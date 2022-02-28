@@ -2,18 +2,15 @@ use std::env;
 
 use crate::{
     contract_instances::memory::Memory,
-    contract_instances::os_factory::OsFactory,
     sender::{GroupConfig, Network, Sender},
 };
-use pandora_os::governance::gov_type::GovernanceDetails;
+
 use secp256k1::Secp256k1;
 
 use pandora_os::memory::msg::{
-    ExecuteMsg as MemExec, InstantiateMsg as MemInit, QueryMsg as MemQuery,
+    ExecuteMsg as MemExec,
 };
-use pandora_os::os_factory::msg::{
-    ExecuteMsg as OsFactExec, InstantiateMsg as OsFactInit, QueryMsg as OsFactQuery,
-};
+
 
 pub async fn demo() -> anyhow::Result<()> {
     let secp = Secp256k1::new();
