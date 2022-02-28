@@ -6,7 +6,7 @@ use std::{
 
 use secp256k1::{Context, Signing};
 
-use serde_json::{from_reader, json, Value};
+use serde_json::{json, Value};
 use terra_rust_api::{
     client::{tx_types::TXResultSync, wasm::Wasm},
     core_types::Coin,
