@@ -1,16 +1,10 @@
 use std::env;
 
 use crate::{
-    contract_instances::memory::Memory,
     sender::{GroupConfig, Network, Sender},
 };
 
 use secp256k1::Secp256k1;
-
-use pandora_os::memory::msg::{
-    ExecuteMsg as MemExec,
-};
-
 
 pub async fn demo() -> anyhow::Result<()> {
     let secp = Secp256k1::new();
@@ -30,26 +24,9 @@ pub async fn demo() -> anyhow::Result<()> {
         &secp,
     )
     .await?;
-    let sender = &Sender::new(&config, secp)?;
-
-    let memory = Memory::new(config.clone());
-    // memory.save_contract_address("terra1x7r06zec02mermgegpu56u8pjdtfekhx2sz54s".to_string())?;
-
-    // let os_factory = OsFactory::new(config.clone());
-    memory
-        .execute(
-            sender,
-            MemExec::update_asset_addresses(vec![], vec![]),
-            vec![],
-        )
-        .await?;
-
-    // let governance = GovernanceDetails::Monarchy {
-    //     monarch: sender.pub_addr()?
-    // };
-    // os_factory.execute(sender, OsFactExec::create_os(governance), vec![]).await?;
-
-    // memory.0.upload(&sender, "/home/cyberhoward/Programming/Pandora/contracts/artifacts/memory.wasm").await?;
+    let _sender = &Sender::new(&config, secp)?;
+    
+    // write custom logic
 
     Ok(())
 }
