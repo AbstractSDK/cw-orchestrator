@@ -102,6 +102,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
                 println!("{}", resp.txhash)
             }
         }
+        wait(&self.group_config).await;
         Ok(resp)
     }
 
@@ -215,7 +216,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
 async fn wait(groupconfig: &GroupConfig ){
     match groupconfig.network_config.network {
         crate::sender::Network::LocalTerra => (),
-        crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(20)).await,
-        crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(20)).await,
+        crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(10)).await,
+        crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(10)).await,
     }
 }
