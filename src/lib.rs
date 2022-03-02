@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 pub mod contract;
-mod error;
+pub mod error;
 pub mod example;
 pub mod multisig;
 pub mod sender;
