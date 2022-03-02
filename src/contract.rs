@@ -137,6 +137,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
         log::debug!("{} address: {:?}", self.name, address);
         self.save_contract_address(address.clone())?;
 
+        wait(&self.group_config).await;
         Ok(resp)
     }
 
@@ -161,6 +162,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             .parse::<u64>()?;
         log::debug!("code_id: {:?}", code_id);
         self.save_code_id(code_id)?;
+        wait(&self.group_config).await;
         Ok(resp)
     }
 
@@ -208,4 +210,12 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
     // pub fn execute(),
     // pub fn query(),
     // pub fn migrate(),
+}
+
+async fn wait(groupconfig: &GroupConfig ){
+    match groupconfig.network_config.network {
+        crate::sender::Network::LocalTerra => (),
+        crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(20)).await,
+        crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(20)).await,
+    }
 }
