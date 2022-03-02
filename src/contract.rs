@@ -130,7 +130,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             )
             .await?;
 
-        tokio::time::sleep(Duration::from_secs(6)).await;
+        tokio::time::sleep(Duration::from_secs(10)).await;
         let result = sender.terra.tx().get(&resp.txhash).await?;
 
         let address =
@@ -154,7 +154,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             .await?;
         log::debug!("uploaded: {:?}", resp.txhash);
         // TODO: check why logs are empty
-        tokio::time::sleep(Duration::from_secs(6)).await;
+        tokio::time::sleep(Duration::from_secs(10)).await;
         let result = sender.terra.tx().get(&resp.txhash).await?;
         let code_id = result.get_attribute_from_result_logs("store_code", "code_id")[0]
             .1
