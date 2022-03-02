@@ -130,11 +130,10 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             )
             .await?;
 
-        tokio::time::sleep(Duration::from_secs(10)).await;
-        let result = sender.terra.tx().get(&resp.txhash).await?;
+        let result = sender.terra.tx().get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2)).await?;
 
         let address =
-            &result.get_attribute_from_result_logs("instantiate_contract", "contract_address")[0].1;
+            &result.tx_response.get_attribute_from_logs("instantiate_contract", "contract_address")[0].1;
         log::debug!("{} address: {:?}", self.name, address);
         self.save_contract_address(address.clone())?;
 
@@ -154,9 +153,10 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             .await?;
         log::debug!("uploaded: {:?}", resp.txhash);
         // TODO: check why logs are empty
-        tokio::time::sleep(Duration::from_secs(10)).await;
-        let result = sender.terra.tx().get(&resp.txhash).await?;
-        let code_id = result.get_attribute_from_result_logs("store_code", "code_id")[0]
+       
+        let result = sender.terra.tx().get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2)).await?;
+
+        let code_id = result.tx_response.get_attribute_from_logs("store_code", "code_id")[0]
             .1
             .parse::<u64>()?;
         log::debug!("code_id: {:?}", code_id);
@@ -209,50 +209,3 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
     // pub fn query(),
     // pub fn migrate(),
 }
-
-// #[async_trait]
-// pub trait Interaction<
-//     E: serde::Serialize + std::marker::Sync,
-//     C: Signing + Context + std::marker::Sync,
-// >
-// {
-//     async fn execute(
-//         &self,
-//         sender: &Sender<C>,
-//         exec_msg: &E,
-//         coins: Vec<Coin>,
-//     ) -> Result<TXResultSync, TerraRustScriptError> {
-//         let execute_msg_json = json!(exec_msg);
-//         let contract = self.addresses()?;
-
-//         let send: Message = MsgExecuteContract::create_from_value(
-//             &sender.pub_addr()?,
-//             &contract,
-//             &execute_msg_json,
-//             &coins,
-//         )?;
-//         // generate the transaction & calc fees
-//         let messages: Vec<Message> = vec![send];
-//         let (std_sign_msg, sigs) = sender
-//             .terra
-//             .generate_transaction_to_broadcast(&sender.secp, &sender.private_key, messages, None)
-//             .await?;
-//         // send it out
-//         let resp = sender
-//             .terra
-//             .tx()
-//             .broadcast_sync(&std_sign_msg, &sigs)
-//             .await?;
-//         match resp.code {
-//             Some(code) => {
-//                 log::error!("{}", serde_json::to_string(&resp)?);
-//                 eprintln!("Transaction returned a {} {}", code, resp.txhash)
-//             }
-//             None => {
-//                 println!("{}", resp.txhash)
-//             }
-//         };
-//         Ok(resp)
-//     }
-
-// }
