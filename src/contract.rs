@@ -171,7 +171,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
         self.group_config.get_contract_address(&self.name)
     }
 
-    fn get_code_id(&self) -> Result<u64, TerraRustScriptError> {
+    pub fn get_code_id(&self) -> Result<u64, TerraRustScriptError> {
         self.group_config.get_contract_code_id(&self.name)
     }
 
