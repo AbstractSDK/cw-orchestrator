@@ -34,7 +34,7 @@ impl Multisig {
         });
 
         log::debug!("{}", msg);
-        log::info!("{}", json!([
+        log::info!("Proposed msgs: {}", json!([
           {
             "wasm": {
               "execute": {
