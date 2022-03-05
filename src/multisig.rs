@@ -33,6 +33,8 @@ impl Multisig {
           }
         });
 
+        log::debug!("{}", msg);
+
         Ok(MsgExecuteContract::create_from_value(
             sender_addr,
             multisig_addr,
