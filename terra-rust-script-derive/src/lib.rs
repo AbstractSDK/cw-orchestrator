@@ -99,6 +99,7 @@ pub fn derive_contract(item: TokenStream) -> TokenStream {
 
                         // Here we construct the function for the current variant
                         variant_checker_functions.extend(quote_spanned! {variant.span()=>
+                            #[allow(clippy::too_many_arguments)]
                             pub fn #is_variant_func_name(#b) -> Self {
                                 #name::#variant_name {
                                     #idents
@@ -143,6 +144,7 @@ pub fn derive_contract(item: TokenStream) -> TokenStream {
 
                     // Here we construct the function for the current variant
                     struct_constructor_function.extend(quote! {
+                        #[allow(clippy::too_many_arguments)]
                         pub fn #is_variant_func_name(#b) -> Self {
                             #name{
                                 #idents
