@@ -29,5 +29,4 @@ serde_json = "1.0.79"
 reqwest = { version = "0.11.9"}
 dotenv="0.15.0"
 env_logger = "0.8.3"
-terra-rust-script-derive = {path = "./terra-rust-script-derive"}
 base64 = "0.13.0"
