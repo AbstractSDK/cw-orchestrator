@@ -53,6 +53,20 @@ pub struct ContractInstance<I, E, Q, M, C: Signing + Context> {
 impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Serialize, C: Signing + Context>
     ContractInstance<I, E, Q, M, C>
 {
+    pub fn new(
+        name: String,
+        sender: Box<Sender<C>>,
+        group_config: GroupConfig,
+        interface: Interface<I, E, Q, M>,
+    ) -> Self {
+        ContractInstance {
+            interface,
+            group_config,
+            name,
+            sender,
+        }
+    }
+
     pub async fn execute(
         &self,
         exec_msg: E,
