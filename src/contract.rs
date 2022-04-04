@@ -43,21 +43,22 @@ impl<I, E, Q, M> Default for Interface<I, E, Q, M> {
     }
 }
 
-pub struct ContractInstance<I, E, Q, M> {
+pub struct ContractInstance<I, E, Q, M, C: Signing + Context> {
     pub interface: Interface<I, E, Q, M>,
     pub group_config: GroupConfig,
     pub name: String,
+    pub sender: Box<Sender<C>>,
 }
 
-impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Serialize>
-    ContractInstance<I, E, Q, M>
+impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Serialize, C: Signing + Context>
+    ContractInstance<I, E, Q, M, C>
 {
-    pub async fn execute<C: Signing + Context>(
+    pub async fn execute(
         &self,
-        sender: &Sender<C>,
         exec_msg: E,
         coins: Vec<Coin>,
     ) -> Result<TXResultSync, TerraRustScriptError> {
+        let sender = &self.sender;
         let execute_msg_json = json!(exec_msg);
         let contract = self.get_address()?;
         log::debug!("############{}#########", contract);
@@ -106,13 +107,13 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
         Ok(resp)
     }
 
-    pub async fn instantiate<C: Signing + Context>(
+    pub async fn instantiate(
         &self,
-        sender: &Sender<C>,
         init_msg: I,
         admin: Option<String>,
         coins: Vec<Coin>,
     ) -> Result<TXResultSync, TerraRustScriptError> {
+        let sender = &self.sender;
         let instantiate_msg_json = json!(init_msg);
         let code_id = self.get_code_id()?;
 
@@ -142,11 +143,11 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
         Ok(resp)
     }
 
-    pub async fn upload<C: Signing + Context>(
+    pub async fn upload(
         &self,
-        sender: &Sender<C>,
         wasm_path: &str,
     ) -> Result<TXResultSync, TerraRustScriptError> {
+        let sender = &self.sender;
         let wasm = Wasm::create(&sender.terra);
         let memo = format!("Contract: {}, Group: {}", self.name, self.group_config.name);
 
