@@ -1,8 +1,6 @@
 use std::env;
 
-use crate::{
-    sender::{GroupConfig, Network, Sender},
-};
+use crate::sender::{GroupConfig, Network, Sender};
 
 use secp256k1::Secp256k1;
 
@@ -25,7 +23,7 @@ pub async fn demo() -> anyhow::Result<()> {
     )
     .await?;
     let _sender = &Sender::new(&config, secp)?;
-    
+
     // write custom logic
 
     Ok(())

@@ -1,6 +1,7 @@
 use std::{
     env,
     fs::{self, File},
+    rc::Rc,
     time::Duration,
 };
 
@@ -47,17 +48,22 @@ pub struct ContractInstance<I, E, Q, M, C: Signing + Context> {
     pub interface: Interface<I, E, Q, M>,
     pub group_config: GroupConfig,
     pub name: String,
-    pub sender: Box<Sender<C>>,
+    pub sender: Rc<Sender<C>>,
 }
 
-impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Serialize, C: Signing + Context>
-    ContractInstance<I, E, Q, M, C>
+impl<
+        I: serde::Serialize,
+        E: serde::Serialize,
+        Q: serde::Serialize,
+        M: serde::Serialize,
+        C: Signing + Context,
+    > ContractInstance<I, E, Q, M, C>
 {
     pub fn new(
         name: String,
-        sender: Box<Sender<C>>,
-        group_config: GroupConfig,
         interface: Interface<I, E, Q, M>,
+        sender: Rc<Sender<C>>,
+        group_config: GroupConfig,
     ) -> Self {
         ContractInstance {
             interface,
@@ -146,10 +152,16 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             )
             .await?;
 
-        let result = sender.terra.tx().get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2)).await?;
+        let result = sender
+            .terra
+            .tx()
+            .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
+            .await?;
 
-        let address =
-            &result.tx_response.get_attribute_from_logs("instantiate_contract", "contract_address")[0].1;
+        let address = &result
+            .tx_response
+            .get_attribute_from_logs("instantiate_contract", "contract_address")[0]
+            .1;
         log::debug!("{} address: {:?}", self.name, address);
         self.save_contract_address(address.clone())?;
 
@@ -157,10 +169,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
         Ok(resp)
     }
 
-    pub async fn upload(
-        &self,
-        wasm_path: &str,
-    ) -> Result<TXResultSync, TerraRustScriptError> {
+    pub async fn upload(&self, wasm_path: &str) -> Result<TXResultSync, TerraRustScriptError> {
         let sender = &self.sender;
         let wasm = Wasm::create(&sender.terra);
         let memo = format!("Contract: {}, Group: {}", self.name, self.group_config.name);
@@ -170,10 +179,16 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
             .await?;
         log::debug!("uploaded: {:?}", resp.txhash);
         // TODO: check why logs are empty
-       
-        let result = sender.terra.tx().get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2)).await?;
 
-        let code_id = result.tx_response.get_attribute_from_logs("store_code", "code_id")[0]
+        let result = sender
+            .terra
+            .tx()
+            .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
+            .await?;
+
+        let code_id = result
+            .tx_response
+            .get_attribute_from_logs("store_code", "code_id")[0]
             .1
             .parse::<u64>()?;
         log::debug!("code_id: {:?}", code_id);
@@ -228,7 +243,7 @@ impl<I: serde::Serialize, E: serde::Serialize, Q: serde::Serialize, M: serde::Se
     // pub fn migrate(),
 }
 
-async fn wait(groupconfig: &GroupConfig ){
+async fn wait(groupconfig: &GroupConfig) {
     match groupconfig.network_config.network {
         crate::sender::Network::LocalTerra => (),
         crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
