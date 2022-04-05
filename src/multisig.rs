@@ -34,17 +34,20 @@ impl Multisig {
         });
 
         log::debug!("{}", msg);
-        log::info!("Proposed msgs: {}", json!([
-          {
-            "wasm": {
-              "execute": {
-                "msg": encoded,
-                "funds": coins.to_vec(),
-                "contract_addr": contract_addr
+        log::info!(
+            "Proposed msgs: {}",
+            json!([
+              {
+                "wasm": {
+                  "execute": {
+                    "msg": encoded,
+                    "funds": coins.to_vec(),
+                    "contract_addr": contract_addr
+                  }
+                }
               }
-            }
-          }
-        ]));
+            ])
+        );
 
         Ok(MsgExecuteContract::create_from_value(
             sender_addr,
