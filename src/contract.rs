@@ -7,10 +7,11 @@ use std::{
 
 use secp256k1::{Context, Signing};
 
+use serde::Deserialize;
 use serde_json::{json, Value};
 use terra_rust_api::{
     client::{tx_types::TXResultSync, wasm::Wasm},
-    core_types::Coin,
+    core_types::{Coin, StdFee},
     messages::MsgExecuteContract,
     Message,
 };
@@ -169,13 +170,33 @@ impl<
         Ok(resp)
     }
 
-    pub async fn upload(&self, wasm_path: &str) -> Result<TXResultSync, TerraRustScriptError> {
+    pub async fn query(
+        &self,
+        query_msg: Q,
+    ) -> Result<Value, TerraRustScriptError> {
+        let sender = &self.sender;
+        let json_query = json!(query_msg);
+        
+        let wasm = Wasm::create(&sender.terra);
+        let resp:Value = wasm.query(&self.get_address()?, &json_query.to_string()).await?;
+        
+        Ok(resp)
+    }
+
+    pub async fn upload(&self, name: &str, path: Option<&str>) -> Result<TXResultSync, TerraRustScriptError> {
         let sender = &self.sender;
         let wasm = Wasm::create(&sender.terra);
         let memo = format!("Contract: {}, Group: {}", self.name, self.group_config.name);
+        let wasm_path = {
+            match path {
+                Some(path) => path.to_string(),
+                None => format!("{}{}", env::var("WASM_DIR").unwrap(), format!("/{}.wasm",name)),
+            }
+        };
 
+        log::debug!("{}",&wasm_path);
         let resp = wasm
-            .store(&sender.secp, &sender.private_key, wasm_path, Some(memo))
+            .store(&sender.secp, &sender.private_key, &wasm_path, Some(memo))
             .await?;
         log::debug!("uploaded: {:?}", resp.txhash);
         // TODO: check why logs are empty
@@ -226,6 +247,19 @@ impl<
         Ok(())
     }
 
+    pub fn save_other_contract_address(
+        &self,
+        contract_name: String,
+        contract_address: String,
+    ) -> Result<(), TerraRustScriptError> {
+        let s = fs::read_to_string(&self.group_config.file_path).unwrap();
+        let mut cfg: Value = serde_json::from_str(&s)?;
+        cfg[&self.group_config.name][&contract_name]["addr"] = Value::String(contract_address);
+
+        serde_json::to_writer_pretty(File::create(&self.group_config.file_path)?, &cfg)?;
+        Ok(())
+    }
+
     pub fn check_scaffold(&self) -> anyhow::Result<()> {
         let s = fs::read_to_string(&self.group_config.file_path)?;
         let mut cfg: Value = serde_json::from_str(&s)?;
@@ -245,7 +279,7 @@ impl<
 
 async fn wait(groupconfig: &GroupConfig) {
     match groupconfig.network_config.network {
-        crate::sender::Network::LocalTerra => (),
+        crate::sender::Network::LocalTerra => tokio::time::sleep(Duration::from_secs(6)).await,
         crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
         crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(10)).await,
     }

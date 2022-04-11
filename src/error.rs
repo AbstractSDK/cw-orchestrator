@@ -16,11 +16,13 @@ pub enum TerraRustScriptError {
     Secp256k1(#[from] ::secp256k1::Error),
     #[error(transparent)]
     VarError(#[from] ::std::env::VarError),
+    #[error(transparent)]
+    AnyError(#[from] ::anyhow::Error),
 
     #[error("Terra `{0}` CLI Error")]
     Terra(String),
 
-    #[error("TerraRustAPIError Error")]
+    #[error(transparent)]
     TerraRustAPIError(#[from] ::terra_rust_api::errors::TerraRustAPIError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,

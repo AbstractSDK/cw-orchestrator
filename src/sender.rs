@@ -1,6 +1,6 @@
 use secp256k1::{Context, Secp256k1, Signing};
-use serde_json::{from_reader, json};
-use std::{env, fs::File};
+use serde_json::{from_reader, json, Map, Value};
+use std::{env, fs::File, collections::HashMap};
 use terra_rust_api::{errors::TerraRustAPIError, GasOptions, PrivateKey, Terra};
 
 use crate::error::TerraRustScriptError;
@@ -110,14 +110,13 @@ pub struct GroupConfig {
 }
 
 impl GroupConfig {
-    pub async fn new<C: secp256k1::Signing + secp256k1::Context>(
+    pub async fn new(
         network: Network,
         name: String,
         client: reqwest::Client,
         denom: &str,
         file_path: String,
         proposal: bool,
-        _secp: &Secp256k1<C>,
     ) -> anyhow::Result<GroupConfig> {
         check_group_existance(&name, &file_path)?;
 
@@ -139,7 +138,6 @@ impl GroupConfig {
         let maybe_address = json[self.name.clone()][contract_name].get("addr");
         match maybe_address {
             Some(addr) => {
-                log::debug!("contract: {} addr: {}", self.name, addr);
                 return Ok(addr.as_str().unwrap().into());
             }
             None => {
@@ -157,7 +155,6 @@ impl GroupConfig {
         let maybe_code_id = json[self.name.clone()][contract_name].get("code_id");
         match maybe_code_id {
             Some(code_id) => {
-                log::debug!("contract: {} code_id: {}", self.name, code_id);
                 return Ok(code_id.as_u64().unwrap());
             }
             None => {
@@ -166,6 +163,13 @@ impl GroupConfig {
                 ))
             }
         }
+    }
+
+    pub fn get_saved_state(&self) -> Map<String, Value>{
+        let file = File::open(&self.file_path)
+            .expect(&format!("file should be present at {}", self.file_path));
+        let json: serde_json::Value = from_reader(file).unwrap();
+        json.get(&self.name).unwrap().as_object().unwrap().clone()
     }
 }
 
