@@ -19,7 +19,6 @@ pub async fn demo() -> anyhow::Result<()> {
         "uusd",
         path,
         propose_on_multisig,
-        &secp,
     )
     .await?;
     let _sender = &Sender::new(&config, secp)?;
