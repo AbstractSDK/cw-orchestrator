@@ -281,6 +281,6 @@ async fn wait(groupconfig: &GroupConfig) {
     match groupconfig.network_config.network {
         crate::sender::Network::LocalTerra => tokio::time::sleep(Duration::from_secs(6)).await,
         crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-        crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(10)).await,
+        crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
     }
 }
