@@ -5,6 +5,7 @@ use std::{
     time::Duration,
 };
 
+use base64::decode;
 use secp256k1::{Context, Signing};
 
 use serde::Deserialize;
@@ -271,6 +272,39 @@ impl<
         }
 
         Ok(())
+    }
+
+    pub async fn is_local_version(&self) -> anyhow::Result<bool> {
+        let on_chain_encoded_hash = self.sender
+        .terra
+        .wasm()
+        .codes(self.get_code_id()?)
+        .await?
+        .result
+        .code_hash;
+        let path = format!("{}/checksums.txt", env::var("WASM_DIR")?);
+
+        let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
+
+        let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
+
+        let name = self.name.split(':').last().unwrap();
+        
+        let containing_line = parsed
+        .iter()
+        .filter(|line| line.contains(name))
+        .next()
+        .unwrap();
+        log::debug!("{:?}", containing_line);
+        
+        let local_hash = containing_line
+            .trim_start_matches('\n')
+            .split_whitespace()
+            .next()
+            .unwrap();
+        
+        let on_chain_hash = base16::encode_lower(&decode(on_chain_encoded_hash)?);
+        Ok(on_chain_hash == local_hash)
     }
     // pub fn execute(),
     // pub fn query(),
