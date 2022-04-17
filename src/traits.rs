@@ -7,7 +7,7 @@ use crate::{contract::ContractInstance, error::TerraRustScriptError};
 
 // Fn for custom implementation to return ContractInstance
 pub trait Instance {
-    fn instance(&self) -> ContractInstance;
+    fn instance(&self) -> &ContractInstance;
 }
 
 /// Implementing Interface ensures type safety

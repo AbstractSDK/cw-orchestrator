@@ -20,12 +20,10 @@ use terra_rust_api::{
 use crate::{
     error::TerraRustScriptError,
     multisig::Multisig,
-    sender::{GroupConfig, Sender},
+    sender::{GroupConfig, Sender, Wallet, self},
 };
 // https://doc.rust-lang.org/std/process/struct.Command.html
 // RUSTFLAGS='-C link-arg=-s' cargo wasm
-
-type Wallet<'a> = &'a Rc<Sender<All>>;
 
 pub struct ContractInstance<'a> {
     pub group_config: &'a GroupConfig,
@@ -34,12 +32,14 @@ pub struct ContractInstance<'a> {
 }
 
 impl<'a> ContractInstance<'a> {
-    pub fn new(name: &'a str, sender: &'a Wallet, group_config: &'a GroupConfig) -> Self {
-        ContractInstance {
+    pub fn new(name: &'a str, sender: &'a Rc<sender::Sender<All>>, group_config: &'a GroupConfig) -> anyhow::Result<Self> {
+        let instance = ContractInstance {
             group_config,
             name,
             sender,
-        }
+        };
+        instance.check_scaffold()?;
+        Ok(instance)
     }
 
     pub async fn execute<E: Serialize>(
