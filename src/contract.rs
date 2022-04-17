@@ -6,16 +6,13 @@ use std::{
 };
 
 use base64::decode;
-use secp256k1::{All, Context, Signing};
+use secp256k1::All;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::{json, Value};
 use terra_rust_api::{
-    client::{
-        tx_types::{TXResultSync, V1TXResult},
-        wasm::Wasm,
-    },
-    core_types::{Coin, StdFee},
+    client::{tx_types::V1TXResult, wasm::Wasm},
+    core_types::Coin,
     messages::MsgExecuteContract,
     Message,
 };
