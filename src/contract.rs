@@ -6,12 +6,15 @@ use std::{
 };
 
 use base64::decode;
-use secp256k1::{Context, Signing};
+use secp256k1::{All, Context, Signing};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use terra_rust_api::{
-    client::{tx_types::TXResultSync, wasm::Wasm},
+    client::{
+        tx_types::{TXResultSync, V1TXResult},
+        wasm::Wasm,
+    },
     core_types::{Coin, StdFee},
     messages::MsgExecuteContract,
     Message,
@@ -25,68 +28,35 @@ use crate::{
 // https://doc.rust-lang.org/std/process/struct.Command.html
 // RUSTFLAGS='-C link-arg=-s' cargo wasm
 
-pub struct Interface<I, E, Q, M> {
-    pub init_msg: Option<I>,
-    pub execute_msg: Option<E>,
-    pub query_msg: Option<Q>,
-    pub migrate_msg: Option<M>,
+type Wallet<'a> = &'a Rc<Sender<All>>;
+
+pub struct ContractInstance<'a> {
+    pub group_config: &'a GroupConfig,
+    pub name: &'a str,
+    pub sender: Wallet<'a>,
 }
 
-impl<I, E, Q, M> Interface<I, E, Q, M> {}
-
-impl<I, E, Q, M> Default for Interface<I, E, Q, M> {
-    // Generates placeholder with type restrictions
-    fn default() -> Self {
-        Interface {
-            init_msg: None,
-            execute_msg: None,
-            query_msg: None,
-            migrate_msg: None,
-        }
-    }
-}
-
-pub struct ContractInstance<I, E, Q, M, C: Signing + Context> {
-    pub interface: Interface<I, E, Q, M>,
-    pub group_config: GroupConfig,
-    pub name: String,
-    pub sender: Rc<Sender<C>>,
-}
-
-impl<
-        I: serde::Serialize,
-        E: serde::Serialize,
-        Q: serde::Serialize,
-        M: serde::Serialize,
-        C: Signing + Context,
-    > ContractInstance<I, E, Q, M, C>
-{
-    pub fn new(
-        name: String,
-        interface: Interface<I, E, Q, M>,
-        sender: Rc<Sender<C>>,
-        group_config: GroupConfig,
-    ) -> Self {
+impl<'a> ContractInstance<'a> {
+    pub fn new(name: &'a str, sender: &'a Wallet, group_config: &'a GroupConfig) -> Self {
         ContractInstance {
-            interface,
             group_config,
             name,
             sender,
         }
     }
 
-    pub async fn execute(
+    pub async fn execute<E: Serialize>(
         &self,
-        exec_msg: E,
-        coins: Vec<Coin>,
-    ) -> Result<TXResultSync, TerraRustScriptError> {
+        exec_msg: &E,
+        coins: &Vec<Coin>,
+    ) -> Result<V1TXResult, TerraRustScriptError> {
         let sender = &self.sender;
         let execute_msg_json = json!(exec_msg);
         let contract = self.get_address()?;
         log::debug!("############{}#########", contract);
         let send: Message = if self.group_config.proposal {
             Multisig::create_proposal(
-                execute_msg_json,
+                &execute_msg_json,
                 &self.group_config.name,
                 &contract,
                 &env::var(&self.group_config.network_config.network.multisig_name())?,
@@ -125,16 +95,21 @@ impl<
                 println!("{}", resp.txhash)
             }
         }
+        let result = sender
+            .terra
+            .tx()
+            .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
+            .await?;
         wait(&self.group_config).await;
-        Ok(resp)
+        Ok(result)
     }
 
-    pub async fn instantiate(
+    pub async fn instantiate<I: Serialize>(
         &self,
         init_msg: I,
         admin: Option<String>,
         coins: Vec<Coin>,
-    ) -> Result<TXResultSync, TerraRustScriptError> {
+    ) -> Result<V1TXResult, TerraRustScriptError> {
         let sender = &self.sender;
         let instantiate_msg_json = json!(init_msg);
         let code_id = self.get_code_id()?;
@@ -168,34 +143,41 @@ impl<
         self.save_contract_address(address.clone())?;
 
         wait(&self.group_config).await;
-        Ok(resp)
+        Ok(result)
     }
 
-    pub async fn query(
-        &self,
-        query_msg: Q,
-    ) -> Result<Value, TerraRustScriptError> {
+    pub async fn query<Q: Serialize>(&self, query_msg: Q) -> Result<Value, TerraRustScriptError> {
         let sender = &self.sender;
         let json_query = json!(query_msg);
-        
+
         let wasm = Wasm::create(&sender.terra);
-        let resp:Value = wasm.query(&self.get_address()?, &json_query.to_string()).await?;
-        
+        let resp: Value = wasm
+            .query(&self.get_address()?, &json_query.to_string())
+            .await?;
+
         Ok(resp)
     }
 
-    pub async fn upload(&self, name: &str, path: Option<&str>) -> Result<TXResultSync, TerraRustScriptError> {
+    pub async fn upload(
+        &self,
+        name: &str,
+        path: Option<&str>,
+    ) -> Result<V1TXResult, TerraRustScriptError> {
         let sender = &self.sender;
         let wasm = Wasm::create(&sender.terra);
         let memo = format!("Contract: {}, Group: {}", self.name, self.group_config.name);
         let wasm_path = {
             match path {
                 Some(path) => path.to_string(),
-                None => format!("{}{}", env::var("WASM_DIR").unwrap(), format!("/{}.wasm",name)),
+                None => format!(
+                    "{}{}",
+                    env::var("WASM_DIR").unwrap(),
+                    format!("/{}.wasm", name)
+                ),
             }
         };
 
-        log::debug!("{}",&wasm_path);
+        log::debug!("{}", &wasm_path);
         let resp = wasm
             .store(&sender.secp, &sender.private_key, &wasm_path, Some(memo))
             .await?;
@@ -216,7 +198,41 @@ impl<
         log::debug!("code_id: {:?}", code_id);
         self.save_code_id(code_id)?;
         wait(&self.group_config).await;
-        Ok(resp)
+        Ok(result)
+    }
+
+    pub async fn migrate<M: Serialize>(
+        &self,
+        migrate_msg: M,
+        new_code_id: u64,
+    ) -> Result<V1TXResult, TerraRustScriptError> {
+        let sender = &self.sender;
+        let migrate_msg_json = json!(migrate_msg);
+
+        let wasm = Wasm::create(&sender.terra);
+
+        let old_code_id = wasm.info(&self.get_address()?).await?.result.code_id;
+        let memo = format!("Contract: {}, OldCodeId: {}", self.name, old_code_id);
+
+        let resp = wasm
+            .migrate(
+                &sender.secp,
+                &sender.private_key,
+                &self.get_address()?,
+                new_code_id,
+                Some(migrate_msg_json.to_string()),
+                Some(memo),
+            )
+            .await?;
+
+        let result = sender
+            .terra
+            .tx()
+            .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
+            .await?;
+
+        wait(&self.group_config).await;
+        Ok(result)
     }
 
     pub fn get_address(&self) -> Result<String, TerraRustScriptError> {
@@ -275,13 +291,14 @@ impl<
     }
 
     pub async fn is_local_version(&self) -> anyhow::Result<bool> {
-        let on_chain_encoded_hash = self.sender
-        .terra
-        .wasm()
-        .codes(self.get_code_id()?)
-        .await?
-        .result
-        .code_hash;
+        let on_chain_encoded_hash = self
+            .sender
+            .terra
+            .wasm()
+            .codes(self.get_code_id()?)
+            .await?
+            .result
+            .code_hash;
         let path = format!("{}/checksums.txt", env::var("WASM_DIR")?);
 
         let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
@@ -289,26 +306,23 @@ impl<
         let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
 
         let name = self.name.split(':').last().unwrap();
-        
+
         let containing_line = parsed
-        .iter()
-        .filter(|line| line.contains(name))
-        .next()
-        .unwrap();
+            .iter()
+            .filter(|line| line.contains(name))
+            .next()
+            .unwrap();
         log::debug!("{:?}", containing_line);
-        
+
         let local_hash = containing_line
             .trim_start_matches('\n')
             .split_whitespace()
             .next()
             .unwrap();
-        
+
         let on_chain_hash = base16::encode_lower(&decode(on_chain_encoded_hash)?);
         Ok(on_chain_hash == local_hash)
     }
-    // pub fn execute(),
-    // pub fn query(),
-    // pub fn migrate(),
 }
 
 async fn wait(groupconfig: &GroupConfig) {
