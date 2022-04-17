@@ -1,6 +1,6 @@
 use secp256k1::{Context, Secp256k1, Signing};
 use serde_json::{from_reader, json, Map, Value};
-use std::{collections::HashMap, env, fs::File};
+use std::{env, fs::File};
 use terra_rust_api::{errors::TerraRustAPIError, GasOptions, PrivateKey, Terra};
 
 use crate::error::TerraRustScriptError;
