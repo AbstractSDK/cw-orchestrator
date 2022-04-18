@@ -7,12 +7,12 @@ pub struct Multisig;
 
 impl Multisig {
     pub fn create_proposal(
-        json_msg: Value,
+        json_msg: &Value,
         _group_name: &str,
         contract_addr: &str,
         multisig_addr: &str,
         sender_addr: &str,
-        coins: Vec<Coin>,
+        coins: &Vec<Coin>,
     ) -> Result<Message, TerraRustScriptError> {
         let encoded = encode(json_msg.to_string());
         let msg = json!({
@@ -22,7 +22,7 @@ impl Multisig {
                 "wasm": {
                   "execute": {
                     "msg": encoded,
-                    "funds": coins.to_vec(),
+                    "funds": coins,
                     "contract_addr": contract_addr
                   }
                 }
@@ -41,7 +41,7 @@ impl Multisig {
                 "wasm": {
                   "execute": {
                     "msg": encoded,
-                    "funds": coins.to_vec(),
+                    "funds": coins,
                     "contract_addr": contract_addr
                   }
                 }
