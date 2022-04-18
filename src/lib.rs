@@ -4,6 +4,7 @@ pub mod error;
 pub mod example;
 pub mod multisig;
 pub mod sender;
+pub mod traits;
 
 use dotenv::dotenv;
 #[tokio::main]

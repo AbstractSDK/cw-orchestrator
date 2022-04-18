@@ -1,9 +1,11 @@
-use secp256k1::{Context, Secp256k1, Signing};
+use secp256k1::{Context, Secp256k1, Signing, All};
 use serde_json::{from_reader, json, Map, Value};
-use std::{env, fs::File, collections::HashMap};
+use std::{env, fs::File, rc::Rc};
 use terra_rust_api::{errors::TerraRustAPIError, GasOptions, PrivateKey, Terra};
 
 use crate::error::TerraRustScriptError;
+
+pub type Wallet<'a> = &'a Rc<Sender<All>>;
 
 pub struct Sender<C: Signing + Context> {
     pub terra: Terra,
@@ -165,7 +167,7 @@ impl GroupConfig {
         }
     }
 
-    pub fn get_saved_state(&self) -> Map<String, Value>{
+    pub fn get_saved_state(&self) -> Map<String, Value> {
         let file = File::open(&self.file_path)
             .expect(&format!("file should be present at {}", self.file_path));
         let json: serde_json::Value = from_reader(file).unwrap();
