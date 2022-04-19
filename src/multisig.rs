@@ -53,7 +53,7 @@ impl Multisig {
             sender_addr,
             multisig_addr,
             &msg,
-            &vec![],
+            &[],
         )?)
     }
 }
