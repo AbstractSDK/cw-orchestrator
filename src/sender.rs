@@ -1,4 +1,4 @@
-use secp256k1::{Context, Secp256k1, Signing, All};
+use secp256k1::{All, Context, Secp256k1, Signing};
 use serde_json::{from_reader, json, Map, Value};
 use std::{env, fs::File, rc::Rc};
 use terra_rust_api::{errors::TerraRustAPIError, GasOptions, PrivateKey, Terra};
@@ -23,19 +23,17 @@ impl<C: Signing + Context> Sender<C> {
     ) -> Result<Sender<C>, TerraRustScriptError> {
         // NETWORK_MNEMONIC_GROUP
         let mut composite_name = config.network_config.network.mnemonic_name().to_string();
-        composite_name.push_str("_");
+        composite_name.push('_');
         composite_name.push_str(&config.name.to_ascii_uppercase());
 
-        let p_key: PrivateKey;
-
-        // use group mnemonic if specified, elso use default network mnemonic
-        if let Some(mnemonic) = env::var_os(&composite_name) {
-            p_key = PrivateKey::from_words(&secp, mnemonic.to_str().unwrap(), 0, 0)?;
+        // use group mnemonic if specified, else use default network mnemonic
+        let p_key: PrivateKey = if let Some(mnemonic) = env::var_os(&composite_name) {
+            PrivateKey::from_words(&secp, mnemonic.to_str().unwrap(), 0, 0)?
         } else {
             log::debug!("{}", config.network_config.network.mnemonic_name());
             let mnemonic = env::var(config.network_config.network.mnemonic_name())?;
-            p_key = PrivateKey::from_words(&secp, &mnemonic, 0, 0)?;
-        }
+            PrivateKey::from_words(&secp, &mnemonic, 0, 0)?
+        };
 
         Ok(Sender {
             terra: Terra::lcd_client(
@@ -139,14 +137,10 @@ impl GroupConfig {
         let json: serde_json::Value = from_reader(file)?;
         let maybe_address = json[self.name.clone()][contract_name].get("addr");
         match maybe_address {
-            Some(addr) => {
-                return Ok(addr.as_str().unwrap().into());
-            }
-            None => {
-                return Err(TerraRustScriptError::AddrNotInFile(
-                    contract_name.to_owned(),
-                ))
-            }
+            Some(addr) => Ok(addr.as_str().unwrap().into()),
+            None => Err(TerraRustScriptError::AddrNotInFile(
+                contract_name.to_owned(),
+            )),
         }
     }
 
@@ -156,14 +150,10 @@ impl GroupConfig {
         let json: serde_json::Value = from_reader(file).unwrap();
         let maybe_code_id = json[self.name.clone()][contract_name].get("code_id");
         match maybe_code_id {
-            Some(code_id) => {
-                return Ok(code_id.as_u64().unwrap());
-            }
-            None => {
-                return Err(TerraRustScriptError::AddrNotInFile(
-                    contract_name.to_owned(),
-                ))
-            }
+            Some(code_id) => Ok(code_id.as_u64().unwrap()),
+            None => Err(TerraRustScriptError::AddrNotInFile(
+                contract_name.to_owned(),
+            )),
         }
     }
 
@@ -180,13 +170,11 @@ fn check_group_existance(name: &String, file_path: &String) -> anyhow::Result<()
     let mut cfg: serde_json::Value = from_reader(file).unwrap();
     let maybe_group = cfg.get(name);
     match maybe_group {
-        Some(_) => {
-            return Ok(());
-        }
+        Some(_) => Ok(()),
         None => {
             cfg[name] = json!({});
             serde_json::to_writer_pretty(File::create(file_path)?, &cfg)?;
-            return Ok(());
+            Ok(())
         }
     }
 }

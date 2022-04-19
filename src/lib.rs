@@ -1,32 +1,10 @@
 #![allow(dead_code)]
 pub mod contract;
 pub mod error;
-pub mod example;
+pub mod helpers;
 pub mod multisig;
 pub mod sender;
 pub mod traits;
-
-use dotenv::dotenv;
-#[tokio::main]
-async fn main() {
-    dotenv().ok();
-    env_logger::init();
-
-    if let Err(ref err) = example::demo().await {
-        log::error!("{}", err);
-        err.chain()
-            .skip(1)
-            .for_each(|cause| log::error!("because: {}", cause));
-
-        // The backtrace is not always generated. Try to run this example
-        // with `$env:RUST_BACKTRACE=1`.
-        //    if let Some(backtrace) = e.backtrace() {
-        //        log::debug!("backtrace: {:?}", backtrace);
-        //    }
-
-        ::std::process::exit(1);
-    }
-}
 
 // mod macro_dev {
 //     use terra_rust_script_derive::contract;

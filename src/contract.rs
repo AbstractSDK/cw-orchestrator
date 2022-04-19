@@ -20,7 +20,7 @@ use terra_rust_api::{
 use crate::{
     error::TerraRustScriptError,
     multisig::Multisig,
-    sender::{GroupConfig, Sender, Wallet, self},
+    sender::{self, GroupConfig, Wallet},
 };
 // https://doc.rust-lang.org/std/process/struct.Command.html
 // RUSTFLAGS='-C link-arg=-s' cargo wasm
@@ -32,7 +32,11 @@ pub struct ContractInstance<'a> {
 }
 
 impl<'a> ContractInstance<'a> {
-    pub fn new(name: &'a str, sender: &'a Rc<sender::Sender<All>>, group_config: &'a GroupConfig) -> anyhow::Result<Self> {
+    pub fn new(
+        name: &'a str,
+        sender: &'a Rc<sender::Sender<All>>,
+        group_config: &'a GroupConfig,
+    ) -> anyhow::Result<Self> {
         let instance = ContractInstance {
             group_config,
             name,
@@ -65,7 +69,7 @@ impl<'a> ContractInstance<'a> {
                 &sender.pub_addr()?,
                 &contract,
                 &execute_msg_json,
-                &coins,
+                coins,
             )?
         };
 
@@ -97,7 +101,7 @@ impl<'a> ContractInstance<'a> {
             .tx()
             .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
             .await?;
-        wait(&self.group_config).await;
+        wait(self.group_config).await;
         Ok(result)
     }
 
@@ -139,7 +143,7 @@ impl<'a> ContractInstance<'a> {
         log::debug!("{} address: {:?}", self.name, address);
         self.save_contract_address(address.clone())?;
 
-        wait(&self.group_config).await;
+        wait(self.group_config).await;
         Ok(result)
     }
 
@@ -194,7 +198,7 @@ impl<'a> ContractInstance<'a> {
             .parse::<u64>()?;
         log::debug!("code_id: {:?}", code_id);
         self.save_code_id(code_id)?;
-        wait(&self.group_config).await;
+        wait(self.group_config).await;
         Ok(result)
     }
 
@@ -228,16 +232,16 @@ impl<'a> ContractInstance<'a> {
             .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
             .await?;
 
-        wait(&self.group_config).await;
+        wait(self.group_config).await;
         Ok(result)
     }
 
     pub fn get_address(&self) -> Result<String, TerraRustScriptError> {
-        self.group_config.get_contract_address(&self.name)
+        self.group_config.get_contract_address(self.name)
     }
 
     pub fn get_code_id(&self) -> Result<u64, TerraRustScriptError> {
-        self.group_config.get_contract_code_id(&self.name)
+        self.group_config.get_contract_code_id(self.name)
     }
 
     fn save_code_id(&self, code_id: u64) -> Result<(), TerraRustScriptError> {
