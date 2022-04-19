@@ -10,7 +10,7 @@ The use of this software makes it easier to quickly deploy new contracts. You sh
 Usually your contracts workspace will have a package that contains the structs that get filled by a provided JSON through the serde-json package on execution by the CosmWasm VM. 
 We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMsg, ...) by adding that package as a dependency to the scripting workspace. 
 
-In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing the message on a wrong contract and it also handles converting the struct to it's json format. This way we prevent sending incorrectly formatted messages! The implementation for a CW20 token is shown below.
+In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing the message on a wrong contract and it also handles converting the struct to it's json format. This way we prevent sending incorrectly formatted messages! The implementation for a CW20 token is shown below. The full file resides [here](example/cw20.rs)
 
 ```
 // Wrapper around a ContractInstance that handles address storage and interactions.
