@@ -26,7 +26,7 @@ pub trait WasmExecute {
     async fn exec<'a>(
         &self,
         execute_msg: &'a Self::E,
-        coins: Option<&Vec<Coin>>,
+        coins: Option<&[Coin]>,
     ) -> Result<V1TXResult, TerraRustScriptError>;
 }
 
@@ -37,7 +37,7 @@ impl<T: Interface + Instance> WasmExecute for T {
     async fn exec<'a>(
         &self,
         execute_msg: &'a Self::E,
-        coins: Option<&Vec<Coin>>,
+        coins: Option<&[Coin]>,
     ) -> Result<V1TXResult, TerraRustScriptError> {
         self.instance()
             .execute(&execute_msg, coins.unwrap_or(&vec![]))
@@ -55,7 +55,7 @@ pub trait WasmInstantiate {
         &self,
         instantiate_msg: Self::I,
         admin: Option<String>,
-        coins: Option<Vec<Coin>>,
+        coins: Option<&[Coin]>,
     ) -> Result<V1TXResult, TerraRustScriptError>;
 }
 
@@ -67,7 +67,7 @@ impl<T: Interface + Instance> WasmInstantiate for T {
         &self,
         instantiate_msg: Self::I,
         admin: Option<String>,
-        coins: Option<Vec<Coin>>,
+        coins: Option<&[Coin]>,
     ) -> Result<V1TXResult, TerraRustScriptError> {
         self.instance()
             .instantiate(instantiate_msg, admin, coins.unwrap_or_default())

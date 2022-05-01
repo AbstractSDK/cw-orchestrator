@@ -12,7 +12,7 @@ impl Multisig {
         contract_addr: &str,
         multisig_addr: &str,
         sender_addr: &str,
-        coins: &Vec<Coin>,
+        coins: &[Coin],
     ) -> Result<Message, TerraRustScriptError> {
         let encoded = encode(json_msg.to_string());
         let msg = json!({
