@@ -49,7 +49,7 @@ impl<'a> ContractInstance<'a> {
     pub async fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
-        coins: &Vec<Coin>,
+        coins: &[Coin],
     ) -> Result<V1TXResult, TerraRustScriptError> {
         let sender = &self.sender;
         let execute_msg_json = json!(exec_msg);
@@ -109,7 +109,7 @@ impl<'a> ContractInstance<'a> {
         &self,
         init_msg: I,
         admin: Option<String>,
-        coins: Vec<Coin>,
+        coins: &[Coin],
     ) -> Result<V1TXResult, TerraRustScriptError> {
         let sender = &self.sender;
         let instantiate_msg_json = json!(init_msg);
@@ -124,7 +124,7 @@ impl<'a> ContractInstance<'a> {
                 &sender.private_key,
                 code_id,
                 instantiate_msg_json.to_string(),
-                coins,
+                coins.to_vec(),
                 admin,
                 Some(memo),
             )
