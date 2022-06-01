@@ -1,24 +1,28 @@
+use cosmos_sdk_proto::{cosmos::{auth::v1beta1::BaseAccount, bank::v1beta1::MsgSend}, tendermint::Protobuf};
+use cosmrs::{crypto::secp256k1::SigningKey, AccountId, tx::Gas, rpc::Client, Any};
+use prost::Message;
 use secp256k1::{All, Context, Secp256k1, Signing};
 use serde_json::{from_reader, json, Map, Value};
 use std::{env, fs::File, rc::Rc};
-use terra_rust_api::{errors::TerraRustAPIError, GasOptions, PrivateKey, Terra};
 
-use crate::error::TerraRustScriptError;
+use crate::{error::TerraRustScriptError, chain::Chain, keys::private::PrivateKey};
 
 pub type Wallet<'a> = &'a Rc<Sender<All>>;
 
 pub struct Sender<C: Signing + Context> {
-    pub terra: Terra,
-    pub private_key: PrivateKey,
+    pub chain: Chain,
+    pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
 }
 
 impl<C: Signing + Context> Sender<C> {
-    pub fn pub_addr(&self) -> Result<String, TerraRustAPIError> {
-        self.private_key.public_key(&self.secp).account()
+    pub fn pub_addr(&self) -> Result<AccountId, TerraRustScriptError> {
+        Ok(self.private_key.public_key().account_id(&self.chain.pub_addr_prefix)?)
     }
+
     pub fn new(
         config: &GroupConfig,
+        chain: Chain,
         secp: Secp256k1<C>,
     ) -> Result<Sender<C>, TerraRustScriptError> {
         // NETWORK_MNEMONIC_GROUP
@@ -28,79 +32,39 @@ impl<C: Signing + Context> Sender<C> {
 
         // use group mnemonic if specified, else use default network mnemonic
         let p_key: PrivateKey = if let Some(mnemonic) = env::var_os(&composite_name) {
-            PrivateKey::from_words(&secp, mnemonic.to_str().unwrap(), 0, 0)?
+            PrivateKey::from_words(&secp, mnemonic.to_str().unwrap(), 0, 0,chain.coin_type)?
         } else {
             log::debug!("{}", config.network_config.network.mnemonic_name());
             let mnemonic = env::var(config.network_config.network.mnemonic_name())?;
-            PrivateKey::from_words(&secp, &mnemonic, 0, 0)?
+            PrivateKey::from_words(&secp, &mnemonic, 0, 0, chain.coin_type)?
         };
 
+        let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
+
         Ok(Sender {
-            terra: Terra::lcd_client(
-                config.network_config.lcd_url.clone(),
-                config.network_config.chain_id.clone(),
-                &config.network_config.gas_opts,
-                None,
-            ),
-            private_key: p_key,
+            chain,
+            private_key: cosmos_private_key,
             secp,
         })
     }
+
+    pub async fn sequence_number(&self) -> Result<u64, TerraRustScriptError> {
+        // SimulateRequest for gas
+
+        // Auth query client
+        let addr = self.pub_addr().unwrap().to_string();
+
+        let mut client = cosmos_sdk_proto::cosmos::auth::v1beta1::query_client::QueryClient::new(self.chain.rpc_channel.clone());
+
+        let resp = client.account(cosmos_sdk_proto::cosmos::auth::v1beta1::QueryAccountRequest{
+            address: addr
+        }).await?.into_inner();
+        
+        let acc: BaseAccount = BaseAccount::decode(resp.account.unwrap().value.as_ref()).unwrap();
+        Ok(acc.sequence)
+    } 
 }
-#[derive(Clone, Debug)]
 
-pub enum Network {
-    LocalTerra,
-    Mainnet,
-    Testnet,
-}
-
-impl Network {
-    async fn config(&self, client: reqwest::Client, denom: &str) -> anyhow::Result<NetworkConfig> {
-        let conf = match self {
-            Network::LocalTerra => (
-                env::var("LTERRA_LCD")?,
-                env::var("LTERRA_FCD")?,
-                env::var("LTERRA_ID")?,
-            ),
-            Network::Mainnet => (
-                env::var("MAINNET_LCD")?,
-                env::var("MAINNET_FCD")?,
-                env::var("MAINNET_ID")?,
-            ),
-            Network::Testnet => (
-                env::var("TESTNET_LCD")?,
-                env::var("TESTNET_FCD")?,
-                env::var("TESTNET_ID")?,
-            ),
-        };
-        let gas_opts = GasOptions::create_with_fcd(&client, &conf.1, denom, 1.3f64).await?;
-
-        Ok(NetworkConfig {
-            network: self.clone(),
-            lcd_url: conf.0,
-            fcd_url: conf.1,
-            chain_id: conf.2,
-            gas_opts,
-        })
-    }
-
-    pub fn mnemonic_name(&self) -> &str {
-        match *self {
-            Network::LocalTerra => "LOCAL_MNEMONIC",
-            Network::Mainnet => "MAIN_MNEMONIC",
-            Network::Testnet => "TEST_MNEMONIC",
-        }
-    }
-
-    pub fn multisig_name(&self) -> &str {
-        match *self {
-            Network::LocalTerra => "LOCAL_MULTISIG",
-            Network::Mainnet => "MAIN_MULTISIG",
-            Network::Testnet => "TEST_MULTISIG",
-        }
-    }
-}
 #[derive(Clone, Debug)]
 pub struct GroupConfig {
     pub network_config: NetworkConfig,
@@ -177,12 +141,4 @@ fn check_group_existance(name: &String, file_path: &String) -> anyhow::Result<()
             Ok(())
         }
     }
-}
-#[derive(Clone, Debug)]
-pub struct NetworkConfig {
-    pub network: Network,
-    pub lcd_url: String,
-    pub fcd_url: String,
-    pub chain_id: String,
-    pub gas_opts: GasOptions,
 }

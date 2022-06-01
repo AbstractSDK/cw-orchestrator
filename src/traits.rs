@@ -1,9 +1,20 @@
 use async_trait::async_trait;
-use serde::Serialize;
+use cosmrs::{Tx};
+use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
-use terra_rust_api::{client::tx_types::V1TXResult, core_types::Coin};
+use crate::{contract::ContractInstance, error::TerraRustScriptError, core_types::Coin};
 
-use crate::{contract::ContractInstance, error::TerraRustScriptError};
+// Wrapper around the cli implementation for the specific network
+#[async_trait(?Send)]
+
+pub trait CliInterface {
+    // cli command
+    fn command(&self) -> &str;
+    async fn query(&self);
+    // async fn upload(&self);
+    // async fn execute(&self);
+    // async fn instantiate(&self);
+}
 
 // Fn for custom implementation to return ContractInstance
 pub trait Instance {
@@ -27,7 +38,7 @@ pub trait WasmExecute {
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<V1TXResult, TerraRustScriptError>;
+    ) -> Result<Tx, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -38,7 +49,7 @@ impl<T: Interface + Instance> WasmExecute for T {
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<V1TXResult, TerraRustScriptError> {
+    ) -> Result<Tx, TerraRustScriptError> {
         self.instance()
             .execute(&execute_msg, coins.unwrap_or(&vec![]))
             .await
@@ -56,7 +67,7 @@ pub trait WasmInstantiate {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<V1TXResult, TerraRustScriptError>;
+    ) -> Result<Tx, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -68,7 +79,7 @@ impl<T: Interface + Instance> WasmInstantiate for T {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<V1TXResult, TerraRustScriptError> {
+    ) -> Result<Tx, TerraRustScriptError> {
         self.instance()
             .instantiate(instantiate_msg, admin, coins.unwrap_or_default())
             .await
@@ -81,14 +92,14 @@ impl<T: Interface + Instance> WasmInstantiate for T {
 pub trait WasmQuery {
     type Q: Serialize;
 
-    async fn query(&self, query_msg: Self::Q) -> Result<Value, TerraRustScriptError>;
+    async fn query<T: Serialize + DeserializeOwned>(&self, query_msg: Self::Q) -> Result<T, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmQuery for T {
     type Q = <T as Interface>::Q;
 
-    async fn query(&self, query_msg: Self::Q) -> Result<Value, TerraRustScriptError> {
+    async fn query<R: Serialize + DeserializeOwned>(&self, query_msg: Self::Q) -> Result<R, TerraRustScriptError> {
         self.instance().query(query_msg).await
     }
 }
@@ -103,7 +114,7 @@ pub trait WasmMigrate {
         &self,
         migrate_msg: Self::M,
         new_code_id: u64,
-    ) -> Result<V1TXResult, TerraRustScriptError>;
+    ) -> Result<Tx, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -114,7 +125,7 @@ impl<T: Interface + Instance> WasmMigrate for T {
         &self,
         migrate_msg: Self::M,
         new_code_id: u64,
-    ) -> Result<V1TXResult, TerraRustScriptError> {
+    ) -> Result<Tx, TerraRustScriptError> {
         self.instance().migrate(migrate_msg, new_code_id).await
     }
 }

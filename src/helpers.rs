@@ -2,7 +2,7 @@ use std::{env, rc::Rc};
 
 use secp256k1::{All, Secp256k1};
 
-use crate::sender::{GroupConfig, Network, Sender};
+use crate::{sender::{GroupConfig, Network, Sender}, chain::Chain};
 
 pub fn get_env_vars() -> (String, String, Network, bool) {
     let propose_on_multisig = env::var("PROPOSE_ON_MULTISIG").unwrap_or("false".to_string());
@@ -22,7 +22,7 @@ pub fn get_env_vars() -> (String, String, Network, bool) {
     )
 }
 
-pub async fn get_configuration(fee_denom: &str) -> anyhow::Result<(Rc<Sender<All>>, GroupConfig)> {
+pub async fn get_configuration(fee_denom: &str, chain: Chain) -> anyhow::Result<(Rc<Sender<All>>, GroupConfig)> {
     let secp = Secp256k1::new();
     let client = reqwest::Client::new();
     let (path, group_name, network, propose_on_multisig) = get_env_vars();
@@ -38,6 +38,6 @@ pub async fn get_configuration(fee_denom: &str) -> anyhow::Result<(Rc<Sender<All
     )
     .await?;
 
-    let sender = Rc::new(Sender::new(&config, secp)?);
+    let sender = Rc::new(Sender::new(&config, chain,secp)?);
     Ok((sender, config))
 }
