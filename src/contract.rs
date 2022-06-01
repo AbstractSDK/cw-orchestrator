@@ -15,7 +15,7 @@ use serde_json::{json, Value, from_value};
 use crate::{
     error::TerraRustScriptError,
     multisig::Multisig,
-    sender::{self, GroupConfig, Wallet}, core_types::Coin,
+    sender::{self, Wallet}, core_types::Coin, config::GroupConfig,
 };
 // https://doc.rust-lang.org/std/process/struct.Command.html
 // RUSTFLAGS='-C link-arg=-s' cargo wasm
@@ -253,7 +253,6 @@ impl<'a> ContractInstance<'a> {
     }
 
     pub async fn commit_tx<T: Msg>(&self, msg: T ) {
-        todo!()
 
         let chain_id = CHAIN_ID.parse().unwrap();
         let sequence_number = 0;
@@ -362,7 +361,7 @@ impl<'a> ContractInstance<'a> {
 
 async fn wait(groupconfig: &GroupConfig) {
     match groupconfig.network_config.network {
-        crate::sender::Network::LocalTerra => tokio::time::sleep(Duration::from_secs(6)).await,
+        crate::sender::Network::Local => tokio::time::sleep(Duration::from_secs(6)).await,
         crate::sender::Network::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
         crate::sender::Network::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
     }

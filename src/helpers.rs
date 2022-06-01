@@ -2,7 +2,8 @@ use std::{env, rc::Rc};
 
 use secp256k1::{All, Secp256k1};
 
-use crate::{sender::{GroupConfig, Network, Sender}, chain::Chain};
+use crate::{chain::{Network, Chain}, sender::Sender, config::GroupConfig};
+
 
 pub fn get_env_vars() -> (String, String, Network, bool) {
     let propose_on_multisig = env::var("PROPOSE_ON_MULTISIG").unwrap_or("false".to_string());
@@ -12,7 +13,7 @@ pub fn get_env_vars() -> (String, String, Network, bool) {
     let network = match group.as_str() {
         "testnet" => Network::Testnet,
         "mainnet" => Network::Mainnet,
-        _ => Network::LocalTerra,
+        _ => Network::Local,
     };
     (
         path,
