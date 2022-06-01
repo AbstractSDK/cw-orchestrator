@@ -8,6 +8,8 @@ pub enum TerraRustScriptError {
     ReqwestError(#[from] ::reqwest::Error),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
+    #[error("Decimal Conversion Error")]
+    RustDecimal(#[from] ::rust_decimal::Error),
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
@@ -18,12 +20,11 @@ pub enum TerraRustScriptError {
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]
     AnyError(#[from] ::anyhow::Error),
-
-    #[error("Terra `{0}` CLI Error")]
-    Terra(String),
-
     #[error(transparent)]
-    TerraRustAPIError(#[from] ::terra_rust_api::errors::TerraRustAPIError),
+    Status(#[from] ::tonic::Status),
+    #[error(transparent)]
+    TransportError(#[from] ::tonic::transport::Error),
+
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
@@ -34,7 +35,21 @@ pub enum TerraRustScriptError {
     MissingPhrase,
     #[error("Bad Implementation. Missing Component")]
     Implementation,
-
+    #[error("Unable to convert into public key `{key}`")]
+    Conversion {
+        key: String,
+        source: bitcoin::bech32::Error,
+    },
+    #[error(transparent)]
+    ErrReport(#[from] ::eyre::ErrReport),
+    #[error(transparent)]
+    ED25519(#[from] ::ed25519_dalek::ed25519::Error),
+    #[error(transparent)]
+    DecodeError(#[from] ::base64::DecodeError),
+    #[error(transparent)]
+    HexError(#[from] ::hex::FromHexError),
+    #[error(transparent)]
+    BitCoinBip32(#[from] ::bitcoin::util::bip32::Error),
     #[error("83 length-missing SECP256K1 prefix")]
     ConversionSECP256k1,
     #[error("82 length-missing ED25519 prefix")]
