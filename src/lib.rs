@@ -5,7 +5,7 @@ pub mod helpers;
 pub mod multisig;
 pub mod sender;
 pub mod traits;
-mod network;
+mod config;
 mod core_types;
 mod client_types;
 mod keys;
