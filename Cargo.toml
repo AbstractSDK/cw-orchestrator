@@ -1,5 +1,5 @@
 [package]
-name = "terra-rust-script"
+name = "cosm-rust-script"
 version = "0.1.0"
 authors = ["CyberHoward"]
 edition = "2018"

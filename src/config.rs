@@ -1,19 +1,11 @@
 use std::fs::File;
 
-use cosmrs::tx::Gas;
-use serde_json::{from_reader, Map, Value, json};
+use serde_json::{from_reader, json, Map, Value};
 
-use crate::{error::TerraRustScriptError, chain::Network};
-
-
-#[derive(Clone, Debug)]
-pub struct NetworkConfig {
-    pub network: Network,
-    pub lcd_url: String,
-    pub fcd_url: String,
-    pub chain_id: String,
-    pub gas_opts: Gas,
-}
+use crate::{
+    error::TerraRustScriptError,
+    network::{Chain, NetworkConfig},
+};
 
 #[derive(Clone, Debug)]
 pub struct GroupConfig {
@@ -25,17 +17,14 @@ pub struct GroupConfig {
 
 impl GroupConfig {
     pub async fn new(
-        network: Network,
         name: String,
-        client: reqwest::Client,
-        denom: &str,
+        network_config: NetworkConfig,
         file_path: String,
         proposal: bool,
     ) -> anyhow::Result<GroupConfig> {
         check_group_existance(&name, &file_path)?;
-
         Ok(GroupConfig {
-            network_config: network.config(client, denom).await?,
+            network_config,
             name,
             file_path,
             proposal,

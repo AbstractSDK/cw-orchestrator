@@ -1,22 +1,22 @@
 #![allow(dead_code)]
+mod client_types;
+pub mod config;
 pub mod contract;
+mod core_types;
 pub mod error;
 pub mod helpers;
-pub mod multisig;
+mod keys;
+mod multisig;
+mod network;
 pub mod sender;
 pub mod traits;
-mod config;
-mod core_types;
-mod client_types;
-mod keys;
-pub mod chain;
 
 #[macro_use]
 extern crate lazy_static;
 
 pub use crate::client_types::{
-    terra_decimal_format, terra_f64_format, terra_opt_decimal_format,
-    terra_opt_u64_format, terra_u64_format,
+    terra_decimal_format, terra_f64_format, terra_opt_decimal_format, terra_opt_u64_format,
+    terra_u64_format,
 };
 
 // mod macro_dev {

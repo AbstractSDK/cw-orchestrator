@@ -24,7 +24,8 @@ pub enum TerraRustScriptError {
     Status(#[from] ::tonic::Status),
     #[error(transparent)]
     TransportError(#[from] ::tonic::transport::Error),
-
+    #[error(transparent)]
+    TendermintError(#[from] ::cosmrs::tendermint::Error),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]

@@ -1,13 +1,11 @@
 use cw20::Cw20QueryMsg;
 
-use terra_rust_script::{traits::WasmQuery, helpers::get_configuration};
-
+use terra_rust_script::{helpers::get_configuration, traits::WasmQuery};
 
 pub async fn script() -> anyhow::Result<()> {
     let (sender, config) = &get_configuration("uusd").await?;
-    
-    let cw20_token =
-        scripts::contract_instances::cw_20::CW20::new("cw20", sender, config)?;
+
+    let cw20_token = scripts::contract_instances::cw_20::CW20::new("cw20", sender, config)?;
     let token_info = cw20_token.query(Cw20QueryMsg::TokenInfo {}).await?;
     print!("{}", token_info);
 

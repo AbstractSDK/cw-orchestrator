@@ -1,8 +1,8 @@
-use crate::{error::TerraRustScriptError, core_types::Coin, chain::Chain};
+use crate::{core_types::Coin, error::TerraRustScriptError, network::Chain};
 use base64::encode;
-use cosmrs::{tx::Body, AccountId,Coin as CosmCoin ,crypto::PublicKey};
-use serde_json::{json, Value};
 use cosmrs::cosmwasm::MsgExecuteContract;
+use cosmrs::{crypto::PublicKey, tx::Body, AccountId, Coin as CosmCoin};
+use serde_json::{json, Value};
 
 pub struct Multisig;
 
@@ -51,13 +51,19 @@ impl Multisig {
             ])
         );
 
-        let coins: Vec<CosmCoin> = coins.iter().map(|coin| CosmCoin{denom: coin.denom.parse().unwrap(), amount: coin.amount.to_string().replace(".", "").parse().unwrap()}).collect();
+        let coins: Vec<CosmCoin> = coins
+            .iter()
+            .map(|coin| CosmCoin {
+                denom: coin.denom.parse().unwrap(),
+                amount: coin.amount.to_string().replace(".", "").parse().unwrap(),
+            })
+            .collect();
 
-        Ok(cosmrs::cosmwasm::MsgExecuteContract{
-          sender: sender_addr,
-          contract: contract_addr.to_string().parse::<AccountId>()?,
-          msg: serde_json::to_string(&msg)?.into_bytes(),
-          funds: coins
+        Ok(cosmrs::cosmwasm::MsgExecuteContract {
+            sender: sender_addr,
+            contract: contract_addr.to_string().parse::<AccountId>()?,
+            msg: serde_json::to_string(&msg)?.into_bytes(),
+            funds: coins,
         })
     }
 }

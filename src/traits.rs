@@ -1,20 +1,9 @@
+use crate::{contract::ContractInstance, core_types::Coin, error::TerraRustScriptError};
 use async_trait::async_trait;
-use cosmrs::{Tx};
-use serde::{Serialize, de::DeserializeOwned};
+use cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
+use cosmrs::Tx;
+use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
-use crate::{contract::ContractInstance, error::TerraRustScriptError, core_types::Coin};
-
-// Wrapper around the cli implementation for the specific network
-#[async_trait(?Send)]
-
-pub trait CliInterface {
-    // cli command
-    fn command(&self) -> &str;
-    async fn query(&self);
-    // async fn upload(&self);
-    // async fn execute(&self);
-    // async fn instantiate(&self);
-}
 
 // Fn for custom implementation to return ContractInstance
 pub trait Instance {
@@ -67,7 +56,7 @@ pub trait WasmInstantiate {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<Tx, TerraRustScriptError>;
+    ) -> Result<TxResponse, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -79,7 +68,7 @@ impl<T: Interface + Instance> WasmInstantiate for T {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<Tx, TerraRustScriptError> {
+    ) -> Result<TxResponse, TerraRustScriptError> {
         self.instance()
             .instantiate(instantiate_msg, admin, coins.unwrap_or_default())
             .await
@@ -92,14 +81,20 @@ impl<T: Interface + Instance> WasmInstantiate for T {
 pub trait WasmQuery {
     type Q: Serialize;
 
-    async fn query<T: Serialize + DeserializeOwned>(&self, query_msg: Self::Q) -> Result<T, TerraRustScriptError>;
+    async fn query<T: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: Self::Q,
+    ) -> Result<T, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmQuery for T {
     type Q = <T as Interface>::Q;
 
-    async fn query<R: Serialize + DeserializeOwned>(&self, query_msg: Self::Q) -> Result<R, TerraRustScriptError> {
+    async fn query<R: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: Self::Q,
+    ) -> Result<R, TerraRustScriptError> {
         self.instance().query(query_msg).await
     }
 }

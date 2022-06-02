@@ -46,7 +46,10 @@ impl PublicKey {
         }
     }
     /// Generate a Cosmos/Tendermint/Terrad Account
-    pub fn from_account(acc_address: &str, prefix: &str) -> Result<PublicKey, TerraRustScriptError> {
+    pub fn from_account(
+        acc_address: &str,
+        prefix: &str,
+    ) -> Result<PublicKey, TerraRustScriptError> {
         PublicKey::check_prefix_and_length(prefix, acc_address, 44).and_then(|vu5| {
             let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
                 TerraRustScriptError::Conversion {
@@ -310,7 +313,11 @@ impl PublicKey {
     pub fn operator_address(&self, prefix: &str) -> Result<String, TerraRustScriptError> {
         match &self.raw_address {
             Some(raw) => {
-                let data = encode(&format!("{}{}",prefix,"valoper"), raw.to_base32(), Variant::Bech32);
+                let data = encode(
+                    &format!("{}{}", prefix, "valoper"),
+                    raw.to_base32(),
+                    Variant::Bech32,
+                );
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustScriptError::Bech32DecodeErr),
@@ -323,7 +330,11 @@ impl PublicKey {
     pub fn application_public_key(&self, prefix: &str) -> Result<String, TerraRustScriptError> {
         match &self.raw_pub_key {
             Some(raw) => {
-                let data = encode(&format!("{}{}",prefix,"pub"), raw.to_base32(), Variant::Bech32);
+                let data = encode(
+                    &format!("{}{}", prefix, "pub"),
+                    raw.to_base32(),
+                    Variant::Bech32,
+                );
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustScriptError::Bech32DecodeErr),
@@ -336,10 +347,17 @@ impl PublicKey {
         }
     }
     /// The operator address used for validators public key.
-    pub fn operator_address_public_key(&self, prefix: &str) -> Result<String, TerraRustScriptError> {
+    pub fn operator_address_public_key(
+        &self,
+        prefix: &str,
+    ) -> Result<String, TerraRustScriptError> {
         match &self.raw_pub_key {
             Some(raw) => {
-                let data = encode(&format!("{}{}",prefix,"valoperpub"), raw.to_base32(), Variant::Bech32);
+                let data = encode(
+                    &format!("{}{}", prefix, "valoperpub"),
+                    raw.to_base32(),
+                    Variant::Bech32,
+                );
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustScriptError::Bech32DecodeErr),
@@ -352,7 +370,11 @@ impl PublicKey {
     pub fn tendermint(&self, prefix: &str) -> Result<String, TerraRustScriptError> {
         match &self.raw_address {
             Some(raw) => {
-                let data = encode(&format!("{}{}",prefix,"valcons"), raw.to_base32(), Variant::Bech32);
+                let data = encode(
+                    &format!("{}{}", prefix, "valcons"),
+                    raw.to_base32(),
+                    Variant::Bech32,
+                );
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustScriptError::Bech32DecodeErr),
@@ -367,7 +389,7 @@ impl PublicKey {
             Some(raw) => {
                 // eprintln!("{} - tendermint_pubkey", hex::encode(raw));
                 let b32 = raw.to_base32();
-                let data = encode(&format!("{}{}",prefix,"valconspub"), b32, Variant::Bech32);
+                let data = encode(&format!("{}{}", prefix, "valconspub"), b32, Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
                     Err(_) => Err(TerraRustScriptError::Bech32DecodeErr),
@@ -387,7 +409,8 @@ mod tst {
 
     #[test]
     pub fn tst_conv() -> anyhow::Result<()> {
-        let pub_key = PublicKey::from_account("terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm", PREFIX)?;
+        let pub_key =
+            PublicKey::from_account("terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm", PREFIX)?;
 
         assert_eq!(
             &pub_key.account(PREFIX)?,
@@ -449,7 +472,10 @@ mod tst {
             &tendermint_pub_key.application_public_key(PREFIX)?,
             "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
         );
-        assert_eq!(&tendermint_pub_key.tendermint_pubkey(PREFIX)?, valconspub_83);
+        assert_eq!(
+            &tendermint_pub_key.tendermint_pubkey(PREFIX)?,
+            valconspub_83
+        );
         /*
                 ED25519 Keys are not currently supported
         */
