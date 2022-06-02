@@ -34,7 +34,7 @@ impl PrivateKey {
     pub fn new<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         coin_type: u32,
-) -> Result<PrivateKey, TerraRustScriptError> {
+    ) -> Result<PrivateKey, TerraRustScriptError> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
@@ -118,14 +118,13 @@ impl PrivateKey {
             root_private_key,
             private_key,
         })
-
     }
 
     /// the words used to generate this private key
     pub fn words(&self) -> Option<&str> {
         self.mnemonic.as_ref().map(|phrase| phrase.phrase())
     }
-    
+
     /// used for testing
     /// could potentially be used to recreate the private key instead of words
     #[allow(dead_code)]

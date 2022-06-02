@@ -1,0 +1,14 @@
+{
+    "juno": {
+        "coin_type": 118,
+        "pub_addr_prefix": "juno",
+        "local": {
+            "id": "testing",
+            "lcd": "",
+            "fcd": "",
+            "grpc_url": "http://localhost:9090",
+            "gas_denom": "ustake",
+            "gas_price": 0
+        }
+    }
+}

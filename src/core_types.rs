@@ -94,7 +94,6 @@ impl PartialEq for Coin {
     }
 }
 
-
 #[cfg(test)]
 mod tst {
     use super::*;

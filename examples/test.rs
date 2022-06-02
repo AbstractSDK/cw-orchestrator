@@ -1,32 +1,36 @@
 use std::{env, time::Duration};
 
-use cosmos_sdk_proto::{cosmos::{auth::v1beta1::{query_client::{self, QueryClient},QueryAccountResponse, QueryAccountRequest}, bank::v1beta1::{msg_client::MsgClient}, tx::v1beta1::{BroadcastTxRequest, BroadcastMode}}};
-use cosmrs::{Tx, Coin, tx::{SignerInfo, self, Body}, bank::MsgSend, AccountId};
-
-
-use terra_rust_script::{
-    helpers::get_configuration,
-    traits::{CliInterface, Instance},
-    chain::Chain,
+use cosm_rust_script::helpers::get_configuration;
+use cosmos_sdk_proto::cosmos::{
+    auth::v1beta1::{
+        query_client::{self, QueryClient},
+        QueryAccountRequest, QueryAccountResponse,
+    },
+    bank::v1beta1::msg_client::MsgClient,
+    tx::v1beta1::{BroadcastMode, BroadcastTxRequest},
 };
-use tonic::{transport::{Channel, Endpoint, Uri}, Response};
+use cosmrs::{
+    bank::MsgSend,
+    tx::{self, Body, SignerInfo},
+    AccountId, Coin, Tx,
+};
+
+use tonic::{
+    transport::{Channel, Endpoint, Uri},
+    Response,
+};
 
 pub async fn script() -> anyhow::Result<()> {
-    
-    
-        
-        
-        let grpc = env::var("LTERRA_GRPC").unwrap();
-        let chain = Chain::new(
-            "osanuth".into(),
-            "juno".into(),
-            grpc,
-            118,
-        ).await?;
-        let (sender, config) = &get_configuration("uconst",chain).await?;
-        let resp = sender.sequence_number().await?;
-        log::debug!("{}", resp);
-        log::debug!("{}",sender.pub_addr()?);
+    let (config, sender) = get_configuration().await?;
+
+    let amount = Coin {
+        amount: 1u8.into(),
+        denom: "ustake".parse().unwrap(),
+    };
+
+    let resp = sender
+        .bank_send("juno1snm7svvfg85trrvzhphkgjc4tqwafad9devy6p", vec![amount])
+        .await?;
 
     Ok(())
 }
@@ -37,7 +41,6 @@ async fn main() {
     env_logger::init();
 
     use dotenv::dotenv;
-
 
     if let Err(ref err) = script().await {
         log::error!("{}", err);
