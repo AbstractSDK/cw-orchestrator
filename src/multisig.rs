@@ -1,4 +1,5 @@
-use crate::{core_types::Coin, error::TerraRustScriptError, network::Chain};
+use crate::core_types::Coin;
+use crate::{error::TerraRustScriptError, network::Chain};
 use base64::encode;
 use cosmrs::cosmwasm::MsgExecuteContract;
 use cosmrs::{crypto::PublicKey, tx::Body, AccountId, Coin as CosmCoin};
@@ -13,8 +14,7 @@ impl Multisig {
         contract_addr: &str,
         multisig_addr: &str,
         sender_addr: AccountId,
-        chain: &Chain,
-        coins: &[Coin],
+        coins: &[CosmCoin],
     ) -> Result<MsgExecuteContract, TerraRustScriptError> {
         let encoded = encode(json_msg.to_string());
         let msg = json!({
@@ -24,7 +24,7 @@ impl Multisig {
                 "wasm": {
                   "execute": {
                     "msg": encoded,
-                    "funds": coins,
+                    "funds": coins.into_iter().map(Coin::from).collect::<Vec<Coin>>(),
                     "contract_addr": contract_addr
                   }
                 }
@@ -43,7 +43,7 @@ impl Multisig {
                 "wasm": {
                   "execute": {
                     "msg": encoded,
-                    "funds": coins,
+                    "funds": coins.into_iter().map(Coin::from).collect::<Vec<Coin>>(),
                     "contract_addr": contract_addr
                   }
                 }
@@ -51,19 +51,19 @@ impl Multisig {
             ])
         );
 
-        let coins: Vec<CosmCoin> = coins
-            .iter()
-            .map(|coin| CosmCoin {
-                denom: coin.denom.parse().unwrap(),
-                amount: coin.amount.to_string().replace(".", "").parse().unwrap(),
-            })
-            .collect();
+        // let coins: Vec<CosmCoin> = coins
+        //     .iter()
+        //     .map(|coin| CosmCoin {
+        //         denom: coin.denom.parse().unwrap(),
+        //         amount: coin.amount.to_string().replace(".", "").parse().unwrap(),
+        //     })
+        //     .collect();
 
         Ok(cosmrs::cosmwasm::MsgExecuteContract {
             sender: sender_addr,
-            contract: contract_addr.to_string().parse::<AccountId>()?,
+            contract: multisig_addr.to_string().parse::<AccountId>()?,
             msg: serde_json::to_string(&msg)?.into_bytes(),
-            funds: coins,
+            funds: coins.to_vec(),
         })
     }
 }

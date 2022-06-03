@@ -1,9 +1,7 @@
-use crate::{contract::ContractInstance, core_types::Coin, error::TerraRustScriptError};
+use crate::{contract::ContractInstance, error::TerraRustScriptError, tx_resp::CosmTxResponse};
 use async_trait::async_trait;
-use cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
-use cosmrs::Tx;
+use cosmrs::{Coin};
 use serde::{de::DeserializeOwned, Serialize};
-use serde_json::Value;
 
 // Fn for custom implementation to return ContractInstance
 pub trait Instance {
@@ -27,7 +25,7 @@ pub trait WasmExecute {
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<Tx, TerraRustScriptError>;
+    ) -> Result<CosmTxResponse, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -38,7 +36,7 @@ impl<T: Interface + Instance> WasmExecute for T {
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<Tx, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         self.instance()
             .execute(&execute_msg, coins.unwrap_or(&vec![]))
             .await
@@ -56,7 +54,7 @@ pub trait WasmInstantiate {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<TxResponse, TerraRustScriptError>;
+    ) -> Result<CosmTxResponse, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -68,7 +66,7 @@ impl<T: Interface + Instance> WasmInstantiate for T {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<TxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         self.instance()
             .instantiate(instantiate_msg, admin, coins.unwrap_or_default())
             .await
@@ -109,7 +107,7 @@ pub trait WasmMigrate {
         &self,
         migrate_msg: Self::M,
         new_code_id: u64,
-    ) -> Result<Tx, TerraRustScriptError>;
+    ) -> Result<CosmTxResponse, TerraRustScriptError>;
 }
 
 #[async_trait(?Send)]
@@ -120,7 +118,7 @@ impl<T: Interface + Instance> WasmMigrate for T {
         &self,
         migrate_msg: Self::M,
         new_code_id: u64,
-    ) -> Result<Tx, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         self.instance().migrate(migrate_msg, new_code_id).await
     }
 }

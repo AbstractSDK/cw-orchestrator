@@ -8,12 +8,13 @@ pub mod helpers;
 mod keys;
 mod multisig;
 mod network;
+pub mod tx_resp;
 pub mod sender;
 pub mod traits;
 
 #[macro_use]
 extern crate lazy_static;
-
+pub use cosmrs::{Coin as Coin, Denom};
 pub use crate::client_types::{
     terra_decimal_format, terra_f64_format, terra_opt_decimal_format, terra_opt_u64_format,
     terra_u64_format,
