@@ -10,7 +10,7 @@ use cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract},
     tx::{Fee, Msg},
-    AccountId, Tx,
+    AccountId, Coin,
 };
 use secp256k1::All;
 
@@ -19,11 +19,10 @@ use serde_json::{from_value, json, Value};
 
 use crate::{
     config::GroupConfig,
-    core_types::Coin,
     error::TerraRustScriptError,
     multisig::Multisig,
     network::NetworkKind,
-    sender::{self, Wallet},
+    sender::{self, Wallet}, tx_resp::CosmTxResponse,
 };
 // https://doc.rust-lang.org/std/process/struct.Command.html
 // RUSTFLAGS='-C link-arg=-s' cargo wasm
@@ -53,12 +52,12 @@ impl<'a> ContractInstance<'a> {
         &self,
         exec_msg: &E,
         coins: &[Coin],
-    ) -> Result<Tx, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
 
         let sender = &self.sender;
         let execute_msg_json = json!(exec_msg);
         let contract = self.get_address()?;
-        log::info!("executing on {}", contract);
+        log::info!("executing on {} at {}",self.name, contract);
         let exec_msg = MsgExecuteContract{
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(&self.get_address()?)?,
@@ -66,7 +65,6 @@ impl<'a> ContractInstance<'a> {
             funds: vec![]
         };
 
-        todo!()
         // let send: MsgExecuteContract = if self.group_config.proposal {
         //     Multisig::create_proposal(
         //         &execute_msg_json,
@@ -86,36 +84,9 @@ impl<'a> ContractInstance<'a> {
         //     )?
         // };
 
-        // log::debug!("{}", serde_json::to_string(&send)?);
+        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
 
-        // // generate the transaction & calc fees
-        // let messages: Vec<Message> = vec![send];
-        // let (std_sign_msg, sigs) = sender
-        //     .terra
-        //     .generate_transaction_to_broadcast(&sender.secp, &sender.private_key, messages, None)
-        //     .await?;
-        // // send it out
-        // let resp = sender
-        //     .terra
-        //     .tx()
-        //     .broadcast_sync(&std_sign_msg, &sigs)
-        //     .await?;
-        // match resp.code {
-        //     Some(code) => {
-        //         log::error!("{}", serde_json::to_string(&resp)?);
-        //         eprintln!("Transaction returned a {} {}", code, resp.txhash)
-        //     }
-        //     None => {
-        //         println!("{}", resp.txhash)
-        //     }
-        // }
-        // let result = sender
-        //     .terra
-        //     .tx()
-        //     .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
-        //     .await?;
-        // wait(self.group_config).await;
-        // Ok(result)
+        Ok(result)
     }
 
     pub async fn instantiate<I: Serialize>(
@@ -123,9 +94,8 @@ impl<'a> ContractInstance<'a> {
         init_msg: I,
         admin: Option<String>,
         coins: &[Coin],
-    ) -> Result<TxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         let sender = &self.sender;
-        let instantiate_msg_json = json!(init_msg);
         let code_id = self.get_code_id()?;
 
         let memo = format!("Contract: {}, Group: {}", self.name, self.group_config.name);
@@ -136,39 +106,19 @@ impl<'a> ContractInstance<'a> {
             code_id,
             label: Some(self.name.into()),
             admin: admin.map(|a|FromStr::from_str(&a).unwrap()),
-            sender: self.sender.pub_addr()?,
-            msg: base64::encode(serde_json::to_string(&init_msg)?).as_bytes().to_vec(),
-            funds: vec![]
+            sender: sender.pub_addr()?,
+            msg: serde_json::to_string(&init_msg)?.as_bytes().to_vec(),
+            funds: coins.to_vec(),
         };
 
-        self.sender.commit_tx(vec![init_msg], None).await
-        // let resp = wasm
-        //     .instantiate(
-        //         &sender.secp,
-        //         &sender.private_key,
-        //         code_id,
-        //         instantiate_msg_json.to_string(),
-        //         coins.to_vec(),
-        //         admin,
-        //         Some(memo),
-        //     )
-        //     .await?;
+        let result = sender.commit_tx(vec![init_msg], Some(&memo)).await?;
+        let address = &result
+            .get_attribute_from_logs("instantiate", "_contract_address")[0].1;
+        
+        log::debug!("{} address: {:?}", self.name, address);
+        self.save_contract_address(address.clone())?;
 
-        // let result = sender
-        //     .terra
-        //     .tx()
-        //     .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
-        //     .await?;
-
-        // let address = &result
-        //     .tx_response
-        //     .get_attribute_from_logs("instantiate_contract", "contract_address")[0]
-        //     .1;
-        // log::debug!("{} address: {:?}", self.name, address);
-        // self.save_contract_address(address.clone())?;
-
-        // wait(self.group_config).await;
-        // Ok(result)
+        Ok(result)
     }
 
     pub async fn query<Q: Serialize, T: Serialize + DeserializeOwned>(
@@ -188,37 +138,50 @@ impl<'a> ContractInstance<'a> {
         // Ok(from_value(resp["result"].take())?)
     }
 
-    pub async fn upload(&self, name: &str, path: Option<&str>) -> Result<TxResponse, TerraRustScriptError> {
+    /// Uploads given .wasm file and stores resulting code-id in contract store.
+    /// *path* can be either a full/relative path. (indicated by the .wasm) or just a regular name. In the second case the WASM_DIR env var
+    /// will be read and the path will be costructed to be WASM_DIR/*path*.wasm
+    pub async fn upload(&self, name: &str, path: &str) -> Result<CosmTxResponse, TerraRustScriptError> {
         let sender = &self.sender;
         let memo = format!("Contract: {}, Group: {}", self.name, self.group_config.name);
-        let wasm_path = {
-            match path {
-                Some(path) => path.to_string(),
-                None => format!(
-                    "{}{}",
-                    env::var("WASM_DIR").unwrap(),
-                    format!("/{}.wasm", name)
-                ),
-            }
+        let wasm_path = if path.contains(".wasm"){
+                path.to_string()
+            } else {
+            format!(
+                "{}{}",
+                env::var("WASM_DIR").unwrap(),
+                format!("/{}.wasm", path)
+            )
         };
+
+        log::debug!("{}", wasm_path);
 
         let file_contents = std::fs::read(wasm_path)?;
-        let exec_b64 = base64::encode(file_contents);
-
         let store_msg = cosmrs::cosmwasm::MsgStoreCode{
             sender: sender.pub_addr()?,
-            wasm_byte_code: exec_b64.into_bytes(),
+            wasm_byte_code: file_contents,
             instantiate_permission: None
         };
-        sender.commit_tx(vec![store_msg], Some(&memo)).await
-        
+        let result = sender.commit_tx(vec![store_msg], Some(&memo)).await?;
+
+        log::debug!("uploaded: {:?}", result.txhash);
+        // TODO: check why logs are empty
+
+        let code_id = result
+            .get_attribute_from_logs("store_code", "code_id")[0]
+            .1
+            .parse::<u64>()?;
+        log::debug!("code_id: {:?}", code_id);
+        self.save_code_id(code_id)?;
+        wait(self.group_config).await;
+        Ok(result)
     }
 
     pub async fn migrate<M: Serialize>(
         &self,
         migrate_msg: M,
         new_code_id: u64,
-    ) -> Result<Tx, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         todo!()
 
         // let sender = &self.sender;

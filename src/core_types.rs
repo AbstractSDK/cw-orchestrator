@@ -1,15 +1,15 @@
 use crate::client_types::{terra_decimal_format, terra_u64_format};
-
+use cosmrs::{Coin as CosmCoin, Denom, Decimal as CosmDecimal};
 use regex::Regex;
 
 use rust_decimal_macros::dec;
 // use rust_decimal::prelude::*;
-use rust_decimal::Decimal;
+use rust_decimal::{Decimal, prelude::FromPrimitive};
 
 use crate::error::TerraRustScriptError;
 //use base64::{ToBase64, STANDARD};
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 /// The primary way to denote currency
 /// NB: Internally everything is represented by their uXXX format.
@@ -94,6 +94,11 @@ impl PartialEq for Coin {
     }
 }
 
+impl From<&CosmCoin> for Coin {
+    fn from(coin: &CosmCoin) -> Self {
+        Self { amount: Decimal::from_u64(u64::from_str(&coin.amount.to_string()).unwrap()).unwrap(), denom:  coin.denom.to_string()}
+    }
+}
 #[cfg(test)]
 mod tst {
     use super::*;

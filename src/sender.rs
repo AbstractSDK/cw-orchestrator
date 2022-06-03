@@ -1,4 +1,4 @@
-use cosmos_sdk_proto::{cosmos::{auth::v1beta1::BaseAccount, base::abci::v1beta1::TxResponse}, tendermint::Protobuf};
+use cosmos_sdk_proto::{cosmos::{auth::v1beta1::BaseAccount}, tendermint::Protobuf};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
@@ -18,7 +18,7 @@ use crate::{
     config::GroupConfig,
     error::TerraRustScriptError,
     keys::private::PrivateKey,
-    network::{Chain, NetworkConfig},
+    network::{Chain, NetworkConfig}, tx_resp::CosmTxResponse,
 };
 
 const GAS_LIMIT: u64 = 1_000_000;
@@ -82,7 +82,7 @@ impl<C: Signing + Context> Sender<C> {
         &self,
         recipient: &str,
         coins: Vec<Coin>,
-    ) -> Result<TxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         let msg_send = MsgSend {
             from_address: self.pub_addr()?,
             to_address: AccountId::from_str(recipient)?,
@@ -96,7 +96,7 @@ impl<C: Signing + Context> Sender<C> {
         &self,
         msgs: Vec<T>,
         memo: Option<&str>,
-    ) -> Result<TxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, TerraRustScriptError> {
         let timeout_height = 9001u16;
         let msgs: Result<Vec<Any>, _> = msgs.into_iter().map(Msg::into_any).collect();
         let msgs = msgs?;
@@ -188,7 +188,7 @@ impl<C: Signing + Context> Sender<C> {
     }
 
 
-    async fn broadcast(&self, tx: Raw) -> Result<TxResponse, TerraRustScriptError>{
+    async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, TerraRustScriptError>{
         let mut client = cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient::new(
             self.channel(),
         );
@@ -204,7 +204,7 @@ impl<C: Signing + Context> Sender<C> {
 
 }
 
-async fn find_by_hash(client: &mut cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient<Channel> ,hash: String) -> Result<TxResponse, TerraRustScriptError>{
+async fn find_by_hash(client: &mut cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient<Channel> ,hash: String) -> Result<CosmTxResponse, TerraRustScriptError>{
     let attempts = 7;
     let request = cosmos_sdk_proto::cosmos::tx::v1beta1::GetTxRequest{
         hash
@@ -215,7 +215,7 @@ async fn find_by_hash(client: &mut cosmos_sdk_proto::cosmos::tx::v1beta1::servic
             let resp = tx.into_inner().tx_response.unwrap();
             
             log::debug!("{:?}", resp);
-            return Ok(resp)
+            return Ok(resp.into())
         }
         sleep(Duration::from_secs(1)).await;
         // if let Ok(tx) =  {

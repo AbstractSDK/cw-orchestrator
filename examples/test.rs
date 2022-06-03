@@ -28,9 +28,11 @@ pub async fn script() -> anyhow::Result<()> {
         denom: "ustake".parse().unwrap(),
     };
 
-    let resp = sender
-        .bank_send("juno1snm7svvfg85trrvzhphkgjc4tqwafad9devy6p", vec![amount])
-        .await?;
+    // let resp = sender
+    //     .bank_send("juno1snm7svvfg85trrvzhphkgjc4tqwafad9devy6p", vec![amount])
+    //     .await?;
+
+    
 
     Ok(())
 }
