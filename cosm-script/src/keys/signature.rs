@@ -4,7 +4,7 @@ use secp256k1::Secp256k1;
 
 use crypto::digest::Digest;
 
-use crate::error::TerraRustScriptError;
+use crate::error::CosmScriptError;
 
 pub struct Signature {}
 impl Signature {
@@ -13,7 +13,7 @@ impl Signature {
         pub_key: &str,
         signature: &str,
         blob: &str,
-    ) -> Result<(), TerraRustScriptError> {
+    ) -> Result<(), CosmScriptError> {
         let public = base64::decode(pub_key)?;
         let sig = base64::decode(signature)?;
         let pk = secp256k1::PublicKey::from_slice(public.as_slice())?;

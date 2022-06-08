@@ -1,10 +1,9 @@
-use crate::error::TerraRustScriptError;
+use crate::error::CosmScriptError;
 use bitcoin::util::bip32::{ExtendedPrivKey, IntoDerivationPath};
 use bitcoin::Network;
-use crypto::sha2::Sha256;
+
 use secp256k1::Secp256k1;
 
-use crypto::digest::Digest;
 use hkd32::mnemonic::{Phrase, Seed};
 
 use rand_core::OsRng;
@@ -34,7 +33,7 @@ impl PrivateKey {
     pub fn new<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         coin_type: u32,
-    ) -> Result<PrivateKey, TerraRustScriptError> {
+    ) -> Result<PrivateKey, CosmScriptError> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
@@ -45,7 +44,7 @@ impl PrivateKey {
         secp: &Secp256k1<C>,
         seed_phrase: &str,
         coin_type: u32,
-    ) -> Result<PrivateKey, TerraRustScriptError> {
+    ) -> Result<PrivateKey, CosmScriptError> {
         let phrase =
             hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
 
@@ -58,12 +57,12 @@ impl PrivateKey {
         account: u32,
         index: u32,
         coin_type: u32,
-    ) -> Result<PrivateKey, TerraRustScriptError> {
+    ) -> Result<PrivateKey, CosmScriptError> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, account, index, coin_type, "")
             }
-            Err(_) => Err(TerraRustScriptError::Phrasing),
+            Err(_) => Err(CosmScriptError::Phrasing),
         }
     }
 
@@ -73,12 +72,12 @@ impl PrivateKey {
         words: &str,
         seed_pass: &str,
         coin_type: u32,
-    ) -> Result<PrivateKey, TerraRustScriptError> {
+    ) -> Result<PrivateKey, CosmScriptError> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_pass)
             }
-            Err(_) => Err(TerraRustScriptError::Phrasing),
+            Err(_) => Err(CosmScriptError::Phrasing),
         }
     }
 
@@ -102,7 +101,7 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
         seed_phrase: &str,
-    ) -> Result<PrivateKey, TerraRustScriptError> {
+    ) -> Result<PrivateKey, CosmScriptError> {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
@@ -135,12 +134,12 @@ impl PrivateKey {
 
 #[cfg(test)]
 mod tst {
-    use crate::error::TerraRustScriptError;
+    use crate::error::CosmScriptError;
 
     use super::*;
 
     #[test]
-    pub fn tst_gen_mnemonic() -> Result<(), TerraRustScriptError> {
+    pub fn tst_gen_mnemonic() -> Result<(), CosmScriptError> {
         // this test just makes sure the default will call it.
         let s = Secp256k1::new();
         let coin_type: u32 = 330;
@@ -159,7 +158,7 @@ mod tst {
                 assert_eq!(words, str_1);
                 Ok(())
             }
-            None => Err(TerraRustScriptError::MissingPhrase.into()),
+            None => Err(CosmScriptError::MissingPhrase.into()),
         }
     }
     #[test]

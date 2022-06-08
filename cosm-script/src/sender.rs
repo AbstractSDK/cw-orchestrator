@@ -1,24 +1,21 @@
-use cosmos_sdk_proto::{cosmos::{auth::v1beta1::BaseAccount}, tendermint::Protobuf};
+use crate::cosmos_modules::{self, auth::BaseAccount};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
-    rpc::Client,
     tendermint::chain::Id,
-    tx::{self, Fee, Gas, Msg, SignDoc, SignerInfo, Raw},
-    AccountId, Any, Coin, Tx, dev,
+    tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
+    AccountId, Any, Coin,
 };
 use prost::Message;
 use secp256k1::{All, Context, Secp256k1, Signing};
-use serde_json::{from_reader, json, Map, Value};
-use tokio::time::{timeout, sleep};
-use std::{convert::TryFrom, env, fs::File, rc::Rc, str::FromStr, time::Duration};
+
+use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
+use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use crate::{
-    config::GroupConfig,
-    error::TerraRustScriptError,
-    keys::private::PrivateKey,
-    network::{Chain, NetworkConfig}, tx_resp::CosmTxResponse,
+    Deployment, error::CosmScriptError, keys::private::PrivateKey, Network,
+    CosmTxResponse,
 };
 
 const GAS_LIMIT: u64 = 1_000_000;
@@ -29,14 +26,14 @@ pub type Wallet<'a> = &'a Rc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
-    network: NetworkConfig,
+    network: Network,
     channel: Channel,
 }
 
 impl<C: Signing + Context> Sender<C> {
-    pub fn new(config: GroupConfig, secp: Secp256k1<C>) -> Result<Sender<C>, TerraRustScriptError> {
+    pub fn new(config: Deployment, secp: Secp256k1<C>) -> Result<Sender<C>, CosmScriptError> {
         // NETWORK_MNEMONIC_GROUP
-        let mut composite_name = config.network_config.network.mnemonic_name().to_string();
+        let mut composite_name = config.network_config.kind.mnemonic_name().to_string();
         composite_name.push('_');
         composite_name.push_str(&config.name.to_ascii_uppercase());
 
@@ -50,8 +47,8 @@ impl<C: Signing + Context> Sender<C> {
                 config.network_config.chain.coin_type,
             )?
         } else {
-            log::debug!("{}", config.network_config.network.mnemonic_name());
-            let mnemonic = env::var(config.network_config.network.mnemonic_name())?;
+            log::debug!("{}", config.network_config.kind.mnemonic_name());
+            let mnemonic = env::var(config.network_config.kind.mnemonic_name())?;
             PrivateKey::from_words(
                 &secp,
                 &mnemonic,
@@ -71,18 +68,25 @@ impl<C: Signing + Context> Sender<C> {
             secp,
         })
     }
-    pub fn pub_addr(&self) -> Result<AccountId, TerraRustScriptError> {
+    pub fn pub_addr(&self) -> Result<AccountId, CosmScriptError> {
         Ok(self
             .private_key
             .public_key()
             .account_id(&self.network.chain.pub_addr_prefix)?)
     }
 
+    pub fn pub_addr_str(&self) -> Result<String, CosmScriptError> {
+        Ok(self
+            .private_key
+            .public_key()
+            .account_id(&self.network.chain.pub_addr_prefix)?.to_string())
+    }
+
     pub async fn bank_send(
         &self,
         recipient: &str,
         coins: Vec<Coin>,
-    ) -> Result<CosmTxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, CosmScriptError> {
         let msg_send = MsgSend {
             from_address: self.pub_addr()?,
             to_address: AccountId::from_str(recipient)?,
@@ -96,8 +100,8 @@ impl<C: Signing + Context> Sender<C> {
         &self,
         msgs: Vec<T>,
         memo: Option<&str>,
-    ) -> Result<CosmTxResponse, TerraRustScriptError> {
-        let timeout_height = 9001u16;
+    ) -> Result<CosmTxResponse, CosmScriptError> {
+        let timeout_height = 900124u32;
         let msgs: Result<Vec<Any>, _> = msgs.into_iter().map(Msg::into_any).collect();
         let msgs = msgs?;
         let gas_denom = self.network.gas_denom.clone();
@@ -119,7 +123,7 @@ impl<C: Signing + Context> Sender<C> {
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.network.network_id.clone())?,
+            &Id::try_from(self.network.id.clone())?,
             account_number,
         )?;
         let tx_raw = sign_doc.sign(&self.private_key)?;
@@ -128,21 +132,20 @@ impl<C: Signing + Context> Sender<C> {
 
         log::debug!("{:?}", sim_gas_used);
 
-        let gas_expected = (sim_gas_used as f64 * GAS_BUFFER);
+        let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
         let amount_to_pay = gas_expected * self.network.gas_price;
         let amount = Coin {
             amount: (amount_to_pay as u64).into(),
             denom: gas_denom,
         };
         let fee = Fee::from_amount_and_gas(amount, gas_expected as u64);
-
-
+        // log::debug!("{:?}", self.pub_addr_str());
         let auth_info =
             SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.network.network_id.clone())?,
+            &Id::try_from(self.network.id.clone())?,
             account_number,
         )?;
         let tx_raw = sign_doc.sign(&self.private_key)?;
@@ -150,7 +153,7 @@ impl<C: Signing + Context> Sender<C> {
         self.broadcast(tx_raw).await
     }
 
-    pub async fn base_account(&self) -> Result<BaseAccount, TerraRustScriptError> {
+    pub async fn base_account(&self) -> Result<BaseAccount, CosmScriptError> {
         let addr = self.pub_addr().unwrap().to_string();
 
         let mut client =
@@ -165,14 +168,13 @@ impl<C: Signing + Context> Sender<C> {
         Ok(acc)
     }
 
-    pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, TerraRustScriptError> {
-        let addr = self.pub_addr().unwrap().to_string();
+    pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, CosmScriptError> {
+        let _addr = self.pub_addr().unwrap().to_string();
 
-        let mut client = cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient::new(
-            self.channel(),
-        );
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
+        #[allow(deprecated)]
         let resp = client
-            .simulate(cosmos_sdk_proto::cosmos::tx::v1beta1::SimulateRequest {
+            .simulate(cosmos_modules::tx::SimulateRequest {
                 tx: None,
                 tx_bytes: tx_bytes,
             })
@@ -183,45 +185,39 @@ impl<C: Signing + Context> Sender<C> {
         Ok(gas_used)
     }
 
-    fn channel(&self) -> Channel {
+    pub fn channel(&self) -> Channel {
         self.channel.clone()
     }
 
+    async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, CosmScriptError> {
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
 
-    async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, TerraRustScriptError>{
-        let mut client = cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient::new(
-            self.channel(),
-        );
-
-        let commit = client.broadcast_tx(cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest{
-            tx_bytes: tx.to_bytes()?,
-            mode: cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode::Async.into()
-        }).await?;
+        let commit = client
+            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
+                tx_bytes: tx.to_bytes()?,
+                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
+            })
+            .await?;
         log::debug!("{:?}", commit);
-        
-        find_by_hash(&mut client, commit.into_inner().tx_response.unwrap().txhash ).await
-    }
 
+        find_by_hash(&mut client, commit.into_inner().tx_response.unwrap().txhash).await
+    }
 }
 
-async fn find_by_hash(client: &mut cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient<Channel> ,hash: String) -> Result<CosmTxResponse, TerraRustScriptError>{
-    let attempts = 7;
-    let request = cosmos_sdk_proto::cosmos::tx::v1beta1::GetTxRequest{
-        hash
-    };
+async fn find_by_hash(
+    client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
+    hash: String,
+) -> Result<CosmTxResponse, CosmScriptError> {
+    let attempts = 10;
+    let request = cosmos_modules::tx::GetTxRequest { hash };
     for _ in 0..attempts {
-        // TODO(tarcieri): handle not found errors
         if let Ok(tx) = client.get_tx(request.clone()).await {
             let resp = tx.into_inner().tx_response.unwrap();
-            
+
             log::debug!("{:?}", resp);
-            return Ok(resp.into())
+            return Ok(resp.into());
         }
-        sleep(Duration::from_secs(1)).await;
-        // if let Ok(tx) =  {
-        //     log::debug!("{:?}", tx);
-        //     return tx;
-        // }
+        sleep(Duration::from_secs(5)).await;
     }
     panic!("couldn't find transaction after {} attempts!", attempts);
 }
