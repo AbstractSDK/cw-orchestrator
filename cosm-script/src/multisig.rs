@@ -1,22 +1,23 @@
 use crate::core_types::Coin;
-use crate::{error::TerraRustScriptError, network::Chain};
+use crate::error::CosmScriptError;
 use base64::encode;
 use cosmrs::cosmwasm::MsgExecuteContract;
-use cosmrs::{crypto::PublicKey, tx::Body, AccountId, Coin as CosmCoin};
-use serde_json::{json, Value};
+use cosmrs::{AccountId, Coin as CosmCoin};
+use serde::Serialize;
+use serde_json::json;
 
 pub struct Multisig;
 
 impl Multisig {
-    pub fn create_proposal(
-        json_msg: &Value,
+    pub fn create_proposal<E: Serialize>(
+        msg: &E,
         _group_name: &str,
         contract_addr: &str,
         multisig_addr: &str,
         sender_addr: AccountId,
         coins: &[CosmCoin],
-    ) -> Result<MsgExecuteContract, TerraRustScriptError> {
-        let encoded = encode(json_msg.to_string());
+    ) -> Result<MsgExecuteContract, CosmScriptError> {
+        let encoded = encode(serde_json::to_string(&msg)?);
         let msg = json!({
           "propose": {
             "msgs": [

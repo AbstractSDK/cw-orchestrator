@@ -1,12 +1,12 @@
-use crate::client_types::{terra_decimal_format, terra_u64_format};
-use cosmrs::{Coin as CosmCoin, Denom, Decimal as CosmDecimal};
+use crate::client_types::terra_decimal_format;
+use cosmrs::Coin as CosmCoin;
 use regex::Regex;
 
 use rust_decimal_macros::dec;
 // use rust_decimal::prelude::*;
-use rust_decimal::{Decimal, prelude::FromPrimitive};
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 
-use crate::error::TerraRustScriptError;
+use crate::error::CosmScriptError;
 //use base64::{ToBase64, STANDARD};
 use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
@@ -31,7 +31,7 @@ impl Coin {
         }
     }
     /// Parse the string "nnnnnXXXX" format where XXXX is the coin type
-    pub fn parse(str: &str) -> Result<Option<Coin>, TerraRustScriptError> {
+    pub fn parse(str: &str) -> Result<Option<Coin>, CosmScriptError> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"^(\d+[.]?\d*)([a-zA-Z]+)$").unwrap();
             static ref RE_IBC: Regex = Regex::new(r"^(\d+[.]?\d*)(ibc/[a-fA-F0-9]+)$").unwrap();
@@ -55,20 +55,20 @@ impl Coin {
     /// this will take a comma delimited string of coins and return a sorted (by denom) vector of coins
     /// eg "22.707524482460197756uaud,21.882510617180501989ucad,16.107413560222631626uchf,114.382279464849248732ucny,14.594888140543189388ueur,12.689498975492463452ugbp,136.932658449160933002uhkd,1315.661396873891976912uinr,1917.803659404458501345ujpy,20710.846165266109229516ukrw,50292.255931832196576203umnt,12.276992042852615569usdr,23.395036036859944228usgd,0.0uthb,17.639582167170638049uusd"
     ///
-    pub fn parse_coins(str: &str) -> Result<Vec<Coin>, TerraRustScriptError> {
+    pub fn parse_coins(str: &str) -> Result<Vec<Coin>, CosmScriptError> {
         let vec_res_opt_coins = str
             .split(',')
             .map(Coin::parse)
-            .collect::<Vec<Result<Option<Coin>, TerraRustScriptError>>>();
+            .collect::<Vec<Result<Option<Coin>, CosmScriptError>>>();
         let mut coins: Vec<Coin> = Vec::with_capacity(vec_res_opt_coins.len());
         for vroc in vec_res_opt_coins {
-            let coin_opt = vroc.map_err(|_source| TerraRustScriptError::CoinParseErrV {
+            let coin_opt = vroc.map_err(|_source| CosmScriptError::CoinParseErrV {
                 parse: str.parse().unwrap(),
             })?;
 
             match coin_opt {
                 None => {
-                    return Err(TerraRustScriptError::CoinParseErr(str.parse().unwrap()));
+                    return Err(CosmScriptError::CoinParseErr(str.parse().unwrap()));
                 }
                 Some(coin) => {
                     coins.push(coin);
@@ -96,7 +96,10 @@ impl PartialEq for Coin {
 
 impl From<&CosmCoin> for Coin {
     fn from(coin: &CosmCoin) -> Self {
-        Self { amount: Decimal::from_u64(u64::from_str(&coin.amount.to_string()).unwrap()).unwrap(), denom:  coin.denom.to_string()}
+        Self {
+            amount: Decimal::from_u64(u64::from_str(&coin.amount.to_string()).unwrap()).unwrap(),
+            denom: coin.denom.to_string(),
+        }
     }
 }
 #[cfg(test)]

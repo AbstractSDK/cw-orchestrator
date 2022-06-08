@@ -3,7 +3,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum TerraRustScriptError {
+pub enum CosmScriptError {
     #[error("Reqwest HTTP(s) Error")]
     ReqwestError(#[from] ::reqwest::Error),
     #[error("JSON Conversion Error")]
@@ -82,4 +82,10 @@ pub enum TerraRustScriptError {
 
     #[error("Contract address for {0} not found in file")]
     AddrNotInFile(String),
+    #[error("calling contract with unimplemented action")]
+    NotImplemented,
+    #[error("new chain detected, fill out the scaffold at {0}")]
+    NewChain(String),
+    #[error("new network detected, fill out the scaffold at {0}")]
+    NewNetwork(String),
 }

@@ -547,3 +547,35 @@ pub mod base64_opt_encoded_format {
         }
     }
 }
+
+pub mod cosm_denom_format {
+    use std::str::FromStr;
+
+    use cosmrs::Denom;
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    #[allow(missing_docs)]
+    pub fn serialize<S>(denom: &Denom, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = denom.to_string();
+        serializer.serialize_str(&s)
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    #[allow(missing_docs)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Denom, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = String::deserialize(deserializer)?;
+        Denom::from_str(&s).map_err(|e| serde::de::Error::custom(e))
+    }
+}

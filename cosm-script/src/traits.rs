@@ -1,7 +1,17 @@
-use crate::{contract::ContractInstance, error::TerraRustScriptError, tx_resp::CosmTxResponse};
+use crate::{contract::ContractInstance, error::CosmScriptError,CosmTxResponse};
 use async_trait::async_trait;
-use cosmrs::{Coin};
+use cosmrs::Coin;
 use serde::{de::DeserializeOwned, Serialize};
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NotImplemented(String);
+
+impl Default for NotImplemented {
+    // TODO: improve, when rust allows negating trait bounds or overwriting traits
+    fn default() -> Self {
+        Self("Stupid Workaround".into())
+    }
+}
 
 // Fn for custom implementation to return ContractInstance
 pub trait Instance {
@@ -10,11 +20,24 @@ pub trait Instance {
 
 /// Implementing Interface ensures type safety
 pub trait Interface {
-    type I: Serialize;
-    type E: Serialize;
-    type Q: Serialize;
-    type M: Serialize;
+    type Init: Serialize;
+    type Exec: Serialize;
+    type Query: Serialize;
+    type Migrate: Serialize;
 }
+
+// TODO: find out how to create a wrapper trait that can be imported to expose all the interfaces
+pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery + WasmMigrate {}
+
+// /// Smart Contract execute endpoint
+// #[async_trait(?Send)]
+// pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery where &'a Self: 'a + Interface + Instance  {
+//     async fn exec<'b>(
+//         &'a self,
+//         execute_msg:&'b <&'a Self as Interface>::E,
+//         coins: Option<&[Coin]>,
+//     ) -> Result<CosmTxResponse, CosmScriptError>;
+// }
 
 /// Smart Contract execute endpoint
 #[async_trait(?Send)]
@@ -25,18 +48,19 @@ pub trait WasmExecute {
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, TerraRustScriptError>;
+    ) -> Result<CosmTxResponse, CosmScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmExecute for T {
-    type E = <T as Interface>::E;
+    type E = <T as Interface>::Exec;
 
     async fn exec<'a>(
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, CosmScriptError> {
+        assert_implemented(&execute_msg)?;
         self.instance()
             .execute(&execute_msg, coins.unwrap_or(&vec![]))
             .await
@@ -54,19 +78,20 @@ pub trait WasmInstantiate {
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, TerraRustScriptError>;
+    ) -> Result<CosmTxResponse, CosmScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmInstantiate for T {
-    type I = <T as Interface>::I;
+    type I = <T as Interface>::Init;
 
     async fn init(
         &self,
         instantiate_msg: Self::I,
         admin: Option<String>,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, CosmScriptError> {
+        assert_implemented(&instantiate_msg)?;
         self.instance()
             .instantiate(instantiate_msg, admin, coins.unwrap_or_default())
             .await
@@ -82,17 +107,18 @@ pub trait WasmQuery {
     async fn query<T: Serialize + DeserializeOwned>(
         &self,
         query_msg: Self::Q,
-    ) -> Result<T, TerraRustScriptError>;
+    ) -> Result<T, CosmScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmQuery for T {
-    type Q = <T as Interface>::Q;
+    type Q = <T as Interface>::Query;
 
     async fn query<R: Serialize + DeserializeOwned>(
         &self,
         query_msg: Self::Q,
-    ) -> Result<R, TerraRustScriptError> {
+    ) -> Result<R, CosmScriptError> {
+        assert_implemented(&query_msg)?;
         self.instance().query(query_msg).await
     }
 }
@@ -107,18 +133,27 @@ pub trait WasmMigrate {
         &self,
         migrate_msg: Self::M,
         new_code_id: u64,
-    ) -> Result<CosmTxResponse, TerraRustScriptError>;
+    ) -> Result<CosmTxResponse, CosmScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmMigrate for T {
-    type M = <T as Interface>::M;
+    type M = <T as Interface>::Migrate;
 
     async fn migrate(
         &self,
         migrate_msg: Self::M,
         new_code_id: u64,
-    ) -> Result<CosmTxResponse, TerraRustScriptError> {
+    ) -> Result<CosmTxResponse, CosmScriptError> {
+        assert_implemented(&migrate_msg)?;
         self.instance().migrate(migrate_msg, new_code_id).await
     }
+}
+
+// asserts that trait function is implemented for contract
+fn assert_implemented<E: Serialize>(msg: &E) -> Result<(), CosmScriptError> {
+    if serde_json::to_string(msg)? == serde_json::to_string(&NotImplemented::default())? {
+        return Err(CosmScriptError::NotImplemented);
+    }
+    Ok(())
 }

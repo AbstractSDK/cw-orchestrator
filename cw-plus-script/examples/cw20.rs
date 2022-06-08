@@ -1,13 +1,24 @@
+use cosm_script::{
+    helpers::get_configuration,
+    traits::{WasmExecute, WasmQuery},
+};
 use cw20::Cw20QueryMsg;
-
-use terra_rust_script::{helpers::get_configuration, traits::WasmQuery};
+use cw_plus_script::cw20::CW20;
 
 pub async fn script() -> anyhow::Result<()> {
-    let (sender, config) = &get_configuration("uusd").await?;
+    let (config, sender) = &get_configuration().await?;
 
-    let cw20_token = scripts::contract_instances::cw_20::CW20::new("cw20", sender, config)?;
+    let cw20_token = CW20::new("cw20", &sender, config)?;
+    cw20_token
+        .exec(
+            &cw20::Cw20ExecuteMsg::Burn {
+                amount: 700u128.into(),
+            },
+            None,
+        )
+        .await?;
     let token_info = cw20_token.query(Cw20QueryMsg::TokenInfo {}).await?;
-    print!("{}", token_info);
+    print!("{:?}", token_info);
 
     Ok(())
 }
