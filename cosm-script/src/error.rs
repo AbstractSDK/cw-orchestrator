@@ -82,10 +82,13 @@ pub enum CosmScriptError {
 
     #[error("Contract address for {0} not found in file")]
     AddrNotInFile(String),
+    #[error("Code id for {0} not found in file")]
+    CodeIdNotInFile(String),
     #[error("calling contract with unimplemented action")]
     NotImplemented,
     #[error("new chain detected, fill out the scaffold at {0}")]
     NewChain(String),
     #[error("new network detected, fill out the scaffold at {0}")]
     NewNetwork(String),
+
 }

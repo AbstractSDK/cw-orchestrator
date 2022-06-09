@@ -1,0 +1,45 @@
+{
+  "juno": {
+    "info": {
+      "coin_type": 118,
+      "pub_addr_prefix": "juno"
+    },
+    "networks": {
+      "local": {
+        "code_ids": {
+          "cw20": 17
+        },
+        "deployments": {
+          "debugging": {
+            "cw20": "juno123gcwlskafnxw4lvkjeacmd5tqzl27gd8xxxnrghe2qhdxtluskq3ru8ak"
+          },
+          "default": {}
+        },
+        "info": {
+          "fcd": "",
+          "gas_denom": "ustake",
+          "gas_price": 0,
+          "grpc_url": "http://localhost:9090",
+          "id": "testing",
+          "lcd": ""
+        }
+      },
+      "testnet": {
+        "code_ids": {},
+        "deployments": {
+          "debugging": {
+            "cw20": "juno1mf5f295fnal44j4e8lzxv6d9jq09yy36nz8qr3l4f9lqn77y8ccsxwfn5m"
+          }
+        },
+        "info": {
+          "fcd": "",
+          "gas_denom": "ujunox",
+          "gas_price": 0.025,
+          "grpc_url": "https://grpc.juno.giansalex.dev:80",
+          "id": "uni-3",
+          "lcd": ""
+        }
+      }
+    }
+  }
+}

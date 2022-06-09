@@ -33,28 +33,28 @@ pub struct Sender<C: Signing + Context> {
 impl<C: Signing + Context> Sender<C> {
     pub fn new(config: Deployment, secp: Secp256k1<C>) -> Result<Sender<C>, CosmScriptError> {
         // NETWORK_MNEMONIC_GROUP
-        let mut composite_name = config.network_config.kind.mnemonic_name().to_string();
+        let mut composite_name = config.network.kind.mnemonic_name().to_string();
         composite_name.push('_');
         composite_name.push_str(&config.name.to_ascii_uppercase());
 
-        // use group mnemonic if specified, else use default network mnemonic
+        // use deployment mnemonic if specified, else use default network mnemonic
         let p_key: PrivateKey = if let Some(mnemonic) = env::var_os(&composite_name) {
             PrivateKey::from_words(
                 &secp,
                 mnemonic.to_str().unwrap(),
                 0,
                 0,
-                config.network_config.chain.coin_type,
+                config.network.chain.coin_type,
             )?
         } else {
-            log::debug!("{}", config.network_config.kind.mnemonic_name());
-            let mnemonic = env::var(config.network_config.kind.mnemonic_name())?;
+            log::debug!("{}", config.network.kind.mnemonic_name());
+            let mnemonic = env::var(config.network.kind.mnemonic_name())?;
             PrivateKey::from_words(
                 &secp,
                 &mnemonic,
                 0,
                 0,
-                config.network_config.chain.coin_type,
+                config.network.chain.coin_type,
             )?
         };
 
@@ -62,8 +62,8 @@ impl<C: Signing + Context> Sender<C> {
 
         Ok(Sender {
             // Cloning is encouraged: https://docs.rs/tonic/latest/tonic/transport/struct.Channel.html
-            channel: config.network_config.grpc_channel.clone(),
-            network: config.network_config,
+            channel: config.network.grpc_channel.clone(),
+            network: config.network,
             private_key: cosmos_private_key,
             secp,
         })

@@ -1,76 +1,74 @@
 use std::fs::File;
 
-use serde_json::{from_reader, json, Map, Value};
+use serde_json::{from_reader, json, Map, Value, to_value};
 
-use crate::{error::CosmScriptError};
+use crate::{error::CosmScriptError, cosmos_modules};
 
 use super::network::Network;
 
 #[derive(Clone, Debug)]
 pub struct Deployment {
-    pub network_config: Network,
+    pub network: Network,
     pub name: String,
-    pub file_path: String,
     pub proposal: bool,
 }
 
 impl Deployment {
     pub async fn new(
         name: String,
-        network_config: Network,
-        file_path: String,
+        network: Network,
         proposal: bool,
     ) -> anyhow::Result<Deployment> {
-        check_group_existance(&name, &file_path)?;
+        check_deployment_existance(&name, &network)?;
         Ok(Deployment {
-            network_config,
+            network,
             name,
-            file_path,
             proposal,
         })
     }
 
+    pub fn get(&self) -> Result<Value,CosmScriptError> {
+        Ok(self.network.get()?["deployments"][&self.name].clone())
+    }
+
+    pub fn set(&self, deployment: Value) -> Result<(),CosmScriptError> {
+        let mut network = self.network.get()?;
+        network["deployments"][&self.name] = deployment;
+        self.network.set(network)
+    }
+
+    /// Get the contract address in the current deployment
     pub fn get_contract_address(&self, contract_name: &str) -> Result<String, CosmScriptError> {
-        let file = File::open(&self.file_path)
-            .expect(&format!("file should be present at {}", self.file_path));
-        let json: serde_json::Value = from_reader(file)?;
-        let maybe_address = json[self.name.clone()][contract_name].get("addr");
-        match maybe_address {
+        let deployment = self.get()?;
+        let maybe_addr = deployment.get(contract_name);
+        match maybe_addr {
             Some(addr) => Ok(addr.as_str().unwrap().into()),
             None => Err(CosmScriptError::AddrNotInFile(contract_name.to_owned())),
         }
     }
 
-    pub fn get_contract_code_id(&self, contract_name: &str) -> Result<u64, CosmScriptError> {
-        let file = File::open(&self.file_path)
-            .expect(&format!("file should be present at {}", self.file_path));
-        let json: serde_json::Value = from_reader(file).unwrap();
-        let maybe_code_id = json[self.name.clone()][contract_name].get("code_id");
-        match maybe_code_id {
-            Some(code_id) => Ok(code_id.as_u64().unwrap()),
-            None => Err(CosmScriptError::AddrNotInFile(contract_name.to_owned())),
-        }
+    /// Set the contract address in the current deployment
+    pub fn save_contract_address(&self, contract_name: &str, contract_address: &str) -> Result<(), CosmScriptError> {
+        let mut deployment = self.get()?;
+        deployment[contract_name] = to_value(contract_address)?;
+        self.set(deployment)
     }
 
-    pub fn get_saved_state(&self) -> Map<String, Value> {
-        let file = File::open(&self.file_path)
-            .expect(&format!("file should be present at {}", self.file_path));
-        let json: serde_json::Value = from_reader(file).unwrap();
-        json.get(&self.name).unwrap().as_object().unwrap().clone()
-    }
+    
+
 }
-
 #[inline]
-fn check_group_existance(name: &String, file_path: &String) -> anyhow::Result<()> {
-    let file = File::open(file_path).expect(&format!("file should be present at {}", file_path));
-    let mut cfg: serde_json::Value = from_reader(file).unwrap();
-    let maybe_group = cfg.get(name);
-    match maybe_group {
+fn check_deployment_existance(name: &str, network: &Network) -> anyhow::Result<()> {
+    let mut cfg = network.get()?;
+    let maybe_deployment = cfg["deployments"].get(name);
+    match maybe_deployment {
         Some(_) => Ok(()),
         None => {
-            cfg[name] = json!({});
-            serde_json::to_writer_pretty(File::create(file_path)?, &cfg)?;
+            cfg["deployments"][name] = json!({});
+            network.set(cfg)?;
             Ok(())
         }
     }
 }
+
+
