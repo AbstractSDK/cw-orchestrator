@@ -10,26 +10,26 @@ use crate::{
 
 pub fn get_env_vars() -> (String, String, String, bool) {
     let propose_on_multisig = env::var("PROPOSE_ON_MULTISIG").unwrap_or("false".to_string());
-    let addr_path = env::var("ADDRESS_JSON").unwrap();
-    let group = env::var("DEPLOYMENT").unwrap();
+    let store_path = env::var("STORE").unwrap();
     let chain = env::var("CHAIN").unwrap();
+    let deployment = env::var("DEPLOYMENT").unwrap();
 
     (
-        addr_path,
+        store_path,
         chain,
-        group,
+        deployment,
         propose_on_multisig.parse::<bool>().unwrap(),
     )
 }
 
 pub async fn get_configuration() -> anyhow::Result<(Deployment, Rc<Sender<All>>)> {
     let secp = Secp256k1::new();
-    let (addr_path, chain_id, deployment_id, propose_on_multisig) = get_env_vars();
+    let (store_path, chain_id, deployment_id, propose_on_multisig) = get_env_vars();
 
-    let chain = Chain::get(&chain_id).await?;
+    let chain = Chain::new(&chain_id, &store_path).await?;
     let network = chain.network().await?;
     // All configs are set here
-    let config = Deployment::new(deployment_id, network, addr_path, propose_on_multisig).await?;
+    let config = Deployment::new(deployment_id, network, propose_on_multisig).await?;
 
     let sender = Rc::new(Sender::new(config.clone(), secp)?);
     Ok((config, sender))

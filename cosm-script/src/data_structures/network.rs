@@ -1,13 +1,9 @@
 use std::{env, fs::File, str::FromStr};
-
 use cosmrs::Denom;
-
 use crate::cosm_denom_format;
 use serde::{Deserialize, Serialize};
-use serde_json::{from_reader, from_value, json, to_value, value::Index};
-
+use serde_json::{from_reader, from_value, json, Value, to_value};
 use tonic::transport::Channel;
-
 use crate::error::CosmScriptError;
 
 #[derive(Clone, Debug)]
@@ -29,7 +25,40 @@ pub struct Network {
     pub fcd_url: Option<String>,
 }
 
-impl Network {}
+impl Network {
+    pub fn get(&self) ->  Result<Value, CosmScriptError> {
+        let file = File::open(&self.chain.file_path)
+            .expect(&format!("file should be present at {}", self.chain.file_path));
+        let json: serde_json::Value = from_reader(file)?;
+        Ok(json[&self.chain.chain_id]["networks"][&self.kind.to_string()].clone())
+    }
+
+    pub fn set(&self,value: Value ) ->  Result<(), CosmScriptError> {
+        let file = File::open(&self.chain.file_path)
+            .expect(&format!("file should be present at {}", self.chain.file_path));
+        let mut json: serde_json::Value = from_reader(file).unwrap();
+        json[&self.chain.chain_id]["networks"][&self.kind.to_string()] = json!(value);
+        serde_json::to_writer_pretty(File::create(&self.chain.file_path)?, &json)?;
+        Ok(())
+    }
+
+    /// Get the locally-saved version version of the contract's latest version on this network
+    pub fn get_latest_version(&self, contract_name: &str) -> Result<u64, CosmScriptError> {
+        let network = self.get()?;
+        let maybe_code_id = network["code_ids"].get(contract_name);
+        match maybe_code_id {
+            Some(code_id) => Ok(code_id.as_u64().unwrap()),
+            None => Err(CosmScriptError::CodeIdNotInFile(contract_name.to_owned())),
+        }
+    }
+
+    /// Set the locally-saved version version of the contract's latest version on this network
+    pub fn set_contract_version(&self, contract_name: &str, code_id: u64) -> Result<(), CosmScriptError> {
+        let mut network = self.get()?;
+        network["code_ids"][contract_name] = to_value(code_id)?;
+        self.set(network)
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NetworkInfo {
@@ -93,7 +122,7 @@ pub struct Chain {
     /// coin type for key derivation
     pub coin_type: u32,
 
-    file_path: String,
+    pub file_path: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
@@ -105,23 +134,22 @@ pub struct ChainInfo {
 }
 
 impl Chain {
-    pub async fn get(chain_id: &str) -> Result<Self, CosmScriptError> {
-        let chains_json_path = env::var("CHAINS")?;
-        let file = File::open(&chains_json_path)
-            .expect(&format!("file should be present at {}", chains_json_path));
+    pub async fn new(chain_id: &str, store_path: &str) -> Result<Self, CosmScriptError> {
+        let file = File::open(store_path)
+            .expect(&format!("file should be present at {}", store_path));
         let mut config: serde_json::Value = from_reader(file)?;
 
         match config.get(chain_id) {
             Some(chain) => {
                 let info: ChainInfo = from_value(chain["info"].clone())?;
                 if info.pub_addr_prefix == "FILL" {
-                    return Err(CosmScriptError::NewChain(chains_json_path));
+                    return Err(CosmScriptError::NewChain(store_path.into()));
                 };
                 return Ok(Self {
                     chain_id: chain_id.into(),
                     pub_addr_prefix: info.pub_addr_prefix,
                     coin_type: info.coin_type,
-                    file_path: chains_json_path,
+                    file_path: store_path.into(),
                 });
             }
             None => {
@@ -135,8 +163,8 @@ impl Chain {
                         "networks": {}
                     }
                 );
-                serde_json::to_writer_pretty(File::create(&chains_json_path)?, &config)?;
-                Err(CosmScriptError::NewChain(chains_json_path))
+                serde_json::to_writer_pretty(File::create(&store_path)?, &config)?;
+                Err(CosmScriptError::NewChain(store_path.into()))
             }
         }
     }
@@ -165,9 +193,7 @@ impl Chain {
                     {
                         "info": info,
                         "code_ids": {},
-                        "deployments": {
-                            "default": {}
-                        }
+                        "deployments": {}
                     }
                 );
                 serde_json::to_writer_pretty(File::create(&self.file_path)?, &config)?;

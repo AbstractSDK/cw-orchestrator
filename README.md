@@ -91,7 +91,7 @@ my_scripts/
 ### .env file
 **Warning: The current version of this software requires you to insert the mnemonic of your wallet in order to sign messages. This is a security risk! I do not take responsibility over lost/stolen funds.**
 
-- **DEPLOYMENT**: Name of the group of contracts you want to address. "mainnet" or "testnet" will automatically use the other configs that apply. Any other name will make the executable default to use localterra. 
+- **DEPLOYMENT**: Name of the deployment of contracts you want to address. "mainnet" or "testnet" will automatically use the other configs that apply. Any other name will make the executable default to use localterra. 
 - **RUST_LOG**: Level of terminal logging
-- **ADDRESS_JSON**: Path to JSON file that stores contract addresses and code-id per group. 
+- **ADDRESS_JSON**: Path to JSON file that stores contract addresses and code-id per deployment. 
 - **WASM_DIR**: Path to dir that stores the .wasm binaries and compile hashes. Used for uploading/verifying.

@@ -25,6 +25,8 @@ pub struct ContractInstance<'a> {
     pub deployment: &'a Deployment,
     pub name: &'a str,
     pub sender: Wallet<'a>,
+    /// Allows for setting a custom code-id in the Instance trait implemtation
+    code_id_key: Option<&'a str>,
 }
 
 impl<'a> ContractInstance<'a> {
@@ -37,9 +39,15 @@ impl<'a> ContractInstance<'a> {
             deployment,
             name,
             sender,
+            code_id_key: None
         };
-        instance.check_scaffold()?;
         Ok(instance)
+    }
+
+    /// Used to overwrite the code-id getter key. Useful when you want shared code between multiple contract instances
+    /// Example: Two CW20 tokens that use the same code-id but have a different name. see 
+    pub fn overwrite_code_id_key(&mut self, code_id_key_to_use: &'static str) -> () {
+        self.code_id_key = Some(code_id_key_to_use);
     }
 
     pub async fn execute<E: Serialize>(
@@ -55,7 +63,7 @@ impl<'a> ContractInstance<'a> {
                 &exec_msg,
                 &self.deployment.name,
                 &contract,
-                &env::var(&self.deployment.network_config.kind.multisig_name())?,
+                &env::var(&self.deployment.network.kind.multisig_name())?,
                 self.sender.pub_addr()?,
                 coins,
             )?
@@ -63,7 +71,7 @@ impl<'a> ContractInstance<'a> {
             MsgExecuteContract {
                 sender: self.sender.pub_addr()?,
                 contract: AccountId::from_str(&self.get_address()?)?,
-                msg: serde_json::to_string(&exec_msg)?.as_bytes().to_vec(),
+                msg: serde_json::to_vec(&exec_msg)?,
                 funds: coins.to_vec(),
             }
         };
@@ -80,7 +88,8 @@ impl<'a> ContractInstance<'a> {
         coins: &[Coin],
     ) -> Result<CosmTxResponse, CosmScriptError> {
         let sender = self.sender;
-        let code_id = self.get_code_id()?;
+        let key = self.code_id_key.unwrap_or_else(|| self.name);
+        let code_id = self.deployment.network.get_latest_version(key)?;
 
         let memo = format!("Contract: {}, Group: {}", self.name, self.deployment.name);
 
@@ -91,7 +100,7 @@ impl<'a> ContractInstance<'a> {
             label: Some(self.name.into()),
             admin: admin.map(|a| FromStr::from_str(&a).unwrap()),
             sender: sender.pub_addr()?,
-            msg: serde_json::to_string(&init_msg)?.as_bytes().to_vec(),
+            msg: serde_json::to_vec(&init_msg)?,
             funds: coins.to_vec(),
         };
 
@@ -99,7 +108,7 @@ impl<'a> ContractInstance<'a> {
         let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
 
         log::debug!("{} address: {:?}", self.name, address);
-        self.save_contract_address(address.clone())?;
+        self.save_contract_address(address)?;
 
         Ok(result)
     }
@@ -109,15 +118,15 @@ impl<'a> ContractInstance<'a> {
         query_msg: Q,
     ) -> Result<T, CosmScriptError> {
         let sender = self.sender;
-
+        
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
         let resp = client
-            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-                address: self.get_address()?,
-                query_data: serde_json::to_string(&query_msg)?.as_bytes().to_vec(),
-            })
-            .await?;
-
+        .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+            address: self.get_address()?,
+            query_data: serde_json::to_vec(&query_msg)?,
+        })
+        .await?;
+        
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
@@ -147,13 +156,13 @@ impl<'a> ContractInstance<'a> {
         };
         let result = sender.commit_tx(vec![store_msg], Some(&memo)).await?;
 
-        log::debug!("uploaded: {:?}", result.txhash);
+        log::info!("uploaded: {:?}", result.txhash);
         // TODO: check why logs are empty
 
         let code_id = result.get_attribute_from_logs("store_code", "code_id")[0]
             .1
             .parse::<u64>()?;
-        log::debug!("code_id: {:?}", code_id);
+        log::info!("code_id: {:?}", code_id);
         self.save_code_id(code_id)?;
         wait(self.deployment).await;
         Ok(result)
@@ -195,56 +204,38 @@ impl<'a> ContractInstance<'a> {
         // Ok(result)
     }
 
+    // Getters //
+    
     pub fn get_address(&self) -> Result<String, CosmScriptError> {
         self.deployment.get_contract_address(self.name)
     }
-
-    pub fn get_code_id(&self) -> Result<u64, CosmScriptError> {
-        self.deployment.get_contract_code_id(self.name)
+    
+    /// get the on-chain contract code-id
+    pub async fn get_code_id(&self) -> Result<u64, CosmScriptError> {
+        let addr = self.get_address()?;
+        let channel = self.deployment.network.grpc_channel.clone();
+        let mut client =
+        cosmos_modules::cosmwasm::query_client::QueryClient::new(channel);
+        
+        let resp = client
+        .contract_info(cosmos_modules::cosmwasm::QueryContractInfoRequest{
+            address: addr
+        })
+        .await?
+        .into_inner();
+        
+        let code_id = resp.contract_info.unwrap().code_id;
+        Ok(code_id)
     }
-
+    
+    // Setters //
+    
     pub fn save_code_id(&self, code_id: u64) -> Result<(), CosmScriptError> {
-        let s = fs::read_to_string(&self.deployment.file_path).unwrap();
-        let mut cfg: Value = serde_json::from_str(&s)?;
-        cfg[&self.deployment.name][&self.name]["code_id"] = Value::Number(code_id.into());
-
-        serde_json::to_writer_pretty(File::create(&self.deployment.file_path)?, &cfg)?;
-        Ok(())
+        self.deployment.network.set_contract_version(self.name, code_id)
     }
 
-    pub fn save_contract_address(&self, contract_address: String) -> Result<(), CosmScriptError> {
-        let s = fs::read_to_string(&self.deployment.file_path).unwrap();
-        let mut cfg: Value = serde_json::from_str(&s)?;
-        cfg[&self.deployment.name][&self.name]["addr"] = Value::String(contract_address);
-
-        serde_json::to_writer_pretty(File::create(&self.deployment.file_path)?, &cfg)?;
-        Ok(())
-    }
-
-    pub fn save_other_contract_address(
-        &self,
-        contract_name: String,
-        contract_address: String,
-    ) -> Result<(), CosmScriptError> {
-        let s = fs::read_to_string(&self.deployment.file_path).unwrap();
-        let mut cfg: Value = serde_json::from_str(&s)?;
-        cfg[&self.deployment.name][&contract_name]["addr"] = Value::String(contract_address);
-
-        serde_json::to_writer_pretty(File::create(&self.deployment.file_path)?, &cfg)?;
-        Ok(())
-    }
-
-    pub fn check_scaffold(&self) -> anyhow::Result<()> {
-        let s = fs::read_to_string(&self.deployment.file_path)?;
-        let mut cfg: Value = serde_json::from_str(&s)?;
-
-        if cfg[&self.deployment.name].get(&self.name).is_none() {
-            let scaffold = json!({});
-            cfg[&self.deployment.name][&self.name] = scaffold;
-            serde_json::to_writer_pretty(File::create(&self.deployment.file_path)?, &cfg)?;
-        }
-
-        Ok(())
+    pub fn save_contract_address(&self, contract_address: &str) -> Result<(), CosmScriptError> {
+        self.deployment.save_contract_address(self.name, contract_address)
     }
 
     pub async fn is_local_version(&self) -> anyhow::Result<bool> {
@@ -285,7 +276,7 @@ impl<'a> ContractInstance<'a> {
 }
 
 async fn wait(deployment: &Deployment) {
-    match deployment.network_config.kind {
+    match deployment.network.kind {
         NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
         NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
         NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,

@@ -11,7 +11,7 @@ pub struct Multisig;
 impl Multisig {
     pub fn create_proposal<E: Serialize>(
         msg: &E,
-        _group_name: &str,
+        _deployment_name: &str,
         contract_addr: &str,
         multisig_addr: &str,
         sender_addr: AccountId,

@@ -104,20 +104,20 @@ impl<T: Interface + Instance> WasmInstantiate for T {
 pub trait WasmQuery {
     type Q: Serialize;
 
-    async fn query<T: Serialize + DeserializeOwned>(
+    async fn query<G: Serialize + DeserializeOwned>(
         &self,
         query_msg: Self::Q,
-    ) -> Result<T, CosmScriptError>;
+    ) -> Result<G, CosmScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Interface + Instance> WasmQuery for T {
     type Q = <T as Interface>::Query;
 
-    async fn query<R: Serialize + DeserializeOwned>(
+    async fn query<G: Serialize + DeserializeOwned>(
         &self,
         query_msg: Self::Q,
-    ) -> Result<R, CosmScriptError> {
+    ) -> Result<G, CosmScriptError> {
         assert_implemented(&query_msg)?;
         self.instance().query(query_msg).await
     }
@@ -147,6 +147,28 @@ impl<T: Interface + Instance> WasmMigrate for T {
     ) -> Result<CosmTxResponse, CosmScriptError> {
         assert_implemented(&migrate_msg)?;
         self.instance().migrate(migrate_msg, new_code_id).await
+    }
+}
+
+/// Smart Contract migrate endpoint
+
+#[async_trait(?Send)]
+pub trait WasmUpload {
+
+    async fn upload(
+        &self,
+        path: &str
+    ) -> Result<CosmTxResponse, CosmScriptError>;
+}
+
+#[async_trait(?Send)]
+impl<T: Instance> WasmUpload for T {
+
+    async fn upload(
+        &self,
+        path: &str,
+    ) -> Result<CosmTxResponse, CosmScriptError> {
+        self.instance().upload(path).await
     }
 }
 
