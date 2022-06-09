@@ -1,8 +1,6 @@
-use std::fs::File;
+use serde_json::{json, to_value, Value};
 
-use serde_json::{from_reader, json, Map, Value, to_value};
-
-use crate::{error::CosmScriptError, cosmos_modules};
+use crate::error::CosmScriptError;
 
 use super::network::Network;
 
@@ -14,11 +12,7 @@ pub struct Deployment {
 }
 
 impl Deployment {
-    pub async fn new(
-        name: String,
-        network: Network,
-        proposal: bool,
-    ) -> anyhow::Result<Deployment> {
+    pub async fn new(name: String, network: Network, proposal: bool) -> anyhow::Result<Deployment> {
         check_deployment_existance(&name, &network)?;
         Ok(Deployment {
             network,
@@ -27,11 +21,11 @@ impl Deployment {
         })
     }
 
-    pub fn get(&self) -> Result<Value,CosmScriptError> {
+    pub fn get(&self) -> Result<Value, CosmScriptError> {
         Ok(self.network.get()?["deployments"][&self.name].clone())
     }
 
-    pub fn set(&self, deployment: Value) -> Result<(),CosmScriptError> {
+    pub fn set(&self, deployment: Value) -> Result<(), CosmScriptError> {
         let mut network = self.network.get()?;
         network["deployments"][&self.name] = deployment;
         self.network.set(network)
@@ -48,14 +42,15 @@ impl Deployment {
     }
 
     /// Set the contract address in the current deployment
-    pub fn save_contract_address(&self, contract_name: &str, contract_address: &str) -> Result<(), CosmScriptError> {
+    pub fn save_contract_address(
+        &self,
+        contract_name: &str,
+        contract_address: &str,
+    ) -> Result<(), CosmScriptError> {
         let mut deployment = self.get()?;
         deployment[contract_name] = to_value(contract_address)?;
         self.set(deployment)
     }
-
-    
-
 }
 #[inline]
 fn check_deployment_existance(name: &str, network: &Network) -> anyhow::Result<()> {
@@ -70,5 +65,3 @@ fn check_deployment_existance(name: &str, network: &Network) -> anyhow::Result<(
         }
     }
 }
-
-

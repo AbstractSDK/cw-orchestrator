@@ -25,7 +25,7 @@ impl Multisig {
                 "wasm": {
                   "execute": {
                     "msg": encoded,
-                    "funds": coins.into_iter().map(Coin::from).collect::<Vec<Coin>>(),
+                    "funds": coins.iter().map(Coin::from).collect::<Vec<Coin>>(),
                     "contract_addr": contract_addr
                   }
                 }
@@ -44,7 +44,7 @@ impl Multisig {
                 "wasm": {
                   "execute": {
                     "msg": encoded,
-                    "funds": coins.into_iter().map(Coin::from).collect::<Vec<Coin>>(),
+                    "funds": coins.iter().map(Coin::from).collect::<Vec<Coin>>(),
                     "contract_addr": contract_addr
                   }
                 }

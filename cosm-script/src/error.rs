@@ -90,5 +90,4 @@ pub enum CosmScriptError {
     NewChain(String),
     #[error("new network detected, fill out the scaffold at {0}")]
     NewNetwork(String),
-
 }

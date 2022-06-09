@@ -1,4 +1,4 @@
-//! Easy to use CosmWasm-plus scripting library 
+//! Easy to use CosmWasm-plus scripting library
 //!
 //! Provides an abstraction over a queue.  When the abstraction is used
 //! there are these advantages:

@@ -1,4 +1,4 @@
-use crate::{contract::ContractInstance, error::CosmScriptError,CosmTxResponse};
+use crate::{contract::ContractInstance, error::CosmScriptError, CosmTxResponse};
 use async_trait::async_trait;
 use cosmrs::Coin;
 use serde::{de::DeserializeOwned, Serialize};
@@ -62,7 +62,7 @@ impl<T: Interface + Instance> WasmExecute for T {
     ) -> Result<CosmTxResponse, CosmScriptError> {
         assert_implemented(&execute_msg)?;
         self.instance()
-            .execute(&execute_msg, coins.unwrap_or(&vec![]))
+            .execute(&execute_msg, coins.unwrap_or(&[]))
             .await
     }
 }
@@ -154,20 +154,12 @@ impl<T: Interface + Instance> WasmMigrate for T {
 
 #[async_trait(?Send)]
 pub trait WasmUpload {
-
-    async fn upload(
-        &self,
-        path: &str
-    ) -> Result<CosmTxResponse, CosmScriptError>;
+    async fn upload(&self, path: &str) -> Result<CosmTxResponse, CosmScriptError>;
 }
 
 #[async_trait(?Send)]
 impl<T: Instance> WasmUpload for T {
-
-    async fn upload(
-        &self,
-        path: &str,
-    ) -> Result<CosmTxResponse, CosmScriptError> {
+    async fn upload(&self, path: &str) -> Result<CosmTxResponse, CosmScriptError> {
         self.instance().upload(path).await
     }
 }

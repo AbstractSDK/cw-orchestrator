@@ -8,18 +8,19 @@ mod multisig;
 pub mod sender;
 pub mod traits;
 
-pub use data_structures::{deployment::Deployment, network::{Network,NetworkKind, Chain}, tx_resp::CosmTxResponse};
 pub use cosmrs::{Coin, Denom};
-pub use helpers::{get_configuration, get_env_vars};
+pub use data_structures::{
+    deployment::Deployment,
+    network::{Chain, Network, NetworkKind},
+    tx_resp::CosmTxResponse,
+};
 pub use error::CosmScriptError;
+pub use helpers::{get_configuration, get_env_vars};
 
 #[macro_use]
 extern crate lazy_static;
+pub(crate) use crate::client_types::cosm_denom_format;
 use data_structures::{client_types, core_types};
-pub(crate) use crate::client_types::{
-    cosm_denom_format, terra_decimal_format, terra_f64_format, terra_opt_decimal_format,
-    terra_opt_u64_format, terra_u64_format,
-};
 
 pub mod cosmos_modules {
     pub use cosmos_sdk_proto::cosmos::auth::v1beta1 as auth;
