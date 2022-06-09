@@ -1,8 +1,5 @@
-use cosm_script::{
-    helpers::get_configuration,
-    traits::*,
-};
-use cw20::Cw20QueryMsg;
+use cosm_script::{helpers::get_configuration, traits::*};
+
 use cw_plus_script::CW20;
 
 // Requires a running local junod with grpc enabled
@@ -14,7 +11,9 @@ pub async fn script() -> anyhow::Result<()> {
 
     // cw20_token.upload("examples/cw20_base.wasm").await?;
 
-    cw20_token.create_new(sender.pub_addr_str()?, 642406u128 ).await?;
+    cw20_token
+        .create_new(sender.pub_addr_str()?, 642406u128)
+        .await?;
     print!("{:?}", cw20_token.instance().get_address()?);
 
     cw20_token
@@ -25,7 +24,9 @@ pub async fn script() -> anyhow::Result<()> {
             None,
         )
         .await?;
-    let token_info = cw20_token.query::<cw20::TokenInfoResponse>(cw20_base::msg::QueryMsg::TokenInfo {  }).await?;
+    let token_info = cw20_token
+        .query::<cw20::TokenInfoResponse>(cw20_base::msg::QueryMsg::TokenInfo {})
+        .await?;
     print!("{:?}", token_info);
 
     Ok(())

@@ -1,10 +1,10 @@
-use std::{env, fs::File, str::FromStr};
-use cosmrs::Denom;
 use crate::cosm_denom_format;
-use serde::{Deserialize, Serialize};
-use serde_json::{from_reader, from_value, json, Value, to_value};
-use tonic::transport::Channel;
 use crate::error::CosmScriptError;
+use cosmrs::Denom;
+use serde::{Deserialize, Serialize};
+use serde_json::{from_reader, from_value, json, to_value, Value};
+use std::{env, fs::File, str::FromStr};
+use tonic::transport::Channel;
 
 #[derive(Clone, Debug)]
 pub struct Network {
@@ -26,16 +26,16 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn get(&self) ->  Result<Value, CosmScriptError> {
+    pub fn get(&self) -> Result<Value, CosmScriptError> {
         let file = File::open(&self.chain.file_path)
-            .expect(&format!("file should be present at {}", self.chain.file_path));
+            .unwrap_or_else(|_| panic!("file should be present at {}", self.chain.file_path));
         let json: serde_json::Value = from_reader(file)?;
         Ok(json[&self.chain.chain_id]["networks"][&self.kind.to_string()].clone())
     }
 
-    pub fn set(&self,value: Value ) ->  Result<(), CosmScriptError> {
+    pub fn set(&self, value: Value) -> Result<(), CosmScriptError> {
         let file = File::open(&self.chain.file_path)
-            .expect(&format!("file should be present at {}", self.chain.file_path));
+            .unwrap_or_else(|_| panic!("file should be present at {}", self.chain.file_path));
         let mut json: serde_json::Value = from_reader(file).unwrap();
         json[&self.chain.chain_id]["networks"][&self.kind.to_string()] = json!(value);
         serde_json::to_writer_pretty(File::create(&self.chain.file_path)?, &json)?;
@@ -53,7 +53,11 @@ impl Network {
     }
 
     /// Set the locally-saved version version of the contract's latest version on this network
-    pub fn set_contract_version(&self, contract_name: &str, code_id: u64) -> Result<(), CosmScriptError> {
+    pub fn set_contract_version(
+        &self,
+        contract_name: &str,
+        code_id: u64,
+    ) -> Result<(), CosmScriptError> {
         let mut network = self.get()?;
         network["code_ids"][contract_name] = to_value(code_id)?;
         self.set(network)
@@ -81,10 +85,9 @@ impl Default for NetworkInfo {
             gas_denom: Denom::from_str("").unwrap(),
             id: String::default(),
             gas_price: 0f64,
-            grpc_url:String::default(),
+            grpc_url: String::default(),
             lcd_url: None,
             fcd_url: None,
-            
         }
     }
 }
@@ -135,8 +138,8 @@ pub struct ChainInfo {
 
 impl Chain {
     pub async fn new(chain_id: &str, store_path: &str) -> Result<Self, CosmScriptError> {
-        let file = File::open(store_path)
-            .expect(&format!("file should be present at {}", store_path));
+        let file =
+            File::open(store_path).unwrap_or_else(|_| panic!("file not present at {}", store_path));
         let mut config: serde_json::Value = from_reader(file)?;
 
         match config.get(chain_id) {
@@ -145,12 +148,12 @@ impl Chain {
                 if info.pub_addr_prefix == "FILL" {
                     return Err(CosmScriptError::NewChain(store_path.into()));
                 };
-                return Ok(Self {
+                Ok(Self {
                     chain_id: chain_id.into(),
                     pub_addr_prefix: info.pub_addr_prefix,
                     coin_type: info.coin_type,
                     file_path: store_path.into(),
-                });
+                })
             }
             None => {
                 let info = ChainInfo {
@@ -170,14 +173,14 @@ impl Chain {
     }
 
     pub async fn network(&self) -> Result<Network, CosmScriptError> {
-        let file =
-            File::open(&self.file_path).expect(&format!("file present at {}", self.file_path));
+        let file = File::open(&self.file_path)
+            .unwrap_or_else(|_| panic!("file present at {}", self.file_path));
         let mut config: serde_json::Value = from_reader(file)?;
-        
+
         let network_kind = NetworkKind::new()?;
-        
+
         let network = config[&self.chain_id]["networks"].get(network_kind.to_string());
-        
+
         match network {
             Some(network) => {
                 let info: NetworkInfo = from_value(network["info"].clone())?;

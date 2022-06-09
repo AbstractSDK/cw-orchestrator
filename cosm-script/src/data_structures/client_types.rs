@@ -576,6 +576,6 @@ pub mod cosm_denom_format {
         D: Deserializer<'de>,
     {
         let s: String = String::deserialize(deserializer)?;
-        Denom::from_str(&s).map_err(|e| serde::de::Error::custom(e))
+        Denom::from_str(&s).map_err(serde::de::Error::custom)
     }
 }

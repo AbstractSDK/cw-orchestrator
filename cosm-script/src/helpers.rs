@@ -2,14 +2,11 @@ use std::{env, rc::Rc};
 
 use secp256k1::{All, Secp256k1};
 
-use crate::{
-    Deployment,
-    Chain, Network,
-    sender::Sender,
-};
+use crate::{sender::Sender, Chain, Deployment};
 
 pub fn get_env_vars() -> (String, String, String, bool) {
-    let propose_on_multisig = env::var("PROPOSE_ON_MULTISIG").unwrap_or("false".to_string());
+    let propose_on_multisig =
+        env::var("PROPOSE_ON_MULTISIG").unwrap_or_else(|_| "false".to_string());
     let store_path = env::var("STORE").unwrap();
     let chain = env::var("CHAIN").unwrap();
     let deployment = env::var("DEPLOYMENT").unwrap();

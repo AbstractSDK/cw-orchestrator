@@ -1,10 +1,10 @@
 use cosmwasm_std::{Binary, Uint128};
 
 use cosm_script::{
-    Deployment, contract::ContractInstance, error::CosmScriptError, sender::Wallet,
-    traits::*, CosmTxResponse,
+    contract::ContractInstance, error::CosmScriptError, sender::Wallet, traits::*, CosmTxResponse,
+    Deployment,
 };
-use cw20::{MinterResponse, Cw20Coin};
+use cw20::{Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 pub struct CW20<'a>(ContractInstance<'a>);
@@ -60,7 +60,6 @@ impl CW20<'_> {
         minter: String,
         balance: T,
     ) -> Result<CosmTxResponse, CosmScriptError> {
-
         let msg = InstantiateMsg {
             decimals: 6,
             mint: Some(MinterResponse {

@@ -1,6 +1,5 @@
 use std::{
     env,
-    fs::{self, File},
     str::{from_utf8, FromStr},
     time::Duration,
 };
@@ -11,14 +10,11 @@ use cosmrs::{
 };
 
 use serde::{de::DeserializeOwned, Serialize};
-use serde_json::{from_str, from_value, json, Value};
+use serde_json::from_str;
 
 use crate::{
-    cosmos_modules,
-    error::CosmScriptError,
-    multisig::Multisig,
-    sender::{self, Wallet},
-    CosmTxResponse, Deployment, data_structures::network::NetworkKind,
+    cosmos_modules, data_structures::network::NetworkKind, error::CosmScriptError,
+    multisig::Multisig, sender::Wallet, CosmTxResponse, Deployment,
 };
 
 pub struct ContractInstance<'a> {
@@ -39,14 +35,14 @@ impl<'a> ContractInstance<'a> {
             deployment,
             name,
             sender,
-            code_id_key: None
+            code_id_key: None,
         };
         Ok(instance)
     }
 
     /// Used to overwrite the code-id getter key. Useful when you want shared code between multiple contract instances
-    /// Example: Two CW20 tokens that use the same code-id but have a different name. see 
-    pub fn overwrite_code_id_key(&mut self, code_id_key_to_use: &'static str) -> () {
+    /// Example: Two CW20 tokens that use the same code-id but have a different name. see
+    pub fn overwrite_code_id_key(&mut self, code_id_key_to_use: &'static str) {
         self.code_id_key = Some(code_id_key_to_use);
     }
 
@@ -88,7 +84,7 @@ impl<'a> ContractInstance<'a> {
         coins: &[Coin],
     ) -> Result<CosmTxResponse, CosmScriptError> {
         let sender = self.sender;
-        let key = self.code_id_key.unwrap_or_else(|| self.name);
+        let key = self.code_id_key.unwrap_or(self.name);
         let code_id = self.deployment.network.get_latest_version(key)?;
 
         let memo = format!("Contract: {}, Group: {}", self.name, self.deployment.name);
@@ -118,15 +114,15 @@ impl<'a> ContractInstance<'a> {
         query_msg: Q,
     ) -> Result<T, CosmScriptError> {
         let sender = self.sender;
-        
+
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
         let resp = client
-        .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-            address: self.get_address()?,
-            query_data: serde_json::to_vec(&query_msg)?,
-        })
-        .await?;
-        
+            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                address: self.get_address()?,
+                query_data: serde_json::to_vec(&query_msg)?,
+            })
+            .await?;
+
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
@@ -139,11 +135,7 @@ impl<'a> ContractInstance<'a> {
         let wasm_path = if path.contains(".wasm") {
             path.to_string()
         } else {
-            format!(
-                "{}{}",
-                env::var("WASM_DIR").unwrap(),
-                format!("/{}.wasm", path)
-            )
+            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), path)
         };
 
         log::debug!("{}", wasm_path);
@@ -205,37 +197,37 @@ impl<'a> ContractInstance<'a> {
     }
 
     // Getters //
-    
+
     pub fn get_address(&self) -> Result<String, CosmScriptError> {
         self.deployment.get_contract_address(self.name)
     }
-    
+
     /// get the on-chain contract code-id
     pub async fn get_code_id(&self) -> Result<u64, CosmScriptError> {
         let addr = self.get_address()?;
         let channel = self.deployment.network.grpc_channel.clone();
-        let mut client =
-        cosmos_modules::cosmwasm::query_client::QueryClient::new(channel);
-        
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(channel);
+
         let resp = client
-        .contract_info(cosmos_modules::cosmwasm::QueryContractInfoRequest{
-            address: addr
-        })
-        .await?
-        .into_inner();
-        
+            .contract_info(cosmos_modules::cosmwasm::QueryContractInfoRequest { address: addr })
+            .await?
+            .into_inner();
+
         let code_id = resp.contract_info.unwrap().code_id;
         Ok(code_id)
     }
-    
+
     // Setters //
-    
+
     pub fn save_code_id(&self, code_id: u64) -> Result<(), CosmScriptError> {
-        self.deployment.network.set_contract_version(self.name, code_id)
+        self.deployment
+            .network
+            .set_contract_version(self.name, code_id)
     }
 
     pub fn save_contract_address(&self, contract_address: &str) -> Result<(), CosmScriptError> {
-        self.deployment.save_contract_address(self.name, contract_address)
+        self.deployment
+            .save_contract_address(self.name, contract_address)
     }
 
     pub async fn is_local_version(&self) -> anyhow::Result<bool> {

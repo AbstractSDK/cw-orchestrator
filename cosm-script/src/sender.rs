@@ -14,8 +14,7 @@ use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use crate::{
-    Deployment, error::CosmScriptError, keys::private::PrivateKey, Network,
-    CosmTxResponse,
+    error::CosmScriptError, keys::private::PrivateKey, CosmTxResponse, Deployment, Network,
 };
 
 const GAS_LIMIT: u64 = 1_000_000;
@@ -49,13 +48,7 @@ impl<C: Signing + Context> Sender<C> {
         } else {
             log::debug!("{}", config.network.kind.mnemonic_name());
             let mnemonic = env::var(config.network.kind.mnemonic_name())?;
-            PrivateKey::from_words(
-                &secp,
-                &mnemonic,
-                0,
-                0,
-                config.network.chain.coin_type,
-            )?
+            PrivateKey::from_words(&secp, &mnemonic, 0, 0, config.network.chain.coin_type)?
         };
 
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
@@ -79,7 +72,8 @@ impl<C: Signing + Context> Sender<C> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.network.chain.pub_addr_prefix)?.to_string())
+            .account_id(&self.network.chain.pub_addr_prefix)?
+            .to_string())
     }
 
     pub async fn bank_send(
@@ -174,10 +168,7 @@ impl<C: Signing + Context> Sender<C> {
         let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
         #[allow(deprecated)]
         let resp = client
-            .simulate(cosmos_modules::tx::SimulateRequest {
-                tx: None,
-                tx_bytes: tx_bytes,
-            })
+            .simulate(cosmos_modules::tx::SimulateRequest { tx: None, tx_bytes })
             .await?
             .into_inner();
 
