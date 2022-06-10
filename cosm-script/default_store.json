@@ -1,0 +1,34 @@
+{
+  "juno": {
+    "info": {
+      "coin_type": 118,
+      "pub_addr_prefix": "juno"
+    },
+    "networks": {
+      "local": {
+        "code_ids": {},
+        "deployments": {},
+        "info": {
+          "fcd": "",
+          "gas_denom": "ustake",
+          "gas_price": 0,
+          "grpc_url": "http://localhost:9090",
+          "id": "testing",
+          "lcd": ""
+        }
+      },
+      "testnet": {
+        "code_ids": {},
+        "deployments": {}
+      },
+      "info": {
+        "fcd": "",
+        "gas_denom": "ujunox",
+        "gas_price": 0.025,
+        "grpc_url": "https://grpc.juno.giansalex.dev:80",
+        "id": "uni-3",
+        "lcd": ""
+      }
+    }
+  }
+}

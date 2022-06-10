@@ -26,19 +26,6 @@ pub trait Interface {
     type Migrate: Serialize;
 }
 
-// TODO: find out how to create a wrapper trait that can be imported to expose all the interfaces
-pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery + WasmMigrate {}
-
-// /// Smart Contract execute endpoint
-// #[async_trait(?Send)]
-// pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery where &'a Self: 'a + Interface + Instance  {
-//     async fn exec<'b>(
-//         &'a self,
-//         execute_msg:&'b <&'a Self as Interface>::E,
-//         coins: Option<&[Coin]>,
-//     ) -> Result<CosmTxResponse, CosmScriptError>;
-// }
-
 /// Smart Contract execute endpoint
 #[async_trait(?Send)]
 pub trait WasmExecute {
@@ -171,3 +158,16 @@ fn assert_implemented<E: Serialize>(msg: &E) -> Result<(), CosmScriptError> {
     }
     Ok(())
 }
+
+// TODO: find out how to create a wrapper trait that can be imported to expose all the interfaces
+// pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery + WasmMigrate {}
+
+// /// Smart Contract execute endpoint
+// #[async_trait(?Send)]
+// pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery where &'a Self: 'a + Interface + Instance  {
+//     async fn exec<'b>(
+//         &'a self,
+//         execute_msg:&'b <&'a Self as Interface>::E,
+//         coins: Option<&[Coin]>,
+//     ) -> Result<CosmTxResponse, CosmScriptError>;
+// }

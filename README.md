@@ -1,16 +1,21 @@
-# terra-rust-script
+# Cosmos Rust Script
 
-Smart contract scripting library to ease smart contract development and deployment.
+Smart contract scripting library to ease [CosmWasm](https://cosmwasm.com/) smart contract development and deployment.
 
-Terra-rust-script is built on top of [terra-rust-api](https://github.com/PFC-Validator/terra-rust).
+> [cosm-script](cosm-script/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) parsing.
 
-The use of this software makes it easier to quickly deploy new contracts. You should use this function responsibly when working on mainnet or testnet as ALL the code you upload to those networks takes up valuable space. Therefore I strongly suggest using [localterra](https://github.com/terra-money/LocalTerra). Setup is very easy and seamlessly supported by using the provided *example.env* file.
+[cw-plus-script](cw-plus-script/README.md) uses cosm-script to provide the standard type-safe interfaces to interact with cosmwasm-plus contracts.
+
+The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as ALL the code you upload to those networks takes up valuable space. Therefore I strongly suggest using a locally-hosted chain like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc. 
+
+## Getting started 
+Setup is very easy and seamlessly supported by using the provided *example.env* file.
 ## How it works
 
-Usually your contracts workspace will have a package that contains the structs that get filled by a provided JSON through the serde-json package on execution by the CosmWasm VM. 
+Usually your contracts workspace will have a package that contains the structs that get filled by a provided JSON through the FFI on execution by the CosmWasm VM. 
 We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMsg, ...) by adding that package as a dependency to the scripting workspace. 
 
-In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing the message on a wrong contract and it also handles converting the struct to it's json format. This way we prevent sending incorrectly formatted messages! The implementation for a CW20 token is shown below. The full file resides [here](example/cw20.rs)
+In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](cw-plus-script/src/cw20.rs)
 
 ```
 // Wrapper around a ContractInstance that handles address storage and interactions.
@@ -53,45 +58,3 @@ After implementing these traits you have the ability to use all the functions pr
 ```
     let token_info = cw20_token.query(Cw20QueryMsg::TokenInfo {}).await?;
 ```
-
-
-## Usage
-
-1. Create a new dir + workspace to hold the scripts and the generated executable binaries.
-   ```
-   $ mkdir my_scripts
-   $ cd my_scripts
-   $ cargo init --bin
-   ```
-2. Clone the *example.env* file from this repo and rename it to *.env*
-3. In order to start using terra-rust-script you need to add the package as a dependency in your Cargo.toml file. (TODO: upload to crates.io)
-    ```
-    [dependencies]
-    terra-rust-script = {git = "https://github.com/CyberHoward/terra-rust-script", tag = "v1.0.0"}
-    ```
-
-I prefer to lay out my dir as shown below but anything goes as file paths are set in the .env file.
-
-```
-my_scripts/
-├─ resources/
-│  ├─ // JSONs that store the contract information
-├─ src/
-│  ├─ bin/
-│  │  ├─ // Actual scripts
-│  ├─ helpers/
-│  │  ├─ // Useful helper functions
-│  ├─ contracts/
-│  │  ├─ // Contract definitions / custom functions
-│  ├─ lib.rs
-├─ .env
-├─ Cargo.toml
-```
-
-### .env file
-**Warning: The current version of this software requires you to insert the mnemonic of your wallet in order to sign messages. This is a security risk! I do not take responsibility over lost/stolen funds.**
-
-- **DEPLOYMENT**: Name of the deployment of contracts you want to address. "mainnet" or "testnet" will automatically use the other configs that apply. Any other name will make the executable default to use localterra. 
-- **RUST_LOG**: Level of terminal logging
-- **ADDRESS_JSON**: Path to JSON file that stores contract addresses and code-id per deployment. 
-- **WASM_DIR**: Path to dir that stores the .wasm binaries and compile hashes. Used for uploading/verifying.
