@@ -7,9 +7,7 @@ Smart contract scripting library to ease [CosmWasm](https://cosmwasm.com/) smart
 [cw-plus-script](cw-plus-script/README.md) uses cosm-script to provide the standard type-safe interfaces to interact with cosmwasm-plus contracts.
 
 The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as ALL the code you upload to those networks takes up valuable space. Therefore I strongly suggest using a locally-hosted chain like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc. 
-
-## Getting started 
-Setup is very easy and seamlessly supported by using the provided *example.env* file.
+.
 ## How it works
 
 Usually your contracts workspace will have a package that contains the structs that get filled by a provided JSON through the FFI on execution by the CosmWasm VM. 

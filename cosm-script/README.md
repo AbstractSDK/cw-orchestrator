@@ -3,8 +3,7 @@ A Rust gRPC-based scripting library.
 
 ## Environment variables
 
-> **These env variables might contain sensitive information (like a mnemonic phrase). I am not responsible for your security practices.**
-
+> **These env variables might contain sensitive information (like a mnemonic phrase). I am not responsible for your security practices.**  
 > A new chain/network scaffold will be automatically generated when you try to run a script with unknown `.env` values.
 
 
@@ -39,7 +38,7 @@ A Rust gRPC-based scripting library.
     cosm-script = {git = "", tag = "v1.0.0"}
     ```
 
-Your layout should then look something like this
+Your layout should look something like this
 
 ```
 my_scripts/
@@ -55,4 +54,5 @@ my_scripts/
 
 You can then add a custom library, similar to [cw-plus-script](../cw-plus-script/README.md), that holds your custom contract interface definitions.
 
-See the [cw-20 example](../cw-plus-script/examples/cw20.rs)
+## Example 
+See the [cw-20 example](../cw-plus-script/examples/cw20.rs) for an example on how to use the library. 
