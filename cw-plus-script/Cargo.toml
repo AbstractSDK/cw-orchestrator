@@ -9,12 +9,20 @@ repository = "https://github.com/CyberHoward/cosm-rust-script"
 keywords = ["cosmwasm", "blockchain"]
 readme = "README.md"
 
+exclude = [
+    ".env",
+    "default_store.json"
+]
+
 [dependencies]
-cosm-script = {path ="../cosm-script"}
+cosm-script = "0.1"
 cosmwasm-std = { version = "1.0" }
 cw20 = "0.13"
 cw20-base = "0.13"
 anyhow="1.0"
+
+[patch.crates-io]
+cosm-script = {path ="../cosm-script"}
 
 [dev-dependencies]
 tokio = "1.19.1"
