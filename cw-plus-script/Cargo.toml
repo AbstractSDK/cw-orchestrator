@@ -1,8 +1,13 @@
 [package]
 name = "cw-plus-script"
 version = "0.1.0"
-authors = ["CyberHoward"]
-edition = "2018"
+authors = ["CyberHoward <cyberhoward@protonmail.com>"]
+edition = "2021"
+description = "CosmWasm-plus scripting interfaces"
+license = "Apache-2.0"
+repository = "https://github.com/CyberHoward/cosm-rust-script"
+keywords = ["cosmwasm", "blockchain"]
+readme = "README.md"
 
 [dependencies]
 cosm-script = {path ="../cosm-script"}
