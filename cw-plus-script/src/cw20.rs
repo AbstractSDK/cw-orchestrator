@@ -7,15 +7,14 @@ use cosm_script::{
 use cw20::{Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
+// Wrapper stuct around the contract instance.
 pub struct CW20<'a>(ContractInstance<'a>);
 
+// Interface and instance traits allow for an auto-implementation of our Cosm traits.
 impl Interface for CW20<'_> {
     type Exec = ExecuteMsg;
-
     type Init = InstantiateMsg;
-
     type Query = QueryMsg;
-
     type Migrate = NotImplemented;
 }
 
@@ -25,8 +24,6 @@ impl Instance for CW20<'_> {
     }
 }
 
-impl WasmContract<'_> for CW20<'_> {}
-
 impl CW20<'_> {
     /// Create a new CW20 ContractInstance. Uses "cw20" as code-id key.
     pub fn new<'a>(
@@ -35,7 +32,7 @@ impl CW20<'_> {
         deployment: &'a Deployment,
     ) -> anyhow::Result<CW20<'a>> {
         let mut instance = ContractInstance::new(name, sender, deployment)?;
-        // We want all our CW20 tokens to use the same contract!
+        // We want all our CW20 tokens to use the same contract (code-id)!
         instance.overwrite_code_id_key("cw20");
         Ok(CW20(instance))
     }
@@ -55,6 +52,7 @@ impl CW20<'_> {
         self.exec(&msg, None).await
     }
 
+    /// Instantiate a new token instance with some initial balance given to the minter
     pub async fn create_new<T: Into<Uint128>>(
         &self,
         minter: String,
@@ -66,7 +64,7 @@ impl CW20<'_> {
                 cap: None,
                 minter: minter.clone(),
             }),
-            symbol: "TESTING".to_string(),
+            symbol: self.instance().name.to_ascii_uppercase(),
             name: self.instance().name.to_string(),
             initial_balances: vec![Cw20Coin {
                 address: minter.clone(),

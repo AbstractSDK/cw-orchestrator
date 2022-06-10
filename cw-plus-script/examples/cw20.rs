@@ -6,17 +6,13 @@ use cw_plus_script::CW20;
 
 pub async fn script() -> anyhow::Result<()> {
     let (config, sender) = &get_configuration().await?;
+    let token = CW20::new("cw20", &sender, config)?;
 
-    let cw20_token = CW20::new("cw20", &sender, config)?;
+    token.upload("examples/cw20_base.wasm").await?;
 
-    // cw20_token.upload("examples/cw20_base.wasm").await?;
+    token.create_new(sender.pub_addr_str()?, 642406u128).await?;
 
-    cw20_token
-        .create_new(sender.pub_addr_str()?, 642406u128)
-        .await?;
-    print!("{:?}", cw20_token.instance().get_address()?);
-
-    cw20_token
+    token
         .exec(
             &cw20::Cw20ExecuteMsg::Burn {
                 amount: 700u128.into(),
@@ -24,11 +20,8 @@ pub async fn script() -> anyhow::Result<()> {
             None,
         )
         .await?;
-    let token_info = cw20_token
-        .query::<cw20::TokenInfoResponse>(cw20_base::msg::QueryMsg::TokenInfo {})
-        .await?;
-    print!("{:?}", token_info);
-
+    let _token_info: cw20::TokenInfoResponse =
+        token.query(cw20_base::msg::QueryMsg::TokenInfo {}).await?;
     Ok(())
 }
 
