@@ -16,38 +16,35 @@ We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMs
 In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](cw-plus-script/src/cw20.rs)
 
 ```
-// Wrapper around a ContractInstance that handles address storage and interactions.
+// Wrapper stuct around the contract instance.
 pub struct CW20<'a>(ContractInstance<'a>);
 
-// Defining the contract's endpoints.
+// Interface and instance traits allow for an auto-implementation of our Cosm traits.
 impl Interface for CW20<'_> {
-    type E = Cw20ExecuteMsg;
-
-    type I = InstantiateMsg;
-
-    type Q = Cw20QueryMsg;
-
-    type M = Empty;
+    type Exec = ExecuteMsg;
+    type Init = InstantiateMsg;
+    type Query = QueryMsg;
+    type Migrate = NotImplemented;
 }
 
-// Implement the Instance trait so the instance can get accessed
 impl Instance for CW20<'_> {
     fn instance(&self) -> &ContractInstance {
         &self.0
     }
 }
 
-// A builder function for the struct
 impl CW20<'_> {
+    /// Create a new CW20 ContractInstance. Uses "cw20" as code-id key.
     pub fn new<'a>(
         name: &'a str,
-        sender: &'a Rc<terra_rust_script::sender::Sender<All>>,
+        sender: Wallet<'a>,
         deployment: &'a Deployment,
     ) -> anyhow::Result<CW20<'a>> {
-        Ok(CW20(ContractInstance::new(name, sender, deployment)?))
+        let mut instance = ContractInstance::new(name, sender, deployment)?;
+        // We want all our CW20 tokens to use the same contract (code-id)!
+        instance.overwrite_code_id_key("cw20");
+        Ok(CW20(instance))
     }
-
-    // Custom functions like send or transfer
     ...
 }
 ```
