@@ -53,3 +53,6 @@ After implementing these traits you have the ability to use all the functions pr
 ```
     let token_info = cw20_token.query(Cw20QueryMsg::TokenInfo {}).await?;
 ```
+
+# Contributing
+Feel free to open issues or PRs!
