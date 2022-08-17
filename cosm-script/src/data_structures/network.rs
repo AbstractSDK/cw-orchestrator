@@ -42,7 +42,7 @@ impl Network {
         Ok(())
     }
 
-    /// Get the locally-saved version version of the contract's latest version on this network
+    /// Get the locally-saved version of the contract's latest version on this network
     pub fn get_latest_version(&self, contract_name: &str) -> Result<u64, CosmScriptError> {
         let network = self.get()?;
         let maybe_code_id = network["code_ids"].get(contract_name);
@@ -52,7 +52,7 @@ impl Network {
         }
     }
 
-    /// Set the locally-saved version version of the contract's latest version on this network
+    /// Set the locally-saved version of the contract's latest version on this network
     pub fn set_contract_version(
         &self,
         contract_name: &str,
