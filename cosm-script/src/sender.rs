@@ -95,7 +95,7 @@ impl<C: Signing + Context> Sender<C> {
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, CosmScriptError> {
-        let timeout_height = 900124u32;
+        let timeout_height = self.block_height().await? + 5u32;
         let msgs: Result<Vec<Any>, _> = msgs.into_iter().map(Msg::into_any).collect();
         let msgs = msgs?;
         let gas_denom = self.network.gas_denom.clone();
@@ -128,6 +128,7 @@ impl<C: Signing + Context> Sender<C> {
 
         let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
         let amount_to_pay = gas_expected * self.network.gas_price;
+        log::debug!("gas fee: {:?}", amount_to_pay);
         let amount = Coin {
             amount: (amount_to_pay as u64).into(),
             denom: gas_denom,
@@ -171,13 +172,22 @@ impl<C: Signing + Context> Sender<C> {
             .simulate(cosmos_modules::tx::SimulateRequest { tx: None, tx_bytes })
             .await?
             .into_inner();
-
         let gas_used = resp.gas_info.unwrap().gas_used;
         Ok(gas_used)
     }
 
     pub fn channel(&self) -> Channel {
         self.channel.clone()
+    }
+
+    async fn block_height(&self) ->  Result<u32, CosmScriptError> {
+        let mut client = cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel());
+        #[allow(deprecated)]
+        let resp = client
+            .get_latest_block(cosmos_modules::tendermint::GetLatestBlockRequest{})
+            .await?
+            .into_inner();
+        Ok(resp.block.unwrap().header.unwrap().height as u32)
     }
 
     async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, CosmScriptError> {
@@ -199,7 +209,7 @@ async fn find_by_hash(
     client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
     hash: String,
 ) -> Result<CosmTxResponse, CosmScriptError> {
-    let attempts = 10;
+    let attempts = 20;
     let request = cosmos_modules::tx::GetTxRequest { hash };
     for _ in 0..attempts {
         if let Ok(tx) = client.get_tx(request.clone()).await {
@@ -208,7 +218,7 @@ async fn find_by_hash(
             log::debug!("{:?}", resp);
             return Ok(resp.into());
         }
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(10)).await;
     }
     panic!("couldn't find transaction after {} attempts!", attempts);
 }
