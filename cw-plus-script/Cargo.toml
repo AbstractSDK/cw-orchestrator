@@ -15,7 +15,7 @@ exclude = [
 ]
 
 [dependencies]
-cosm-script = "0.1"
+cosm-script ={path ="../cosm-script"}
 cosmwasm-std = { version = "1.0" }
 cw20 = "0.13"
 cw20-base = "0.13"
