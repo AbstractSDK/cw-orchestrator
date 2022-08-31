@@ -5,7 +5,7 @@ use std::{
 };
 
 use cosmrs::{
-    cosmwasm::{MsgExecuteContract, MsgInstantiateContract},
+    cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     AccountId, Coin,
 };
 
@@ -162,38 +162,25 @@ impl<'a> ContractInstance<'a> {
 
     pub async fn migrate<M: Serialize>(
         &self,
-        _migrate_msg: M,
-        _new_code_id: u64,
+        migrate_msg: M,
+        new_code_id: u64,
     ) -> Result<CosmTxResponse, CosmScriptError> {
-        todo!()
 
-        // let sender = &self.sender;
-        // let migrate_msg_json = json!(migrate_msg);
+        let contract = self.get_address()?;
+        log::info!("executing on {} at {}", self.name, contract);
 
-        // let wasm = Wasm::create(&sender.terra);
+        let exec_msg: MsgMigrateContract =
+        MsgMigrateContract {
+                sender: self.sender.pub_addr()?,
+                contract: AccountId::from_str(&self.get_address()?)?,
+                msg: serde_json::to_vec(&migrate_msg)?,
+                code_id: new_code_id
+            
+        };
 
-        // let old_code_id = wasm.info(&self.get_address()?).await?.result.code_id;
-        // let memo = format!("Contract: {}, OldCodeId: {}", self.name, old_code_id);
+        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
 
-        // let resp = wasm
-        //     .migrate(
-        //         &sender.secp,
-        //         &sender.private_key,
-        //         &self.get_address()?,
-        //         new_code_id,
-        //         Some(migrate_msg_json.to_string()),
-        //         Some(memo),
-        //     )
-        //     .await?;
-
-        // let result = sender
-        //     .terra
-        //     .tx()
-        //     .get_and_wait_v1(&resp.txhash, 15, Duration::from_secs(2))
-        //     .await?;
-
-        // wait(self.deployment).await;
-        // Ok(result)
+        Ok(result)
     }
 
     // Getters //
