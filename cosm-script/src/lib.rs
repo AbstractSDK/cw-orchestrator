@@ -6,8 +6,11 @@ pub mod helpers;
 mod keys;
 mod multisig;
 pub mod sender;
-pub mod traits;
-
+pub (crate) mod tx_handler;
+pub (crate) mod environments;
+pub (crate) mod index_response;
+pub (crate) mod state;
+// pub mod traits;
 pub use cosmrs::{Coin, Denom};
 pub use data_structures::{
     deployment::Deployment,
