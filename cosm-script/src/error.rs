@@ -13,6 +13,8 @@ pub enum CosmScriptError {
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
+    CosmWasmError(#[from] cosmwasm_std::StdError),
+    #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
     #[error(transparent)]
     Secp256k1(#[from] ::secp256k1::Error),

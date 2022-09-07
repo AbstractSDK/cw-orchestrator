@@ -44,3 +44,5 @@ regex="1"
 cosmrs = {version = "0.7.0", features=["dev","cosmwasm"]}
 cosmos-sdk-proto = {version = "0.12.2", features=["cosmwasm","grpc-transport"]}
 chrono= "0.4"
+cosmwasm-std = "1.0.0"
+cw-multi-test = "0.14.0"
