@@ -1,7 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use cosm_script::contract::get_source;
+use cosm_script::index_response::IndexResponse;
 use cosm_script::networks::juno::JUNO_DAEMON;
+use cosm_script::tx_handler::TxHandler;
 use cosm_script::{instantiate_daemon_env, Mock, MockState};
 
 use cosmwasm_std::Addr;
@@ -11,44 +14,50 @@ use cw_plus_script::Cw20;
 
 pub fn script() -> anyhow::Result<()> {
     for network in [JUNO_DAEMON] {
-        let (_runtime, sender, chain) = instantiate_daemon_env(network)?;
+        let (_, sender, chain) = instantiate_daemon_env(network)?;
 
         // run contract on a particular chain with a particular sender.
         let token = Cw20::new("cw20", &chain);
-        let _token2 = Cw20::new("raw", &chain);
-        let _token3 = Cw20::new("test", &chain);
-
+        // upload the contract over gRPC
         token.upload(token.source())?;
-
-        let resp = token.create_new(&sender.address()?, 642406u128)?;
-        resp.gas_used;
-
+        // Instantiate the contract using a custom function
+        let resp = token.create_new(&sender.address()?, 420u128)?;
+        // Access the execution result 
+        println!("gas used in token creation: {}", resp.gas_used);
+        // get the user balance and assert for testing purposes
+        let new_balance = token.balance(&sender.address()?)?;
+        // balance == mint balance
+        assert_eq!(420u128, new_balance.u128());
+        // BURNNNN
         token.execute(
             &cw20::Cw20ExecuteMsg::Burn {
-                amount: 700u128.into(),
+                amount: 96u128.into(),
             },
             None,
         )?;
         let _token_info: cw20::TokenInfoResponse =
             token.query(&cw20_base::msg::QueryMsg::TokenInfo {})?;
     }
+
+    // The same in a cw-multi-test context
     let sender = Addr::unchecked("testing");
-    let mock_state = Rc::new(RefCell::new(MockState::new()));
-    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
 
     let mock_chain = Mock::new(&sender, &mock_state, &mock_app)?;
     let mock_token = Cw20::new("testing", &mock_chain);
     mock_token.upload(
-        cosm_script::contract::ContractCodeReference::ContractEndpoints(Box::new(
-            ContractWrapper::new_with_empty(
-                cw20_base::contract::execute,
-                cw20_base::contract::instantiate,
-                cw20_base::contract::query,
-            ),
-        )),
+        ,
     )?;
 
+    mock_token.create_new(minter, balance)
+
     Ok(())
+}
+
+fn generic_cw20_test<Chain: TxHandler + Clone>(token: Cw20<Chain>, chain: Chain) where
+<Chain as TxHandler>::Response : IndexResponse {
+    let token = Cw20::new("cw20", &chain);
+    token.upload(get_source(&token)?)?;
+
 }
 
 fn main() {
