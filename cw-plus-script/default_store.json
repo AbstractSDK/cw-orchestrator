@@ -2,7 +2,7 @@
   "juno": {
     "info": {
       "coin_type": 118,
-      "pub_addr_prefix": "juno"
+      "pub_address_prefix": "juno"
     },
     "networks": {
       "local": {

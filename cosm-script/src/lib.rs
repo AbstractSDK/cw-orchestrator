@@ -1,24 +1,25 @@
 #![allow(dead_code)]
 pub mod contract;
 mod data_structures;
+pub(crate) mod environments;
 pub mod error;
 pub mod helpers;
+pub mod index_response;
 mod keys;
 mod multisig;
+pub mod networks;
 pub mod sender;
-pub (crate) mod tx_handler;
-pub (crate) mod environments;
-pub (crate) mod index_response;
-pub (crate) mod state;
+pub mod state;
+pub mod tx_handler;
 // pub mod traits;
 pub use cosmrs::{Coin, Denom};
 pub use data_structures::{
-    deployment::Deployment,
-    network::{Chain, Network, NetworkKind},
+    daemon_state::{ChainInfo, DaemonState, NetworkInfo, NetworkKind},
     tx_resp::CosmTxResponse,
 };
 pub use error::CosmScriptError;
-pub use helpers::{get_configuration, get_env_vars};
+pub use helpers::get_env_vars;
+pub use environments::{daemon::Daemon,mock_chain::Mock};
 
 #[macro_use]
 extern crate lazy_static;

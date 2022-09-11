@@ -1,27 +1,51 @@
 use std::{
     env,
+    fmt::Debug,
     str::{from_utf8, FromStr},
     time::Duration,
-    fmt::Debug,
 };
 
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
-    AccountId
+    AccountId,
 };
 
-use cosmwasm_std::{Coin, Addr};
+use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 
 use crate::{
-    cosmos_modules, data_structures::{network::NetworkKind, parse_cw_coins}, error::CosmScriptError,
-    multisig::Multisig, sender::Wallet, CosmTxResponse, Deployment, tx_handler::TxHandler,
+    contract::ContractCodeReference, cosmos_modules, data_structures::parse_cw_coins,
+    error::CosmScriptError, multisig::Multisig, sender::Wallet, state::{StateInterface, ChainState},
+    tx_handler::TxHandler, CosmTxResponse, DaemonState, NetworkKind,
 };
 
 pub struct Daemon<'a> {
-    pub deployment: &'a Deployment,
+    pub state: &'a DaemonState,
     pub sender: Wallet<'a>,
+}
+
+impl<'a> Daemon<'a> {
+    pub fn new(sender: Wallet<'a>, state: &'a DaemonState) -> anyhow::Result<Self> {
+        let instance = Self { sender, state };
+        Ok(instance)
+    }
+
+    async fn wait(&self) {
+        match self.state.kind {
+            NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
+            NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
+            NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
+        }
+    }
+}
+
+impl <'a>ChainState for Daemon<'a> {
+    type Out = &'a DaemonState;
+
+    fn state(&self) -> Self::Out {
+        self.state
+    }
 }
 
 // Execute on the real chain, returns tx response
@@ -36,79 +60,60 @@ impl TxHandler for Daemon<'_> {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?;
-        let contract = self.get_address()?;
-        let exec_msg: MsgExecuteContract = if self.deployment.proposal {
-            Multisig::create_proposal(
-                &exec_msg,
-                &self.deployment.name,
-                &contract,
-                &env::var(&self.deployment.network.kind.multisig_name())?,
-                self.sender.pub_addr()?,
-                &parse_cw_coins(coins)?,
-            )?
-        } else {
-            MsgExecuteContract {
-                sender: self.sender.pub_addr()?,
-                contract: AccountId::from_str(&self.get_address()?)?,
-                msg: serde_json::to_vec(&exec_msg)?,
-                funds: parse_cw_coins(coins)?,
-            }
+        let exec_msg: MsgExecuteContract = MsgExecuteContract {
+            sender: self.sender.pub_addr()?,
+            contract: AccountId::from_str(contract_address.as_str())?,
+            msg: serde_json::to_vec(&exec_msg)?,
+            funds: parse_cw_coins(coins)?,
         };
-
         let result = rt.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
 
     fn instantiate<I: Serialize + Debug>(
         &self,
+        code_id: u64,
         init_msg: &I,
-        admin: Option<String>,
+        label: Option<&str>,
+        admin: Option<&Addr>,
         coins: &[Coin],
     ) -> Result<Self::Response, CosmScriptError> {
         let sender = self.sender;
-        let key = self.code_id_key.unwrap_or(self.name);
-        let code_id = self.deployment.network.get_latest_version(key)?;
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?;
 
-        let memo = format!("Contract: {}, Group: {}", self.name, self.deployment.name);
-
-        log::info!("instantiating {}", self.name);
-
         let init_msg = MsgInstantiateContract {
             code_id,
-            label: Some(self.name.into()),
-            admin: admin.map(|a| FromStr::from_str(&a).unwrap()),
+            label: label.map(|msg| msg.to_string()),
+            admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
             sender: sender.pub_addr()?,
             msg: serde_json::to_vec(&init_msg)?,
-            funds: coins.to_vec(),
+            funds: parse_cw_coins(coins)?,
         };
 
-        let result = rt.block_on(sender.commit_tx(vec![init_msg], Some(&memo)))?;
-        let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
-
-        log::debug!("{} address: {:?}", self.name, address);
-        self.save_contract_address(address)?;
+        let result = rt.block_on(sender.commit_tx(vec![init_msg], None))?;
+        // let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
 
         Ok(result)
     }
 
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
-        query_msg: Q,
+        query_msg: &Q,
+        contract_address: &Addr,
     ) -> Result<T, CosmScriptError> {
         let sender = self.sender;
         let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
+            .enable_all()
+            .build()?;
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
-        let resp = rt.block_on(client
-            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-                address: self.get_address()?,
+        let resp = rt.block_on(client.smart_contract_state(
+            cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                address: contract_address.to_string(),
                 query_data: serde_json::to_vec(&query_msg)?,
-            })
-        )?;
+            },
+        ))?;
 
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
@@ -117,206 +122,65 @@ impl TxHandler for Daemon<'_> {
         &self,
         migrate_msg: &M,
         new_code_id: u64,
+        contract_address: &Addr,
     ) -> Result<Self::Response, CosmScriptError> {
         let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
-        let contract = self.get_address()?;
-        log::info!("executing on {} at {}", self.name, contract);
+            .enable_all()
+            .build()?;
 
-        let exec_msg: MsgMigrateContract =
-        MsgMigrateContract {
-                sender: self.sender.pub_addr()?,
-                contract: AccountId::from_str(&self.get_address()?)?,
-                msg: serde_json::to_vec(&migrate_msg)?,
-                code_id: new_code_id
-            
+        let exec_msg: MsgMigrateContract = MsgMigrateContract {
+            sender: self.sender.pub_addr()?,
+            contract: AccountId::from_str(contract_address.as_str())?,
+            msg: serde_json::to_vec(&migrate_msg)?,
+            code_id: new_code_id,
         };
         let result = rt.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
 
-    fn upload<T>(&self, path: T) -> Result<Self::Response, CosmScriptError> {
-        let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
-        let sender = &self.sender;
-        let memo = format!("Contract: {}, Group: {}", self.name, self.deployment.name);
-        let wasm_path = if path.contains(".wasm") {
-            path.to_string()
-        } else {
-            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), path)
-        };
-
-        log::debug!("{}", wasm_path);
-
-        let file_contents = std::fs::read(wasm_path)?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: sender.pub_addr()?,
-            wasm_byte_code: file_contents,
-            instantiate_permission: None,
-        };
-        let result = rt.block_on(sender.commit_tx(vec![store_msg], Some(&memo)))?;
-
-        log::info!("uploaded: {:?}", result.txhash);
-        // TODO: check why logs are empty
-
-        let code_id = result.get_attribute_from_logs("store_code", "code_id")[0]
-            .1
-            .parse::<u64>()?;
-        log::info!("code_id: {:?}", code_id);
-        self.save_code_id(code_id)?;
-        rt.block_on(wait(self.deployment));
-        Ok(result)
-    }
-    
-}
-
-impl<'a> Daemon<'a> {
-    pub fn new(
-        sender: Wallet<'a>,
-        deployment: &'a Deployment,
-    ) -> anyhow::Result<Self> {
-        let instance = Self {
-            deployment,
-            sender,
-        };
-        Ok(instance)
-    }
-
-    
-    /// Uploads given .wasm file and stores resulting code-id in contract store.
-    /// *path* can be either a full/relative path. (indicated by the .wasm) or just a regular name. In the second case the WASM_DIR env var
-    /// will be read and the path will be costructed to be WASM_DIR/*path*.wasm
-    pub async fn upload(&self, path: &str) -> Result<CosmTxResponse, CosmScriptError> {
-        let sender = &self.sender;
-        let memo = format!("Contract: {}, Group: {}", self.name, self.deployment.name);
-        let wasm_path = if path.contains(".wasm") {
-            path.to_string()
-        } else {
-            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), path)
-        };
-
-        log::debug!("{}", wasm_path);
-
-        let file_contents = std::fs::read(wasm_path)?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: sender.pub_addr()?,
-            wasm_byte_code: file_contents,
-            instantiate_permission: None,
-        };
-        let result = sender.commit_tx(vec![store_msg], Some(&memo)).await?;
-
-        log::info!("uploaded: {:?}", result.txhash);
-        // TODO: check why logs are empty
-
-        let code_id = result.get_attribute_from_logs("store_code", "code_id")[0]
-            .1
-            .parse::<u64>()?;
-        log::info!("code_id: {:?}", code_id);
-        self.save_code_id(code_id)?;
-        wait(self.deployment).await;
-        Ok(result)
-    }
-
-    pub async fn migrate<M: Serialize>(
+    fn upload(
         &self,
-        migrate_msg: M,
-        new_code_id: u64,
-    ) -> Result<CosmTxResponse, CosmScriptError> {
-
-        let contract = self.get_address()?;
-        log::info!("executing on {} at {}", self.name, contract);
-
-        let exec_msg: MsgMigrateContract =
-        MsgMigrateContract {
-                sender: self.sender.pub_addr()?,
-                contract: AccountId::from_str(&self.get_address()?)?,
-                msg: serde_json::to_vec(&migrate_msg)?,
-                code_id: new_code_id
-            
+        contract_source: ContractCodeReference<Empty>,
+    ) -> Result<Self::Response, CosmScriptError> {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?;
+        let sender = &self.sender;
+        let path = match contract_source {
+            ContractCodeReference::WasmCodePath(path) => path,
+            ContractCodeReference::ContractEndpoints(_) => {
+                return Err(CosmScriptError::StdErr(
+                    "Blockchain deamon upload requires wasm file.".into(),
+                ))
+            }
         };
 
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let wasm_path = if path.contains(".wasm") {
+            path.to_string()
+        } else {
+            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), path)
+        };
 
+        log::debug!("{}", wasm_path);
+
+        let file_contents = std::fs::read(wasm_path)?;
+        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+            sender: sender.pub_addr()?,
+            wasm_byte_code: file_contents,
+            instantiate_permission: None,
+        };
+        let result = rt.block_on(sender.commit_tx(vec![store_msg], None))?;
+
+        log::info!("uploaded: {:?}", result.txhash);
+
+        // let code_id = result.get_attribute_from_logs("store_code", "code_id")[0]
+        //     .1
+        //     .parse::<u64>()?;
+        // log::info!("code_id: {:?}", code_id);
+        // self.save_code_id(code_id)?;
+
+        // Extra time-out to ensure contract code propagation
+        rt.block_on(self.wait());
         Ok(result)
-    }
-
-    // Getters //
-
-    pub fn get_address(&self) -> Result<String, CosmScriptError> {
-        self.deployment.get_contract_address(self.name)
-    }
-
-    /// get the on-chain contract code-id
-    pub async fn get_code_id(&self) -> Result<u64, CosmScriptError> {
-        let addr = self.get_address()?;
-        let channel = self.deployment.network.grpc_channel.clone();
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(channel);
-
-        let resp = client
-            .contract_info(cosmos_modules::cosmwasm::QueryContractInfoRequest { address: addr })
-            .await?
-            .into_inner();
-
-        let code_id = resp.contract_info.unwrap().code_id;
-        Ok(code_id)
-    }
-
-    // Setters //
-
-    pub fn save_code_id(&self, code_id: u64) -> Result<(), CosmScriptError> {
-        self.deployment
-            .network
-            .set_contract_version(self.name, code_id)
-    }
-
-    pub fn save_contract_address(&self, contract_address: &str) -> Result<(), CosmScriptError> {
-        self.deployment
-            .save_contract_address(self.name, contract_address)
-    }
-
-    pub async fn is_local_version(&self) -> anyhow::Result<bool> {
-        todo!()
-
-        // let on_chain_encoded_hash = self
-        //     .sender
-        //     .terra
-        //     .wasm()
-        //     .codes(self.get_code_id()?)
-        //     .await?
-        //     .result
-        //     .code_hash;
-        // let path = format!("{}/checksums.txt", env::var("WASM_DIR")?);
-
-        // let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
-
-        // let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-
-        // let name = self.name.split(':').last().unwrap();
-
-        // let containing_line = parsed
-        //     .iter()
-        //     .filter(|line| line.contains(name))
-        //     .next()
-        //     .unwrap();
-        // log::debug!("{:?}", containing_line);
-
-        // let local_hash = containing_line
-        //     .trim_start_matches('\n')
-        //     .split_whitespace()
-        //     .next()
-        //     .unwrap();
-
-        // let on_chain_hash = base16::encode_lower(&decode(on_chain_encoded_hash)?);
-        // Ok(on_chain_hash == local_hash)
-    }
-}
-
-async fn wait(deployment: &Deployment) {
-    match deployment.network.kind {
-        NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-        NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-        NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
     }
 }
