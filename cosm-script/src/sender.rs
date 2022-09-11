@@ -22,16 +22,16 @@ use crate::{error::CosmScriptError, keys::private::PrivateKey, CosmTxResponse};
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
 
-pub type Wallet<'a> = &'a Rc<Sender<'a, All>>;
+pub type Wallet = Rc<Sender<All>>;
 
-pub struct Sender<'a, C: Signing + Context> {
+pub struct Sender<C: Signing + Context> {
     pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
-    daemon_state: &'a DaemonState,
+    daemon_state: Rc<DaemonState>,
 }
 
-impl<'a> Sender<'a, All> {
-    pub fn new(daemon_state: &DaemonState) -> Result<Sender<All>, CosmScriptError> {
+impl Sender<All> {
+    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, CosmScriptError> {
         let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP
         let mnemonic = env::var(&daemon_state.kind.mnemonic_name().to_string())?;
@@ -43,7 +43,7 @@ impl<'a> Sender<'a, All> {
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
 
         Ok(Sender {
-            daemon_state: daemon_state,
+            daemon_state: daemon_state.clone(),
             private_key: cosmos_private_key,
             secp,
         })

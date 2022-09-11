@@ -14,11 +14,11 @@ use crate::CwPlusContract;
 pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
 // implement chain-generic functions
-impl<Chain: TxHandler> Cw20<Chain>
+impl<Chain: TxHandler + Clone> Cw20<Chain>
 where
     TxResponse<Chain>: IndexResponse,
 {
-    pub fn new(name: &str, chain: Chain) -> Self {
+    pub fn new(name: &str, chain: &Chain) -> Self {
         Self {
             contract: Contract::new(name, chain),
         }
@@ -62,7 +62,7 @@ where
     }
 }
 
-impl<'a> Cw20<Daemon<'a>> {
+impl Cw20<Daemon> {
     pub fn source(&self) -> ContractCodeReference {
         ContractCodeReference::WasmCodePath("cw20_base")
     }
