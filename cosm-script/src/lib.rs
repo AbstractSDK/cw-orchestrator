@@ -17,13 +17,13 @@ pub use data_structures::{
     daemon_state::{ChainInfo, DaemonState, NetworkInfo, NetworkKind},
     tx_resp::CosmTxResponse,
 };
+pub use environments::{daemon::Daemon, mock_chain::Mock};
 pub use error::CosmScriptError;
 pub use helpers::get_env_vars;
-pub use environments::{daemon::Daemon,mock_chain::Mock};
 
 #[macro_use]
 extern crate lazy_static;
-pub(crate) use crate::client_types::cosm_denom_format;
+
 use data_structures::{client_types, core_types};
 
 pub mod cosmos_modules {

@@ -1,8 +1,4 @@
-use std::{env, rc::Rc};
-
-use secp256k1::{All, Secp256k1};
-
-use crate::sender::Sender;
+use std::env;
 
 pub fn get_env_vars() -> (String, String, String, bool) {
     let propose_on_multisig =

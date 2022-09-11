@@ -16,8 +16,8 @@ use serde_json::from_str;
 
 use crate::{
     contract::ContractCodeReference, cosmos_modules, data_structures::parse_cw_coins,
-    error::CosmScriptError, multisig::Multisig, sender::Wallet, state::{StateInterface, ChainState},
-    tx_handler::TxHandler, CosmTxResponse, DaemonState, NetworkKind,
+    error::CosmScriptError, sender::Wallet, state::ChainState, tx_handler::TxHandler,
+    CosmTxResponse, DaemonState, NetworkKind,
 };
 
 pub struct Daemon<'a> {
@@ -40,7 +40,7 @@ impl<'a> Daemon<'a> {
     }
 }
 
-impl <'a>ChainState for Daemon<'a> {
+impl<'a> ChainState for Daemon<'a> {
     type Out = &'a DaemonState;
 
     fn state(&self) -> Self::Out {

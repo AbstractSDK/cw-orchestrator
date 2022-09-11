@@ -1,9 +1,12 @@
 use std::rc::Rc;
 
-use cosm_script::{Daemon, DaemonState, sender::{Wallet, Sender}};
-use cw_plus_script::Cw20;
-use cosm_script::networks::juno::JUNO_DAEMON;
 use crate::Cw20 as cWWW;
+use cosm_script::networks::juno::JUNO_DAEMON;
+use cosm_script::{
+    sender::{Sender, Wallet},
+    Daemon, DaemonState,
+};
+use cw_plus_script::Cw20;
 // Requires a running local junod with grpc enabled
 
 pub async fn script() -> anyhow::Result<()> {
@@ -19,13 +22,12 @@ pub async fn script() -> anyhow::Result<()> {
     let resp = token.create_new(&sender.address()?, 642406u128)?;
     resp.gas_used;
 
-    token
-        .execute(
-            &cw20::Cw20ExecuteMsg::Burn {
-                amount: 700u128.into(),
-            },
-            None,
-        );
+    token.execute(
+        &cw20::Cw20ExecuteMsg::Burn {
+            amount: 700u128.into(),
+        },
+        None,
+    );
     let _token_info: cw20::TokenInfoResponse =
         token.query(cw20_base::msg::QueryMsg::TokenInfo {}).await?;
     Ok(())

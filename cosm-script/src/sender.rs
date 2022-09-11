@@ -1,6 +1,6 @@
 use crate::{
     cosmos_modules::{self, auth::BaseAccount},
-    DaemonState, NetworkKind,
+    DaemonState,
 };
 use cosmrs::{
     bank::MsgSend,
@@ -55,11 +55,12 @@ impl<'a, C: Signing + Context> Sender<'a, C> {
             .account_id(&self.daemon_state.chain.pub_address_prefix)?)
     }
     pub fn address(&self) -> Result<Addr, CosmScriptError> {
-        Ok(Addr::unchecked(self
-            .private_key
-            .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?
-            .to_string()))
+        Ok(Addr::unchecked(
+            self.private_key
+                .public_key()
+                .account_id(&self.daemon_state.chain.pub_address_prefix)?
+                .to_string(),
+        ))
     }
 
     pub fn pub_addr_str(&self) -> Result<String, CosmScriptError> {
