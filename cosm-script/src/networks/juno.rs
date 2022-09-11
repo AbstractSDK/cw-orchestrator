@@ -33,7 +33,7 @@ pub const JUNO_1: NetworkInfo = NetworkInfo {
 
 pub const JUNO_DAEMON: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
-    id: "local",
+    id: "testing",
     gas_denom: "ustake",
     gas_price: 0.0,
     grpc_url: "http://localhost:9090",

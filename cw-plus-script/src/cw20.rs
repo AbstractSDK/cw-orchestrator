@@ -64,7 +64,7 @@ where
 
 impl<'a> Cw20<Daemon<'a>> {
     pub fn source(&self) -> ContractCodeReference {
-        ContractCodeReference::WasmCodePath("/home/cyberhoward/Programming/tools/cosm-rust-script-dev/cw-plus-script/examples/cw20_base.wasm")
+        ContractCodeReference::WasmCodePath("cw20_base")
     }
 }
 

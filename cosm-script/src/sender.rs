@@ -30,7 +30,7 @@ pub struct Sender<'a, C: Signing + Context> {
     daemon_state: &'a DaemonState,
 }
 
-impl<'a, C: Signing + Context> Sender<'a, C> {
+impl<'a> Sender<'a, All> {
     pub fn new(daemon_state: &DaemonState) -> Result<Sender<All>, CosmScriptError> {
         let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP

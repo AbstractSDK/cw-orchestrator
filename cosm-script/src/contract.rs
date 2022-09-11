@@ -67,6 +67,7 @@ where
         msg: &E,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
+        log::info!("executing {}", self.name);
         self.chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?)
     }
@@ -76,20 +77,26 @@ where
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
+        log::info!("instantiating {}", self.name);
         let resp =
             self.chain
                 .instantiate(self.code_id()?, msg, None, admin, coins.unwrap_or(&[]))?;
         let contract_address = resp.instantiated_contract_address()?;
         self.set_address(&contract_address);
+        log::debug!("instantiate response: {:?}", resp);
         Ok(resp)
     }
     pub fn upload(
         &self,
         contract_source: ContractCodeReference<Empty>,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
+        log::info!("uploading {}", self.name);
         let resp = self.chain.upload(contract_source)?;
         let code_id = resp.uploaded_code_id()?;
+        log::info!("{:?}",resp.events());
         self.set_code_id(code_id);
+        log::debug!("upload response: {:?}", resp);
+
         Ok(resp)
     }
     pub fn query<T: Serialize + DeserializeOwned>(
