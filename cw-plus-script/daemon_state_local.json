@@ -1,0 +1,16 @@
+{
+  "juno": {
+    "local": {
+      "addresses": {},
+      "code_ids": {}
+    },
+    "testing": {
+      "addresses": {
+        "cw20": "juno1h80epmeqxu6lmvhg3a6wg3esuauxevas2ec32uyt6m977043cwkqg6rm3q"
+      },
+      "code_ids": {
+        "cw20": 52
+      }
+    }
+  }
+}

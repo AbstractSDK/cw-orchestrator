@@ -13,6 +13,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
+use tokio::runtime::Runtime;
 
 use crate::{
     contract::ContractCodeReference, cosmos_modules, data_structures::parse_cw_coins,
@@ -23,11 +24,12 @@ use crate::{
 pub struct Daemon<'a> {
     pub state: &'a DaemonState,
     pub sender: Wallet<'a>,
+    pub runtime: Runtime,
 }
 
 impl<'a> Daemon<'a> {
-    pub fn new(sender: Wallet<'a>, state: &'a DaemonState) -> anyhow::Result<Self> {
-        let instance = Self { sender, state };
+    pub fn new(sender: Wallet<'a>, state: &'a DaemonState, runtime: Runtime) -> anyhow::Result<Self> {
+        let instance = Self { sender, state , runtime};
         Ok(instance)
     }
 
@@ -57,16 +59,13 @@ impl TxHandler for Daemon<'_> {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, CosmScriptError> {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
         };
-        let result = rt.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        let result = self.runtime.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
 
@@ -79,20 +78,17 @@ impl TxHandler for Daemon<'_> {
         coins: &[Coin],
     ) -> Result<Self::Response, CosmScriptError> {
         let sender = self.sender;
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
 
         let init_msg = MsgInstantiateContract {
             code_id,
-            label: label.map(|msg| msg.to_string()),
+            label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
             sender: sender.pub_addr()?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
 
-        let result = rt.block_on(sender.commit_tx(vec![init_msg], None))?;
+        let result = self.runtime.block_on(sender.commit_tx(vec![init_msg], None))?;
         // let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
 
         Ok(result)
@@ -104,11 +100,8 @@ impl TxHandler for Daemon<'_> {
         contract_address: &Addr,
     ) -> Result<T, CosmScriptError> {
         let sender = self.sender;
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
-        let resp = rt.block_on(client.smart_contract_state(
+        let resp = self.runtime.block_on(client.smart_contract_state(
             cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),
                 query_data: serde_json::to_vec(&query_msg)?,
@@ -124,17 +117,13 @@ impl TxHandler for Daemon<'_> {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, CosmScriptError> {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
         };
-        let result = rt.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        let result = self.runtime.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
 
@@ -142,9 +131,6 @@ impl TxHandler for Daemon<'_> {
         &self,
         contract_source: ContractCodeReference<Empty>,
     ) -> Result<Self::Response, CosmScriptError> {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
         let sender = &self.sender;
         let path = match contract_source {
             ContractCodeReference::WasmCodePath(path) => path,
@@ -169,7 +155,7 @@ impl TxHandler for Daemon<'_> {
             wasm_byte_code: file_contents,
             instantiate_permission: None,
         };
-        let result = rt.block_on(sender.commit_tx(vec![store_msg], None))?;
+        let result = self.runtime.block_on(sender.commit_tx(vec![store_msg], None))?;
 
         log::info!("uploaded: {:?}", result.txhash);
 
@@ -180,7 +166,7 @@ impl TxHandler for Daemon<'_> {
         // self.save_code_id(code_id)?;
 
         // Extra time-out to ensure contract code propagation
-        rt.block_on(self.wait());
+        self.runtime.block_on(self.wait());
         Ok(result)
     }
 }

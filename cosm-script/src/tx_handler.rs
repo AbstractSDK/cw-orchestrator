@@ -7,7 +7,7 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState {
-    type Response;
+    type Response: Debug;
 
     // Actions //
     fn execute<E: Serialize + Debug>(
