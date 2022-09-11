@@ -25,11 +25,9 @@ pub struct CwPlusContract<
     I: Serialize + Debug,
     Q: Serialize,
     M: Serialize,
-> where
-    <Chain as TxHandler>::Response: IndexResponse,
-{
-    contract: Contract<Chain, E, I, Q, M>,
-}
+>(Contract<Chain, E, I, Q, M>)
+where
+    <Chain as TxHandler>::Response: IndexResponse;
 
 // Generally considered bad practice but best solution rn.
 // Circumventing the Orphan rule
@@ -41,6 +39,6 @@ where
     type Target = Contract<Chain, E, I, Q, M>;
 
     fn deref(&self) -> &Self::Target {
-        &self.contract
+        &self.0
     }
 }
