@@ -1,28 +1,14 @@
-use std::{
-    cell::RefCell,
-    env,
-    fmt::Debug,
-    marker::PhantomData,
-    rc::Rc,
-    str::{from_utf8, FromStr},
-    time::Duration,
-};
+use std::{cell::RefCell, fmt::Debug, marker::PhantomData, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as TestContract;
 use serde::{de::DeserializeOwned, Serialize};
-use serde_json::from_str;
 
 use crate::{
-    cosmos_modules,
-    data_structures::daemon_state::NetworkKind,
     error::CosmScriptError,
     index_response::IndexResponse,
-    multisig::Multisig,
-    sender::Wallet,
     state::StateInterface,
     tx_handler::{TxHandler, TxResponse},
-    CosmTxResponse,
 };
 
 pub type StateReference<S> = Rc<RefCell<S>>;
@@ -48,14 +34,19 @@ pub struct Contract<
     _migrate_msg: PhantomData<M>,
 }
 
-pub enum ContractCodeReference <T = Empty>{
+pub enum ContractCodeReference<T = Empty> {
     WasmCodePath(&'static str),
     ContractEndpoints(Box<dyn TestContract<T>>),
 }
 
 /// Expose chain and state function to call them on the contract
-impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug>
-    Contract<Chain, E, I, Q, M>
+impl<
+        Chain: TxHandler,
+        E: Serialize + Debug,
+        I: Serialize + Debug,
+        Q: Serialize + Debug,
+        M: Serialize + Debug,
+    > Contract<Chain, E, I, Q, M>
 where
     TxResponse<Chain>: IndexResponse,
 {
@@ -85,27 +76,35 @@ where
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
-        let resp = self.chain
-            .instantiate(self.code_id()?,msg, None,admin,coins.unwrap_or(&[]))?;
+        let resp =
+            self.chain
+                .instantiate(self.code_id()?, msg, None, admin, coins.unwrap_or(&[]))?;
         let contract_address = resp.instantiated_contract_address()?;
         self.set_address(&contract_address);
         Ok(resp)
     }
-    pub fn upload(&self, contract_source: ContractCodeReference<Empty>) -> Result<TxResponse<Chain>, CosmScriptError> {
+    pub fn upload(
+        &self,
+        contract_source: ContractCodeReference<Empty>,
+    ) -> Result<TxResponse<Chain>, CosmScriptError> {
         let resp = self.chain.upload(contract_source)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
         Ok(resp)
     }
-    pub fn query<T: Serialize + DeserializeOwned>(&self, query_msg: &Q)-> Result<T, CosmScriptError>{
+    pub fn query<T: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, CosmScriptError> {
         self.chain.query(query_msg, &self.address()?)
     }
     fn migrate(
         &self,
         migrate_msg: &M,
         new_code_id: u64,
-    ) -> Result<TxResponse<Chain>, CosmScriptError>{
-        self.chain.migrate(migrate_msg, new_code_id, &self.address()?)
+    ) -> Result<TxResponse<Chain>, CosmScriptError> {
+        self.chain
+            .migrate(migrate_msg, new_code_id, &self.address()?)
     }
 
     // State interfaces
@@ -116,9 +115,9 @@ where
         self.chain.state().get_code_id(&self.name)
     }
     fn set_address(&self, address: &Addr) {
-        self.chain.state().set_address(&self.name,address)
+        self.chain.state().set_address(&self.name, address)
     }
     fn set_code_id(&self, code_id: u64) {
-        self.chain.state().set_code_id(&self.name,code_id)
+        self.chain.state().set_code_id(&self.name, code_id)
     }
 }

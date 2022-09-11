@@ -1,18 +1,21 @@
-use cosmwasm_std::{Addr, Event, Empty};
-use cw_multi_test::{App, AppResponse, Executor, BasicApp};
+use cosmwasm_std::{Addr, Empty, Event};
+use cw_multi_test::{App, AppResponse, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    contract::ContractCodeReference, state::{StateInterface, ChainState}, tx_handler::TxHandler, CosmScriptError,
+    contract::ContractCodeReference,
+    state::{ChainState, StateInterface},
+    tx_handler::TxHandler,
+    CosmScriptError,
 };
-use std::{cell::{RefCell, RefMut}, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 pub struct Mock<S: StateInterface> {
     sender: Addr,
     app: Rc<RefCell<App>>,
     state: Rc<RefCell<S>>,
 }
 
-impl <S: StateInterface>ChainState for Mock<S> {
+impl<S: StateInterface> ChainState for Mock<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {

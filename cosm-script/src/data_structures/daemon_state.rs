@@ -1,9 +1,9 @@
-use crate::{cosm_denom_format, state::StateInterface};
 use crate::error::CosmScriptError;
+use crate::state::StateInterface;
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use serde_json::{from_reader, from_value, json, to_value, Value};
+use serde::{Deserialize, Serialize};
+use serde_json::{from_reader, json};
 use std::{env, fs::File, str::FromStr};
 use tonic::transport::Channel;
 
@@ -67,8 +67,6 @@ impl DaemonState {
         }
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
-
-    
 }
 
 impl StateInterface for &DaemonState {
@@ -106,7 +104,7 @@ impl StateInterface for &DaemonState {
     }
 
     /// Set the locally-saved version of the contract's latest version on this network
-    fn set_code_id(&self, contract_id: &str, code_id: u64) {
+    fn set_code_id(&self, contract_id: &str, _code_id: u64) {
         let file = File::open(&self.json_file_path)
             .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
         let mut json: serde_json::Value = from_reader(file).unwrap();

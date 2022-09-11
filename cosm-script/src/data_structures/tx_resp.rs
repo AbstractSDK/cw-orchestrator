@@ -2,7 +2,7 @@ use crate::cosmos_modules::abci::{AbciMessageLog, Attribute, StringEvent, TxResp
 use crate::cosmos_modules::tendermint_abci::Event;
 use crate::error::CosmScriptError;
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
-use cw_multi_test::AppResponse;
+
 use serde::{Deserialize, Serialize};
 const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
 const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";

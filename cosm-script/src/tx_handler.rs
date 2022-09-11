@@ -1,4 +1,4 @@
-use crate::{contract::ContractCodeReference, state::{ChainState}, CosmScriptError};
+use crate::{contract::ContractCodeReference, state::ChainState, CosmScriptError};
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;

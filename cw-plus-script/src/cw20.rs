@@ -2,25 +2,26 @@ use cosm_script::{
     contract::{Contract, ContractCodeReference},
     index_response::IndexResponse,
     tx_handler::{TxHandler, TxResponse},
-    CosmScriptError, Daemon, Mock, state::StateInterface,
+    CosmScriptError, Daemon,
 };
-use cosmwasm_std::{Binary, Empty, Uint128, Addr};
+use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 
 use cw20::{Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use cw_multi_test::ContractWrapper;
 
 use crate::CwPlusContract;
 
-pub type Cw20<Chain> = CwPlusContract<Chain,ExecuteMsg,InstantiateMsg,QueryMsg, Empty>;
+pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
 // implement chain-generic functions
 impl<Chain: TxHandler> Cw20<Chain>
 where
     TxResponse<Chain>: IndexResponse,
 {
-    pub fn new(name:&str, chain: Chain) -> Self {
-        Self{contract: Contract::new(name, chain)}
+    pub fn new(name: &str, chain: Chain) -> Self {
+        Self {
+            contract: Contract::new(name, chain),
+        }
     }
     pub fn send(
         &self,
@@ -38,31 +39,30 @@ where
     }
 
     pub fn create_new<T: Into<Uint128>>(
-                &self,
-                minter: &Addr,
-                balance: T,
-            ) -> Result<TxResponse<Chain>, CosmScriptError> {
-                let msg = InstantiateMsg {
-                    decimals: 6,
-                    mint: Some(MinterResponse {
-                        cap: None,
-                        minter: minter.to_string(),
-                    }),
-                    symbol: "TEST".into(),
-                    name: self.contract.name.to_string(),
-                    initial_balances: vec![Cw20Coin {
-                        address: minter.to_string(),
-                        amount: balance.into(),
-                    }],
-                    marketing: None,
-                };
-        
-                self.instantiate(&msg, Some(minter), None)
-            }
+        &self,
+        minter: &Addr,
+        balance: T,
+    ) -> Result<TxResponse<Chain>, CosmScriptError> {
+        let msg = InstantiateMsg {
+            decimals: 6,
+            mint: Some(MinterResponse {
+                cap: None,
+                minter: minter.to_string(),
+            }),
+            symbol: "TEST".into(),
+            name: self.contract.name.to_string(),
+            initial_balances: vec![Cw20Coin {
+                address: minter.to_string(),
+                amount: balance.into(),
+            }],
+            marketing: None,
+        };
+
+        self.instantiate(&msg, Some(minter), None)
+    }
 }
 
-impl<'a> Cw20<Daemon<'a>>
-{
+impl<'a> Cw20<Daemon<'a>> {
     pub fn source(&self) -> ContractCodeReference {
         ContractCodeReference::WasmCodePath("/home/cyberhoward/Programming/tools/cosm-rust-script-dev/cw-plus-script/examples/cw20_base.wasm")
     }
