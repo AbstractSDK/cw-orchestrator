@@ -2,7 +2,7 @@ use std::{env, rc::Rc};
 
 use secp256k1::{All, Secp256k1};
 
-use crate::{sender::Sender, Chain, Deployment};
+use crate::sender::Sender;
 
 pub fn get_env_vars() -> (String, String, String, bool) {
     let propose_on_multisig =
@@ -19,15 +19,15 @@ pub fn get_env_vars() -> (String, String, String, bool) {
     )
 }
 
-pub async fn get_configuration() -> anyhow::Result<(Deployment, Rc<Sender<All>>)> {
-    let secp = Secp256k1::new();
-    let (store_path, chain_id, deployment_id, propose_on_multisig) = get_env_vars();
+// pub async fn get_configuration() -> anyhow::Result<(Deployment, Rc<Sender<All>>)> {
+//     let secp = Secp256k1::new();
+//     let (store_path, chain_id, deployment_id, propose_on_multisig) = get_env_vars();
 
-    let chain = Chain::new(&chain_id, &store_path).await?;
-    let network = chain.network().await?;
-    // All configs are set here
-    let config = Deployment::new(deployment_id, network, propose_on_multisig).await?;
+//     let chain = Chain::new(&chain_id, &store_path).await?;
+//     let network = chain.network().await?;
+//     // All configs are set here
+//     let config = Deployment::new(deployment_id, network, propose_on_multisig).await?;
 
-    let sender = Rc::new(Sender::new(config.clone(), secp)?);
-    Ok((config, sender))
-}
+//     let sender = Rc::new(Sender::new(config.clone(), secp)?);
+//     Ok((config, sender))
+// }

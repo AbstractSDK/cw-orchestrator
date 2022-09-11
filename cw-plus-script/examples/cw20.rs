@@ -1,25 +1,31 @@
-use cosm_script::{helpers::get_configuration, traits::*};
+use std::rc::Rc;
 
-use cw_plus_script::CW20;
-
+use cosm_script::{Daemon, DaemonState, sender::{Wallet, Sender}};
+use cw_plus_script::Cw20;
+use cosm_script::networks::juno::JUNO_DAEMON;
+use crate::Cw20 as cWWW;
 // Requires a running local junod with grpc enabled
 
 pub async fn script() -> anyhow::Result<()> {
-    let (config, sender) = &get_configuration().await?;
-    let token = CW20::new("cw20", &sender, config)?;
+    let state = &DaemonState::new(JUNO_DAEMON).await?;
+    let sender = Sender::new(state)?;
+    let wallet = &Rc::new(sender);
+    let chain = Daemon::new(wallet, state)?;
 
-    token.upload("examples/cw20_base.wasm").await?;
+    let token = Cw20::new("cw20", chain);
 
-    token.create_new(sender.pub_addr_str()?, 642406u128).await?;
+    token.upload(token.source())?;
+
+    let resp = token.create_new(&sender.address()?, 642406u128)?;
+    resp.gas_used;
 
     token
-        .exec(
+        .execute(
             &cw20::Cw20ExecuteMsg::Burn {
                 amount: 700u128.into(),
             },
             None,
-        )
-        .await?;
+        );
     let _token_info: cw20::TokenInfoResponse =
         token.query(cw20_base::msg::QueryMsg::TokenInfo {}).await?;
     Ok(())

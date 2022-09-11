@@ -1,12 +1,12 @@
-use cosmwasm_std::{Coin, Addr};
-use serde::{Serialize, de::DeserializeOwned};
+use crate::{contract::ContractCodeReference, state::{ChainState}, CosmScriptError};
+use cosmwasm_std::{Addr, Coin, Empty};
+use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
-use crate::{CosmScriptError, contract::ContractCodeReference};
 // Functions that are callable on the cosmwasm chain/mock
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
-/// Signer trait for chains. 
+/// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
-pub(crate) trait TxHandler {
+pub trait TxHandler: ChainState {
     type Response;
 
     // Actions //
@@ -20,7 +20,7 @@ pub(crate) trait TxHandler {
         &self,
         code_id: u64,
         init_msg: &I,
-        label: &str,
+        label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CosmScriptError>;
@@ -35,6 +35,8 @@ pub(crate) trait TxHandler {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, CosmScriptError>;
-    fn upload(&self, contract_source: ContractCodeReference) -> Result<Self::Response, CosmScriptError>;
+    fn upload(
+        &self,
+        contract_source: ContractCodeReference<Empty>,
+    ) -> Result<Self::Response, CosmScriptError>;
 }
-

@@ -2,10 +2,10 @@ use serde_json::{json, to_value, Value};
 
 use crate::error::CosmScriptError;
 
-use super::network::Network;
+use super::daemon_state::Network;
 
 #[derive(Clone, Debug)]
-pub struct Deployment {
+pub struct DaemonState {
     pub network: Network,
     pub name: String,
     pub proposal: bool,

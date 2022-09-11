@@ -1,16 +1,44 @@
-use cosmwasm_std::{Addr, Event};
-use cw_multi_test::{AppResponse, App, Executor};
-use serde::{Serialize, de::DeserializeOwned};
+use cosmwasm_std::{Addr, Event, Empty};
+use cw_multi_test::{App, AppResponse, Executor, BasicApp};
+use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{tx_handler::TxHandler, contract::ContractCodeReference, CosmScriptError};
-use std::{fmt::Debug, cell::RefCell};
-struct MockChain {
+use crate::{
+    contract::ContractCodeReference, state::{StateInterface, ChainState}, tx_handler::TxHandler, CosmScriptError,
+};
+use std::{cell::{RefCell, RefMut}, fmt::Debug, rc::Rc};
+pub struct Mock<S: StateInterface> {
     sender: Addr,
-    app: RefCell<App>,
+    app: Rc<RefCell<App>>,
+    state: Rc<RefCell<S>>,
+}
+
+impl <S: StateInterface>ChainState for Mock<S> {
+    type Out = Rc<RefCell<S>>;
+
+    fn state(&self) -> Self::Out {
+        Rc::clone(&self.state)
+    }
+}
+
+impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CosmScriptError> {
+        self.borrow().get_address(contract_id)
+    }
+
+    fn set_address(&self, contract_id: &str, address: &Addr) {
+        self.borrow_mut().set_address(contract_id, address)
+    }
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CosmScriptError> {
+        self.borrow().get_code_id(contract_id)
+    }
+
+    fn set_code_id(&self, contract_id: &str, code_id: u64) {
+        self.borrow_mut().set_code_id(contract_id, code_id)
+    }
 }
 
 // Execute on the test chain, returns test response type
-impl TxHandler for MockChain {
+impl<S: StateInterface> TxHandler for Mock<S> {
     type Response = AppResponse;
 
     fn execute<E: Serialize + Debug>(
@@ -19,21 +47,36 @@ impl TxHandler for MockChain {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, crate::CosmScriptError> {
-        self.app.borrow_mut().execute_contract(self.sender.clone(), contract_address.to_owned(),exec_msg, coins).map_err(From::from)
+        self.app
+            .borrow_mut()
+            .execute_contract(
+                self.sender.clone(),
+                contract_address.to_owned(),
+                exec_msg,
+                coins,
+            )
+            .map_err(From::from)
     }
 
     fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
         init_msg: &I,
-        label: &str,
+        label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, crate::CosmScriptError> {
-        let addr = self.app.borrow_mut().instantiate_contract(code_id, self.sender.clone(), init_msg,coins, label, admin.map(|a| a.to_string()))?;
-        // add contract address to events manually 
+        let addr = self.app.borrow_mut().instantiate_contract(
+            code_id,
+            self.sender.clone(),
+            init_msg,
+            coins,
+            label.unwrap_or("contract_init"),
+            admin.map(|a| a.to_string()),
+        )?;
+        // add contract address to events manually
         let mut event = Event::new("instantiate");
-        event.add_attribute("_contract_address", addr);
+        event = event.add_attribute("_contract_address", addr);
         let mut resp = AppResponse::default();
         resp.events = vec![event];
         Ok(resp)
@@ -44,7 +87,11 @@ impl TxHandler for MockChain {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, crate::CosmScriptError> {
-        self.app.borrow().wrap().query_wasm_smart(contract_address, query_msg).map_err(From::from)
+        self.app
+            .borrow()
+            .wrap()
+            .query_wasm_smart(contract_address, query_msg)
+            .map_err(From::from)
     }
 
     fn migrate<M: Serialize + Debug>(
@@ -53,23 +100,33 @@ impl TxHandler for MockChain {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, crate::CosmScriptError> {
-        self.app.borrow_mut().migrate_contract(self.sender, contract_address.clone(), migrate_msg, new_code_id).map_err(From::from)
+        self.app
+            .borrow_mut()
+            .migrate_contract(
+                self.sender.clone(),
+                contract_address.clone(),
+                migrate_msg,
+                new_code_id,
+            )
+            .map_err(From::from)
     }
 
-    fn upload(&self, contract_source: ContractCodeReference) -> Result<Self::Response, crate::CosmScriptError> {
-        if let ContractCodeReference::ContractEndpoints(contract) = contract_source{
+    fn upload(
+        &self,
+        contract_source: ContractCodeReference<Empty>,
+    ) -> Result<Self::Response, crate::CosmScriptError> {
+        if let ContractCodeReference::ContractEndpoints(contract) = contract_source {
             let code_id = self.app.borrow_mut().store_code(contract);
-            // add contract code_id to events manually 
+            // add contract code_id to events manually
             let mut event = Event::new("store_code");
-            event.add_attribute("code_id", code_id.to_string());
+            event = event.add_attribute("code_id", code_id.to_string());
             let mut resp = AppResponse::default();
             resp.events = vec![event];
             Ok(resp)
         } else {
-            Err(CosmScriptError::StdErr("Contract reference must be cosm-multi-test contract object.".into()))
+            Err(CosmScriptError::StdErr(
+                "Contract reference must be cosm-multi-test contract object.".into(),
+            ))
         }
     }
-
-    
-    
 }

@@ -1,4 +1,7 @@
-use crate::cosmos_modules::{self, auth::BaseAccount};
+use crate::{
+    cosmos_modules::{self, auth::BaseAccount},
+    DaemonState, NetworkKind,
+};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
@@ -6,6 +9,7 @@ use cosmrs::{
     tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
     AccountId, Any, Coin,
 };
+use cosmwasm_std::Addr;
 use prost::Message;
 use secp256k1::{All, Context, Secp256k1, Signing};
 
@@ -13,66 +17,56 @@ use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
 use tokio::time::sleep;
 use tonic::transport::Channel;
 
-use crate::{
-    error::CosmScriptError, keys::private::PrivateKey, CosmTxResponse, Deployment, Network,
-};
+use crate::{error::CosmScriptError, keys::private::PrivateKey, CosmTxResponse};
 
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
 
-pub type Wallet<'a> = &'a Rc<Sender<All>>;
+pub type Wallet<'a> = &'a Rc<Sender<'a, All>>;
 
-pub struct Sender<C: Signing + Context> {
+pub struct Sender<'a, C: Signing + Context> {
     pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
-    network: Network,
-    channel: Channel,
+    daemon_state: &'a DaemonState,
 }
 
-impl<C: Signing + Context> Sender<C> {
-    pub fn new(config: Deployment, secp: Secp256k1<C>) -> Result<Sender<C>, CosmScriptError> {
+impl<'a, C: Signing + Context> Sender<'a, C> {
+    pub fn new(daemon_state: &DaemonState) -> Result<Sender<All>, CosmScriptError> {
+        let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP
-        let mut composite_name = config.network.kind.mnemonic_name().to_string();
-        composite_name.push('_');
-        composite_name.push_str(&config.name.to_ascii_uppercase());
+        let mnemonic = env::var(&daemon_state.kind.mnemonic_name().to_string())?;
 
         // use deployment mnemonic if specified, else use default network mnemonic
-        let p_key: PrivateKey = if let Some(mnemonic) = env::var_os(&composite_name) {
-            PrivateKey::from_words(
-                &secp,
-                mnemonic.to_str().unwrap(),
-                0,
-                0,
-                config.network.chain.coin_type,
-            )?
-        } else {
-            log::debug!("{}", config.network.kind.mnemonic_name());
-            let mnemonic = env::var(config.network.kind.mnemonic_name())?;
-            PrivateKey::from_words(&secp, &mnemonic, 0, 0, config.network.chain.coin_type)?
-        };
+        let p_key: PrivateKey =
+            PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
 
         Ok(Sender {
-            // Cloning is encouraged: https://docs.rs/tonic/latest/tonic/transport/struct.Channel.html
-            channel: config.network.grpc_channel.clone(),
-            network: config.network,
+            daemon_state: daemon_state,
             private_key: cosmos_private_key,
             secp,
         })
     }
-    pub fn pub_addr(&self) -> Result<AccountId, CosmScriptError> {
+    pub(crate) fn pub_addr(&self) -> Result<AccountId, CosmScriptError> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.network.chain.pub_addr_prefix)?)
+            .account_id(&self.daemon_state.chain.pub_address_prefix)?)
+    }
+    pub fn address(&self) -> Result<Addr, CosmScriptError> {
+        Ok(Addr::unchecked(self
+            .private_key
+            .public_key()
+            .account_id(&self.daemon_state.chain.pub_address_prefix)?
+            .to_string()))
     }
 
     pub fn pub_addr_str(&self) -> Result<String, CosmScriptError> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.network.chain.pub_addr_prefix)?
+            .account_id(&self.daemon_state.chain.pub_address_prefix)?
             .to_string())
     }
 
@@ -95,10 +89,10 @@ impl<C: Signing + Context> Sender<C> {
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, CosmScriptError> {
-        let timeout_height = self.block_height().await? + 5u32;
+        let timeout_height = self.block_height().await? + 10u32;
         let msgs: Result<Vec<Any>, _> = msgs.into_iter().map(Msg::into_any).collect();
         let msgs = msgs?;
-        let gas_denom = self.network.gas_denom.clone();
+        let gas_denom = self.daemon_state.gas_denom.clone();
         let amount = Coin {
             amount: 0u8.into(),
             denom: gas_denom.clone(),
@@ -117,7 +111,7 @@ impl<C: Signing + Context> Sender<C> {
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.network.id.clone())?,
+            &Id::try_from(self.daemon_state.id.clone())?,
             account_number,
         )?;
         let tx_raw = sign_doc.sign(&self.private_key)?;
@@ -127,7 +121,7 @@ impl<C: Signing + Context> Sender<C> {
         log::debug!("{:?}", sim_gas_used);
 
         let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
-        let amount_to_pay = gas_expected * self.network.gas_price;
+        let amount_to_pay = gas_expected * self.daemon_state.gas_price;
         log::debug!("gas fee: {:?}", amount_to_pay);
         let amount = Coin {
             amount: (amount_to_pay as u64).into(),
@@ -140,7 +134,7 @@ impl<C: Signing + Context> Sender<C> {
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.network.id.clone())?,
+            &Id::try_from(self.daemon_state.id.clone())?,
             account_number,
         )?;
         let tx_raw = sign_doc.sign(&self.private_key)?;
@@ -177,14 +171,15 @@ impl<C: Signing + Context> Sender<C> {
     }
 
     pub fn channel(&self) -> Channel {
-        self.channel.clone()
+        self.daemon_state.grpc_channel.clone()
     }
 
-    async fn block_height(&self) ->  Result<u32, CosmScriptError> {
-        let mut client = cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel());
+    async fn block_height(&self) -> Result<u32, CosmScriptError> {
+        let mut client =
+            cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel());
         #[allow(deprecated)]
         let resp = client
-            .get_latest_block(cosmos_modules::tendermint::GetLatestBlockRequest{})
+            .get_latest_block(cosmos_modules::tendermint::GetLatestBlockRequest {})
             .await?
             .into_inner();
         Ok(resp.block.unwrap().header.unwrap().height as u32)
