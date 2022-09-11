@@ -1,15 +1,17 @@
+use anyhow::Ok;
 use cosm_script::{
-    contract::{Contract, ContractCodeReference, ContractSource},
+    contract::{upload_all, Contract, ContractCodeReference, ContractSource},
     index_response::IndexResponse,
     state::StateInterface,
     tx_handler::{TxHandler, TxResponse},
     CosmScriptError, Daemon, Mock,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-
 use cw20::{Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
+use serde::Serialize;
+use std::{fmt::Debug, ops::Deref};
 
 use crate::CwPlusContract;
 
@@ -21,9 +23,7 @@ where
     TxResponse<Chain>: IndexResponse,
 {
     pub fn new(name: &str, chain: &Chain) -> Self {
-        Self {
-            contract: Contract::new(name, chain),
-        }
+        Self(Contract::new(name, chain))
     }
     pub fn send(
         &self,
@@ -52,7 +52,7 @@ where
                 minter: minter.to_string(),
             }),
             symbol: "TEST".into(),
-            name: self.contract.name.to_string(),
+            name: self.0.name.to_string(),
             initial_balances: vec![Cw20Coin {
                 address: minter.to_string(),
                 amount: balance.into(),
@@ -86,6 +86,31 @@ impl ContractSource for Cw20<Mock> {
         ))
     }
 }
+
+pub fn cw20_test<Chain: TxHandler + Clone>(chain: Chain)
+where
+    TxResponse<Chain>: IndexResponse,
+{
+    let my_contracts = vec![
+        &Cw20::new("my_token", &chain),
+        &Cw20::new("astro", &chain),
+        &Cw20::new("some_other_token", &chain),
+        &Cw20::new("you_get_the_point", &chain),
+    ]
+    upload_all(my_contracts);
+
+}
+
+// fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
+// where
+// Chain: TxHandler + Clone,
+// <Chain as TxHandler>::Response : IndexResponse,
+// Cw20<Chain>: ContractSource
+// {
+//     token.upload(get_source(&token))?;
+//     Ok(())
+// }
+
 // impl <S:StateInterface>Cw20<Mock<S>>
 // {
 //     pub fn source(&self) -> ContractCodeReference<Empty> {

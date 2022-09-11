@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use cosm_script::contract::get_source;
+use cosm_script::contract::{get_source, ContractSource};
 use cosm_script::index_response::IndexResponse;
 use cosm_script::networks::juno::JUNO_DAEMON;
 use cosm_script::tx_handler::TxHandler;
@@ -22,7 +22,7 @@ pub fn script() -> anyhow::Result<()> {
         token.upload(token.source())?;
         // Instantiate the contract using a custom function
         let resp = token.create_new(&sender.address()?, 420u128)?;
-        // Access the execution result 
+        // Access the execution result
         println!("gas used in token creation: {}", resp.gas_used);
         // get the user balance and assert for testing purposes
         let new_balance = token.balance(&sender.address()?)?;
@@ -44,20 +44,11 @@ pub fn script() -> anyhow::Result<()> {
 
     let mock_chain = Mock::new(&sender, &mock_state, &mock_app)?;
     let mock_token = Cw20::new("testing", &mock_chain);
-    mock_token.upload(
-        ,
-    )?;
-
-    mock_token.create_new(minter, balance)
+    // mock_token.upload(
+    //     ,
+    // )?;
 
     Ok(())
-}
-
-fn generic_cw20_test<Chain: TxHandler + Clone>(token: Cw20<Chain>, chain: Chain) where
-<Chain as TxHandler>::Response : IndexResponse {
-    let token = Cw20::new("cw20", &chain);
-    token.upload(get_source(&token)?)?;
-
 }
 
 fn main() {

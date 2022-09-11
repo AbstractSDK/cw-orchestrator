@@ -6,14 +6,14 @@ use crate::{
     contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    CosmScriptError,
+    CosmScriptError, MockState,
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 // Generic mock-chain implementation
 // Allows for custom state storage
 #[derive(Clone)]
-pub struct Mock<S: StateInterface> {
+pub struct Mock<S: StateInterface = MockState> {
     pub sender: Addr,
     pub state: Rc<RefCell<S>>,
     pub app: Rc<RefCell<App>>,

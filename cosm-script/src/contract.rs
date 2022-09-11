@@ -5,17 +5,17 @@ use std::{
     rc::Rc,
 };
 
-use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
-use cw_multi_test::Contract as TestContract;
-use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, Serialize};
-
 use crate::{
     error::CosmScriptError,
     index_response::IndexResponse,
     state::StateInterface,
     tx_handler::{TxHandler, TxResponse},
 };
+use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
+use cw_multi_test::Contract as TestContract;
+use schemars::JsonSchema;
+use serde::{de::DeserializeOwned, Serialize};
+use std::ops::Deref;
 
 pub type StateReference<S> = Rc<RefCell<S>>;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
@@ -57,10 +57,41 @@ where
     fn source(&self) -> ContractCodeReference<ExecT, QueryT>;
 }
 
-pub fn get_source(contract: &dyn ContractSource) -> ContractCodeReference {
-    contract.source()
-}
+pub trait Uploadable<Chain, E, I, Q, M>: Deref<Target = Contract<Chain, E, I, Q, M>> where
+E: Serialize + Debug,
+I: Serialize + Debug,
+Q: Serialize + Debug,
+M: Serialize + Debug,
+Chain: TxHandler + Clone,
+<Chain as TxHandler>::Response: IndexResponse,
+Contract<Chain, E, I, Q, M>: ContractSource
+{}
+impl<Chain, E, I, Q, M,T: Deref<Target = Contract<Chain, E, I, Q, M>>> Uploadable<Chain, E, I, Q, M> for T where 
+E: Serialize + Debug,
+I: Serialize + Debug,
+Q: Serialize + Debug,
+M: Serialize + Debug,
+Chain: TxHandler + Clone,
+<Chain as TxHandler>::Response: IndexResponse,
+Contract<Chain, E, I, Q, M>: ContractSource
+{}
 
+pub fn upload_all<Chain, E, I, Q, M, ContractWrapper>(
+    contracts: Vec<&dyn Uploadable<Chain, E, I, Q, M>>,
+) -> anyhow::Result<()>
+where
+    E: Serialize + Debug,
+    I: Serialize + Debug,
+    Q: Serialize + Debug,
+    M: Serialize + Debug,
+    Chain: TxHandler + Clone,
+    <Chain as TxHandler>::Response: IndexResponse,
+{
+    for contract in contracts {
+        contract.upload(contract.source())?;
+    }
+    Ok(())
+}
 /// Expose chain and state function to call them on the contract
 impl<
         Chain: TxHandler + Clone,
@@ -110,7 +141,7 @@ where
     }
     pub fn upload(
         &self,
-        contract_source: ContractCodeReference<ExecT, QueryT>,
+        contract_source: ContractCodeReference,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
         log::info!("uploading {}", self.name);
         let resp = self.chain.upload(contract_source)?;
