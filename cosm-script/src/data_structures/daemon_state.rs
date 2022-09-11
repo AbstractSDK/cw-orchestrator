@@ -4,7 +4,7 @@ use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json};
-use std::{env, fs::File, str::FromStr};
+use std::{env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 
 #[derive(Clone, Debug)]
@@ -31,12 +31,11 @@ impl DaemonState {
     pub async fn new(network: NetworkInfo<'static>) -> Result<DaemonState, CosmScriptError> {
         let grpc_channel = Channel::from_static(network.grpc_url).connect().await?;
         let mut path = env::var("DAEMON_STATE").unwrap();
-        if network.kind == NetworkKind::Local
-        {
+        if network.kind == NetworkKind::Local {
             let name = path.split('.').next().unwrap();
             path = format!("{}_local.json", name);
         }
-        
+
         let state = DaemonState {
             json_file_path: path,
             kind: network.kind,
@@ -69,7 +68,7 @@ impl DaemonState {
     }
 }
 
-impl StateInterface for &DaemonState {
+impl StateInterface for Rc<DaemonState> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, CosmScriptError> {
         let file = File::open(&self.json_file_path)
             .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
@@ -81,7 +80,7 @@ impl StateInterface for &DaemonState {
         Ok(Addr::unchecked(value.as_str().unwrap()))
     }
 
-    fn set_address(&self, contract_id: &str, address: &Addr) {
+    fn set_address(&mut self, contract_id: &str, address: &Addr) {
         let file = File::open(&self.json_file_path)
             .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
         let mut json: serde_json::Value = from_reader(file).unwrap();
@@ -104,13 +103,12 @@ impl StateInterface for &DaemonState {
     }
 
     /// Set the locally-saved version of the contract's latest version on this network
-    fn set_code_id(&self, contract_id: &str, code_id: u64) {
+    fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         let file = File::open(&self.json_file_path)
             .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
         let mut json: serde_json::Value = from_reader(file).unwrap();
 
-        json[&self.chain.chain_id][&self.id.to_string()]["code_ids"][contract_id] =
-            json!(code_id);
+        json[&self.chain.chain_id][&self.id.to_string()]["code_ids"][contract_id] = json!(code_id);
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
 }

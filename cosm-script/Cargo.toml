@@ -46,3 +46,4 @@ cosmos-sdk-proto = {version = "0.12.2", features=["cosmwasm","grpc-transport"]}
 chrono= "0.4"
 cosmwasm-std = "1.0.0"
 cw-multi-test = "0.14.0"
+schemars = "0.8.10"

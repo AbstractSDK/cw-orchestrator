@@ -9,10 +9,29 @@ use crate::{
     CosmScriptError,
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
+
+// Generic mock-chain implementation
+// Allows for custom state storage
+#[derive(Clone)]
 pub struct Mock<S: StateInterface> {
-    sender: Addr,
-    app: Rc<RefCell<App>>,
-    state: Rc<RefCell<S>>,
+    pub sender: Addr,
+    pub state: Rc<RefCell<S>>,
+    pub app: Rc<RefCell<App>>,
+}
+
+impl<S: StateInterface> Mock<S> {
+    pub fn new(
+        sender: &Addr,
+        state: &Rc<RefCell<S>>,
+        app: &Rc<RefCell<App>>,
+    ) -> anyhow::Result<Self> {
+        let instance = Self {
+            sender: sender.clone(),
+            state: state.clone(),
+            app: app.clone(),
+        };
+        Ok(instance)
+    }
 }
 
 impl<S: StateInterface> ChainState for Mock<S> {
@@ -28,14 +47,14 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow().get_address(contract_id)
     }
 
-    fn set_address(&self, contract_id: &str, address: &Addr) {
+    fn set_address(&mut self, contract_id: &str, address: &Addr) {
         self.borrow_mut().set_address(contract_id, address)
     }
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CosmScriptError> {
         self.borrow().get_code_id(contract_id)
     }
 
-    fn set_code_id(&self, contract_id: &str, code_id: u64) {
+    fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.borrow_mut().set_code_id(contract_id, code_id)
     }
 }

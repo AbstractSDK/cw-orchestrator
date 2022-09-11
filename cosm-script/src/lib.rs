@@ -15,9 +15,10 @@ pub mod tx_handler;
 pub use cosmrs::{Coin, Denom};
 pub use data_structures::{
     daemon_state::{ChainInfo, DaemonState, NetworkInfo, NetworkKind},
+    mock_state::MockState,
     tx_resp::CosmTxResponse,
 };
-pub use environments::{daemon::Daemon, mock_chain::Mock};
+pub use environments::{daemon::Daemon, instantiate_daemon_env, mock_chain::Mock};
 pub use error::CosmScriptError;
 pub use helpers::get_env_vars;
 

@@ -1,29 +1,28 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
-use cosm_script::networks::juno::{UNI_3, JUNO_DAEMON};
-use cosm_script::{
-    sender::{Sender},
-    Daemon, DaemonState,
-};
+use cosm_script::networks::juno::JUNO_DAEMON;
+use cosm_script::{instantiate_daemon_env, Mock, MockState};
+
+use cosmwasm_std::Addr;
+use cw_multi_test::{BasicApp, ContractWrapper};
 use cw_plus_script::Cw20;
 // Requires a running local junod with grpc enabled
 
 pub fn script() -> anyhow::Result<()> {
     for network in [JUNO_DAEMON] {
-        let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
-        let state = &rt.block_on(DaemonState::new(network))?;
-        let sender = &Rc::new(Sender::new(state)?);
-        let chain = Daemon::new(sender, state, rt)?;
-    
-        let token = Cw20::new("cw20", chain);
-    
+        let (_runtime, sender, chain) = instantiate_daemon_env(network)?;
+
+        // run contract on a particular chain with a particular sender.
+        let token = Cw20::new("cw20", &chain);
+        let _token2 = Cw20::new("raw", &chain);
+        let _token3 = Cw20::new("test", &chain);
+
         token.upload(token.source())?;
-    
+
         let resp = token.create_new(&sender.address()?, 642406u128)?;
         resp.gas_used;
-    
+
         token.execute(
             &cw20::Cw20ExecuteMsg::Burn {
                 amount: 700u128.into(),
@@ -32,9 +31,24 @@ pub fn script() -> anyhow::Result<()> {
         )?;
         let _token_info: cw20::TokenInfoResponse =
             token.query(&cw20_base::msg::QueryMsg::TokenInfo {})?;
-        }
-        
-        Ok(())
+    }
+    let sender = Addr::unchecked("testing");
+    let mock_state = Rc::new(RefCell::new(MockState::new()));
+    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
+
+    let mock_chain = Mock::new(&sender, &mock_state, &mock_app)?;
+    let mock_token = Cw20::new("testing", &mock_chain);
+    mock_token.upload(
+        cosm_script::contract::ContractCodeReference::ContractEndpoints(Box::new(
+            ContractWrapper::new_with_empty(
+                cw20_base::contract::execute,
+                cw20_base::contract::instantiate,
+                cw20_base::contract::query,
+            ),
+        )),
+    )?;
+
+    Ok(())
 }
 
 fn main() {

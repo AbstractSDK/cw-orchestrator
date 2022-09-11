@@ -1,7 +1,13 @@
-use std::{cell::RefCell, fmt::Debug, marker::PhantomData, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::{self, Debug},
+    marker::PhantomData,
+    rc::Rc,
+};
 
-use cosmwasm_std::{Addr, Coin, Empty};
+use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
 use cw_multi_test::Contract as TestContract;
+use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -34,14 +40,18 @@ pub struct Contract<
     _migrate_msg: PhantomData<M>,
 }
 
-pub enum ContractCodeReference<T = Empty> {
+pub enum ContractCodeReference<ExecT = Empty, QueryT = Empty>
+where
+    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    QueryT: CustomQuery + DeserializeOwned + 'static,
+{
     WasmCodePath(&'static str),
-    ContractEndpoints(Box<dyn TestContract<T>>),
+    ContractEndpoints(Box<dyn TestContract<ExecT, QueryT>>),
 }
 
 /// Expose chain and state function to call them on the contract
 impl<
-        Chain: TxHandler,
+        Chain: TxHandler + Clone,
         E: Serialize + Debug,
         I: Serialize + Debug,
         Q: Serialize + Debug,
@@ -50,10 +60,10 @@ impl<
 where
     TxResponse<Chain>: IndexResponse,
 {
-    pub fn new(name: &str, chain: Chain) -> Self {
+    pub fn new(name: &str, chain: &Chain) -> Self {
         Contract {
             name: name.to_string(),
-            chain,
+            chain: chain.clone(),
             _execute_msg: PhantomData,
             _instantiate_msg: PhantomData,
             _query_msg: PhantomData,
@@ -93,7 +103,7 @@ where
         log::info!("uploading {}", self.name);
         let resp = self.chain.upload(contract_source)?;
         let code_id = resp.uploaded_code_id()?;
-        log::info!("{:?}",resp.events());
+        log::info!("{:?}", resp.events());
         self.set_code_id(code_id);
         log::debug!("upload response: {:?}", resp);
 

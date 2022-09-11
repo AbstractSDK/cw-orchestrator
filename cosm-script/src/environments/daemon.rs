@@ -1,6 +1,7 @@
 use std::{
     env,
     fmt::Debug,
+    rc::Rc,
     str::{from_utf8, FromStr},
     time::Duration,
 };
@@ -21,15 +22,24 @@ use crate::{
     CosmTxResponse, DaemonState, NetworkKind,
 };
 
-pub struct Daemon<'a> {
-    pub state: &'a DaemonState,
-    pub sender: Wallet<'a>,
-    pub runtime: Runtime,
+#[derive(Clone)]
+pub struct Daemon {
+    pub sender: Wallet,
+    pub state: Rc<DaemonState>,
+    pub runtime: Rc<Runtime>,
 }
 
-impl<'a> Daemon<'a> {
-    pub fn new(sender: Wallet<'a>, state: &'a DaemonState, runtime: Runtime) -> anyhow::Result<Self> {
-        let instance = Self { sender, state , runtime};
+impl Daemon {
+    pub fn new(
+        sender: &Wallet,
+        state: &Rc<DaemonState>,
+        runtime: &Rc<Runtime>,
+    ) -> anyhow::Result<Self> {
+        let instance = Self {
+            sender: sender.clone(),
+            state: state.clone(),
+            runtime: runtime.clone(),
+        };
         Ok(instance)
     }
 
@@ -42,16 +52,16 @@ impl<'a> Daemon<'a> {
     }
 }
 
-impl<'a> ChainState for Daemon<'a> {
-    type Out = &'a DaemonState;
+impl ChainState for Daemon {
+    type Out = Rc<DaemonState>;
 
     fn state(&self) -> Self::Out {
-        self.state
+        self.state.clone()
     }
 }
 
 // Execute on the real chain, returns tx response
-impl TxHandler for Daemon<'_> {
+impl TxHandler for Daemon {
     type Response = CosmTxResponse;
     fn execute<E: Serialize>(
         &self,
@@ -65,7 +75,9 @@ impl TxHandler for Daemon<'_> {
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
         };
-        let result = self.runtime.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        let result = self
+            .runtime
+            .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
 
@@ -77,7 +89,7 @@ impl TxHandler for Daemon<'_> {
         admin: Option<&Addr>,
         coins: &[Coin],
     ) -> Result<Self::Response, CosmScriptError> {
-        let sender = self.sender;
+        let sender = &self.sender;
 
         let init_msg = MsgInstantiateContract {
             code_id,
@@ -88,7 +100,9 @@ impl TxHandler for Daemon<'_> {
             funds: parse_cw_coins(coins)?,
         };
 
-        let result = self.runtime.block_on(sender.commit_tx(vec![init_msg], None))?;
+        let result = self
+            .runtime
+            .block_on(sender.commit_tx(vec![init_msg], None))?;
         // let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
 
         Ok(result)
@@ -99,7 +113,7 @@ impl TxHandler for Daemon<'_> {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, CosmScriptError> {
-        let sender = self.sender;
+        let sender = &self.sender;
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
         let resp = self.runtime.block_on(client.smart_contract_state(
             cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
@@ -123,7 +137,9 @@ impl TxHandler for Daemon<'_> {
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
         };
-        let result = self.runtime.block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        let result = self
+            .runtime
+            .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
 
@@ -155,7 +171,9 @@ impl TxHandler for Daemon<'_> {
             wasm_byte_code: file_contents,
             instantiate_permission: None,
         };
-        let result = self.runtime.block_on(sender.commit_tx(vec![store_msg], None))?;
+        let result = self
+            .runtime
+            .block_on(sender.commit_tx(vec![store_msg], None))?;
 
         log::info!("uploaded: {:?}", result.txhash);
 

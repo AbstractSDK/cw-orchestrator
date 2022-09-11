@@ -8,6 +8,7 @@ pub(crate) mod client_types;
 pub(crate) mod core_types;
 // pub(crate) mod _daemon_state;
 pub(crate) mod daemon_state;
+pub mod mock_state;
 pub(crate) mod tx_resp;
 
 pub fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, CosmScriptError> {
