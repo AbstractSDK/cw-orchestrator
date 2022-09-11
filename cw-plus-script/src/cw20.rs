@@ -1,13 +1,15 @@
 use cosm_script::{
-    contract::{Contract, ContractCodeReference},
+    contract::{Contract, ContractCodeReference, ContractSource},
     index_response::IndexResponse,
+    state::StateInterface,
     tx_handler::{TxHandler, TxResponse},
-    CosmScriptError, Daemon,
+    CosmScriptError, Daemon, Mock,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 
 use cw20::{Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw_multi_test::ContractWrapper;
 
 use crate::CwPlusContract;
 
@@ -60,14 +62,30 @@ where
 
         self.instantiate(&msg, Some(minter), None)
     }
-}
 
-impl Cw20<Daemon> {
-    pub fn source(&self) -> ContractCodeReference {
-        ContractCodeReference::WasmCodePath("cw20_base")
+    pub fn balance(&self, address: &Addr) -> Result<Uint128, CosmScriptError> {
+        self.query(&QueryMsg::Balance {
+            address: address.to_string(),
+        })
     }
 }
 
+impl ContractSource for Cw20<Daemon> {
+    fn source(&self) -> ContractCodeReference {
+        ContractCodeReference::WasmCodePath("cw20_base")
+    }
+}
+impl ContractSource for Cw20<Mock> {
+    fn source(&self) -> ContractCodeReference {
+        cosm_script::contract::ContractCodeReference::ContractEndpoints(Box::new(
+            ContractWrapper::new_with_empty(
+                cw20_base::contract::execute,
+                cw20_base::contract::instantiate,
+                cw20_base::contract::query,
+            ),
+        ))
+    }
+}
 // impl <S:StateInterface>Cw20<Mock<S>>
 // {
 //     pub fn source(&self) -> ContractCodeReference<Empty> {

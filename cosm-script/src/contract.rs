@@ -49,6 +49,18 @@ where
     ContractEndpoints(Box<dyn TestContract<ExecT, QueryT>>),
 }
 
+pub trait ContractSource<ExecT = Empty, QueryT = Empty>
+where
+    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    QueryT: CustomQuery + DeserializeOwned + 'static,
+{
+    fn source(&self) -> ContractCodeReference<ExecT, QueryT>;
+}
+
+pub fn get_source(contract: &dyn ContractSource) -> ContractCodeReference {
+    contract.source()
+}
+
 /// Expose chain and state function to call them on the contract
 impl<
         Chain: TxHandler + Clone,
@@ -96,9 +108,12 @@ where
         log::debug!("instantiate response: {:?}", resp);
         Ok(resp)
     }
-    pub fn upload(
+    pub fn upload<
+        ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+        QueryT: CustomQuery + DeserializeOwned + 'static,
+    >(
         &self,
-        contract_source: ContractCodeReference<Empty>,
+        contract_source: ContractCodeReference<ExecT, QueryT>,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
         log::info!("uploading {}", self.name);
         let resp = self.chain.upload(contract_source)?;
