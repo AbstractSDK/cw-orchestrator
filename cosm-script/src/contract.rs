@@ -108,10 +108,7 @@ where
         log::debug!("instantiate response: {:?}", resp);
         Ok(resp)
     }
-    pub fn upload<
-        ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
-        QueryT: CustomQuery + DeserializeOwned + 'static,
-    >(
+    pub fn upload(
         &self,
         contract_source: ContractCodeReference<ExecT, QueryT>,
     ) -> Result<TxResponse<Chain>, CosmScriptError> {
