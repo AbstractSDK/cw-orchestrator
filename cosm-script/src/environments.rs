@@ -7,7 +7,8 @@ use secp256k1::All;
 use tokio::runtime::Runtime;
 
 use crate::{
-    sender::Sender, state::StateInterface, Daemon, DaemonState, Mock, MockState, NetworkInfo,
+    sender::Sender, state::{StateInterface, ChainState}, tx_handler::TxHandler, Daemon, DaemonState, Mock,
+    MockState, NetworkInfo, index_response::IndexResponse,
 };
 
 pub(crate) mod daemon;
@@ -15,7 +16,7 @@ pub(crate) mod mock_chain;
 
 pub fn instantiate_daemon_env(
     network: NetworkInfo<'static>,
-) -> anyhow::Result<(Rc<Runtime>, Rc<Sender<All>>, Daemon)> {
+) -> anyhow::Result<(Rc<Runtime>, Addr, Daemon)> {
     let rt = Rc::new(
         tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -24,7 +25,7 @@ pub fn instantiate_daemon_env(
     let state = Rc::new(rt.block_on(DaemonState::new(network))?);
     let sender = Rc::new(Sender::new(&state)?);
     let chain = Daemon::new(&sender, &state, &rt)?;
-    Ok((rt, sender, chain))
+    Ok((rt, sender.address()?, chain))
 }
 
 pub fn instantiate_default_mock_env(

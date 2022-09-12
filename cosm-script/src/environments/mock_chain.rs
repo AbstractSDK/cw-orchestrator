@@ -135,9 +135,10 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 
     fn upload(
         &self,
-        contract_source: ContractCodeReference<Empty>,
+        contract_source: &mut ContractCodeReference<Empty>,
     ) -> Result<Self::Response, crate::CosmScriptError> {
-        if let ContractCodeReference::ContractEndpoints(contract) = contract_source {
+        // transfer ownership of Boxed app to App
+        if let Some(contract) = std::mem::replace(&mut contract_source.contract_endpoints, None) {
             let code_id = self.app.borrow_mut().store_code(contract);
             // add contract code_id to events manually
             let mut event = Event::new("store_code");

@@ -145,16 +145,15 @@ impl TxHandler for Daemon {
 
     fn upload(
         &self,
-        contract_source: ContractCodeReference<Empty>,
+        contract_source: &mut ContractCodeReference<Empty>,
     ) -> Result<Self::Response, CosmScriptError> {
         let sender = &self.sender;
-        let path = match contract_source {
-            ContractCodeReference::WasmCodePath(path) => path,
-            ContractCodeReference::ContractEndpoints(_) => {
-                return Err(CosmScriptError::StdErr(
-                    "Blockchain deamon upload requires wasm file.".into(),
-                ))
-            }
+        let path = if let Some(path) = contract_source.wasm_code_path {
+            path
+        } else {
+            return Err(CosmScriptError::StdErr(
+                "Blockchain deamon upload requires wasm file.".into(),
+            ));
         };
 
         let wasm_path = if path.contains(".wasm") {

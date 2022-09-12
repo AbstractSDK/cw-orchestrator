@@ -7,7 +7,7 @@ pub trait ChainState {
     fn state(&self) -> Self::Out;
 }
 
-pub trait StateInterface {
+pub trait StateInterface : Clone{
     fn get_address(&self, contract_id: &str) -> Result<Addr, CosmScriptError>;
     fn set_address(&mut self, contract_id: &str, address: &Addr);
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CosmScriptError>;

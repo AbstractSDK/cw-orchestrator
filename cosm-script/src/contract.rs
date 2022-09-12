@@ -31,6 +31,7 @@ pub struct Contract<
 {
     /// Name of the contract, used to retrieve addr/code-id
     pub name: String,
+    source: ContractCodeReference,
     /// chain object that handles tx execution and queries.
     chain: Chain,
     /// Indicate the type of executemsg
@@ -40,13 +41,14 @@ pub struct Contract<
     _migrate_msg: PhantomData<M>,
 }
 
-pub enum ContractCodeReference<ExecT = Empty, QueryT = Empty>
+#[derive(Default)]
+pub struct ContractCodeReference<ExecT = Empty, QueryT = Empty>
 where
     ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
-    WasmCodePath(&'static str),
-    ContractEndpoints(Box<dyn TestContract<ExecT, QueryT>>),
+    pub wasm_code_path: Option<&'static str>,
+    pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
 }
 /// Expose chain and state function to call them on the contract
 impl<
@@ -63,11 +65,22 @@ where
         Contract {
             name: name.to_string(),
             chain: chain.clone(),
+            source: ContractCodeReference::default(),
             _execute_msg: PhantomData,
             _instantiate_msg: PhantomData,
             _query_msg: PhantomData,
             _migrate_msg: PhantomData,
         }
+    }
+
+    pub fn with_wasm_path(mut self, path: &'static str) -> Self {
+        self.source.wasm_code_path = Some(path);
+        self
+    }
+
+    pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
+        self.source.contract_endpoints = Some(mock_contract);
+        self
     }
 
     // Chain interfaces
@@ -95,12 +108,9 @@ where
         log::debug!("instantiate response: {:#?}", resp);
         Ok(resp)
     }
-    pub fn upload(
-        &self,
-        contract_source: ContractCodeReference,
-    ) -> Result<TxResponse<Chain>, CosmScriptError> {
+    pub fn upload(&mut self) -> Result<TxResponse<Chain>, CosmScriptError> {
         log::info!("uploading {}", self.name);
-        let resp = self.chain.upload(contract_source)?;
+        let resp = self.chain.upload(&mut self.source)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
         log::debug!("upload response: {:#?}", resp);
@@ -111,7 +121,7 @@ where
         &self,
         query_msg: &Q,
     ) -> Result<T, CosmScriptError> {
-        log::debug!("Querying {:#?} on {}", query_msg, self.address()?); 
+        log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
         self.chain.query(query_msg, &self.address()?)
     }
     fn migrate(
