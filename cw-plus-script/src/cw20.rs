@@ -1,13 +1,12 @@
-use anyhow::Ok;
 use cosm_script::{
-    contract::{upload_all, Contract, ContractCodeReference, ContractSource},
+    contract::{Contract, ContractCodeReference},
     index_response::IndexResponse,
     state::StateInterface,
     tx_handler::{TxHandler, TxResponse},
     CosmScriptError, Daemon, Mock,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw20::{Cw20Coin, MinterResponse};
+use cw20::{Cw20Coin, MinterResponse, BalanceResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 use serde::Serialize;
@@ -64,19 +63,42 @@ where
     }
 
     pub fn balance(&self, address: &Addr) -> Result<Uint128, CosmScriptError> {
-        self.query(&QueryMsg::Balance {
+        let bal: BalanceResponse =self.query(&QueryMsg::Balance {
             address: address.to_string(),
-        })
+        })?;
+        Ok(bal.balance)
+    }
+
+    pub fn test_generic(&self, sender: Addr) -> Result<(),CosmScriptError> {
+        // Instantiate the contract using a custom function
+        let resp = self.create_new(&sender, 420u128)?;
+        // Access the execution result
+        println!("events: {:?}", resp.events());
+        // get the user balance and assert for testing purposes
+        let new_balance = self.balance(&sender)?;
+        // balance == mint balance
+        assert_eq!(420u128, new_balance.u128());
+        // BURNNNN
+        self.execute(
+            &cw20::Cw20ExecuteMsg::Burn {
+                amount: 96u128.into(),
+            },
+            None,
+        )?;
+        let token_info: cw20::TokenInfoResponse =
+            self.query(&cw20_base::msg::QueryMsg::TokenInfo {})?;
+        println!("token_info: {:?}", token_info);
+        Ok(())
     }
 }
 
-impl ContractSource for Cw20<Daemon> {
-    fn source(&self) -> ContractCodeReference {
+impl Cw20<Daemon> {
+    pub fn source(&self) -> ContractCodeReference {
         ContractCodeReference::WasmCodePath("cw20_base")
     }
 }
-impl ContractSource for Cw20<Mock> {
-    fn source(&self) -> ContractCodeReference {
+impl Cw20<Mock> {
+    pub fn source(&self) -> ContractCodeReference {
         cosm_script::contract::ContractCodeReference::ContractEndpoints(Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -85,20 +107,6 @@ impl ContractSource for Cw20<Mock> {
             ),
         ))
     }
-}
-
-pub fn cw20_test<Chain: TxHandler + Clone>(chain: Chain)
-where
-    TxResponse<Chain>: IndexResponse,
-{
-    let my_contracts = vec![
-        &Cw20::new("my_token", &chain),
-        &Cw20::new("astro", &chain),
-        &Cw20::new("some_other_token", &chain),
-        &Cw20::new("you_get_the_point", &chain),
-    ]
-    upload_all(my_contracts);
-
 }
 
 // fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
