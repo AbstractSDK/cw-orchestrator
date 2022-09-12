@@ -6,7 +6,7 @@ use cosm_script::{
     CosmScriptError, Daemon, Mock,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw20::{Cw20Coin, MinterResponse, BalanceResponse};
+use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 use serde::Serialize;
@@ -22,7 +22,15 @@ where
     TxResponse<Chain>: IndexResponse,
 {
     pub fn new(name: &str, chain: &Chain) -> Self {
-        Self(Contract::new(name, chain))
+        Self(
+            Contract::new(name, chain)
+                .with_wasm_path("cw20_base")
+                .with_mock(Box::new(ContractWrapper::new_with_empty(
+                    cw20_base::contract::execute,
+                    cw20_base::contract::instantiate,
+                    cw20_base::contract::query,
+                ))),
+        )
     }
     pub fn send(
         &self,
@@ -63,19 +71,19 @@ where
     }
 
     pub fn balance(&self, address: &Addr) -> Result<Uint128, CosmScriptError> {
-        let bal: BalanceResponse =self.query(&QueryMsg::Balance {
+        let bal: BalanceResponse = self.query(&QueryMsg::Balance {
             address: address.to_string(),
         })?;
         Ok(bal.balance)
     }
 
-    pub fn test_generic(&self, sender: Addr) -> Result<(),CosmScriptError> {
+    pub fn test_generic(&self, sender: &Addr) -> Result<(), CosmScriptError> {
         // Instantiate the contract using a custom function
-        let resp = self.create_new(&sender, 420u128)?;
+        let resp = self.create_new(sender, 420u128)?;
         // Access the execution result
         println!("events: {:?}", resp.events());
         // get the user balance and assert for testing purposes
-        let new_balance = self.balance(&sender)?;
+        let new_balance = self.balance(sender)?;
         // balance == mint balance
         assert_eq!(420u128, new_balance.u128());
         // BURNNNN
@@ -92,22 +100,22 @@ where
     }
 }
 
-impl Cw20<Daemon> {
-    pub fn source(&self) -> ContractCodeReference {
-        ContractCodeReference::WasmCodePath("cw20_base")
-    }
-}
-impl Cw20<Mock> {
-    pub fn source(&self) -> ContractCodeReference {
-        cosm_script::contract::ContractCodeReference::ContractEndpoints(Box::new(
-            ContractWrapper::new_with_empty(
-                cw20_base::contract::execute,
-                cw20_base::contract::instantiate,
-                cw20_base::contract::query,
-            ),
-        ))
-    }
-}
+// impl Cw20<Daemon> {
+//     pub fn source(&self) -> ContractCodeReference {
+//         ContractCodeReference::WasmCodePath("cw20_base")
+//     }
+// }
+// impl Cw20<Mock> {
+//     pub fn source(&self) -> ContractCodeReference {
+//         cosm_script::contract::ContractCodeReference::ContractEndpoints(Box::new(
+//             ContractWrapper::new_with_empty(
+//                 cw20_base::contract::execute,
+//                 cw20_base::contract::instantiate,
+//                 cw20_base::contract::query,
+//             ),
+//         ))
+//     }
+// }
 
 // fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
 // where

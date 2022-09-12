@@ -3,4 +3,5 @@
 members = [
     "cosm-script",
     "cw-plus-script",
+    "packages/boot-derive"
 ]

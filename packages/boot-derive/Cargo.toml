@@ -1,0 +1,14 @@
+[package]
+name = "boot-derive"
+version = "0.1.0"
+edition = "2021"
+authors = ["CyberHoward"]
+description = "Derive macros for CosmWasm scripting"
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "1", features = ["full", "printing", "extra-traits"] }
+
+[lib]
+proc-macro = true
