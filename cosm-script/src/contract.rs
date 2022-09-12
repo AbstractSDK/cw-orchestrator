@@ -48,50 +48,6 @@ where
     WasmCodePath(&'static str),
     ContractEndpoints(Box<dyn TestContract<ExecT, QueryT>>),
 }
-
-pub trait ContractSource<ExecT = Empty, QueryT = Empty>
-where
-    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
-    QueryT: CustomQuery + DeserializeOwned + 'static,
-{
-    fn source(&self) -> ContractCodeReference<ExecT, QueryT>;
-}
-
-pub trait Uploadable<Chain, E, I, Q, M>: Deref<Target = Contract<Chain, E, I, Q, M>> where
-E: Serialize + Debug,
-I: Serialize + Debug,
-Q: Serialize + Debug,
-M: Serialize + Debug,
-Chain: TxHandler + Clone,
-<Chain as TxHandler>::Response: IndexResponse,
-Contract<Chain, E, I, Q, M>: ContractSource
-{}
-impl<Chain, E, I, Q, M,T: Deref<Target = Contract<Chain, E, I, Q, M>>> Uploadable<Chain, E, I, Q, M> for T where 
-E: Serialize + Debug,
-I: Serialize + Debug,
-Q: Serialize + Debug,
-M: Serialize + Debug,
-Chain: TxHandler + Clone,
-<Chain as TxHandler>::Response: IndexResponse,
-Contract<Chain, E, I, Q, M>: ContractSource
-{}
-
-pub fn upload_all<Chain, E, I, Q, M, ContractWrapper>(
-    contracts: Vec<&dyn Uploadable<Chain, E, I, Q, M>>,
-) -> anyhow::Result<()>
-where
-    E: Serialize + Debug,
-    I: Serialize + Debug,
-    Q: Serialize + Debug,
-    M: Serialize + Debug,
-    Chain: TxHandler + Clone,
-    <Chain as TxHandler>::Response: IndexResponse,
-{
-    for contract in contracts {
-        contract.upload(contract.source())?;
-    }
-    Ok(())
-}
 /// Expose chain and state function to call them on the contract
 impl<
         Chain: TxHandler + Clone,
@@ -136,7 +92,7 @@ where
                 .instantiate(self.code_id()?, msg, None, admin, coins.unwrap_or(&[]))?;
         let contract_address = resp.instantiated_contract_address()?;
         self.set_address(&contract_address);
-        log::debug!("instantiate response: {:?}", resp);
+        log::debug!("instantiate response: {:#?}", resp);
         Ok(resp)
     }
     pub fn upload(
@@ -146,9 +102,8 @@ where
         log::info!("uploading {}", self.name);
         let resp = self.chain.upload(contract_source)?;
         let code_id = resp.uploaded_code_id()?;
-        log::info!("{:?}", resp.events());
         self.set_code_id(code_id);
-        log::debug!("upload response: {:?}", resp);
+        log::debug!("upload response: {:#?}", resp);
 
         Ok(resp)
     }
@@ -156,6 +111,7 @@ where
         &self,
         query_msg: &Q,
     ) -> Result<T, CosmScriptError> {
+        log::debug!("Querying {:#?} on {}", query_msg, self.address()?); 
         self.chain.query(query_msg, &self.address()?)
     }
     fn migrate(

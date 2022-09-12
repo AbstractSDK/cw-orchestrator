@@ -45,10 +45,10 @@ impl IndexResponse for CosmTxResponse {
         for event in &self.events {
             let mut pattr = vec![];
             for attr in &event.attributes {
-                pattr.push(Attribute::new(
-                    std::str::from_utf8(&attr.key).unwrap(),
-                    std::str::from_utf8(&attr.value).unwrap(),
-                ))
+                pattr.push(Attribute{
+                    key: std::str::from_utf8(&attr.key).unwrap().to_string(),
+                    value: std::str::from_utf8(&attr.value).unwrap().to_string(),
+            })
             }
             let pevent = Event::new(event.r#type.clone()).add_attributes(pattr);
             parsed_events.push(pevent);

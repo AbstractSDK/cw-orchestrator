@@ -6,10 +6,10 @@
     },
     "testing": {
       "addresses": {
-        "cw20": "juno1h80epmeqxu6lmvhg3a6wg3esuauxevas2ec32uyt6m977043cwkqg6rm3q"
+        "cw20": "juno17yzhlse7mlyl28uzqwzcf0e8rfcuqlqw4e5lals2h7p2vndu9umquz46gq"
       },
       "code_ids": {
-        "cw20": 52
+        "cw20": 55
       }
     }
   }
