@@ -18,7 +18,10 @@ pub use data_structures::{
     mock_state::MockState,
     tx_resp::CosmTxResponse,
 };
-pub use environments::{daemon::Daemon, instantiate_daemon_env, instantiate_custom_mock_env,instantiate_default_mock_env, mock_chain::Mock};
+pub use environments::{
+    daemon::Daemon, instantiate_custom_mock_env, instantiate_daemon_env,
+    instantiate_default_mock_env, mock_chain::Mock,
+};
 pub use error::CosmScriptError;
 pub use helpers::get_env_vars;
 
