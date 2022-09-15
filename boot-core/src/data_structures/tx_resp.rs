@@ -52,8 +52,7 @@ impl CosmTxResponse {
                     .attributes
                     .iter()
                     .filter(|attr| attr.key == attribute_key)
-                    .map(|f| Some(f.value.clone()))
-                    .flatten()
+                    .map(|f| f.value.clone())
                     .collect::<Vec<_>>();
 
                 if let Some(attr_key) = attributes_filtered.first() {

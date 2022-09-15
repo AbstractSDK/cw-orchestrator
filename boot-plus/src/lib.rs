@@ -31,8 +31,13 @@ where
 
 // Generally considered bad practice but best solution rn.
 // Circumventing the Orphan rule
-impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug> Deref
-    for CwPlusContract<Chain, E, I, Q, M>
+impl<
+        Chain: TxHandler,
+        E: Serialize + Debug,
+        I: Serialize + Debug,
+        Q: Serialize + Debug,
+        M: Serialize + Debug,
+    > Deref for CwPlusContract<Chain, E, I, Q, M>
 where
     <Chain as TxHandler>::Response: IndexResponse,
 {
@@ -45,8 +50,13 @@ where
 
 // Generally considered bad practice but best solution rn.
 // Circumventing the Orphan rule
-impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug>
-    DerefMut for CwPlusContract<Chain, E, I, Q, M>
+impl<
+        Chain: TxHandler,
+        E: Serialize + Debug,
+        I: Serialize + Debug,
+        Q: Serialize + Debug,
+        M: Serialize + Debug,
+    > DerefMut for CwPlusContract<Chain, E, I, Q, M>
 where
     <Chain as TxHandler>::Response: IndexResponse,
 {

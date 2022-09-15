@@ -15,7 +15,6 @@ use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
 use cw_multi_test::Contract as TestContract;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
-use std::ops::Deref;
 
 pub type StateReference<S> = Rc<RefCell<S>>;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
@@ -84,11 +83,7 @@ where
     }
 
     // Chain interfaces
-    pub fn execute(
-        &self,
-        msg: &E,
-        coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, BootError> {
+    pub fn execute(&self, msg: &E, coins: Option<&[Coin]>) -> Result<TxResponse<Chain>, BootError> {
         log::info!("executing {}", self.name);
         self.chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?)
@@ -117,18 +112,11 @@ where
 
         Ok(resp)
     }
-    pub fn query<T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-    ) -> Result<T, BootError> {
+    pub fn query<T: Serialize + DeserializeOwned>(&self, query_msg: &Q) -> Result<T, BootError> {
         log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
         self.chain.query(query_msg, &self.address()?)
     }
-    fn migrate(
-        &self,
-        migrate_msg: &M,
-        new_code_id: u64,
-    ) -> Result<TxResponse<Chain>, BootError> {
+    fn migrate(&self, migrate_msg: &M, new_code_id: u64) -> Result<TxResponse<Chain>, BootError> {
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
     }

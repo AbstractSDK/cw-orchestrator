@@ -1,7 +1,7 @@
-use std::ops::{Deref, DerefMut};
 use boot_core::{contract::Contract, index_response::IndexResponse, tx_handler::TxHandler};
 use serde::Serialize;
 use std::fmt::Debug;
+use std::ops::{Deref, DerefMut};
 
 // Update `MyProjectName` to your project name and export contract implementations here.
 // No need to touch anything else
@@ -16,8 +16,13 @@ pub struct MyProjectName<
 where
     <Chain as TxHandler>::Response: IndexResponse;
 
-impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug> Deref
-    for MyProjectName<Chain, E, I, Q, M>
+impl<
+        Chain: TxHandler,
+        E: Serialize + Debug,
+        I: Serialize + Debug,
+        Q: Serialize + Debug,
+        M: Serialize + Debug,
+    > Deref for MyProjectName<Chain, E, I, Q, M>
 where
     <Chain as TxHandler>::Response: IndexResponse,
 {
@@ -28,8 +33,13 @@ where
     }
 }
 
-impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug>
-    DerefMut for MyProjectName<Chain, E, I, Q, M>
+impl<
+        Chain: TxHandler,
+        E: Serialize + Debug,
+        I: Serialize + Debug,
+        Q: Serialize + Debug,
+        M: Serialize + Debug,
+    > DerefMut for MyProjectName<Chain, E, I, Q, M>
 where
     <Chain as TxHandler>::Response: IndexResponse,
 {

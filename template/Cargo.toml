@@ -9,5 +9,10 @@ exclude = [
 ]
 
 [dependencies]
-boot_core = {git = "https://github.com/Abstract-OS/BOOT"}
+boot-core = {git = "https://github.com/Abstract-OS/BOOT"}
 serde = "1.0"
+log="0.4.14"
+env_logger = "0.8.3"
+anyhow="1.0"
+dotenv="0.15.0"
+

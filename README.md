@@ -5,7 +5,7 @@ Smart contract scripting library to ease [CosmWasm](https://cosmwasm.com/) smart
 
 > [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) parsing.
 
-[cw-boot](cw-plus-script/README.md) uses cosm-script to provide the standard type-safe interfaces to interact with cosmwasm-plus contracts.
+[boot-plus](boot-plus/README.md) uses BOOT to provide standard type-safe interfaces to interact with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
 The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as ALL the code you upload to those networks takes up valuable space. Therefore I strongly suggest using a locally-hosted chain like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc. 
 .
@@ -22,7 +22,7 @@ use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
 ```
-You can now perform any action on the cw20 contract and implement its custom actions.
+You can now perform any action on the cw20 contract and implement custom actions.
 
 ```
     let cw20_token = Cw20::new(chain)?;

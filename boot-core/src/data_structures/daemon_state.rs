@@ -52,12 +52,11 @@ impl DaemonState {
     }
 
     pub fn check_file_validity(&self) {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| {
-                let file = File::create(&self.json_file_path).unwrap();
-                serde_json::to_writer_pretty(&file, &json!({})).unwrap();
-                file
-            } );
+        let file = File::open(&self.json_file_path).unwrap_or_else(|_| {
+            let file = File::create(&self.json_file_path).unwrap();
+            serde_json::to_writer_pretty(&file, &json!({})).unwrap();
+            file
+        });
         log::info!("Opening daemon state at {}", self.json_file_path);
         let mut json: serde_json::Value = from_reader(file).unwrap();
         if json.get(self.chain.chain_id).is_none() {
@@ -80,7 +79,7 @@ impl StateInterface for Rc<DaemonState> {
         let json: serde_json::Value = from_reader(file)?;
         let value = json[&self.chain.chain_id][&self.id.to_string()]["addresses"]
             .get(contract_id)
-            .ok_or(BootError::AddrNotInFile(contract_id.to_owned()))?
+            .ok_or_else(|| BootError::AddrNotInFile(contract_id.to_owned()))?
             .clone();
         Ok(Addr::unchecked(value.as_str().unwrap()))
     }
@@ -102,7 +101,7 @@ impl StateInterface for Rc<DaemonState> {
         let json: serde_json::Value = from_reader(file)?;
         let value = json[&self.chain.chain_id][&self.id.to_string()]["code_ids"]
             .get(contract_id)
-            .ok_or(BootError::CodeIdNotInFile(contract_id.to_owned()))?
+            .ok_or_else(|| BootError::CodeIdNotInFile(contract_id.to_owned()))?
             .clone();
         Ok(value.as_u64().unwrap())
     }

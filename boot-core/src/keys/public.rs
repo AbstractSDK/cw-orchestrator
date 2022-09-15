@@ -48,11 +48,10 @@ impl PublicKey {
     /// Generate a Cosmos/Tendermint/Terrad Account
     pub fn from_account(acc_address: &str, prefix: &str) -> Result<PublicKey, BootError> {
         PublicKey::check_prefix_and_length(prefix, acc_address, 44).and_then(|vu5| {
-            let vu8 =
-                Vec::from_base32(vu5.as_slice()).map_err(|source| BootError::Conversion {
-                    key: acc_address.into(),
-                    source,
-                })?;
+            let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| BootError::Conversion {
+                key: acc_address.into(),
+                source,
+            })?;
             Ok(PublicKey {
                 raw_pub_key: None,
                 raw_address: Some(vu8),
@@ -121,9 +120,7 @@ impl PublicKey {
     }
     /// build a terravalcons address from a tendermint hex key
     /// the tendermint_hex_address should be a hex code of 40 length
-    pub fn from_tendermint_address(
-        tendermint_hex_address: &str,
-    ) -> Result<PublicKey, BootError> {
+    pub fn from_tendermint_address(tendermint_hex_address: &str) -> Result<PublicKey, BootError> {
         let len = tendermint_hex_address.len();
         if len == 40 {
             let raw = hex::decode(tendermint_hex_address)?;
@@ -138,11 +135,10 @@ impl PublicKey {
     /// Generate a Operator address for this public key (used by the validator)
     pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey, BootError> {
         PublicKey::check_prefix_and_length("terravaloper", valoper_address, 51).and_then(|vu5| {
-            let vu8 =
-                Vec::from_base32(vu5.as_slice()).map_err(|source| BootError::Conversion {
-                    key: valoper_address.into(),
-                    source,
-                })?;
+            let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| BootError::Conversion {
+                key: valoper_address.into(),
+                source,
+            })?;
             Ok(PublicKey {
                 raw_pub_key: None,
                 raw_address: Some(vu8),

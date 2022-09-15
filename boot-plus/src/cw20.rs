@@ -1,15 +1,12 @@
 use boot_core::{
-    contract::{Contract, ContractCodeReference},
+    contract::Contract,
     index_response::IndexResponse,
-    state::StateInterface,
     tx_handler::{TxHandler, TxResponse},
-    BootError, Daemon, Mock,
+    BootError,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
+use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw_multi_test::ContractWrapper;
-use serde::Serialize;
-use cw20::{Cw20Coin, MinterResponse, BalanceResponse};
-use std::{fmt::Debug, ops::Deref};
 
 use crate::CwPlusContract;
 
@@ -19,21 +16,23 @@ pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMs
 // implement chain-generic functions
 impl<Chain: TxHandler + Clone> Cw20<Chain>
 where
-TxResponse<Chain>: IndexResponse,
+    TxResponse<Chain>: IndexResponse,
 {
     pub fn new(name: &str, chain: &Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
-        let file_path = &format!("{}{}",crate_path,"/cw-artifacts/cw20_base.wasm");
-        Self(Contract::new(name, chain).with_mock(Box::new(
-            ContractWrapper::new_with_empty(
-                cw20_base::contract::execute,
-                cw20_base::contract::instantiate,
-                cw20_base::contract::query,
-            ),
-        )).with_wasm_path(file_path))
+        let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
+        Self(
+            Contract::new(name, chain)
+                .with_mock(Box::new(ContractWrapper::new_with_empty(
+                    cw20_base::contract::execute,
+                    cw20_base::contract::instantiate,
+                    cw20_base::contract::query,
+                )))
+                .with_wasm_path(file_path),
+        )
     }
 
-    // Find a way to generate these functions with a macro!!! 
+    // Find a way to generate these functions with a macro!!!
     pub fn send(
         &self,
         msg: Binary,
@@ -48,12 +47,17 @@ TxResponse<Chain>: IndexResponse,
 
         self.execute(&msg, None)
     }
-    pub fn transfer(&self,
+    pub fn transfer(
+        &self,
         amount: u128,
-        recipient: String) -> Result<TxResponse<Chain>, BootError> {
-        let msg = ExecuteMsg::Transfer { recipient, amount: amount.into() };
-        self.execute(&msg,None)
-        }
+        recipient: String,
+    ) -> Result<TxResponse<Chain>, BootError> {
+        let msg = ExecuteMsg::Transfer {
+            recipient,
+            amount: amount.into(),
+        };
+        self.execute(&msg, None)
+    }
 
     pub fn create_new<T: Into<Uint128>>(
         &self,
@@ -79,13 +83,13 @@ TxResponse<Chain>: IndexResponse,
     }
 
     pub fn balance(&self, address: &Addr) -> Result<Uint128, BootError> {
-        let bal: BalanceResponse =self.query(&QueryMsg::Balance {
+        let bal: BalanceResponse = self.query(&QueryMsg::Balance {
             address: address.to_string(),
         })?;
         Ok(bal.balance)
     }
 
-    pub fn test_generic(&self, sender: &Addr) -> Result<(),BootError> {
+    pub fn test_generic(&self, sender: &Addr) -> Result<(), BootError> {
         // Instantiate the contract using a custom function
         let resp = self.create_new(sender, 420u128)?;
         // Access the execution result

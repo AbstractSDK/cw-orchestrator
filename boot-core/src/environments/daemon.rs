@@ -18,8 +18,8 @@ use tokio::runtime::Runtime;
 
 use crate::{
     contract::ContractCodeReference, cosmos_modules, data_structures::parse_cw_coins,
-    error::BootError, sender::Wallet, state::ChainState, tx_handler::TxHandler,
-    CosmTxResponse, DaemonState, NetworkKind,
+    error::BootError, sender::Wallet, state::ChainState, tx_handler::TxHandler, CosmTxResponse,
+    DaemonState, NetworkKind,
 };
 
 #[derive(Clone)]

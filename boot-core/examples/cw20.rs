@@ -1,14 +1,10 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
-use boot_core::index_response::IndexResponse;
 use boot_core::networks::juno::JUNO_DAEMON;
 use boot_core::tx_handler::TxHandler;
-use boot_core::{instantiate_daemon_env, instantiate_default_mock_env, Mock, MockState};
+use boot_core::{instantiate_daemon_env, instantiate_default_mock_env};
 
-use cosmwasm_std::Addr;
-use cw_multi_test::{BasicApp, ContractWrapper};
 use boot_plus::Cw20;
+use cosmwasm_std::Addr;
+
 // Requires a running local junod with grpc enabled
 
 pub fn script() -> anyhow::Result<()> {
@@ -41,6 +37,7 @@ fn main() {
             .skip(1)
             .for_each(|cause| log::error!("because: {}", cause));
 
+        log::error!("Ensure your environment variables are set!");
         // The backtrace is not always generated. Try to run this example
         // with `$env:RUST_BACKTRACE=1`.
         //    if let Some(backtrace) = e.backtrace() {

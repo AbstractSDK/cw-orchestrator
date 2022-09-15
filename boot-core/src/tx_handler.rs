@@ -6,7 +6,7 @@ use std::fmt::Debug;
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
-pub trait TxHandler: ChainState + Clone{
+pub trait TxHandler: ChainState + Clone {
     type Response: Debug;
 
     // Actions //

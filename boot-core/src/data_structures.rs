@@ -13,9 +13,9 @@ pub(crate) mod tx_resp;
 
 pub fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, BootError> {
     coins
-        .into_iter()
+        .iter()
         .map(|cosmwasm_std::Coin { amount, denom }| {
-            let parsed_amount = cosmwasm_std::Decimal::from_atomics(amount.clone(), 6)
+            let parsed_amount = cosmwasm_std::Decimal::from_atomics(*amount, 6)
                 .map_err(|e| BootError::StdErr(e.to_string()))?;
             let in_go_decimal = cosmrs::Decimal::from_str(&parsed_amount.to_string())?;
             Ok(cosmrs::Coin {
