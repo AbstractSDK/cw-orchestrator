@@ -34,7 +34,7 @@ impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, BootError> {
         let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP
-        let mnemonic = env::var(&daemon_state.kind.mnemonic_name().to_string())?;
+        let mnemonic = env::var(daemon_state.kind.mnemonic_name())?;
 
         // use deployment mnemonic if specified, else use default network mnemonic
         let p_key: PrivateKey =
@@ -52,13 +52,13 @@ impl Sender<All> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?)
+            .account_id(self.daemon_state.chain.pub_address_prefix)?)
     }
     pub fn address(&self) -> Result<Addr, BootError> {
         Ok(Addr::unchecked(
             self.private_key
                 .public_key()
-                .account_id(&self.daemon_state.chain.pub_address_prefix)?
+                .account_id(self.daemon_state.chain.pub_address_prefix)?
                 .to_string(),
         ))
     }
@@ -67,7 +67,7 @@ impl Sender<All> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?
+            .account_id(self.daemon_state.chain.pub_address_prefix)?
             .to_string())
     }
 

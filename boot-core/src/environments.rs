@@ -2,13 +2,12 @@ use std::{cell::RefCell, rc::Rc};
 
 use anyhow::Ok;
 use cosmwasm_std::Addr;
-use cw_multi_test::{App, BasicApp};
-use secp256k1::All;
+use cw_multi_test::BasicApp;
+
 use tokio::runtime::Runtime;
 
 use crate::{
-    sender::Sender, state::{StateInterface, ChainState}, tx_handler::TxHandler, Daemon, DaemonState, Mock,
-    MockState, NetworkInfo, index_response::IndexResponse,
+    sender::Sender, state::StateInterface, Daemon, DaemonState, Mock, MockState, NetworkInfo,
 };
 
 pub(crate) mod daemon;
@@ -33,7 +32,7 @@ pub fn instantiate_default_mock_env(
 ) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
     let mock_state = Rc::new(RefCell::new(MockState::new()));
     let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
-    let mock_chain = Mock::new(&sender, &mock_state, &mock_app)?;
+    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
     Ok((mock_state, mock_chain))
 }
 pub fn instantiate_custom_mock_env<S: StateInterface>(
@@ -42,6 +41,6 @@ pub fn instantiate_custom_mock_env<S: StateInterface>(
 ) -> anyhow::Result<(Rc<RefCell<S>>, Mock<S>)> {
     let mock_state = Rc::new(RefCell::new(custom_state));
     let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
-    let mock_chain = Mock::new(&sender, &mock_state, &mock_app)?;
+    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
     Ok((mock_state, mock_chain))
 }

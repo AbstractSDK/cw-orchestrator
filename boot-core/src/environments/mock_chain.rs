@@ -99,8 +99,10 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         // add contract address to events manually
         let mut event = Event::new("instantiate");
         event = event.add_attribute("_contract_address", addr);
-        let mut resp = AppResponse::default();
-        resp.events = vec![event];
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
         Ok(resp)
     }
 
@@ -143,8 +145,10 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             // add contract code_id to events manually
             let mut event = Event::new("store_code");
             event = event.add_attribute("code_id", code_id.to_string());
-            let mut resp = AppResponse::default();
-            resp.events = vec![event];
+            let resp = AppResponse {
+                events: vec![event],
+                ..Default::default()
+            };
             Ok(resp)
         } else {
             Err(BootError::StdErr(
