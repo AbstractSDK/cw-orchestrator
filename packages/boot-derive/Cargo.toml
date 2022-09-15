@@ -6,9 +6,10 @@ authors = ["CyberHoward"]
 description = "Derive macros for CosmWasm scripting"
 
 [dependencies]
+convert_case = "0.6.0"
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "1", features = ["full", "printing", "extra-traits"] }
-
+terra-rust-script-derive = {git = "https://github.com/CyberHoward/terra-rust-script-derive"}
 [lib]
 proc-macro = true

@@ -22,6 +22,8 @@ cw20-base = "0.13"
 anyhow="1.0"
 cw-multi-test = { version = "0.14.0"}
 serde = "1.0"
+boot-derive = {path = "../packages/boot-derive"}
+terra-rust-script-derive = {git = "https://github.com/CyberHoward/terra-rust-script-derive"}
 
 [patch.crates-io]
 cosm-script = {path ="../cosm-script"}

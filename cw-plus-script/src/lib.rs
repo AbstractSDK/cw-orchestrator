@@ -13,13 +13,14 @@ use std::ops::{Deref, DerefMut};
 
 pub use crate::cw20::Cw20;
 
+use boot_derive::Boot;
 use cosm_script::{contract::Contract, index_response::IndexResponse, tx_handler::TxHandler};
 use serde::Serialize;
 use std::fmt::Debug;
 
 // Newtype
 // unit-struct wouldn't compile properly
-#[derive(Boot)]
+
 pub struct CwPlusContract<
     Chain: TxHandler,
     E: Serialize + Debug,

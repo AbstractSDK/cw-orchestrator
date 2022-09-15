@@ -19,14 +19,14 @@ pub fn script() -> anyhow::Result<()> {
     token.upload()?;
     token.test_generic(&sender)?;
     // mock chain
-    let (_, chain) = instantiate_default_mock_env(&sender)?;
-
+    
     // run contract on a particular chain with a particular sender.
     // let token = Cw20::new("cw20", &chain);
     // upload the contract over gRPC
     // token.upload(token.source())?;
     // Instantiate the contract using a custom function
-
+    
+    let (_, chain) = instantiate_default_mock_env(&sender)?;
     // The same in a cw-multi-test context
     let sender = Addr::unchecked("testing");
 
