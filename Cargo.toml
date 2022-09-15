@@ -3,4 +3,5 @@
 members = [
     "boot-core",
     "boot-plus",
+    "template"
 ]

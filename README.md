@@ -1,3 +1,4 @@
+![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png)
 # BOOT
 
 Smart contract scripting library to ease [CosmWasm](https://cosmwasm.com/) smart contract deployment and testing.
@@ -10,49 +11,25 @@ The use of this software makes it easier to quickly deploy and iterate on your c
 .
 ## How it works
 
-Usually your contracts workspace will have a package that contains the structs that get filled by a provided JSON through the FFI on execution by the CosmWasm VM. 
-We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMsg, ...) by adding that package as a dependency to the scripting workspace. 
+Usually your contracts workspace will have a package that contains the endpoint structs of your contracts.
+We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMsg, ...) by adding that package as a dependency to your BOOT crate. 
 
-In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](cw-plus-script/src/cw20.rs)
-
-```
-// Wrapper stuct around the contract instance.
-pub struct CW20<'a>(ContractInstance<'a>);
-
-// Interface and instance traits allow for an auto-implementation of our Cosm traits.
-impl Interface for CW20<'_> {
-    type Exec = ExecuteMsg;
-    type Init = InstantiateMsg;
-    type Query = QueryMsg;
-    type Migrate = NotImplemented;
-}
-
-impl Instance for CW20<'_> {
-    fn instance(&self) -> &ContractInstance {
-        &self.0
-    }
-}
-
-impl CW20<'_> {
-    /// Create a new CW20 ContractInstance. Uses "cw20" as code-id key.
-    pub fn new<'a>(
-        name: &'a str,
-        sender: Wallet<'a>,
-        deployment: &'a Deployment,
-    ) -> anyhow::Result<CW20<'a>> {
-        let mut instance = ContractInstance::new(name, sender, deployment)?;
-        // We want all our CW20 tokens to use the same contract (code-id)!
-        instance.overwrite_code_id_key("cw20");
-        Ok(CW20(instance))
-    }
-    ...
-}
-```
-After implementing these traits you have the ability to use all the functions provided by the WasmInstantiate, WasmExecute, WasmQuery and WasmMigrate traits. This way our script calls are very ergonomic: 
+In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](boot-plus/src/cw20.rs)
 
 ```
-    let token_info = cw20_token.query(Cw20QueryMsg::TokenInfo {}).await?;
+use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+// Just a type-alias
+pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
+
 ```
+You can now perform any action on the cw20 contract and implement its custom actions.
+
+```
+    let cw20_token = Cw20::new(chain)?;
+    let token_info: TokenInfoResponse = cw20_token.query(&Cw20QueryMsg::TokenInfo {}).await?;
+```
+
+I recommend reading [the cw20 usage example here](boot-core/examples/cw20.rs)
 
 # Contributing
 Feel free to open issues or PRs!
