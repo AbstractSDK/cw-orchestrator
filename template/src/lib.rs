@@ -1,25 +1,12 @@
-//! Easy to use CosmWasm-plus scripting library
-//!
-//! Provides an abstraction over a queue.  When the abstraction is used
-//! there are these advantages:
-//! - Fast
-//! - [`Easy`]
-//!
-//! [`Easy`]: http://thatwaseasy.example.com
-
-pub(crate) mod cw20;
-
 use std::ops::{Deref, DerefMut};
-
-pub use crate::cw20::Cw20;
-
 use boot_core::{contract::Contract, index_response::IndexResponse, tx_handler::TxHandler};
 use serde::Serialize;
 use std::fmt::Debug;
 
-// Newtype
-// unit-struct wouldn't compile properly
-pub struct CwPlusContract<
+// Update `MyProjectName` to your project name and export contract implementations here.
+// No need to touch anything else
+
+pub struct MyProjectName<
     Chain: TxHandler,
     E: Serialize + Debug,
     I: Serialize + Debug,
@@ -29,10 +16,8 @@ pub struct CwPlusContract<
 where
     <Chain as TxHandler>::Response: IndexResponse;
 
-// Generally considered bad practice but best solution rn.
-// Circumventing the Orphan rule
 impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug> Deref
-    for CwPlusContract<Chain, E, I, Q, M>
+    for MyProjectName<Chain, E, I, Q, M>
 where
     <Chain as TxHandler>::Response: IndexResponse,
 {
@@ -43,10 +28,8 @@ where
     }
 }
 
-// Generally considered bad practice but best solution rn.
-// Circumventing the Orphan rule
 impl<Chain: TxHandler, E: Serialize + Debug, I: Serialize + Debug, Q: Serialize+ Debug, M: Serialize+ Debug>
-    DerefMut for CwPlusContract<Chain, E, I, Q, M>
+    DerefMut for MyProjectName<Chain, E, I, Q, M>
 where
     <Chain as TxHandler>::Response: IndexResponse,
 {

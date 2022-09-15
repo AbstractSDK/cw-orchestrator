@@ -6,14 +6,11 @@ use boot_core::{
     BootError, Daemon, Mock,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw_multi_test::ContractWrapper;
 use serde::Serialize;
-use cw20::{Cw20Coin, MinterResponse, BalanceResponse};
 use std::{fmt::Debug, ops::Deref};
 
-use crate::CwPlusContract;
+use crate::MyProjectName;
 
-use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
 // implement chain-generic functions

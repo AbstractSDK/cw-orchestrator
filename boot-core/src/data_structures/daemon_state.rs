@@ -30,7 +30,7 @@ pub struct DaemonState {
 impl DaemonState {
     pub async fn new(network: NetworkInfo<'static>) -> Result<DaemonState, BootError> {
         let grpc_channel = Channel::from_static(network.grpc_url).connect().await?;
-        let mut path = env::var("DAEMON_STATE").unwrap();
+        let mut path = env::var("DAEMON_STATE_PATH").unwrap();
         if network.kind == NetworkKind::Local {
             let name = path.split('.').next().unwrap();
             path = format!("{}_local.json", name);
