@@ -9,7 +9,7 @@ use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw_multi_test::ContractWrapper;
 
 use crate::CwPlusContract;
-
+use boot_core::Daemon;
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
@@ -18,11 +18,11 @@ impl<Chain: TxHandler + Clone> Cw20<Chain>
 where
     TxResponse<Chain>: IndexResponse,
 {
-    pub fn new(name: &str, chain: &Chain) -> Self {
+    pub fn new(id: &str, chain: &Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
         Self(
-            Contract::new(name, chain)
+            Contract::new(id, chain)
                 .with_mock(Box::new(ContractWrapper::new_with_empty(
                     cw20_base::contract::execute,
                     cw20_base::contract::instantiate,
@@ -71,7 +71,7 @@ where
                 minter: minter.to_string(),
             }),
             symbol: "TEST".into(),
-            name: self.0.name.to_string(),
+            name: self.0.id.to_string(),
             initial_balances: vec![Cw20Coin {
                 address: minter.to_string(),
                 amount: balance.into(),
@@ -109,6 +109,13 @@ where
             self.query(&cw20_base::msg::QueryMsg::TokenInfo {})?;
         println!("token_info: {:?}", token_info);
         Ok(())
+    }
+}
+
+impl Cw20<Daemon>{
+    pub fn upload_required(&self) -> Result<bool, BootError> {
+        let daemon: Daemon = self.chain();
+        daemon.is_contract_hash_identical(&self.id)
     }
 }
 

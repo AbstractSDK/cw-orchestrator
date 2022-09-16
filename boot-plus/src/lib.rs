@@ -12,7 +12,8 @@ pub(crate) mod cw20;
 use std::ops::{Deref, DerefMut};
 
 pub use crate::cw20::Cw20;
-
+mod registry;
+pub use registry::*;
 use boot_core::{contract::Contract, index_response::IndexResponse, tx_handler::TxHandler};
 use serde::Serialize;
 use std::fmt::Debug;
