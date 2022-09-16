@@ -28,8 +28,8 @@ pub struct Contract<
 > where
     TxResponse<Chain>: IndexResponse,
 {
-    /// Name of the contract, used to retrieve addr/code-id
-    pub name: String,
+    /// ID of the contract, used to retrieve addr/code-id
+    pub id: String,
     source: ContractCodeReference,
     /// chain object that handles tx execution and queries.
     chain: Chain,
@@ -60,9 +60,9 @@ impl<
 where
     TxResponse<Chain>: IndexResponse,
 {
-    pub fn new(name: &str, chain: &Chain) -> Self {
+    pub fn new(id: impl ToString, chain: &Chain) -> Self {
         Contract {
-            name: name.to_string(),
+            id: id.to_string(),
             chain: chain.clone(),
             source: ContractCodeReference::default(),
             _execute_msg: PhantomData,
@@ -70,6 +70,10 @@ where
             _query_msg: PhantomData,
             _migrate_msg: PhantomData,
         }
+    }
+
+    pub fn chain(&self) -> Chain {
+        self.chain.clone()
     }
 
     pub fn with_wasm_path(mut self, path: impl ToString) -> Self {
@@ -84,7 +88,7 @@ where
 
     // Chain interfaces
     pub fn execute(&self, msg: &E, coins: Option<&[Coin]>) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("executing {}", self.name);
+        log::info!("executing {}", self.id);
         self.chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?)
     }
@@ -94,7 +98,7 @@ where
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("instantiating {}", self.name);
+        log::info!("instantiating {}", self.id);
         let resp =
             self.chain
                 .instantiate(self.code_id()?, msg, None, admin, coins.unwrap_or(&[]))?;
@@ -104,7 +108,7 @@ where
         Ok(resp)
     }
     pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("uploading {}", self.name);
+        log::info!("uploading {}", self.id);
         let resp = self.chain.upload(&mut self.source)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
@@ -123,15 +127,15 @@ where
 
     // State interfaces
     pub fn address(&self) -> Result<Addr, BootError> {
-        self.chain.state().get_address(&self.name)
+        self.chain.state().get_address(&self.id)
     }
     pub fn code_id(&self) -> Result<u64, BootError> {
-        self.chain.state().get_code_id(&self.name)
+        self.chain.state().get_code_id(&self.id)
     }
     fn set_address(&self, address: &Addr) {
-        self.chain.state().set_address(&self.name, address)
+        self.chain.state().set_address(&self.id, address)
     }
     fn set_code_id(&self, code_id: u64) {
-        self.chain.state().set_code_id(&self.name, code_id)
+        self.chain.state().set_code_id(&self.id, code_id)
     }
 }

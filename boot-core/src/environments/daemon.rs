@@ -54,47 +54,41 @@ impl Daemon {
         }
     }
 
-    pub async fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
+    pub fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
         use cosmos_modules::cosmwasm::query_client::*;
         let channel: Channel = self.sender.channel().clone();
         let latest_code_id = self.state.get_code_id(contract_id)?;
         // query hash of code-id
         let mut client: QueryClient<Channel>=
             QueryClient::new(channel);
-
         let request = QueryCodeRequest{
             code_id: latest_code_id,
         };
-
-        let resp = client.code(request).await?
+        let resp = self
+        .runtime
+        .block_on(client.code(request))?
         .into_inner();
-
         let contract_hash = resp.code_info.unwrap().data_hash;
+        let on_chain_hash = base16::encode_lower(&contract_hash);
 
+        // Now get local hash from optimization script
         let path = format!("{}/checksums.txt", env::var("WASM_DIR")?);
-
         let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
-
         let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-
         let name = contract_id.split(':').last().unwrap();
-
         let containing_line = parsed
             .iter()
             .filter(|line| line.contains(name))
             .next()
             .unwrap();
         log::debug!("{:?}", containing_line);
-
         let local_hash = containing_line
             .trim_start_matches('\n')
             .split_whitespace()
             .next()
             .unwrap();
-
-        let on_chain_hash = base16::encode_lower(&decode(contract_hash)?);
-
-        Ok(on_chain_hash == local_hash)
+        log::debug!("on-chain hash: {} - local hash: {}", on_chain_hash, local_hash);
+        Ok(local_hash == on_chain_hash)
     }
 }
 
