@@ -3,9 +3,11 @@ use std::{
     fmt::Debug,
     rc::Rc,
     str::{from_utf8, FromStr},
-    time::Duration,
+    time::Duration, fs,
 };
 
+use base64::decode;
+use cosmos_sdk_proto::cosmwasm::wasm::v1::{QueryContractInfoRequest, QueryCodeRequest};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     AccountId,
@@ -15,10 +17,11 @@ use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use tokio::runtime::Runtime;
+use tonic::transport::Channel;
 
 use crate::{
     contract::ContractCodeReference, cosmos_modules, data_structures::parse_cw_coins,
-    error::BootError, sender::Wallet, state::ChainState, tx_handler::TxHandler, CosmTxResponse,
+    error::BootError, sender::Wallet, state::{ChainState, StateInterface}, tx_handler::TxHandler, CosmTxResponse,
     DaemonState, NetworkKind,
 };
 
@@ -49,6 +52,49 @@ impl Daemon {
             NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
             NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
         }
+    }
+
+    pub async fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
+        use cosmos_modules::cosmwasm::query_client::*;
+        let channel: Channel = self.sender.channel().clone();
+        let latest_code_id = self.state.get_code_id(contract_id)?;
+        // query hash of code-id
+        let mut client: QueryClient<Channel>=
+            QueryClient::new(channel);
+
+        let request = QueryCodeRequest{
+            code_id: latest_code_id,
+        };
+
+        let resp = client.code(request).await?
+        .into_inner();
+
+        let contract_hash = resp.code_info.unwrap().data_hash;
+
+        let path = format!("{}/checksums.txt", env::var("WASM_DIR")?);
+
+        let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
+
+        let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
+
+        let name = contract_id.split(':').last().unwrap();
+
+        let containing_line = parsed
+            .iter()
+            .filter(|line| line.contains(name))
+            .next()
+            .unwrap();
+        log::debug!("{:?}", containing_line);
+
+        let local_hash = containing_line
+            .trim_start_matches('\n')
+            .split_whitespace()
+            .next()
+            .unwrap();
+
+        let on_chain_hash = base16::encode_lower(&decode(contract_hash)?);
+
+        Ok(on_chain_hash == local_hash)
     }
 }
 

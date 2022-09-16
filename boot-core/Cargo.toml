@@ -49,6 +49,7 @@ chrono= "0.4"
 cosmwasm-std = "1.0.0"
 cw-multi-test = "0.14.0"
 schemars = "0.8.10"
+base16 = "0.2.1"
 
 [dev-dependencies]
 boot-plus = {path = "../boot-plus"}
