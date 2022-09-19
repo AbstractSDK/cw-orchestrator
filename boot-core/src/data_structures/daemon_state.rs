@@ -55,7 +55,7 @@ impl DaemonState {
         let file = File::open(&self.json_file_path).unwrap_or_else(|_| {
             let file = File::create(&self.json_file_path).unwrap();
             serde_json::to_writer_pretty(&file, &json!({})).unwrap();
-            file
+            File::open(&self.json_file_path).unwrap()
         });
         log::info!("Opening daemon state at {}", self.json_file_path);
         let mut json: serde_json::Value = from_reader(file).unwrap();
