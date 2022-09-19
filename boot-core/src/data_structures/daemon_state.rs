@@ -4,7 +4,7 @@ use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json};
-use std::{env, fs::File, rc::Rc, str::FromStr};
+use std::{env, fs::File, rc::Rc, str::FromStr, collections::HashMap};
 use tonic::transport::Channel;
 
 #[derive(Clone, Debug)]
@@ -114,6 +114,28 @@ impl StateInterface for Rc<DaemonState> {
 
         json[&self.chain.chain_id][&self.id.to_string()]["code_ids"][contract_id] = json!(code_id);
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+    }
+    fn get_all_addresses(&self) -> Result<HashMap<String,Addr>, BootError> {
+        let mut store = HashMap::new();
+        let file = File::open(&self.json_file_path)
+            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
+        let json: serde_json::Value = from_reader(file).unwrap();
+        let value = json[&self.chain.chain_id][&self.id.to_string()]["addresses"].as_object().unwrap();
+        for (id,addr) in value {
+            store.insert(id.clone(), Addr::unchecked(addr.as_str().unwrap()));
+        };
+        Ok(store)
+    }
+    fn get_all_code_ids(&self) -> Result<HashMap<String,u64>, BootError> {
+        let mut store = HashMap::new();
+        let file = File::open(&self.json_file_path)
+            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
+        let json: serde_json::Value = from_reader(file).unwrap();
+        let value = json[&self.chain.chain_id][&self.id.to_string()]["code_ids"].as_object().unwrap();
+        for (id,code_id) in value {
+            store.insert(id.clone(), code_id.as_u64().unwrap());
+        };
+        Ok(store)
     }
 }
 

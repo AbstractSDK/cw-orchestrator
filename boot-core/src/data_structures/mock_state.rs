@@ -50,4 +50,10 @@ impl StateInterface for MockState {
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.code_ids.insert(contract_id.to_string(), code_id);
     }
+    fn get_all_addresses(&self) -> Result<HashMap<String,Addr>, BootError> {
+        Ok(self.addresses.clone())
+    }
+    fn get_all_code_ids(&self) -> Result<HashMap<String,u64>, BootError> {
+        Ok(self.code_ids.clone())
+    }
 }
