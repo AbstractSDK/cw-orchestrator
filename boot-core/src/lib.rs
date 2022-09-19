@@ -1,23 +1,25 @@
 #![allow(dead_code)]
-pub mod contract;
+mod contract;
 mod data_structures;
 pub(crate) mod environments;
 pub mod error;
 pub mod helpers;
-pub mod index_response;
+mod index_response;
 mod keys;
 mod multisig;
 pub mod networks;
 pub mod sender;
 pub mod state;
-pub mod tx_handler;
+mod tx_handler;
 // pub mod traits;
-pub use cosmrs::{Coin, Denom};
 pub use data_structures::{
     daemon_state::{ChainInfo, DaemonState, NetworkInfo, NetworkKind},
     mock_state::MockState,
     tx_resp::CosmTxResponse,
 };
+pub use tx_handler::{TxHandler,TxResponse};
+pub use index_response::IndexResponse;
+pub use contract::Contract;
 pub use environments::{
     daemon::Daemon, instantiate_custom_mock_env, instantiate_daemon_env,
     instantiate_default_mock_env, mock_chain::Mock,

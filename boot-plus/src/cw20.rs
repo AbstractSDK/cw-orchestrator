@@ -1,7 +1,7 @@
 use boot_core::{
-    contract::Contract,
-    index_response::IndexResponse,
-    tx_handler::{TxHandler, TxResponse},
+    Contract,
+    IndexResponse,
+    TxHandler, TxResponse,
     BootError,
 };
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
