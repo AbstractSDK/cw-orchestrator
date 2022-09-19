@@ -132,10 +132,10 @@ where
     pub fn code_id(&self) -> Result<u64, BootError> {
         self.chain.state().get_code_id(&self.id)
     }
-    fn set_address(&self, address: &Addr) {
+    pub fn set_address(&self, address: &Addr) {
         self.chain.state().set_address(&self.id, address)
     }
-    fn set_code_id(&self, code_id: u64) {
+    pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
     }
 }
