@@ -13,8 +13,8 @@ use std::ops::{Deref, DerefMut};
 
 pub use crate::cw20::Cw20;
 mod registry;
-pub use registry::*;
 use boot_core::{Contract, IndexResponse, TxHandler};
+pub use registry::*;
 use serde::Serialize;
 use std::fmt::Debug;
 

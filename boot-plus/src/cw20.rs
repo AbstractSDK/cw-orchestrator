@@ -1,9 +1,4 @@
-use boot_core::{
-    Contract,
-    IndexResponse,
-    TxHandler, TxResponse,
-    BootError,
-};
+use boot_core::{BootError, Contract, IndexResponse, TxHandler, TxResponse};
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw_multi_test::ContractWrapper;
@@ -112,7 +107,7 @@ where
     }
 }
 
-impl Cw20<Daemon>{
+impl Cw20<Daemon> {
     pub fn upload_required(&self) -> Result<bool, BootError> {
         let daemon: Daemon = self.chain();
         daemon.is_contract_hash_identical(&self.id)
