@@ -57,10 +57,10 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.borrow_mut().set_code_id(contract_id, code_id)
     }
-    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String,Addr>, BootError> {
+    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, BootError> {
         self.borrow().get_all_addresses()
     }
-    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String,u64>, BootError> {
+    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, BootError> {
         self.borrow().get_all_code_ids()
     }
 }
@@ -68,7 +68,9 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 // Execute on the test chain, returns test response type
 impl<S: StateInterface> TxHandler for Mock<S> {
     type Response = AppResponse;
-
+    fn sender(&self) -> Addr {
+        self.sender.clone()
+    }
     fn execute<E: Serialize + Debug>(
         &self,
         exec_msg: &E,

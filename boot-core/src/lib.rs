@@ -12,20 +12,20 @@ pub mod sender;
 pub mod state;
 mod tx_handler;
 // pub mod traits;
+pub use contract::Contract;
 pub use data_structures::{
     daemon_state::{ChainInfo, DaemonState, NetworkInfo, NetworkKind},
     mock_state::MockState,
     tx_resp::CosmTxResponse,
 };
-pub use tx_handler::{TxHandler,TxResponse};
-pub use index_response::IndexResponse;
-pub use contract::Contract;
 pub use environments::{
     daemon::Daemon, instantiate_custom_mock_env, instantiate_daemon_env,
     instantiate_default_mock_env, mock_chain::Mock,
 };
 pub use error::BootError;
 pub use helpers::get_env_vars;
+pub use index_response::IndexResponse;
+pub use tx_handler::{TxHandler, TxResponse};
 
 #[macro_use]
 extern crate lazy_static;

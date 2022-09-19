@@ -9,6 +9,8 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 pub trait TxHandler: ChainState + Clone {
     type Response: Debug;
 
+    // Gets current sender
+    fn sender(&self) -> Addr;
     // Actions //
     fn execute<E: Serialize + Debug>(
         &self,

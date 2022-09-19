@@ -14,8 +14,8 @@ pub trait StateInterface: Clone {
     fn set_address(&mut self, contract_id: &str, address: &Addr);
     fn get_code_id(&self, contract_id: &str) -> Result<u64, BootError>;
     fn set_code_id(&mut self, contract_id: &str, code_id: u64);
-    fn get_all_addresses(&self) -> Result<HashMap<String,Addr>, BootError>;
-    fn get_all_code_ids(&self) -> Result<HashMap<String,u64>, BootError>;
+    fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError>;
+    fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, BootError>;
 }
 
 // pub struct DaemonState{

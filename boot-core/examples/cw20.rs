@@ -13,7 +13,7 @@ pub fn script() -> anyhow::Result<()> {
     let (_, sender, chain) = instantiate_daemon_env(network)?;
     let mut token = Cw20::new(CW20_BASE, &chain);
     // token.upload()?;
-    println!("{}",token.upload_required()?);
+    println!("{}", token.upload_required()?);
     // token.test_generic(&sender)?;
 
     // Now we do the same but on a cw-multi-test environment!

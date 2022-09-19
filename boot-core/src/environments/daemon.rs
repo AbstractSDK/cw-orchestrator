@@ -1,9 +1,10 @@
 use std::{
     env,
     fmt::Debug,
+    fs,
     rc::Rc,
     str::{from_utf8, FromStr},
-    time::Duration, fs,
+    time::Duration,
 };
 
 use cosmos_sdk_proto::cosmwasm::wasm::v1::QueryCodeRequest;
@@ -19,9 +20,14 @@ use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
 use crate::{
-    contract::ContractCodeReference, cosmos_modules, data_structures::parse_cw_coins,
-    error::BootError, sender::Wallet, state::{ChainState, StateInterface}, tx_handler::TxHandler, CosmTxResponse,
-    DaemonState, NetworkKind,
+    contract::ContractCodeReference,
+    cosmos_modules,
+    data_structures::parse_cw_coins,
+    error::BootError,
+    sender::Wallet,
+    state::{ChainState, StateInterface},
+    tx_handler::TxHandler,
+    CosmTxResponse, DaemonState, NetworkKind,
 };
 
 #[derive(Clone)]
@@ -58,15 +64,11 @@ impl Daemon {
         let channel: Channel = self.sender.channel().clone();
         let latest_code_id = self.state.get_code_id(contract_id)?;
         // query hash of code-id
-        let mut client: QueryClient<Channel>=
-            QueryClient::new(channel);
-        let request = QueryCodeRequest{
+        let mut client: QueryClient<Channel> = QueryClient::new(channel);
+        let request = QueryCodeRequest {
             code_id: latest_code_id,
         };
-        let resp = self
-        .runtime
-        .block_on(client.code(request))?
-        .into_inner();
+        let resp = self.runtime.block_on(client.code(request))?.into_inner();
         let contract_hash = resp.code_info.unwrap().data_hash;
         let on_chain_hash = base16::encode_lower(&contract_hash);
 
@@ -86,7 +88,11 @@ impl Daemon {
             .split_whitespace()
             .next()
             .unwrap();
-        log::debug!("on-chain hash: {} - local hash: {}", on_chain_hash, local_hash);
+        log::debug!(
+            "on-chain hash: {} - local hash: {}",
+            on_chain_hash,
+            local_hash
+        );
         Ok(local_hash == on_chain_hash)
     }
 }
@@ -102,6 +108,10 @@ impl ChainState for Daemon {
 // Execute on the real chain, returns tx response
 impl TxHandler for Daemon {
     type Response = CosmTxResponse;
+
+    fn sender(&self) -> Addr {
+        self.sender.address().unwrap()
+    }
     fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
