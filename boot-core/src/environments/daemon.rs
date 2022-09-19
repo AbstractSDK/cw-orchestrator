@@ -6,8 +6,7 @@ use std::{
     time::Duration, fs,
 };
 
-use base64::decode;
-use cosmos_sdk_proto::cosmwasm::wasm::v1::{QueryContractInfoRequest, QueryCodeRequest};
+use cosmos_sdk_proto::cosmwasm::wasm::v1::QueryCodeRequest;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     AccountId,
