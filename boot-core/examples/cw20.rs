@@ -1,5 +1,5 @@
 use boot_core::networks::juno::JUNO_DAEMON;
-use boot_core::tx_handler::TxHandler;
+use boot_core::TxHandler;
 use boot_core::{instantiate_daemon_env, instantiate_default_mock_env};
 
 use boot_plus::{Cw20, CW20_BASE};
