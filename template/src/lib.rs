@@ -1,4 +1,4 @@
-use boot_core::{contract::Contract, index_response::IndexResponse, tx_handler::TxHandler};
+use boot_core::{Contract, IndexResponse, TxHandler};
 use serde::Serialize;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
