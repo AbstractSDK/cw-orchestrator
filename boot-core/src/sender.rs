@@ -7,10 +7,9 @@ use cosmrs::{
     crypto::secp256k1::SigningKey,
     tendermint::chain::Id,
     tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
-    AccountId, Any, Coin,
+    AccountId, Any, Coin, proto::traits::Message,
 };
 use cosmwasm_std::Addr;
-use prost::Message;
 use secp256k1::{All, Context, Secp256k1, Signing};
 
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
@@ -147,10 +146,10 @@ impl Sender<All> {
         let addr = self.pub_addr().unwrap().to_string();
 
         let mut client =
-            cosmos_sdk_proto::cosmos::auth::v1beta1::query_client::QueryClient::new(self.channel());
+        cosmos_modules::auth::query_client::QueryClient::new(self.channel());
 
         let resp = client
-            .account(cosmos_sdk_proto::cosmos::auth::v1beta1::QueryAccountRequest { address: addr })
+            .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
             .await?
             .into_inner();
 

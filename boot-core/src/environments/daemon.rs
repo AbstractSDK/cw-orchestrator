@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-use cosmos_sdk_proto::cosmwasm::wasm::v1::QueryCodeRequest;
+use cosmos_modules::cosmwasm::QueryCodeRequest;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     AccountId,
