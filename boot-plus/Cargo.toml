@@ -1,0 +1,34 @@
+[package]
+name = "boot-plus"
+version = "0.1.0"
+authors = ["CyberHoward <cyberhoward@protonmail.com>"]
+edition = "2021"
+description = "Environment generic CosmWasm-plus scripting interfaces"
+license = "Apache-2.0"
+repository = "https://github.com/CyberHoward/cosm-rust-script"
+keywords = ["cosmwasm", "blockchain"]
+readme = "README.md"
+
+exclude = [
+    ".env",
+]
+
+[dependencies]
+boot-core ={path ="../boot-core"}
+cosmwasm-std = { version = "1.1" }
+cw20 = "0.15.0"
+cw20-base = "0.15.0"
+anyhow="1.0"
+cw-multi-test = { version = "0.15.0"}
+serde = "1.0"
+boot-derive = {path = "../packages/boot-derive"}
+terra-rust-script-derive = {git = "https://github.com/CyberHoward/terra-rust-script-derive"}
+
+[patch.crates-io]
+boot-core ={path ="../boot-core"}
+
+[dev-dependencies]
+tokio = "1.19.1"
+dotenv="0.15.0"
+env_logger = "0.9.0"
+log="0.4.14"

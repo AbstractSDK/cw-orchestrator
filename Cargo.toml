@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "cosm-script",
-    "cw-plus-script",
-    "packages/boot-derive"
+    "packages/boot-derive",
+    "boot-core",
+    "boot-plus",
+    # "template"
 ]
