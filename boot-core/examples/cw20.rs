@@ -1,4 +1,4 @@
-use boot_core::networks::juno::JUNO_DAEMON;
+use boot_core::networks::juno::{JUNO_DAEMON, UNI_3};
 use boot_core::TxHandler;
 use boot_core::{instantiate_daemon_env, instantiate_default_mock_env};
 
@@ -9,19 +9,18 @@ use cosmwasm_std::Addr;
 
 pub fn script() -> anyhow::Result<()> {
     // First we upload, instantiate and interact with a real chain
-    let network = JUNO_DAEMON;
+    let network = UNI_3;
     let (_, sender, chain) = instantiate_daemon_env(network)?;
     let mut token = Cw20::new(CW20_BASE, &chain);
-    // token.upload()?;
-    println!("{}", token.upload_required()?);
-    // token.test_generic(&sender)?;
-
+    token.upload()?;
+    // token.send(msg, amount, contract)
+    token.balance(&sender)?;
     // Now we do the same but on a cw-multi-test environment!
-    // let (_, chain) = instantiate_default_mock_env(&sender)?;
-    // // The same in a cw-multi-test context
-    // let sender = Addr::unchecked("test_sender");
-    // let token = Cw20::new("cw-plus:cw20_base", &chain);
-    // token.test_generic(&sender)?;
+    let (_, chain) = instantiate_default_mock_env(&sender)?;
+    // The same in a cw-multi-test context
+    let sender = Addr::unchecked("test_sender");
+    let token = Cw20::new(CW20_BASE, &chain);
+    token.test_generic(&sender)?;
 
     Ok(())
 }

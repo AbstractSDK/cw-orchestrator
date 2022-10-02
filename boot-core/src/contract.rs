@@ -33,7 +33,7 @@ pub struct Contract<
     source: ContractCodeReference,
     /// chain object that handles tx execution and queries.
     chain: Chain,
-    /// Indicate the type of executemsg
+    /// Indicate the type of messages
     _execute_msg: PhantomData<E>,
     _instantiate_msg: PhantomData<I>,
     _query_msg: PhantomData<Q>,

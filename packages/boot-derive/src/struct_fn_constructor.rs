@@ -30,6 +30,7 @@ use convert_case::{Case, Casing};
 //     TokenStream::from(token_stream2)
 // }
 
+
 macro_rules! derive_error {
     ($string: tt) => {
         Error::new(Span::call_site(), $string)
@@ -38,34 +39,34 @@ macro_rules! derive_error {
     };
 }
 
-pub fn derive_contract_impl(input: DeriveInput) -> TokenStream2 {
-    // See https://doc.servo.org/syn/derive/struct.DeriveInput.html
-    // let input: DeriveInput = parse_macro_input!(item as DeriveInput);
+// pub fn derive_contract_impl(input: DeriveInput) -> TokenStream2 {
+//     // See https://doc.servo.org/syn/derive/struct.DeriveInput.html
+//     // let input: DeriveInput = parse_macro_input!(item as DeriveInput);
 
-    // get enum name
-    let ref name = input.ident;
-    let generics = add_trait_bounds(input.generics);
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-    impl_generics.
-    let gen = quote! {
-        impl #impl_generics Default for #name #ty_generics #where_clause {
-            fn default() -> Self {
-                #name {
-                    #defaults
-                }
-            }
-        }
-    };
-    gen.into()
-}
-fn add_trait_bounds(mut generics: Generics) -> Generics {
-    for param in &mut generics.params {
-        if let GenericParam::Type(ref mut type_param) = *param {
-            type_param.bounds.push(parse_quote!(terra_rust_script_derive::CosmWasmContract));
-        }
-    }
-    generics
-}
+//     // get enum name
+//     let ref name = input.ident;
+//     let generics = add_trait_bounds(input.generics);
+//     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+//     impl_generics.
+//     let gen = quote! {
+//         impl #impl_generics Default for #name #ty_generics #where_clause {
+//             fn default() -> Self {
+//                 #name {
+//                     #defaults
+//                 }
+//             }
+//         }
+//     };
+//     gen.into()
+// }
+// fn add_trait_bounds(mut generics: Generics) -> Generics {
+//     for param in &mut generics.params {
+//         if let GenericParam::Type(ref mut type_param) = *param {
+//             type_param.bounds.push(parse_quote!(terra_rust_script_derive::CosmWasmContract));
+//         }
+//     }
+//     generics
+// }
 
 // Above we are making a TokenStream using extend()
 // This is because TokenStream is an Iterator,

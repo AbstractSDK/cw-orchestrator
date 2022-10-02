@@ -1,4 +1,5 @@
 use boot_core::{BootError, Contract, IndexResponse, TxHandler, TxResponse};
+use boot_derive::implement_execute;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw_multi_test::ContractWrapper;
@@ -11,8 +12,11 @@ pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMs
 // implement chain-generic functions
 impl<Chain: TxHandler + Clone> Cw20<Chain>
 where
-    TxResponse<Chain>: IndexResponse,
+TxResponse<Chain>: IndexResponse,
 {
+    implement_execute!{
+        cw20_base::msg::ExecuteMsg
+    };
     pub fn new(id: &str, chain: &Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
