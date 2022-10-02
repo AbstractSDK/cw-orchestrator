@@ -9,12 +9,12 @@ pub const JUNO_CHAIN: ChainInfo = ChainInfo {
     coin_type: 118u32,
 };
 
-pub const UNI_3: NetworkInfo = NetworkInfo {
+pub const UNI_5: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Testnet,
-    id: "uni-3",
+    id: "uni-5",
     gas_denom: "ujunox",
     gas_price: 0.025,
-    grpc_url: "http://ssh.ohmroger.com:9099",
+    grpc_url: "https://juno-testnet-grpc.polkachu.com:12690",
     chain_info: JUNO_CHAIN,
     lcd_url: None,
     fcd_url: None,
