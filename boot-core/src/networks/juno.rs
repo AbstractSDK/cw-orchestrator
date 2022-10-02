@@ -13,7 +13,7 @@ pub const UNI_5: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Testnet,
     id: "uni-5",
     gas_denom: "ujunox",
-    gas_price: 0.025,
+    gas_price: 0.026,
     grpc_url: "https://juno-testnet-grpc.polkachu.com:12690",
     chain_info: JUNO_CHAIN,
     lcd_url: None,
