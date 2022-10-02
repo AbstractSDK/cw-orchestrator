@@ -35,7 +35,7 @@ pub const OSMO_DAEMON: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
     id: "localosmosis",
     gas_denom: "uosmo",
-    gas_price: 0.0,
+    gas_price: 0.0026,
     grpc_url: "http://65.108.235.46:9094",
     chain_info: OSMO_CHAIN,
     lcd_url: None,
