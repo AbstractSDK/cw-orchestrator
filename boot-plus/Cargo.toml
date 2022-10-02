@@ -21,6 +21,7 @@ cw20-base = "0.15.0"
 anyhow="1.0"
 cw-multi-test = { version = "0.15.0"}
 serde = "1.0"
+cw1-whitelist = "0.15.1"
 
 [patch.crates-io]
 boot-core ={path ="../boot-core"}

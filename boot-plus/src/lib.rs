@@ -8,10 +8,12 @@
 //! [`Easy`]: http://thatwaseasy.example.com
 
 pub(crate) mod cw20;
+pub(crate) mod cw1;
 
 use std::ops::{Deref, DerefMut};
 
 pub use crate::cw20::Cw20;
+pub use crate::cw1::Cw1;
 mod registry;
 use boot_core::{Contract, IndexResponse, TxHandler};
 pub use registry::*;
