@@ -120,7 +120,7 @@ where
         log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
         self.chain.query(query_msg, &self.address()?)
     }
-    fn migrate(&self, migrate_msg: &M, new_code_id: u64) -> Result<TxResponse<Chain>, BootError> {
+    pub fn migrate(&self, migrate_msg: &M, new_code_id: u64) -> Result<TxResponse<Chain>, BootError> {
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
     }
