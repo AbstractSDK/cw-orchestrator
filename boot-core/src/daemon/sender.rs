@@ -2,8 +2,7 @@ use crate::cosmos_modules::{self, auth::BaseAccount};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
-    proto::traits::Message,
-    tendermint::chain::Id,
+    tendermint::{chain::Id, Block, Time},
     tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
     AccountId, Any, Coin,
 };
@@ -173,7 +172,7 @@ impl Sender<All> {
         self.daemon_state.grpc_channel.clone()
     }
 
-    async fn block_height(&self) -> Result<u32, BootError> {
+    async fn latest_block(&self) -> Result<Block, BootError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel());
         #[allow(deprecated)]
@@ -181,7 +180,18 @@ impl Sender<All> {
             .get_latest_block(cosmos_modules::tendermint::GetLatestBlockRequest {})
             .await?
             .into_inner();
-        Ok(resp.block.unwrap().header.unwrap().height as u32)
+        Ok(Block::try_from(resp.block.unwrap())?)
+    }
+
+    async fn block_height(&self) -> Result<u32, BootError> {
+        let block = self.latest_block().await?;
+        Ok(block.header.height.value() as u32)
+    }
+
+    /// Returns the block timestamp (since unix epoch) in nanos
+    async fn block_time(&self) -> Result<u128, BootError> {
+        let block = self.latest_block().await?;
+        Ok(block.header.time.duration_since(Time::unix_epoch())?.as_nanos())
     }
 
     async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, BootError> {
