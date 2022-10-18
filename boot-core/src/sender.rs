@@ -185,13 +185,13 @@ impl Sender<All> {
         Ok(Block::try_from(resp.block.unwrap())?)
     }
 
-    async fn block_height(&self) -> Result<u32, BootError> {
+    pub async fn block_height(&self) -> Result<u32, BootError> {
         let block = self.latest_block().await?;
         Ok(block.header.height.value() as u32)
     }
 
     /// Returns the block timestamp (since unix epoch) in nanos
-    async fn block_time(&self) -> Result<u128, BootError> {
+    pub async fn block_time(&self) -> Result<u128, BootError> {
         let block = self.latest_block().await?;
         Ok(block.header.time.duration_since(Time::unix_epoch())?.as_nanos())
     }

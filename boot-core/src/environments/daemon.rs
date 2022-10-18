@@ -13,7 +13,7 @@ use cosmrs::{
     AccountId,
 };
 
-use cosmwasm_std::{Addr, Coin, Empty};
+use cosmwasm_std::{Addr, Coin, Empty, Timestamp};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use tokio::runtime::Runtime;
@@ -108,7 +108,7 @@ impl ChainState for Daemon {
 // Execute on the real chain, returns tx response
 impl TxHandler for Daemon {
     type Response = CosmTxResponse;
-
+ 
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
@@ -234,5 +234,25 @@ impl TxHandler for Daemon {
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());
         Ok(result)
+    }
+
+    fn wait_blocks(&self, amount: u32) -> Result<(),BootError> {
+        let mut last_height = self
+            .runtime
+            .block_on(self.sender.as_ref().block_height())?;
+        let end_height = last_height + amount;
+
+        while last_height < end_height {
+            // wait
+            self
+            .runtime
+            .block_on(tokio::time::sleep(Duration::from_secs(4)));
+            
+            // ping latest block 
+            last_height = self
+            .runtime
+            .block_on(self.sender.as_ref().block_height())?;
+        }
+        Ok(())
     }
 }
