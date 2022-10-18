@@ -1,3 +1,5 @@
+/// Might still be useful if we switch back to trait-based implementation
+
 use crate::{contract::ContractInstance, error::BootError, CosmTxResponse};
 use async_trait::async_trait;
 use cosmrs::Coin;
