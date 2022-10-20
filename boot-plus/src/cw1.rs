@@ -1,11 +1,12 @@
+use std::ops::Deref;
+
 use boot_core::{BootError, Contract, IndexResponse, TxHandler, TxResponse};
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw_multi_test::ContractWrapper;
+use cw_multi_test::{ContractWrapper};
 use cw1_whitelist::msg::*;
 use crate::CwPlusContract;
 use boot_core::Daemon;
 pub type Cw1<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
-
 // implement chain-generic functions
 impl<Chain: TxHandler + Clone> Cw1<Chain>
 where
@@ -24,6 +25,7 @@ where
                 .with_wasm_path(file_path),
         )
     }
-
-    
+    pub fn set_path(self,path: &str) -> Self {
+        Self(self.0.with_wasm_path(path))
+    }
 }
