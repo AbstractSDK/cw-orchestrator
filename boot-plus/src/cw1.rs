@@ -25,7 +25,9 @@ where
                 .with_wasm_path(file_path),
         )
     }
-    pub fn set_path(self,path: &str) -> Self {
-        Self(self.0.with_wasm_path(path))
+    pub fn set_variant(self,filename: &str) -> Self {
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let file_path = &format!("{}{}{}", crate_path, "/cw-artifacts/", filename);
+        Self(self.0.with_wasm_path(file_path))
     }
 }
