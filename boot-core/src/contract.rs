@@ -1,3 +1,5 @@
+use std::env;
+use std::path::Path;
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
@@ -49,6 +51,37 @@ where
     pub wasm_code_path: Option<String>,
     pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
 }
+
+impl<ExecT, QueryT> ContractCodeReference<ExecT, QueryT>
+where
+    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    QueryT: CustomQuery + DeserializeOwned + 'static,
+{
+    /// CHecks the environment for the wasm dir configuration and returns the path to the wasm file
+    pub fn get_wasm_code_path(&self) -> Result<String, BootError> {
+        let wasm_code_path = self.wasm_code_path.as_ref().ok_or(BootError::StdErr(
+            "Wasm file is required to determine hash.".into(),
+        ))?;
+
+        let wasm_code_path = if wasm_code_path.contains(".wasm") {
+            wasm_code_path.to_string()
+        } else {
+            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), wasm_code_path)
+        };
+
+        Ok(wasm_code_path)
+    }
+
+    /// Calculate the checksum of the wasm file to compare against previous uploads
+    pub fn checksum(&self) -> Result<String, BootError> {
+        let wasm_code_path= &self.get_wasm_code_path()?;
+
+        let wasm_code = Path::new(wasm_code_path);
+        let checksum = sha256::try_digest(wasm_code)?;
+        Ok(checksum)
+    }
+}
+
 /// Expose chain and state function to call them on the contract
 impl<
         Chain: TxHandler + Clone,
@@ -92,6 +125,7 @@ where
         self.chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?)
     }
+
     pub fn instantiate(
         &self,
         msg: &I,
@@ -99,14 +133,19 @@ where
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
         log::info!("instantiating {}", self.id);
-        let resp =
-            self.chain
-                .instantiate(self.code_id()?, msg, None, admin, coins.unwrap_or(&[]))?;
+        let resp = self.chain.instantiate(
+            self.code_id()?,
+            msg,
+            Some(&self.id),
+            admin,
+            coins.unwrap_or(&[]),
+        )?;
         let contract_address = resp.instantiated_contract_address()?;
         self.set_address(&contract_address);
         log::debug!("instantiate response: {:#?}", resp);
         Ok(resp)
     }
+
     pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
         log::info!("uploading {}", self.id);
         let resp = self.chain.upload(&mut self.source)?;
@@ -116,11 +155,17 @@ where
 
         Ok(resp)
     }
+
     pub fn query<T: Serialize + DeserializeOwned>(&self, query_msg: &Q) -> Result<T, BootError> {
         log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
         self.chain.query(query_msg, &self.address()?)
     }
-    pub fn migrate(&self, migrate_msg: &M, new_code_id: u64) -> Result<TxResponse<Chain>, BootError> {
+
+    pub fn migrate(
+        &self,
+        migrate_msg: &M,
+        new_code_id: u64,
+    ) -> Result<TxResponse<Chain>, BootError> {
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
     }
