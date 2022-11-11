@@ -197,19 +197,7 @@ impl TxHandler for Daemon {
         contract_source: &mut ContractCodeReference<Empty>,
     ) -> Result<Self::Response, BootError> {
         let sender = &self.sender;
-        let path = if let Some(path) = &contract_source.wasm_code_path {
-            path
-        } else {
-            return Err(BootError::StdErr(
-                "Blockchain deamon upload requires wasm file.".into(),
-            ));
-        };
-
-        let wasm_path = if path.contains(".wasm") {
-            path.to_string()
-        } else {
-            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), path)
-        };
+        let wasm_path = &contract_source.get_wasm_code_path()?;
 
         log::debug!("{}", wasm_path);
 
