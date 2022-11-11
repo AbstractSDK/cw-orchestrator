@@ -74,7 +74,7 @@ where
 
     /// Calculate the checksum of the wasm file to compare against previous uploads
     pub fn checksum(&self) -> Result<String, BootError> {
-        let wasm_code_path= &self.get_wasm_code_path()?;
+        let wasm_code_path = &self.get_wasm_code_path()?;
 
         let wasm_code = Path::new(wasm_code_path);
         let checksum = sha256::try_digest(wasm_code)?;
@@ -116,6 +116,14 @@ where
 
     pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
         self.source.contract_endpoints = Some(mock_contract);
+        self
+    }
+
+    /// Sets the address of the contract in the local state
+    pub fn with_address(mut self, address: Option<&Addr>) -> Self {
+        if let Some(address) = address {
+            self.set_address(address)
+        }
         self
     }
 

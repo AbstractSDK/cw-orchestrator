@@ -1,6 +1,5 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
-use cosmrs::bip32::secp256k1::elliptic_curve::weierstrass::add;
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
