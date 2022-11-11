@@ -50,6 +50,7 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
         self.borrow_mut().set_address(contract_id, address)
     }
+
     fn get_code_id(&self, contract_id: &str) -> Result<u64, BootError> {
         self.borrow().get_code_id(contract_id)
     }
