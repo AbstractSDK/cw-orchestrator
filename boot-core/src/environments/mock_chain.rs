@@ -50,12 +50,20 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
         self.borrow_mut().set_address(contract_id, address)
     }
+
     fn get_code_id(&self, contract_id: &str) -> Result<u64, BootError> {
         self.borrow().get_code_id(contract_id)
     }
 
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.borrow_mut().set_code_id(contract_id, code_id)
+    }
+
+    fn get_checksum(&self, contract_id: &str) -> Result<String, BootError> {
+        self.borrow().get_checksum(contract_id)
+    }
+    fn set_checksum(&mut self, contract_id: &str, checksum: &str) {
+        self.borrow_mut().set_checksum(contract_id, checksum)
     }
     fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, BootError> {
         self.borrow().get_all_addresses()

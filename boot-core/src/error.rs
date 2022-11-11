@@ -86,6 +86,8 @@ pub enum BootError {
     AddrNotInFile(String),
     #[error("Code id for {0} not found in file")]
     CodeIdNotInFile(String),
+    #[error("Checksum for {0} not found in file")]
+    ChecksumNotInFile(String),
     #[error("calling contract with unimplemented action")]
     NotImplemented,
     #[error("new chain detected, fill out the scaffold at {0}")]

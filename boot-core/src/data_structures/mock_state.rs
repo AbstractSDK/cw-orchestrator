@@ -9,6 +9,7 @@ use std::collections::HashMap;
 pub struct MockState {
     pub code_ids: HashMap<String, u64>,
     pub addresses: HashMap<String, Addr>,
+    pub checksums: HashMap<String, String>,
 }
 
 impl MockState {
@@ -16,6 +17,7 @@ impl MockState {
         Self {
             addresses: HashMap::new(),
             code_ids: HashMap::new(),
+            checksums: HashMap::new(),
         }
     }
 }
@@ -50,6 +52,18 @@ impl StateInterface for MockState {
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.code_ids.insert(contract_id.to_string(), code_id);
     }
+
+    fn get_checksum(&self, contract_id: &str) -> Result<String, BootError> {
+        self.checksums
+            .get(contract_id)
+            .ok_or_else(|| BootError::ChecksumNotInFile(contract_id.to_owned()))
+            .map(|val| val.to_owned())
+    }
+    fn set_checksum(&mut self, contract_id: &str, checksum: &str) {
+        self.checksums
+            .insert(contract_id.to_string(), checksum.to_string());
+    }
+
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError> {
         Ok(self.addresses.clone())
     }
