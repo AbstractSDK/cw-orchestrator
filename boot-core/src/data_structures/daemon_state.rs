@@ -1,9 +1,10 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
+use cosmrs::bip32::secp256k1::elliptic_curve::weierstrass::add;
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
-use serde_json::{from_reader, json};
+use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 
@@ -70,14 +71,35 @@ impl DaemonState {
         }
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
+
+    /// Get the state filepath and read it as json
+    fn json(&self) -> serde_json::Value {
+        let file = File::open(&self.json_file_path)
+            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
+        let json: serde_json::Value = from_reader(file).unwrap();
+        json
+    }
+
+    /// Retrieve a stateful value using the chainId and networkId
+    fn get(&self, key: &str) -> Value {
+        let json = self.json();
+        json[&self.chain.chain_id][&self.id.to_string()][key].clone()
+    }
+
+    /// Set a stateful value using the chainId and networkId
+    fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
+        let mut json = self.json();
+
+        json[&self.chain.chain_id][&self.id.to_string()][key][contract_id] = json!(value);
+
+        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+    }
 }
 
 impl StateInterface for Rc<DaemonState> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError> {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let json: serde_json::Value = from_reader(file)?;
-        let value = json[&self.chain.chain_id][&self.id.to_string()]["addresses"]
+        let value = self
+            .get("addresses")
             .get(contract_id)
             .ok_or_else(|| BootError::AddrNotInFile(contract_id.to_owned()))?
             .clone();
@@ -85,21 +107,13 @@ impl StateInterface for Rc<DaemonState> {
     }
 
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let mut json: serde_json::Value = from_reader(file).unwrap();
-
-        json[&self.chain.chain_id][&self.id.to_string()]["addresses"][contract_id] =
-            json!(address.as_str());
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+        self.set("addresses", contract_id, address.as_str());
     }
 
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, BootError> {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let json: serde_json::Value = from_reader(file)?;
-        let value = json[&self.chain.chain_id][&self.id.to_string()]["code_ids"]
+        let value = self
+            .get("code_ids")
             .get(contract_id)
             .ok_or_else(|| BootError::CodeIdNotInFile(contract_id.to_owned()))?
             .clone();
@@ -108,21 +122,13 @@ impl StateInterface for Rc<DaemonState> {
 
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let mut json: serde_json::Value = from_reader(file).unwrap();
-
-        json[&self.chain.chain_id][&self.id.to_string()]["code_ids"][contract_id] = json!(code_id);
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+        self.set("code_ids", contract_id, code_id);
     }
+
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError> {
         let mut store = HashMap::new();
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let json: serde_json::Value = from_reader(file).unwrap();
-        let value = json[&self.chain.chain_id][&self.id.to_string()]["addresses"]
-            .as_object()
-            .unwrap();
+        let addresses = self.get("addresses");
+        let value = addresses.as_object().unwrap();
         for (id, addr) in value {
             store.insert(id.clone(), Addr::unchecked(addr.as_str().unwrap()));
         }
@@ -130,12 +136,8 @@ impl StateInterface for Rc<DaemonState> {
     }
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, BootError> {
         let mut store = HashMap::new();
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let json: serde_json::Value = from_reader(file).unwrap();
-        let value = json[&self.chain.chain_id][&self.id.to_string()]["code_ids"]
-            .as_object()
-            .unwrap();
+        let code_ids = self.get("code_ids");
+        let value = code_ids.as_object().unwrap();
         for (id, code_id) in value {
             store.insert(id.clone(), code_id.as_u64().unwrap());
         }

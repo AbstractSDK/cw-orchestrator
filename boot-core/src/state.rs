@@ -9,6 +9,7 @@ pub trait ChainState {
     fn state(&self) -> Self::Out;
 }
 
+/// Interface for setting the local (jsonified) state of the contracts on a chain
 pub trait StateInterface: Clone {
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError>;
     fn set_address(&mut self, contract_id: &str, address: &Addr);
