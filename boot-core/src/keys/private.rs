@@ -35,7 +35,7 @@ impl PrivateKey {
         coin_type: u32,
     ) -> Result<PrivateKey, BootError> {
         let phrase =
-            hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
+            hkd32::mnemonic::Phrase::random(OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, "")
     }
@@ -46,7 +46,7 @@ impl PrivateKey {
         coin_type: u32,
     ) -> Result<PrivateKey, BootError> {
         let phrase =
-            hkd32::mnemonic::Phrase::random(&mut OsRng, hkd32::mnemonic::Language::English);
+            hkd32::mnemonic::Phrase::random(OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_phrase)
     }

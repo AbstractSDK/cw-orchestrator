@@ -1,17 +1,17 @@
 use boot_core::networks::juno::JUNO_DAEMON;
-use boot_core::TxHandler;
-use boot_core::{instantiate_daemon_env, instantiate_default_mock_env};
+
+use boot_core::{instantiate_daemon_env};
 
 use boot_plus::{Cw20, CW20_BASE};
-use cosmwasm_std::Addr;
+
 
 // Requires a running local junod with grpc enabled
 
 pub fn script() -> anyhow::Result<()> {
     // First we upload, instantiate and interact with a real chain
     let network = JUNO_DAEMON;
-    let (_, sender, chain) = instantiate_daemon_env(network)?;
-    let mut token = Cw20::new(CW20_BASE, &chain);
+    let (_, _sender, chain) = instantiate_daemon_env(network)?;
+    let token = Cw20::new(CW20_BASE, &chain);
     // token.upload()?;
     println!("{}", token.upload_required()?);
     // token.test_generic(&sender)?;

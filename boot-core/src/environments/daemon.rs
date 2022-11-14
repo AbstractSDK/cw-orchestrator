@@ -61,7 +61,7 @@ impl Daemon {
 
     pub fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
         use cosmos_modules::cosmwasm::query_client::*;
-        let channel: Channel = self.sender.channel().clone();
+        let channel: Channel = self.sender.channel();
         let latest_code_id = self.state.get_code_id(contract_id)?;
         // query hash of code-id
         let mut client: QueryClient<Channel> = QueryClient::new(channel);
@@ -78,9 +78,7 @@ impl Daemon {
         let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
         let name = contract_id.split(':').last().unwrap();
         let containing_line = parsed
-            .iter()
-            .filter(|line| line.contains(name))
-            .next()
+            .iter().find(|line| line.contains(name))
             .unwrap();
         log::debug!("{:?}", containing_line);
         let local_hash = containing_line
