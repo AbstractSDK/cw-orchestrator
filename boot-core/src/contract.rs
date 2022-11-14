@@ -120,7 +120,7 @@ where
     }
 
     /// Sets the address of the contract in the local state
-    pub fn with_address(mut self, address: Option<&Addr>) -> Self {
+    pub fn with_address(self, address: Option<&Addr>) -> Self {
         if let Some(address) = address {
             self.set_address(address)
         }

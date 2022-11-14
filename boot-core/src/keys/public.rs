@@ -423,7 +423,7 @@ mod tst {
             "terravaloper1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztraasg"
         );
         assert_eq!(
-            &pub_key.account(PREFIX)?.to_string(),
+            &pub_key.account(PREFIX)?,
             "terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm"
         );
         assert_eq!(
@@ -448,7 +448,7 @@ mod tst {
         //   eprintln!("{}", hex::encode(&pub_key.raw_pub_key.unwrap()));
         let tendermint_pub_key = PublicKey::from_tendermint_key(valconspub_83)?;
         assert_eq!(
-            &tendermint_pub_key.account(PREFIX)?.to_string(),
+            &tendermint_pub_key.account(PREFIX)?,
             "terra1jnzv225hwl3uxc5wtnlgr8mwy6nlt0vztv3qqm"
         );
         assert_eq!(
