@@ -5,7 +5,7 @@ authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 description = "Environment generic CosmWasm-plus scripting interfaces"
 license = "Apache-2.0"
-repository = "https://github.com/CyberHoward/cosm-rust-script"
+repository = "https://github.com/Abstract-OS/BOOT"
 keywords = ["cosmwasm", "blockchain"]
 readme = "README.md"
 

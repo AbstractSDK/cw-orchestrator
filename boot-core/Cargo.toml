@@ -1,11 +1,11 @@
 [package]
 name = "boot-core"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
 license = "Apache-2.0"
-repository = "https://github.com/CyberHoward/cosm-rust-script"
+repository = "https://github.com/Abstract-OS/BOOT"
 keywords = ["cosmwasm", "blockchain"]
 categories = ["development-tools", "api-bindings"]
 readme = "README.md"
