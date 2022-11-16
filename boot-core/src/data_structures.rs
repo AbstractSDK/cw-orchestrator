@@ -22,3 +22,15 @@ pub fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>,
         })
         .collect::<Result<Vec<_>, BootError>>()
 }
+
+pub fn parse_rs_coins(coins: &[cosmrs::Coin]) -> Result<Vec<cosmwasm_std::Coin>, BootError> {
+    coins
+        .iter()
+        .map(|cosmrs::Coin { amount, denom }| {
+            Ok(cosmwasm_std::Coin {
+                amount: amount.clone().into(),
+                denom: denom.to_string(),
+            })
+        })
+        .collect::<Result<Vec<_>, BootError>>()
+}

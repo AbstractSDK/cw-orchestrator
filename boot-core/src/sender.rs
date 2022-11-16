@@ -5,9 +5,10 @@ use crate::{
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
+    proto::{traits::Message},
     tendermint::chain::Id,
     tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
-    AccountId, Any, Coin, proto::traits::Message,
+    AccountId, Any, Coin,
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
@@ -145,8 +146,7 @@ impl Sender<All> {
     pub async fn base_account(&self) -> Result<BaseAccount, BootError> {
         let addr = self.pub_addr().unwrap().to_string();
 
-        let mut client =
-        cosmos_modules::auth::query_client::QueryClient::new(self.channel());
+        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel());
 
         let resp = client
             .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
@@ -200,7 +200,7 @@ impl Sender<All> {
     }
 }
 
-async fn find_by_hash(
+pub async fn find_by_hash(
     client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
     hash: String,
 ) -> Result<CosmTxResponse, BootError> {

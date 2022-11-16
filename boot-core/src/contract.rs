@@ -116,11 +116,17 @@ where
 
         Ok(resp)
     }
-    pub fn query<T: Serialize + DeserializeOwned>(&self, query_msg: &Q) -> Result<T, BootError> {
+    pub fn query<T: Serialize + DeserializeOwned + Debug>(&self, query_msg: &Q) -> Result<T, BootError> {
         log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
-        self.chain.query(query_msg, &self.address()?)
+        let resp = self.chain.query(query_msg, &self.address()?)?;
+        log::info!("{:?}",resp);
+        Ok(resp)
     }
-    pub fn migrate(&self, migrate_msg: &M, new_code_id: u64) -> Result<TxResponse<Chain>, BootError> {
+    pub fn migrate(
+        &self,
+        migrate_msg: &M,
+        new_code_id: u64,
+    ) -> Result<TxResponse<Chain>, BootError> {
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
     }

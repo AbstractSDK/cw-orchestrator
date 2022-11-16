@@ -50,6 +50,7 @@ pub mod cosmos_modules {
     pub use cosmrs::proto::cosmos::staking::v1beta1 as staking;
     pub use cosmrs::proto::cosmos::tx::v1beta1 as tx;
     pub use cosmrs::proto::cosmwasm::wasm::v1 as cosmwasm;
+    pub use cosmrs::proto::ibc::core::channel::v1 as ibc_channel;
     pub use cosmrs::proto::tendermint::abci as tendermint_abci;
 }
 

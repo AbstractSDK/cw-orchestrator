@@ -1,11 +1,11 @@
-use std::ops::Deref;
 
-use boot_core::{BootError, Contract, IndexResponse, TxHandler, TxResponse};
-use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw_multi_test::{ContractWrapper};
-use cw1_whitelist::msg::*;
+
 use crate::CwPlusContract;
-use boot_core::Daemon;
+
+use boot_core::{Contract, IndexResponse, TxHandler, TxResponse};
+use cosmwasm_std::{Empty};
+use cw1_whitelist::msg::*;
+use cw_multi_test::ContractWrapper;
 pub type Cw1<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 // implement chain-generic functions
 impl<Chain: TxHandler + Clone> Cw1<Chain>
@@ -25,7 +25,7 @@ where
                 .with_wasm_path(file_path),
         )
     }
-    pub fn set_variant(self,filename: &str) -> Self {
+    pub fn set_variant(self, filename: &str) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}{}", crate_path, "/cw-artifacts/", filename);
         Self(self.0.with_wasm_path(file_path))

@@ -10,10 +10,15 @@ use std::{
 use cosmos_modules::cosmwasm::QueryCodeRequest;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
+    proto::{
+        cosmos::bank::v1beta1::QueryAllBalancesRequest,
+        ibc::core::channel::v1::QueryPacketReceiptRequest,
+    },
     AccountId,
 };
 
 use cosmwasm_std::{Addr, Coin, Empty};
+
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use tokio::runtime::Runtime;
@@ -22,7 +27,7 @@ use tonic::transport::Channel;
 use crate::{
     contract::ContractCodeReference,
     cosmos_modules,
-    data_structures::parse_cw_coins,
+    data_structures::{parse_cw_coins, parse_rs_coins},
     error::BootError,
     sender::Wallet,
     state::{ChainState, StateInterface},
@@ -57,6 +62,27 @@ impl Daemon {
             NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
             NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
         }
+    }
+
+    pub fn balance(&self, address: Addr) -> Result<Vec<Coin>, BootError> {
+        use crate::cosmos_modules::bank::query_client::QueryClient as BankQueryClient;
+
+        let mut client: BankQueryClient<Channel> =
+            BankQueryClient::new(self.sender.channel().clone());
+
+        let resp = self
+            .runtime
+            .block_on(client.all_balances(QueryAllBalancesRequest {
+                address: address.to_string(),
+                pagination: None,
+            }))?
+            .into_inner();
+        let rs_coins: Vec<cosmrs::Coin> = resp
+            .balances
+            .into_iter()
+            .map(|c| cosmrs::Coin::try_from(c).unwrap())
+            .collect();
+        parse_rs_coins(&rs_coins)
     }
 
     pub fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
@@ -95,6 +121,26 @@ impl Daemon {
         );
         Ok(local_hash == on_chain_hash)
     }
+
+    pub fn ibc_packet_received(
+        &self,
+        packet_sequence: u64,
+        dest_port: String,
+        channel_id: String,
+    ) -> Result<bool, BootError> {
+        self.runtime.block_on(self.wait());
+        use crate::cosmos_modules::ibc_channel::query_client::QueryClient as IbcQueryClient;
+        let channel: Channel = self.sender.channel().clone();
+        let mut client: IbcQueryClient<Channel> = IbcQueryClient::new(channel);
+        let resp = self
+            .runtime
+            .block_on(client.packet_receipt(QueryPacketReceiptRequest {
+                port_id: dest_port,
+                channel_id: channel_id,
+                sequence: packet_sequence,
+            }))?;
+        Ok(resp.into_inner().received)
+    }
 }
 
 impl ChainState for Daemon {
@@ -127,6 +173,27 @@ impl TxHandler for Daemon {
         let result = self
             .runtime
             .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        // check for ibc packets
+        let ibc_events = result.get_events("send_packet");
+        if !ibc_events.is_empty() {
+            let event = ibc_events.last().unwrap();
+            let packet_connection = event.get_first_value("packet_connection").unwrap();
+            let src_channel = event.get_first_value("packet_src_channel").unwrap();
+            let src_port = event.get_first_value("packet_src_port").unwrap();
+            let sequence = event.get_first_value("packet_sequence").unwrap();
+            let dest_channel = event.get_first_value("packet_dst_channel").unwrap();
+            let dest_port = event.get_first_value("packet_dst_port").unwrap();
+            let packet_data = event.get_first_value("packet_data").unwrap();
+            log::info!("IBC packet sent on port {src_port} to port {dest_port} over source channel {src_channel} with destination channel {dest_channel}");
+            log::info!("Packet data: {packet_data}");
+            // while !self.ibc_packet_received(
+            //     u64::from_str(&sequence)?,
+            //     dest_port.clone(),
+            //     packet_connection.clone(),
+            // )? {
+            //     log::info!("checking receiving chain");
+            // }
+        }
         Ok(result)
     }
 
