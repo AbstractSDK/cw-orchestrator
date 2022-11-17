@@ -77,9 +77,7 @@ impl Daemon {
         let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
         let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
         let name = contract_id.split(':').last().unwrap();
-        let containing_line = parsed
-            .iter().find(|line| line.contains(name))
-            .unwrap();
+        let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
         log::debug!("{:?}", containing_line);
         let local_hash = containing_line
             .trim_start_matches('\n')
