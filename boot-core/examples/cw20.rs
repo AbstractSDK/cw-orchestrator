@@ -1,4 +1,4 @@
-use boot_core::networks::juno::JUNO_DAEMON;
+use boot_core::networks::juno::LOCAL_JUNO;
 
 use boot_core::instantiate_daemon_env;
 
@@ -8,7 +8,7 @@ use boot_cw_plus::{Cw20, CW20_BASE};
 
 pub fn script() -> anyhow::Result<()> {
     // First we upload, instantiate and interact with a real chain
-    let network = JUNO_DAEMON;
+    let network = LOCAL_JUNO;
     let (_, _sender, chain) = instantiate_daemon_env(network)?;
     let token = Cw20::new(CW20_BASE, &chain);
     // token.upload()?;
