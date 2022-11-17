@@ -1,4 +1,4 @@
-use crate::{CosmTxResponse};
+use crate::CosmTxResponse;
 use cosmwasm_std::{to_binary, Addr, Attribute, Binary, Event, StdError, StdResult};
 use cw_multi_test::AppResponse;
 
