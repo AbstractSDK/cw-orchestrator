@@ -31,6 +31,9 @@ pub use tx_handler::{TxHandler, TxResponse};
 extern crate lazy_static;
 
 use data_structures::{client_types, core_types};
+/// Signals a supported execution environment
+pub trait BootEnvironment : TxHandler + Clone {}
+impl <T: TxHandler + Clone> BootEnvironment for T{}
 
 pub mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;
