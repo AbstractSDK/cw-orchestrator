@@ -1,9 +1,8 @@
 use boot_core::networks::juno::JUNO_DAEMON;
 
-use boot_core::{instantiate_daemon_env};
+use boot_core::instantiate_daemon_env;
 
 use boot_plus::{Cw20, CW20_BASE};
-
 
 // Requires a running local junod with grpc enabled
 

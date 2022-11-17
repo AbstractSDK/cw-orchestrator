@@ -1,4 +1,4 @@
-# BOOT-plus
+# boot-cw-plus
 Library that hold the most-used interfaces for standard cw-plus contracts and their artifacts.
 
 Currently supports
