@@ -1,4 +1,4 @@
-use crate::{contract::ContractCodeReference, state::ChainState, BootError};
+use crate::{contract::ContractCodeReference, state::ChainState, BootError, IndexResponse};
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -7,7 +7,7 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
-    type Response: Debug;
+    type Response: IndexResponse + Debug;
 
     // Gets current sender
     fn sender(&self) -> Addr;
