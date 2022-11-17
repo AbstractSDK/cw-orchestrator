@@ -1,9 +1,7 @@
-
-
 use crate::CwPlusContract;
 
 use boot_core::{Contract, IndexResponse, TxHandler, TxResponse};
-use cosmwasm_std::{Empty};
+use cosmwasm_std::Empty;
 use cw1_whitelist::msg::*;
 use cw_multi_test::ContractWrapper;
 pub type Cw1<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;

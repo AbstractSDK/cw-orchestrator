@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "boot-core",
-    "boot-plus",
+    "boot-cw-plus",
     # "template"
 ]
 
