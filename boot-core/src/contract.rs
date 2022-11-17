@@ -59,7 +59,7 @@ where
 {
     /// CHecks the environment for the wasm dir configuration and returns the path to the wasm file
     pub fn get_wasm_code_path(&self) -> Result<String, BootError> {
-        let wasm_code_path = self.wasm_code_path.as_ref().ok_or(BootError::StdErr(
+        let wasm_code_path = self.wasm_code_path.as_ref().ok_or_else( || BootError::StdErr(
             "Wasm file is required to determine hash.".into(),
         ))?;
 
