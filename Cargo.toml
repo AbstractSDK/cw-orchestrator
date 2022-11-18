@@ -2,6 +2,7 @@
 members = [
     "boot-core",
     "boot-cw-plus",
+    "packages/*",
     # "template"
 ]
 
