@@ -1,15 +1,13 @@
-use crate::CwPlusContract;
-
-use boot_core::{Contract, IndexResponse, TxHandler, TxResponse};
+use boot_core::{BootEnvironment, Contract, IndexResponse, TxHandler, TxResponse};
 use cosmwasm_std::Empty;
 use cw1_whitelist::msg::*;
 use cw_multi_test::ContractWrapper;
-pub type Cw1<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
+
+pub struct Cw1<Chain: BootEnvironment>(Contract<Chain>);
+
+// pub type Cw1<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 // implement chain-generic functions
-impl<Chain: TxHandler + Clone> Cw1<Chain>
-where
-    TxResponse<Chain>: IndexResponse,
-{
+impl<Chain: BootEnvironment + Clone> Cw1<Chain> {
     pub fn new(id: &str, chain: &Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw1_whitelist.wasm");

@@ -1,173 +1,117 @@
-use crate::{contract::ContractInstance, error::BootError, CosmTxResponse};
-use async_trait::async_trait;
-use cosmrs::Coin;
+use std::fmt::Debug;
+
+use crate::{contract::Contract, error::BootError, BootEnvironment};
+use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 
-#[derive(Debug, Clone, Serialize)]
-pub struct NotImplemented(String);
-
-impl Default for NotImplemented {
-    // TODO: improve, when rust allows negating trait bounds or overwriting traits
-    fn default() -> Self {
-        Self("Stupid Workaround".into())
-    }
-}
-
 // Fn for custom implementation to return ContractInstance
-pub trait Instance {
-    fn instance(&self) -> &ContractInstance;
+pub trait Instance<Chain: BootEnvironment> {
+    fn instance(&self) -> &Contract<Chain>;
+    fn instance_mut(&mut self) -> &mut Contract<Chain>;
 }
 
-/// Implementing Interface ensures type safety
-pub trait Interface {
-    type Init: Serialize;
-    type Exec: Serialize;
-    type Query: Serialize;
-    type Migrate: Serialize;
+/// Implementing CwInterface ensures type safety
+pub trait CwInterface {
+    type InstantiateMsg: Serialize + Debug;
+    type ExecuteMsg: Serialize + Debug;
+    type QueryMsg: Serialize + Debug;
+    type MigrateMsg: Serialize + Debug;
 }
 
 /// Smart Contract execute endpoint
-#[async_trait(?Send)]
-pub trait WasmExecute {
+pub trait BootExecute<Chain: BootEnvironment> {
     type E: Serialize;
 
-    async fn exec<'a>(
+    fn execute<'a>(
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, BootError>;
+    ) -> Result<Chain::Response, BootError>;
 }
 
-#[async_trait(?Send)]
-impl<T: Interface + Instance> WasmExecute for T {
-    type E = <T as Interface>::Exec;
+impl<T: CwInterface + Instance<Chain>, Chain: BootEnvironment> BootExecute<Chain> for T {
+    type E = <T as CwInterface>::ExecuteMsg;
 
-    async fn exec<'a>(
+    fn execute<'a>(
         &self,
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, BootError> {
-        assert_implemented(&execute_msg)?;
-        self.instance()
-            .execute(&execute_msg, coins.unwrap_or(&[]))
-            .await
+    ) -> Result<Chain::Response, BootError> {
+        self.instance().execute(&execute_msg, coins)
     }
 }
 
 /// Smart Contract instantiate endpoint
-
-#[async_trait(?Send)]
-pub trait WasmInstantiate {
+pub trait BootInstantiate<Chain: BootEnvironment> {
     type I: Serialize;
 
-    async fn init(
+    fn instantiate(
         &self,
-        instantiate_msg: Self::I,
-        admin: Option<String>,
+        instantiate_msg: &Self::I,
+        admin: Option<&Addr>,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, BootError>;
+    ) -> Result<Chain::Response, BootError>;
 }
 
-#[async_trait(?Send)]
-impl<T: Interface + Instance> WasmInstantiate for T {
-    type I = <T as Interface>::Init;
+impl<T: CwInterface + Instance<Chain>, Chain: BootEnvironment> BootInstantiate<Chain> for T {
+    type I = <T as CwInterface>::InstantiateMsg;
 
-    async fn init(
+    fn instantiate(
         &self,
-        instantiate_msg: Self::I,
-        admin: Option<String>,
+        instantiate_msg: &Self::I,
+        admin: Option<&Addr>,
         coins: Option<&[Coin]>,
-    ) -> Result<CosmTxResponse, BootError> {
-        assert_implemented(&instantiate_msg)?;
-        self.instance()
-            .instantiate(instantiate_msg, admin, coins.unwrap_or_default())
-            .await
+    ) -> Result<Chain::Response, BootError> {
+        self.instance().instantiate(instantiate_msg, admin, coins)
     }
 }
 
 /// Smart Contract query endpoint
-
-#[async_trait(?Send)]
-pub trait WasmQuery {
+pub trait BootQuery<Chain: BootEnvironment> {
     type Q: Serialize;
 
-    async fn query<G: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: Self::Q,
-    ) -> Result<G, BootError>;
+    fn query<G: Serialize + DeserializeOwned>(&self, query_msg: &Self::Q) -> Result<G, BootError>;
 }
 
-#[async_trait(?Send)]
-impl<T: Interface + Instance> WasmQuery for T {
-    type Q = <T as Interface>::Query;
+impl<T: CwInterface + Instance<Chain>, Chain: BootEnvironment> BootQuery<Chain> for T {
+    type Q = <T as CwInterface>::QueryMsg;
 
-    async fn query<G: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: Self::Q,
-    ) -> Result<G, BootError> {
-        assert_implemented(&query_msg)?;
-        self.instance().query(query_msg).await
+    fn query<G: Serialize + DeserializeOwned>(&self, query_msg: &Self::Q) -> Result<G, BootError> {
+        self.instance().query(query_msg)
     }
 }
 
 /// Smart Contract migrate endpoint
-
-#[async_trait(?Send)]
-pub trait WasmMigrate {
+pub trait BootMigrate<Chain: BootEnvironment> {
     type M: Serialize;
 
-    async fn migrate(
+    fn migrate(
         &self,
-        migrate_msg: Self::M,
+        migrate_msg: &Self::M,
         new_code_id: u64,
-    ) -> Result<CosmTxResponse, BootError>;
+    ) -> Result<Chain::Response, BootError>;
 }
 
-#[async_trait(?Send)]
-impl<T: Interface + Instance> WasmMigrate for T {
-    type M = <T as Interface>::Migrate;
+impl<T: CwInterface + Instance<Chain>, Chain: BootEnvironment> BootMigrate<Chain> for T {
+    type M = <T as CwInterface>::MigrateMsg;
 
-    async fn migrate(
+    fn migrate(
         &self,
-        migrate_msg: Self::M,
+        migrate_msg: &Self::M,
         new_code_id: u64,
-    ) -> Result<CosmTxResponse, BootError> {
-        assert_implemented(&migrate_msg)?;
-        self.instance().migrate(migrate_msg, new_code_id).await
+    ) -> Result<Chain::Response, BootError> {
+        self.instance().migrate(migrate_msg, new_code_id)
     }
 }
 
 /// Smart Contract migrate endpoint
 
-#[async_trait(?Send)]
-pub trait WasmUpload {
-    async fn upload(&self, path: &str) -> Result<CosmTxResponse, BootError>;
+pub trait BootUpload<Chain: BootEnvironment> {
+    fn upload(&mut self) -> Result<Chain::Response, BootError>;
 }
 
-#[async_trait(?Send)]
-impl<T: Instance> WasmUpload for T {
-    async fn upload(&self, path: &str) -> Result<CosmTxResponse, BootError> {
-        self.instance().upload(path).await
+impl<T: Instance<Chain>, Chain: BootEnvironment> BootUpload<Chain> for T {
+    fn upload(&mut self) -> Result<Chain::Response, BootError> {
+        self.instance_mut().upload()
     }
 }
-
-// asserts that trait function is implemented for contract
-fn assert_implemented<E: Serialize>(msg: &E) -> Result<(), BootError> {
-    if serde_json::to_string(msg)? == serde_json::to_string(&NotImplemented::default())? {
-        return Err(BootError::NotImplemented);
-    }
-    Ok(())
-}
-
-// TODO: find out how to create a wrapper trait that can be imported to expose all the interfaces
-// pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery + WasmMigrate {}
-
-// /// Smart Contract execute endpoint
-// #[async_trait(?Send)]
-// pub trait WasmContract<'a>: WasmExecute + WasmInstantiate + WasmQuery where &'a Self: 'a + Interface + Instance  {
-//     async fn exec<'b>(
-//         &'a self,
-//         execute_msg:&'b <&'a Self as Interface>::E,
-//         coins: Option<&[Coin]>,
-//     ) -> Result<CosmTxResponse, BootError>;
-// }
