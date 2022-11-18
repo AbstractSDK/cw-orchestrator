@@ -8,9 +8,11 @@ mod index_response;
 mod keys;
 mod multisig;
 pub mod networks;
+pub mod old_traits;
 pub mod sender;
 pub mod state;
 mod tx_handler;
+
 // pub mod traits;
 pub use contract::Contract;
 pub use data_structures::{
@@ -32,8 +34,9 @@ extern crate lazy_static;
 
 use data_structures::{client_types, core_types};
 /// Signals a supported execution environment
-pub trait BootEnvironment : TxHandler + Clone {}
-impl <T: TxHandler + Clone> BootEnvironment for T{}
+pub trait BootEnvironment: TxHandler + Clone {}
+
+impl<T: TxHandler + Clone> BootEnvironment for T {}
 
 pub mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;

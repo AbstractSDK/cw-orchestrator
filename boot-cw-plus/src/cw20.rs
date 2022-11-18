@@ -1,16 +1,34 @@
-use boot_core::{BootError, Contract, IndexResponse, TxHandler, TxResponse, BootEnvironment};
-use cosmwasm_std::{Addr, Binary, Empty, Uint128};
+use boot_core::{
+    old_traits::*, BootEnvironment, BootError, Contract, IndexResponse,
+    TxResponse,
+};
+use cosmwasm_std::{Addr, Binary, Uint128, Empty};
 use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw_multi_test::ContractWrapper;
 
-use crate::CwPlusContract;
 use boot_core::Daemon;
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
+
+pub struct Cw20<Chain: BootEnvironment>(Contract<Chain>);
+
+impl<Chain: BootEnvironment> CwInterface for Cw20<Chain> {
+    type InstantiateMsg = InstantiateMsg;
+    type ExecuteMsg = ExecuteMsg;
+    type QueryMsg = QueryMsg;
+    type MigrateMsg = Empty;
+}
+
+impl<Chain: BootEnvironment> Instance<Chain> for Cw20<Chain> {
+    fn instance(&self) -> &Contract<Chain> {
+        &self.0
+    }
+    fn instance_mut(&mut self) -> &mut Contract<Chain> {
+        &mut self.0
+    }
+}
 
 // implement chain-generic functions
-impl<Chain: BootEnvironment> Cw20<Chain>
-{
+impl<Chain: BootEnvironment> Cw20<Chain> {
     pub fn new(id: &str, chain: &Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
@@ -107,14 +125,14 @@ impl<Chain: BootEnvironment> Cw20<Chain>
 
 impl Cw20<Daemon> {
     pub fn upload_required(&self) -> Result<bool, BootError> {
-        let daemon: Daemon = self.chain();
+        let daemon: Daemon = self.0.chain();
         daemon.is_contract_hash_identical(&self.id)
     }
 }
 
 // fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
 // where
-// Chain: TxHandler + Clone,
+// Chain: BootEnvironment + Clone,
 // <Chain as TxHandler>::Response : IndexResponse,
 // Cw20<Chain>: ContractSource
 // {
