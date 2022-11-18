@@ -10,7 +10,7 @@ use std::{
 use cosmos_modules::cosmwasm::QueryCodeRequest;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
-    AccountId,
+    AccountId, Denom,
 };
 
 use cosmwasm_std::{Addr, Coin, Empty};
@@ -22,13 +22,30 @@ use tonic::transport::Channel;
 use crate::{
     contract::ContractCodeReference,
     cosmos_modules,
-    data_structures::parse_cw_coins,
     error::BootError,
-    sender::Wallet,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    CosmTxResponse, DaemonState, NetworkKind,
 };
+
+use super::{
+    sender::{Sender, Wallet},
+    state::{DaemonState, NetworkInfo, NetworkKind},
+    tx_resp::CosmTxResponse,
+};
+
+pub fn instantiate_daemon_env(
+    network: NetworkInfo<'static>,
+) -> anyhow::Result<(Rc<Runtime>, Addr, Daemon)> {
+    let rt = Rc::new(
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?,
+    );
+    let state = Rc::new(rt.block_on(DaemonState::new(network))?);
+    let sender = Rc::new(Sender::new(&state)?);
+    let chain = Daemon::new(&sender, &state, &rt)?;
+    Ok((rt, sender.address()?, chain))
+}
 
 #[derive(Clone)]
 pub struct Daemon {
@@ -219,4 +236,16 @@ impl TxHandler for Daemon {
         self.runtime.block_on(self.wait());
         Ok(result)
     }
+}
+
+fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, BootError> {
+    coins
+        .iter()
+        .map(|cosmwasm_std::Coin { amount, denom }| {
+            Ok(cosmrs::Coin {
+                amount: amount.u128(),
+                denom: Denom::from_str(denom)?,
+            })
+        })
+        .collect::<Result<Vec<_>, BootError>>()
 }

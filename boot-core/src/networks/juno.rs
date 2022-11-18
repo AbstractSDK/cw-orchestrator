@@ -1,7 +1,4 @@
-use crate::{
-    data_structures::daemon_state::{ChainInfo, NetworkInfo},
-    NetworkKind,
-};
+use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
 
 pub const JUNO_CHAIN: ChainInfo = ChainInfo {
     chain_id: "juno",
