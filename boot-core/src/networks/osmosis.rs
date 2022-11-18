@@ -28,7 +28,7 @@ pub const OSMO_4: NetworkInfo = NetworkInfo {
 //     fcd_url: None,
 // };
 
-pub const OSMO_DAEMON: NetworkInfo = NetworkInfo {
+pub const LOCAL_OSMO: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
     id: "localosmosis",
     gas_denom: "uosmo",
