@@ -1,7 +1,4 @@
-use crate::{
-    cosmos_modules::{self, auth::BaseAccount},
-    DaemonState,
-};
+use crate::cosmos_modules::{self, auth::BaseAccount};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
@@ -17,7 +14,9 @@ use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
 use tokio::time::sleep;
 use tonic::transport::Channel;
 
-use crate::{error::BootError, keys::private::PrivateKey, CosmTxResponse};
+use crate::{error::BootError, keys::private::PrivateKey};
+
+use super::{state::DaemonState, tx_resp::CosmTxResponse};
 
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
