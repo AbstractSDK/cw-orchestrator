@@ -2,7 +2,7 @@ use boot_contract_derive::boot_contract;
 use boot_core::{BootEnvironment, Contract};
 
 use cosmwasm_std::Empty;
-use cw1_whitelist::msg::{InstantiateMsg, ExecuteMsg, QueryMsg};
+use cw1_whitelist::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
