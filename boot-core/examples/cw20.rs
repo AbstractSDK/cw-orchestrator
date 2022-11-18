@@ -1,6 +1,6 @@
-use boot_core::networks::juno::LOCAL_JUNO;
+use boot_core::networks::LOCAL_JUNO;
 
-use boot_core::instantiate_daemon_env;
+use boot_core::prelude::*;
 
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::Addr;
@@ -9,11 +9,10 @@ use cosmwasm_std::Addr;
 pub fn script() -> anyhow::Result<()> {
     // First we upload, instantiate and interact with a real chain
     let network = LOCAL_JUNO;
-    let (_, _sender, chain) = instantiate_daemon_env(network)?;
-    let token = Cw20::new(CW20_BASE, &chain);
-    // token.upload()?;
-    println!("{}", token.upload_required()?);
-    // token.test_generic(&sender)?;
+    let (_, sender, chain) = instantiate_daemon_env(network)?;
+    let mut token = Cw20::new(CW20_BASE, &chain);
+    token.upload()?;
+    token.test_generic(&sender)?;
 
     // Now we do the same but on a cw-multi-test environment!
     let (_, chain) = instantiate_default_mock_env(&sender)?;
