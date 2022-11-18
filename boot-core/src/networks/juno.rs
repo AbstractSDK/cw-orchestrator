@@ -28,7 +28,7 @@ pub const JUNO_1: NetworkInfo = NetworkInfo {
     fcd_url: None,
 };
 
-pub const JUNO_DAEMON: NetworkInfo = NetworkInfo {
+pub const LOCAL_JUNO: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
     id: "testing",
     gas_denom: "ustake",
