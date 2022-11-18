@@ -1,11 +1,13 @@
-use boot_core::{BootEnvironment, Contract, IndexResponse, TxHandler, TxResponse};
+use boot_contract_derive::boot_contract;
+use boot_core::{BootEnvironment, Contract};
+
 use cosmwasm_std::Empty;
-use cw1_whitelist::msg::*;
+use cw1_whitelist::msg::{InstantiateMsg, ExecuteMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 
-pub struct Cw1<Chain: BootEnvironment>(Contract<Chain>);
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+pub struct Cw1;
 
-// pub type Cw1<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 // implement chain-generic functions
 impl<Chain: BootEnvironment + Clone> Cw1<Chain> {
     pub fn new(id: &str, chain: &Chain) -> Self {
