@@ -6,21 +6,21 @@ use serde::{de::DeserializeOwned, Serialize};
 
 // Fn for custom implementation to return ContractInstance
 pub trait ContractInstance<Chain: BootEnvironment> {
-    fn instance(&self) -> &Contract<Chain>;
-    fn instance_mut(&mut self) -> &mut Contract<Chain>;
+    fn as_instance(&self) -> &Contract<Chain>;
+    fn as_instance_mut(&mut self) -> &mut Contract<Chain>;
 
     // State interfaces
     fn address(&self) -> Result<Addr, BootError> {
-        Contract::address(self.instance())
+        Contract::address(self.as_instance())
     }
     fn code_id(&self) -> Result<u64, BootError> {
-        Contract::code_id(self.instance())
+        Contract::code_id(self.as_instance())
     }
     fn set_address(&self, address: &Addr) {
-        Contract::set_address(self.instance(), address)
+        Contract::set_address(self.as_instance(), address)
     }
     fn set_code_id(&self, code_id: u64) {
-        Contract::set_code_id(self.instance(), code_id)
+        Contract::set_code_id(self.as_instance(), code_id)
     }
 }
 
@@ -51,7 +51,7 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootExecu
         execute_msg: &'a Self::E,
         coins: Option<&[Coin]>,
     ) -> Result<Chain::Response, BootError> {
-        self.instance().execute(&execute_msg, coins)
+        self.as_instance().execute(&execute_msg, coins)
     }
 }
 
@@ -78,7 +78,8 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootInsta
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
     ) -> Result<Chain::Response, BootError> {
-        self.instance().instantiate(instantiate_msg, admin, coins)
+        self.as_instance()
+            .instantiate(instantiate_msg, admin, coins)
     }
 }
 
@@ -93,7 +94,7 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootQuery
     type Q = <T as CwInterface>::QueryMsg;
 
     fn query<G: Serialize + DeserializeOwned>(&self, query_msg: &Self::Q) -> Result<G, BootError> {
-        self.instance().query(query_msg)
+        self.as_instance().query(query_msg)
     }
 }
 
@@ -116,7 +117,7 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootMigra
         migrate_msg: &Self::M,
         new_code_id: u64,
     ) -> Result<Chain::Response, BootError> {
-        self.instance().migrate(migrate_msg, new_code_id)
+        self.as_instance().migrate(migrate_msg, new_code_id)
     }
 }
 
@@ -128,6 +129,6 @@ pub trait BootUpload<Chain: BootEnvironment> {
 
 impl<T: ContractInstance<Chain>, Chain: BootEnvironment> BootUpload<Chain> for T {
     fn upload(&mut self) -> Result<Chain::Response, BootError> {
-        self.instance_mut().upload()
+        self.as_instance_mut().upload()
     }
 }
