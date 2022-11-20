@@ -9,15 +9,16 @@ mod keys;
 mod mock;
 pub mod networks;
 pub mod prelude;
-mod state;
+pub mod state;
 mod tx_handler;
 
 // pub mod traits;
 pub use contract::Contract;
-
+pub use daemon::core::Daemon;
 pub use error::BootError;
 pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
+pub use mock::core::Mock;
 pub use tx_handler::{TxHandler, TxResponse};
 
 /// Signals a supported execution environment
@@ -25,7 +26,7 @@ pub trait BootEnvironment: TxHandler + Clone {}
 
 impl<T: TxHandler + Clone> BootEnvironment for T {}
 
-pub mod cosmos_modules {
+pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;
     pub use cosmrs::proto::cosmos::authz::v1beta1 as authz;
     pub use cosmrs::proto::cosmos::bank::v1beta1 as bank;
