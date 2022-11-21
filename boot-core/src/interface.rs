@@ -87,13 +87,19 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootInsta
 pub trait BootQuery<Chain: BootEnvironment> {
     type QueryMsg: Serialize;
 
-    fn query<G: Serialize + DeserializeOwned>(&self, query_msg: &Self::QueryMsg) -> Result<G, BootError>;
+    fn query<G: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: &Self::QueryMsg,
+    ) -> Result<G, BootError>;
 }
 
 impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootQuery<Chain> for T {
     type QueryMsg = <T as CwInterface>::QueryMsg;
 
-    fn query<G: Serialize + DeserializeOwned>(&self, query_msg: &Self::QueryMsg) -> Result<G, BootError> {
+    fn query<G: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: &Self::QueryMsg,
+    ) -> Result<G, BootError> {
         self.as_instance().query(query_msg)
     }
 }
