@@ -20,8 +20,8 @@ pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let exec = types_in_order[0].clone();
-    let init = types_in_order[1].clone();
+    let init = types_in_order[0].clone();
+    let exec = types_in_order[1].clone();
     let query = types_in_order[2].clone();
     let migrate = types_in_order[3].clone();
 
