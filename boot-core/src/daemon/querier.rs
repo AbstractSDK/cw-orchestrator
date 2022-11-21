@@ -22,6 +22,7 @@ impl DaemonQuerier {
     }
 
     /// Returns the block timestamp (since unix epoch) in nanos
+    #[allow(unused)]
     pub async fn block_time(channel: Channel) -> Result<u128, BootError> {
         let block = Self::latest_block(channel).await?;
         Ok(block
