@@ -18,7 +18,7 @@ exclude = [
 name = "cw20"
 
 [dependencies]
-boot-contract-derive = {path = "../packages/boot-contract-derive"}
+boot-contract-derive = {workspace = true}
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.21" }
 tokio = { version = "1.4", features = ["full"] }
