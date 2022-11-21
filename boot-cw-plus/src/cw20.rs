@@ -105,7 +105,7 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
     }
 }
 // Todo: make into derive macro
-pub trait Cw20Send<Chain: BootEnvironment>: BootExecute<Chain, E = ExecuteMsg> {
+pub trait Cw20Send<Chain: BootEnvironment>: BootExecute<Chain, ExecuteMsg = ExecuteMsg> {
     fn send(
         &self,
         msg: Binary,
@@ -116,7 +116,7 @@ pub trait Cw20Send<Chain: BootEnvironment>: BootExecute<Chain, E = ExecuteMsg> {
 
 impl<T, Chain: BootEnvironment> Cw20Send<Chain> for T
 where
-    T: BootExecute<Chain, E = ExecuteMsg>,
+    T: BootExecute<Chain, ExecuteMsg = ExecuteMsg>,
 {
     fn send(
         &self,
