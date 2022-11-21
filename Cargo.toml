@@ -16,3 +16,4 @@ repository = "https://github.com/Abstract-OS/BOOT"
 [workspace.dependencies]
 cw-multi-test = { version = "0.15.0"}
 anyhow = "1.0"
+boot-contract-derive = {path = "packages/boot-contract-derive", version = "0.1.3"}
