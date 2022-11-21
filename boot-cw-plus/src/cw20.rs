@@ -1,4 +1,3 @@
-use boot_contract_derive::boot_contract;
 use boot_core::prelude::*;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use cw_multi_test::ContractWrapper;

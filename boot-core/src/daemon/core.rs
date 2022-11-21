@@ -28,6 +28,7 @@ use crate::{
 };
 
 use super::{
+    querier::DaemonQuerier,
     sender::{Sender, Wallet},
     state::{DaemonState, NetworkInfo, NetworkKind},
     tx_resp::CosmTxResponse,
@@ -226,15 +227,49 @@ impl TxHandler for Daemon {
 
         log::info!("uploaded: {:?}", result.txhash);
 
-        // let code_id = result.get_attribute_from_logs("store_code", "code_id")[0]
-        //     .1
-        //     .parse::<u64>()?;
-        // log::info!("code_id: {:?}", code_id);
-        // self.save_code_id(code_id)?;
-
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());
         Ok(result)
+    }
+
+    fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
+        let channel: Channel = self.sender.channel();
+        let mut last_height = self
+            .runtime
+            .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        let end_height = last_height + amount;
+
+        while last_height < end_height {
+            // wait
+            self.runtime
+                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+
+            // ping latest block
+            last_height = self
+                .runtime
+                .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        }
+        Ok(())
+    }
+
+    fn next_block(&self) -> Result<(), BootError> {
+        let channel: Channel = self.sender.channel();
+        let mut last_height = self
+            .runtime
+            .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        let end_height = last_height + 1;
+
+        while last_height < end_height {
+            // wait
+            self.runtime
+                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+
+            // ping latest block
+            last_height = self
+                .runtime
+                .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        }
+        Ok(())
     }
 }
 

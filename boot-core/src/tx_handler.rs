@@ -11,6 +11,9 @@ pub trait TxHandler: ChainState + Clone {
 
     // Gets current sender
     fn sender(&self) -> Addr;
+    // Skip x amount of blocks
+    fn wait_blocks(&self, amount: u64) -> Result<(), BootError>;
+    fn next_block(&self) -> Result<(), BootError>;
     // Actions //
     fn execute<E: Serialize + Debug>(
         &self,
