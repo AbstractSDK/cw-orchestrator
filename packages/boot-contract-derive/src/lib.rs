@@ -49,8 +49,8 @@ pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         impl<Chain: ::boot_core::BootEnvironment> ::boot_core::interface::CwInterface for #name<Chain> {
-            type InstantiateMsg = #exec;
-            type ExecuteMsg = #init;
+            type InstantiateMsg = #init;
+            type ExecuteMsg = #exec;
             type QueryMsg = #query;
             type MigrateMsg = #migrate;
         }
