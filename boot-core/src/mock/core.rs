@@ -1,5 +1,5 @@
 use cosmwasm_std::{Addr, Empty, Event};
-use cw_multi_test::{App, AppResponse, BasicApp, Executor};
+use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -184,5 +184,18 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 "Contract reference must be cosm-multi-test contract object.".into(),
             ))
         }
+    }
+
+    fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
+        self.app.borrow_mut().update_block(|b| {
+            b.height += amount;
+            b.time = b.time.plus_seconds(5 * amount);
+        });
+        Ok(())
+    }
+
+    fn next_block(&self) -> Result<(), BootError> {
+        self.app.borrow_mut().update_block(next_block);
+        Ok(())
     }
 }

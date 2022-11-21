@@ -1,5 +1,5 @@
-use crate::{contract::ContractCodeReference, state::ChainState, BootError};
-use cosmwasm_std::{Addr, Coin, Empty, Timestamp};
+use crate::{contract::ContractCodeReference, state::ChainState, BootError, IndexResponse};
+use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 // Functions that are callable on the cosmwasm chain/mock
@@ -12,7 +12,8 @@ pub trait TxHandler: ChainState + Clone {
     // Gets current sender
     fn sender(&self) -> Addr;
     // Skip x amount of blocks
-    fn wait_blocks(&self, amount: u32) -> Result<(),BootError>;
+    fn wait_blocks(&self, amount: u64) -> Result<(), BootError>;
+    fn next_block(&self) -> Result<(), BootError>;
     // Actions //
     fn execute<E: Serialize + Debug>(
         &self,
