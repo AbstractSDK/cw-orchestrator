@@ -6,7 +6,7 @@ use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
-    tendermint::{chain::Id},
+    tendermint::chain::Id,
     tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
     AccountId, Any, Coin,
 };
