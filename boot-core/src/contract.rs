@@ -78,7 +78,8 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         }
     }
 
-    pub fn chain(&self) -> Chain {
+    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method. 
+    pub fn get_chain(&self) -> Chain {
         self.chain.clone()
     }
 
