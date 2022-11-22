@@ -1,14 +1,34 @@
 use cosmwasm_std::{Addr, Empty, Event};
-use cw_multi_test::{App, AppResponse, Executor};
+use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    BootError, MockState,
+    BootError,
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
+
+use super::mock_state::MockState;
+
+pub fn instantiate_default_mock_env(
+    sender: &Addr,
+) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
+    let mock_state = Rc::new(RefCell::new(MockState::new()));
+    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
+    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
+    Ok((mock_state, mock_chain))
+}
+pub fn instantiate_custom_mock_env<S: StateInterface>(
+    sender: &Addr,
+    custom_state: S,
+) -> anyhow::Result<(Rc<RefCell<S>>, Mock<S>)> {
+    let mock_state = Rc::new(RefCell::new(custom_state));
+    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
+    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
+    Ok((mock_state, mock_chain))
+}
 
 // Generic mock-chain implementation
 // Allows for custom state storage
@@ -171,5 +191,18 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 "Contract reference must be cosm-multi-test contract object.".into(),
             ))
         }
+    }
+
+    fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
+        self.app.borrow_mut().update_block(|b| {
+            b.height += amount;
+            b.time = b.time.plus_seconds(5 * amount);
+        });
+        Ok(())
+    }
+
+    fn next_block(&self) -> Result<(), BootError> {
+        self.app.borrow_mut().update_block(next_block);
+        Ok(())
     }
 }

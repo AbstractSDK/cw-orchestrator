@@ -20,17 +20,3 @@ pub trait StateInterface: Clone {
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError>;
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, BootError>;
 }
-
-// pub struct DaemonState{
-//     pub path: String,
-// }
-
-// impl StateInterface for DaemonState {
-//     fn address(&self, key: &str) -> String {
-//         todo!()
-//     }
-
-//     fn save_address(&self,contract_id: &str, address: &str) {
-//         todo!()
-//     }
-// }

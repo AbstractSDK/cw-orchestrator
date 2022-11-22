@@ -10,7 +10,7 @@ use std::{
 use cosmos_modules::cosmwasm::QueryCodeRequest;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
-    AccountId,
+    AccountId, Denom,
 };
 
 use cosmwasm_std::{Addr, Coin, Empty};
@@ -22,13 +22,31 @@ use tonic::transport::Channel;
 use crate::{
     contract::ContractCodeReference,
     cosmos_modules,
-    data_structures::parse_cw_coins,
     error::BootError,
-    sender::Wallet,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    CosmTxResponse, DaemonState, NetworkKind,
 };
+
+use super::{
+    querier::DaemonQuerier,
+    sender::{Sender, Wallet},
+    state::{DaemonState, NetworkInfo, NetworkKind},
+    tx_resp::CosmTxResponse,
+};
+
+pub fn instantiate_daemon_env(
+    network: NetworkInfo<'static>,
+) -> anyhow::Result<(Rc<Runtime>, Addr, Daemon)> {
+    let rt = Rc::new(
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?,
+    );
+    let state = Rc::new(rt.block_on(DaemonState::new(network))?);
+    let sender = Rc::new(Sender::new(&state)?);
+    let chain = Daemon::new(&sender, &state, &rt)?;
+    Ok((rt, sender.address()?, chain))
+}
 
 #[derive(Clone)]
 pub struct Daemon {
@@ -61,7 +79,7 @@ impl Daemon {
 
     pub fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
         use cosmos_modules::cosmwasm::query_client::*;
-        let channel: Channel = self.sender.channel().clone();
+        let channel: Channel = self.sender.channel();
         let latest_code_id = self.state.get_code_id(contract_id)?;
         // query hash of code-id
         let mut client: QueryClient<Channel> = QueryClient::new(channel);
@@ -77,11 +95,7 @@ impl Daemon {
         let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
         let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
         let name = contract_id.split(':').last().unwrap();
-        let containing_line = parsed
-            .iter()
-            .filter(|line| line.contains(name))
-            .next()
-            .unwrap();
+        let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
         log::debug!("{:?}", containing_line);
         let local_hash = containing_line
             .trim_start_matches('\n')
@@ -213,14 +227,60 @@ impl TxHandler for Daemon {
 
         log::info!("uploaded: {:?}", result.txhash);
 
-        // let code_id = result.get_attribute_from_logs("store_code", "code_id")[0]
-        //     .1
-        //     .parse::<u64>()?;
-        // log::info!("code_id: {:?}", code_id);
-        // self.save_code_id(code_id)?;
-
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());
         Ok(result)
     }
+
+    fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
+        let channel: Channel = self.sender.channel();
+        let mut last_height = self
+            .runtime
+            .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        let end_height = last_height + amount;
+
+        while last_height < end_height {
+            // wait
+            self.runtime
+                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+
+            // ping latest block
+            last_height = self
+                .runtime
+                .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        }
+        Ok(())
+    }
+
+    fn next_block(&self) -> Result<(), BootError> {
+        let channel: Channel = self.sender.channel();
+        let mut last_height = self
+            .runtime
+            .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        let end_height = last_height + 1;
+
+        while last_height < end_height {
+            // wait
+            self.runtime
+                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+
+            // ping latest block
+            last_height = self
+                .runtime
+                .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        }
+        Ok(())
+    }
+}
+
+fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, BootError> {
+    coins
+        .iter()
+        .map(|cosmwasm_std::Coin { amount, denom }| {
+            Ok(cosmrs::Coin {
+                amount: amount.u128(),
+                denom: Denom::from_str(denom)?,
+            })
+        })
+        .collect::<Result<Vec<_>, BootError>>()
 }

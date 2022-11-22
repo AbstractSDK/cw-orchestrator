@@ -3,44 +3,28 @@ use std::path::Path;
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
-    marker::PhantomData,
     rc::Rc,
 };
 
+use crate::BootEnvironment;
 use crate::{
-    error::BootError,
-    index_response::IndexResponse,
-    state::StateInterface,
-    tx_handler::{TxHandler, TxResponse},
+    error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
 use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
 use cw_multi_test::Contract as TestContract;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
-use sha256::try_digest;
 
+#[allow(unused)]
 pub type StateReference<S> = Rc<RefCell<S>>;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
-pub struct Contract<
-    Chain: TxHandler,
-    E: Serialize + Debug,
-    I: Serialize + Debug,
-    Q: Serialize,
-    M: Serialize,
-> where
-    TxResponse<Chain>: IndexResponse,
-{
+pub struct Contract<Chain: BootEnvironment> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     source: ContractCodeReference,
     /// chain object that handles tx execution and queries.
     chain: Chain,
-    /// Indicate the type of executemsg
-    _execute_msg: PhantomData<E>,
-    _instantiate_msg: PhantomData<I>,
-    _query_msg: PhantomData<Q>,
-    _migrate_msg: PhantomData<M>,
 }
 
 #[derive(Default)]
@@ -76,37 +60,40 @@ where
     /// Calculate the checksum of the wasm file to compare against previous uploads
     pub fn checksum(&self) -> Result<String, BootError> {
         let wasm_code_path= &self.get_wasm_code_path()?;
-
+        if wasm_code_path.contains("artifacts") {
+            // Now get local hash from optimization script
+            let checksum_path = format!("{}/checksums.txt", wasm_code_path);
+            let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
+            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
+            let name = contract_id.split(':').last().unwrap();
+            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
+            log::debug!("{:?}", containing_line);
+            let local_hash = containing_line
+                .trim_start_matches('\n')
+                .split_whitespace()
+                .next()
+                .unwrap();
+            return Ok(local_hash.into())
+        }
+        // Compute hash
         let wasm_code = Path::new(wasm_code_path);
-        let checksum = try_digest(wasm_code)?;
+        let checksum = sha256::try_digest(wasm_code)?;
         Ok(checksum)
     }
 }
 
 /// Expose chain and state function to call them on the contract
-impl<
-        Chain: TxHandler + Clone,
-        E: Serialize + Debug,
-        I: Serialize + Debug,
-        Q: Serialize + Debug,
-        M: Serialize + Debug,
-    > Contract<Chain, E, I, Q, M>
-where
-    TxResponse<Chain>: IndexResponse,
-{
+impl<Chain: BootEnvironment + Clone> Contract<Chain> {
     pub fn new(id: impl ToString, chain: &Chain) -> Self {
         Contract {
             id: id.to_string(),
             chain: chain.clone(),
             source: ContractCodeReference::default(),
-            _execute_msg: PhantomData,
-            _instantiate_msg: PhantomData,
-            _query_msg: PhantomData,
-            _migrate_msg: PhantomData,
         }
     }
 
-    pub fn chain(&self) -> Chain {
+    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
+    pub fn get_chain(&self) -> Chain {
         self.chain.clone()
     }
 
@@ -120,14 +107,26 @@ where
         self
     }
 
+    /// Sets the address of the contract in the local state
+    pub fn with_address(self, address: Option<&Addr>) -> Self {
+        if let Some(address) = address {
+            self.set_address(address)
+        }
+        self
+    }
+
     // Chain interfaces
-    pub fn execute(&self, msg: &E, coins: Option<&[Coin]>) -> Result<TxResponse<Chain>, BootError> {
+    pub fn execute<E: Serialize + Debug>(
+        &self,
+        msg: &E,
+        coins: Option<&[Coin]>,
+    ) -> Result<TxResponse<Chain>, BootError> {
         log::info!("executing {}", self.id);
         self.chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?)
     }
 
-    pub fn instantiate(
+    pub fn instantiate<I: Serialize + Debug>(
         &self,
         msg: &I,
         admin: Option<&Addr>,
@@ -179,12 +178,15 @@ where
         return Ok(self.code_id()?);
     }
 
-    pub fn query<T: Serialize + DeserializeOwned>(&self, query_msg: &Q) -> Result<T, BootError> {
+    pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, BootError> {
         log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
         self.chain.query(query_msg, &self.address()?)
     }
 
-    pub fn migrate(
+    pub fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
         new_code_id: u64,
@@ -200,20 +202,10 @@ where
     pub fn code_id(&self) -> Result<u64, BootError> {
         self.chain.state().get_code_id(&self.id)
     }
-    pub fn checksum(&self) -> Result<String, BootError> {
-        self.chain.state().get_checksum(&self.id)
-    }
     pub fn set_address(&self, address: &Addr) {
         self.chain.state().set_address(&self.id, address)
     }
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
-    }
-    /// Update the checksum in the state file to match the source wasm file
-    pub fn update_checksum(&self) -> Result<(), BootError> {
-        Ok(self
-            .chain
-            .state()
-            .set_checksum(&self.id, &self.source.checksum()?))
     }
 }

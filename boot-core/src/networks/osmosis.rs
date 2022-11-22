@@ -1,7 +1,4 @@
-use crate::{
-    data_structures::daemon_state::{ChainInfo, NetworkInfo},
-    NetworkKind,
-};
+use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
 
 pub const OSMO_CHAIN: ChainInfo = ChainInfo {
     chain_id: "osmosis",
@@ -31,7 +28,7 @@ pub const OSMO_4: NetworkInfo = NetworkInfo {
 //     fcd_url: None,
 // };
 
-pub const OSMO_DAEMON: NetworkInfo = NetworkInfo {
+pub const LOCAL_OSMO: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
     id: "localosmosis",
     gas_denom: "uosmo",

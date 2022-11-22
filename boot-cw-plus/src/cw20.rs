@@ -1,18 +1,15 @@
-use boot_core::{BootError, Contract, IndexResponse, TxHandler, TxResponse};
+use boot_core::prelude::*;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw_multi_test::ContractWrapper;
 
-use crate::CwPlusContract;
-use boot_core::Daemon;
+use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
+
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+pub struct Cw20;
 
 // implement chain-generic functions
-impl<Chain: TxHandler + Clone> Cw20<Chain>
-where
-    TxResponse<Chain>: IndexResponse,
-{
+impl<Chain: BootEnvironment> Cw20<Chain> {
     pub fn new(id: &str, chain: &Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
@@ -106,74 +103,31 @@ where
         Ok(())
     }
 }
-
-impl Cw20<Daemon> {
-    pub fn upload_required(&self) -> Result<bool, BootError> {
-        let daemon: Daemon = self.chain();
-        daemon.is_contract_hash_identical(&self.id)
-    }
+// Todo: make into derive macro
+pub trait Cw20Send<Chain: BootEnvironment>: BootExecute<Chain, ExecuteMsg = ExecuteMsg> {
+    fn send(
+        &self,
+        msg: Binary,
+        amount: u128,
+        contract: String,
+    ) -> Result<TxResponse<Chain>, BootError>;
 }
 
-// fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
-// where
-// Chain: TxHandler + Clone,
-// <Chain as TxHandler>::Response : IndexResponse,
-// Cw20<Chain>: ContractSource
-// {
-//     token.upload(get_source(&token))?;
-//     Ok(())
-// }
-
-// impl <S:StateInterface>Cw20<Mock<S>>
-// {
-//     pub fn source(&self) -> ContractCodeReference<Empty> {
-//         let cw20_token_contract = Box::new(ContractWrapper::new_with_empty(
-//             cw20_base::contract::execute,
-//             cw20_base::contract::instantiate,
-//             cw20_base::contract::query,
-//         ));
-//         ContractCodeReference::ContractEndpoints(cw20_token_contract)
-//     }
-// }
-
-// impl<Chain: TxRe> CW20<Chain> {
-//     /// Send tokens to a contract allong with a contract call
-//     pub async fn send(
-//         &self,
-//         msg: Binary,
-//         amount: u128,
-//         contract: String,
-//     ) -> Result<CosmTxResponse, BootError> {
-//         let msg = ExecuteMsg::Send {
-//             contract,
-//             amount: Uint128::new(amount),
-//             msg,
-//         };
-
-//         self.exec(&msg, None).await
-//     }
-
-//     /// Instantiate a new token instance with some initial balance given to the minter
-//     pub async fn create_new<T: Into<Uint128>>(
-//         &self,
-//         minter: String,
-//         balance: T,
-//     ) -> Result<CosmTxResponse, BootError> {
-//         let msg = InstantiateMsg {
-//             decimals: 6,
-//             mint: Some(MinterResponse {
-//                 cap: None,
-//                 minter: minter.clone(),
-//             }),
-//             symbol: self.instance().name.to_ascii_uppercase(),
-//             name: self.instance().name.to_string(),
-//             initial_balances: vec![Cw20Coin {
-//                 address: minter.clone(),
-//                 amount: balance.into(),
-//             }],
-//             marketing: None,
-//         };
-
-//         self.init(msg, Some(minter), None).await
-//     }
-// }
+impl<T, Chain: BootEnvironment> Cw20Send<Chain> for T
+where
+    T: BootExecute<Chain, ExecuteMsg = ExecuteMsg>,
+{
+    fn send(
+        &self,
+        msg: Binary,
+        amount: u128,
+        contract: String,
+    ) -> Result<TxResponse<Chain>, BootError> {
+        let msg = ExecuteMsg::Send {
+            contract,
+            amount: Uint128::new(amount),
+            msg,
+        };
+        self.execute(&msg, None)
+    }
+}
