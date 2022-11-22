@@ -74,9 +74,10 @@ impl Daemon {
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), BootError> {
         // This ensures that you don't change the deployment of any contract that has been used before.
         // It reduces the probability of shooting yourself in the foot.
-        Ok(Rc::get_mut(&mut self.state)
+        Rc::get_mut(&mut self.state)
             .ok_or(BootError::SharedDaemonState)?
-            .set_deployment(deployment_id))
+            .set_deployment(deployment_id);
+        Ok(())
     }
 }
 
