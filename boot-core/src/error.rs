@@ -77,8 +77,10 @@ pub enum BootError {
     TendermintValidatorSet(u64, u64),
     #[error("Transaction {0} not found after {1} attempts")]
     TXNotFound(String, usize),
-    #[error("unknown Terra-Rust API error")]
+    #[error("unknown API error")]
     Unknown,
+    #[error("Can not augment daemon deployment after usage in more than one contract.")]
+    SharedDaemonState,
     #[error("Generic Error {0}")]
     StdErr(String),
 
