@@ -1,6 +1,8 @@
-use crate::{cosmos_modules, CosmTxResponse};
-use cosmwasm_std::{to_binary, Addr, Attribute, Binary, Empty, Event, StdError, StdResult};
+use cosmwasm_std::{to_binary, Addr, Attribute, Binary, Event, StdError, StdResult};
+
 use cw_multi_test::AppResponse;
+
+use crate::daemon::tx_resp::CosmTxResponse;
 
 // Function to index data returned by transactions which are applicable to both AppResponse (mock env) and TxResponse (live env)
 pub trait IndexResponse {

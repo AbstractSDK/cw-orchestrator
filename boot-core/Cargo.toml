@@ -1,11 +1,11 @@
 [package]
 name = "boot-core"
-version = "0.1.0"
-authors = ["CyberHoward <cyberhoward@protonmail.com>"]
-edition = "2021"
+version = { workspace = true}
+authors = { workspace = true}
+edition = { workspace = true}
+license = { workspace = true}
+repository = { workspace = true}
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
-license = "Apache-2.0"
-repository = "https://github.com/CyberHoward/cosm-rust-script"
 keywords = ["cosmwasm", "blockchain"]
 categories = ["development-tools", "api-bindings"]
 readme = "README.md"
@@ -18,13 +18,16 @@ exclude = [
 name = "cw20"
 
 [dependencies]
-serde = { version = "1.0.103", default-features = false, features = ["derive"] }
+boot-contract-derive = {workspace = true}
+cosmwasm-std = { workspace = true }
+cw-multi-test = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true}
 thiserror = { version = "1.0.21" }
 tokio = { version = "1.4", features = ["full"] }
 tonic = "0.8.1"
 secp256k1 = { version = "0.20.3", default-features = false }
 log="0.4.14"
-anyhow="1.0"
 serde_json = "1.0.79"
 reqwest = { version = "0.11.9"}
 base64 = "0.13.0"
@@ -44,13 +47,10 @@ rust_decimal="1.12.2"
 rust_decimal_macros="1.12.2"
 regex="1"
 cosmrs = {version = "0.9.0", features=["dev","cosmwasm","grpc"]}
-# cosmos-sdk-proto = {version = "0.14.0", features=["cosmwasm","grpc-transport"]}
 chrono= "0.4"
-cosmwasm-std = "1.0.0"
-cw-multi-test = "0.15.0"
 schemars = "0.8.10"
 base16 = "0.2.1"
 sha256 = "1.1.1"
 
 [dev-dependencies]
-boot-plus = {path = "../boot-plus"}
+boot-cw-plus = {path = "../boot-cw-plus"}

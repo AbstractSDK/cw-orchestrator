@@ -125,18 +125,6 @@ impl StateInterface for Rc<DaemonState> {
         self.set("code_ids", contract_id, code_id);
     }
 
-    fn get_checksum(&self, contract_id: &str) -> Result<String, BootError> {
-        let value = self
-            .get("checksums")
-            .get(contract_id)
-            .ok_or_else(|| BootError::ChecksumNotInFile(contract_id.to_owned()))?
-            .clone();
-        Ok(value.as_str().unwrap().to_string())
-    }
-
-    fn set_checksum(&mut self, contract_id: &str, checksum: &str) {
-        self.set("checksums", contract_id, checksum);
-    }
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError> {
         let mut store = HashMap::new();
         let addresses = self.get("addresses");

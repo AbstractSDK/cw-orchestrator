@@ -14,7 +14,7 @@ use crate::MyProjectName;
 pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
 // implement chain-generic functions
-impl<Chain: TxHandler + Clone> Cw20<Chain>
+impl<Chain: BootEnvironment + Clone> Cw20<Chain>
 where
 TxResponse<Chain>: IndexResponse,
 {
@@ -107,7 +107,7 @@ TxResponse<Chain>: IndexResponse,
 
 // fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
 // where
-// Chain: TxHandler + Clone,
+// Chain: BootEnvironment + Clone,
 // <Chain as TxHandler>::Response : IndexResponse,
 // Cw20<Chain>: ContractSource
 // {
@@ -156,8 +156,8 @@ TxResponse<Chain>: IndexResponse,
 //                 cap: None,
 //                 minter: minter.clone(),
 //             }),
-//             symbol: self.instance().name.to_ascii_uppercase(),
-//             name: self.instance().name.to_string(),
+//             symbol: self.as_instance().name.to_ascii_uppercase(),
+//             name: self.as_instance().name.to_string(),
 //             initial_balances: vec![Cw20Coin {
 //                 address: minter.clone(),
 //                 amount: balance.into(),

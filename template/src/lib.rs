@@ -7,7 +7,7 @@ use std::ops::{Deref, DerefMut};
 // No need to touch anything else
 
 pub struct MyProjectName<
-    Chain: TxHandler,
+    Chain: BootEnvironment,
     E: Serialize + Debug,
     I: Serialize + Debug,
     Q: Serialize + Debug,
@@ -17,7 +17,7 @@ where
     <Chain as TxHandler>::Response: IndexResponse;
 
 impl<
-        Chain: TxHandler,
+        Chain: BootEnvironment,
         E: Serialize + Debug,
         I: Serialize + Debug,
         Q: Serialize + Debug,
@@ -34,7 +34,7 @@ where
 }
 
 impl<
-        Chain: TxHandler,
+        Chain: BootEnvironment,
         E: Serialize + Debug,
         I: Serialize + Debug,
         Q: Serialize + Debug,

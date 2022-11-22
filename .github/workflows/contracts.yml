@@ -1,0 +1,61 @@
+on:
+  pull_request:
+    branches:
+     - main
+     - dev
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Clippy Linter
+    runs-on: self-hosted
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2
+      - name: Setup | Rust
+        id: rustup
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+          components: clippy
+        continue-on-error: true
+      - name: Delete rustup cache
+        run: rm -rf ~/.rustup
+        if: ${{ steps.rustup.outcome }} != "success"
+      - name: Setup Rust (again)
+        if: ${{ steps.rustup.outcome }} != "success"
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+          components: clippy
+      - name: Build | Lint
+        run: cargo clippy -- -D warnings
+  compile:
+    name: Compile
+    runs-on: self-hosted
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2
+      - name: Setup | Rust
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+      - name: Dependencies | Compile
+        run: cargo update
+      - name: Build | Compile
+        run: cargo check
+  # test:
+  #   name: Test
+  #   runs-on:  self-hosted
+  #   needs: [compile]
+  #   steps:
+  #     - name: Setup | Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Setup | Rust
+  #       uses: ATiltedTree/setup-rust@v1
+  #       with:
+  #         rust-version: stable
+  #     - name: Unit Test | Test
+  #       run: cargo test

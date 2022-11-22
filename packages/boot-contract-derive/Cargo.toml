@@ -1,0 +1,15 @@
+[package]
+name = "boot-contract-derive"
+version = { workspace = true}
+authors = { workspace = true}
+edition = { workspace = true}
+license = { workspace = true}
+repository = { workspace = true}
+description = "Attribute macro for creating a BOOTable contract."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "1", features = ["full", "extra-traits"] }

@@ -5,7 +5,7 @@ Smart contract scripting library to ease [CosmWasm](https://cosmwasm.com/) smart
 
 > [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) parsing.
 
-[boot-plus](boot-plus/README.md) uses BOOT to provide standard type-safe interfaces to interact with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
+[boot-cw-plus](boot-cw-plus/README.md) uses BOOT to provide standard type-safe interfaces to interact with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
 The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as ALL the code you upload to those networks takes up valuable space. Therefore I strongly suggest using a locally-hosted chain like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc. 
 .
@@ -14,7 +14,7 @@ The use of this software makes it easier to quickly deploy and iterate on your c
 Usually your contracts workspace will have a package that contains the endpoint structs of your contracts.
 We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMsg, ...) by adding that package as a dependency to your BOOT crate. 
 
-In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](boot-plus/src/cw20.rs)
+In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](boot-cw-plus/src/cw20.rs)
 
 ```
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
