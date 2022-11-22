@@ -42,4 +42,32 @@ impl DaemonQuerier {
         let gas_used = resp.gas_info.unwrap().gas_used;
         Ok(gas_used)
     }
+
+    pub async fn code_id_hash(channel: Channel, code_id: u64) -> Result<String, BootError> {
+        use cosmos_modules::cosmwasm::query_client::*;
+        use cosmos_modules::cosmwasm::QueryCodeRequest;
+        // query hash of code-id
+        let mut client: QueryClient<Channel> = QueryClient::new(channel);
+        let request = QueryCodeRequest { code_id };
+        let resp = client.code(request).await?.into_inner();
+        let contract_hash = resp.code_info.unwrap().data_hash;
+        let on_chain_hash = base16::encode_lower(&contract_hash);
+        Ok(on_chain_hash)
+    }
+
+    pub async fn contract_info(
+        channel: Channel,
+        address: impl Into<String>,
+    ) -> Result<cosmos_modules::cosmwasm::ContractInfo, BootError> {
+        use cosmos_modules::cosmwasm::query_client::*;
+        use cosmos_modules::cosmwasm::QueryContractInfoRequest;
+        // query hash of code-id
+        let mut client: QueryClient<Channel> = QueryClient::new(channel);
+        let request = QueryContractInfoRequest {
+            address: address.into(),
+        };
+        let resp = client.contract_info(request).await?.into_inner();
+        let contract_info = resp.contract_info.unwrap();
+        Ok(contract_info)
+    }
 }
