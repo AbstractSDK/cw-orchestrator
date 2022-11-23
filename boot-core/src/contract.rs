@@ -1,10 +1,10 @@
-use std::env;
 use std::path::Path;
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
     rc::Rc,
 };
+use std::{env, fs};
 
 use crate::BootEnvironment;
 use crate::{
@@ -22,7 +22,7 @@ pub type StateReference<S> = Rc<RefCell<S>>;
 pub struct Contract<Chain: BootEnvironment> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
-    source: ContractCodeReference,
+    pub(crate) source: ContractCodeReference,
     /// chain object that handles tx execution and queries.
     chain: Chain,
 }
@@ -59,9 +59,25 @@ where
     }
 
     /// Calculate the checksum of the wasm file to compare against previous uploads
-    pub fn checksum(&self) -> Result<String, BootError> {
+    pub fn checksum(&self, id: &str) -> Result<String, BootError> {
         let wasm_code_path = &self.get_wasm_code_path()?;
-
+        if wasm_code_path.contains("artifacts") {
+            // Now get local hash from optimization script
+            let checksum_path = format!("{}/checksums.txt", wasm_code_path);
+            let contents =
+                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
+            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
+            let name = id.split(':').last().unwrap();
+            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
+            log::debug!("{:?}", containing_line);
+            let local_hash = containing_line
+                .trim_start_matches('\n')
+                .split_whitespace()
+                .next()
+                .unwrap();
+            return Ok(local_hash.into());
+        }
+        // Compute hash
         let wasm_code = Path::new(wasm_code_path);
         let checksum = sha256::try_digest(wasm_code)?;
         Ok(checksum)

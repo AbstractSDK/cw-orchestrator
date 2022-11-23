@@ -77,8 +77,10 @@ pub enum BootError {
     TendermintValidatorSet(u64, u64),
     #[error("Transaction {0} not found after {1} attempts")]
     TXNotFound(String, usize),
-    #[error("unknown Terra-Rust API error")]
+    #[error("unknown API error")]
     Unknown,
+    #[error("Can not augment daemon deployment after usage in more than one contract.")]
+    SharedDaemonState,
     #[error("Generic Error {0}")]
     StdErr(String),
 
@@ -86,6 +88,8 @@ pub enum BootError {
     AddrNotInFile(String),
     #[error("Code id for {0} not found in file")]
     CodeIdNotInFile(String),
+    #[error("Checksum for {0} not found in file")]
+    ChecksumNotInFile(String),
     #[error("calling contract with unimplemented action")]
     NotImplemented,
     #[error("new chain detected, fill out the scaffold at {0}")]

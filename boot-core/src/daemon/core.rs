@@ -1,13 +1,10 @@
 use std::{
-    env,
     fmt::Debug,
-    fs,
     rc::Rc,
     str::{from_utf8, FromStr},
     time::Duration,
 };
 
-use cosmos_modules::cosmwasm::QueryCodeRequest;
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     AccountId, Denom,
@@ -20,10 +17,7 @@ use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
 use crate::{
-    contract::ContractCodeReference,
-    cosmos_modules,
-    error::BootError,
-    state::{ChainState, StateInterface},
+    contract::ContractCodeReference, cosmos_modules, error::BootError, state::ChainState,
     tx_handler::TxHandler,
 };
 
@@ -77,37 +71,13 @@ impl Daemon {
         }
     }
 
-    pub fn is_contract_hash_identical(&self, contract_id: &str) -> Result<bool, BootError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        let channel: Channel = self.sender.channel();
-        let latest_code_id = self.state.get_code_id(contract_id)?;
-        // query hash of code-id
-        let mut client: QueryClient<Channel> = QueryClient::new(channel);
-        let request = QueryCodeRequest {
-            code_id: latest_code_id,
-        };
-        let resp = self.runtime.block_on(client.code(request))?.into_inner();
-        let contract_hash = resp.code_info.unwrap().data_hash;
-        let on_chain_hash = base16::encode_lower(&contract_hash);
-
-        // Now get local hash from optimization script
-        let path = format!("{}/checksums.txt", env::var("WASM_DIR")?);
-        let contents = fs::read_to_string(path).expect("Something went wrong reading the file");
-        let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-        let name = contract_id.split(':').last().unwrap();
-        let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
-        log::debug!("{:?}", containing_line);
-        let local_hash = containing_line
-            .trim_start_matches('\n')
-            .split_whitespace()
-            .next()
-            .unwrap();
-        log::debug!(
-            "on-chain hash: {} - local hash: {}",
-            on_chain_hash,
-            local_hash
-        );
-        Ok(local_hash == on_chain_hash)
+    pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), BootError> {
+        // This ensures that you don't change the deployment of any contract that has been used before.
+        // It reduces the probability of shooting yourself in the foot.
+        Rc::get_mut(&mut self.state)
+            .ok_or(BootError::SharedDaemonState)?
+            .set_deployment(deployment_id);
+        Ok(())
     }
 }
 

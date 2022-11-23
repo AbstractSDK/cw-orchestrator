@@ -15,10 +15,11 @@ pub fn script() -> anyhow::Result<()> {
     token.test_generic(&sender)?;
 
     // Now we do the same but on a cw-multi-test environment!
+    let sender = Addr::unchecked("test_sender");
     let (_, chain) = instantiate_default_mock_env(&sender)?;
     // The same in a cw-multi-test context
-    let sender = Addr::unchecked("test_sender");
-    let token = Cw20::new("cw-plus:cw20_base", &chain);
+    let mut token = Cw20::new("cw-plus:cw20_base", &chain);
+    token.upload()?;
     token.test_generic(&sender)?;
 
     Ok(())
