@@ -20,7 +20,8 @@ pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
 pub use mock::core::Mock;
 pub use tx_handler::{TxHandler, TxResponse};
-
+pub use boot_contract_derive::boot_contract;
+pub use boot_exec_derive::ExecuteFns;
 /// Signals a supported execution environment
 pub trait BootEnvironment: TxHandler + Clone {}
 
@@ -46,38 +47,3 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmwasm::wasm::v1 as cosmwasm;
     pub use cosmrs::proto::tendermint::abci as tendermint_abci;
 }
-
-// mod macro_dev {
-//     use terra_rust_script_derive::contract;
-
-//     #[derive(Clone, Debug, contract)]
-//     /// Updates the addressbook
-//     pub enum ExecuteMsg {
-//         UpdateContractAddresses {
-//             to_add: Vec<(String, String)>,
-//             to_remove: Vec<String>,
-//         },
-//         UpdateAssetAddresses {
-//             to_add: Vec<(String, String)>,
-//             to_remove: Vec<String>,
-//         },
-//         /// Sets a new Admin
-//         SetAdmin {
-//             admin: String,
-//         },
-
-//         Set {
-//             init: InstantiateMsg,
-//         },
-//     }
-
-//     #[derive(Clone, Debug, contract)]
-//     pub struct InstantiateMsg {
-//         /// Version control contract used to get code-ids and register OS
-//         pub version_control_contract: String,
-//         /// Memory contract
-//         pub memory_contract: String,
-//         // Creation fee in some denom (TBD)
-//         pub creation_fee: u32,
-//     }
-// }

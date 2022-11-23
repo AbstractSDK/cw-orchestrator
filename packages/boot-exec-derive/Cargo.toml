@@ -1,0 +1,16 @@
+[package]
+name = "boot-exec-derive"
+version = { workspace = true}
+authors = { workspace = true}
+edition = { workspace = true}
+license = { workspace = true}
+repository = { workspace = true}
+description = "Derive macro for generating contract execute functions."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "1", features = ["full", "extra-traits"] }
+convert_case = "0.6.0"

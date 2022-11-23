@@ -19,6 +19,7 @@ name = "cw20"
 
 [dependencies]
 boot-contract-derive = {workspace = true}
+boot-exec-derive = {workspace = true}
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
