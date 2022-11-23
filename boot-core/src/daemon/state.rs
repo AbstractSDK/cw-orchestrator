@@ -1,11 +1,13 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
+
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
+pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Debug)]
 pub struct DaemonState {
@@ -14,6 +16,8 @@ pub struct DaemonState {
     pub kind: NetworkKind,
     /// Identifier for the network ex. columbus-2
     pub id: String,
+    /// Deployment identifier
+    pub deployment_id: String,
     /// gRPC channel
     pub grpc_channel: Channel,
     /// Underlying chain details
@@ -39,6 +43,7 @@ impl DaemonState {
         let state = DaemonState {
             json_file_path: path,
             kind: network.kind,
+            deployment_id: DEFAULT_DEPLOYMENT.into(),
             grpc_channel,
             chain: network.chain_info,
             id: network.id.to_string(),
@@ -64,11 +69,17 @@ impl DaemonState {
         }
         if json[self.chain.chain_id].get(&self.id).is_none() {
             json[self.chain.chain_id][&self.id] = json!({
-                "addresses": {},
+                &self.deployment_id: {},
                 "code_ids": {}
             });
         }
+
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+    }
+
+    pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
+        self.deployment_id = deployment_id.into();
+        self.check_file_validity();
     }
 
     /// Get the state filepath and read it as json
@@ -98,7 +109,7 @@ impl DaemonState {
 impl StateInterface for Rc<DaemonState> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError> {
         let value = self
-            .get("addresses")
+            .get(&self.deployment_id)
             .get(contract_id)
             .ok_or_else(|| BootError::AddrNotInFile(contract_id.to_owned()))?
             .clone();
@@ -106,7 +117,7 @@ impl StateInterface for Rc<DaemonState> {
     }
 
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.set("addresses", contract_id, address.as_str());
+        self.set(&self.deployment_id, contract_id, address.as_str());
     }
 
     /// Get the locally-saved version of the contract's version on this network
@@ -126,7 +137,7 @@ impl StateInterface for Rc<DaemonState> {
 
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError> {
         let mut store = HashMap::new();
-        let addresses = self.get("addresses");
+        let addresses = self.get(&self.deployment_id);
         let value = addresses.as_object().unwrap();
         for (id, addr) in value {
             store.insert(id.clone(), Addr::unchecked(addr.as_str().unwrap()));

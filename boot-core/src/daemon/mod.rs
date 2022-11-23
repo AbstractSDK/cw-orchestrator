@@ -1,3 +1,4 @@
+pub mod contract;
 pub mod core;
 mod querier;
 pub mod sender;

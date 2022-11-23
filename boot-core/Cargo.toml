@@ -52,6 +52,5 @@ schemars = "0.8.10"
 base16 = "0.2.1"
 sha256 = "1.1.1"
 
-
 [dev-dependencies]
 boot-cw-plus = {path = "../boot-cw-plus"}
