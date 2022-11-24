@@ -1,11 +1,13 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
 
+use cosmos_chain_registry::ChainInfo as RegistryChainInfo;
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
-use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
+use tokio::join;
+use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr, future::Future};
 use tonic::transport::Channel;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
@@ -32,8 +34,28 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
-    pub async fn new(network: NetworkInfo<'static>) -> Result<DaemonState, BootError> {
-        let grpc_channel = Channel::from_static(network.grpc_url).connect().await?;
+    pub async fn new(network: RegistryChainInfo) -> Result<DaemonState, BootError> {
+
+        // find working grpc channel
+        
+
+        let connection_attempts:Vec<_> = network.apis.grpc.iter().map(|grpc|{
+            tokio::spawn(Channel::from_static(&grpc.address).connect())
+        }
+        ).collect();
+
+        let mut successful_connections = vec![];
+        for attempt in connection_attempts {
+            let maybe_connection = attempt.await.unwrap();
+            if let Ok(channel) = &maybe_connection {
+                successful_connections.push(channel);
+            };
+        }
+
+        if successful_connections.is_empty() {
+            return Err(BootError::StdErr("No active grpc endpoint found.".into()))
+        }
+
         let mut path = env::var("STATE_FILE").unwrap();
         if network.kind == NetworkKind::Local {
             let name = path.split('.').next().unwrap();

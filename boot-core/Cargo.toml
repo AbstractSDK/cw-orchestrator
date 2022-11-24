@@ -24,6 +24,8 @@ cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true}
+cosmos-chain-registry = {git = "https://github.com/CronCats/cosmos-chain-registry.git"}
+rayon = "1.6.0"
 thiserror = { version = "1.0.21" }
 tokio = { version = "1.4", features = ["full"] }
 tonic = "0.8.1"
