@@ -22,7 +22,7 @@ pub fn boot_execute(input: TokenStream) -> TokenStream {
 
     let variant_fns = variants.iter().filter_map( |variant|{
         let variant_name = variant.ident.clone();
-        let is_payable = payable(&variant);
+        let is_payable = payable(variant);
         match &variant.fields {
             Fields::Unnamed(_) => None,
             Fields::Unit => None,
