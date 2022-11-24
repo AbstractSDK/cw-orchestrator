@@ -27,7 +27,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     let variant_fns = variants.iter().map( |variant|{
         let variant_name = variant.ident.clone();
-        let (query_ident,response) = parse_query(&variant);
+        let (query_ident,response) = parse_query(variant);
         let mut variant_func_name =
                 format_ident!("{}",query_ident);
                 variant_func_name.set_span(variant_name.span());
