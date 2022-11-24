@@ -7,6 +7,15 @@ use cosmwasm_std::Addr;
 
 // Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {
+    use cosmos_chain_registry::ChainRegistry;
+
+    let registry = ChainRegistry::from_remote().unwrap();
+    let chain_info = registry.get_by_chain_id("juno-1").unwrap();
+    
+    assert_eq!(chain_info.chain_name, "juno");
+    assert_eq!(info.chain_id, "juno-1");
+    assert_eq!(info.pretty_name, "Juno");
+
     // First we upload, instantiate and interact with a real chain
     let network = LOCAL_JUNO;
     let (_, sender, chain) = instantiate_daemon_env(network)?;
