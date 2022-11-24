@@ -12,4 +12,4 @@ pub use crate::mock::{
 };
 pub use crate::{BootEnvironment, BootError, TxResponse};
 pub use boot_contract_derive::boot_contract;
-pub use boot_exec_derive::ExecuteFns;
+pub use boot_fns_derive::ExecuteFns;

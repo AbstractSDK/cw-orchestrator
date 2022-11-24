@@ -18,6 +18,6 @@ cosmwasm-std = { version = "1.1" }
 cw-multi-test = { version = "0.16.0"}
 anyhow = "1.0"
 boot-contract-derive = {path = "packages/boot-contract-derive", version = "0.1.3"}
-boot-exec-derive = {path = "packages/boot-exec-derive", version = "0.1.3"}
+boot-fns-derive = {path = "packages/boot-fns-derive", version = "0.1.3"}
 boot-core ={path ="boot-core", version = "0.1.3"}
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }

@@ -1,14 +1,19 @@
-#![recursion_limit = "128"]
-
 extern crate proc_macro;
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, DeriveInput, Fields, Ident};
+use syn::{DeriveInput, Fields, Ident};
 
-#[proc_macro_derive(ExecuteFns,attributes(payable))]
-pub fn boot_execute(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
+fn payable(v: &syn::Variant) -> bool {
+    for attr in &v.attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "payable" {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn execute_fns_derive(ast: DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let bname = Ident::new(&format!("{}Fns", name), name.span());
 
@@ -41,29 +46,19 @@ pub fn boot_execute(input: TokenStream) -> TokenStream {
                 }else { 
                     (quote!(),quote!(None))
                 };
-                Some(if variant_idents.is_empty() {
-                    quote!(
-                        #[allow(clippy::too_many_arguments)]
-                        fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::boot_core::TxResponse<Chain>, ::boot_core::BootError> {
-                            let msg = #name::#variant_name {};
-                            self.execute(&msg,#passed_coins)
-                        }
-                    )
-                } else {
-                    quote!(
-                        #[allow(clippy::too_many_arguments)]
-                        fn #variant_func_name(&self, #variant_idents, #maybe_coins_attr) -> Result<::boot_core::TxResponse<Chain>, ::boot_core::BootError> {
-                            let msg = #name::#variant_name {
-                                #(#variant_ident_content_names,)*
-                            };
-                            self.execute(&msg,#passed_coins)
-                        }
-                    )
-                })
-            },
+                let variant_attr = variant_idents.iter();
+                Some(quote!(
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::boot_core::TxResponse<Chain>, ::boot_core::BootError> {
+                        let msg = #name::#variant_name {
+                            #(#variant_ident_content_names,)*
+                        };
+                        self.execute(&msg,#passed_coins)
+                    }
+                ))
+            }
         }
-    }
-);
+    });
 
     let derived_trait = quote!(
         pub trait #bname<Chain: ::boot_core::BootEnvironment>: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #name> {
@@ -72,6 +67,7 @@ pub fn boot_execute(input: TokenStream) -> TokenStream {
     );
 
     let derived_trait_impl = quote!(
+        #[automatically_derived]
         impl<T, Chain: ::boot_core::BootEnvironment> #bname<Chain> for T
         where
             T: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #name>{}
@@ -82,15 +78,6 @@ pub fn boot_execute(input: TokenStream) -> TokenStream {
 
         #derived_trait_impl
     );
+
     expand.into()
-}
-
-
-fn payable(v: &syn::Variant) -> bool {
-    for attr in &v.attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "payable" {
-            return true
-        }
-    }
-    false
 }
