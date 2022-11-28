@@ -11,5 +11,5 @@ The following sections detail setting up a library package for the contract inte
     * Define interfaces for your contracts.
 - **[Environment File](./env-variable.md)**
     * Configure your mnemonics and log settings.
-- **[Scripts](./scripts.md)**
+- **[Scripting](./scripting.md)**
     * Write runnable scripts with your interfaces.
