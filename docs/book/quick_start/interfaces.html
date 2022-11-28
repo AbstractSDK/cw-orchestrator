@@ -182,7 +182,7 @@ my-project = { path = &quot;../my-project&quot;}
 echo 'pub mod my-contract;' &gt;&gt; src/lib.rs
 <span class="boring">}
 </span></code></pre></pre>
-<p>In your new contract file, define a struct for your contract interface and provide the [<code>Instantiate</code>|<code>Execute</code>|<code>Query</code>|<code>Migrate</code>] messages to the <code>boot_contract</code> macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.</p>
+<p>In your new file, define a struct for your contract interface and provide the [<code>Instantiate</code>|<code>Execute</code>|<code>Query</code>|<code>Migrate</code>] messages to the <code>boot_contract</code> macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use boot_core::prelude::*;
@@ -192,9 +192,9 @@ use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 pub struct MyContract&lt;Chain&gt;;
 <span class="boring">}
 </span></code></pre></pre>
-<p>The generic &quot;&lt;Chain&gt;&quot; argument allows you to write functions for your interface that will be executable in different environments.</p>
+<p>The generic <code>&lt;Chain&gt;</code> argument allows you to write functions for your interface that will be executable in different environments.</p>
 <blockquote>
-<p><em>If your entry point Msgs have any generic arguments, pull them out into newtypes before passing into the macro.</em></p>
+<p><em>If your entry point messages have any generic arguments, pull them out into newtypes before passing them into the macro.</em></p>
 </blockquote>
 <h2 id="constructor"><a class="header" href="#constructor">Constructor</a></h2>
 <p>Next, you'll want to define the constructor for the interface we just defined:</p>
@@ -223,7 +223,7 @@ pub struct MyContract&lt;Chain&gt;;
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Notice that we build the <code>Contract</code> instance and point it to the contract code using <code>with_wasm_path()</code>, where we provide the contract name <code>my-contract</code>. This contract name will be used to search the artifacts directory (set by ARTIFACTS_DIR env variable) for a <code>my-contract.wasm</code>. Alternatively you can specify a path to the wasm artifact after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the CosmWasm documentation on compiling your contract for more information.</p>
+<p>Notice that we build the <code>Contract</code> instance and point it to the contract code using <code>with_wasm_path()</code>, where we provide the contract name <code>&quot;my-contract&quot;</code>. This contract name will be used to search the artifacts directory (set by <code>ARTIFACTS_DIR</code> env variable) for a <code>my-contract.wasm</code> file. Alternatively you can specify a path to the wasm artifact after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the CosmWasm documentation on compiling your contract for more information.</p>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <p>Now we can start writing executable functions for our contracts with ensured type safety.
 We can define functions that are generic or that can only be used called in a specific environment.
@@ -262,38 +262,14 @@ The environments that are currently supported are:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl MyContract&lt;Mock&gt; {
-    pub fn call_cw_20(&amp;self, msg: &amp;ExecuteMsg) -&gt; Self {
-        let cw_20 = 
+    pub fn call_other_chain (&amp;self, msg: &amp;ExecuteMsg) -&gt; Self {
+        let resp = self.execute(&amp;msg,None)?;
         let destination_port = resp.event_attr_value(&quot;ibc_transfer&quot;, &quot;destination_port&quot;);?;
     }
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Script
-Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.
-Setup
-Like before, we're going to setup a new folder for our scripts. This time, we'll call it scripts and initialize it as a binary crate:
-cargo init --bin scripts
-If your cargo project is a workspace, be sure to add scripts to the [workspace].members array at the workspace root.
-Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:
-cargo add --path ../interfaces
-and also add the anyhow and dotenv crates:
-cargo add anyhow dotenv log
-Env Configuration
-The dotenv crate will allow us to load environment variables from a .env file. This is useful for setting up the chain configuration for your scripts.</p>
-<h1 id="env"><a class="header" href="#env">.env</a></h1>
-<h1 id="info-debug-trace"><a class="header" href="#info-debug-trace">info, debug, trace</a></h1>
-<p>RUST_LOG=info</p>
-<h1 id="where-the-contract-wasms-are-located"><a class="header" href="#where-the-contract-wasms-are-located">where the contract wasms are located</a></h1>
-<p>ARTIFACTS_DIR=&quot;../artifacts&quot;</p>
-<h1 id="where-to-store-the-output-state-data"><a class="header" href="#where-to-store-the-output-state-data">where to store the output state data</a></h1>
-<p>DAEMON_STATE_PATH=&quot;./daemon_state.json&quot;</p>
-<h1 id="mnemonics-of-the-account-that-will-be-used-to-sign-transactions"><a class="header" href="#mnemonics-of-the-account-that-will-be-used-to-sign-transactions">Mnemonics of the account that will be used to sign transactions</a></h1>
-<p>LOCAL_MNEMONIC=&quot;&quot;
-TEST_MNEMONIC=&quot;&quot;
-MAIN_MNEMONIC=&quot;&quot;
-IMPORTANT: Make sure to exclude the .env file in your gitignore.
-Main Function
+<p>Main Function
 Now that we have our dependencies setup, we can start writing our script. Either create a new file in the src directory of the scripts/src package, or use the main.rs file that was created by default.
 This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:
 fn main() {

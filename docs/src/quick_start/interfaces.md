@@ -50,7 +50,7 @@ touch src/my-contract.rs
 echo 'pub mod my-contract;' >> src/lib.rs
 ```
 
-In your new contract file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `boot_contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
+In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `boot_contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
 
 ```rust
 use boot_core::prelude::*;
@@ -60,9 +60,9 @@ use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 pub struct MyContract<Chain>;
 ```
 
-The generic "\<Chain\>" argument allows you to write functions for your interface that will be executable in different environments.
+The generic `<Chain>` argument allows you to write functions for your interface that will be executable in different environments.
 
-> *If your entry point Msgs have any generic arguments, pull them out into newtypes before passing into the macro.*
+> *If your entry point messages have any generic arguments, pull them out into newtypes before passing them into the macro.*  
 
 ## Constructor
 
@@ -92,7 +92,7 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
 }
 ```
 
-Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path()`, where we provide the contract name `my-contract`. This contract name will be used to search the artifacts directory (set by ARTIFACTS_DIR env variable) for a `my-contract.wasm`. Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the CosmWasm documentation on compiling your contract for more information.
+Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path()`, where we provide the contract name `"my-contract"`. This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file. Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the CosmWasm documentation on compiling your contract for more information.
 
 ## Functions
 
@@ -134,46 +134,13 @@ impl MyContract<Daemon> {
 
 ```rust
 impl MyContract<Mock> {
-    pub fn call_cw_20(&self, msg: &ExecuteMsg) -> Self {
-        let cw_20 = 
+    pub fn call_other_chain (&self, msg: &ExecuteMsg) -> Self {
+        let resp = self.execute(&msg,None)?;
         let destination_port = resp.event_attr_value("ibc_transfer", "destination_port");?;
     }
 }
 ```
 
-Script
-Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.
-Setup
-Like before, we're going to setup a new folder for our scripts. This time, we'll call it scripts and initialize it as a binary crate:
-cargo init --bin scripts
-If your cargo project is a workspace, be sure to add scripts to the [workspace].members array at the workspace root.
-Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:
-cargo add --path ../interfaces
-and also add the anyhow and dotenv crates:
-cargo add anyhow dotenv log
-Env Configuration
-The dotenv crate will allow us to load environment variables from a .env file. This is useful for setting up the chain configuration for your scripts.
-
-# .env
-
-# info, debug, trace
-
-RUST_LOG=info
-
-# where the contract wasms are located
-
-ARTIFACTS_DIR="../artifacts"
-
-# where to store the output state data
-
-DAEMON_STATE_PATH="./daemon_state.json"
-
-# Mnemonics of the account that will be used to sign transactions
-
-LOCAL_MNEMONIC=""
-TEST_MNEMONIC=""
-MAIN_MNEMONIC=""
-IMPORTANT: Make sure to exclude the .env file in your gitignore.
 Main Function
 Now that we have our dependencies setup, we can start writing our script. Either create a new file in the src directory of the scripts/src package, or use the main.rs file that was created by default.
 This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:
