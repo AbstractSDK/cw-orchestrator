@@ -1,3 +1,4 @@
 # Summary
 
-- [Chapter 1](./chapter_1.md)
+- [Introduction](./intro.md)
+- [Quick Start](./quick_start/index.md)
