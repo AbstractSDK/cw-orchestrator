@@ -9,7 +9,8 @@ cd interfaces
 ```
 
 Following this example, the project's structure should eventually look like:
-```
+
+```path
 .
 ├── Cargo.toml
 ├── my-contract
@@ -42,8 +43,9 @@ my-project = { path = "../my-project"}
 
 The contract interface is a struct that provides accessible methods to deploy and interact with an instance of your contract. Let's see how to use it.
 
-First, create a new file in the src directory of the interfaces package, and add it to the library declaration 
-```
+First, create a new file in the src directory of the interfaces package, and add it to the library declaration
+
+```rust
 touch src/my-contract.rs
 echo 'pub mod my-contract;' >> src/lib.rs
 ```
@@ -58,11 +60,12 @@ use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 pub struct MyContract<Chain>;
 ```
 
-The generic "<Chain>" argument allows you to write functions for your interface that will be executable in different environments.
+The generic "\<Chain\>" argument allows you to write functions for your interface that will be executable in different environments.
 
 > *If your entry point Msgs have any generic arguments, pull them out into newtypes before passing into the macro.*
 
 ## Constructor
+
 Next, you'll want to define the constructor for the interface we just defined:
 
 ```rust
@@ -73,11 +76,11 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
     pub fn new(contract_id: &str, chain: &Chain) -> Self {
         // Use an absolute path
         let wasm_path = "../../target/wasm32-unknown-unknown/release/my-contract.wasm";
-      	// OR give the contract name and set ARTIFACTS_DIR environment variable to the artifacts folder. 
-      	let wasm_path = "my-contract";
+       // OR give the contract name and set ARTIFACTS_DIR environment variable to the artifacts folder. 
+       let wasm_path = "my-contract";
         Self(
             Contract::new(contract_id, chain)
-          		.with_mock(Box::new(
+            .with_mock(Box::new(
                   ContractWrapper::new_with_empty(
                     my_contract::contract::execute,
                     my_contract::contract::instantiate,
@@ -93,14 +96,16 @@ Notice that we build the `Contract` instance and point it to the contract code u
 
 ## Functions
 
-Now we can start writing executable functions for our contracts with ensured type safety. 
-We can define functions that are generic or that can only be used called in a specific environment. 
-The environments that are currently supported are: 
-1. [cw-multi-test](https://crates.io/crates/cw-multi-test)
-2. Blockchain daemons [junod](https://github.com/CosmosContracts/juno), [osmosisd](https://github.com/osmosis-labs/osmosis),... 
+Now we can start writing executable functions for our contracts with ensured type safety.
+We can define functions that are generic or that can only be used called in a specific environment.
+The environments that are currently supported are:
 
-### Generic function 
-Generic functions can be executed over any environment. 
+1. [cw-multi-test](https://crates.io/crates/cw-multi-test)
+2. Blockchain daemons [junod](https://github.com/CosmosContracts/juno), [osmosisd](https://github.com/osmosis-labs/osmosis),...
+
+### Generic function
+
+Generic functions can be executed over any environment.
 
 ```rust
 impl<Chain: BootEnvironment> MyContract<Chain> {
@@ -115,6 +120,7 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
 ```
 
 ### Daemon-only functions
+
 ```rust
 impl MyContract<Daemon> {
     pub fn send_ibc_transaction(&self, msg: &ExecuteMsg) -> Self {
@@ -125,6 +131,7 @@ impl MyContract<Daemon> {
 ```
 
 ### Mock-only functions
+
 ```rust
 impl MyContract<Mock> {
     pub fn call_cw_20(&self, msg: &ExecuteMsg) -> Self {
@@ -146,17 +153,23 @@ and also add the anyhow and dotenv crates:
 cargo add anyhow dotenv log
 Env Configuration
 The dotenv crate will allow us to load environment variables from a .env file. This is useful for setting up the chain configuration for your scripts.
+
 # .env
+
 # info, debug, trace
+
 RUST_LOG=info
 
 # where the contract wasms are located
+
 ARTIFACTS_DIR="../artifacts"
 
 # where to store the output state data
+
 DAEMON_STATE_PATH="./daemon_state.json"
 
 # Mnemonics of the account that will be used to sign transactions
+
 LOCAL_MNEMONIC=""
 TEST_MNEMONIC=""
 MAIN_MNEMONIC=""
