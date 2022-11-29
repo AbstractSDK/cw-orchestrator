@@ -2,7 +2,7 @@
 
 To get started with BOOT, create a new folder in your project's package directory and add it to the workspace members.
 
-```bast
+```shell
 cd packages
 cargo init --lib interfaces
 cd interfaces
@@ -31,12 +31,18 @@ Following this example, the project's structure should eventually look like:
             └── test_my_contract.rs
 ```
 
-Now add `boot-core` to `Cargo.toml` along with the package that contains the contract's endpoint messages.
+Now add [boot-core](https://crates.io/crates/boot-core) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
+
+```bash
+cargo add boot-core
+cargo add --path ../contracts
+```
 
 ```toml
 [dependencies]
 boot-core = "0.1.4" # latest version as of writing this article
 my-project = { path = "../my-project"}
+# ...other dependencies
 ```
 
 ## Defining Contract Interfaces
@@ -62,7 +68,7 @@ pub struct MyContract<Chain>;
 
 The generic `<Chain>` argument allows you to write functions for your interface that will be executable in different environments.
 
-> *If your entry point messages have any generic arguments, pull them out into newtypes before passing them into the macro.*  
+> *If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.*  
 
 ## Constructor
 
@@ -76,23 +82,28 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
     pub fn new(contract_id: &str, chain: &Chain) -> Self {
         // Use an absolute path
         let wasm_path = "../../target/wasm32-unknown-unknown/release/my-contract.wasm";
-       // OR give the contract name and set ARTIFACTS_DIR environment variable to the artifacts folder. 
+       // OR give the contract name and set the ARTIFACTS_DIR environment variable to the artifacts folder
        let wasm_path = "my-contract";
         Self(
             Contract::new(contract_id, chain)
-            .with_mock(Box::new(
-                  ContractWrapper::new_with_empty(
-                    my_contract::contract::execute,
-                    my_contract::contract::instantiate,
-                    my_contract::contract::query,
+	            .with_wasm_path(wasm_path)
+	            // Mocked entry points will 
+	            .with_mock(Box::new(
+                   ContractWrapper::new_with_empty(
+                     my_contract::contract::execute,
+                     my_contract::contract::instantiate,
+                     my_contract::contract::query,
                 )))
-                .with_wasm_path(wasm_path),
+                ,
         )
     }
 }
 ```
 
-Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path()`, where we provide the contract name `"my-contract"`. This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file. Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the CosmWasm documentation on compiling your contract for more information.
+Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`. 
+This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file. 
+
+Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the [CosmWasm documentation on compiling your contract](https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/) for more information.
 
 ## Functions
 
@@ -141,109 +152,29 @@ impl MyContract<Mock> {
 }
 ```
 
-Main Function
-Now that we have our dependencies setup, we can start writing our script. Either create a new file in the src directory of the scripts/src package, or use the main.rs file that was created by default.
-This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:
-fn main() {
-    dotenv().ok();
-    env_logger::init();
-    use dotenv::dotenv;
-    if let Err(ref err) = deploy_contract() {
-        log::error!("{}", err);
-        err.chain()
-            .skip(1)
-            .for_each(|cause| log::error!("because: {}", cause));
-        ::std::process::exit(1);
-    }
-}
-Deployment Function
-First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a Result with the contract address.
-// scripts/src/my_contract.rs
-use anyhow::Result;
-use boot_core::networks;
-use boot_core::prelude::{instantiate_daemon_env, NetworkInfo};
-// Traits for contract deployment
-use boot_core::interface::*;
-use interfaces::my_contract::MyContract;
-// Select the chain to deploy to
-const NETWORK: NetworkInfo = networks::juno::UNI_5;
-const CONTRACT_NAME: &str = "my-contract";
-pub fn deploy_contract() -> anyhow::Result<String> {
-    // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(network)?;
-    // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, &chain);
-    // Upload your contract
-    contract.upload()?;
-    // Instantiate your contract
-    let init_msg = InstantiateMsg {
-        // ...
-    };
-    // The second argument is the admin, the third is any coins to send with the init message
-    contract.instantiate(init_msg, None, None)?;
-    // Load and return the contract address
-    let contract_addr = contract.address()?;
-    Ok(contract_addr)
-}
-Additional Scripts
-So you have your contract deployed, but what now? You can write additional scripts to interact with your contract. For example, you can write a script to query the contract state, or to execute a contract method.
-Here's an example of a script that queries the contract state:
-// scripts/src/my_contract.rs
-// use ...
-use my_contract::{QueryMsg};
-// ...
-pub fn query_contract() -> Result<()> {
-    // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
-    // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, &chain);
-    // Load the contract address (this will use the address set from the previous deploy script)
-    let contract_addr = contract.address();
-    // Query the contract
-    let res = contract.query(QueryMsg::Balance {
-      address: contract_addr,
-    })?;
-    // Print the result
-    println!("{:?}", res);
-    Ok(())
-}
-And one that executes a contract method:
-// scripts/src/my_contract.rs
-// use ...
-use my_contract::{ExecuteMsg};
-// ...
-pub fn execute_contract() -> Result<()> {
-    // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
-    // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, &chain);
-    // Load the contract address (this will use the address set from the previous deploy script)
-    let contract_addr = contract.address();
-    // Execute a contract method
-    let res = contract.execute(ExecuteMsg::UpdateBalance {
-      address: contract_addr,
-      balance: Uint128::from(1000000u128),
-    })?;
-    // Print the result
-    println!("{:?}", res);
-    Ok(())
-}
-Refinement
-You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call contract.execute and contract.query separately.
+
+
+#### Refinement
+You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call `contract.execute` and `contract.query` separately. 
+
+```rust
 // interfaces/src/my_contract.rs
 // Import the boot traits
 use boot_core::interface::*;
 // ...
+
 impl<Chain: BootEnvironment> MyContract<Chain> {
     pub fn new(contract_id: &str, chain: &Chain) -> Self {
       // ...
     }
+
     /// Query the balance of an address
     /// `address` - the address to query
     pub fn balance(&self, address: Addr) -> Result<BalanceResponse> {
         let balance_query = QueryMsg::Balance { address };
         self.query(balance_query)
     }
+  
     /// Update the balance of an address
     /// `address` - the address to update
     /// `balance` - the new balance
@@ -255,7 +186,16 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
         self.execute(update_balance_msg)
     }
 }
-References
-Boot Core
-Boot Cw-plus
-Abstract Contract Interfaces
+
+```
+
+## Learn more
+Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#boot` channel.
+Learn more about Abstract at [abstract.money](https://abstract.money).
+
+
+## References
+- [Boot Core](https://crates.io/crates/boot-core)
+- [Boot Cw-plus](https://crates.io/crates/boot-cw-plus)
+- [Abstract Contract Interfaces](https://crates.io/crates/abstract-boot)
+

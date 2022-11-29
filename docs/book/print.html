@@ -145,11 +145,14 @@
                     <main>
                         <h1 id="boot-guide-v014"><a class="header" href="#boot-guide-v014">BOOT Guide (v0.1.4)</a></h1>
 <p>Once you have written your CosmWasm smart contract, you are probably ready to start writing integration tests or deploy it to a live network. Doing this through a frontend interface or CLI tool is laborious and error-prone.</p>
-<p>BOOT (by Abstract) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts. </p>
+<p><a href="https://github.com/Abstract-OS/BOOT">BOOT</a> (by Abstract) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
-<p>In order to use BOOT you need access to the endpoint message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,...) of the contracts you want to interact with.</p>
+<p>In order to use BOOT you need access to the entry point message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,...) of the contracts you want to interact with.</p>
 <p>If you want to perform on-chain transaction you also need access to the gRPC endpoint of a node. These are most-often available on port 9050.</p>
-<p>The following sections detail setting up a library package for the contract interfaces and a binary package for executable scripts.</p>
+<blockquote>
+<p>If you're unsure as to what the gRPC endpoint of your chain is, check the <a href="https://cosmos.directory">Cosmos Directory</a> and there should be some listed.</p>
+</blockquote>
+<p>The following sections detail setting up a library package for the contract interfaces and a binary package for executable scripts.˜</p>
 <h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
 <ul>
 <li><strong><a href="quick_start/./interfaces.html">Interfaces</a></strong>
@@ -170,7 +173,7 @@
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="interfaces"><a class="header" href="#interfaces">Interfaces</a></h1>
 <p>To get started with BOOT, create a new folder in your project's package directory and add it to the workspace members.</p>
-<pre><code class="language-bast">cd packages
+<pre><code class="language-shell">cd packages
 cargo init --lib interfaces
 cd interfaces
 </code></pre>
@@ -194,10 +197,14 @@ cd interfaces
             ├── deploy.rs
             └── test_my_contract.rs
 </code></pre>
-<p>Now add <code>boot-core</code> to <code>Cargo.toml</code> along with the package that contains the contract's endpoint messages.</p>
+<p>Now add <a href="https://crates.io/crates/boot-core">boot-core</a> to <code>Cargo.toml</code> along with the package that contains the contract's endpoint messages.</p>
+<pre><code class="language-bash">cargo add boot-core
+cargo add --path ../contracts
+</code></pre>
 <pre><code class="language-toml">[dependencies]
 boot-core = &quot;0.1.4&quot; # latest version as of writing this article
 my-project = { path = &quot;../my-project&quot;}
+# ...other dependencies
 </code></pre>
 <h2 id="defining-contract-interfaces"><a class="header" href="#defining-contract-interfaces">Defining Contract Interfaces</a></h2>
 <p>The contract interface is a struct that provides accessible methods to deploy and interact with an instance of your contract. Let's see how to use it.</p>
@@ -220,7 +227,7 @@ pub struct MyContract&lt;Chain&gt;;
 </span></code></pre></pre>
 <p>The generic <code>&lt;Chain&gt;</code> argument allows you to write functions for your interface that will be executable in different environments.</p>
 <blockquote>
-<p><em>If your entry point messages have any generic arguments, pull them out into newtypes before passing them into the macro.</em></p>
+<p><em>If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.</em></p>
 </blockquote>
 <h2 id="constructor"><a class="header" href="#constructor">Constructor</a></h2>
 <p>Next, you'll want to define the constructor for the interface we just defined:</p>
@@ -233,23 +240,27 @@ pub struct MyContract&lt;Chain&gt;;
     pub fn new(contract_id: &amp;str, chain: &amp;Chain) -&gt; Self {
         // Use an absolute path
         let wasm_path = &quot;../../target/wasm32-unknown-unknown/release/my-contract.wasm&quot;;
-       // OR give the contract name and set ARTIFACTS_DIR environment variable to the artifacts folder. 
+       // OR give the contract name and set the ARTIFACTS_DIR environment variable to the artifacts folder
        let wasm_path = &quot;my-contract&quot;;
         Self(
             Contract::new(contract_id, chain)
-            .with_mock(Box::new(
-                  ContractWrapper::new_with_empty(
-                    my_contract::contract::execute,
-                    my_contract::contract::instantiate,
-                    my_contract::contract::query,
+	            .with_wasm_path(wasm_path)
+	            // Mocked entry points will 
+	            .with_mock(Box::new(
+                   ContractWrapper::new_with_empty(
+                     my_contract::contract::execute,
+                     my_contract::contract::instantiate,
+                     my_contract::contract::query,
                 )))
-                .with_wasm_path(wasm_path),
+                ,
         )
     }
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Notice that we build the <code>Contract</code> instance and point it to the contract code using <code>with_wasm_path()</code>, where we provide the contract name <code>&quot;my-contract&quot;</code>. This contract name will be used to search the artifacts directory (set by <code>ARTIFACTS_DIR</code> env variable) for a <code>my-contract.wasm</code> file. Alternatively you can specify a path to the wasm artifact after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the CosmWasm documentation on compiling your contract for more information.</p>
+<p>Notice that we build the <code>Contract</code> instance and point it to the contract code using <code>with_wasm_path(...)</code>, where we provide the contract name <code>&quot;my-contract&quot;</code>. 
+This contract name will be used to search the artifacts directory (set by <code>ARTIFACTS_DIR</code> env variable) for a <code>my-contract.wasm</code> file. </p>
+<p>Alternatively you can specify a path to the wasm artifact after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the <a href="https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/">CosmWasm documentation on compiling your contract</a> for more information.</p>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <p>Now we can start writing executable functions for our contracts with ensured type safety.
 We can define functions that are generic or that can only be used called in a specific environment.
@@ -295,124 +306,50 @@ The environments that are currently supported are:</p>
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>Main Function
-Now that we have our dependencies setup, we can start writing our script. Either create a new file in the src directory of the scripts/src package, or use the main.rs file that was created by default.
-This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:
-fn main() {
-dotenv().ok();
-env_logger::init();
-use dotenv::dotenv;
-if let Err(ref err) = deploy_contract() {
-log::error!(&quot;{}&quot;, err);
-err.chain()
-.skip(1)
-.for_each(|cause| log::error!(&quot;because: {}&quot;, cause));
-::std::process::exit(1);
-}
-}
-Deployment Function
-First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a Result with the contract address.
-// scripts/src/my_contract.rs
-use anyhow::Result;
-use boot_core::networks;
-use boot_core::prelude::{instantiate_daemon_env, NetworkInfo};
-// Traits for contract deployment
-use boot_core::interface::<em>;
-use interfaces::my_contract::MyContract;
-// Select the chain to deploy to
-const NETWORK: NetworkInfo = networks::juno::UNI_5;
-const CONTRACT_NAME: &amp;str = &quot;my-contract&quot;;
-pub fn deploy_contract() -&gt; anyhow::Result<String> {
-// Setup the environment
-let (_, <em>sender, chain) = instantiate_daemon_env(network)?;
-// Create a new instance of your contract interface
-let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
-// Upload your contract
-contract.upload()?;
-// Instantiate your contract
-let init_msg = InstantiateMsg {
-// ...
-};
-// The second argument is the admin, the third is any coins to send with the init message
-contract.instantiate(init_msg, None, None)?;
-// Load and return the contract address
-let contract_addr = contract.address()?;
-Ok(contract_addr)
-}
-Additional Scripts
-So you have your contract deployed, but what now? You can write additional scripts to interact with your contract. For example, you can write a script to query the contract state, or to execute a contract method.
-Here's an example of a script that queries the contract state:
-// scripts/src/my_contract.rs
-// use ...
-use my_contract::{QueryMsg};
-// ...
-pub fn query_contract() -&gt; Result&lt;()&gt; {
-// Setup the environment
-let (</em>, <em>sender, chain) = instantiate_daemon_env(NETWORK)?;
-// Create a new instance of your contract interface
-let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
-// Load the contract address (this will use the address set from the previous deploy script)
-let contract_addr = contract.address();
-// Query the contract
-let res = contract.query(QueryMsg::Balance {
-address: contract_addr,
-})?;
-// Print the result
-println!(&quot;{:?}&quot;, res);
-Ok(())
-}
-And one that executes a contract method:
-// scripts/src/my_contract.rs
-// use ...
-use my_contract::{ExecuteMsg};
-// ...
-pub fn execute_contract() -&gt; Result&lt;()&gt; {
-// Setup the environment
-let (</em>, _sender, chain) = instantiate_daemon_env(NETWORK)?;
-// Create a new instance of your contract interface
-let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
-// Load the contract address (this will use the address set from the previous deploy script)
-let contract_addr = contract.address();
-// Execute a contract method
-let res = contract.execute(ExecuteMsg::UpdateBalance {
-address: contract_addr,
-balance: Uint128::from(1000000u128),
-})?;
-// Print the result
-println!(&quot;{:?}&quot;, res);
-Ok(())
-}
-Refinement
-You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call contract.execute and contract.query separately.
-// interfaces/src/my_contract.rs
+<h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
+<p>You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call <code>contract.execute</code> and <code>contract.query</code> separately. </p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// interfaces/src/my_contract.rs
 // Import the boot traits
-use boot_core::interface::</em>;
+use boot_core::interface::*;
 // ...
-impl&lt;Chain: BootEnvironment&gt; MyContract<Chain> {
-pub fn new(contract_id: &amp;str, chain: &amp;Chain) -&gt; Self {
-// ...
+
+impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
+    pub fn new(contract_id: &amp;str, chain: &amp;Chain) -&gt; Self {
+      // ...
+    }
+
+    /// Query the balance of an address
+    /// `address` - the address to query
+    pub fn balance(&amp;self, address: Addr) -&gt; Result&lt;BalanceResponse&gt; {
+        let balance_query = QueryMsg::Balance { address };
+        self.query(balance_query)
+    }
+  
+    /// Update the balance of an address
+    /// `address` - the address to update
+    /// `balance` - the new balance
+    pub fn update_balance(&amp;self, address: Addr, balance: Uint128) -&gt; Result&lt;ExecuteResult&gt; {
+        let update_balance_msg = ExecuteMsg::UpdateBalance {
+            address,
+            balance,
+        };
+        self.execute(update_balance_msg)
+    }
 }
-/// Query the balance of an address
-/// <code>address</code> - the address to query
-pub fn balance(&amp;self, address: Addr) -&gt; Result<BalanceResponse> {
-let balance_query = QueryMsg::Balance { address };
-self.query(balance_query)
-}
-/// Update the balance of an address
-/// <code>address</code> - the address to update
-/// <code>balance</code> - the new balance
-pub fn update_balance(&amp;self, address: Addr, balance: Uint128) -&gt; Result<ExecuteResult> {
-let update_balance_msg = ExecuteMsg::UpdateBalance {
-address,
-balance,
-};
-self.execute(update_balance_msg)
-}
-}
-References
-Boot Core
-Boot Cw-plus
-Abstract Contract Interfaces</p>
+
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="learn-more"><a class="header" href="#learn-more">Learn more</a></h2>
+<p>Got questions? Join the <a href="https://discord.gg/vAQVnz3tzj">Abstract Discord</a> and ask in the <code>#boot</code> channel.
+Learn more about Abstract at <a href="https://abstract.money">abstract.money</a>.</p>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<ul>
+<li><a href="https://crates.io/crates/boot-core">Boot Core</a></li>
+<li><a href="https://crates.io/crates/boot-cw-plus">Boot Cw-plus</a></li>
+<li><a href="https://crates.io/crates/abstract-boot">Abstract Contract Interfaces</a></li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="environment-variables"><a class="header" href="#environment-variables">Environment Variables</a></h1>
 <pre><code class="language-bash"># .env
 
@@ -436,17 +373,138 @@ MAIN_MNEMONIC=&quot;&quot;
 </code></pre>
 <p>IMPORTANT: Make sure to exclude the .env file in your gitignore.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="writing-and-executing-scripts"><a class="header" href="#writing-and-executing-scripts">Writing and Executing Scripts</a></h1>
-<p>Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.
-Setup
-Like before, we're going to setup a new folder for our scripts. This time, we'll call it scripts and initialize it as a binary crate:
-cargo init --bin scripts
-If your cargo project is a workspace, be sure to add scripts to the [workspace].members array at the workspace root.
-Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:
-cargo add --path ../interfaces
-and also add the anyhow and dotenv crates:
-cargo add anyhow dotenv log
-Env Configuration
-The dotenv crate will allow us to load environment variables from a .env file. This is useful for setting up the chain configuration for your scripts.</p>
+<p>Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.</p>
+<h3 id="setup"><a class="header" href="#setup">Setup</a></h3>
+<p>Like before, we're going to setup a new folder for our scripts. This time, we'll call it <code>scripts</code> and initialize it as a binary crate:</p>
+<pre><code class="language-bash">cargo init --bin scripts
+</code></pre>
+<blockquote>
+<p>If your cargo project is a workspace, be sure to add <code>scripts</code> to the [workspace].members array at the workspace root.</p>
+</blockquote>
+<p>Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:</p>
+<pre><code class="language-bash">cargo add --path ../interfaces
+</code></pre>
+<p>and also add the <code>anyhow</code> and <code>dotenv</code> crates:</p>
+<pre><code class="language-bash">cargo add anyhow dotenv log
+</code></pre>
+<h3 id="main-function"><a class="header" href="#main-function">Main Function</a></h3>
+<p>Now that we have our dependencies setup, we can start writing our script. Either create a new file in the <code>src</code> directory of the <code>scripts/src</code> package, or use the <code>main.rs</code> file that was created by default.</p>
+<p>This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:</p>
+<pre><pre class="playground"><code class="language-rust">fn main() {
+    dotenv().ok();
+    env_logger::init();
+
+    use dotenv::dotenv;
+
+    if let Err(ref err) = deploy_contract() {
+        log::error!(&quot;{}&quot;, err);
+        err.chain()
+            .skip(1)
+            .for_each(|cause| log::error!(&quot;because: {}&quot;, cause));
+
+        // The backtrace is not always generated. Try to run this example
+        // with `$env:RUST_BACKTRACE=1`.
+        //    if let Some(backtrace) = e.backtrace() {
+        //        log::debug!(&quot;backtrace: {:?}&quot;, backtrace);
+        //    }
+
+        ::std::process::exit(1);
+    }
+}
+</code></pre></pre>
+<h3 id="deployment-function"><a class="header" href="#deployment-function">Deployment Function</a></h3>
+<p>First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a <code>Result</code> with the contract address. </p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// scripts/src/my_contract.rs
+use anyhow::Result;
+use boot_core::networks;
+use boot_core::prelude::{instantiate_daemon_env, NetworkInfo};
+// Traits for contract deployment
+use boot_core::interface::*;
+use interfaces::my_contract::MyContract;
+
+// Select the chain to deploy to
+const NETWORK: NetworkInfo = networks::juno::UNI_5;
+const CONTRACT_NAME: &amp;str = &quot;my-contract&quot;;
+
+pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
+    // Setup the environment
+    let (_, _sender, chain) = instantiate_daemon_env(network)?;
+
+    // Create a new instance of your contract interface
+    let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
+    // Upload your contract
+    contract.upload()?;
+
+    // Instantiate your contract
+    let init_msg = InstantiateMsg {
+        // ...
+    };
+    // The second argument is the admin, the third is any coins to send with the init message
+    contract.instantiate(init_msg, None, None)?;
+  
+    // Load and return the contract address
+    let contract_addr = contract.address();
+    Ok(contract_addr)
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="additional-scripts"><a class="header" href="#additional-scripts">Additional Scripts</a></h3>
+<p>So you have your contract deployed, but what now? You can write additional scripts to interact with your contract. For example, you can write a script to query the contract state, or to execute a contract method.</p>
+<p>Here's an example of a script that queries the contract state:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// scripts/src/my_contract.rs
+// use ...
+use my_contract::{QueryMsg};
+// ...
+
+pub fn query_contract() -&gt; Result&lt;()&gt; {
+    // Setup the environment
+    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
+
+    // Create a new instance of your contract interface
+    let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
+    // Load the contract address (this will use the address set from the previous deploy script)
+    let contract_addr = contract.address();
+    // Query the contract
+    let res = contract.query(QueryMsg::Balance {
+      address: contract_addr,
+    })?;
+    // Print the result
+    println!(&quot;{:?}&quot;, res);
+    Ok(())
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>And one that executes a contract method:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// scripts/src/my_contract.rs
+// use ...
+use my_contract::{ExecuteMsg};
+// ...
+
+pub fn execute_contract() -&gt; Result&lt;()&gt; {
+    // Setup the environment
+    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
+
+    // Create a new instance of your contract interface
+    let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
+    // Load the contract address (this will use the address set from the previous deploy script)
+    let contract_addr = contract.address();
+    // Execute a contract method
+    let res = contract.execute(ExecuteMsg::UpdateBalance {
+      address: contract_addr,
+      balance: Uint128::from(1000000u128),
+    })?;
+    // Print the result
+    println!(&quot;{:?}&quot;, res);
+    Ok(())
+}
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
