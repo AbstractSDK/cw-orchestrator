@@ -1,35 +1,52 @@
 ![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png)
 # BOOT
 
-Smart contract scripting library to ease [CosmWasm](https://cosmwasm.com/) smart contract deployment and testing.
+Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.
 
-> [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) parsing.
+> [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
 
-[boot-cw-plus](boot-cw-plus/README.md) uses BOOT to provide standard type-safe interfaces to interact with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
+[boot-cw-plus](boot-cw-plus/README.md) uses BOOT to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
-The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as ALL the code you upload to those networks takes up valuable space. Therefore I strongly suggest using a locally-hosted chain like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc.
+The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as the code you upload to those networks takes up valuable space. It is strongly suggested to use a locally-hosted daemon like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc.
 .
 ## How it works
 
-Usually your contracts workspace will have a package that contains the endpoint structs of your contracts.
-We can easily access these endpoint structs (InstantiateMsg, ExecuteMsg, QueryMsg, ...) by adding that package as a dependency to your BOOT crate.
+Interacting with a [CosmWasm](https://cosmwasm.com/) is possible through the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, etc.).
 
-In order to perform actions on the contract we need to specify these structs so the compiler can type-check our actions. This prevents us from executing a faulty message on a contract and it also handles converting the structs to their json format. The implementation for a CW20 token is shown below. The full file resides [here](boot-cw-plus/src/cw20.rs)
+In order to perform actions on the contract you can pass these messages to a macro `boot_contract' like so: 
+
+```rust
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MyContract<Chain>;
+```
+
+The macro implements a set of traits for the struct. These traits contain functions that we can use to interact with the contract and they prevent us from executing a faulty message on a contract. The implementation for a CW20 token is shown below. The full file resides [here](boot-cw-plus/src/cw20.rs)
 
 ```
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-// Just a type-alias
-pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;
 
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+pub struct Cw20;
 ```
+
 You can now perform any action on the cw20 contract and implement custom actions.
 
 ```
     let cw20_token = Cw20::new(chain)?;
+    let msg = ExecuteMsg::Transfer {
+            recipient,
+            amount: amount.into(),
+        };
+    cw20_token.execute(&msg, None)?;
     let token_info: TokenInfoResponse = cw20_token.query(&Cw20QueryMsg::TokenInfo {}).await?;
 ```
 
-I recommend reading [the cw20 usage example here](boot-core/examples/cw20.rs)
+
+
+I recommend reading [the cw20 executable example here](boot-core/examples/cw20.rs).
+
+## Other features
+
 
 # Contributing
 Feel free to open issues or PRs!
@@ -40,3 +57,6 @@ The documentation is generated using [mdbook](https://rust-lang.github.io/mdBook
 cd docs && mdbook serve --open --port 5000
 ```
 to view the changes.
+
+# Disclaimer
+This software is provided as-is without any guarantees.
