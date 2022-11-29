@@ -354,24 +354,22 @@ Learn more about Abstract at <a href="https://abstract.money">abstract.money</a>
 <pre><code class="language-bash"># .env
 
 # info, debug, trace
-
 RUST_LOG=info
 
 # where the contract wasms are located
-
 ARTIFACTS_DIR=&quot;../artifacts&quot;
 
 # where to store the output state data
-
 DAEMON_STATE_PATH=&quot;./daemon_state.json&quot;
 
 # Mnemonics of the account that will be used to sign transactions
-
 LOCAL_MNEMONIC=&quot;&quot;
 TEST_MNEMONIC=&quot;&quot;
 MAIN_MNEMONIC=&quot;&quot;
 </code></pre>
+<blockquote>
 <p>IMPORTANT: Make sure to exclude the .env file in your gitignore.</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="writing-and-executing-scripts"><a class="header" href="#writing-and-executing-scripts">Writing and Executing Scripts</a></h1>
 <p>Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.</p>
 <h3 id="setup"><a class="header" href="#setup">Setup</a></h3>
