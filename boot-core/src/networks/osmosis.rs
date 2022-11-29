@@ -11,7 +11,7 @@ pub const OSMO_4: NetworkInfo = NetworkInfo {
     id: "osmo-test-4",
     gas_denom: "uosmo",
     gas_price: 0.025,
-    grpc_url: "http://65.108.235.46:9092",
+    grpc_url: "http://grpc-test.osmosis.zone:443",
     chain_info: OSMO_CHAIN,
     lcd_url: None,
     fcd_url: None,
