@@ -149,6 +149,26 @@
 <p>If you're unsure as to what the gRPC endpoint of your chain is, check the <a href="https://cosmos.directory">Cosmos Directory</a> and there should be some listed.</p>
 </blockquote>
 <p>The following sections detail setting up a library package for the contract interfaces and a binary package for executable scripts.˜</p>
+<p>Following this example, the project's structure should eventually look like:</p>
+<pre><code class="language-path">.
+├── Cargo.toml
+├── my-contract
+│   ├── Cargo.toml
+│   └── src
+│       ├── contract.rs (execute, instantiate, query, ...)
+│       └── ..
+├── packages
+│   ├── my-project
+│   │   └── my-contract.rs (msgs)
+│   └── interfaces
+│       └── my-contract.rs (interface)
+└── scripts
+    ├── Cargo.toml
+    └── src
+        └── bin
+            ├── deploy.rs
+            └── test_my_contract.rs
+</code></pre>
 <h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
 <ul>
 <li><strong><a href="./interfaces.html">Interfaces</a></strong>
@@ -164,6 +184,13 @@
 <li><strong><a href="./scripting.html">Scripting</a></strong>
 <ul>
 <li>Write runnable scripts with your interfaces.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><strong><a href="./ci-cd.html">CI/CD</a></strong>
+<ul>
+<li>Deploying your contracts in Using Contiruous Integration and Deployment solutions</li>
 </ul>
 </li>
 </ul>

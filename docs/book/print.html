@@ -145,7 +145,7 @@
                     <main>
                         <h1 id="boot-guide-v014"><a class="header" href="#boot-guide-v014">BOOT Guide (v0.1.4)</a></h1>
 <p>Once you have written your CosmWasm smart contract, you are probably ready to start writing integration tests or deploy it to a live network. Doing this through a frontend interface or CLI tool is laborious and error-prone.</p>
-<p><a href="https://github.com/Abstract-OS/BOOT">BOOT</a> (by Abstract) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts.</p>
+<p><a href="https://github.com/Abstract-OS/BOOT">BOOT</a> (by Abstract) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts. </p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
 <p>In order to use BOOT you need access to the entry point message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,...) of the contracts you want to interact with.</p>
 <p>If you want to perform on-chain transaction you also need access to the gRPC endpoint of a node. These are most-often available on port 9050.</p>
@@ -153,30 +153,6 @@
 <p>If you're unsure as to what the gRPC endpoint of your chain is, check the <a href="https://cosmos.directory">Cosmos Directory</a> and there should be some listed.</p>
 </blockquote>
 <p>The following sections detail setting up a library package for the contract interfaces and a binary package for executable scripts.˜</p>
-<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
-<ul>
-<li><strong><a href="quick_start/./interfaces.html">Interfaces</a></strong>
-<ul>
-<li>Define interfaces for your contracts.</li>
-</ul>
-</li>
-<li><strong><a href="quick_start/./env-variable.html">Environment File</a></strong>
-<ul>
-<li>Configure your mnemonics and log settings.</li>
-</ul>
-</li>
-<li><strong><a href="quick_start/./scripting.html">Scripting</a></strong>
-<ul>
-<li>Write runnable scripts with your interfaces.</li>
-</ul>
-</li>
-</ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="interfaces"><a class="header" href="#interfaces">Interfaces</a></h1>
-<p>To get started with BOOT, create a new folder in your project's package directory and add it to the workspace members.</p>
-<pre><code class="language-shell">cd packages
-cargo init --lib interfaces
-cd interfaces
-</code></pre>
 <p>Following this example, the project's structure should eventually look like:</p>
 <pre><code class="language-path">.
 ├── Cargo.toml
@@ -196,6 +172,37 @@ cd interfaces
         └── bin
             ├── deploy.rs
             └── test_my_contract.rs
+</code></pre>
+<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
+<ul>
+<li><strong><a href="quick_start/./interfaces.html">Interfaces</a></strong>
+<ul>
+<li>Define interfaces for your contracts.</li>
+</ul>
+</li>
+<li><strong><a href="quick_start/./env-variable.html">Environment File</a></strong>
+<ul>
+<li>Configure your mnemonics and log settings.</li>
+</ul>
+</li>
+<li><strong><a href="quick_start/./scripting.html">Scripting</a></strong>
+<ul>
+<li>Write runnable scripts with your interfaces.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><strong><a href="quick_start/./ci-cd.html">CI/CD</a></strong>
+<ul>
+<li>Deploying your contracts in Using Contiruous Integration and Deployment solutions</li>
+</ul>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="interfaces"><a class="header" href="#interfaces">Interfaces</a></h1>
+<p>To get started with BOOT, create a new folder in your project's package directory and add it to the workspace members.</p>
+<pre><code class="language-shell">cd packages
+cargo init --lib interfaces
+cd interfaces
 </code></pre>
 <p>Now add <a href="https://crates.io/crates/boot-core">boot-core</a> to <code>Cargo.toml</code> along with the package that contains the contract's endpoint messages.</p>
 <pre><code class="language-bash">cargo add boot-core
