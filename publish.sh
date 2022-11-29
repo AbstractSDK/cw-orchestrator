@@ -35,7 +35,7 @@ sleep $SLEEP_TIME
 
 for pack in $UTILS_PACKAGES; do
   (
-    cd "packages/$pack"
+    cd "$pack"
     echo "Publishing $pack"
     cargo publish
   )
@@ -47,7 +47,7 @@ sleep $SLEEP_TIME
 
 for pack in $ALL_PACKAGES; do
   (
-    cd "packages/$pack"
+    cd "$pack"
     echo "Publishing $pack"
     cargo publish
   )
