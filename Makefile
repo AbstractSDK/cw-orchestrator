@@ -12,8 +12,10 @@ install:
 
 
 s serve:
+	cd docs; \
 	mdbook serve
 
 
 build:
+	cd docs; \
 	mdbook build
