@@ -3,8 +3,8 @@ name: GH Pages Deploy
 on:
   push:
     # branches: [main]
-    paths-ignore:
-      - "docs/**"
+    # paths-ignore:
+    #   - "docs/**"
 
   pull_request:
     branches: [main]
@@ -30,4 +30,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: book
+          publish_dir: docs/book
