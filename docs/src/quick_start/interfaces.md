@@ -8,28 +8,6 @@ cargo init --lib interfaces
 cd interfaces
 ```
 
-Following this example, the project's structure should eventually look like:
-
-```path
-.
-├── Cargo.toml
-├── my-contract
-│   ├── Cargo.toml
-│   └── src
-│       ├── contract.rs (execute, instantiate, query, ...)
-│       └── ..
-├── packages
-│   ├── my-project
-│   │   └── my-contract.rs (msgs)
-│   └── interfaces
-│       └── my-contract.rs (interface)
-└── scripts
-    ├── Cargo.toml
-    └── src
-        └── bin
-            ├── deploy.rs
-            └── test_my_contract.rs
-```
 
 Now add [boot-core](https://crates.io/crates/boot-core) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
 

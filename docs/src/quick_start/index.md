@@ -8,6 +8,29 @@ If you want to perform on-chain transaction you also need access to the gRPC end
 
 The following sections detail setting up a library package for the contract interfaces and a binary package for executable scripts.˜
 
+Following this example, the project's structure should eventually look like:
+
+```path
+.
+├── Cargo.toml
+├── my-contract
+│   ├── Cargo.toml
+│   └── src
+│       ├── contract.rs (execute, instantiate, query, ...)
+│       └── ..
+├── packages
+│   ├── my-project
+│   │   └── my-contract.rs (msgs)
+│   └── interfaces
+│       └── my-contract.rs (interface)
+└── scripts
+    ├── Cargo.toml
+    └── src
+        └── bin
+            ├── deploy.rs
+            └── test_my_contract.rs
+```
+
 ## Sections
 - **[Interfaces](./interfaces.md)**
     * Define interfaces for your contracts.
@@ -15,3 +38,5 @@ The following sections detail setting up a library package for the contract inte
     * Configure your mnemonics and log settings.
 - **[Scripting](./scripting.md)**
     * Write runnable scripts with your interfaces.
+* **[CI/CD](./ci-cd.md)**
+	* Deploying your contracts in Using Contiruous Integration and Deployment solutions
