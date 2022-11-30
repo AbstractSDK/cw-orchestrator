@@ -1,6 +1,6 @@
 pub mod contract;
 pub mod core;
 mod querier;
-pub mod sender;
+mod sender;
 pub mod state;
 pub mod tx_resp;
