@@ -144,7 +144,8 @@
                         <h1 id="continuous-integration-and-deployment"><a class="header" href="#continuous-integration-and-deployment">Continuous Integration and Deployment</a></h1>
 <p>One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments. </p>
 <p>BOOT does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="./interfaces">interfaces</a> can be found below:</p>
-<pre><code class="language-yaml">---  
+<pre><code class="language-yaml"># .github/workflows/deploy.yml
+---
 name: Deploy Contracts  
 on:  
   # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
@@ -190,7 +191,7 @@ jobs:
           NETWORK: &quot;local&quot;  
           RUST_LOG: info  
           WASM_DIR: ${{ env.WASM_DIR }}  
-          DAEMON_STATE_PATH: ${{ env.STATE_FILE }}  
+          STATE_FILE: ${{ env.STATE_FILE }}  
   
           VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
           TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  

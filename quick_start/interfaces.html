@@ -250,8 +250,39 @@ The environments that are currently supported are:</p>
     }
 }
 <span class="boring">}</span></code></pre></pre>
+<h3 id="endpoint-function-generation"><a class="header" href="#endpoint-function-generation">Endpoint function generation</a></h3>
+<p>We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs. </p>
+<p>Here's an example:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>#[cw_serde]
+#[derive(ExecuteFns)]
+pub enum ExecuteMsg{
+    Freeze {},
+    UpdateAdmins { admins: Vec&lt;String&gt; },
+    // Indicates that the call expects funds `Vec&lt;Coin&gt;`
+    #[payable]
+    Deposit {}
+}
+
+// If we now define a BOOTable contract with this execute message
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MyContract&lt;Chain&gt;;
+
+// Then the message variants are available as functions on the struct through an &quot;ExecuteFns&quot; trait.
+impl&lt;Chain: BootEnvironment + Clone&gt; MyContract&lt;Chain&gt; {
+    pub fn test_macro(&amp;self) {
+        self.freeze().unwrap();
+        self.update_admins(vec![]).unwrap(); 
+        self.deposit(&amp;[Coin::new(13,&quot;juno&quot;)]).unwrap();
+    }
+}
+
+<span class="boring">}</span></code></pre></pre>
+<p>Support for queries is in the pipeline. </p>
 <h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
-<p>You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call <code>contract.execute</code> and <code>contract.query</code> separately. </p>
+<p>You can also refine your contract interface manually to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call <code>contract.execute</code> and <code>contract.query</code> separately. </p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// interfaces/src/my_contract.rs
@@ -274,7 +305,7 @@ impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
     /// Update the balance of an address
     /// `address` - the address to update
     /// `balance` - the new balance
-    pub fn update_balance(&amp;self, address: Addr, balance: Uint128) -&gt; Result&lt;ExecuteResult&gt; {
+    pub fn update_balance(&amp;self, address: Addr, balance: Uint128) -&gt; Result&lt;Chain::TxResult&gt; {
         let update_balance_msg = ExecuteMsg::UpdateBalance {
             address,
             balance,
