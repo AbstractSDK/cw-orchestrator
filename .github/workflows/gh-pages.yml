@@ -11,6 +11,15 @@ on:
     paths:
       - "docs/**"
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build-deploy:
     runs-on: self-hosted
@@ -31,9 +40,25 @@ jobs:
       - name: Build 🏗️
         run: make build
 
-      - name: Deploy to GitHub Pages 🚀
+      - name: Upload artifact
         if: ${{ github.event_name != 'pull_request' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/book
+
+      - name: Setup Pages
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/configure-pages@v2
+
+      - name: Upload artifact
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload book repository
+          path: './docs/book'
+          
+      - name: Deploy to GitHub Pages
+        if: ${{ github.event_name != 'pull_request' }}
+        id: deployment
+        uses: actions/deploy-pages@v1
