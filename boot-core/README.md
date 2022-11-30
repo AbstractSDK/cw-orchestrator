@@ -10,7 +10,7 @@ A Rust gRPC and mock multi-test scripting library.
 | ----------- | ----------- |
 | STATE_FILE | File that stores network info and state |
 | RUST_LOG | Debug level for logging |
-| WASM_DIR   | Directory path that holds optimized `.wasm` builds |
+| ARTIFACTS_DIR   | Directory path that holds optimized `.wasm` builds |
 | LOCAL_MNEMONIC   | Mnemonic used when `NETWORK="local"` |
 | TEST_MNEMONIC   | Mnemonic used when `NETWORK="testnet"` |
 | MAIN_MNEMONIC   | Mnemonic used when `NETWORK="mainnet"` |
