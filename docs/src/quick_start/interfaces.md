@@ -130,10 +130,43 @@ impl MyContract<Mock> {
 }
 ```
 
+### Endpoint function generation
 
+We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs. 
+
+Here's an example:
+
+```rust
+
+#[cw_serde]
+#[derive(ExecuteFns)]
+pub enum ExecuteMsg{
+    Freeze {},
+    UpdateAdmins { admins: Vec<String> },
+    // Indicates that the call expects funds `Vec<Coin>`
+    #[payable]
+    Deposit {}
+}
+
+// If we now define a BOOTable contract with this execute message
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MyContract<Chain>;
+
+// Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
+impl<Chain: BootEnvironment + Clone> MyContract<Chain> {
+    pub fn test_macro(&self) {
+        self.freeze().unwrap();
+        self.update_admins(vec![]).unwrap(); 
+        self.deposit(&[Coin::new(13,"juno")]).unwrap();
+    }
+}
+
+```
+
+Support for queries is in the pipeline. 
 
 #### Refinement
-You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call `contract.execute` and `contract.query` separately. 
+You can also refine your contract interface manually to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call `contract.execute` and `contract.query` separately. 
 
 ```rust
 // interfaces/src/my_contract.rs
@@ -156,7 +189,7 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
     /// Update the balance of an address
     /// `address` - the address to update
     /// `balance` - the new balance
-    pub fn update_balance(&self, address: Addr, balance: Uint128) -> Result<ExecuteResult> {
+    pub fn update_balance(&self, address: Addr, balance: Uint128) -> Result<Chain::TxResult> {
         let update_balance_msg = ExecuteMsg::UpdateBalance {
             address,
             balance,
@@ -170,7 +203,6 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
 ## Learn more
 Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#boot` channel.
 Learn more about Abstract at [abstract.money](https://abstract.money).
-
 
 ## References
 - [Boot Core](https://crates.io/crates/boot-core)
