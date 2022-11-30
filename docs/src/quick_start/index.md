@@ -39,4 +39,4 @@ Following this example, the project's structure should eventually look like:
 - **[Scripting](./scripting.md)**
     * Write runnable scripts with your interfaces.
 * **[CI/CD](./ci-cd.md)**
-	* Deploying your contracts in Using Contiruous Integration and Deployment solutions
+	* Deploying your contracts in using continuous integration and deployment tools.
