@@ -42,17 +42,6 @@ jobs:
 
       - name: Upload artifact
         if: ${{ github.event_name != 'pull_request' }}
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/book
-
-      - name: Setup Pages
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/configure-pages@v2
-
-      - name: Upload artifact
-        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload book repository
