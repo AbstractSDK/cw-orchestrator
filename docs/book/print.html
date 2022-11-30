@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="quick_start/ci-cd.html"><strong aria-hidden="true">2.4.</strong> CI/CD</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -367,7 +367,7 @@ RUST_LOG=info
 ARTIFACTS_DIR=&quot;../artifacts&quot;
 
 # where to store the output state data
-DAEMON_STATE_PATH=&quot;./daemon_state.json&quot;
+STATE_FILE=&quot;./daemon_state.json&quot;
 
 # Mnemonics of the account that will be used to sign transactions
 LOCAL_MNEMONIC=&quot;&quot;
@@ -510,6 +510,73 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
 }
 <span class="boring">}
 </span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="continuous-integration-and-deployment"><a class="header" href="#continuous-integration-and-deployment">Continuous Integration and Deployment</a></h1>
+<p>One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments. </p>
+<p>BOOT does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="quick_start/./interfaces">interfaces</a> can be found below:</p>
+<pre><code class="language-yaml"># .github/workflows/deploy.yml
+---
+name: Deploy Contracts  
+on:  
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
+  workflow_dispatch:  
+  push:  
+    branches: [ 'mainline' ]  
+    paths:  
+      - 'contracts/src/**/*.rs'  
+      - '.github/workflows/deploy.yml'  
+  
+env:
+  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
+  STATE_FILE: &quot;./daemon_state.json&quot;  
+  WASM_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;  
+  SCHEMA_DIR: &quot;./schema&quot;  
+  
+jobs:  
+  deploy:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v3  
+      - uses: actions-rs/toolchain@v1  
+        with:  
+          toolchain: nightly  
+          target: wasm32-unknown-unknown  
+          override: true  
+      - name: Run cargo wasm  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: build  
+          args: --package counter-app --release --target wasm32-unknown-unknown  
+        env:  
+          RUSTFLAGS: '-C link-arg=-s'  
+
+      - name: Run deployment script  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: run  
+          args: --package scripts --bin deploy_app  
+        env:  
+          CHAIN: &quot;juno&quot;  
+          DEPLOYMENT: &quot;debugging&quot;  
+          NETWORK: &quot;local&quot;  
+          RUST_LOG: info  
+          WASM_DIR: ${{ env.WASM_DIR }}  
+          STATE_FILE: ${{ env.STATE_FILE }}  
+  
+          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
+          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  
+
+      - name: Upload deployment daemon state  
+        uses: actions/upload-artifact@v2  
+        with:  
+          name: deployment.json  
+          path: ${{ env.STATE_FILE }}  
+      - name: Upload WASM  
+        uses: actions/upload-artifact@v2  
+        with:  
+          # TODO: name env or from cargo  
+          name: counter_app.wasm  
+          path: ${{ env.WASM_DIR }}/counter_app.wasm
+</code></pre>
 
                     </main>
 
