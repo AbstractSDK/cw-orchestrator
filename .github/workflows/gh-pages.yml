@@ -19,6 +19,12 @@ jobs:
       - name: Checkout 🛎
         uses: actions/checkout@v2
 
+      - name: Setup | Rust
+        id: rustup
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+
       - name: Install dependencies 🔧
         run: make install
 
