@@ -19,7 +19,7 @@ on:
 env:
   VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
   STATE_FILE: "./daemon_state.json"  
-  WASM_DIR: "./target/wasm32-unknown-unknown/release"  
+  ARTIFACTS_DIR: "./target/wasm32-unknown-unknown/release"  
   SCHEMA_DIR: "./schema"  
   
 jobs:  
@@ -50,7 +50,7 @@ jobs:
           DEPLOYMENT: "debugging"  
           NETWORK: "local"  
           RUST_LOG: info  
-          WASM_DIR: ${{ env.WASM_DIR }}  
+          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}  
           STATE_FILE: ${{ env.STATE_FILE }}  
   
           VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
@@ -66,5 +66,5 @@ jobs:
         with:  
           # TODO: name env or from cargo  
           name: counter_app.wasm  
-          path: ${{ env.WASM_DIR }}/counter_app.wasm
+          path: ${{ env.ARTIFACTS_DIR }}/counter_app.wasm
 ```
