@@ -4,7 +4,8 @@ One of the tools that can improve your developer productivity drastically is set
 BOOT does not *currently* add additional support for actions, but an example using the directory structure specified in [interfaces](./interfaces) can be found below:
 
 ```yaml
----  
+# .github/workflows/deploy.yml
+---
 name: Deploy Contracts  
 on:  
   # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
@@ -18,7 +19,7 @@ on:
 env:
   VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
   STATE_FILE: "./daemon_state.json"  
-  ARTIFACTS_DIR: "./target/wasm32-unknown-unknown/release"  
+  WASM_DIR: "./target/wasm32-unknown-unknown/release"  
   SCHEMA_DIR: "./schema"  
   
 jobs:  
