@@ -11,7 +11,7 @@ pub fn script() -> anyhow::Result<()> {
 
     let registry = ChainRegistry::from_remote().unwrap();
     let chain_info = registry.get_by_chain_id("juno-1").unwrap();
-    
+
     assert_eq!(chain_info.chain_name, "juno");
     assert_eq!(info.chain_id, "juno-1");
     assert_eq!(info.pretty_name, "Juno");

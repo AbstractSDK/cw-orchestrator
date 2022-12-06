@@ -43,7 +43,7 @@ pub fn execute_fns_derive(ast: DeriveInput) -> TokenStream {
 
                 let (maybe_coins_attr, passed_coins) = if is_payable {
                     (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
-                }else { 
+                } else {
                     (quote!(),quote!(None))
                 };
                 let variant_attr = variant_idents.iter();
