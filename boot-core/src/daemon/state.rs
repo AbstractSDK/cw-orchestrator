@@ -1,13 +1,12 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
 
-use cosmos_chain_registry::ChainInfo as RegistryChainInfo;
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
+use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
-use tokio::join;
-use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr, future::Future};
+use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
@@ -23,7 +22,7 @@ pub struct DaemonState {
     /// gRPC channel
     pub grpc_channel: Channel,
     /// Underlying chain details
-    pub chain: ChainInfo<'static>,
+    pub chain: ChainInfoOwned,
     /// Max gas and denom info
     pub gas_denom: Denom,
     /// gas price
@@ -34,45 +33,66 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
-    pub async fn new(network: RegistryChainInfo) -> Result<DaemonState, BootError> {
-
+    pub async fn new(network: impl Into<RegistryChainInfo>) -> Result<DaemonState, BootError> {
+        let network: RegistryChainInfo = network.into();
         // find working grpc channel
-        
 
-        let connection_attempts:Vec<_> = network.apis.grpc.iter().map(|grpc|{
-            tokio::spawn(Channel::from_static(&grpc.address).connect())
+        let mut connection_attempts: Vec<_> = vec![];
+        for grpc in network.apis.grpc.iter() {
+            connection_attempts.push(
+                Channel::from_shared(grpc.address.clone())
+                    .unwrap()
+                    .connect()
+                    .await,
+            )
         }
-        ).collect();
 
         let mut successful_connections = vec![];
         for attempt in connection_attempts {
-            let maybe_connection = attempt.await.unwrap();
-            if let Ok(channel) = &maybe_connection {
+            if let Ok(channel) = attempt {
                 successful_connections.push(channel);
             };
         }
 
         if successful_connections.is_empty() {
-            return Err(BootError::StdErr("No active grpc endpoint found.".into()))
+            return Err(BootError::StdErr("No active grpc endpoint found.".into()));
         }
 
         let mut path = env::var("STATE_FILE").unwrap();
-        if network.kind == NetworkKind::Local {
+        if network.network_type == NetworkKind::Local.to_string() {
             let name = path.split('.').next().unwrap();
             path = format!("{}_local.json", name);
         }
 
+        // Try to get the standard fee token (probably shortest denom)
+        let shortest_denom_index = network
+            .fees
+            .fee_tokens
+            .iter()
+            .map(|token| token.denom.len())
+            .min();
+        let fee_token = network
+            .fees
+            .fee_tokens
+            .get(shortest_denom_index.unwrap())
+            .unwrap()
+            .clone();
+
         let state = DaemonState {
             json_file_path: path,
-            kind: network.kind,
+            kind: NetworkKind::from(network.network_type),
             deployment_id: DEFAULT_DEPLOYMENT.into(),
-            grpc_channel,
-            chain: network.chain_info,
-            id: network.id.to_string(),
-            gas_denom: Denom::from_str(network.gas_denom).unwrap(),
-            gas_price: network.gas_price,
-            lcd_url: network.lcd_url.map(|url| url.to_string()),
-            fcd_url: network.fcd_url.map(|url| url.to_string()),
+            grpc_channel: successful_connections[0].clone(),
+            chain: ChainInfoOwned {
+                chain_id: network.chain_id.to_string(),
+                pub_address_prefix: network.bech32_prefix,
+                coin_type: network.slip44,
+            },
+            id: network.chain_id.to_string(),
+            gas_denom: Denom::from_str(&fee_token.denom).unwrap(),
+            gas_price: fee_token.fixed_min_gas_price,
+            lcd_url: None,
+            fcd_url: None,
         };
         state.check_file_validity();
         Ok(state)
@@ -86,11 +106,11 @@ impl DaemonState {
         });
         log::info!("Opening daemon state at {}", self.json_file_path);
         let mut json: serde_json::Value = from_reader(file).unwrap();
-        if json.get(self.chain.chain_id).is_none() {
-            json[self.chain.chain_id] = json!({});
+        if json.get(&self.chain.chain_id).is_none() {
+            json[&self.chain.chain_id] = json!({});
         }
-        if json[self.chain.chain_id].get(&self.id).is_none() {
-            json[self.chain.chain_id][&self.id] = json!({
+        if json[&self.chain.chain_id].get(&self.id).is_none() {
+            json[&self.chain.chain_id][&self.id] = json!({
                 &self.deployment_id: {},
                 "code_ids": {}
             });
@@ -177,6 +197,37 @@ impl StateInterface for Rc<DaemonState> {
     }
 }
 
+impl Into<RegistryChainInfo> for NetworkInfo<'_> {
+    fn into(self) -> RegistryChainInfo {
+        RegistryChainInfo {
+            chain_name: self.chain_info.chain_id.to_string(),
+            chain_id: self.id.to_string().into(),
+            bech32_prefix: self.chain_info.pub_address_prefix.into(),
+            fees: FeeTokens {
+                fee_tokens: vec![FeeToken {
+                    fixed_min_gas_price: self.gas_price,
+                    denom: self.gas_denom.to_string(),
+                    ..Default::default()
+                }],
+            },
+            network_type: self.kind.to_string(),
+            apis: Apis {
+                grpc: self
+                    .grpc_urls
+                    .iter()
+                    .map(|url| Grpc {
+                        address: url.to_string(),
+                        ..Default::default()
+                    })
+                    .collect(),
+                ..Default::default()
+            },
+            slip44: self.chain_info.coin_type,
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct NetworkInfo<'a> {
     /// Identifier for the network ex. columbus-2
@@ -186,7 +237,7 @@ pub struct NetworkInfo<'a> {
     pub gas_denom: &'a str,
     /// gas price
     pub gas_price: f64,
-    pub grpc_url: &'a str,
+    pub grpc_urls: &'a [&'a str],
     /// Optional urls for custom functionality
     pub lcd_url: Option<&'a str>,
     pub fcd_url: Option<&'a str>,
@@ -201,6 +252,25 @@ pub struct ChainInfo<'a> {
     pub pub_address_prefix: &'a str,
     /// coin type for key derivation
     pub coin_type: u32,
+}
+
+#[derive(Clone, Debug, Serialize, Default)]
+pub struct ChainInfoOwned {
+    pub chain_id: String,
+    /// address prefix
+    pub pub_address_prefix: String,
+    /// coin type for key derivation
+    pub coin_type: u32,
+}
+
+impl From<ChainInfo<'_>> for ChainInfoOwned {
+    fn from(info: ChainInfo<'_>) -> Self {
+        Self {
+            chain_id: info.chain_id.to_owned(),
+            pub_address_prefix: info.pub_address_prefix.to_owned(),
+            coin_type: info.coin_type,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -246,5 +316,16 @@ impl ToString for NetworkKind {
             NetworkKind::Testnet => "testnet",
         }
         .into()
+    }
+}
+
+impl From<String> for NetworkKind {
+    fn from(str: String) -> Self {
+        match str.as_str() {
+            "local" => NetworkKind::Local,
+            "mainnet" => NetworkKind::Mainnet,
+            "testnet" => NetworkKind::Testnet,
+            _ => NetworkKind::Local,
+        }
     }
 }
