@@ -65,18 +65,16 @@ impl DaemonState {
         }
 
         // Try to get the standard fee token (probably shortest denom)
-        let shortest_denom_index = network
-            .fees
-            .fee_tokens
-            .iter()
-            .map(|token| token.denom.len())
-            .min();
-        let fee_token = network
-            .fees
-            .fee_tokens
-            .get(shortest_denom_index.unwrap())
-            .unwrap()
-            .clone();
+        let shortest_denom_token = network.fees.fee_tokens.iter().fold(
+            network.fees.fee_tokens[0].clone(),
+            |acc, item| {
+                if item.denom.len() < acc.denom.len() {
+                    item.clone()
+                } else {
+                    acc
+                }
+            },
+        );
 
         let state = DaemonState {
             json_file_path: path,
@@ -84,13 +82,13 @@ impl DaemonState {
             deployment_id: DEFAULT_DEPLOYMENT.into(),
             grpc_channel: successful_connections[0].clone(),
             chain: ChainInfoOwned {
-                chain_id: network.chain_id.to_string(),
+                chain_id: network.chain_name.to_string(),
                 pub_address_prefix: network.bech32_prefix,
                 coin_type: network.slip44,
             },
             id: network.chain_id.to_string(),
-            gas_denom: Denom::from_str(&fee_token.denom).unwrap(),
-            gas_price: fee_token.fixed_min_gas_price,
+            gas_denom: Denom::from_str(&shortest_denom_token.denom).unwrap(),
+            gas_price: shortest_denom_token.fixed_min_gas_price,
             lcd_url: None,
             fcd_url: None,
         };
