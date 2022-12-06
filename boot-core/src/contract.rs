@@ -52,7 +52,11 @@ where
         let wasm_code_path = if wasm_code_path.contains(".wasm") {
             wasm_code_path.to_string()
         } else {
-            format!("{}/{}.wasm", env::var("ARTIFACTS_DIR").unwrap(), wasm_code_path)
+            format!(
+                "{}/{}.wasm",
+                env::var("ARTIFACTS_DIR").unwrap(),
+                wasm_code_path
+            )
         };
 
         Ok(wasm_code_path)

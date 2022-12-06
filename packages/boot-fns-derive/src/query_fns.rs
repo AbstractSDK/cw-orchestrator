@@ -50,7 +50,6 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                             self.query(&msg)
                         }
                     )
-                    
                 }
             }
         }
