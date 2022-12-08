@@ -13,7 +13,7 @@ Now add [boot-core](https://crates.io/crates/boot-core) to `Cargo.toml` along wi
 
 ```bash
 cargo add boot-core
-cargo add --path ../contracts
+cargo add --path ../../contracts
 ```
 
 ```toml
