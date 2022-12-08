@@ -1,14 +1,17 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
 
-use cosmrs::{Denom, proto::cosmos::base::tendermint::v1beta1::{service_client::ServiceClient, GetNodeInfoRequest}};
+use cosmrs::{
+    proto::cosmos::base::tendermint::v1beta1::{service_client::ServiceClient, GetNodeInfoRequest},
+    Denom,
+};
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
-use log::info;
+
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
-use tonic::{transport::Channel, client::GrpcService};
+use tonic::transport::Channel;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Debug)]
@@ -45,15 +48,16 @@ impl DaemonState {
             if maybe_client.is_err() {
                 continue;
             }
-            let node_info = maybe_client?.get_node_info(GetNodeInfoRequest{}).await?.into_inner();
+            let node_info = maybe_client?
+                .get_node_info(GetNodeInfoRequest {})
+                .await?
+                .into_inner();
             if node_info.default_node_info.as_ref().unwrap().network != network.chain_id.as_str() {
                 continue;
             }
 
             log::error!("{:?}", node_info.default_node_info.unwrap());
-            successful_connections.push(
-                endpoint.connect().await?
-            )
+            successful_connections.push(endpoint.connect().await?)
         }
 
         if successful_connections.is_empty() {
@@ -69,16 +73,18 @@ impl DaemonState {
         }
 
         // Try to get the standard fee token (probably shortest denom)
-        let shortest_denom_token = network.fees.fee_tokens.iter().fold(
-            network.fees.fee_tokens[0].clone(),
-            |acc, item| {
-                if item.denom.len() < acc.denom.len() {
-                    item.clone()
-                } else {
-                    acc
-                }
-            },
-        );
+        let shortest_denom_token =
+            network
+                .fees
+                .fee_tokens
+                .iter()
+                .fold(network.fees.fee_tokens[0].clone(), |acc, item| {
+                    if item.denom.len() < acc.denom.len() {
+                        item.clone()
+                    } else {
+                        acc
+                    }
+                });
 
         let state = DaemonState {
             json_file_path: path,
@@ -199,6 +205,7 @@ impl StateInterface for Rc<DaemonState> {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<RegistryChainInfo> for NetworkInfo<'_> {
     fn into(self) -> RegistryChainInfo {
         RegistryChainInfo {
