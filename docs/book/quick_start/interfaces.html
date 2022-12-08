@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quick_start/interfaces.html" class="active"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="../quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="../quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="../quick_start/ci-cd.html"><strong aria-hidden="true">2.4.</strong> CI/CD</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quick_start/interfaces.html" class="active"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="../quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="../quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li><li class="chapter-item expanded "><a href="../integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="../advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,7 +163,7 @@ my-project = { path = &quot;../my-project&quot;}
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>touch src/my-contract.rs
-echo 'pub mod my-contract;' &gt;&gt; src/lib.rs
+echo 'pub mod my_contract;' &gt;&gt; src/lib.rs
 <span class="boring">}
 </span></code></pre></pre>
 <p>In your new file, define a struct for your contract interface and provide the [<code>Instantiate</code>|<code>Execute</code>|<code>Query</code>|<code>Migrate</code>] messages to the <code>boot_contract</code> macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.</p>
@@ -195,20 +195,16 @@ pub struct MyContract&lt;Chain&gt;;
        let wasm_path = &quot;my-contract&quot;;
         Self(
             Contract::new(contract_id, chain)
-	            .with_wasm_path(wasm_path)
-	            // Mocked entry points will 
-	            .with_mock(Box::new(
-                   ContractWrapper::new_with_empty(
-                     my_contract::contract::execute,
-                     my_contract::contract::instantiate,
-                     my_contract::contract::query,
-                )))
-                ,
+	            .with_wasm_path(wasm_path),
+	            // Mocked environments are also available and can be used for integartion testing... See Integration Testing
         )
     }
 }
 <span class="boring">}
 </span></code></pre></pre>
+<blockquote>
+<p>See <a href="../integration-tests.html">Integration Testing</a> for details on using mocks for integration testing.</p>
+</blockquote>
 <p>Notice that we build the <code>Contract</code> instance and point it to the contract code using <code>with_wasm_path(...)</code>, where we provide the contract name <code>&quot;my-contract&quot;</code>. 
 This contract name will be used to search the artifacts directory (set by <code>ARTIFACTS_DIR</code> env variable) for a <code>my-contract.wasm</code> file. </p>
 <p>Alternatively you can specify a path to the wasm artifact after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the <a href="https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/">CosmWasm documentation on compiling your contract</a> for more information.</p>
@@ -257,8 +253,40 @@ The environments that are currently supported are:</p>
 }
 <span class="boring">}
 </span></code></pre></pre>
+<h3 id="endpoint-function-generation"><a class="header" href="#endpoint-function-generation">Endpoint function generation</a></h3>
+<p>We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs. </p>
+<p>Here's an example:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>#[cw_serde]
+#[derive(ExecuteFns)]
+pub enum ExecuteMsg{
+    Freeze {},
+    UpdateAdmins { admins: Vec&lt;String&gt; },
+    // Indicates that the call expects funds `Vec&lt;Coin&gt;`
+    #[payable]
+    Deposit {}
+}
+
+// If we now define a BOOTable contract with this execute message
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MyContract&lt;Chain&gt;;
+
+// Then the message variants are available as functions on the struct through an &quot;ExecuteFns&quot; trait.
+impl&lt;Chain: BootEnvironment + Clone&gt; MyContract&lt;Chain&gt; {
+    pub fn test_macro(&amp;self) {
+        self.freeze().unwrap();
+        self.update_admins(vec![]).unwrap(); 
+        self.deposit(&amp;[Coin::new(13,&quot;juno&quot;)]).unwrap();
+    }
+}
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>Support for queries is in the pipeline. </p>
 <h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
-<p>You can also refine your contract interface to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call <code>contract.execute</code> and <code>contract.query</code> separately. </p>
+<p>You can also refine your contract interface manually to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call <code>contract.execute</code> and <code>contract.query</code> separately. </p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// interfaces/src/my_contract.rs
@@ -281,7 +309,7 @@ impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
     /// Update the balance of an address
     /// `address` - the address to update
     /// `balance` - the new balance
-    pub fn update_balance(&amp;self, address: Addr, balance: Uint128) -&gt; Result&lt;ExecuteResult&gt; {
+    pub fn update_balance(&amp;self, address: Addr, balance: Uint128) -&gt; Result&lt;Chain::TxResult&gt; {
         let update_balance_msg = ExecuteMsg::UpdateBalance {
             address,
             balance,
