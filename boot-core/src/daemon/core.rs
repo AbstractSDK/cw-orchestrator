@@ -11,8 +11,6 @@ use cosmrs::{
     AccountId, Denom,
 };
 
-use ibc_chain_registry::chain::ChainData;
-
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
@@ -27,15 +25,15 @@ use crate::{
 use super::{
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
-    state::{DaemonState, NetworkKind},
+    state::{DaemonOptions, DaemonState, NetworkKind},
     tx_resp::CosmTxResponse,
 };
 
 pub fn instantiate_daemon_env(
     runtime: &Arc<Runtime>,
-    network: impl Into<ChainData>,
+    options: DaemonOptions,
 ) -> anyhow::Result<(Addr, Daemon)> {
-    let state = Rc::new(runtime.block_on(DaemonState::new(network))?);
+    let state = Rc::new(runtime.block_on(DaemonState::new(options))?);
     let sender = Rc::new(Sender::new(&state)?);
     let chain = Daemon::new(&sender, &state, runtime)?;
     Ok((sender.address()?, chain))
