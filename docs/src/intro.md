@@ -1,4 +1,4 @@
-# BOOT Guide (v0.1.4)
+# BOOT Guide (v0.2.0)
 
 Once you have written your CosmWasm smart contract, you are probably ready to start writing integration tests or deploy it to a live network. Doing this through a frontend interface or CLI tool is laborious and error-prone.
 
