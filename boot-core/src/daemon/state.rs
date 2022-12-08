@@ -1,13 +1,14 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
 
-use cosmrs::Denom;
+use cosmrs::{Denom, proto::cosmos::base::tendermint::v1beta1::{service_client::ServiceClient, GetNodeInfoRequest}};
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
+use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
-use tonic::transport::Channel;
+use tonic::{transport::Channel, client::GrpcService};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Debug)]
@@ -37,26 +38,29 @@ impl DaemonState {
         let network: RegistryChainInfo = network.into();
         // find working grpc channel
 
-        let mut connection_attempts: Vec<_> = vec![];
-        for grpc in network.apis.grpc.iter() {
-            connection_attempts.push(
-                Channel::from_shared(grpc.address.clone())
-                    .unwrap()
-                    .connect()
-                    .await,
-            )
-        }
-
         let mut successful_connections = vec![];
-        for attempt in connection_attempts {
-            if let Ok(channel) = attempt {
-                successful_connections.push(channel);
-            };
+        for grpc in network.apis.grpc.iter() {
+            let endpoint = Channel::builder(grpc.address.clone().try_into().unwrap());
+            let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+            if maybe_client.is_err() {
+                continue;
+            }
+            let node_info = maybe_client?.get_node_info(GetNodeInfoRequest{}).await?.into_inner();
+            if node_info.default_node_info.as_ref().unwrap().network != network.chain_name {
+                continue;
+            }
+
+            log::error!("{:?}", node_info.default_node_info.unwrap());
+            successful_connections.push(
+                endpoint.connect().await?
+            )
         }
 
         if successful_connections.is_empty() {
             return Err(BootError::StdErr("No active grpc endpoint found.".into()));
         }
+
+        log::error!("{:?}", successful_connections[0]);
 
         let mut path = env::var("STATE_FILE").unwrap();
         if network.network_type == NetworkKind::Local.to_string() {
