@@ -2,7 +2,8 @@ use std::{
     fmt::Debug,
     rc::Rc,
     str::{from_utf8, FromStr},
-    time::Duration, sync::Arc,
+    sync::Arc,
+    time::Duration,
 };
 
 use cosmrs::{
