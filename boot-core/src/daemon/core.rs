@@ -2,6 +2,7 @@ use std::{
     fmt::Debug,
     rc::Rc,
     str::{from_utf8, FromStr},
+    sync::Arc,
     time::Duration,
 };
 
@@ -9,6 +10,8 @@ use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     AccountId, Denom,
 };
+
+use ibc_chain_registry::chain::ChainData;
 
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
@@ -24,36 +27,32 @@ use crate::{
 use super::{
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
-    state::{DaemonState, NetworkInfo, NetworkKind},
+    state::{DaemonState, NetworkKind},
     tx_resp::CosmTxResponse,
 };
 
 pub fn instantiate_daemon_env(
-    network: NetworkInfo<'static>,
-) -> anyhow::Result<(Rc<Runtime>, Addr, Daemon)> {
-    let rt = Rc::new(
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?,
-    );
-    let state = Rc::new(rt.block_on(DaemonState::new(network))?);
+    runtime: &Arc<Runtime>,
+    network: impl Into<ChainData>,
+) -> anyhow::Result<(Addr, Daemon)> {
+    let state = Rc::new(runtime.block_on(DaemonState::new(network))?);
     let sender = Rc::new(Sender::new(&state)?);
-    let chain = Daemon::new(&sender, &state, &rt)?;
-    Ok((rt, sender.address()?, chain))
+    let chain = Daemon::new(&sender, &state, runtime)?;
+    Ok((sender.address()?, chain))
 }
 
 #[derive(Clone)]
 pub struct Daemon {
     pub sender: Wallet,
     pub state: Rc<DaemonState>,
-    pub runtime: Rc<Runtime>,
+    pub runtime: Arc<Runtime>,
 }
 
 impl Daemon {
     pub fn new(
         sender: &Wallet,
         state: &Rc<DaemonState>,
-        runtime: &Rc<Runtime>,
+        runtime: &Arc<Runtime>,
     ) -> anyhow::Result<Self> {
         let instance = Self {
             sender: sender.clone(),
