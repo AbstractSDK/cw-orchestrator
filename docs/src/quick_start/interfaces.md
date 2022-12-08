@@ -31,7 +31,7 @@ First, create a new file in the src directory of the interfaces package, and add
 
 ```rust
 touch src/my-contract.rs
-echo 'pub mod my-contract;' >> src/lib.rs
+echo 'pub mod my_contract;' >> src/lib.rs
 ```
 
 In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `boot_contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
@@ -64,19 +64,14 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
        let wasm_path = "my-contract";
         Self(
             Contract::new(contract_id, chain)
-	            .with_wasm_path(wasm_path)
-	            // Mocked entry points will 
-	            .with_mock(Box::new(
-                   ContractWrapper::new_with_empty(
-                     my_contract::contract::execute,
-                     my_contract::contract::instantiate,
-                     my_contract::contract::query,
-                )))
-                ,
+	            .with_wasm_path(wasm_path),
+	            // Mocked environments are also available and can be used for integartion testing... See Integration Testing
         )
     }
 }
 ```
+
+> See [Integration Testing](../integration-tests.md) for details on using mocks for integration testing.
 
 Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`. 
 This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file. 
