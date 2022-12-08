@@ -14,6 +14,17 @@ use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
+#[derive(derive_builder::Builder)]
+#[builder(pattern = "owned")]
+pub struct DaemonOptions {
+    #[builder(setter(into))]
+    network: RegistryChainInfo,
+    #[builder(setter(into, strip_option))]
+    #[builder(default)]
+    // #[builder(setter(strip_option))]
+    deployment_id: Option<String>,
+}
+
 #[derive(Clone, Debug)]
 pub struct DaemonState {
     pub json_file_path: String,
@@ -37,8 +48,8 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
-    pub async fn new(network: impl Into<RegistryChainInfo>) -> Result<DaemonState, BootError> {
-        let network: RegistryChainInfo = network.into();
+    pub async fn new(options: DaemonOptions) -> Result<DaemonState, BootError> {
+        let network: RegistryChainInfo = options.network;
         // find working grpc channel
 
         let mut successful_connections = vec![];
@@ -89,7 +100,10 @@ impl DaemonState {
         let state = DaemonState {
             json_file_path: path,
             kind: NetworkKind::from(network.network_type),
-            deployment_id: DEFAULT_DEPLOYMENT.into(),
+            deployment_id: options
+                .deployment_id
+                .map(Into::into)
+                .unwrap_or_else(|| DEFAULT_DEPLOYMENT.into()),
             grpc_channel: successful_connections[0].clone(),
             chain: ChainInfoOwned {
                 chain_id: network.chain_name.to_string(),
