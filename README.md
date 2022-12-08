@@ -1,9 +1,10 @@
 ![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png)
 # BOOT
 
-Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.
+Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [https://boot.abstract.money](https://boot.abstract.money).
 
 > [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
+
 
 [boot-cw-plus](boot-cw-plus/README.md) uses BOOT to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
@@ -13,7 +14,7 @@ The use of this software makes it easier to quickly deploy and iterate on your c
 
 Interacting with a [CosmWasm](https://cosmwasm.com/) is possible through the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, etc.).
 
-In order to perform actions on the contract you can pass these messages to a macro `boot_contract' like so: 
+In order to perform actions on the contract you can pass these messages to a macro `boot_contract' like so:
 
 ```rust
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
