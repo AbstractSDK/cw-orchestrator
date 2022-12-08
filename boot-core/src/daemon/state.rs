@@ -46,7 +46,7 @@ impl DaemonState {
                 continue;
             }
             let node_info = maybe_client?.get_node_info(GetNodeInfoRequest{}).await?.into_inner();
-            if node_info.default_node_info.as_ref().unwrap().network != network.chain_name {
+            if node_info.default_node_info.as_ref().unwrap().network != network.chain_id.as_str() {
                 continue;
             }
 
