@@ -16,7 +16,10 @@ mod tx_handler;
 pub use boot_contract_derive::boot_contract;
 pub use boot_fns_derive::ExecuteFns;
 pub use contract::Contract;
-pub use daemon::core::Daemon;
+pub use daemon::{
+    core::Daemon,
+    state::{DaemonOptions, DaemonOptionsBuilder},
+};
 pub use error::BootError;
 pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
