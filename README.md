@@ -12,18 +12,18 @@ The use of this software makes it easier to quickly deploy and iterate on your c
 .
 ## How it works
 
-Interacting with a [CosmWasm](https://cosmwasm.com/) is possible through the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, etc.).
+Interacting with a [CosmWasm](https://cosmwasm.com/) is possible through the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.).
 
-In order to perform actions on the contract you can pass these messages to a macro `boot_contract' like so:
+In order to perform actions on the contract you can define a struct for your contract, passing the contract's entry point types into the `boot_contract` macro:
 
 ```rust
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 ```
 
-The macro implements a set of traits for the struct. These traits contain functions that we can use to interact with the contract and they prevent us from executing a faulty message on a contract. The implementation for a CW20 token is shown below. The full file resides [here](boot-cw-plus/src/cw20.rs)
+The macro implements a set of traits for the struct. These traits contain functions that we can use to interact with the contract and they prevent us from executing a faulty message on a contract. The implementation for a CW20 token is shown below. The full implementation resides [here](boot-cw-plus/src/cw20.rs)
 
-```
+```rust
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
@@ -32,7 +32,7 @@ pub struct Cw20;
 
 You can now perform any action on the cw20 contract and implement custom actions.
 
-```
+```rust
     let cw20_token = Cw20::new(chain)?;
     let msg = ExecuteMsg::Transfer {
             recipient,
@@ -42,9 +42,7 @@ You can now perform any action on the cw20 contract and implement custom actions
     let token_info: TokenInfoResponse = cw20_token.query(&Cw20QueryMsg::TokenInfo {}).await?;
 ```
 
-
-
-I recommend reading [the cw20 executable example here](boot-core/examples/cw20.rs).
+We would recommend reading through [the full cw20 executable example here](boot-core/examples/cw20.rs).
 
 ## Other features
 
