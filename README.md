@@ -57,5 +57,8 @@ cd docs && mdbook serve --open --port 5000
 ```
 to view the changes.
 
+# References
+Enjoy scripting your smart contracts with ease? Build your contracts with ease with [Abstract](https://abstract.money). Get started [here](https://docs.abstract.money/building-on-abstract/writing-modules/writing-an-app).
+
 # Disclaimer
 This software is provided as-is without any guarantees.
