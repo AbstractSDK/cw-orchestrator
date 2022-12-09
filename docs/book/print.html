@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li><li class="chapter-item expanded "><a href="integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li><li class="chapter-item expanded "><a href="integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -145,7 +145,7 @@
                     <main>
                         <h1 id="boot-guide-v020"><a class="header" href="#boot-guide-v020">BOOT Guide (v0.2.0)</a></h1>
 <p>Once you have written your CosmWasm smart contract, you are probably ready to start writing integration tests or deploy it to a live network. Doing this through a frontend interface or CLI tool is laborious and error-prone.</p>
-<p><a href="https://github.com/Abstract-OS/BOOT">BOOT</a> (by Abstract) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts. </p>
+<p><a href="https://github.com/Abstract-OS/BOOT">BOOT</a> (by <a href="https://abstract.money">Abstract</a>) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
 <p>In order to use BOOT you need access to the entry point message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,...) of the contracts you want to interact with.</p>
 <p>If you want to perform on-chain transaction you also need access to the gRPC endpoint of a node. These are most-often available on port 9090.</p>
@@ -654,6 +654,11 @@ impl&lt;Chain: BootEnvironment&gt; MockMyContract&lt;Chain&gt; {
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cicd"><a class="header" href="#cicd">CI/CD</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
+<p>Find an issue you want to work on? Great! Feel free to open a PR and we'll review it as soon as possible.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="references-1"><a class="header" href="#references-1">References</a></h1>
+<p>Easy, right? Try building your contracts with <a href="https://abstract.money">Abstract</a> for the same experience with smart contracts.
+Get started <a href="https://docs.abstract.money/building-on-abstract/writing-modules/writing-an-app">here</a>.</p>
 
                     </main>
 
