@@ -35,8 +35,6 @@ pub(crate) fn process_impl_into(
             let type_args = e.path.segments[0].arguments.clone();
             if let PathArguments::AngleBracketed(argo) = type_args {
                 type_generics = argo.args
-            } else {
-                panic!("impl_into must have exactly one type argument");
             }
         };
         (quote!(.into()), quote!(#entrypoint_msg_type), type_generics)
