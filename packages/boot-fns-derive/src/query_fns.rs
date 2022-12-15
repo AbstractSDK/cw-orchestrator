@@ -67,7 +67,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let derived_trait_impl = quote!(
-        impl<SupportedContract, Chain: ::boot_core::BootEnvironment> #bname<Chain, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::boot_core::BootEnvironment, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
             SupportedContract: ::boot_core::prelude::BootQuery<Chain, QueryMsg = #entrypoint_msg_type>{}
     );
