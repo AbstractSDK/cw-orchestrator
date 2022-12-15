@@ -4,7 +4,7 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{visit_mut::VisitMut, Fields, Ident, ItemEnum, Type};
 
-use crate::helpers::LexiographicMatching;
+use crate::helpers::{process_impl_into, LexiographicMatching};
 
 const RETURNS: &str = "returns";
 
@@ -24,6 +24,7 @@ fn parse_query(v: &syn::Variant) -> (String, Type) {
 pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let name = &input.ident;
     let bname = Ident::new(&format!("{}Fns", name), name.span());
+    let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name);
 
     let variants = input.variants;
 
@@ -51,7 +52,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                             let msg = #name::#variant_name {
                                 #(#variant_idents,)*
                             };
-                            self.query(&msg)
+                            self.query(&msg #maybe_into)
                         }
                     )
                 }
@@ -60,15 +61,15 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::boot_core::BootEnvironment>: ::boot_core::prelude::BootQuery<Chain, QueryMsg = #name> {
+        pub trait #bname<Chain: ::boot_core::BootEnvironment, #type_generics>: ::boot_core::prelude::BootQuery<Chain, QueryMsg = #entrypoint_msg_type> {
             #(#variant_fns)*
         }
     );
 
     let derived_trait_impl = quote!(
-        impl<T, Chain: ::boot_core::BootEnvironment> #bname<Chain> for T
+        impl<SupportedContract, Chain: ::boot_core::BootEnvironment> #bname<Chain, #type_generics> for SupportedContract
         where
-            T: ::boot_core::prelude::BootQuery<Chain, QueryMsg = #name>{}
+            SupportedContract: ::boot_core::prelude::BootQuery<Chain, QueryMsg = #entrypoint_msg_type>{}
     );
 
     let expand = quote!(

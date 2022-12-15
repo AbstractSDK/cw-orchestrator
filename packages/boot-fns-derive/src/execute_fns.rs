@@ -4,7 +4,7 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{visit_mut::VisitMut, DeriveInput, Fields, Ident};
 
-use crate::helpers::{impl_into, LexiographicMatching};
+use crate::helpers::{process_impl_into, LexiographicMatching};
 
 fn payable(v: &syn::Variant) -> bool {
     for attr in &v.attrs {
@@ -15,25 +15,14 @@ fn payable(v: &syn::Variant) -> bool {
     false
 }
 
-pub fn execute_fns_derive(ast: DeriveInput) -> TokenStream {
-    let name = &ast.ident;
-
-    // Does the struct have an #[impl_into] attribute?
-    let impl_into = impl_into(&ast);
-
-    // If so, we need to add a .into() to the execute fn and set the entrypoint message message
-    let (maybe_into, entrypoint_msg_type) = if let Some(entrypoint_msg_type) = impl_into {
-        (quote!(.into()), quote!(#entrypoint_msg_type))
-    } else {
-        (quote!(), quote!(#name))
-    };
-
+pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
+    let name = &input.ident;
     let bname = Ident::new(&format!("{}Fns", name), name.span());
-
+    let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name);
     let syn::Data::Enum(syn::DataEnum {
         variants,
         ..
-    }) = ast.data
+    }) = input.data
      else {
         unimplemented!();
     };
@@ -79,16 +68,16 @@ pub fn execute_fns_derive(ast: DeriveInput) -> TokenStream {
     });
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::boot_core::BootEnvironment>: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type> {
+        pub trait #bname<Chain: ::boot_core::BootEnvironment, #type_generics>: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type> {
             #(#variant_fns)*
         }
     );
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<T, Chain: ::boot_core::BootEnvironment> #bname<Chain> for T
+        impl<SupportedContract, Chain: ::boot_core::BootEnvironment, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            T: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type>{}
+            SupportedContract: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type>{}
     );
 
     let expand = quote!(

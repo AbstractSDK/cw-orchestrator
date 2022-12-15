@@ -1,9 +1,14 @@
+use proc_macro2::Ident;
+use proc_macro2::TokenStream;
+use quote::quote;
 use std::cmp::Ordering;
+use syn::{
+    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, GenericArgument,
+    PathArguments, Type,
+};
 
-use syn::{punctuated::Punctuated, token::Comma, DeriveInput, Field, FieldsNamed, Type};
-
-pub(crate) fn impl_into(ast: &DeriveInput) -> Option<Type> {
-    for attr in &ast.attrs {
+pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
+    for attr in attrs {
         if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "impl_into" {
             return Some(
                 attr.parse_args().unwrap_or_else(|_| {
@@ -13,6 +18,31 @@ pub(crate) fn impl_into(ast: &DeriveInput) -> Option<Type> {
         }
     }
     None
+}
+
+pub(crate) fn process_impl_into(
+    attrs: &Vec<Attribute>,
+    ident: &Ident,
+) -> (TokenStream, TokenStream, Punctuated<GenericArgument, Comma>) {
+    // Does the struct have an #[impl_into] attribute?
+    let impl_into = impl_into(attrs);
+    // expect empty generics
+    let mut type_generics = Punctuated::<GenericArgument, Comma>::new();
+    // If so, we need to add a .into() to the execute fn and set the entrypoint message message
+    if let Some(entrypoint_msg_type) = impl_into {
+        // extract the type generics
+        if let Type::Path(e) = &entrypoint_msg_type {
+            let type_args = e.path.segments[0].arguments.clone();
+            if let PathArguments::AngleBracketed(argo) = type_args {
+                type_generics = argo.args
+            } else {
+                panic!("impl_into must have exactly one type argument");
+            }
+        };
+        (quote!(.into()), quote!(#entrypoint_msg_type), type_generics)
+    } else {
+        (quote!(), quote!(#ident), type_generics)
+    }
 }
 
 #[derive(Default)]
