@@ -2,7 +2,9 @@ extern crate proc_macro;
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, Ident, ItemEnum, Type};
+use syn::{visit_mut::VisitMut, Fields, Ident, ItemEnum, Type};
+
+use crate::helpers::LexiographicMatching;
 
 const RETURNS: &str = "returns";
 
@@ -25,16 +27,18 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     let variants = input.variants;
 
-    let variant_fns = variants.iter().map( |variant|{
+    let variant_fns = variants.into_iter().map( |mut variant|{
         let variant_name = variant.ident.clone();
-        let (query_ident,response) = parse_query(variant);
+        let (query_ident,response) = parse_query(&variant);
         let mut variant_func_name =
                 format_ident!("{}",query_ident);
                 variant_func_name.set_span(variant_name.span());
-        match &variant.fields {
+        match &mut variant.fields {
             Fields::Unnamed(_) => panic!("Expected named variant"),
             Fields::Unit => panic!("Expected named variant"),
             Fields::Named(variant_fields) => {
+                // sort fields on field name
+                LexiographicMatching::default().visit_fields_named_mut(variant_fields);
 
                 // Parse these fields as arguments to function
                 let variant_fields = variant_fields.named.clone();
