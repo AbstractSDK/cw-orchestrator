@@ -23,7 +23,7 @@ pub use daemon::{
 pub use error::BootError;
 pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
-pub use mock::core::Mock;
+pub use mock::{core::{Mock}, state::MockState};
 pub use tx_handler::{TxHandler, TxResponse};
 /// Signals a supported execution environment
 pub trait BootEnvironment: TxHandler + Clone {}
