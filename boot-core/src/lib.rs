@@ -14,13 +14,16 @@ mod tx_handler;
 
 // pub mod traits;
 pub use boot_contract_derive::boot_contract;
-pub use boot_fns_derive::ExecuteFns;
+pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
-pub use daemon::core::Daemon;
+pub use daemon::{
+    core::Daemon,
+    state::{DaemonOptions, DaemonOptionsBuilder},
+};
 pub use error::BootError;
 pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
-pub use mock::core::Mock;
+pub use mock::{core::{Mock}, state::MockState};
 pub use tx_handler::{TxHandler, TxResponse};
 /// Signals a supported execution environment
 pub trait BootEnvironment: TxHandler + Clone {}

@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="../quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="../quick_start/scripting.html" class="active"><strong aria-hidden="true">2.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="../quick_start/ci-cd.html"><strong aria-hidden="true">2.4.</strong> CI/CD</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="../quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="../quick_start/scripting.html" class="active"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li><li class="chapter-item expanded "><a href="../integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="../advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="../contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="../references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -189,7 +189,7 @@
 </span>// scripts/src/my_contract.rs
 use anyhow::Result;
 use boot_core::networks;
-use boot_core::prelude::{instantiate_daemon_env, NetworkInfo};
+use boot_core::prelude::{instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
 // Traits for contract deployment
 use boot_core::interface::*;
 use interfaces::my_contract::MyContract;
@@ -199,8 +199,18 @@ const NETWORK: NetworkInfo = networks::juno::UNI_5;
 const CONTRACT_NAME: &amp;str = &quot;my-contract&quot;;
 
 pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
+    // Create a runtime for the asynchronous actions
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+
+    // Specify the options for the blockchain daemon
+    let options = DaemonOptionsBuilder::default()
+        // or provide `chain_data`
+        .network(NETWORK)
+        .deployment_id(&quot;my_deployment_version&quot;)
+        .build()?;
+
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(network)?;
+    let (_, _sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
@@ -232,7 +242,11 @@ use my_contract::{QueryMsg};
 
 pub fn query_contract() -&gt; Result&lt;()&gt; {
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+    let options = DaemonOptionsBuilder::default()
+        .network(NETWORK)
+        .build()?;
+    let (_, _sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
@@ -258,7 +272,11 @@ use my_contract::{ExecuteMsg};
 
 pub fn execute_contract() -&gt; Result&lt;()&gt; {
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+    let options = DaemonOptionsBuilder::default()
+        .network(NETWORK)
+        .build()?;
+    let (_, _sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, &amp;chain);
@@ -284,7 +302,7 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../quick_start/ci-cd.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../integration-tests.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -298,7 +316,7 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../quick_start/ci-cd.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../integration-tests.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use boot_core::networks::LOCAL_JUNO;
+use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 
 use boot_core::prelude::*;
 
@@ -18,7 +18,13 @@ pub fn script() -> anyhow::Result<()> {
     // First we upload, instantiate and interact with a real chain
     let network = LOCAL_JUNO;
 
-    let (sender, chain) = instantiate_daemon_env(&rt, network)?;
+    let options = DaemonOptionsBuilder::default()
+        // or provide `chain_data`
+        .network(network)
+        .deployment_id("boot_showcase")
+        .build()?;
+
+    let (sender, chain) = instantiate_daemon_env(&rt, options)?;
     let mut token = Cw20::new(CW20_BASE, &chain);
     token.upload()?;
     token.test_generic(&sender)?;
