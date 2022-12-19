@@ -545,7 +545,7 @@ mod tst {
             "terravalconspub1zcjduepqpxp3kxmn8yty9eh8a0e6tasdna04q7zsl88u7dyup7fv7t06pl9q342a8t";
         let pk = PublicKey::from_tendermint_key(cons_pub_str)?;
         assert_eq!(cons_str, pk.tendermint(PREFIX)?);
-        assert_eq!(hex_str, hex::encode_upper(&pk.raw_address.unwrap()));
+        assert_eq!(hex_str, hex::encode_upper(pk.raw_address.unwrap()));
 
         let pk2 = PublicKey::from_tendermint_address(hex_str)?;
         assert_eq!(cons_str, &pk2.tendermint(PREFIX)?);

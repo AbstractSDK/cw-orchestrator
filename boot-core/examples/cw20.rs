@@ -1,4 +1,6 @@
-use boot_core::networks::LOCAL_JUNO;
+use std::sync::Arc;
+
+use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 
 use boot_core::prelude::*;
 
@@ -7,9 +9,22 @@ use cosmwasm_std::Addr;
 
 // Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+
+    // use the cosmos chain registry for gRPC url sources.
+    // let chain_data = rt.block_on( ChainData::fetch("juno".into(), None))?;
+    // let (sender, chain) = instantiate_daemon_env(&rt,chain_data)?;
+
     // First we upload, instantiate and interact with a real chain
     let network = LOCAL_JUNO;
-    let (_, sender, chain) = instantiate_daemon_env(network)?;
+
+    let options = DaemonOptionsBuilder::default()
+        // or provide `chain_data`
+        .network(network)
+        .deployment_id("boot_showcase")
+        .build()?;
+
+    let (sender, chain) = instantiate_daemon_env(&rt, options)?;
     let mut token = Cw20::new(CW20_BASE, &chain);
     token.upload()?;
     token.test_generic(&sender)?;

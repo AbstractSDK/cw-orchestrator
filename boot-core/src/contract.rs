@@ -42,7 +42,7 @@ where
     ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
-    /// CHecks the environment for the wasm dir configuration and returns the path to the wasm file
+    /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
     pub fn get_wasm_code_path(&self) -> Result<String, BootError> {
         let wasm_code_path = self
             .wasm_code_path
@@ -52,7 +52,11 @@ where
         let wasm_code_path = if wasm_code_path.contains(".wasm") {
             wasm_code_path.to_string()
         } else {
-            format!("{}/{}.wasm", env::var("WASM_DIR").unwrap(), wasm_code_path)
+            format!(
+                "{}/{}.wasm",
+                env::var("ARTIFACTS_DIR").unwrap(),
+                wasm_code_path
+            )
         };
 
         Ok(wasm_code_path)
@@ -107,6 +111,10 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
     pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
         self.source.contract_endpoints = Some(mock_contract);
         self
+    }
+
+    pub fn set_mock(&mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) {
+        self.source.contract_endpoints = Some(mock_contract);
     }
 
     /// Sets the address of the contract in the local state
