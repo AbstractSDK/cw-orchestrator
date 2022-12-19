@@ -55,7 +55,7 @@ First, we'll define a function that will deploy our contract to the chain. This 
 // scripts/src/my_contract.rs
 use anyhow::Result;
 use boot_core::networks;
-use boot_core::prelude::{instantiate_daemon_env, NetworkInfo};
+use boot_core::prelude::{instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
 // Traits for contract deployment
 use boot_core::interface::*;
 use interfaces::my_contract::MyContract;
@@ -65,8 +65,18 @@ const NETWORK: NetworkInfo = networks::juno::UNI_5;
 const CONTRACT_NAME: &str = "my-contract";
 
 pub fn deploy_contract() -> anyhow::Result<String> {
+    // Create a runtime for the asynchronous actions
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+
+    // Specify the options for the blockchain daemon
+    let options = DaemonOptionsBuilder::default()
+        // or provide `chain_data`
+        .network(NETWORK)
+        .deployment_id("my_deployment_version")
+        .build()?;
+
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(network)?;
+    let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, &chain);
@@ -98,7 +108,11 @@ use my_contract::{QueryMsg};
 
 pub fn query_contract() -> Result<()> {
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+    let options = DaemonOptionsBuilder::default()
+        .network(NETWORK)
+        .build()?;
+    let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, &chain);
@@ -123,7 +137,11 @@ use my_contract::{ExecuteMsg};
 
 pub fn execute_contract() -> Result<()> {
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(NETWORK)?;
+    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+    let options = DaemonOptionsBuilder::default()
+        .network(NETWORK)
+        .build()?;
+    let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, &chain);

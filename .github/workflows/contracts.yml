@@ -13,6 +13,8 @@ jobs:
   lint:
     name: Clippy Linter
     runs-on: self-hosted
+    container:
+        image: rust:latest
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v2
@@ -37,6 +39,8 @@ jobs:
   compile:
     name: Compile
     runs-on: self-hosted
+    container:
+        image: rust:latest
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v2

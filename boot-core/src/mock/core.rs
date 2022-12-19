@@ -10,7 +10,7 @@ use crate::{
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use super::mock_state::MockState;
+use super::state::MockState;
 
 pub fn instantiate_default_mock_env(
     sender: &Addr,
