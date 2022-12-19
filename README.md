@@ -44,8 +44,43 @@ You can now perform any action on the cw20 contract and implement custom actions
 
 We would recommend reading through [the full cw20 executable example here](boot-core/examples/cw20.rs).
 
-## Other features
+## Advanced features
 
+BOOT provides two additional macros that can be used to improve the scripting experience. 
+
+### ExecuteFns
+The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct itself. 
+
+Example:
+```
+#[cw_serde]
+#[derive(ExecuteFns)]
+pub enum ExecuteMsg{
+    /// Freeze will make a mutable contract immutable, must be called by an admin
+    Freeze {},
+    /// UpdateAdmins will change the admin set of the contract, must be called by an existing admin,
+    /// and only works if the contract is mutable
+    UpdateAdmins { admins: Vec<String> },
+    #[payable]
+    Deposit {}
+}
+
+#[boot_contract(Empty,ExecuteMsg,Empty,Empty)]
+struct Cw1
+
+impl<Chain: BootEnvironment + Clone> Cw1<Chain> {
+    pub fn test_macro(&self) {
+        self.freeze().unwrap();
+        self.update_admins(vec![]).unwrap(); 
+        self.deposit(&[Coin::new(13,"juno")]).unwrap();
+    }
+}
+```
+For nested execute messages see [this PR](https://github.com/Abstract-OS/BOOT/pull/40). 
+
+### QueryFns 
+
+The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryRespone)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
 # Contributing
 Feel free to open issues or PRs!
