@@ -37,6 +37,9 @@ pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     };
     let name = boot_struct.ident.clone();
     let struct_def = quote!(
+            #[derive(
+                ::std::clone::Clone,
+            )]
             pub struct #name<Chain: ::boot_core::BootEnvironment>(::boot_core::Contract<Chain>);
 
             impl<Chain: ::boot_core::BootEnvironment> ::boot_core::interface::ContractInstance<Chain> for #name<Chain> {

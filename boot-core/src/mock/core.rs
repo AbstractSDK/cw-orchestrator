@@ -6,7 +6,7 @@ use crate::{
     contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    BootError,
+    BootError, Contract,
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
@@ -198,5 +198,12 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     fn next_block(&self) -> Result<(), BootError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
+    }
+}
+
+impl Contract<Mock> {
+    pub fn set_sender(&mut self, sender: Addr) -> &mut Self {
+        self.chain.sender = sender;
+        self
     }
 }
