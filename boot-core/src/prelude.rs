@@ -1,6 +1,7 @@
 pub use crate::contract::Contract;
 pub use crate::daemon::{
     core::{instantiate_daemon_env, Daemon},
+    state::DaemonOptionsBuilder,
     tx_resp::CosmTxResponse,
 };
 pub use crate::index_response::IndexResponse;
@@ -12,4 +13,4 @@ pub use crate::mock::{
 };
 pub use crate::{BootEnvironment, BootError, TxResponse};
 pub use boot_contract_derive::boot_contract;
-pub use boot_fns_derive::ExecuteFns;
+pub use boot_fns_derive::{ExecuteFns, QueryFns};

@@ -7,7 +7,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.2.0-rc.1"
+version = "0.3.0"
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 license = "Apache-2.0"
@@ -17,7 +17,7 @@ repository = "https://github.com/Abstract-OS/BOOT"
 cosmwasm-std = { version = "1.1" }
 cw-multi-test = { version = "0.16.0"}
 anyhow = "1.0"
-boot-contract-derive = {path = "packages/boot-contract-derive", version = "0.2.0-rc.1"}
-boot-fns-derive = {path = "packages/boot-fns-derive", version = "0.2.0-rc.1"}
-boot-core ={path ="boot-core", version = "0.2.0-rc.1"}
+boot-contract-derive = {path = "packages/boot-contract-derive", version = "0.3.0"}
+boot-fns-derive = {path = "packages/boot-fns-derive", version = "0.3.0"}
+boot-core ={path ="boot-core", version = "0.3.0"}
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
