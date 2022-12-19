@@ -6,7 +6,7 @@ pub use crate::daemon::{
 };
 pub use crate::index_response::IndexResponse;
 pub use crate::interface::{
-    BootExecute, BootInstantiate, BootMigrate, BootQuery, BootUpload, ContractInstance,
+    BootExecute, BootInstantiate, BootMigrate, BootQuery, BootUpload, ContractInstance, CallAs
 };
 pub use crate::mock::{
     core::instantiate_custom_mock_env, core::instantiate_default_mock_env, core::Mock,
