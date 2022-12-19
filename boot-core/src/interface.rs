@@ -142,7 +142,6 @@ impl<T: ContractInstance<Chain>, Chain: BootEnvironment> BootUpload<Chain> for T
     }
 }
 
-
 pub trait CallAs: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone {
     fn call_as(&self, sender: &Addr) -> Self {
         let mut contract = self.clone();

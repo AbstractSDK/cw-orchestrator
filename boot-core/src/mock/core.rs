@@ -201,7 +201,6 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 }
 
-
 impl Contract<Mock> {
     pub fn set_sender(&mut self, sender: Addr) -> &mut Self {
         self.chain.sender = sender;
