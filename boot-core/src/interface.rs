@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{contract::Contract, error::BootError, BootEnvironment};
+use crate::{contract::Contract, error::BootError, BootEnvironment, Mock};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -141,3 +141,14 @@ impl<T: ContractInstance<Chain>, Chain: BootEnvironment> BootUpload<Chain> for T
         self.as_instance_mut().upload()
     }
 }
+
+
+pub trait CallAs: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone {
+    fn call_as(&self, sender: &Addr) -> Self {
+        let mut contract = self.clone();
+        contract.as_instance_mut().set_sender(sender.clone());
+        contract
+    }
+}
+
+impl<T: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone> CallAs for T {}
