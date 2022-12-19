@@ -68,7 +68,7 @@ pub enum ExecuteMsg{
 #[boot_contract(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1
 
-impl<Chain: BootEnvironment + Clone> Cw1<Chain> {
+impl<Chain: BootEnvironment> Cw1<Chain> {
     pub fn test_macro(&self) {
         self.freeze().unwrap();
         self.update_admins(vec![]).unwrap(); 
@@ -80,7 +80,7 @@ For nested execute messages see [this PR](https://github.com/Abstract-OS/BOOT/pu
 
 ### QueryFns 
 
-The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryRespone)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
+The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryResponse)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
 # Contributing
 Feel free to open issues or PRs!
