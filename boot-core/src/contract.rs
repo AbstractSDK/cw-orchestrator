@@ -19,12 +19,13 @@ use serde::{de::DeserializeOwned, Serialize};
 pub type StateReference<S> = Rc<RefCell<S>>;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
+#[derive(Clone)]
 pub struct Contract<Chain: BootEnvironment> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     pub(crate) source: ContractCodeReference,
     /// chain object that handles tx execution and queries.
-    chain: Chain,
+    pub(crate) chain: Chain,
 }
 
 #[derive(Default)]
@@ -35,6 +36,15 @@ where
 {
     pub wasm_code_path: Option<String>,
     pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
+}
+
+impl Clone for ContractCodeReference {
+    fn clone(&self) -> Self {
+        Self {
+            wasm_code_path: self.wasm_code_path.clone(),
+            contract_endpoints: None,
+        }
+    }
 }
 
 impl<ExecT, QueryT> ContractCodeReference<ExecT, QueryT>
