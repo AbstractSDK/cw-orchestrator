@@ -240,7 +240,7 @@ impl TxHandler for Daemon {
     }
 }
 
-fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, BootError> {
+pub(crate) fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, BootError> {
     coins
         .iter()
         .map(|cosmwasm_std::Coin { amount, denom }| {
