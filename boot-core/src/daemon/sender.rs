@@ -18,6 +18,7 @@ use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use crate::{error::BootError, keys::private::PrivateKey};
+use crate::daemon::core::parse_cw_coins;
 
 use super::{state::DaemonState, tx_resp::CosmTxResponse};
 
@@ -76,12 +77,12 @@ impl Sender<All> {
     pub async fn bank_send(
         &self,
         recipient: &str,
-        coins: Vec<Coin>,
+        coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, BootError> {
         let msg_send = MsgSend {
             from_address: self.pub_addr()?,
             to_address: AccountId::from_str(recipient)?,
-            amount: coins,
+            amount: parse_cw_coins(&coins)?,
         };
 
         self.commit_tx(vec![msg_send], Some("sending tokens")).await
