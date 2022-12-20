@@ -180,7 +180,7 @@ impl StateInterface for Rc<DaemonState> {
         let value = self
             .get(&self.deployment_id)
             .get(contract_id)
-            .ok_or_else(|| BootError::AddrNotInFile(contract_id.to_owned()))?
+            .ok_or_else(|| BootError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(Addr::unchecked(value.as_str().unwrap()))
     }
@@ -194,7 +194,7 @@ impl StateInterface for Rc<DaemonState> {
         let value = self
             .get("code_ids")
             .get(contract_id)
-            .ok_or_else(|| BootError::CodeIdNotInFile(contract_id.to_owned()))?
+            .ok_or_else(|| BootError::CodeIdNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(value.as_u64().unwrap())
     }
