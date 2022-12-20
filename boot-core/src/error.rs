@@ -100,3 +100,14 @@ pub enum BootError {
     #[error("new network detected, fill out the scaffold at {0}")]
     NewNetwork(String),
 }
+
+impl BootError {
+    pub fn root(&self) -> &dyn std::error::Error {
+        match self {
+            BootError::AnyError(e) => e.root_cause(),
+            _ => panic!("Unexpected error type"),
+        }
+    }
+}
+
+
