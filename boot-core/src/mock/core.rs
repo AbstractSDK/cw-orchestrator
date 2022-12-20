@@ -203,10 +203,12 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         });
         Ok(())
     }
-
     fn next_block(&self) -> Result<(), BootError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
+    }
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, BootError> {
+        Ok(self.app.borrow().block_info())
     }
 }
 
