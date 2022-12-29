@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li><li class="chapter-item expanded "><a href="integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li></ol></li><li class="chapter-item expanded "><a href="integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="advanced/ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -653,7 +653,73 @@ impl&lt;Chain: BootEnvironment&gt; MockMyContract&lt;Chain&gt; {
 </ul>
 </li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="cicd"><a class="header" href="#cicd">CI/CD</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="continuous-integration-and-deployment"><a class="header" href="#continuous-integration-and-deployment">Continuous Integration and Deployment</a></h1>
+<p>One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments. </p>
+<p>BOOT does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="advanced/interfaces.html">interfaces</a> can be found below:</p>
+<pre><code class="language-yaml"># .github/workflows/deploy.yml
+---
+name: Deploy Contracts  
+on:  
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
+  workflow_dispatch:  
+  push:  
+    branches: [ 'mainline' ]  
+    paths:  
+      - 'contracts/src/**/*.rs'  
+      - '.github/workflows/deploy.yml'  
+  
+env:
+  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
+  STATE_FILE: &quot;./daemon_state.json&quot;  
+  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;  
+  SCHEMA_DIR: &quot;./schema&quot;  
+  
+jobs:  
+  deploy:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v3  
+      - uses: actions-rs/toolchain@v1  
+        with:  
+          toolchain: nightly  
+          target: wasm32-unknown-unknown  
+          override: true  
+      - name: Run cargo wasm  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: build  
+          args: --package counter-app --release --target wasm32-unknown-unknown  
+        env:  
+          RUSTFLAGS: '-C link-arg=-s'  
+
+      - name: Run deployment script  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: run  
+          args: --package scripts --bin deploy_app  
+        env:  
+          CHAIN: &quot;juno&quot;  
+          DEPLOYMENT: &quot;debugging&quot;  
+          NETWORK: &quot;local&quot;  
+          RUST_LOG: info  
+          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}  
+          STATE_FILE: ${{ env.STATE_FILE }}  
+  
+          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
+          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  
+
+      - name: Upload deployment daemon state  
+        uses: actions/upload-artifact@v2  
+        with:  
+          name: deployment.json  
+          path: ${{ env.STATE_FILE }}  
+      - name: Upload WASM  
+        uses: actions/upload-artifact@v2  
+        with:  
+          # TODO: name env or from cargo  
+          name: counter_app.wasm  
+          path: ${{ env.ARTIFACTS_DIR }}/counter_app.wasm
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
 <p>Find an issue you want to work on? Great! Feel free to open a PR and we'll review it as soon as possible.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="references-1"><a class="header" href="#references-1">References</a></h1>

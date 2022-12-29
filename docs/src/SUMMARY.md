@@ -7,6 +7,6 @@
   - [Scripting](./quick_start/scripting.md)
 - [Integration Tests](integration-tests.md)
 - [Advanced](./advanced/index.md)
-  - [CI/CD](ci-cd.md)
+  - [CI/CD](./advanced/ci-cd.md)
 - [Contributing](contributing.md)
 - [References](references.md)
