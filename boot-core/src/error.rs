@@ -46,6 +46,9 @@ pub enum BootError {
     #[error(transparent)]
     ErrReport(#[from] ::eyre::ErrReport),
     #[error(transparent)]
+    GRpcDecodeError(#[from] ::prost::DecodeError),
+
+    #[error(transparent)]
     ED25519(#[from] ::ed25519_dalek::ed25519::Error),
     #[error(transparent)]
     DecodeError(#[from] ::base64::DecodeError),

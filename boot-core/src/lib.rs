@@ -47,6 +47,7 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::slashing::v1beta1 as slashing;
     pub use cosmrs::proto::cosmos::staking::v1beta1 as staking;
     pub use cosmrs::proto::cosmos::tx::v1beta1 as tx;
+    pub use cosmrs::proto::cosmos::vesting::v1beta1 as vesting;
     pub use cosmrs::proto::cosmwasm::wasm::v1 as cosmwasm;
     pub use cosmrs::proto::tendermint::abci as tendermint_abci;
 }
