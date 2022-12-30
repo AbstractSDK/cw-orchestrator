@@ -141,12 +141,12 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         msg: &E,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("Executing {:#?} on {}",msg, self.id);
-        let resp = self.chain
+        log::info!("Executing {:#?} on {}", msg, self.id);
+        let resp = self
+            .chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?);
         log::debug!("execute response: {:?}", resp);
         resp
-        
     }
 
     pub fn instantiate<I: Serialize + Debug>(
