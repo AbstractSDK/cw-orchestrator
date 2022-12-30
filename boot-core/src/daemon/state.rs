@@ -53,6 +53,9 @@ impl DaemonState {
         // find working grpc channel
 
         let mut successful_connections = vec![];
+
+        log::debug!("Found {} gRPC endpoints", network.apis.grpc.len());
+
         for grpc in network.apis.grpc.iter() {
             let endpoint = Channel::builder(grpc.address.clone().try_into().unwrap());
             let maybe_client = ServiceClient::connect(endpoint.clone()).await;
@@ -63,11 +66,15 @@ impl DaemonState {
                 .get_node_info(GetNodeInfoRequest {})
                 .await?
                 .into_inner();
+
             if node_info.default_node_info.as_ref().unwrap().network != network.chain_id.as_str() {
+                log::error!(
+                    "Network mismatch: connection:{} != config:{}",
+                    node_info.default_node_info.as_ref().unwrap().network,
+                    network.chain_id.as_str()
+                );
                 continue;
             }
-
-            log::error!("{:?}", node_info.default_node_info.unwrap());
             successful_connections.push(endpoint.connect().await?)
         }
 
@@ -75,12 +82,10 @@ impl DaemonState {
             return Err(BootError::StdErr("No active grpc endpoint found.".into()));
         }
 
-        log::error!("{:?}", successful_connections[0]);
-
         let mut path = env::var("STATE_FILE").unwrap();
         if network.network_type == NetworkKind::Local.to_string() {
             let name = path.split('.').next().unwrap();
-            path = format!("{}_local.json", name);
+            path = format!("{}_local.json ", name);
         }
 
         // Try to get the standard fee token (probably shortest denom)

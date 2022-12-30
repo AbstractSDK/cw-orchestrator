@@ -141,9 +141,12 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         msg: &E,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("executing {}", self.id);
-        self.chain
-            .execute(msg, coins.unwrap_or(&[]), &self.address()?)
+        log::info!("Executing {:#?} on {}",msg, self.id);
+        let resp = self.chain
+            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
+        log::debug!("execute response: {:?}", resp);
+        resp
+        
     }
 
     pub fn instantiate<I: Serialize + Debug>(
@@ -152,7 +155,7 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("instantiating {}", self.id);
+        log::info!("Instantiating {} with msg {:#?}", self.id, msg);
         let resp = self.chain.instantiate(
             self.code_id()?,
             msg,
@@ -162,26 +165,27 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         )?;
         let contract_address = resp.instantiated_contract_address()?;
         self.set_address(&contract_address);
-        log::debug!("instantiate response: {:#?}", resp);
+        log::debug!("Instantiate response: {:?}", resp);
         Ok(resp)
     }
 
     pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("uploading {}", self.id);
+        log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(&mut self.source)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
-        log::debug!("upload response: {:#?}", resp);
-
+        log::debug!("Upload response: {:?}", resp);
         Ok(resp)
     }
 
-    pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
     ) -> Result<T, BootError> {
-        log::debug!("Querying {:#?} on {}", query_msg, self.address()?);
-        self.chain.query(query_msg, &self.address()?)
+        log::info!("Querying {:#?} on {}", query_msg, self.id);
+        let resp = self.chain.query(query_msg, &self.address()?)?;
+        log::debug!("Query response: {:?}", resp);
+        Ok(resp)
     }
 
     pub fn migrate<M: Serialize + Debug>(
@@ -189,6 +193,7 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         migrate_msg: &M,
         new_code_id: u64,
     ) -> Result<TxResponse<Chain>, BootError> {
+        log::info!("Migrating {:?} to code_id {}", self.id, new_code_id);
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
     }
