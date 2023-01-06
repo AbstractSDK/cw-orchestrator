@@ -30,7 +30,7 @@ TxResponse<Chain>: IndexResponse,
         )).with_wasm_path(file_path))
     }
 
-    // Find a way to generate these functions with a macro!!! 
+    // If you have access to the msgs these can be generated for you with a macro!
     pub fn send(
         &self,
         msg: Binary,
@@ -104,67 +104,3 @@ TxResponse<Chain>: IndexResponse,
         Ok(())
     }
 }
-
-// fn upload_token<Chain>(token: Cw20<Chain>) -> anyhow::Result<()>
-// where
-// Chain: BootEnvironment + Clone,
-// <Chain as TxHandler>::Response : IndexResponse,
-// Cw20<Chain>: ContractSource
-// {
-//     token.upload(get_source(&token))?;
-//     Ok(())
-// }
-
-// impl <S:StateInterface>Cw20<Mock<S>>
-// {
-//     pub fn source(&self) -> ContractCodeReference<Empty> {
-//         let cw20_token_contract = Box::new(ContractWrapper::new_with_empty(
-//             cw20_base::contract::execute,
-//             cw20_base::contract::instantiate,
-//             cw20_base::contract::query,
-//         ));
-//         ContractCodeReference::ContractEndpoints(cw20_token_contract)
-//     }
-// }
-
-// impl<Chain: TxRe> CW20<Chain> {
-//     /// Send tokens to a contract allong with a contract call
-//     pub async fn send(
-//         &self,
-//         msg: Binary,
-//         amount: u128,
-//         contract: String,
-//     ) -> Result<CosmTxResponse, BootError> {
-//         let msg = ExecuteMsg::Send {
-//             contract,
-//             amount: Uint128::new(amount),
-//             msg,
-//         };
-
-//         self.exec(&msg, None).await
-//     }
-
-//     /// Instantiate a new token instance with some initial balance given to the minter
-//     pub async fn create_new<T: Into<Uint128>>(
-//         &self,
-//         minter: String,
-//         balance: T,
-//     ) -> Result<CosmTxResponse, BootError> {
-//         let msg = InstantiateMsg {
-//             decimals: 6,
-//             mint: Some(MinterResponse {
-//                 cap: None,
-//                 minter: minter.clone(),
-//             }),
-//             symbol: self.as_instance().name.to_ascii_uppercase(),
-//             name: self.as_instance().name.to_string(),
-//             initial_balances: vec![Cw20Coin {
-//                 address: minter.clone(),
-//                 amount: balance.into(),
-//             }],
-//             marketing: None,
-//         };
-
-//         self.init(msg, Some(minter), None).await
-//     }
-// }
