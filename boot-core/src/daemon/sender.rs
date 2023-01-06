@@ -17,8 +17,8 @@ use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
 use tokio::time::sleep;
 use tonic::transport::Channel;
 
-use crate::{error::BootError, keys::private::PrivateKey};
 use crate::daemon::core::parse_cw_coins;
+use crate::{error::BootError, keys::private::PrivateKey};
 
 use super::{state::DaemonState, tx_resp::CosmTxResponse};
 
@@ -155,8 +155,20 @@ impl Sender<All> {
             .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
             .await?
             .into_inner();
+        log::debug!("base account query response: {:?}", resp);
 
-        let acc: BaseAccount = BaseAccount::decode(resp.account.unwrap().value.as_ref()).unwrap();
+        let account = resp.account.unwrap().value;
+
+        let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
+            acc
+        } else {
+            // try vesting account, (used by Terra2)
+            use cosmos_modules::vesting::PeriodicVestingAccount;
+            let acc = PeriodicVestingAccount::decode(account.as_ref()).map_err(|_| {
+                BootError::StdErr("Unknown account type returned from QueryAccountRequest".into())
+            })?;
+            acc.base_vesting_account.unwrap().base_account.unwrap()
+        };
         Ok(acc)
     }
 
