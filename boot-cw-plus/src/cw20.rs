@@ -14,7 +14,7 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
         Self(
-            Contract::new(id, chain)
+            Contract::new(id, chain.clone())
                 .with_mock(Box::new(ContractWrapper::new_with_empty(
                     cw20_base::contract::execute,
                     cw20_base::contract::instantiate,
