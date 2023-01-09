@@ -165,6 +165,7 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         )?;
         let contract_address = resp.instantiated_contract_address()?;
         self.set_address(&contract_address);
+        log::info!("Instantiated {} with address {}", self.id, contract_address);
         log::debug!("Instantiate response: {:?}", resp);
         Ok(resp)
     }
@@ -174,6 +175,7 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         let resp = self.chain.upload(&mut self.source)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
+        log::info!("uploaded {} with code id {}", self.id, code_id);
         log::debug!("Upload response: {:?}", resp);
         Ok(resp)
     }
