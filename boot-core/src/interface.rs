@@ -22,7 +22,7 @@ pub trait ContractInstance<Chain: BootEnvironment> {
     fn set_code_id(&self, code_id: u64) {
         Contract::set_code_id(self.as_instance(), code_id)
     }
-    fn get_chain(&self) -> Chain {
+    fn get_chain(&self) -> &Chain {
         Contract::get_chain(self.as_instance())
     }
 }

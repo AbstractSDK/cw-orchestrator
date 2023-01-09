@@ -100,17 +100,17 @@ where
 
 /// Expose chain and state function to call them on the contract
 impl<Chain: BootEnvironment + Clone> Contract<Chain> {
-    pub fn new(id: impl ToString, chain: &Chain) -> Self {
+    pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),
-            chain: chain.clone(),
+            chain,
             source: ContractCodeReference::default(),
         }
     }
 
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
-    pub fn get_chain(&self) -> Chain {
-        self.chain.clone()
+    pub fn get_chain(&self) -> &Chain {
+        &self.chain
     }
 
     pub fn with_wasm_path(mut self, path: impl ToString) -> Self {
