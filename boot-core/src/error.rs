@@ -87,16 +87,25 @@ pub enum BootError {
     #[error("Generic Error {0}")]
     StdErr(String),
 
-    #[error("Contract address for {0} not found in file")]
-    AddrNotInFile(String),
-    #[error("Code id for {0} not found in file")]
-    CodeIdNotInFile(String),
-    #[error("Checksum for {0} not found in file")]
-    ChecksumNotInFile(String),
+    #[error("Contract address for {0} not found in store")]
+    AddrNotInStore(String),
+    #[error("Code id for {0} not found in store")]
+    CodeIdNotInStore(String),
+    #[error("Checksum for {0} not found in store")]
+    ChecksumNotInStore(String),
     #[error("calling contract with unimplemented action")]
     NotImplemented,
     #[error("new chain detected, fill out the scaffold at {0}")]
     NewChain(String),
     #[error("new network detected, fill out the scaffold at {0}")]
     NewNetwork(String),
+}
+
+impl BootError {
+    pub fn root(&self) -> &dyn std::error::Error {
+        match self {
+            BootError::AnyError(e) => e.root_cause(),
+            _ => panic!("Unexpected error type"),
+        }
+    }
 }

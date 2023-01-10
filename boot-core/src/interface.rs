@@ -13,6 +13,9 @@ pub trait ContractInstance<Chain: BootEnvironment> {
     fn address(&self) -> Result<Addr, BootError> {
         Contract::address(self.as_instance())
     }
+    fn addr_str(&self) -> Result<String, BootError> {
+        Contract::address(self.as_instance()).map(|addr| addr.into_string())
+    }
     fn code_id(&self) -> Result<u64, BootError> {
         Contract::code_id(self.as_instance())
     }
