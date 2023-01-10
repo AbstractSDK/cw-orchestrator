@@ -1,5 +1,5 @@
 use crate::{contract::ContractCodeReference, state::ChainState, BootError, IndexResponse};
-use cosmwasm_std::{Addr, Coin, Empty, BlockInfo};
+use cosmwasm_std::{Addr, BlockInfo, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 // Functions that are callable on the cosmwasm chain/mock
