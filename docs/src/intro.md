@@ -1,5 +1,5 @@
-# BOOT Guide (v0.5.0)
+# BOOT (v0.5.0)
 
-Once you have written your CosmWasm smart contract, you are probably ready to start writing integration tests or deploy it to a live network. Doing this through a frontend interface or CLI tool is laborious and error-prone.
+BOOT is a testing and deployment tool for CosmWasm smart-contracts. It features execute and query endpoint function generation, network-agnostic transaction execution and a mock environment wrapper for complex multi-contract testing scenarios.  
 
-[BOOT](https://github.com/Abstract-OS/BOOT) (by [Abstract](https://abstract.money)) simplifies all of this by providing a type-safe library and standard for deploying and interacting with your CosmWasm smart contracts.
+These docs will run you through the setup and directory layout, letting you reliably interact with your contracts in minutes.
