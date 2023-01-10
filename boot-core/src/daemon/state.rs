@@ -82,7 +82,7 @@ impl DaemonState {
             return Err(BootError::StdErr("No active grpc endpoint found.".into()));
         }
 
-        let mut path = env::var("STATE_FILE").unwrap();
+        let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");
         if network.network_type == NetworkKind::Local.to_string() {
             let name = path.split('.').next().unwrap();
             path = format!("{}_local.json ", name);
@@ -310,7 +310,7 @@ pub enum NetworkKind {
 
 impl NetworkKind {
     pub fn new() -> Result<Self, BootError> {
-        let network_id = env::var("NETWORK")?;
+        let network_id = env::var("NETWORK").expect("NETWORK is not set");
         let network = match network_id.as_str() {
             "testnet" => NetworkKind::Testnet,
             "mainnet" => NetworkKind::Mainnet,
