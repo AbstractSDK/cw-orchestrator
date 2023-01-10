@@ -15,7 +15,6 @@ fn main() {
             .skip(1)
             .for_each(|cause| log::error!("because: {}", cause));
 
-        log::error!("Ensure your environment variables are set!");
         ::std::process::exit(1);
     }
 }
