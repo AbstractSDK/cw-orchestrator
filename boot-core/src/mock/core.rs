@@ -41,10 +41,15 @@ pub struct Mock<S: StateInterface = MockState> {
 
 impl<S: StateInterface> Mock<S> {
     /// set the Bank balance of an address
-    pub fn init_balance(&self, address: &Addr, amount: Vec<cosmwasm_std::Coin>) -> Result<(), BootError> {
-        self.app.borrow_mut().init_modules(|router, _, storage| {
-            router.bank.init_balance(storage, address, amount)
-        }).map_err(Into::into)
+    pub fn init_balance(
+        &self,
+        address: &Addr,
+        amount: Vec<cosmwasm_std::Coin>,
+    ) -> Result<(), BootError> {
+        self.app
+            .borrow_mut()
+            .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
+            .map_err(Into::into)
     }
 }
 
