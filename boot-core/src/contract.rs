@@ -64,7 +64,7 @@ where
         } else {
             format!(
                 "{}/{}.wasm",
-                env::var("ARTIFACTS_DIR").unwrap(),
+                env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set"),
                 wasm_code_path
             )
         };
