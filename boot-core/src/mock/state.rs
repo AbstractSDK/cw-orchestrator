@@ -30,7 +30,7 @@ impl StateInterface for MockState {
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError> {
         self.addresses
             .get(contract_id)
-            .ok_or_else(|| BootError::AddrNotInFile(contract_id.to_owned()))
+            .ok_or_else(|| BootError::AddrNotInStore(contract_id.to_owned()))
             .map(|val| val.to_owned())
     }
 
@@ -43,7 +43,7 @@ impl StateInterface for MockState {
     fn get_code_id(&self, contract_id: &str) -> Result<u64, BootError> {
         self.code_ids
             .get(contract_id)
-            .ok_or_else(|| BootError::CodeIdNotInFile(contract_id.to_owned()))
+            .ok_or_else(|| BootError::CodeIdNotInStore(contract_id.to_owned()))
             .map(|val| val.to_owned())
     }
     /// Set the locally-saved version of the contract's latest version on this network

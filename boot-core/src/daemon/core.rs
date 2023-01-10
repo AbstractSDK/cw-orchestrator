@@ -8,6 +8,7 @@ use std::{
 
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
+    tendermint::Time,
     AccountId, Denom,
 };
 
@@ -237,6 +238,19 @@ impl TxHandler for Daemon {
                 .block_on(DaemonQuerier::block_height(channel.clone()))?;
         }
         Ok(())
+    }
+
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, BootError> {
+        let block = self
+            .runtime
+            .block_on(DaemonQuerier::latest_block(self.sender.channel()))?;
+        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
+        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
+        Ok(cosmwasm_std::BlockInfo {
+            height: block.header.height.value(),
+            time,
+            chain_id: block.header.chain_id.to_string(),
+        })
     }
 }
 

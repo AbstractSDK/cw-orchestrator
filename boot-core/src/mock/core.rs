@@ -40,6 +40,20 @@ pub struct Mock<S: StateInterface = MockState> {
 }
 
 impl<S: StateInterface> Mock<S> {
+    /// set the Bank balance of an address
+    pub fn init_balance(
+        &self,
+        address: &Addr,
+        amount: Vec<cosmwasm_std::Coin>,
+    ) -> Result<(), BootError> {
+        self.app
+            .borrow_mut()
+            .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
+            .map_err(Into::into)
+    }
+}
+
+impl<S: StateInterface> Mock<S> {
     pub fn new(
         sender: &Addr,
         state: &Rc<RefCell<S>>,
@@ -194,10 +208,12 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         });
         Ok(())
     }
-
     fn next_block(&self) -> Result<(), BootError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
+    }
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, BootError> {
+        Ok(self.app.borrow().block_info())
     }
 }
 
