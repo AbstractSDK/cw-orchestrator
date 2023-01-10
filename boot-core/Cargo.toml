@@ -14,9 +14,6 @@ exclude = [
     ".env",
 ]
 
-[features]
-staking = ["cw-multi-test/staking"]
-
 [[example]]
 name = "cw20"
 
