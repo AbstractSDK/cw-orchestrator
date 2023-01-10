@@ -2,8 +2,10 @@
 
 Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.
 
-### Setup
+## Setup
+
 Like before, we're going to setup a new folder for our scripts. This time, we'll call it `scripts` and initialize it as a binary crate:
+
 ```bash
 cargo init --bin scripts
 ```
@@ -11,19 +13,23 @@ cargo init --bin scripts
 > If your cargo project is a workspace, be sure to add `scripts` to the [workspace].members array at the workspace root.
 
 Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:
+
 ```bash
 cargo add --path ../interfaces
 ```
+
 and also add the `anyhow` and `dotenv` crates:
+
 ```bash
 cargo add anyhow dotenv log
 ```
 
+## Main Function
 
-### Main Function
 Now that we have our dependencies setup, we can start writing our script. Either create a new file in the `src` directory of the `scripts/src` package, or use the `main.rs` file that was created by default.
 
 This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:
+
 ```rust
 fn main() {
     dotenv().ok();
@@ -48,8 +54,9 @@ fn main() {
 }
 ```
 
-### Deployment Function
-First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a `Result` with the contract address. 
+## Deployment Function
+
+First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a `Result` with the contract address.
 
 ```rust
 // scripts/src/my_contract.rs
@@ -79,7 +86,7 @@ pub fn deploy_contract() -> anyhow::Result<String> {
     let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, &chain);
+    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
     // Upload your contract
     contract.upload()?;
 
@@ -97,9 +104,11 @@ pub fn deploy_contract() -> anyhow::Result<String> {
 ```
 
 ### Additional Scripts
+
 So you have your contract deployed, but what now? You can write additional scripts to interact with your contract. For example, you can write a script to query the contract state, or to execute a contract method.
 
 Here's an example of a script that queries the contract state:
+
 ```rust
 // scripts/src/my_contract.rs
 // use ...
@@ -115,7 +124,7 @@ pub fn query_contract() -> Result<()> {
     let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, &chain);
+    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
     // Load the contract address (this will use the address set from the previous deploy script)
     let contract_addr = contract.address();
     // Query the contract
@@ -129,6 +138,7 @@ pub fn query_contract() -> Result<()> {
 ```
 
  And one that executes a contract method:
+
 ```rust
 // scripts/src/my_contract.rs
 // use ...
@@ -144,7 +154,7 @@ pub fn execute_contract() -> Result<()> {
     let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, &chain);
+    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
     // Load the contract address (this will use the address set from the previous deploy script)
     let contract_addr = contract.address();
     // Execute a contract method

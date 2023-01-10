@@ -57,15 +57,15 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
     /// Construct a new instance of MyContract
     /// * `contract_id` - what your contract should be called in local state (*not* on-chain)
     /// * `chain` - the environment to deploy to
-    pub fn new(contract_id: &str, chain: &Chain) -> Self {
+    pub fn new(contract_id: &str, chain: Chain) -> Self {
         // Use an absolute path
         let wasm_path = "../../target/wasm32-unknown-unknown/release/my-contract.wasm";
        // OR give the contract name and set the ARTIFACTS_DIR environment variable to the artifacts folder
        let wasm_path = "my-contract";
         Self(
             Contract::new(contract_id, chain)
-	            .with_wasm_path(wasm_path),
-	            // Mocked environments are also available and can be used for integartion testing... See Integration Testing
+            .with_wasm_path(wasm_path),
+            // Mocked environments are also available and can be used for integartion testing... See Integration Testing
         )
     }
 }
@@ -73,8 +73,8 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
 
 > See [Integration Testing](../integration-tests.md) for details on using mocks for integration testing.
 
-Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`. 
-This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file. 
+Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`.  
+This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file.
 
 Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the [CosmWasm documentation on compiling your contract](https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/) for more information.
 
@@ -127,14 +127,14 @@ impl MyContract<Mock> {
 
 ### Endpoint function generation
 
-We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs. 
+We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs.
+> You will want to feature-flag the function generation to prevent BOOT entering as a dependency when building your contract.
 
 Here's an example:
 
 ```rust
-
 #[cw_serde]
-#[derive(ExecuteFns)]
+#[cfg_attr(feature = "boot", derive(boot_core::ExecuteFns))]
 pub enum ExecuteMsg{
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
@@ -149,19 +149,51 @@ pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
 impl<Chain: BootEnvironment + Clone> MyContract<Chain> {
-    pub fn test_macro(&self) {
-        self.freeze().unwrap();
-        self.update_admins(vec![]).unwrap(); 
-        self.deposit(&[Coin::new(13,"juno")]).unwrap();
+    pub fn test_macro(&self) -> Result<(),BootError> {
+        self.freeze()?;
+        self.update_admins(vec![])?; 
+        self.deposit(&[Coin::new(13,"juno")])?;
+        Ok(())
+    }
+}
+```
+
+Generating query functions is a similar process but has the added advantage of using the `cosmwasm-schema` return tags to expect the correct return type.
+
+```rust
+#[cosmwasm_schema::cw_serde]
+#[derive(QueryResponses)]
+#[cfg_attr(feature = "boot", derive(boot_core::QueryFns))]
+pub enum QueryMsg {
+    /// Returns [`InfoResponse`]
+    #[returns(InfoResponse)]
+    Info {},
+}
+
+#[cosmwasm_schema::cw_serde]
+pub struct InfoResponse {
+    pub admin: Addr,
+}
+
+// If we now define a BOOTable contract with this execute message
+#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MyContract<Chain>;
+
+// Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
+impl<Chain: BootEnvironment + Clone> MyContract<Chain> {
+    pub fn test_macro(&self) -> Result<(),BootError> {
+        // No need to specify returned type!
+        let info = self.info()?;
+        let admin: Addr = info.admin;
+        Ok(())
     }
 }
 
 ```
 
-Support for queries is in the pipeline. 
-
 #### Refinement
-You can also refine your contract interface manually to make it easier to use. For example, you can create a function that will execute a specific contract method and return the result, instead of having to call `contract.execute` and `contract.query` separately. 
+
+You can also refine your contract interface manually to add more complex interactions.
 
 ```rust
 // interfaces/src/my_contract.rs
@@ -170,7 +202,7 @@ use boot_core::interface::*;
 // ...
 
 impl<Chain: BootEnvironment> MyContract<Chain> {
-    pub fn new(contract_id: &str, chain: &Chain) -> Self {
+    pub fn new(contract_id: &str, chain: Chain) -> Self {
       // ...
     }
 
@@ -196,11 +228,12 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
 ```
 
 ## Learn more
+
 Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#boot` channel.
 Learn more about Abstract at [abstract.money](https://abstract.money).
 
 ## References
+
 - [Boot Core](https://crates.io/crates/boot-core)
 - [Boot Cw-plus](https://crates.io/crates/boot-cw-plus)
 - [Abstract Contract Interfaces](https://crates.io/crates/abstract-boot)
-
