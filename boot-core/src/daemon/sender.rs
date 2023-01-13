@@ -47,12 +47,13 @@ impl Sender<All> {
             PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
-
-        Ok(Sender {
+        let sender = Sender {
             daemon_state: daemon_state.clone(),
             private_key: cosmos_private_key,
             secp,
-        })
+        };
+        log::info!("Interacting with {} using address: {}",daemon_state.id,sender.pub_addr_str()?);
+        Ok(sender)
     }
     pub(crate) fn pub_addr(&self) -> Result<AccountId, BootError> {
         Ok(self
@@ -128,7 +129,7 @@ impl Sender<All> {
         log::debug!("{:?}", sim_gas_used);
 
         let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
-        let amount_to_pay = gas_expected * self.daemon_state.gas_price;
+        let amount_to_pay = gas_expected * (self.daemon_state.gas_price + 0.00001);
         log::debug!("gas fee: {:?}", amount_to_pay);
         let amount = Coin {
             amount: (amount_to_pay as u64).into(),
