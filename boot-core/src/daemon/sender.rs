@@ -37,7 +37,10 @@ impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, BootError> {
         let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP
-        let mnemonic = env::var(daemon_state.kind.mnemonic_name())?;
+        let mnemonic = env::var(daemon_state.kind.mnemonic_name()).expect(&format!(
+            "Wallet mnemonic environment variable {} not set.",
+            daemon_state.kind.mnemonic_name()
+        ));
 
         // use deployment mnemonic if specified, else use default network mnemonic
         let p_key: PrivateKey =
@@ -195,16 +198,19 @@ async fn find_by_hash(
     client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
     hash: String,
 ) -> Result<CosmTxResponse, BootError> {
-    let attempts = 20;
+    let attempts = 5;
     let request = cosmos_modules::tx::GetTxRequest { hash };
     for _ in 0..attempts {
-        if let Ok(tx) = client.get_tx(request.clone()).await {
-            let resp = tx.into_inner().tx_response.unwrap();
-
-            log::debug!("{:?}", resp);
-            return Ok(resp.into());
-        }
-        sleep(Duration::from_secs(10)).await;
+        let query_attempt = client.get_tx(request.clone()).await;
+        let Ok(tx) = query_attempt else {
+            log::debug!("tx not found with error: {:?}", query_attempt.unwrap_err());
+            log::debug!("Waiting 10s");
+            sleep(Duration::from_secs(10)).await;
+            continue;
+        };
+        let resp = tx.into_inner().tx_response.unwrap();
+        log::debug!("{:?}", resp);
+        return Ok(resp.into());
     }
     panic!("couldn't find transaction after {} attempts!", attempts);
 }
