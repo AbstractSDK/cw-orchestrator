@@ -11,10 +11,10 @@ pub mod state;
 mod tx_handler;
 
 // pub mod traits;
-pub use daemon::networks;
 pub use boot_contract_derive::boot_contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
+pub use daemon::networks;
 pub use daemon::{
     core::Daemon,
     state::{DaemonOptions, DaemonOptionsBuilder},

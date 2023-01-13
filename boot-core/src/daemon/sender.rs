@@ -52,7 +52,11 @@ impl Sender<All> {
             private_key: cosmos_private_key,
             secp,
         };
-        log::info!("Interacting with {} using address: {}",daemon_state.id,sender.pub_addr_str()?);
+        log::info!(
+            "Interacting with {} using address: {}",
+            daemon_state.id,
+            sender.pub_addr_str()?
+        );
         Ok(sender)
     }
     pub(crate) fn pub_addr(&self) -> Result<AccountId, BootError> {
