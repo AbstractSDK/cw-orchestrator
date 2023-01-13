@@ -1,18 +1,17 @@
 mod contract;
 mod daemon;
 mod error;
-mod helpers;
 mod index_response;
 ///
 pub mod interface;
 mod keys;
 mod mock;
-pub mod networks;
 pub mod prelude;
 pub mod state;
 mod tx_handler;
 
 // pub mod traits;
+pub use daemon::networks;
 pub use boot_contract_derive::boot_contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
@@ -21,7 +20,6 @@ pub use daemon::{
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
 pub use error::BootError;
-pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
 pub use mock::{core::Mock, state::MockState};
 pub use tx_handler::{TxHandler, TxResponse};
