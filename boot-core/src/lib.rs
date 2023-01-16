@@ -9,6 +9,7 @@ mod mock;
 pub mod prelude;
 pub mod state;
 mod tx_handler;
+pub mod deploy;
 
 // pub mod traits;
 pub use boot_contract_derive::boot_contract;
