@@ -24,6 +24,6 @@ use crate::{BootError, BootEnvironment};
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: BootEnvironment>: Sized {
     type Error: From<BootError>;
-    /// Deploy the application to the mockchain.
-    fn deploy_on(chain: Chain) -> Result<Self, Self::Error>;
+    /// Deploy the application to the chain.
+    fn deploy_on(chain: Chain, version: impl Into<String>) -> Result<Self, Self::Error>;
 }
