@@ -8,14 +8,16 @@ use crate::{BootError, BootEnvironment};
 /// use boot_core::mock::deploy::Deploy;
 /// 
 /// pub struct MyApplication<Chain: BootEnvironment> {
-///   pub chain: Chain,
 ///   pub token: Cw20<Chain>
 /// }
 /// 
 /// impl Deploy for MyApplication<Mock> {
-///     fn deploy(&mut self) -> Result<(), Error> {
-///        self.token.upload()?;
-///        self.token.instantiate(...)?;
+///     type Error = BootError;
+///     fn deploy_on(chain: Chain, version: impl Into<String>) -> Result<Self, BootError> {
+///         let token = Cw20::new("my-token", chain.clone());
+///         self.token.upload()?;
+///         self.token.instantiate(...)?;
+///         Ok(Self { token })
 ///     }
 /// }
 /// ```
