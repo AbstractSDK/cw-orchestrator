@@ -108,6 +108,11 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         }
     }
 
+    // Returns the contract id
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
     pub fn get_chain(&self) -> &Chain {
         &self.chain
