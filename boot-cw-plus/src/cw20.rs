@@ -2,7 +2,7 @@ use boot_core::prelude::*;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use cw_multi_test::ContractWrapper;
 
-use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
+use cw20::{BalanceResponse, Cw20Coin, MinterResponse, Expiration};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
@@ -85,6 +85,20 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
         let msg = ExecuteMsg::Mint {
             recipient: recipient.into(),
             amount: Uint128::new(amount),
+        };
+        self.execute(&msg, None)
+    }
+
+    pub fn increase_allowance(
+        &self,
+        spender: impl Into<String>,
+        amount: u128,
+        expires: Option<Expiration>,
+    ) -> Result<TxResponse<Chain>, BootError> {
+        let msg = ExecuteMsg::IncreaseAllowance {
+            spender: spender.into(),
+            amount: Uint128::new(amount),
+            expires,
         };
         self.execute(&msg, None)
     }
