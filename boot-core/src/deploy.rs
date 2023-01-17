@@ -13,7 +13,8 @@ use crate::{BootError, BootEnvironment};
 /// 
 /// impl Deploy for MyApplication<Mock> {
 ///     type Error = BootError;
-///     fn deploy_on(chain: Chain, version: impl Into<String>) -> Result<Self, BootError> {
+///     type DeployData = Empty;
+///     fn deploy_on(chain: Chain, data: Empty) -> Result<R, BootError> {
 ///         let token = Cw20::new("my-token", chain.clone());
 ///         self.token.upload()?;
 ///         self.token.instantiate(...)?;
@@ -26,6 +27,10 @@ use crate::{BootError, BootEnvironment};
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: BootEnvironment>: Sized {
     type Error: From<BootError>;
+    /// Data required to deploy the application.
+    type DeployData;
     /// Deploy the application to the chain.
-    fn deploy_on(chain: Chain, version: impl Into<String>) -> Result<Self, Self::Error>;
+    fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error>;
+    /// Load the application from the chain, assuming it has already been deployed.
+    fn load_from(chain: &Chain) -> Result<Self, Self::Error>;
 }
