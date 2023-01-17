@@ -4,6 +4,7 @@ use cw_multi_test::ContractWrapper;
 
 use cw20::{BalanceResponse, Cw20Coin, MinterResponse, Expiration};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use serde::Serialize;
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
 pub struct Cw20;
@@ -27,14 +28,14 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
     // Find a way to generate these functions with a macro!!!
     pub fn send(
         &self,
-        msg: Binary,
+        msg: &impl Serialize,
         amount: u128,
         contract: String,
     ) -> Result<TxResponse<Chain>, BootError> {
         let msg = ExecuteMsg::Send {
             contract,
             amount: Uint128::new(amount),
-            msg,
+            msg: cosmwasm_std::to_binary(msg)?,
         };
 
         self.execute(&msg, None)
