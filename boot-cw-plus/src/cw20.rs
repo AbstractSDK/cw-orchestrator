@@ -75,11 +75,11 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
         self.instantiate(&msg, Some(minter), None)
     }
 
-    pub fn balance(&self, address: &Addr) -> Result<Uint128, BootError> {
+    pub fn balance(&self, address: &Addr) -> Result<u128, BootError> {
         let bal: BalanceResponse = self.query(&QueryMsg::Balance {
             address: address.to_string(),
         })?;
-        Ok(bal.balance)
+        Ok(bal.balance.u128())
     }
 
     pub fn mint(&self, recipient: impl Into<String>, amount: u128) -> Result<TxResponse<Chain>, BootError> {
