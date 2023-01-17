@@ -32,5 +32,5 @@ pub trait Deploy<Chain: BootEnvironment>: Sized {
     /// Deploy the application to the chain.
     fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error>;
     /// Load the application from the chain, assuming it has already been deployed.
-    fn load_from(chain: &Chain) -> Result<Self, Self::Error>;
+    fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
