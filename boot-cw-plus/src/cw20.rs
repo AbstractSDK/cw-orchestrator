@@ -81,26 +81,12 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
         Ok(bal.balance)
     }
 
-    pub fn test_generic(&self, sender: &Addr) -> Result<(), BootError> {
-        // Instantiate the contract using a custom function
-        let resp = self.create_new(sender, 420u128)?;
-        // Access the execution result
-        println!("events: {:?}", resp.events());
-        // get the user balance and assert for testing purposes
-        let new_balance = self.balance(sender)?;
-        // balance == mint balance
-        assert_eq!(420u128, new_balance.u128());
-        // BURNNNN
-        self.execute(
-            &cw20::Cw20ExecuteMsg::Burn {
-                amount: 96u128.into(),
-            },
-            None,
-        )?;
-        let token_info: cw20::TokenInfoResponse =
-            self.query(&cw20_base::msg::QueryMsg::TokenInfo {})?;
-        println!("token_info: {:?}", token_info);
-        Ok(())
+    pub fn mint(&self, recipient: impl Into<String>, amount: u128) -> Result<TxResponse<Chain>, BootError> {
+        let msg = ExecuteMsg::Mint {
+            recipient: recipient.into(),
+            amount: Uint128::new(amount),
+        };
+        self.execute(&msg, None)
     }
 }
 // Todo: make into derive macro
