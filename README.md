@@ -1,4 +1,4 @@
-![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png)
+<!-- ![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png) -->
 # BOOT
 
 Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [https://boot.abstract.money](https://boot.abstract.money).
@@ -52,7 +52,7 @@ BOOT provides two additional macros that can be used to improve the scripting ex
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct itself. 
 
 Example:
-```
+```rust
 #[cw_serde]
 #[derive(ExecuteFns)]
 pub enum ExecuteMsg{
