@@ -20,11 +20,11 @@ pub use daemon::{
     core::Daemon,
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
+pub use deploy::Deploy;
 pub use error::BootError;
 pub use index_response::IndexResponse;
 pub use mock::{core::Mock, state::MockState};
 pub use tx_handler::{TxHandler, TxResponse};
-pub use deploy::Deploy;
 /// Signals a supported execution environment
 pub trait BootEnvironment: TxHandler + Clone {}
 
