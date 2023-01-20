@@ -37,10 +37,12 @@ impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, BootError> {
         let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP
-        let mnemonic = env::var(daemon_state.kind.mnemonic_name()).expect(&format!(
-            "Wallet mnemonic environment variable {} not set.",
-            daemon_state.kind.mnemonic_name()
-        ));
+        let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
+            panic!(
+                "Wallet mnemonic environment variable {} not set.",
+                daemon_state.kind.mnemonic_name()
+            )
+        });
 
         // use deployment mnemonic if specified, else use default network mnemonic
         let p_key: PrivateKey =
