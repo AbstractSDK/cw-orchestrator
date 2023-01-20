@@ -39,3 +39,5 @@ Following this example, the project's structure should eventually look like:
   - Configure your mnemonics and log settings.
 - **[Scripting](./scripting.md)**
   - Write runnable scripts with your interfaces.
+- **[Integration](./integration.md)**
+  - Export a deployment of your application for use in integration testing.  
