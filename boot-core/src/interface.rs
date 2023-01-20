@@ -9,6 +9,10 @@ pub trait ContractInstance<Chain: BootEnvironment> {
     fn as_instance(&self) -> &Contract<Chain>;
     fn as_instance_mut(&mut self) -> &mut Contract<Chain>;
 
+    // Returns the contract id
+    fn id(&self) -> String {
+        self.as_instance().id.clone()
+    }
     // State interfaces
     fn address(&self) -> Result<Addr, BootError> {
         Contract::address(self.as_instance())

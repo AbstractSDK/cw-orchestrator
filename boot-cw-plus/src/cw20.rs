@@ -2,8 +2,9 @@ use boot_core::prelude::*;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use cw_multi_test::ContractWrapper;
 
-use cw20::{BalanceResponse, Cw20Coin, MinterResponse};
+use cw20::{BalanceResponse, Cw20Coin, Expiration, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use serde::Serialize;
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
 pub struct Cw20;
@@ -27,14 +28,14 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
     // Find a way to generate these functions with a macro!!!
     pub fn send(
         &self,
-        msg: Binary,
+        msg: &impl Serialize,
         amount: u128,
         contract: String,
     ) -> Result<TxResponse<Chain>, BootError> {
         let msg = ExecuteMsg::Send {
             contract,
             amount: Uint128::new(amount),
-            msg,
+            msg: cosmwasm_std::to_binary(msg)?,
         };
 
         self.execute(&msg, None)
@@ -74,33 +75,37 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
         self.instantiate(&msg, Some(minter), None)
     }
 
-    pub fn balance(&self, address: &Addr) -> Result<Uint128, BootError> {
+    pub fn balance(&self, address: &Addr) -> Result<u128, BootError> {
         let bal: BalanceResponse = self.query(&QueryMsg::Balance {
             address: address.to_string(),
         })?;
-        Ok(bal.balance)
+        Ok(bal.balance.u128())
     }
 
-    pub fn test_generic(&self, sender: &Addr) -> Result<(), BootError> {
-        // Instantiate the contract using a custom function
-        let resp = self.create_new(sender, 420u128)?;
-        // Access the execution result
-        println!("events: {:?}", resp.events());
-        // get the user balance and assert for testing purposes
-        let new_balance = self.balance(sender)?;
-        // balance == mint balance
-        assert_eq!(420u128, new_balance.u128());
-        // BURNNNN
-        self.execute(
-            &cw20::Cw20ExecuteMsg::Burn {
-                amount: 96u128.into(),
-            },
-            None,
-        )?;
-        let token_info: cw20::TokenInfoResponse =
-            self.query(&cw20_base::msg::QueryMsg::TokenInfo {})?;
-        println!("token_info: {:?}", token_info);
-        Ok(())
+    pub fn mint(
+        &self,
+        recipient: impl Into<String>,
+        amount: u128,
+    ) -> Result<TxResponse<Chain>, BootError> {
+        let msg = ExecuteMsg::Mint {
+            recipient: recipient.into(),
+            amount: Uint128::new(amount),
+        };
+        self.execute(&msg, None)
+    }
+
+    pub fn increase_allowance(
+        &self,
+        spender: impl Into<String>,
+        amount: u128,
+        expires: Option<Expiration>,
+    ) -> Result<TxResponse<Chain>, BootError> {
+        let msg = ExecuteMsg::IncreaseAllowance {
+            spender: spender.into(),
+            amount: Uint128::new(amount),
+            expires,
+        };
+        self.execute(&msg, None)
     }
 }
 // Todo: make into derive macro

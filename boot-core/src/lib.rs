@@ -1,5 +1,6 @@
 mod contract;
 mod daemon;
+pub mod deploy;
 mod error;
 mod index_response;
 ///
@@ -19,6 +20,7 @@ pub use daemon::{
     core::Daemon,
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
+pub use deploy::Deploy;
 pub use error::BootError;
 pub use index_response::IndexResponse;
 pub use mock::{core::Mock, state::MockState};
