@@ -52,7 +52,7 @@ BOOT provides two additional macros that can be used to improve the scripting ex
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct itself. 
 
 Example:
-```
+```rust
 #[cw_serde]
 #[derive(ExecuteFns)]
 pub enum ExecuteMsg{
