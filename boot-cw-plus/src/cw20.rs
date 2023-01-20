@@ -2,7 +2,7 @@ use boot_core::prelude::*;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use cw_multi_test::ContractWrapper;
 
-use cw20::{BalanceResponse, Cw20Coin, MinterResponse, Expiration};
+use cw20::{BalanceResponse, Cw20Coin, Expiration, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use serde::Serialize;
 
@@ -82,7 +82,11 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
         Ok(bal.balance.u128())
     }
 
-    pub fn mint(&self, recipient: impl Into<String>, amount: u128) -> Result<TxResponse<Chain>, BootError> {
+    pub fn mint(
+        &self,
+        recipient: impl Into<String>,
+        amount: u128,
+    ) -> Result<TxResponse<Chain>, BootError> {
         let msg = ExecuteMsg::Mint {
             recipient: recipient.into(),
             amount: Uint128::new(amount),
