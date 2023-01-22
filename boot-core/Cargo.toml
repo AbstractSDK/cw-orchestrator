@@ -15,10 +15,8 @@ exclude = [".env"]
 
 [[example]]
 name = "cw20"
-features = ["daemon"]
 
 [features]
-default = ["daemon"]
 # enable the optional dependencies
 daemon = [
     "dep:ibc-chain-registry",
