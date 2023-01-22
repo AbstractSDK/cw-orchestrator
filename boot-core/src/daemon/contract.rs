@@ -1,8 +1,17 @@
-use std::fmt::Debug;
+use std::{
+    env,
+    fmt::{self, Debug},
+    fs,
+    path::Path,
+};
 
-use serde::Serialize;
+use cosmwasm_std::CustomQuery;
+use schemars::JsonSchema;
+use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{BootError, Contract, Daemon, TxResponse};
+use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse};
+
+use super::error::DaemonError;
 
 impl Contract<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
@@ -56,5 +65,55 @@ impl Contract<Daemon> {
             ))?;
 
         Ok(latest_uploaded_code_id == info.code_id)
+    }
+}
+
+impl<ExecT, QueryT> ContractCodeReference<ExecT, QueryT>
+where
+    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    QueryT: CustomQuery + DeserializeOwned + 'static,
+{
+    /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
+    pub fn get_wasm_code_path(&self) -> Result<String, DaemonError> {
+        let wasm_code_path = self.wasm_code_path.as_ref().ok_or_else(|| {
+            DaemonError::StdErr("Wasm file is required to determine hash.".into())
+        })?;
+
+        let wasm_code_path = if wasm_code_path.contains(".wasm") {
+            wasm_code_path.to_string()
+        } else {
+            format!(
+                "{}/{}.wasm",
+                env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set"),
+                wasm_code_path
+            )
+        };
+
+        Ok(wasm_code_path)
+    }
+
+    /// Calculate the checksum of the wasm file to compare against previous uploads
+    pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
+        let wasm_code_path = &self.get_wasm_code_path()?;
+        if wasm_code_path.contains("artifacts") {
+            // Now get local hash from optimization script
+            let checksum_path = format!("{}/checksums.txt", wasm_code_path);
+            let contents =
+                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
+            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
+            let name = id.split(':').last().unwrap();
+            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
+            log::debug!("{:?}", containing_line);
+            let local_hash = containing_line
+                .trim_start_matches('\n')
+                .split_whitespace()
+                .next()
+                .unwrap();
+            return Ok(local_hash.into());
+        }
+        // Compute hash
+        let wasm_code = Path::new(wasm_code_path);
+        let checksum = sha256::try_digest(wasm_code)?;
+        Ok(checksum)
     }
 }
