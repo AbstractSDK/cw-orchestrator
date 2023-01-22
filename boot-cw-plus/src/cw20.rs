@@ -1,8 +1,8 @@
 use boot_core::prelude::*;
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
-use cw_multi_test::ContractWrapper;
 use cw20::{BalanceResponse, Cw20Coin, Expiration, MinterResponse};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw_multi_test::ContractWrapper;
 use serde::Serialize;
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
