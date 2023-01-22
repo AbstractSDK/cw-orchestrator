@@ -20,21 +20,23 @@ pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
-    let init = types_in_order[0].clone();
-    let exec = types_in_order[1].clone();
-    let query = types_in_order[2].clone();
-    let migrate = types_in_order[3].clone();
-
-    if types_in_order.len() != 4 {
-        panic!("Expected four endpoint types (InstantiateMsg,ExecuteMsg,QueryMsg,MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
+        
+        if types_in_order.len() != 4 {
+            panic!("Expected four endpoint types (InstantiateMsg,ExecuteMsg,QueryMsg,MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
     }
-
+    
     let Item::Struct(boot_struct) = &mut item else {
         panic!("Only works on structs");
     };
     let Fields::Unit = &mut boot_struct.fields else {
         panic!("Struct must be unit-struct");
     };
+
+    let init = types_in_order[0].clone();
+    let exec = types_in_order[1].clone();
+    let query = types_in_order[2].clone();
+    let migrate = types_in_order[3].clone();
+    
     let name = boot_struct.ident.clone();
     let struct_def = quote!(
             #[derive(
