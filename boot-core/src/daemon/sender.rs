@@ -18,9 +18,9 @@ use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use crate::daemon::core::parse_cw_coins;
-use crate::{error::BootError, keys::private::PrivateKey};
+use crate::keys::private::PrivateKey;
 
-use super::{state::DaemonState, tx_resp::CosmTxResponse};
+use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
 
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
@@ -34,7 +34,7 @@ pub struct Sender<C: Signing + Context> {
 }
 
 impl Sender<All> {
-    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, BootError> {
+    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         // NETWORK_MNEMONIC_GROUP
         let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
@@ -61,13 +61,13 @@ impl Sender<All> {
         );
         Ok(sender)
     }
-    pub(crate) fn pub_addr(&self) -> Result<AccountId, BootError> {
+    pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
         Ok(self
             .private_key
             .public_key()
             .account_id(&self.daemon_state.chain.pub_address_prefix)?)
     }
-    pub fn address(&self) -> Result<Addr, BootError> {
+    pub fn address(&self) -> Result<Addr, DaemonError> {
         Ok(Addr::unchecked(
             self.private_key
                 .public_key()
@@ -76,7 +76,7 @@ impl Sender<All> {
         ))
     }
 
-    pub fn pub_addr_str(&self) -> Result<String, BootError> {
+    pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
         Ok(self
             .private_key
             .public_key()
@@ -88,7 +88,7 @@ impl Sender<All> {
         &self,
         recipient: &str,
         coins: Vec<cosmwasm_std::Coin>,
-    ) -> Result<CosmTxResponse, BootError> {
+    ) -> Result<CosmTxResponse, DaemonError> {
         let msg_send = MsgSend {
             from_address: self.pub_addr()?,
             to_address: AccountId::from_str(recipient)?,
@@ -102,7 +102,7 @@ impl Sender<All> {
         &self,
         msgs: Vec<T>,
         memo: Option<&str>,
-    ) -> Result<CosmTxResponse, BootError> {
+    ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = DaemonQuerier::block_height(self.channel()).await? + 10u64;
         let msgs: Result<Vec<Any>, _> = msgs.into_iter().map(Msg::into_any).collect();
         let msgs = msgs?;
@@ -156,7 +156,7 @@ impl Sender<All> {
         self.broadcast(tx_raw).await
     }
 
-    pub async fn base_account(&self) -> Result<BaseAccount, BootError> {
+    pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.pub_addr().unwrap().to_string();
 
         let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel());
@@ -175,7 +175,7 @@ impl Sender<All> {
             // try vesting account, (used by Terra2)
             use cosmos_modules::vesting::PeriodicVestingAccount;
             let acc = PeriodicVestingAccount::decode(account.as_ref()).map_err(|_| {
-                BootError::StdErr("Unknown account type returned from QueryAccountRequest".into())
+                DaemonError::StdErr("Unknown account type returned from QueryAccountRequest".into())
             })?;
             acc.base_vesting_account.unwrap().base_account.unwrap()
         };
@@ -186,7 +186,7 @@ impl Sender<All> {
         self.daemon_state.grpc_channel.clone()
     }
 
-    async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, BootError> {
+    async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, DaemonError> {
         let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
 
         let commit = client
@@ -204,7 +204,7 @@ impl Sender<All> {
 async fn find_by_hash(
     client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
     hash: String,
-) -> Result<CosmTxResponse, BootError> {
+) -> Result<CosmTxResponse, DaemonError> {
     let attempts = 5;
     let request = cosmos_modules::tx::GetTxRequest { hash };
     for _ in 0..attempts {

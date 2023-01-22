@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
+
+use super::error::DaemonError;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(derive_builder::Builder)]
@@ -48,7 +50,7 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
-    pub async fn new(options: DaemonOptions) -> Result<DaemonState, BootError> {
+    pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
         let network: RegistryChainInfo = options.network;
         // find working grpc channel
 
@@ -79,7 +81,7 @@ impl DaemonState {
         }
 
         if successful_connections.is_empty() {
-            return Err(BootError::StdErr("No active grpc endpoint found.".into()));
+            return Err(DaemonError::CannotConnectGRPC);
         }
 
         let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");

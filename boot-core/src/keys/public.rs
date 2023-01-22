@@ -6,7 +6,7 @@ use crypto::sha2::Sha256;
 pub use ed25519_dalek::PublicKey as Ed25519;
 use serde::{Deserialize, Serialize};
 
-use crate::error::BootError;
+use crate::daemon::error::DaemonError;
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
 static BECH32_PUBKEY_DATA_PREFIX_ED25519: [u8; 5] = [0x16, 0x24, 0xde, 0x64, 0x20]; // "eb5ae98721";
 
@@ -46,12 +46,13 @@ impl PublicKey {
         }
     }
     /// Generate a Cosmos/Tendermint/Terrad Account
-    pub fn from_account(acc_address: &str, prefix: &str) -> Result<PublicKey, BootError> {
+    pub fn from_account(acc_address: &str, prefix: &str) -> Result<PublicKey, DaemonError> {
         PublicKey::check_prefix_and_length(prefix, acc_address, 44).and_then(|vu5| {
-            let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| BootError::Conversion {
-                key: acc_address.into(),
-                source,
-            })?;
+            let vu8 =
+                Vec::from_base32(vu5.as_slice()).map_err(|source| DaemonError::Conversion {
+                    key: acc_address.into(),
+                    source,
+                })?;
             Ok(PublicKey {
                 raw_pub_key: None,
                 raw_address: Some(vu8),
@@ -59,7 +60,7 @@ impl PublicKey {
         })
     }
     /// build a public key from a tendermint public key
-    pub fn from_tendermint_key(tendermint_public_key: &str) -> Result<PublicKey, BootError> {
+    pub fn from_tendermint_key(tendermint_public_key: &str) -> Result<PublicKey, DaemonError> {
         // Len 83 == PubKeySecp256k1 key with a prefix of 0xEB5AE987
         // Len 82 == PubKeyEd25519 key with a prefix of 0x1624DE64
 
@@ -68,7 +69,7 @@ impl PublicKey {
             PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
                 .and_then(|vu5| {
                     let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
-                        BootError::Conversion {
+                        DaemonError::Conversion {
                             key: tendermint_public_key.into(),
                             source,
                         }
@@ -83,7 +84,7 @@ impl PublicKey {
                             raw_address: Some(raw),
                         })
                     } else {
-                        Err(BootError::ConversionSECP256k1)
+                        Err(DaemonError::ConversionSECP256k1)
                     }
                 })
         } else if len == 82 {
@@ -93,7 +94,7 @@ impl PublicKey {
             PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
                 .and_then(|vu5| {
                     let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
-                        BootError::Conversion {
+                        DaemonError::Conversion {
                             key: tendermint_public_key.into(),
                             source,
                         }
@@ -109,18 +110,18 @@ impl PublicKey {
                         })
                     } else {
                         //     eprintln!("{}", hex::encode(&vu8));
-                        Err(BootError::ConversionED25519)
+                        Err(DaemonError::ConversionED25519)
                     }
                 })
 
             /* */
         } else {
-            Err(BootError::ConversionLength(len))
+            Err(DaemonError::ConversionLength(len))
         }
     }
     /// build a terravalcons address from a tendermint hex key
     /// the tendermint_hex_address should be a hex code of 40 length
-    pub fn from_tendermint_address(tendermint_hex_address: &str) -> Result<PublicKey, BootError> {
+    pub fn from_tendermint_address(tendermint_hex_address: &str) -> Result<PublicKey, DaemonError> {
         let len = tendermint_hex_address.len();
         if len == 40 {
             let raw = hex::decode(tendermint_hex_address)?;
@@ -129,16 +130,17 @@ impl PublicKey {
                 raw_address: Some(raw),
             })
         } else {
-            Err(BootError::ConversionLengthED25519Hex(len))
+            Err(DaemonError::ConversionLengthED25519Hex(len))
         }
     }
     /// Generate a Operator address for this public key (used by the validator)
-    pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey, BootError> {
+    pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey, DaemonError> {
         PublicKey::check_prefix_and_length("terravaloper", valoper_address, 51).and_then(|vu5| {
-            let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| BootError::Conversion {
-                key: valoper_address.into(),
-                source,
-            })?;
+            let vu8 =
+                Vec::from_base32(vu5.as_slice()).map_err(|source| DaemonError::Conversion {
+                    key: valoper_address.into(),
+                    source,
+                })?;
             Ok(PublicKey {
                 raw_pub_key: None,
                 raw_address: Some(vu8),
@@ -147,7 +149,7 @@ impl PublicKey {
     }
 
     /// Generate Public key from raw address
-    pub fn from_raw_address(raw_address: &str) -> Result<PublicKey, BootError> {
+    pub fn from_raw_address(raw_address: &str) -> Result<PublicKey, DaemonError> {
         let vec1 = hex::decode(raw_address)?;
 
         Ok(PublicKey {
@@ -159,15 +161,15 @@ impl PublicKey {
         prefix: &str,
         data: &str,
         length: usize,
-    ) -> Result<Vec<u5>, BootError> {
-        let (hrp, decoded_str, _) = decode(data).map_err(|source| BootError::Conversion {
+    ) -> Result<Vec<u5>, DaemonError> {
+        let (hrp, decoded_str, _) = decode(data).map_err(|source| DaemonError::Conversion {
             key: data.into(),
             source,
         })?;
         if hrp == prefix && data.len() == length {
             Ok(decoded_str)
         } else {
-            Err(BootError::Bech32DecodeExpanded(
+            Err(DaemonError::Bech32DecodeExpanded(
                 hrp,
                 data.len(),
                 prefix.into(),
@@ -200,7 +202,7 @@ impl PublicKey {
         .concat()
     }
     /// Translate from a BECH32 prefixed key to a standard public key
-    pub fn public_key_from_pubkey(pub_key: &[u8]) -> Result<Vec<u8>, BootError> {
+    pub fn public_key_from_pubkey(pub_key: &[u8]) -> Result<Vec<u8>, DaemonError> {
         if pub_key.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
             let len = BECH32_PUBKEY_DATA_PREFIX_SECP256K1.len();
             let len2 = pub_key.len();
@@ -213,7 +215,7 @@ impl PublicKey {
             Ok(ed25519_pubkey.to_bytes().to_vec())
         } else {
             log::info!("pub key does not start with BECH32 PREFIX");
-            Err(BootError::Bech32DecodeErr)
+            Err(DaemonError::Bech32DecodeErr)
         }
     }
 
@@ -245,11 +247,11 @@ impl PublicKey {
 
     */
 
-    pub fn address_from_public_ed25519_key(public_key: &[u8]) -> Result<Vec<u8>, BootError> {
+    pub fn address_from_public_ed25519_key(public_key: &[u8]) -> Result<Vec<u8>, DaemonError> {
         // Vec<bech32::u5> {
 
         if public_key.len() != (32 + 5/* the 5 is the BECH32 ED25519 prefix */) {
-            Err(BootError::ConversionPrefixED25519(
+            Err(DaemonError::ConversionPrefixED25519(
                 public_key.len(),
                 hex::encode(public_key),
             ))
@@ -283,20 +285,20 @@ impl PublicKey {
         }
     }
     /// The main account used in most things
-    pub fn account(&self, prefix: &str) -> Result<String, BootError> {
+    pub fn account(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode(prefix, raw.to_base32(), Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(BootError::Bech32DecodeErr),
+                    Err(_) => Err(DaemonError::Bech32DecodeErr),
                 }
             }
-            None => Err(BootError::Implementation),
+            None => Err(DaemonError::Implementation),
         }
     }
     /// The operator address used for validators
-    pub fn operator_address(&self, prefix: &str) -> Result<String, BootError> {
+    pub fn operator_address(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode(
@@ -306,14 +308,14 @@ impl PublicKey {
                 );
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(BootError::Bech32DecodeErr),
+                    Err(_) => Err(DaemonError::Bech32DecodeErr),
                 }
             }
-            None => Err(BootError::Implementation),
+            None => Err(DaemonError::Implementation),
         }
     }
     /// application public key - Application keys are associated with a public key terrapub- and an address terra-
-    pub fn application_public_key(&self, prefix: &str) -> Result<String, BootError> {
+    pub fn application_public_key(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode(
@@ -323,17 +325,17 @@ impl PublicKey {
                 );
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(BootError::Bech32DecodeErr),
+                    Err(_) => Err(DaemonError::Bech32DecodeErr),
                 }
             }
             None => {
                 log::warn!("Missing Public Key. Can't continue");
-                Err(BootError::Implementation)
+                Err(DaemonError::Implementation)
             }
         }
     }
     /// The operator address used for validators public key.
-    pub fn operator_address_public_key(&self, prefix: &str) -> Result<String, BootError> {
+    pub fn operator_address_public_key(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_pub_key {
             Some(raw) => {
                 let data = encode(
@@ -343,14 +345,14 @@ impl PublicKey {
                 );
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(BootError::Bech32DecodeErr),
+                    Err(_) => Err(DaemonError::Bech32DecodeErr),
                 }
             }
-            None => Err(BootError::Implementation),
+            None => Err(DaemonError::Implementation),
         }
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
-    pub fn tendermint(&self, prefix: &str) -> Result<String, BootError> {
+    pub fn tendermint(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_address {
             Some(raw) => {
                 let data = encode(
@@ -360,14 +362,14 @@ impl PublicKey {
                 );
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(BootError::Bech32DecodeErr),
+                    Err(_) => Err(DaemonError::Bech32DecodeErr),
                 }
             }
-            None => Err(BootError::Implementation),
+            None => Err(DaemonError::Implementation),
         }
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
-    pub fn tendermint_pubkey(&self, prefix: &str) -> Result<String, BootError> {
+    pub fn tendermint_pubkey(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_pub_key {
             Some(raw) => {
                 // eprintln!("{} - tendermint_pubkey", hex::encode(raw));
@@ -375,10 +377,10 @@ impl PublicKey {
                 let data = encode(&format!("{}{}", prefix, "valconspub"), b32, Variant::Bech32);
                 match data {
                     Ok(acc) => Ok(acc),
-                    Err(_) => Err(BootError::Bech32DecodeErr),
+                    Err(_) => Err(DaemonError::Bech32DecodeErr),
                 }
             }
-            None => Err(BootError::Implementation),
+            None => Err(DaemonError::Implementation),
         }
     }
 }

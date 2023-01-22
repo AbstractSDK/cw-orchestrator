@@ -104,6 +104,7 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 // Execute on the test chain, returns test response type
 impl<S: StateInterface> TxHandler for Mock<S> {
     type Response = AppResponse;
+    type Error = BootError;
     fn sender(&self) -> Addr {
         self.sender.clone()
     }
