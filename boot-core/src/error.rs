@@ -2,10 +2,12 @@
 
 use thiserror::Error;
 
+#[cfg(feature = "daemon")]
 use crate::daemon::error::DaemonError;
 
 #[derive(Error, Debug)]
 pub enum BootError {
+    #[cfg(feature = "daemon")]
     #[error(transparent)]
     DaemonError(#[from] DaemonError),
     #[error("JSON Conversion Error")]
