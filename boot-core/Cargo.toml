@@ -15,6 +15,7 @@ exclude = [".env"]
 
 [[example]]
 name = "cw20"
+required-features = ["daemon"]
 
 [features]
 # enable the optional dependencies
