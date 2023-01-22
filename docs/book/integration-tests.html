@@ -159,7 +159,6 @@ use cosmwasm_std::Addr;
 use cw_multi_test::ContractWrapper;
 use semver::Version;
 use crate::contract;
-
 use my_contract::{ExecuteMsg};
   
 const TEST_VERSION: Version = Version::new(0, 0, 0);  
@@ -211,7 +210,6 @@ use my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockMyContract&lt;Chain&gt;;
-
 use cw_multi_test::ContractWrapper;
 use crate::contract;
 use boot_prelude::*;

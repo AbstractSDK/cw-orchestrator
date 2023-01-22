@@ -3,7 +3,6 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{visit_mut::VisitMut, DeriveInput, Fields, Ident};
-
 use crate::helpers::{process_impl_into, LexiographicMatching};
 
 fn payable(v: &syn::Variant) -> bool {

@@ -1,9 +1,6 @@
 use std::sync::Arc;
-
 use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
-
 use boot_core::prelude::*;
-
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::Addr;
 

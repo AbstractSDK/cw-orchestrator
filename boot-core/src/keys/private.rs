@@ -1,14 +1,9 @@
 use bitcoin::util::bip32::{ExtendedPrivKey, IntoDerivationPath};
 use bitcoin::Network;
-
 use secp256k1::Secp256k1;
-
 use hkd32::mnemonic::{Phrase, Seed};
-
 use rand_core::OsRng;
-
 use crate::daemon::error::DaemonError;
-
 use super::public::PublicKey;
 
 /// The Private key structure that is used to generate signatures and public keys

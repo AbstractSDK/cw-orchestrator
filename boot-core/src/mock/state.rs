@@ -1,8 +1,6 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
-
 use cosmwasm_std::Addr;
-
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
