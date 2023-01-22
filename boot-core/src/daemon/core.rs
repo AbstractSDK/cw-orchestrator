@@ -5,23 +5,19 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,
     AccountId, Denom,
 };
-
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
-
 use crate::{
     contract::ContractCodeReference, cosmos_modules, state::ChainState, tx_handler::TxHandler,
 };
-
 use super::{
     error::DaemonError,
     querier::DaemonQuerier,

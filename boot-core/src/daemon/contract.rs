@@ -4,13 +4,10 @@ use std::{
     fs,
     path::Path,
 };
-
 use cosmwasm_std::CustomQuery;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
-
 use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse};
-
 use super::error::DaemonError;
 
 impl Contract<Daemon> {

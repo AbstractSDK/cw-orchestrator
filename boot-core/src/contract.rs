@@ -3,7 +3,6 @@ use std::{
     fmt::{self, Debug},
     rc::Rc,
 };
-
 use crate::BootEnvironment;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,

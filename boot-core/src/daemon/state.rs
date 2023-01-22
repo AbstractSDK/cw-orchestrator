@@ -1,18 +1,15 @@
 use crate::error::BootError;
 use crate::state::StateInterface;
-
 use cosmrs::{
     proto::cosmos::base::tendermint::v1beta1::{service_client::ServiceClient, GetNodeInfoRequest},
     Denom,
 };
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
-
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
-
 use super::error::DaemonError;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 

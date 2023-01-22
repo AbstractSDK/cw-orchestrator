@@ -1,8 +1,6 @@
 use cosmrs::tendermint::{Block, Time};
 use tonic::transport::Channel;
-
 use crate::cosmos_modules;
-
 use super::error::DaemonError;
 
 pub(super) struct DaemonQuerier;

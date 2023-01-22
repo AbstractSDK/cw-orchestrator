@@ -8,7 +8,6 @@ use boot_core::{
 use cosmwasm_std::{Addr, Binary, Empty, Uint128};
 use serde::Serialize;
 use std::{fmt::Debug, ops::Deref};
-
 use crate::MyProjectName;
 
 pub type Cw20<Chain> = CwPlusContract<Chain, ExecuteMsg, InstantiateMsg, QueryMsg, Empty>;

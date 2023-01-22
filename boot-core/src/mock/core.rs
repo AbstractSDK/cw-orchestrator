@@ -1,7 +1,6 @@
 use cosmwasm_std::{Addr, Empty, Event};
 use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
 use serde::{de::DeserializeOwned, Serialize};
-
 use crate::{
     contract::ContractCodeReference,
     state::{ChainState, StateInterface},
@@ -9,7 +8,6 @@ use crate::{
     BootError, Contract,
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
-
 use super::state::MockState;
 
 pub fn instantiate_default_mock_env(

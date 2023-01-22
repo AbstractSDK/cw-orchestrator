@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-
 use cosmwasm_std::Addr;
-
 use crate::BootError;
 
 pub trait ChainState {
