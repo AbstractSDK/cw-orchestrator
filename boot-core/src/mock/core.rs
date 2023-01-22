@@ -1,14 +1,14 @@
-use cosmwasm_std::{Addr, Empty, Event};
-use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
-use serde::{de::DeserializeOwned, Serialize};
+use super::state::MockState;
 use crate::{
     contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
     BootError, Contract,
 };
+use cosmwasm_std::{Addr, Empty, Event};
+use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
+use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
-use super::state::MockState;
 
 pub fn instantiate_default_mock_env(
     sender: &Addr,

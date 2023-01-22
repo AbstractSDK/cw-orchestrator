@@ -1,8 +1,8 @@
-use std::sync::Arc;
-use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 use boot_core::prelude::*;
+use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::Addr;
+use std::sync::Arc;
 
 // Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {

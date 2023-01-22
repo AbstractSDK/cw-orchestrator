@@ -1,9 +1,12 @@
-use std::{
-    fmt::Debug,
-    rc::Rc,
-    str::{from_utf8, FromStr},
-    sync::Arc,
-    time::Duration,
+use super::{
+    error::DaemonError,
+    querier::DaemonQuerier,
+    sender::{Sender, Wallet},
+    state::{DaemonOptions, DaemonState, NetworkKind},
+    tx_resp::CosmTxResponse,
+};
+use crate::{
+    contract::ContractCodeReference, cosmos_modules, state::ChainState, tx_handler::TxHandler,
 };
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
@@ -13,18 +16,15 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
+use std::{
+    fmt::Debug,
+    rc::Rc,
+    str::{from_utf8, FromStr},
+    sync::Arc,
+    time::Duration,
+};
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
-use crate::{
-    contract::ContractCodeReference, cosmos_modules, state::ChainState, tx_handler::TxHandler,
-};
-use super::{
-    error::DaemonError,
-    querier::DaemonQuerier,
-    sender::{Sender, Wallet},
-    state::{DaemonOptions, DaemonState, NetworkKind},
-    tx_resp::CosmTxResponse,
-};
 
 pub fn instantiate_daemon_env(
     runtime: &Arc<Runtime>,

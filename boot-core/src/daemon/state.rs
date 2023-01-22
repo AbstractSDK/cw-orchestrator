@@ -1,3 +1,4 @@
+use super::error::DaemonError;
 use crate::error::BootError;
 use crate::state::StateInterface;
 use cosmrs::{
@@ -10,7 +11,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
-use super::error::DaemonError;
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(derive_builder::Builder)]

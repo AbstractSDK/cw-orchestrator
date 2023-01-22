@@ -1,14 +1,14 @@
+use super::error::DaemonError;
+use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse};
+use cosmwasm_std::CustomQuery;
+use schemars::JsonSchema;
+use serde::{de::DeserializeOwned, Serialize};
 use std::{
     env,
     fmt::{self, Debug},
     fs,
     path::Path,
 };
-use cosmwasm_std::CustomQuery;
-use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, Serialize};
-use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse};
-use super::error::DaemonError;
 
 impl Contract<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)

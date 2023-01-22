@@ -1,3 +1,6 @@
+use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
+use crate::daemon::core::parse_cw_coins;
+use crate::keys::private::PrivateKey;
 use crate::{
     cosmos_modules::{self, auth::BaseAccount},
     daemon::querier::DaemonQuerier,
@@ -15,9 +18,6 @@ use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
 use tokio::time::sleep;
 use tonic::transport::Channel;
-use crate::daemon::core::parse_cw_coins;
-use crate::keys::private::PrivateKey;
-use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
 
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
