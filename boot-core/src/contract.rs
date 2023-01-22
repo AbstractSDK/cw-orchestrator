@@ -1,12 +1,9 @@
-use std::path::Path;
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
     rc::Rc,
 };
-use std::{env, fs};
 
-use crate::daemon::error::DaemonError;
 use crate::BootEnvironment;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
@@ -45,57 +42,6 @@ impl Clone for ContractCodeReference {
             wasm_code_path: self.wasm_code_path.clone(),
             contract_endpoints: None,
         }
-    }
-}
-
-#[cfg(feature = "daemon")]
-impl<ExecT, QueryT> ContractCodeReference<ExecT, QueryT>
-where
-    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
-    QueryT: CustomQuery + DeserializeOwned + 'static,
-{
-    /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
-    pub fn get_wasm_code_path(&self) -> Result<String, DaemonError> {
-        let wasm_code_path = self.wasm_code_path.as_ref().ok_or_else(|| {
-            DaemonError::StdErr("Wasm file is required to determine hash.".into())
-        })?;
-
-        let wasm_code_path = if wasm_code_path.contains(".wasm") {
-            wasm_code_path.to_string()
-        } else {
-            format!(
-                "{}/{}.wasm",
-                env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set"),
-                wasm_code_path
-            )
-        };
-
-        Ok(wasm_code_path)
-    }
-
-    /// Calculate the checksum of the wasm file to compare against previous uploads
-    pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
-        let wasm_code_path = &self.get_wasm_code_path()?;
-        if wasm_code_path.contains("artifacts") {
-            // Now get local hash from optimization script
-            let checksum_path = format!("{}/checksums.txt", wasm_code_path);
-            let contents =
-                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
-            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-            let name = id.split(':').last().unwrap();
-            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
-            log::debug!("{:?}", containing_line);
-            let local_hash = containing_line
-                .trim_start_matches('\n')
-                .split_whitespace()
-                .next()
-                .unwrap();
-            return Ok(local_hash.into());
-        }
-        // Compute hash
-        let wasm_code = Path::new(wasm_code_path);
-        let checksum = sha256::try_digest(wasm_code)?;
-        Ok(checksum)
     }
 }
 
