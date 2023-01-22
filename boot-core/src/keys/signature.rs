@@ -1,8 +1,8 @@
+use crate::daemon::error::DaemonError;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use secp256k1::Message;
 use secp256k1::Secp256k1;
-use crate::daemon::error::DaemonError;
 
 pub struct Signature {}
 impl Signature {

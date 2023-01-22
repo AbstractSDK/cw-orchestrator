@@ -1,8 +1,3 @@
-use std::{
-    cell::RefCell,
-    fmt::{self, Debug},
-    rc::Rc,
-};
 use crate::BootEnvironment;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
@@ -11,6 +6,11 @@ use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
 use cw_multi_test::Contract as TestContract;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
+use std::{
+    cell::RefCell,
+    fmt::{self, Debug},
+    rc::Rc,
+};
 
 #[allow(unused)]
 pub type StateReference<S> = Rc<RefCell<S>>;

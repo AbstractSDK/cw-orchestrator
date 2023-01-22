@@ -1,7 +1,7 @@
-use std::fmt::Debug;
 use crate::{contract::Contract, error::BootError, BootEnvironment, Mock};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
+use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 pub trait ContractInstance<Chain: BootEnvironment> {
