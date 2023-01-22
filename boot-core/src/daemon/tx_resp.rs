@@ -1,9 +1,13 @@
 use crate::cosmos_modules::abci::{AbciMessageLog, Attribute, StringEvent, TxResponse};
 use crate::cosmos_modules::tendermint_abci::Event;
-use crate::error::BootError;
+
+use crate::IndexResponse;
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
+use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
 use serde::{Deserialize, Serialize};
+
+use super::error::DaemonError;
 const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
 const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
 const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
@@ -173,7 +177,7 @@ impl From<AbciMessageLog> for TxResultBlockMsg {
     }
 }
 
-pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, BootError> {
+pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, DaemonError> {
     let len = s.len();
     let slice_len = if s.contains('.') {
         len.saturating_sub(4)
@@ -190,7 +194,7 @@ pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, BootError> {
                 Err(_e3) => match NaiveDateTime::parse_from_str(&s, FORMAT_SHORT_Z2) {
                     Err(_e4) => {
                         eprintln!("DateTime Fail {} {:#?}", s, _e4);
-                        Err(BootError::StdErr(_e4.to_string()))
+                        Err(DaemonError::StdErr(_e4.to_string()))
                     }
                     Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
                 },
@@ -199,5 +203,46 @@ pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, BootError> {
             Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
         },
         Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
+    }
+}
+
+impl IndexResponse for CosmTxResponse {
+    fn events(&self) -> Vec<cosmwasm_std::Event> {
+        let mut parsed_events = vec![];
+        for event in &self.events {
+            let mut pattr = vec![];
+            for attr in &event.attributes {
+                pattr.push(cosmwasm_std::Attribute {
+                    key: std::str::from_utf8(&attr.key).unwrap().to_string(),
+                    value: std::str::from_utf8(&attr.value).unwrap().to_string(),
+                })
+            }
+            let pevent = cosmwasm_std::Event::new(event.r#type.clone()).add_attributes(pattr);
+            parsed_events.push(pevent);
+        }
+        parsed_events
+    }
+    fn data(&self) -> Option<Binary> {
+        if self.data.is_empty() {
+            None
+        } else {
+            Some(to_binary(self.data.as_bytes()).unwrap())
+        }
+    }
+
+    fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String> {
+        for event in &self.events {
+            if event.r#type == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key.as_bytes() {
+                        return Ok(std::str::from_utf8(&attr.value).unwrap().to_string());
+                    }
+                }
+            }
+        }
+        Err(StdError::generic_err(format!(
+            "event of type {} does not have a value at key {}",
+            event_type, attr_key
+        )))
     }
 }

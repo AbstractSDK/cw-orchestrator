@@ -1,12 +1,14 @@
 use cosmrs::tendermint::{Block, Time};
 use tonic::transport::Channel;
 
-use crate::{cosmos_modules, BootError};
+use crate::cosmos_modules;
+
+use super::error::DaemonError;
 
 pub(super) struct DaemonQuerier;
 
 impl DaemonQuerier {
-    pub async fn latest_block(channel: Channel) -> Result<Block, BootError> {
+    pub async fn latest_block(channel: Channel) -> Result<Block, DaemonError> {
         let mut client = cosmos_modules::tendermint::service_client::ServiceClient::new(channel);
         #[allow(deprecated)]
         let resp = client
@@ -16,14 +18,14 @@ impl DaemonQuerier {
         Ok(Block::try_from(resp.block.unwrap())?)
     }
 
-    pub async fn block_height(channel: Channel) -> Result<u64, BootError> {
+    pub async fn block_height(channel: Channel) -> Result<u64, DaemonError> {
         let block = Self::latest_block(channel).await?;
         Ok(block.header.height.value())
     }
 
     /// Returns the block timestamp (since unix epoch) in nanos
     #[allow(unused)]
-    pub async fn block_time(channel: Channel) -> Result<u128, BootError> {
+    pub async fn block_time(channel: Channel) -> Result<u128, DaemonError> {
         let block = Self::latest_block(channel).await?;
         Ok(block
             .header
@@ -32,7 +34,7 @@ impl DaemonQuerier {
             .as_nanos())
     }
 
-    pub async fn simulate_tx(channel: Channel, tx_bytes: Vec<u8>) -> Result<u64, BootError> {
+    pub async fn simulate_tx(channel: Channel, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
         let mut client = cosmos_modules::tx::service_client::ServiceClient::new(channel);
         #[allow(deprecated)]
         let resp = client
@@ -43,7 +45,7 @@ impl DaemonQuerier {
         Ok(gas_used)
     }
 
-    pub async fn code_id_hash(channel: Channel, code_id: u64) -> Result<String, BootError> {
+    pub async fn code_id_hash(channel: Channel, code_id: u64) -> Result<String, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryCodeRequest;
         // query hash of code-id
@@ -58,7 +60,7 @@ impl DaemonQuerier {
     pub async fn contract_info(
         channel: Channel,
         address: impl Into<String>,
-    ) -> Result<cosmos_modules::cosmwasm::ContractInfo, BootError> {
+    ) -> Result<cosmos_modules::cosmwasm::ContractInfo, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryContractInfoRequest;
         // query hash of code-id

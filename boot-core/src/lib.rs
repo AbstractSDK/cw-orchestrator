@@ -1,10 +1,12 @@
 mod contract;
+#[cfg(feature = "daemon")]
 mod daemon;
 pub mod deploy;
 mod error;
 mod index_response;
 ///
 pub mod interface;
+#[cfg(feature = "daemon")]
 mod keys;
 mod mock;
 pub mod prelude;
@@ -15,9 +17,11 @@ mod tx_handler;
 pub use boot_contract_derive::boot_contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
-pub use daemon::networks;
+
+#[cfg(feature = "daemon")]
 pub use daemon::{
     core::Daemon,
+    networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
 pub use deploy::Deploy;
@@ -30,6 +34,7 @@ pub trait BootEnvironment: TxHandler + Clone {}
 
 impl<T: TxHandler + Clone> BootEnvironment for T {}
 
+#[cfg(feature = "daemon")]
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;
     pub use cosmrs::proto::cosmos::authz::v1beta1 as authz;
