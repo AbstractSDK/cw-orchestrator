@@ -23,6 +23,7 @@ pub use daemon::{
     core::Daemon,
     networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
+    error::DaemonError,
 };
 pub use deploy::Deploy;
 pub use error::BootError;
