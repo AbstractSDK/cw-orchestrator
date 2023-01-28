@@ -84,7 +84,7 @@ impl DaemonState {
         let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");
         if network.network_type == NetworkKind::Local.to_string() {
             let name = path.split('.').next().unwrap();
-            path = format!("{}_local.json ", name);
+            path = format!("{name}_local.json ");
         }
 
         // Try to get the standard fee token (probably shortest denom)

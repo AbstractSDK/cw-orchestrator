@@ -22,7 +22,7 @@ fn parse_query(v: &syn::Variant) -> (String, Type) {
 
 pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let name = &input.ident;
-    let bname = Ident::new(&format!("{}Fns", name), name.span());
+    let bname = Ident::new(&format!("{name}Fns"), name.span());
     let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name);
 
     let variants = input.variants;

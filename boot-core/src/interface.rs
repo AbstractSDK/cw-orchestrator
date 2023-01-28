@@ -45,9 +45,9 @@ pub trait CwInterface {
 pub trait BootExecute<Chain: BootEnvironment> {
     type ExecuteMsg: Serialize;
 
-    fn execute<'a>(
+    fn execute(
         &self,
-        execute_msg: &'a Self::ExecuteMsg,
+        execute_msg: &Self::ExecuteMsg,
         coins: Option<&[Coin]>,
     ) -> Result<Chain::Response, BootError>;
 }
@@ -55,9 +55,9 @@ pub trait BootExecute<Chain: BootEnvironment> {
 impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootExecute<Chain> for T {
     type ExecuteMsg = <T as CwInterface>::ExecuteMsg;
 
-    fn execute<'a>(
+    fn execute(
         &self,
-        execute_msg: &'a Self::ExecuteMsg,
+        execute_msg: &Self::ExecuteMsg,
         coins: Option<&[Coin]>,
     ) -> Result<Chain::Response, BootError> {
         self.as_instance().execute(&execute_msg, coins)
