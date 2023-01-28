@@ -18,8 +18,6 @@ BASE_PACKAGES="boot-contract-derive boot-fns-derive"
 UTILS_PACKAGES="boot-core"
 ALL_PACKAGES="boot-cw-plus"
 
-SLEEP_TIME=30
-
 for pack in $BASE_PACKAGES; do
   (
     cd "packages/$pack"
@@ -29,10 +27,6 @@ for pack in $BASE_PACKAGES; do
   )
 done
 
-# wait for these to be processed on crates.io
-echo "Waiting for publishing base packages"
-sleep $SLEEP_TIME
-
 for pack in $UTILS_PACKAGES; do
   (
     cd "$pack"
@@ -40,10 +34,6 @@ for pack in $UTILS_PACKAGES; do
     cargo publish
   )
 done
-
-# wait for these to be processed on crates.io
-echo "Waiting for publishing utils packages"
-sleep $SLEEP_TIME
 
 for pack in $ALL_PACKAGES; do
   (
