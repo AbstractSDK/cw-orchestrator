@@ -216,5 +216,5 @@ async fn find_by_hash(
         log::debug!("{:?}", resp);
         return Ok(resp.into());
     }
-    panic!("couldn't find transaction after {} attempts!", attempts);
+    panic!("couldn't find transaction after {attempts} attempts!");
 }

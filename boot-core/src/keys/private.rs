@@ -99,7 +99,7 @@ impl PrivateKey {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
-        let path = format!("m/44'/{}'/{}'/0/{}", coin_type, account, index);
+        let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
 
         let private_key = root_private_key.derive_priv(secp, &derivation_path)?;
