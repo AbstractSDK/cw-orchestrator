@@ -1,9 +1,8 @@
+use crate::daemon::error::DaemonError;
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
 use crypto::digest::Digest;
 use crypto::ripemd160::Ripemd160;
 use crypto::sha2::Sha256;
-
-use crate::daemon::error::DaemonError;
 pub use ed25519_dalek::PublicKey as Ed25519;
 use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
