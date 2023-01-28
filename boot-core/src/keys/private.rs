@@ -80,8 +80,8 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
     ) -> PublicKey {
-        let x = &self.private_key.private_key.public_key(secp);
-        PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x.clone()))
+        let x = self.private_key.private_key.public_key(secp);
+        PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x))
     }
 
     pub fn raw_key(&self) -> Vec<u8> {
