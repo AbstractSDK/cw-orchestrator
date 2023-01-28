@@ -1,3 +1,21 @@
+use super::{
+    error::DaemonError,
+    querier::DaemonQuerier,
+    sender::{Sender, Wallet},
+    state::{DaemonOptions, DaemonState, NetworkKind},
+    tx_resp::CosmTxResponse,
+};
+use crate::{
+    contract::ContractCodeReference, cosmos_modules, state::ChainState, tx_handler::TxHandler,
+};
+use cosmrs::{
+    cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
+    tendermint::Time,
+    AccountId, Denom,
+};
+use cosmwasm_std::{Addr, Coin, Empty};
+use serde::{de::DeserializeOwned, Serialize};
+use serde_json::from_str;
 use std::{
     fmt::Debug,
     rc::Rc,
@@ -5,30 +23,8 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-
-use cosmrs::{
-    cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
-    tendermint::Time,
-    AccountId, Denom,
-};
-
-use cosmwasm_std::{Addr, Coin, Empty};
-use serde::{de::DeserializeOwned, Serialize};
-use serde_json::from_str;
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
-
-use crate::{
-    contract::ContractCodeReference, cosmos_modules, error::BootError, state::ChainState,
-    tx_handler::TxHandler,
-};
-
-use super::{
-    querier::DaemonQuerier,
-    sender::{Sender, Wallet},
-    state::{DaemonOptions, DaemonState, NetworkKind},
-    tx_resp::CosmTxResponse,
-};
 
 pub fn instantiate_daemon_env(
     runtime: &Arc<Runtime>,
@@ -69,11 +65,11 @@ impl Daemon {
         }
     }
 
-    pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), BootError> {
+    pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), DaemonError> {
         // This ensures that you don't change the deployment of any contract that has been used before.
         // It reduces the probability of shooting yourself in the foot.
         Rc::get_mut(&mut self.state)
-            .ok_or(BootError::SharedDaemonState)?
+            .ok_or(DaemonError::SharedDaemonState)?
             .set_deployment(deployment_id);
         Ok(())
     }
@@ -90,6 +86,7 @@ impl ChainState for Daemon {
 // Execute on the real chain, returns tx response
 impl TxHandler for Daemon {
     type Response = CosmTxResponse;
+    type Error = DaemonError;
 
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -99,7 +96,7 @@ impl TxHandler for Daemon {
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, BootError> {
+    ) -> Result<Self::Response, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(contract_address.as_str())?,
@@ -119,7 +116,7 @@ impl TxHandler for Daemon {
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[Coin],
-    ) -> Result<Self::Response, BootError> {
+    ) -> Result<Self::Response, DaemonError> {
         let sender = &self.sender;
 
         let init_msg = MsgInstantiateContract {
@@ -143,7 +140,7 @@ impl TxHandler for Daemon {
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, BootError> {
+    ) -> Result<T, DaemonError> {
         let sender = &self.sender;
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
         let resp = self.runtime.block_on(client.smart_contract_state(
@@ -161,7 +158,7 @@ impl TxHandler for Daemon {
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, BootError> {
+    ) -> Result<Self::Response, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(contract_address.as_str())?,
@@ -177,7 +174,7 @@ impl TxHandler for Daemon {
     fn upload(
         &self,
         contract_source: &mut ContractCodeReference<Empty>,
-    ) -> Result<Self::Response, BootError> {
+    ) -> Result<Self::Response, DaemonError> {
         let sender = &self.sender;
         let wasm_path = &contract_source.get_wasm_code_path()?;
 
@@ -200,7 +197,7 @@ impl TxHandler for Daemon {
         Ok(result)
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
+    fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let channel: Channel = self.sender.channel();
         let mut last_height = self
             .runtime
@@ -220,7 +217,7 @@ impl TxHandler for Daemon {
         Ok(())
     }
 
-    fn next_block(&self) -> Result<(), BootError> {
+    fn next_block(&self) -> Result<(), DaemonError> {
         let channel: Channel = self.sender.channel();
         let mut last_height = self
             .runtime
@@ -240,7 +237,7 @@ impl TxHandler for Daemon {
         Ok(())
     }
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, BootError> {
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
         let block = self
             .runtime
             .block_on(DaemonQuerier::latest_block(self.sender.channel()))?;
@@ -254,7 +251,9 @@ impl TxHandler for Daemon {
     }
 }
 
-pub(crate) fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, BootError> {
+pub(crate) fn parse_cw_coins(
+    coins: &[cosmwasm_std::Coin],
+) -> Result<Vec<cosmrs::Coin>, DaemonError> {
     coins
         .iter()
         .map(|cosmwasm_std::Coin { amount, denom }| {
@@ -263,5 +262,5 @@ pub(crate) fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs:
                 denom: Denom::from_str(denom)?,
             })
         })
-        .collect::<Result<Vec<_>, BootError>>()
+        .collect::<Result<Vec<_>, DaemonError>>()
 }

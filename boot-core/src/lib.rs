@@ -1,13 +1,14 @@
 mod contract;
+#[cfg(feature = "daemon")]
 mod daemon;
+pub mod deploy;
 mod error;
-mod helpers;
 mod index_response;
 ///
 pub mod interface;
+#[cfg(feature = "daemon")]
 mod keys;
 mod mock;
-pub mod networks;
 pub mod prelude;
 pub mod state;
 mod tx_handler;
@@ -16,12 +17,16 @@ mod tx_handler;
 pub use boot_contract_derive::boot_contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
+
+#[cfg(feature = "daemon")]
 pub use daemon::{
     core::Daemon,
+    error::DaemonError,
+    networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
+pub use deploy::Deploy;
 pub use error::BootError;
-pub use helpers::get_env_vars;
 pub use index_response::IndexResponse;
 pub use mock::{core::Mock, state::MockState};
 pub use tx_handler::{TxHandler, TxResponse};
@@ -30,6 +35,7 @@ pub trait BootEnvironment: TxHandler + Clone {}
 
 impl<T: TxHandler + Clone> BootEnvironment for T {}
 
+#[cfg(feature = "daemon")]
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;
     pub use cosmrs::proto::cosmos::authz::v1beta1 as authz;

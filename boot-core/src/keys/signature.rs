@@ -1,10 +1,8 @@
+use crate::daemon::error::DaemonError;
+use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use secp256k1::Message;
 use secp256k1::Secp256k1;
-
-use crypto::digest::Digest;
-
-use crate::error::BootError;
 
 pub struct Signature {}
 impl Signature {
@@ -13,7 +11,7 @@ impl Signature {
         pub_key: &str,
         signature: &str,
         blob: &str,
-    ) -> Result<(), BootError> {
+    ) -> Result<(), DaemonError> {
         let public = base64::decode(pub_key)?;
         let sig = base64::decode(signature)?;
         let pk = secp256k1::PublicKey::from_slice(public.as_slice())?;

@@ -1,5 +1,4 @@
 use boot_core::{prelude::boot_contract, BootEnvironment, Contract};
-
 use cosmwasm_std::Empty;
 use cw1_whitelist::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;

@@ -1,11 +1,8 @@
-use std::sync::Arc;
-
-use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
-
 use boot_core::prelude::*;
-
+use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::Addr;
+use std::sync::Arc;
 
 // Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {
@@ -24,10 +21,9 @@ pub fn script() -> anyhow::Result<()> {
         .deployment_id("boot_showcase")
         .build()?;
 
-    let (sender, chain) = instantiate_daemon_env(&rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
     let mut token = Cw20::new(CW20_BASE, chain);
     token.upload()?;
-    token.test_generic(&sender)?;
 
     // Now we do the same but on a cw-multi-test environment!
     let sender = Addr::unchecked("test_sender");
@@ -35,7 +31,6 @@ pub fn script() -> anyhow::Result<()> {
     // The same in a cw-multi-test context
     let mut token = Cw20::new("cw-plus:cw20_base", chain);
     token.upload()?;
-    token.test_generic(&sender)?;
 
     Ok(())
 }
