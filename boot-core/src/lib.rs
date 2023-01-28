@@ -21,9 +21,9 @@ pub use contract::Contract;
 #[cfg(feature = "daemon")]
 pub use daemon::{
     core::Daemon,
+    error::DaemonError,
     networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
-    error::DaemonError,
 };
 pub use deploy::Deploy;
 pub use error::BootError;
