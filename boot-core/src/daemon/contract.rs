@@ -94,7 +94,7 @@ where
         let wasm_code_path = &self.get_wasm_code_path()?;
         if wasm_code_path.contains("artifacts") {
             // Now get local hash from optimization script
-            let checksum_path = format!("{}/checksums.txt", wasm_code_path);
+            let checksum_path = format!("{wasm_code_path}/checksums.txt");
             let contents =
                 fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
             let parsed: Vec<&str> = contents.rsplit(".wasm").collect();

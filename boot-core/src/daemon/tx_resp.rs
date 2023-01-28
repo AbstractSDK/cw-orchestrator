@@ -190,7 +190,7 @@ pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, DaemonError> {
                 // block 6877827 has this
                 Err(_e3) => match NaiveDateTime::parse_from_str(&s, FORMAT_SHORT_Z2) {
                     Err(_e4) => {
-                        eprintln!("DateTime Fail {} {:#?}", s, _e4);
+                        eprintln!("DateTime Fail {s} {_e4:#?}");
                         Err(DaemonError::StdErr(_e4.to_string()))
                     }
                     Ok(dt) => Ok(Utc.from_utc_datetime(&dt)),
@@ -238,8 +238,7 @@ impl IndexResponse for CosmTxResponse {
             }
         }
         Err(StdError::generic_err(format!(
-            "event of type {} does not have a value at key {}",
-            event_type, attr_key
+            "event of type {event_type} does not have a value at key {attr_key}"
         )))
     }
 }

@@ -16,7 +16,7 @@ fn payable(v: &syn::Variant) -> bool {
 
 pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let name = &input.ident;
-    let bname = Ident::new(&format!("{}Fns", name), name.span());
+    let bname = Ident::new(&format!("{name}Fns"), name.span());
     let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name);
     let syn::Data::Enum(syn::DataEnum {
         variants,

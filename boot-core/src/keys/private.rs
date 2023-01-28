@@ -80,12 +80,12 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
     ) -> PublicKey {
-        let x = &self.private_key.private_key.public_key(secp);
-        PublicKey::from_bitcoin_public_key(x)
+        let x = self.private_key.private_key.public_key(secp);
+        PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x))
     }
 
     pub fn raw_key(&self) -> Vec<u8> {
-        self.private_key.private_key.to_bytes()
+        self.private_key.private_key.secret_bytes().to_vec()
     }
 
     fn gen_private_key_phrase<C: secp256k1::Signing + secp256k1::Context>(
@@ -99,7 +99,7 @@ impl PrivateKey {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
-        let path = format!("m/44'/{}'/{}'/0/{}", coin_type, account, index);
+        let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
 
         let private_key = root_private_key.derive_priv(secp, &derivation_path)?;
@@ -163,7 +163,10 @@ mod tst {
         assert_eq!(pk.root_private_key.to_string(), root_key);
 
         let derived_key = "4804e2bdce36d413206ccf47cc4c64db2eff924e7cc9e90339fa7579d2bd9d5b";
-        assert_eq!(pk.private_key.private_key.key.to_string(), derived_key);
+        assert_eq!(
+            pk.private_key.private_key.display_secret().to_string(),
+            derived_key
+        );
 
         Ok(())
     }

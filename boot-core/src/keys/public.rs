@@ -1,9 +1,8 @@
+use crate::daemon::error::DaemonError;
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
 use crypto::digest::Digest;
 use crypto::ripemd160::Ripemd160;
 use crypto::sha2::Sha256;
-
-use crate::daemon::error::DaemonError;
 pub use ed25519_dalek::PublicKey as Ed25519;
 use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
@@ -24,7 +23,7 @@ Variant::Bech32M ?
 impl PublicKey {
     /// Generate a Cosmos/Tendermint/Terrad Public Key
     pub fn from_bitcoin_public_key(bpub: &bitcoin::util::key::PublicKey) -> PublicKey {
-        let bpub_bytes = bpub.key.serialize();
+        let bpub_bytes = bpub.inner.serialize();
         //     eprintln!("B-PK-{}", hex::encode(bpub_bytes));
         let raw_pub_key = PublicKey::pubkey_from_public_key(&bpub_bytes);
         let raw_address = PublicKey::address_from_public_key(&bpub_bytes);
