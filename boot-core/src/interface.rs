@@ -1,14 +1,17 @@
-use std::fmt::Debug;
-
 use crate::{contract::Contract, error::BootError, BootEnvironment, Mock};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
+use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 pub trait ContractInstance<Chain: BootEnvironment> {
     fn as_instance(&self) -> &Contract<Chain>;
     fn as_instance_mut(&mut self) -> &mut Contract<Chain>;
 
+    // Returns the contract id
+    fn id(&self) -> String {
+        self.as_instance().id.clone()
+    }
     // State interfaces
     fn address(&self) -> Result<Addr, BootError> {
         Contract::address(self.as_instance())

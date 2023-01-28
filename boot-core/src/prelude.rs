@@ -1,4 +1,5 @@
 pub use crate::contract::Contract;
+#[cfg(feature = "daemon")]
 pub use crate::daemon::{
     core::{instantiate_daemon_env, Daemon},
     state::DaemonOptionsBuilder,

@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
-use cosmwasm_std::Addr;
-
 use crate::BootError;
+use cosmwasm_std::Addr;
+use std::collections::HashMap;
 
 pub trait ChainState {
     type Out: StateInterface;

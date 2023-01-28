@@ -1,13 +1,12 @@
+use super::error::DaemonError;
 use crate::error::BootError;
 use crate::state::StateInterface;
-
 use cosmrs::{
     proto::cosmos::base::tendermint::v1beta1::{service_client::ServiceClient, GetNodeInfoRequest},
     Denom,
 };
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
-
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
@@ -48,7 +47,7 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
-    pub async fn new(options: DaemonOptions) -> Result<DaemonState, BootError> {
+    pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
         let network: RegistryChainInfo = options.network;
         // find working grpc channel
 
@@ -79,7 +78,7 @@ impl DaemonState {
         }
 
         if successful_connections.is_empty() {
-            return Err(BootError::StdErr("No active grpc endpoint found.".into()));
+            return Err(DaemonError::CannotConnectGRPC);
         }
 
         let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");

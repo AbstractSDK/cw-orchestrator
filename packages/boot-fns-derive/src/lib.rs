@@ -5,9 +5,7 @@ mod helpers;
 mod query_fns;
 
 extern crate proc_macro;
-
 use proc_macro::TokenStream;
-
 use syn::{parse_macro_input, DeriveInput, ItemEnum};
 
 #[proc_macro_derive(ExecuteFns, attributes(payable, impl_into))]

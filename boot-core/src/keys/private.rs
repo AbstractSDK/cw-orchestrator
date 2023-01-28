@@ -1,14 +1,10 @@
-use crate::error::BootError;
+use super::public::PublicKey;
+use crate::daemon::error::DaemonError;
 use bitcoin::util::bip32::{ExtendedPrivKey, IntoDerivationPath};
 use bitcoin::Network;
-
-use secp256k1::Secp256k1;
-
 use hkd32::mnemonic::{Phrase, Seed};
-
 use rand_core::OsRng;
-
-use super::public::PublicKey;
+use secp256k1::Secp256k1;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
@@ -33,7 +29,7 @@ impl PrivateKey {
     pub fn new<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         coin_type: u32,
-    ) -> Result<PrivateKey, BootError> {
+    ) -> Result<PrivateKey, DaemonError> {
         let phrase = hkd32::mnemonic::Phrase::random(OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, "")
@@ -43,7 +39,7 @@ impl PrivateKey {
         secp: &Secp256k1<C>,
         seed_phrase: &str,
         coin_type: u32,
-    ) -> Result<PrivateKey, BootError> {
+    ) -> Result<PrivateKey, DaemonError> {
         let phrase = hkd32::mnemonic::Phrase::random(OsRng, hkd32::mnemonic::Language::English);
 
         PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_phrase)
@@ -55,12 +51,12 @@ impl PrivateKey {
         account: u32,
         index: u32,
         coin_type: u32,
-    ) -> Result<PrivateKey, BootError> {
+    ) -> Result<PrivateKey, DaemonError> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, account, index, coin_type, "")
             }
-            Err(_) => Err(BootError::Phrasing),
+            Err(_) => Err(DaemonError::Phrasing),
         }
     }
 
@@ -70,12 +66,12 @@ impl PrivateKey {
         words: &str,
         seed_pass: &str,
         coin_type: u32,
-    ) -> Result<PrivateKey, BootError> {
+    ) -> Result<PrivateKey, DaemonError> {
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_pass)
             }
-            Err(_) => Err(BootError::Phrasing),
+            Err(_) => Err(DaemonError::Phrasing),
         }
     }
 
@@ -99,7 +95,7 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
         seed_phrase: &str,
-    ) -> Result<PrivateKey, BootError> {
+    ) -> Result<PrivateKey, DaemonError> {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
@@ -132,12 +128,10 @@ impl PrivateKey {
 
 #[cfg(test)]
 mod tst {
-    use crate::error::BootError;
-
     use super::*;
 
     #[test]
-    pub fn tst_gen_mnemonic() -> Result<(), BootError> {
+    pub fn tst_gen_mnemonic() -> Result<(), DaemonError> {
         // this test just makes sure the default will call it.
         let s = Secp256k1::new();
         let coin_type: u32 = 330;
@@ -156,7 +150,7 @@ mod tst {
                 assert_eq!(words, str_1);
                 Ok(())
             }
-            None => Err(BootError::MissingPhrase.into()),
+            None => Err(DaemonError::MissingPhrase.into()),
         }
     }
     #[test]
