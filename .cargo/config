@@ -1,1 +1,4 @@
 [alias]
+
+bl = "build --features daemon"
+ch = "check --features daemon"
