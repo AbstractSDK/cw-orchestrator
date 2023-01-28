@@ -23,7 +23,6 @@ for pack in $BASE_PACKAGES; do
     cd "packages/$pack"
     echo "Publishing $pack"
     cargo publish
-    sleep $SLEEP_TIME
   )
 done
 
