@@ -83,7 +83,7 @@ pub fn deploy_contract() -> anyhow::Result<String> {
         .build()?;
 
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, chain.clone());
@@ -96,7 +96,7 @@ pub fn deploy_contract() -> anyhow::Result<String> {
     };
     // The second argument is the admin, the third is any coins to send with the init message
     contract.instantiate(init_msg, None, None)?;
-  
+
     // Load and return the contract address
     let contract_addr = contract.address();
     Ok(contract_addr)
@@ -121,7 +121,7 @@ pub fn query_contract() -> Result<()> {
     let options = DaemonOptionsBuilder::default()
         .network(NETWORK)
         .build()?;
-    let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, chain.clone());
@@ -141,8 +141,8 @@ pub fn query_contract() -> Result<()> {
 
 ```rust
 // scripts/src/my_contract.rs
-// use ...
-use my_contract::{ExecuteMsg};
+use boot_core::prelude::*;
+use my_contract::{ExecuteMsg, ExecuteMsgFnsDerive};
 // ...
 
 pub fn execute_contract() -> Result<()> {
@@ -151,7 +151,7 @@ pub fn execute_contract() -> Result<()> {
     let options = DaemonOptionsBuilder::default()
         .network(NETWORK)
         .build()?;
-    let (_, _sender, chain) = instantiate_daemon_env(&rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, chain.clone());
@@ -162,6 +162,8 @@ pub fn execute_contract() -> Result<()> {
       address: contract_addr,
       balance: Uint128::from(1000000u128),
     })?;
+    // OR, if you're usincg the `ExecuteMsgFnsDerive` derive macro
+    let res = contract.update_balance(contract_addr, Uint128::from(1000000u128))?;
     // Print the result
     println!("{:?}", res);
     Ok(())
