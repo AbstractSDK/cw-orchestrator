@@ -18,7 +18,7 @@ cargo add --path ../contracts
 
 ```toml
 [dependencies]
-boot-core = "0.1.4" # latest version as of writing this article
+boot-core = "0.6.0" # latest version as of writing this article
 my-project = { path = "../my-project"}
 # ...other dependencies
 ```
@@ -29,7 +29,7 @@ The contract interface is a struct that provides accessible methods to deploy an
 
 First, create a new file in the src directory of the interfaces package, and add it to the library declaration
 
-```rust
+```bash
 touch src/my-contract.rs
 echo 'pub mod my_contract;' >> src/lib.rs
 ```
@@ -46,7 +46,7 @@ pub struct MyContract<Chain>;
 
 The generic `<Chain>` argument allows you to write functions for your interface that will be executable in different environments.
 
-> *If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.*  
+> *If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.*
 
 ## Constructor
 
@@ -73,7 +73,7 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
 
 > See [Integration Testing](../integration-tests.md) for details on using mocks for integration testing.
 
-Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`.  
+Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`.
 This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file.
 
 Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the [CosmWasm documentation on compiling your contract](https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/) for more information.
@@ -151,7 +151,7 @@ pub struct MyContract<Chain>;
 impl<Chain: BootEnvironment + Clone> MyContract<Chain> {
     pub fn test_macro(&self) -> Result<(),BootError> {
         self.freeze()?;
-        self.update_admins(vec![])?; 
+        self.update_admins(vec![])?;
         self.deposit(&[Coin::new(13,"juno")])?;
         Ok(())
     }
@@ -212,7 +212,7 @@ impl<Chain: BootEnvironment> MyContract<Chain> {
         let balance_query = QueryMsg::Balance { address };
         self.query(balance_query)
     }
-  
+
     /// Update the balance of an address
     /// `address` - the address to update
     /// `balance` - the new balance

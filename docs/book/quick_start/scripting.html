@@ -8,6 +8,7 @@
 
         <!-- Custom HTML head -->
         
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -33,13 +34,13 @@
     </head>
     <body>
         <!-- Provide site root to javascript -->
-        <script>
+        <script type="text/javascript">
             var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script>
+        <script type="text/javascript">
             try {
                 var theme = localStorage.getItem('mdbook-theme');
                 var sidebar = localStorage.getItem('mdbook-sidebar');
@@ -55,7 +56,7 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script>
+        <script type="text/javascript">
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
@@ -67,7 +68,7 @@
         </script>
 
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script>
+        <script type="text/javascript">
             var html = document.querySelector('html');
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080) {
@@ -98,7 +99,7 @@
                             <i class="fa fa-paint-brush"></i>
                         </button>
                         <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
@@ -131,7 +132,7 @@
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script>
+                <script type="text/javascript">
                     document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
                     document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
                     Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
@@ -179,7 +180,8 @@
 
         ::std::process::exit(1);
     }
-}</code></pre></pre>
+}
+</code></pre></pre>
 <h2 id="deployment-function"><a class="header" href="#deployment-function">Deployment Function</a></h2>
 <p>First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a <code>Result</code> with the contract address.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -208,7 +210,7 @@ pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
         .build()?;
 
     // Setup the environment
-    let (_, _sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, chain.clone());
@@ -221,12 +223,13 @@ pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
     };
     // The second argument is the admin, the third is any coins to send with the init message
     contract.instantiate(init_msg, None, None)?;
-  
+
     // Load and return the contract address
     let contract_addr = contract.address();
     Ok(contract_addr)
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}
+</span></code></pre></pre>
 <h3 id="additional-scripts"><a class="header" href="#additional-scripts">Additional Scripts</a></h3>
 <p>So you have your contract deployed, but what now? You can write additional scripts to interact with your contract. For example, you can write a script to query the contract state, or to execute a contract method.</p>
 <p>Here's an example of a script that queries the contract state:</p>
@@ -243,7 +246,7 @@ pub fn query_contract() -&gt; Result&lt;()&gt; {
     let options = DaemonOptionsBuilder::default()
         .network(NETWORK)
         .build()?;
-    let (_, _sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, chain.clone());
@@ -257,13 +260,14 @@ pub fn query_contract() -&gt; Result&lt;()&gt; {
     println!(&quot;{:?}&quot;, res);
     Ok(())
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}
+</span></code></pre></pre>
 <p>And one that executes a contract method:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// scripts/src/my_contract.rs
-// use ...
-use my_contract::{ExecuteMsg};
+use boot_core::prelude::*;
+use my_contract::{ExecuteMsg, ExecuteMsgFnsDerive};
 // ...
 
 pub fn execute_contract() -&gt; Result&lt;()&gt; {
@@ -272,7 +276,7 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
     let options = DaemonOptionsBuilder::default()
         .network(NETWORK)
         .build()?;
-    let (_, _sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
+    let (_sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
     let contract = MyContract::new(CONTRACT_NAME, chain.clone());
@@ -283,11 +287,14 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
       address: contract_addr,
       balance: Uint128::from(1000000u128),
     })?;
+    // OR, if you're usincg the `ExecuteMsgFnsDerive` derive macro
+    let res = contract.update_balance(contract_addr, Uint128::from(1000000u128))?;
     // Print the result
     println!(&quot;{:?}&quot;, res);
     Ok(())
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
@@ -319,7 +326,7 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
         </div>
 
         <!-- Livereload script (if served using the cli tool) -->
-        <script>
+        <script type="text/javascript">
             const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
             const socket = new WebSocket(wsAddress);
@@ -337,18 +344,18 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
 
 
 
-        <script>
+        <script type="text/javascript">
             window.playground_copyable = true;
         </script>
 
 
-        <script src="../elasticlunr.min.js"></script>
-        <script src="../mark.min.js"></script>
-        <script src="../searcher.js"></script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
 
-        <script src="../clipboard.min.js"></script>
-        <script src="../highlight.js"></script>
-        <script src="../book.js"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
 
