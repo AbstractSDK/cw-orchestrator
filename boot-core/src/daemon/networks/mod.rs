@@ -4,6 +4,7 @@ pub mod terra;
 pub mod injective;
 pub mod kujira;
 pub mod archway;
+pub mod neutron;
 
 pub use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_5};
@@ -12,6 +13,7 @@ pub use terra::{LOCAL_TERRA, PISCO_1, PHOENIX_1};
 pub use injective::{INJECTIVE_888, INJECTIVE_1};
 pub use kujira::HARPOON_4;
 pub use archway::CONSTANTINE_1;
+pub use neutron::BARYON_1;
 
 /// Returns a [`NetworkInfo`] given its id
 pub fn parse_network(net_id: &str) -> NetworkInfo {
@@ -24,6 +26,7 @@ pub fn parse_network(net_id: &str) -> NetworkInfo {
         LOCAL_TERRA,
         INJECTIVE_888,
         CONSTANTINE_1,
+        BARYON_1,
         INJECTIVE_1,
         HARPOON_4,
         OSMO_4,
