@@ -153,6 +153,7 @@ impl Sender<All> {
         self.broadcast(tx_raw).await
     }
 
+    // TODO: this does not work for injective because it's eth account
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.pub_addr().unwrap().to_string();
 
