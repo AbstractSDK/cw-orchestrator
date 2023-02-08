@@ -61,18 +61,29 @@ impl DaemonState {
         } in network.apis.grpc.iter() {
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
 
-            // https://github.com/hyperium/tonic/issues/363#issuecomment-638545965
-            let endpoint = if address.contains("https") || address.contains("443") {
-                endpoint.tls_config(ClientTlsConfig::new())?
+            let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+            let mut client = if maybe_client.is_ok() {
+                maybe_client?
             } else {
-                endpoint
+                log::warn!("Cannot connect to gRPC endpoint: {}, {:?}", address, maybe_client.unwrap_err());
+
+                // https://github.com/hyperium/tonic/issues/363#issuecomment-638545965
+                if !(address.contains("https") || address.contains("443")) {
+                    continue;
+                };
+
+                log::info!("Attempting to connect with TLS");
+                let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
+
+                let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+                if maybe_client.is_err() {
+                    log::warn!("Cannot connect to gRPC endpoint: {}, {:?}", address, maybe_client.unwrap_err());
+                    continue;
+                };
+                maybe_client?
             };
 
-            let maybe_client = ServiceClient::connect(endpoint.clone()).await;
-            if maybe_client.is_err() {
-                continue;
-            }
-            let node_info = maybe_client?
+            let node_info = client
                 .get_node_info(GetNodeInfoRequest {})
                 .await?
                 .into_inner();

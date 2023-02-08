@@ -11,7 +11,7 @@ pub const HARPOON_4: NetworkInfo = NetworkInfo {
     id: "harpoon-4",
     gas_denom: "ukuji",
     gas_price: 0.025,
-    grpc_urls: &["https://kujira-testnet-grpc.polkachu.com:11890"],
+    grpc_urls: &["http://kujira-testnet-grpc.polkachu.com:11890"],
     chain_info: KUJIRA_CHAIN,
     lcd_url: None,
     fcd_url: None,
