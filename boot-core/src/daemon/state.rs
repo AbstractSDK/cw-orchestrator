@@ -10,7 +10,7 @@ use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, 
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
-use tonic::transport::{Certificate, Channel, ClientTlsConfig};
+use tonic::transport::{Channel, ClientTlsConfig};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(derive_builder::Builder)]
