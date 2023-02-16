@@ -26,6 +26,7 @@ pub struct CosmTxResponse {
     pub timestamp: DateTime<Utc>,
     pub events: Vec<Event>,
 }
+
 impl CosmTxResponse {
     /// find a attribute's value from TX logs.
     /// returns: msg_index and value

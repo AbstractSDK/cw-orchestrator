@@ -30,7 +30,7 @@ pub const JUNO_1: NetworkInfo = NetworkInfo {
 
 pub const LOCAL_JUNO: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
-    id: "testing",
+    id: "localjuno",
     gas_denom: "ujunox",
     gas_price: 0.0,
     grpc_urls: &["http://localhost:9090"],
