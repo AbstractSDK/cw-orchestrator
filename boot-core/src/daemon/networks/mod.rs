@@ -7,7 +7,7 @@ pub mod archway;
 pub mod neutron;
 
 pub use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
-pub use juno::{JUNO_1, LOCAL_JUNO, UNI_5};
+pub use juno::{JUNO_1, LOCAL_JUNO, UNI_5, UNI_6};
 pub use osmosis::{LOCAL_OSMO, OSMO_4};
 pub use terra::{LOCAL_TERRA, PISCO_1, PHOENIX_1};
 pub use injective::{INJECTIVE_888, INJECTIVE_1};
@@ -19,6 +19,7 @@ pub use neutron::BARYON_1;
 pub fn parse_network(net_id: &str) -> NetworkInfo {
     let networks = vec![
         UNI_5,
+        UNI_6,
         JUNO_1,
         LOCAL_JUNO,
         PISCO_1,
