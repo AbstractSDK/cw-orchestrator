@@ -1,4 +1,4 @@
-# BOOT (v0.6.0)
+# BOOT (v0.6.1)
 
 BOOT is a testing and deployment tool for CosmWasm smart-contracts. It features execute and query endpoint function generation, network-agnostic transaction execution and a mock environment wrapper for complex multi-contract testing scenarios.
 

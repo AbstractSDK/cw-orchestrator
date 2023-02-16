@@ -18,7 +18,7 @@ cargo add --path ../contracts
 
 ```toml
 [dependencies]
-boot-core = "0.6.0" # latest version as of writing this article
+boot-core = "0.6.1" # latest version as of writing this article
 my-project = { path = "../my-project"}
 # ...other dependencies
 ```

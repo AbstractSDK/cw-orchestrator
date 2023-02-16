@@ -68,7 +68,7 @@ use boot_core::interface::*;
 use interfaces::my_contract::MyContract;
 
 // Select the chain to deploy to
-const NETWORK: NetworkInfo = networks::juno::UNI_5;
+const NETWORK: NetworkInfo = networks::juno::UNI_6;
 const CONTRACT_NAME: &str = "my-contract";
 
 pub fn deploy_contract() -> anyhow::Result<String> {
