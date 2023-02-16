@@ -120,8 +120,6 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
     }
 
     pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
-        // log::info!("Uploading {} with path: {}", self.id, self.source.get_wasm_code_path()?);
-
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(&mut self.source).map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
