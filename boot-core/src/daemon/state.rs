@@ -55,17 +55,18 @@ impl DaemonState {
 
         log::debug!("Found {} gRPC endpoints", network.apis.grpc.len());
 
-        for Grpc {
-            address,
-            ..
-        } in network.apis.grpc.iter() {
+        for Grpc { address, .. } in network.apis.grpc.iter() {
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
 
             let maybe_client = ServiceClient::connect(endpoint.clone()).await;
             let mut client = if maybe_client.is_ok() {
                 maybe_client?
             } else {
-                log::warn!("Cannot connect to gRPC endpoint: {}, {:?}", address, maybe_client.unwrap_err());
+                log::warn!(
+                    "Cannot connect to gRPC endpoint: {}, {:?}",
+                    address,
+                    maybe_client.unwrap_err()
+                );
 
                 // https://github.com/hyperium/tonic/issues/363#issuecomment-638545965
                 if !(address.contains("https") || address.contains("443")) {
@@ -77,7 +78,11 @@ impl DaemonState {
 
                 let maybe_client = ServiceClient::connect(endpoint.clone()).await;
                 if maybe_client.is_err() {
-                    log::warn!("Cannot connect to gRPC endpoint: {}, {:?}", address, maybe_client.unwrap_err());
+                    log::warn!(
+                        "Cannot connect to gRPC endpoint: {}, {:?}",
+                        address,
+                        maybe_client.unwrap_err()
+                    );
                     continue;
                 };
                 maybe_client?
