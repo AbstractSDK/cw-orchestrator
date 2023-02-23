@@ -31,17 +31,11 @@ pub struct Sender<C: Signing + Context> {
 }
 
 impl Sender<All> {
-    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+    pub fn from_mnemonic(
+        daemon_state: &Rc<DaemonState>,
+        mnemonic: &str,
+    ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
-        // NETWORK_MNEMONIC_GROUP
-        let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
-            panic!(
-                "Wallet mnemonic environment variable {} not set.",
-                daemon_state.kind.mnemonic_name()
-            )
-        });
-
-        // use deployment mnemonic if specified, else use default network mnemonic
         let p_key: PrivateKey =
             PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
@@ -57,6 +51,17 @@ impl Sender<All> {
             sender.pub_addr_str()?
         );
         Ok(sender)
+    }
+
+    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+        // NETWORK_MNEMONIC_GROUP
+        let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
+            panic!(
+                "Wallet mnemonic environment variable {} not set.",
+                daemon_state.kind.mnemonic_name()
+            )
+        });
+        Self::from_mnemonic(daemon_state, &mnemonic)
     }
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
         Ok(self

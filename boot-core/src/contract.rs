@@ -64,6 +64,10 @@ impl<Chain: BootEnvironment + Clone> Contract<Chain> {
         self
     }
 
+    pub fn set_wasm_path(&mut self, path: impl ToString) {
+        self.source.wasm_code_path = Some(path.to_string());
+    }
+
     pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
         self.source.contract_endpoints = Some(mock_contract);
         self

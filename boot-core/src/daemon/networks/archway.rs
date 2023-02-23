@@ -17,4 +17,3 @@ pub const CONSTANTINE_1: NetworkInfo = NetworkInfo {
     lcd_url: Some("https://api.constantine-1.archway.tech"),
     fcd_url: None,
 };
-
