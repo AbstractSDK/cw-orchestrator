@@ -29,4 +29,3 @@ pub const INJECTIVE_888: NetworkInfo = NetworkInfo {
     lcd_url: None,
     fcd_url: None,
 };
-

@@ -17,4 +17,3 @@ pub const BARYON_1: NetworkInfo = NetworkInfo {
     lcd_url: Some("https://rest.baryon.ntrn.info"),
     fcd_url: None,
 };
-
