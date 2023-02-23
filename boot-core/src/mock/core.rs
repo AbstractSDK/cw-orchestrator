@@ -5,7 +5,7 @@ use crate::{
     tx_handler::TxHandler,
     BootError, Contract,
 };
-use cosmwasm_std::{Addr, Empty, Event};
+use cosmwasm_std::{Addr, Empty, Event, Uint128};
 use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
@@ -35,6 +35,41 @@ pub struct Mock<S: StateInterface = MockState> {
     pub sender: Addr,
     pub state: Rc<RefCell<S>>,
     pub app: Rc<RefCell<App>>,
+}
+
+impl<S: StateInterface> Mock<S> {
+    pub fn set_balances(
+        &self,
+        balances: &[(&Addr, &[cosmwasm_std::Coin])],
+    ) -> Result<(), BootError> {
+        self.app
+            .borrow_mut()
+            .init_modules(|router, _, storage| -> Result<(), BootError> {
+                for (addr, coins) in balances {
+                    router.bank.init_balance(storage, &addr, coins.to_vec())?;
+                }
+                Ok(())
+            })
+    }
+
+    /// Query the balance of a native token for and address
+    /// Returns the amount of the native token
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, BootError> {
+        let amount = self
+            .app
+            .borrow()
+            .wrap()
+            .query_balance(&Addr::unchecked(address), denom)?
+            .amount;
+        Ok(amount)
+    }
+
+    /// Query all balances of the address
+    /// Returns a vector of coins
+    pub fn query_all_balances(&self, address: &Addr) -> Result<Vec<cosmwasm_std::Coin>, BootError> {
+        let amount = self.app.borrow().wrap().query_all_balances(address)?;
+        Ok(amount)
+    }
 }
 
 impl<S: StateInterface> Mock<S> {
