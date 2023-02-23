@@ -1,13 +1,16 @@
 mod contract;
 #[cfg(feature = "daemon")]
 mod daemon;
+#[cfg(feature = "daemon")]
+mod keys;
+// TODO: make private
 pub mod deploy;
 mod error;
 mod index_response;
+#[cfg(feature = "interchain")]
+pub mod interchain;
 ///
 pub mod interface;
-#[cfg(feature = "daemon")]
-mod keys;
 mod mock;
 pub mod prelude;
 pub mod state;
@@ -25,6 +28,7 @@ pub use daemon::{
     networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
+
 pub use deploy::Deploy;
 pub use error::BootError;
 pub use index_response::IndexResponse;
@@ -56,4 +60,5 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::vesting::v1beta1 as vesting;
     pub use cosmrs::proto::cosmwasm::wasm::v1 as cosmwasm;
     pub use cosmrs::proto::tendermint::abci as tendermint_abci;
+    pub use cosmrs::proto::ibc::core::channel::v1 as ibc_channel;
 }

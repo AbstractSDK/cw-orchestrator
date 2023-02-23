@@ -1,0 +1,25 @@
+{
+  "juno": {
+    "juno-1": {
+      "code_ids": {
+        "cw-plus:cw20_base": 1,
+        "cw1": 2,
+        "host": 3
+      },
+      "interchain": {
+        "host": "juno1hrpna9v7vs3stzyd4z3xf00676kf78zpe2u5ksvljswn2vnjp3ys7tlgu0"
+      }
+    }
+  },
+  "osmosis": {
+    "osmosis-2": {
+      "code_ids": {
+        "controller": 1,
+        "cw-plus:cw20_base": 1
+      },
+      "interchain": {
+        "controller": "osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9"
+      }
+    }
+  }
+}

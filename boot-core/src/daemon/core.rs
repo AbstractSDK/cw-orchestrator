@@ -58,11 +58,12 @@ impl Daemon {
     }
 
     async fn wait(&self) {
-        match self.state.kind {
-            NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-            NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-            NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
-        }
+        tokio::time::sleep(Duration::from_secs(3)).await
+        // match self.state.kind {
+        //     NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
+        //     NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
+        //     NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
+        // }
     }
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), DaemonError> {
