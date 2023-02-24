@@ -58,7 +58,7 @@ impl<S: StateInterface> Mock<S> {
             .borrow_mut()
             .init_modules(|router, _, storage| -> Result<(), BootError> {
                 for (addr, coins) in balances {
-                    router.bank.init_balance(storage, &addr, coins.to_vec())?;
+                    router.bank.init_balance(storage, addr, coins.to_vec())?;
                 }
                 Ok(())
             })
@@ -71,7 +71,7 @@ impl<S: StateInterface> Mock<S> {
             .app
             .borrow()
             .wrap()
-            .query_balance(&Addr::unchecked(address), denom)?
+            .query_balance(address, denom)?
             .amount;
         Ok(amount)
     }
@@ -83,7 +83,6 @@ impl<S: StateInterface> Mock<S> {
         Ok(amount)
     }
 }
-
 
 impl<S: StateInterface> Mock<S> {
     pub fn new(
