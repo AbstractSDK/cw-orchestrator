@@ -1,4 +1,6 @@
+pub mod docker;
 pub mod error;
-pub mod infra;
+pub mod hermes;
+pub mod infrastructure;
 
 pub type IcResult<T> = Result<T, error::InterchainError>;

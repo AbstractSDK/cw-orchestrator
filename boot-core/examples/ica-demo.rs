@@ -1,4 +1,4 @@
-use boot_core::{interchain::infra::InterchainInfrastructure, prelude::*};
+use boot_core::{interchain::infrastructure::InterchainInfrastructure, prelude::*};
 use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::{Addr, Empty};
@@ -74,7 +74,8 @@ pub fn script() -> anyhow::Result<()> {
 
     // controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
 
-    let res: controller_msgs::ListAccountsResponse = controller.query(&controller_msgs::QueryMsg::ListAccounts {  })?;
+    let res: controller_msgs::ListAccountsResponse =
+        controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
     println!("res: {:?}", res);
     Ok(())
 }
