@@ -1,15 +1,14 @@
 <!-- ![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png) -->
 # BOOT
 
-Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [https://boot.abstract.money](https://boot.abstract.money).
+Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [boot.abstract.money](https://boot.abstract.money).
 
 > [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
-
 
 [boot-cw-plus](boot-cw-plus/README.md) uses BOOT to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
 The use of this software makes it easier to quickly deploy and iterate on your contracts. You should use this function responsibly when working on mainnet or testnet as the code you upload to those networks takes up valuable space. It is strongly suggested to use a locally-hosted daemon like [localterra](https://github.com/terra-money/LocalTerra), [local junod](https://docs.junonetwork.io/smart-contracts-and-junod-development/junod-local-dev-setup), etc.
-.
+
 ## How it works
 
 Interacting with a [CosmWasm](https://cosmwasm.com/) is possible through the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.).
@@ -46,9 +45,10 @@ We would recommend reading through [the full cw20 executable example here](boot-
 
 ## Advanced features
 
-BOOT provides two additional macros that can be used to improve the scripting experience. 
+BOOT provides two additional macros that can be used to improve the scripting experience.
 
 ### ExecuteFns
+
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct itself. 
 
 Example:
