@@ -1,13 +1,12 @@
 use super::{
+    cosmos_modules,
     error::DaemonError,
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
     state::{DaemonOptions, DaemonState, NetworkKind},
     tx_resp::CosmTxResponse,
 };
-use crate::{
-    contract::ContractCodeReference, cosmos_modules, state::ChainState, tx_handler::TxHandler,
-};
+use crate::{contract::ContractCodeReference, state::ChainState, tx_handler::TxHandler};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,

@@ -62,7 +62,7 @@ First, we'll define a function that will deploy our contract to the chain. This 
 // scripts/src/my_contract.rs
 use anyhow::Result;
 use boot_core::networks;
-use boot_core::prelude::{instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
+use boot_core::{instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
 // Traits for contract deployment
 use boot_core::interface::*;
 use interfaces::my_contract::MyContract;
@@ -141,7 +141,7 @@ pub fn query_contract() -> Result<()> {
 
 ```rust
 // scripts/src/my_contract.rs
-use boot_core::prelude::*;
+use boot_core::*;
 use my_contract::{ExecuteMsg, ExecuteMsgFnsDerive};
 // ...
 
