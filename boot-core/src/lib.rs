@@ -1,22 +1,27 @@
 mod contract;
 #[cfg(feature = "daemon")]
 mod daemon;
-pub mod deploy;
+mod deploy;
 mod error;
 mod index_response;
 ///
-pub mod interface;
+mod interface;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
 pub mod prelude;
-pub mod state;
+mod state;
 mod tx_handler;
 
 // pub mod traits;
 pub use boot_contract_derive::boot_contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
+
+// re-export as it is used in the public API
+pub use cw_multi_test::ContractWrapper;
+pub use cosmwasm_std::{Addr, Coin};
+
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
