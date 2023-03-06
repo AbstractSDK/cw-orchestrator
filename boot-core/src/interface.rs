@@ -33,7 +33,7 @@ pub trait ContractInstance<Chain: BootEnvironment> {
     }
 }
 
-/// Implementing CwInterface ensures type safety
+/// Tells BOOT what the contract's entrypoint messages are.
 pub trait CwInterface {
     type InstantiateMsg: Serialize + Debug;
     type ExecuteMsg: Serialize + Debug;
