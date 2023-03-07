@@ -6,7 +6,7 @@ use crate::{BootEnvironment, BootError};
 /// ```rust
 /// use boot_core::{Deploy, BootError, Empty, BootEnvironment, BootUpload};
 /// use boot_cw_plus::Cw20;
-/// 
+///
 /// pub struct MyApplication<Chain: BootEnvironment> {
 ///   pub token: Cw20<Chain>
 /// }
