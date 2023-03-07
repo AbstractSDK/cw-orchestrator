@@ -12,7 +12,6 @@ readme = "README.md"
 
 exclude = [".env"]
 
-
 [[example]]
 name = "cw20"
 required-features = ["daemon"]
@@ -40,7 +39,6 @@ daemon = [
     "dep:prost",
     "dep:sha256",
 ]
-default = ["daemon"]
 
 [dependencies]
 # Default deps
