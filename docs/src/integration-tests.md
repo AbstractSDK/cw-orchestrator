@@ -15,7 +15,7 @@ The following assumes that you have written your interfaces as described in [Int
 
 use boot_core::networks;  
 use interfaces::MyContract;
-use boot_core::prelude::*;  
+use boot_core::*;  
 use cosmwasm_std::Addr;  
 use cw_multi_test::ContractWrapper;
 use semver::Version;
@@ -75,7 +75,7 @@ use my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 pub struct MockMyContract<Chain>;
 use cw_multi_test::ContractWrapper;
 use crate::contract;
-use boot_prelude::*;
+use boot_*;
 
 
 impl<Chain: BootEnvironment> MockMyContract<Chain> {
