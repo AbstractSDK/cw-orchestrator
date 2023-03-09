@@ -2,12 +2,14 @@ use crate::BootError;
 use cosmwasm_std::Addr;
 use std::collections::HashMap;
 
+/// State accessor trait
+/// Indicates that the type has access to an underlying state
 pub trait ChainState {
     type Out: StateInterface;
     fn state(&self) -> Self::Out;
 }
 
-/// Interface for setting the local (jsonified) state of the contracts on a chain
+/// Interface for setting the local state of the contracts on a chain
 pub trait StateInterface: Clone {
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError>;
     fn set_address(&mut self, contract_id: &str, address: &Addr);

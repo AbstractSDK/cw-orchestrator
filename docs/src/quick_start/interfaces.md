@@ -37,7 +37,7 @@ echo 'pub mod my_contract;' >> src/lib.rs
 In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `boot_contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
 
 ```rust
-use boot_core::prelude::*;
+use boot_core::*;
 use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
 #[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
