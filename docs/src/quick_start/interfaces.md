@@ -8,7 +8,6 @@ cargo init --lib interfaces
 cd interfaces
 ```
 
-
 Now add [boot-core](https://crates.io/crates/boot-core) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
 
 ```bash
@@ -18,7 +17,7 @@ cargo add --path ../contracts
 
 ```toml
 [dependencies]
-boot-core = "0.6.1" # latest version as of writing this article
+boot-core = "0.8.0" # latest version as of writing this article
 my-project = { path = "../my-project"}
 # ...other dependencies
 ```
