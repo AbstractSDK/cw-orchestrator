@@ -11,7 +11,7 @@ The following assumes that you have written your interfaces as described in [Int
 ## Test Setup
 
 ```rust
-// contracts/my-contract/src/integration_tests.rs
+// contracts/my-contract/tests/integration_tests.rs
 
 use boot_core::networks;  
 use interfaces::MyContract;
@@ -19,7 +19,7 @@ use boot_core::*;
 use cosmwasm_std::Addr;  
 use cw_multi_test::ContractWrapper;
 use semver::Version;
-use crate::contract;
+use my_contract::contract;
 use my_contract::{ExecuteMsg};
   
 const TEST_VERSION: Version = Version::new(0, 0, 0);  
@@ -75,7 +75,7 @@ use my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 pub struct MockMyContract<Chain>;
 use cw_multi_test::ContractWrapper;
 use crate::contract;
-use boot_*;
+use boot_core::ß*;
 
 
 impl<Chain: BootEnvironment> MockMyContract<Chain> {
