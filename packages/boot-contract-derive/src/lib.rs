@@ -43,7 +43,7 @@ pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             )]
             pub struct #name<Chain: ::boot_core::BootEnvironment>(::boot_core::Contract<Chain>);
 
-            impl<Chain: ::boot_core::BootEnvironment> ::boot_core::interface::ContractInstance<Chain> for #name<Chain> {
+            impl<Chain: ::boot_core::BootEnvironment> ::boot_core::ContractInstance<Chain> for #name<Chain> {
                 fn as_instance(&self) -> &::boot_core::Contract<Chain> {
             &self.0
         }
@@ -52,7 +52,7 @@ pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
-        impl<Chain: ::boot_core::BootEnvironment> ::boot_core::interface::CwInterface for #name<Chain> {
+        impl<Chain: ::boot_core::BootEnvironment> ::boot_core::CwInterface for #name<Chain> {
             type InstantiateMsg = #init;
             type ExecuteMsg = #exec;
             type QueryMsg = #query;

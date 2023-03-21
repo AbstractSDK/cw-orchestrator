@@ -35,7 +35,7 @@ jobs:
           rust-version: stable
           components: clippy
       - name: Build | Lint
-        run: cargo clippy --features daemon -- -D warnings
+        run: cargo clippy --all-features -- -D warnings
   compile:
     name: Compile
     runs-on: self-hosted
@@ -51,7 +51,7 @@ jobs:
       - name: Dependencies | Compile
         run: cargo update
       - name: Build | Compile
-        run: cargo check --features daemon
+        run: cargo check --all-features
   # test:
   #   name: Test
   #   runs-on:  self-hosted

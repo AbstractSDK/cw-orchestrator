@@ -12,7 +12,6 @@ readme = "README.md"
 
 exclude = [".env"]
 
-
 [[example]]
 name = "cw20"
 required-features = ["daemon"]

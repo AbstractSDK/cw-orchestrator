@@ -67,7 +67,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     });
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::boot_core::BootEnvironment, #type_generics>: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type> {
+        pub trait #bname<Chain: ::boot_core::BootEnvironment, #type_generics>: ::boot_core::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type> {
             #(#variant_fns)*
         }
     );
@@ -76,7 +76,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
         #[automatically_derived]
         impl<SupportedContract, Chain: ::boot_core::BootEnvironment, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            SupportedContract: ::boot_core::prelude::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type>{}
+            SupportedContract: ::boot_core::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type>{}
     );
 
     let expand = quote!(

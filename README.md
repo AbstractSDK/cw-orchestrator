@@ -1,5 +1,5 @@
 <!-- ![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png) -->
-# BOOT
+# BOOT (Unstable API)
 
 Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [boot.abstract.money](https://boot.abstract.money).
 
