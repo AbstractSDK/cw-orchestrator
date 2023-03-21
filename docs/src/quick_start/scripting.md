@@ -24,6 +24,12 @@ and also add the `anyhow` and `dotenv` crates:
 cargo add anyhow dotenv log
 ```
 
+and, we must enable the `daemon` feature on `boot_core`
+
+```bash
+cargo add boot_core --features daemon
+```
+
 ## Main Function
 
 Now that we have our dependencies setup, we can start writing our script. Either create a new file in the `src` directory of the `scripts/src` package, or use the `main.rs` file that was created by default.
