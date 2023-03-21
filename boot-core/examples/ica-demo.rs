@@ -1,5 +1,4 @@
-use boot_core::{interchain::infrastructure::InterchainInfrastructure, prelude::*};
-use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
+use boot_core::*;
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::{Addr, Empty};
 use simple_ica_controller::msg as controller_msgs;
@@ -55,28 +54,32 @@ pub fn script() -> anyhow::Result<()> {
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
 
     let interchain = InterchainInfrastructure::new(&rt)?;
-
+    
     let mut cw1 = Cw1::new("cw1", interchain.chain_a.clone());
     let mut host = Host::new("host", interchain.chain_a.clone());
     let mut controller = Controller::new("controller", interchain.chain_b);
-
-    // cw1.upload()?;
-    // host.upload()?;
-    // controller.upload()?;
-
-    // host.instantiate(
-    //     &host_msgs::InstantiateMsg {
-    //         cw1_code_id: cw1.code_id()?,
-    //     },
-    //     None,
-    //     None,
-    // )?;
-
-    // controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
-
+    
+    cw1.upload()?;
+    host.upload()?;
+    controller.upload()?;
+    
+    host.instantiate(
+        &host_msgs::InstantiateMsg {
+            cw1_code_id: cw1.code_id()?,
+        },
+        None,
+        None,
+    )?;
+    
+    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
+    
     let res: controller_msgs::ListAccountsResponse =
-        controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-    println!("res: {:?}", res);
+    controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
+    println!("Before channel creation: {:?}", res);
+    interchain.hermes.create_channel(&rt, "simple-ica-v2", &host, &controller);
+    let res: controller_msgs::ListAccountsResponse =
+    controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
+    println!("After channel creation: {:?}", res);
     Ok(())
 }
 
