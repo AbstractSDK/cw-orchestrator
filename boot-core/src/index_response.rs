@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Binary, Event, StdError, StdResult};
 use cw_multi_test::AppResponse;
 
-// Function to index data returned by transactions which are applicable to both AppResponse (mock env) and TxResponse (live env)
+/// Index data returned by transactions which are applicable to both AppResponse (mock env) and TxResponse (live env)
 pub trait IndexResponse {
     fn events(&self) -> Vec<Event>;
     fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String>;

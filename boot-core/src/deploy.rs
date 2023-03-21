@@ -4,24 +4,24 @@ use crate::{BootEnvironment, BootError};
 ///
 /// ## Example:
 /// ```rust
-/// use boot_core::mock::deploy::Deploy;
+/// use boot_core::{Deploy, BootError, Empty, BootEnvironment, BootUpload};
+/// use boot_cw_plus::Cw20;
 ///
 /// pub struct MyApplication<Chain: BootEnvironment> {
 ///   pub token: Cw20<Chain>
 /// }
 ///
-/// impl Deploy for MyApplication<Mock> {
+/// impl<Chain: BootEnvironment> Deploy<Chain> for MyApplication<Chain> {
 ///     type Error = BootError;
 ///     type DeployData = Empty;
 ///     // deploys the token to the chain
-///     fn deploy_on(chain: Chain, data: Empty) -> Result<R, BootError> {
-///         let token = Cw20::new("my-token", chain.clone());
-///         self.token.upload()?;
-///         self.token.instantiate(...)?;
+///     fn deploy_on(chain: Chain, data: Empty) -> Result<Self, BootError> {
+///         let mut token = Cw20::new("my-token", chain.clone());
+///         token.upload()?;
 ///         Ok(Self { token })
 ///     }
 ///    // loads the token from the chain
-///    fn load_from(chain: Chain) -> Result<R, BootError> {
+///    fn load_from(chain: Chain) -> Result<Self, BootError> {
 ///         let token = Cw20::new("my-token", chain.clone());
 ///         Ok(Self { token })
 ///    }
