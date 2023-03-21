@@ -43,6 +43,9 @@ pub use daemon::{
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
 
+#[cfg(feature = "interchain")]
+pub use interchain::{hermes::Hermes, infrastructure::InterchainInfrastructure};
+
 /// Signals a supported execution environment
 pub trait BootEnvironment: TxHandler + Clone {}
 impl<T: TxHandler + Clone> BootEnvironment for T {}
