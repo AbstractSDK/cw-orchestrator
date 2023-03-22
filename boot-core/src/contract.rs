@@ -1,4 +1,4 @@
-use crate::BootEnvironment;
+use crate::CwEnvironment;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
@@ -11,7 +11,7 @@ use std::fmt::Debug;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: BootEnvironment> {
+pub struct Contract<Chain: CwEnvironment> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     pub(crate) source: ContractCodeReference,
@@ -39,7 +39,7 @@ impl Clone for ContractCodeReference {
 }
 
 /// Expose chain and state function to call them on the contract
-impl<Chain: BootEnvironment + Clone> Contract<Chain> {
+impl<Chain: CwEnvironment + Clone> Contract<Chain> {
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),
