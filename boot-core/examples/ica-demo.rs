@@ -1,8 +1,8 @@
 use boot_core::*;
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::{Addr, Empty};
-use simple_ica_controller::msg as controller_msgs;
-use simple_ica_host::msg as host_msgs;
+use simple_ica_controller::msg::{self as controller_msgs, AccountResponse};
+use simple_ica_host::msg::{self as host_msgs, ListAccountsResponse};
 use std::sync::Arc;
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
@@ -59,27 +59,41 @@ pub fn script() -> anyhow::Result<()> {
     let mut host = Host::new("host", interchain.chain_a.clone());
     let mut controller = Controller::new("controller", interchain.chain_b);
     
-    cw1.upload()?;
-    host.upload()?;
-    controller.upload()?;
+    // cw1.upload()?;
+    // host.upload()?;
+    // controller.upload()?;
     
-    host.instantiate(
-        &host_msgs::InstantiateMsg {
-            cw1_code_id: cw1.code_id()?,
-        },
-        None,
-        None,
-    )?;
+    // host.instantiate(
+    //     &host_msgs::InstantiateMsg {
+    //         cw1_code_id: cw1.code_id()?,
+    //     },
+    //     None,
+    //     None,
+    // )?;
     
-    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
+    // controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
     
-    let res: controller_msgs::ListAccountsResponse =
-    controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-    println!("Before channel creation: {:?}", res);
-    interchain.hermes.create_channel(&rt, "simple-ica-v2", &host, &controller);
-    let res: controller_msgs::ListAccountsResponse =
-    controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-    println!("After channel creation: {:?}", res);
+    // let res: controller_msgs::ListAccountsResponse =
+    // controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
+    // println!("Before channel creation: {:?}", res);
+    // interchain.hermes.create_channel(&rt, "simple-ica-v2", &host, &controller);
+    // let res: controller_msgs::ListAccountsResponse =
+    // controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
+    // println!("After channel creation: {:?}", res);
+
+    let remote_accounts: ListAccountsResponse = host.query(&host_msgs::QueryMsg::ListAccounts {  })?;
+    println!("Remote accounts: {:?}", remote_accounts);
+    let remote_account = remote_accounts.accounts[0].clone();
+    // send some funds to the remote account
+    // let res = interchain.chain_a.runtime.block_on(interchain.chain_a.sender.bank_send(&remote_account.account, vec![cosmwasm_std::coin(100u128,"ujuno")]))?;
+    // println!("Send funds result: {:?}", res);
+    let channel = remote_account.channel_id;
+
+    // controller.execute(&controller_msgs::ExecuteMsg::CheckRemoteBalance { channel_id: channel.clone() }, None)?;
+    // wait a bit
+    // std::thread::sleep(std::time::Duration::from_secs(40));
+    let balance_result: AccountResponse = controller.query(&controller_msgs::QueryMsg::Account { channel_id: channel })?;
+    println!("Balance result: {:?}", balance_result);
     Ok(())
 }
 
