@@ -12,7 +12,7 @@ The deployment can be represented by a struct containing all the contracts that 
 
 ```rust
 // Our Abstract deployment
-pub struct Abstract<Chain: BootEnvironment> {
+pub struct Abstract<Chain: CwEnvironment> {
     pub version: Version,
     pub ans_host: AnsHost<Chain>,
     pub version_control: VersionControl<Chain>,
@@ -24,7 +24,7 @@ pub struct Abstract<Chain: BootEnvironment> {
 Now we can implement the `boot_core::Deploy` trait for the `Abstract` struct.
 
 ```rust
-impl<Chain: BootEnvironment> boot_core::Deploy<Chain> for Abstract<Chain> {
+impl<Chain: CwEnvironment> boot_core::Deploy<Chain> for Abstract<Chain> {
     // We don't have a custom error type
     type Error = BootError;
     type DeployData = semver::Version;
@@ -112,7 +112,7 @@ fn setup_test(mock: Mock) -> Result<(), BootError> {
 And then when setting up your own deployment you can load these applications to access their contracts (for accessing configuration, addresses, ...)
 
 ```rust
-impl<Chain: BootEnvironment> boot_core::Deploy<Chain> for MyApplication<Chain> {
+impl<Chain: CwEnvironment> boot_core::Deploy<Chain> for MyApplication<Chain> {
     /// ...
     fn deploy_on(chain: Chain, _data: Empty) -> Result<Self, BootError> {
 

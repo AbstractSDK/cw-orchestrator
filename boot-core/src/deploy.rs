@@ -1,17 +1,17 @@
-use crate::{BootEnvironment, BootError};
+use crate::{CwEnvironment, BootError};
 
 /// Indicates the ability to deploy an application to a mock chain.
 ///
 /// ## Example:
 /// ```rust
-/// use boot_core::{Deploy, BootError, Empty, BootEnvironment, BootUpload};
+/// use boot_core::{Deploy, BootError, Empty, CwEnvironment, BootUpload};
 /// use boot_cw_plus::Cw20;
 ///
-/// pub struct MyApplication<Chain: BootEnvironment> {
+/// pub struct MyApplication<Chain: CwEnvironment> {
 ///   pub token: Cw20<Chain>
 /// }
 ///
-/// impl<Chain: BootEnvironment> Deploy<Chain> for MyApplication<Chain> {
+/// impl<Chain: CwEnvironment> Deploy<Chain> for MyApplication<Chain> {
 ///     type Error = BootError;
 ///     type DeployData = Empty;
 ///     // deploys the token to the chain
@@ -30,7 +30,7 @@ use crate::{BootEnvironment, BootError};
 ///
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
-pub trait Deploy<Chain: BootEnvironment>: Sized {
+pub trait Deploy<Chain: CwEnvironment>: Sized {
     type Error: From<BootError>;
     /// Data required to deploy the application.
     type DeployData;

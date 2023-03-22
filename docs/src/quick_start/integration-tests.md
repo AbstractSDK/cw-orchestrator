@@ -78,7 +78,7 @@ use crate::contract;
 use boot_core::ß*;
 
 
-impl<Chain: BootEnvironment> MockMyContract<Chain> {
+impl<Chain: CwEnvironment> MockMyContract<Chain> {
     /// Construct a new instance of MyContract
     /// * `contract_id` - what your contract should be called in local state (*not* on-chain)
     /// * `chain` - the environment to deploy to

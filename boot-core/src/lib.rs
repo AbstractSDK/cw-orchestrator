@@ -40,6 +40,15 @@ pub use daemon::{
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
 
+#[deprecated(
+    since = "0.8.1",
+    note = "Phasing out the use of `BootEnvironment` in favor of `CwEnvironment`"
+)]
 /// Signals a supported execution environment
 pub trait BootEnvironment: TxHandler + Clone {}
+#[allow(deprecated)]
 impl<T: TxHandler + Clone> BootEnvironment for T {}
+
+/// Signals a supported execution environment for CosmWasm contracts
+pub trait CwEnvironment: TxHandler + Clone {}
+impl<T: TxHandler + Clone> CwEnvironment for T {}
