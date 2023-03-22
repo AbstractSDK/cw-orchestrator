@@ -52,7 +52,7 @@ The generic `<Chain>` argument allows you to write functions for your interface 
 Next, you'll want to define the constructor for the interface we just defined:
 
 ```rust
-impl<Chain: CwEnvironment> MyContract<Chain> {
+impl<Chain: CwEnv> MyContract<Chain> {
     /// Construct a new instance of MyContract
     /// * `contract_id` - what your contract should be called in local state (*not* on-chain)
     /// * `chain` - the environment to deploy to
@@ -91,7 +91,7 @@ The environments that are currently supported are:
 Generic functions can be executed over any environment.
 
 ```rust
-impl<Chain: CwEnvironment> MyContract<Chain> {
+impl<Chain: CwEnv> MyContract<Chain> {
     pub fn deploy(&self, instantiate_msg: &InstantiateMsg) -> Self {
         let sender = &self.chain.sender();
         self.upload()?;
@@ -147,7 +147,7 @@ pub enum ExecuteMsg{
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
-impl<Chain: CwEnvironment + Clone> MyContract<Chain> {
+impl<Chain: CwEnv + Clone> MyContract<Chain> {
     pub fn test_macro(&self) -> Result<(),BootError> {
         self.freeze()?;
         self.update_admins(vec![])?;
@@ -179,7 +179,7 @@ pub struct InfoResponse {
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
-impl<Chain: CwEnvironment + Clone> MyContract<Chain> {
+impl<Chain: CwEnv + Clone> MyContract<Chain> {
     pub fn test_macro(&self) -> Result<(),BootError> {
         // No need to specify returned type!
         let info = self.info()?;
@@ -200,7 +200,7 @@ You can also refine your contract interface manually to add more complex interac
 use boot_core::interface::*;
 // ...
 
-impl<Chain: CwEnvironment> MyContract<Chain> {
+impl<Chain: CwEnv> MyContract<Chain> {
     pub fn new(contract_id: &str, chain: Chain) -> Self {
       // ...
     }
