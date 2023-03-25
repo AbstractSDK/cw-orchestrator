@@ -1,9 +1,9 @@
-use boot_core::{boot_contract, BootEnvironment, Contract};
+use boot_core::{contract, BootEnvironment, Contract};
 use cosmwasm_std::Empty;
 use cw1_whitelist::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
 pub struct Cw1;
 
 // implement chain-generic functions
