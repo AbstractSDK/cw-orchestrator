@@ -71,7 +71,7 @@ To define an interface *exclusively* for use in integration testing, create an i
 
 use my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockMyContract<Chain>;
 use cw_multi_test::ContractWrapper;
 use crate::contract;
