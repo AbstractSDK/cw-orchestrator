@@ -1,4 +1,4 @@
-use crate::{CwEnv, BootError};
+use crate::{BootError, CwEnv};
 
 /// Indicates the ability to deploy an application to a mock chain.
 ///

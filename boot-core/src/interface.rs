@@ -76,9 +76,7 @@ pub trait BootInstantiate<Chain: CwEnv> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain>
-    for T
-{
+impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain> for T {
     type InstantiateMsg = <T as CwInterface>::InstantiateMsg;
 
     fn instantiate(
