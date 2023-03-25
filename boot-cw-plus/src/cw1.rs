@@ -1,4 +1,4 @@
-use boot_core::{contract, BootEnvironment, Contract};
+use boot_core::{contract, CwEnv, Contract};
 use cosmwasm_std::Empty;
 use cw1_whitelist::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
@@ -7,7 +7,7 @@ use cw_multi_test::ContractWrapper;
 pub struct Cw1;
 
 // implement chain-generic functions
-impl<Chain: BootEnvironment + Clone> Cw1<Chain> {
+impl<Chain: CwEnv + Clone> Cw1<Chain> {
     pub fn new(id: &str, chain: Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw1_whitelist.wasm");

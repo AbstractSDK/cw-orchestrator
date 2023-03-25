@@ -68,7 +68,7 @@ pub enum ExecuteMsg{
 #[contract(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1
 
-impl<Chain: BootEnvironment> Cw1<Chain> {
+impl<Chain: CwEnv> Cw1<Chain> {
     pub fn test_macro(&self) {
         self.freeze().unwrap();
         self.update_admins(vec![]).unwrap(); 
