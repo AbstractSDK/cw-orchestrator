@@ -9,7 +9,7 @@ use serde::Serialize;
 pub struct Cw20;
 
 // implement chain-generic functions
-impl<Chain: BootEnvironment> Cw20<Chain> {
+impl<Chain: CwEnv> Cw20<Chain> {
     pub fn new(id: &str, chain: Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
@@ -108,7 +108,7 @@ impl<Chain: BootEnvironment> Cw20<Chain> {
     }
 }
 // Todo: make into derive macro
-pub trait Cw20Send<Chain: BootEnvironment>: BootExecute<Chain, ExecuteMsg = ExecuteMsg> {
+pub trait Cw20Send<Chain: CwEnv>: BootExecute<Chain, ExecuteMsg = ExecuteMsg> {
     fn send(
         &self,
         msg: Binary,
@@ -117,7 +117,7 @@ pub trait Cw20Send<Chain: BootEnvironment>: BootExecute<Chain, ExecuteMsg = Exec
     ) -> Result<TxResponse<Chain>, BootError>;
 }
 
-impl<T, Chain: BootEnvironment> Cw20Send<Chain> for T
+impl<T, Chain: CwEnv> Cw20Send<Chain> for T
 where
     T: BootExecute<Chain, ExecuteMsg = ExecuteMsg>,
 {
