@@ -5,7 +5,7 @@ use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 use serde::Serialize;
 
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
 pub struct Cw20;
 
 // implement chain-generic functions

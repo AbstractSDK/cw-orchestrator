@@ -14,10 +14,10 @@ The use of this software makes it easier to quickly deploy and iterate on your c
 
 Interacting with a [CosmWasm](https://cosmwasm.com/) is possible through the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.).
 
-In order to perform actions on the contract you can define a struct for your contract, passing the contract's entry point types into the `boot_contract` macro:
+In order to perform actions on the contract you can define a struct for your contract, passing the contract's entry point types into the `contract` macro:
 
 ```rust
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 ```
 
@@ -26,7 +26,7 @@ The macro implements a set of traits for the struct. These traits contain functi
 ```rust
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
 pub struct Cw20;
 ```
 
@@ -65,7 +65,7 @@ pub enum ExecuteMsg{
     Deposit {}
 }
 
-#[boot_contract(Empty,ExecuteMsg,Empty,Empty)]
+#[contract(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1
 
 impl<Chain: CwEnv> Cw1<Chain> {

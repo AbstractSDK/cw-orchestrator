@@ -6,7 +6,7 @@ use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, Fields, Item, Meta, NestedMeta, Path};
 
 #[proc_macro_attribute]
-pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
+pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
     let attributes = parse_macro_input!(attrs as AttributeArgs);
 

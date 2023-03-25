@@ -33,13 +33,13 @@ touch src/my-contract.rs
 echo 'pub mod my_contract;' >> src/lib.rs
 ```
 
-In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `boot_contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
+In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
 
 ```rust
 use boot_core::*;
 use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 ```
 
@@ -143,7 +143,7 @@ pub enum ExecuteMsg{
 }
 
 // If we now define a BOOTable contract with this execute message
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
@@ -175,7 +175,7 @@ pub struct InfoResponse {
 }
 
 // If we now define a BOOTable contract with this execute message
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
