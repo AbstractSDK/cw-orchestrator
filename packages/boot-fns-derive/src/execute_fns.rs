@@ -59,7 +59,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                         let msg = #name::#variant_name {
                             #(#variant_ident_content_names,)*
                         };
-                        self.execute(&msg #maybe_into,#passed_coins)
+                        ::boot_core::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type>::execute(self, &msg #maybe_into,#passed_coins)
                     }
                 ))
             }
