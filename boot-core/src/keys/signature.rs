@@ -3,7 +3,7 @@ use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use secp256k1::Message;
 use secp256k1::Secp256k1;
-
+use base64::engine::{Engine, general_purpose::STANDARD};
 pub struct Signature {}
 impl Signature {
     pub fn verify<C: secp256k1::Verification + secp256k1::Context>(
@@ -12,8 +12,8 @@ impl Signature {
         signature: &str,
         blob: &str,
     ) -> Result<(), DaemonError> {
-        let public = base64::decode(pub_key)?;
-        let sig = base64::decode(signature)?;
+        let public = STANDARD.decode(pub_key)?;
+        let sig = STANDARD.decode(signature)?;
         let pk = secp256k1::PublicKey::from_slice(public.as_slice())?;
         let mut sha = Sha256::new();
         let mut sha_result: [u8; 32] = [0; 32];
@@ -29,8 +29,6 @@ impl Signature {
 #[cfg(test)]
 mod tst {
     use super::*;
-    #[allow(unused_imports)]
-    use env_logger;
     #[test]
     pub fn test_verify() -> anyhow::Result<()> {
         let secp = Secp256k1::new();
