@@ -1,4 +1,4 @@
-use crate::{contract::Contract, error::BootError, CwEnv, Mock};
+use crate::{contract::Contract, error::BootError, CwEnv};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -146,12 +146,15 @@ impl<T: ContractInstance<Chain>, Chain: CwEnv> BootUpload<Chain> for T {
     }
 }
 
-pub trait CallAs: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone {
-    fn call_as(&self, sender: &Addr) -> Self {
-        let mut contract = self.clone();
-        contract.as_instance_mut().set_sender(sender.clone());
-        contract
-    }
-}
+/// Call a contract with a different sender
+/// Clones the contract interface to prevent mutation of the original
+pub trait CallAs<Chain: CwEnv>: BootExecute<Chain> + ContractInstance<Chain> + Clone {
+    type Sender: Clone;
 
-impl<T: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone> CallAs for T {}
+    /// Set the sender for the contract
+    fn set_sender(&mut self, sender: &Self::Sender) -> &mut Self;
+
+    /// Call a contract as a different sender.  
+    /// Creates a new copy of the contract with a different sender
+    fn call_as(&self, sender: &Self::Sender) -> Self;
+}
