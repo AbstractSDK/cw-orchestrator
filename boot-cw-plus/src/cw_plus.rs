@@ -33,7 +33,7 @@ impl<Chain: CwEnv> Deploy<Chain> for CwPlus<Chain> {
         cw3_flex_multisig.upload()?;
         let mut cw4_group = Cw4Group::new(CW4_GROUP, chain.clone());
         cw4_group.upload()?;
-        let mut cw4_stake = Cw4Stake::new(CW4_STAKE, chain.clone());
+        let mut cw4_stake = Cw4Stake::new(CW4_STAKE, chain);
         cw4_stake.upload()?;
 
         Ok(Self {
