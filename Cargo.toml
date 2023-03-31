@@ -1,26 +1,14 @@
 [workspace]
-members = [
-    "boot-core",
-    "boot-cw-plus",
-    "packages/*",
-    # "template"
-]
+members = ["boot-core", "boot-cw-plus", "packages/*"]
 
 [workspace.package]
-version = "0.9.0"
-authors = ["CyberHoward <cyberhoward@protonmail.com>"]
-edition = "2021"
-license = "GPL-3.0-only"
+authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
+edition    = "2021"
+license    = "GPL-3.0-only"
 repository = "https://github.com/Abstract-OS/BOOT"
 
 [workspace.dependencies]
-cosmwasm-std = { version = "1.1" }
-cw-multi-test = { version = "0.16.0"}
-anyhow = "1.0"
-boot-contract-derive = {path = "packages/boot-contract-derive", version = "0.9.0"}
-boot-fns-derive = {path = "packages/boot-fns-derive", version = "0.9.0"}
-boot-core ={version = "0.9.0"}
-serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-
-# [patch.crates-io]
-# cosmrs = {git = "https://github.com/Abstract-OS/cosmos-rust.git", features=["dev","cosmwasm","grpc"]}
+cosmwasm-std  = { version = "1.1" }
+cw-multi-test = { version = "0.16.0" }
+anyhow        = "1.0"
+serde         = { version = "1.0.103", default-features = false, features = ["derive"] }

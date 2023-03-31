@@ -1,11 +1,11 @@
 [package]
 name = "boot-contract-derive"
-version = { workspace = true}
+version = "0.10.0"
 authors = { workspace = true}
 edition = { workspace = true}
 license = { workspace = true}
 repository = { workspace = true}
-description = "Attribute macro for creating a BOOTable contract."
+description = "Attribute macro for creating a virtualized contract."
 
 [lib]
 proc-macro = true
