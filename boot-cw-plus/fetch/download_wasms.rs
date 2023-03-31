@@ -24,7 +24,13 @@ const VERSION: &str = "v1.0.1";
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     let url = format!("{}{}", URL, VERSION);
-    let release: Release = client.get(url).header("User-Agent", "request").send().await?.json().await?;
+    let release: Release = client
+        .get(url)
+        .header("User-Agent", "request")
+        .send()
+        .await?
+        .json()
+        .await?;
     let tasks: Vec<_> = release
         .assets
         .iter()

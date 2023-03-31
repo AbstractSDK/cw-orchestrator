@@ -1,10 +1,13 @@
 # boot-cw-plus
+
 Library that hold the most-used interfaces for standard cw-plus contracts and their artifacts.
 
-Currently supports
-- CW-20
+## Usage
 
-Future support
-- CW-721
-- CW-3
-- ...
+## Wasms (v1.0.1)
+
+This package contains the wasms files provided in the github release of cw-plus. You can fetch them yourself using the executable in this library by calling
+
+```bash
+cargo run --features "wasms" download_wasms
+```
