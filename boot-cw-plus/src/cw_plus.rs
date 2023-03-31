@@ -56,7 +56,7 @@ impl<Chain: CwEnv> Deploy<Chain> for CwPlus<Chain> {
         let cw3_fixed_multisig = Cw3FixedMultisig::new(CW3_FIXED_MULTISIG, chain.clone());
         let cw3_flex_multisig = Cw3FlexMultisig::new(CW3_FLEX_MULTISIG, chain.clone());
         let cw4_group = Cw4Group::new(CW4_GROUP, chain.clone());
-        let cw4_stake = Cw4Stake::new(CW4_STAKE, chain.clone());
+        let cw4_stake = Cw4Stake::new(CW4_STAKE, chain);
 
         Ok(Self {
             cw20_base,

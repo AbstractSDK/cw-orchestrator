@@ -7,17 +7,16 @@
 //! ### Usage
 //!
 //! ```rust
-//! // retrieve environment
-//! let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
-//! let mut token = Cw20Base::new(CW20_BASE, chain);
-//! token.upload()?;
-//!
-//! // Now we do the same but on a cw-multi-test environment!
-//! let sender = Addr::unchecked("test_sender");
-//! let (_, chain) = instantiate_default_mock_env(&sender)?;
-//! // The same in a cw-multi-test context
-//! let mut token = Cw20Base::new("cw-plus:cw20_base", chain);
-//! token.upload()?;
+//! use boot_cw_plus::CwPlus;
+//! fn setup() {
+//!     let sender = Addr::unchecked("test_sender");
+//!     let cw_plus = CwPlus::new();
+//!     let (_, chain) = instantiate_default_mock_env(&sender)?;
+//!     cw_plus.deploy(chain.clone(), Empty {});
+//!     // The same in a cw-multi-test context
+//!     let mut token = Cw20Base::new("cw-plus:cw20_base", chain);
+//!     token.upload()?;
+//! }
 //! ```
 
 pub const CW1_SUBKEYS: &str = "cw-plus:cw1_subkeys";
