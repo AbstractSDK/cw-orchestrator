@@ -1,6 +1,6 @@
 use boot_core::*;
 use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
-use boot_cw_plus::{Cw20, CW20_BASE};
+use boot_cw_plus::{Cw20Base, Cw20QueryMsgFns, CW20_BASE};
 use cosmwasm_std::Addr;
 use std::sync::Arc;
 
@@ -22,14 +22,14 @@ pub fn script() -> anyhow::Result<()> {
         .build()?;
 
     let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
-    let mut token = Cw20::new(CW20_BASE, chain);
+    let mut token = Cw20Base::new(CW20_BASE, chain);
     token.upload()?;
 
     // Now we do the same but on a cw-multi-test environment!
     let sender = Addr::unchecked("test_sender");
     let (_, chain) = instantiate_default_mock_env(&sender)?;
     // The same in a cw-multi-test context
-    let mut token = Cw20::new("cw-plus:cw20_base", chain);
+    let mut token = Cw20Base::new("cw-plus:cw20_base", chain);
     token.upload()?;
 
     Ok(())
