@@ -38,8 +38,8 @@ daemon = [
 
 [dependencies]
 # Default deps
-boot-contract-derive = { path = "../packages/boot-contract-derive", version = "0.10.0" }
-boot-fns-derive      = { path = "../packages/boot-fns-derive", version = "0.10.0" }
+boot-contract-derive = { version = "0.10.0" }
+boot-fns-derive      = { version = "0.10.0" }
 cosmwasm-std         = { workspace = true }
 cw-multi-test        = { workspace = true }
 anyhow               = { workspace = true }
@@ -72,7 +72,7 @@ rand_core = { version = "0.6.4", default-features = false, optional = true }
 ed25519-dalek = { version = "1", features = ["serde"], optional = true }
 eyre = { version = "0.6", optional = true }
 # Waiting for a 0.12 release
-cosmrs = { version = "0.9.0", features = [
+cosmrs = { version = "0.12.0", features = [
     "dev",
     "cosmwasm",
     "grpc",
