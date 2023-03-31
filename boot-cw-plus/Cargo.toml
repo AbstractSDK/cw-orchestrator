@@ -27,7 +27,6 @@ required-features = ["daemon"]
 
 
 [features]
-default = ["daemon"]
 wasms   = ["dep:tokio", "dep:reqwest"]
 daemon  = ["boot-core/daemon", "dep:tokio"]
 
