@@ -18,7 +18,7 @@ In order to perform actions on the contract you can define a struct for your con
 
 ```rust
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct MyContract<Chain>;
+pub struct MyContract;
 ```
 
 The macro implements a set of traits for the struct. These traits contain functions that we can use to interact with the contract and they prevent us from executing a faulty message on a contract. The implementation for a CW20 token is shown below. The full implementation resides [here](boot-cw-plus/src/cw20.rs)
@@ -33,7 +33,7 @@ pub struct Cw20;
 You can now perform any action on the cw20 contract and implement custom actions.
 
 ```rust
-    let cw20_token = Cw20::new(chain)?;
+    let cw20_token = Cw20Base::new(chain)?;
     let msg = ExecuteMsg::Transfer {
             recipient,
             amount: amount.into(),
@@ -42,16 +42,18 @@ You can now perform any action on the cw20 contract and implement custom actions
     let token_info: TokenInfoResponse = cw20_token.query(&Cw20QueryMsg::TokenInfo {}).await?;
 ```
 
-We would recommend reading through [the full cw20 executable example here](boot-core/examples/cw20.rs).
+We would recommend reading [the full cw20 executable example here](boot-core/examples/cw20.rs).
 
 ## Advanced features
 
-BOOT provides two additional macros that can be used to improve the scripting experience. 
+BOOT provides two additional macros that can be used to improve the scripting experience.
 
 ### ExecuteFns
-The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct itself. 
+
+The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct itself.
 
 Example:
+
 ```rust
 #[cw_serde]
 #[derive(ExecuteFns)]
@@ -76,24 +78,34 @@ impl<Chain: CwEnv> Cw1<Chain> {
     }
 }
 ```
-For nested execute messages see [this PR](https://github.com/Abstract-OS/BOOT/pull/40). 
 
-### QueryFns 
+> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `boot-core` by default.
+> The resulting derive would look like this: `#[cfg_attr(feature = "boot", derive(boot_core::ExecuteFns))]`
+
+For nested execute messages you can add an `impl_into` attribute. This expects the message to implement the `Into` trait for the provided type.
+
+### QueryFns
 
 The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryResponse)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
 # Contributing
-Feel free to open issues or PRs!
+
+We'd really appreciate your help! Please read our [contributing guidelines](CONTRIBUTING.md) to get started.
 
 ## Documentation
+
 The documentation is generated using [mdbook](https://rust-lang.github.io/mdBook/index.html). Edit the files in the `docs/src` folder and run
+
 ```shell
 cd docs && mdbook serve --open --port 5000
 ```
+
 to view the changes.
 
 # References
+
 Enjoy scripting your smart contracts with ease? Build your contracts with ease by using [Abstract](https://abstract.money).
 
 # Disclaimer
+
 This software is provided as-is without any guarantees.
