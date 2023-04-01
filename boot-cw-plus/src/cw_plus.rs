@@ -16,7 +16,7 @@ pub struct CwPlus<Chain: CwEnv> {
 impl<Chain: CwEnv> Deploy<Chain> for CwPlus<Chain> {
     type Error = BootError;
     type DeployData = Empty;
-
+    /// Upload the CwPlus contracts to the environment.
     fn store_on(chain: Chain) -> Result<Self, BootError> {
         let mut cw20_base = Cw20Base::new(CW20_BASE, chain.clone());
         cw20_base.upload()?;
@@ -34,7 +34,6 @@ impl<Chain: CwEnv> Deploy<Chain> for CwPlus<Chain> {
         cw4_group.upload()?;
         let mut cw4_stake = Cw4Stake::new(CW4_STAKE, chain);
         cw4_stake.upload()?;
-
         Ok(Self {
             cw20_base,
             cw1_whitelist,
