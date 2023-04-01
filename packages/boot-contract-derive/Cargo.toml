@@ -5,7 +5,7 @@ authors = { workspace = true}
 edition = { workspace = true}
 license = { workspace = true}
 repository = { workspace = true}
-description = "Attribute macro for creating a virtualized contract."
+description = "Attribute macro for creating a contract interface."
 
 [lib]
 proc-macro = true
