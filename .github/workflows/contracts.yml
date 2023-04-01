@@ -17,7 +17,7 @@ jobs:
         image: rust:latest
     steps:
       - name: Setup | Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup | Rust
         id: rustup
         uses: ATiltedTree/setup-rust@v1
@@ -43,7 +43,7 @@ jobs:
         image: rust:latest
     steps:
       - name: Setup | Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup | Rust
         uses: ATiltedTree/setup-rust@v1
         with:
@@ -58,7 +58,7 @@ jobs:
   #   needs: [compile]
   #   steps:
   #     - name: Setup | Checkout
-  #       uses: actions/checkout@v2
+  #       uses: actions/checkout@v3
   #     - name: Setup | Rust
   #       uses: ATiltedTree/setup-rust@v1
   #       with:
