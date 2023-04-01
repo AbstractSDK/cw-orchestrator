@@ -3,7 +3,7 @@ use crate::{
     contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    BootError, Contract,
+    BootError, BootExecute, CallAs, ContractInstance,
 };
 use cosmwasm_std::{Addr, Empty, Event, Uint128};
 use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
@@ -249,9 +249,16 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 }
 
-impl Contract<Mock> {
-    pub fn set_sender(&mut self, sender: Addr) -> &mut Self {
-        self.chain.sender = sender;
-        self
+impl<T: BootExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
+    type Sender = Addr;
+
+    fn set_sender(&mut self, sender: &Addr) {
+        self.as_instance_mut().chain.sender = sender.clone();
+    }
+
+    fn call_as(&self, sender: &Self::Sender) -> Self {
+        let mut contract = self.clone();
+        contract.set_sender(sender);
+        contract
     }
 }
