@@ -256,9 +256,8 @@ impl TxHandler for Daemon {
 impl<T: BootExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
     type Sender = Wallet;
 
-    fn set_sender(&mut self, sender: &Self::Sender) -> &mut Self {
+    fn set_sender(&mut self, sender: &Self::Sender) {
         self.as_instance_mut().chain.sender = sender.clone();
-        self
     }
 
     fn call_as(&self, sender: &Self::Sender) -> Self {

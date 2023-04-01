@@ -252,9 +252,8 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 impl<T: BootExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
     type Sender = Addr;
 
-    fn set_sender(&mut self, sender: &Addr) -> &mut Self {
+    fn set_sender(&mut self, sender: &Addr) {
         self.as_instance_mut().chain.sender = sender.clone();
-        self
     }
 
     fn call_as(&self, sender: &Self::Sender) -> Self {
