@@ -1,9 +1,10 @@
 use boot_core::{contract, Contract, CwEnv};
 use cosmwasm_std::Empty;
+use cw1_subkeys::msg::{ExecuteMsg, QueryMsg};
 pub use cw1_subkeys::msg::{
     ExecuteMsgFns as Cw1SubkeysExecuteMsgFns, QueryMsgFns as Cw1SubkeysQueryMsgFns,
 };
-use cw1_whitelist::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw1_whitelist::msg::InstantiateMsg;
 use cw_multi_test::ContractWrapper;
 
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
