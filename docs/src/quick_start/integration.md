@@ -29,6 +29,11 @@ impl<Chain: CwEnv> boot_core::Deploy<Chain> for Abstract<Chain> {
     type Error = BootError;
     type DeployData = semver::Version;
 
+    fn store_on(chain: Chain) -> Result<Self, Self::Error> {
+        let version = env!("CARGO_PKG_VERSION").parse().unwrap();
+        Self::deploy_on(chain, version)
+    }
+
     fn deploy_on(chain: Chain, version: semver::Version) -> Result<Self, BootError> {
         let mut ans_host = AnsHost::new(ANS_HOST, chain.clone());
         let mut version_control = VersionControl::new(VERSION_CONTROL, chain.clone());
