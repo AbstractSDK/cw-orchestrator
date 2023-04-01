@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("Downloading {} from {}", name, url);
                 let response = reqwest::get(&url).await.unwrap();
                 let path = Path::new(&file_path);
-                let mut file = File::create(&path).unwrap();
+                let mut file = File::create(path).unwrap();
                 let content = response.bytes().await.unwrap();
                 copy(&mut content.as_ref(), &mut file).unwrap();
                 println!("Downloaded {}", name);
