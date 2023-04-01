@@ -17,8 +17,7 @@ impl<Chain: CwEnv> Deploy<Chain> for CwPlus<Chain> {
     type Error = BootError;
     type DeployData = Empty;
 
-    /// Deploy all cw-plus contracts to the given chain.
-    fn deploy_on(chain: Chain, _data: Empty) -> Result<Self, BootError> {
+    fn store_on(chain: Chain) -> Result<Self, BootError> {
         let mut cw20_base = Cw20Base::new(CW20_BASE, chain.clone());
         cw20_base.upload()?;
         let mut cw1_whitelist = Cw1Whitelist::new(CW1_WHITELIST, chain.clone());
@@ -47,6 +46,7 @@ impl<Chain: CwEnv> Deploy<Chain> for CwPlus<Chain> {
             cw4_stake,
         })
     }
+
     /// Load CwPlus contracts from the chain.
     fn load_from(chain: Chain) -> Result<Self, BootError> {
         let cw20_base = Cw20Base::new(CW20_BASE, chain.clone());
