@@ -34,8 +34,13 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     type Error: From<BootError>;
     /// Data required to deploy the application.
     type DeployData;
-    /// Deploy the application to the chain.
-    fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error>;
+    /// Stores/uploads the application to the chain.
+    fn store_on(chain: Chain) -> Result<Self, Self::Error>;
+    /// Deploy the application to the chain. This could include instantiating contracts.
+    fn deploy_on(chain: Chain, _data: Self::DeployData) -> Result<Self, Self::Error>
+    {
+        Self::store_on(chain)
+    }
     /// Load the application from the chain, assuming it has already been deployed.
     /// This either loads contract addresses from the chain state manually or constructs the
     /// boot contract wrappers that were used to deploy the application with the same name.
