@@ -211,8 +211,8 @@ impl IndexResponse for CosmTxResponse {
             let mut pattr = vec![];
             for attr in &event.attributes {
                 pattr.push(cosmwasm_std::Attribute {
-                    key: std::str::from_utf8(&attr.key).unwrap().to_string(),
-                    value: std::str::from_utf8(&attr.value).unwrap().to_string(),
+                    key: attr.key.clone(),
+                    value: attr.value.clone(),
                 })
             }
             let pevent = cosmwasm_std::Event::new(event.r#type.clone()).add_attributes(pattr);
@@ -232,8 +232,8 @@ impl IndexResponse for CosmTxResponse {
         for event in &self.events {
             if event.r#type == event_type {
                 for attr in &event.attributes {
-                    if attr.key == attr_key.as_bytes() {
-                        return Ok(std::str::from_utf8(&attr.value).unwrap().to_string());
+                    if attr.key == attr_key {
+                        return Ok(attr.value.clone());
                     }
                 }
             }

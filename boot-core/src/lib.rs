@@ -39,6 +39,8 @@ pub use daemon::{
     networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
 };
+#[cfg(feature = "daemon")]
+pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
 
 #[deprecated(
     since = "0.8.1",

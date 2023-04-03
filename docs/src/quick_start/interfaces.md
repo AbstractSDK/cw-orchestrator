@@ -43,13 +43,13 @@ use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 pub struct MyContract<Chain>;
 ```
 
-The generic `<Chain>` argument allows you to write functions for your interface that will be executable in different environments.
-
 > *If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.*
 
 ## Constructor
 
 Next, you'll want to define the constructor for the interface we just defined:
+
+The generic `<Chain>` argument allows you to write functions for your interface that will be executable in different environments.
 
 ```rust
 impl<Chain: CwEnv> MyContract<Chain> {
@@ -63,28 +63,33 @@ impl<Chain: CwEnv> MyContract<Chain> {
        let wasm_path = "my-contract";
         Self(
             Contract::new(contract_id, chain)
-            .with_wasm_path(wasm_path),
-            // Mocked environments are also available and can be used for integartion testing... See Integration Testing
+            // Adds the wasm path for uploading to a node
+            .with_wasm_path(wasm_path)
+            // Adds the contract's endpoint functions for mocking
+            .with_mock(Box::new(
+                   ContractWrapper::new_with_empty(
+                     my_contract::contract::execute,
+                     my_contract::contract::instantiate,
+                     my_contract::contract::query,
+                ))),
         )
     }
 }
 ```
 
-> See [Integration Testing](../integration-tests.md) for details on using mocks for integration testing.
-
 Notice that we build the `Contract` instance and point it to the contract code using `with_wasm_path(...)`, where we provide the contract name `"my-contract"`.
 This contract name will be used to search the artifacts directory (set by `ARTIFACTS_DIR` env variable) for a `my-contract.wasm` file.
 
-Alternatively you can specify a path to the wasm artifact after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the [CosmWasm documentation on compiling your contract](https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/) for more information.
+Alternatively you can specify a path to the wasm artifact that's generated after running `RUSTFLAGS='-C link-arg=-s' cargo wasm` in the contract's directory. See the [CosmWasm documentation on compiling your contract](https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/) for more information.
 
 ## Functions
 
-Now we can start writing executable functions for our contracts with ensured type safety.
-We can define functions that are generic or that can only be used called in a specific environment.
+Now you can start writing executable functions for your contracts with ensured type safety.
+You can write functions that are generic or that can only be used called in a specific environment.
 The environments that are currently supported are:
 
 1. [cw-multi-test](https://crates.io/crates/cw-multi-test)
-2. Blockchain daemons [junod](https://github.com/CosmosContracts/juno), [osmosisd](https://github.com/osmosis-labs/osmosis),...
+2. Blockchain daemons with CosmWasm enabled: [junod](https://github.com/CosmosContracts/juno), [osmosisd](https://github.com/osmosis-labs/osmosis),...
 
 ### Generic function
 
@@ -126,10 +131,10 @@ impl MyContract<Mock> {
 
 ### Endpoint function generation
 
-We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs.
+We can expand on this functionality with a simple macro that provides access to a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs's crate.
 > You will want to feature-flag the function generation to prevent BOOT entering as a dependency when building your contract.
 
-Here's an example:
+Here's an example with the macro shielded behind a "boot" feature flag:
 
 ```rust
 #[cw_serde]
@@ -157,7 +162,7 @@ impl<Chain: CwEnv + Clone> MyContract<Chain> {
 }
 ```
 
-Generating query functions is a similar process but has the added advantage of using the `cosmwasm-schema` return tags to expect the correct return type.
+Generating query functions is a similar process but has the added advantage of using the `cosmwasm-schema` return tags to detect the query's return type.
 
 ```rust
 #[cosmwasm_schema::cw_serde]
@@ -182,6 +187,7 @@ pub struct MyContract<Chain>;
 impl<Chain: CwEnv + Clone> MyContract<Chain> {
     pub fn test_macro(&self) -> Result<(),BootError> {
         // No need to specify returned type!
+        // info of type `InfoResponse` is returned
         let info = self.info()?;
         let admin: Addr = info.admin;
         Ok(())
