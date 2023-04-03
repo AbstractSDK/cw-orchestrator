@@ -1,4 +1,4 @@
-use crate::BootEnvironment;
+use crate::CwEnv;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
@@ -6,18 +6,12 @@ use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
 use cw_multi_test::Contract as TestContract;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{
-    cell::RefCell,
-    fmt::{self, Debug},
-    rc::Rc,
-};
+use std::fmt::Debug;
 
-#[allow(unused)]
-pub type StateReference<S> = Rc<RefCell<S>>;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: BootEnvironment> {
+pub struct Contract<Chain: CwEnv> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     pub(crate) source: ContractCodeReference,
@@ -28,7 +22,7 @@ pub struct Contract<Chain: BootEnvironment> {
 #[derive(Default)]
 pub struct ContractCodeReference<ExecT = Empty, QueryT = Empty>
 where
-    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     pub wasm_code_path: Option<String>,
@@ -45,7 +39,7 @@ impl Clone for ContractCodeReference {
 }
 
 /// Expose chain and state function to call them on the contract
-impl<Chain: BootEnvironment + Clone> Contract<Chain> {
+impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),

@@ -1,4 +1,5 @@
 use super::{
+    cosmos_modules,
     error::DaemonError,
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
@@ -6,7 +7,8 @@ use super::{
     tx_resp::CosmTxResponse,
 };
 use crate::{
-    contract::ContractCodeReference, cosmos_modules, state::ChainState, tx_handler::TxHandler,
+    contract::ContractCodeReference, state::ChainState, tx_handler::TxHandler, BootExecute, CallAs,
+    ContractInstance,
 };
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
@@ -248,6 +250,20 @@ impl TxHandler for Daemon {
             time,
             chain_id: block.header.chain_id.to_string(),
         })
+    }
+}
+
+impl<T: BootExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
+    type Sender = Wallet;
+
+    fn set_sender(&mut self, sender: &Self::Sender) {
+        self.as_instance_mut().chain.sender = sender.clone();
+    }
+
+    fn call_as(&self, sender: &Self::Sender) -> Self {
+        let mut contract = self.clone();
+        contract.set_sender(sender);
+        contract
     }
 }
 

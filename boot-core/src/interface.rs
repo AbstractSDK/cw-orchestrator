@@ -1,10 +1,10 @@
-use crate::{contract::Contract, error::BootError, BootEnvironment, Mock};
+use crate::{contract::Contract, error::BootError, CwEnv};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
-pub trait ContractInstance<Chain: BootEnvironment> {
+pub trait ContractInstance<Chain: CwEnv> {
     fn as_instance(&self) -> &Contract<Chain>;
     fn as_instance_mut(&mut self) -> &mut Contract<Chain>;
 
@@ -33,7 +33,7 @@ pub trait ContractInstance<Chain: BootEnvironment> {
     }
 }
 
-/// Implementing CwInterface ensures type safety
+/// Tells BOOT what the contract's entrypoint messages are.
 pub trait CwInterface {
     type InstantiateMsg: Serialize + Debug;
     type ExecuteMsg: Serialize + Debug;
@@ -42,7 +42,7 @@ pub trait CwInterface {
 }
 
 /// Smart Contract execute endpoint
-pub trait BootExecute<Chain: BootEnvironment> {
+pub trait BootExecute<Chain: CwEnv> {
     type ExecuteMsg: Serialize;
 
     fn execute(
@@ -52,7 +52,7 @@ pub trait BootExecute<Chain: BootEnvironment> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootExecute<Chain> for T {
+impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootExecute<Chain> for T {
     type ExecuteMsg = <T as CwInterface>::ExecuteMsg;
 
     fn execute(
@@ -65,7 +65,7 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootExecu
 }
 
 /// Smart Contract instantiate endpoint
-pub trait BootInstantiate<Chain: BootEnvironment> {
+pub trait BootInstantiate<Chain: CwEnv> {
     type InstantiateMsg: Serialize;
 
     fn instantiate(
@@ -76,9 +76,7 @@ pub trait BootInstantiate<Chain: BootEnvironment> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootInstantiate<Chain>
-    for T
-{
+impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain> for T {
     type InstantiateMsg = <T as CwInterface>::InstantiateMsg;
 
     fn instantiate(
@@ -93,7 +91,7 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootInsta
 }
 
 /// Smart Contract query endpoint
-pub trait BootQuery<Chain: BootEnvironment> {
+pub trait BootQuery<Chain: CwEnv> {
     type QueryMsg: Serialize;
 
     fn query<G: Serialize + DeserializeOwned + Debug>(
@@ -102,7 +100,7 @@ pub trait BootQuery<Chain: BootEnvironment> {
     ) -> Result<G, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootQuery<Chain> for T {
+impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootQuery<Chain> for T {
     type QueryMsg = <T as CwInterface>::QueryMsg;
 
     fn query<G: Serialize + DeserializeOwned + Debug>(
@@ -114,7 +112,7 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootQuery
 }
 
 /// Smart Contract migrate endpoint
-pub trait BootMigrate<Chain: BootEnvironment> {
+pub trait BootMigrate<Chain: CwEnv> {
     type MigrateMsg: Serialize;
 
     fn migrate(
@@ -124,7 +122,7 @@ pub trait BootMigrate<Chain: BootEnvironment> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootMigrate<Chain> for T {
+impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootMigrate<Chain> for T {
     type MigrateMsg = <T as CwInterface>::MigrateMsg;
 
     fn migrate(
@@ -138,22 +136,25 @@ impl<T: CwInterface + ContractInstance<Chain>, Chain: BootEnvironment> BootMigra
 
 /// Smart Contract migrate endpoint
 
-pub trait BootUpload<Chain: BootEnvironment> {
+pub trait BootUpload<Chain: CwEnv> {
     fn upload(&mut self) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: ContractInstance<Chain>, Chain: BootEnvironment> BootUpload<Chain> for T {
+impl<T: ContractInstance<Chain>, Chain: CwEnv> BootUpload<Chain> for T {
     fn upload(&mut self) -> Result<Chain::Response, BootError> {
         self.as_instance_mut().upload()
     }
 }
 
-pub trait CallAs: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone {
-    fn call_as(&self, sender: &Addr) -> Self {
-        let mut contract = self.clone();
-        contract.as_instance_mut().set_sender(sender.clone());
-        contract
-    }
-}
+/// Call a contract with a different sender
+/// Clones the contract interface to prevent mutation of the original
+pub trait CallAs<Chain: CwEnv>: BootExecute<Chain> + ContractInstance<Chain> + Clone {
+    type Sender: Clone;
 
-impl<T: BootExecute<Mock> + ContractInstance<Mock> + Sized + Clone> CallAs for T {}
+    /// Set the sender for the contract
+    fn set_sender(&mut self, sender: &Self::Sender);
+
+    /// Call a contract as a different sender.  
+    /// Creates a new copy of the contract with a different sender
+    fn call_as(&self, sender: &Self::Sender) -> Self;
+}

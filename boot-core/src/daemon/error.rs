@@ -53,7 +53,7 @@ pub enum DaemonError {
     #[error(transparent)]
     HexError(#[from] ::hex::FromHexError),
     #[error(transparent)]
-    BitCoinBip32(#[from] ::bitcoin::util::bip32::Error),
+    BitCoinBip32(#[from] ::bitcoin::bip32::Error),
     #[error("83 length-missing SECP256K1 prefix")]
     ConversionSECP256k1,
     #[error("82 length-missing ED25519 prefix")]
