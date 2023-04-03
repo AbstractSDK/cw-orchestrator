@@ -1,6 +1,6 @@
 # Integration Tests
 
-To get started writing integration tests with BOOT, first add `boot-core` to your workspace.
+To get started writing integration tests with BOOT, first add `boot-core` to your dependencies.
 
 ```bash
 cargo add --dev boot-core
@@ -17,8 +17,6 @@ use boot_core::*;
 use semver::Version;
 use my_contract::contract;
 use my_contract::{ExecuteMsg};
-  
-const TEST_VERSION: Version = Version::new(0, 0, 0);  
   
 fn setup() -> anyhow::Result<MyContract<Mock>> {  
     let sender = Addr::unchecked("sender"); 
@@ -44,11 +42,13 @@ fn setup() -> anyhow::Result<MyContract<Mock>> {
 }  
   
 #[test]  
-fn test_something() {  
-  let my_contract = setup();  
+fn test_something() -> anyhow::Result<()> {  
+  let my_contract = setup()?;  
+
+  my_contract.instantiate(...)?;
 
   // execute on the contract
-  my_contract.execute(ExecuteMsg::MyContractCall {
+  my_contract.execute(&ExecuteMsg::MyContractCall {
     something: Some(Addr::unchecked("arg"))
   });
 }
