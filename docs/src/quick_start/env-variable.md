@@ -1,5 +1,7 @@
 # Environment Variables
 
+These variables are used by BOOT when interacting with a node using the `daemon` feature.
+
 ```bash
 # .env
 
@@ -9,7 +11,7 @@ RUST_LOG=info
 # where the contract wasms are located
 ARTIFACTS_DIR="../artifacts"
 
-# where to store the output state data
+# where to store the state of your deployments
 STATE_FILE="./daemon_state.json"
 
 # Mnemonics of the account that will be used to sign transactions

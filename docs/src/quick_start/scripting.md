@@ -92,7 +92,7 @@ pub fn deploy_contract() -> anyhow::Result<String> {
     let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let mut contract = MyContract::new(CONTRACT_NAME, chain.clone());
     // Upload your contract
     contract.upload()?;
 
