@@ -175,10 +175,10 @@ impl PublicKey {
         }
     }
     /**
-     Gets a bech32-words pubkey from a compressed bytes Secp256K1 public key.
-     
-      @param publicKey raw public key
-     */
+    Gets a bech32-words pubkey from a compressed bytes Secp256K1 public key.
+
+     @param publicKey raw public key
+    */
     pub fn pubkey_from_public_key(public_key: &[u8]) -> Vec<u8> {
         [
             BECH32_PUBKEY_DATA_PREFIX_SECP256K1.to_vec(),
@@ -187,10 +187,10 @@ impl PublicKey {
         .concat()
     }
     /**
-     Gets a bech32-words pubkey from a compressed bytes Ed25519 public key.
-    
-     @param publicKey raw public key
-     */
+    Gets a bech32-words pubkey from a compressed bytes Ed25519 public key.
+
+    @param publicKey raw public key
+    */
     pub fn pubkey_from_ed25519_public_key(public_key: &[u8]) -> Vec<u8> {
         [
             BECH32_PUBKEY_DATA_PREFIX_ED25519.to_vec(),
@@ -218,7 +218,7 @@ impl PublicKey {
 
     /**
     Gets a raw address from a compressed bytes public key.
-    
+
     @param publicKey raw public key
     */
     pub fn address_from_public_key(public_key: &[u8]) -> Vec<u8> {
