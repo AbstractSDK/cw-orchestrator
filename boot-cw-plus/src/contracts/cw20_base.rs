@@ -9,7 +9,7 @@ pub use cw20_base::msg::QueryMsgFns as Cw20QueryMsgFns;
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct Cw20Base;
 
-// implement chain-generic functions
+// Implement chain-generic functions
 impl<Chain: CwEnv> Cw20Base<Chain> {
     pub fn new(id: &str, chain: Chain) -> Self {
         let crate_path = env!("CARGO_MANIFEST_DIR");
