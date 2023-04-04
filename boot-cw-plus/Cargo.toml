@@ -31,7 +31,7 @@ wasms   = ["dep:tokio", "dep:reqwest"]
 daemon  = ["boot-core/daemon", "dep:tokio"]
 
 [dependencies]
-boot-core     = { git = "https://github.com/Abstract-OS/BOOT.git" }
+boot-core     = { version = "0.10.0"}
 cosmwasm-std  = { workspace = true }
 serde         = { workspace = true }
 anyhow        = { workspace = true }
