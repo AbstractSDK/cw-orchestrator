@@ -16,11 +16,14 @@ impl<Chain: CwEnv> Cw20Base<Chain> {
         let file_path = &format!("{}{}", crate_path, "/cw-artifacts/cw20_base.wasm");
         Self(
             Contract::new(id, chain)
-                .with_mock(Box::new(ContractWrapper::new_with_empty(
-                    cw20_base::contract::execute,
-                    cw20_base::contract::instantiate,
-                    cw20_base::contract::query,
-                )))
+                .with_mock(Box::new(
+                    ContractWrapper::new_with_empty(
+                        cw20_base::contract::execute,
+                        cw20_base::contract::instantiate,
+                        cw20_base::contract::query,
+                    )
+                    .with_migrate(cw20_base::contract::migrate),
+                ))
                 .with_wasm_path(file_path),
         )
     }
