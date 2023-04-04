@@ -84,3 +84,4 @@ derive_builder = { version = "0.12.0", optional = true }
 cw20-base = { version = "1.0" }
 cw20 = { version = "1.0" }
 boot-cw-plus = { path = "../boot-cw-plus" }
+speculoos = "0.9.0"
