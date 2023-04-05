@@ -49,14 +49,14 @@ fn cw20_example<Chain: CwEnv>(chain: Chain) -> anyhow::Result<()> {
 
     // send some tokens
     let cw20_send_msg = cw20_base::msg::ExecuteMsg::Transfer {
-        recipient: "recipient_addr".to_string(),
+        recipient: "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y".to_string(),
         amount: 100u128.into(),
     };
     cw20_base.execute(&cw20_send_msg, None)?;
 
     // query the balance of the recipient
     let query_msg = cw20_base::msg::QueryMsg::Balance {
-        address: "recipient_addr".to_string(),
+        address: "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y".to_string(),
     };
     let _balance: cw20::BalanceResponse = cw20_base.query(&query_msg)?;
 
