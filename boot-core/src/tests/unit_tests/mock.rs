@@ -3,7 +3,7 @@
 */
 #[cfg(test)]
 mod general {
-    use cosmwasm_std::{Addr, Coin, Response, to_binary, DepsMut, Env, MessageInfo, StdResult, Deps, Binary};
+    use cosmwasm_std::{Addr, Coin, Response, to_binary, DepsMut, Env, MessageInfo, StdResult, Deps, Binary, Uint128};
 
     use speculoos::prelude::*;
 
@@ -12,7 +12,7 @@ mod general {
     use crate::{
         mock::core::*,
         TxHandler,
-        ContractCodeReference
+        ContractCodeReference, ChainState, StateInterface
     };
 
     const SENDER: &str = "cosmos123";
@@ -22,10 +22,30 @@ mod general {
         _deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
-        _msg: cw20::Cw20ExecuteMsg,
+        msg: cw20::Cw20ExecuteMsg,
     ) -> Result<Response, cw20_base::ContractError>
     {
-        Ok(Response::default())
+        match msg {
+            cw20::Cw20ExecuteMsg::Transfer { recipient, amount } => todo!(),
+            cw20::Cw20ExecuteMsg::Burn { amount } => todo!(),
+            cw20::Cw20ExecuteMsg::Send { contract, amount, msg } => todo!(),
+            cw20::Cw20ExecuteMsg::IncreaseAllowance { spender, amount, expires } => todo!(),
+            cw20::Cw20ExecuteMsg::DecreaseAllowance { spender, amount, expires } => todo!(),
+            cw20::Cw20ExecuteMsg::TransferFrom { owner, recipient, amount } => todo!(),
+            cw20::Cw20ExecuteMsg::SendFrom { owner, contract, amount, msg } => todo!(),
+            cw20::Cw20ExecuteMsg::BurnFrom { owner, amount } => todo!(),
+            cw20::Cw20ExecuteMsg::Mint { recipient, amount } => {
+                Ok(
+                    Response::default()
+                        .add_attribute("action", "mint")
+                        .add_attribute("recipient", recipient)
+                        .add_attribute("amount", amount)
+                )
+            },
+            cw20::Cw20ExecuteMsg::UpdateMinter { new_minter } => todo!(),
+            cw20::Cw20ExecuteMsg::UpdateMarketing { project, description, marketing } => todo!(),
+            cw20::Cw20ExecuteMsg::UploadLogo(_) => todo!(),
+        }
     }
 
     fn instantiate(
@@ -71,11 +91,36 @@ mod general {
             ContractWrapper::new(execute, instantiate, query)
         ));
 
-        let res = chain.upload(&mut contract_source);
-        match res {
-            Ok(r) => println!("{:#?}", r),
-            Err(e) => println!("{:#?}", e),
-        }
+        let res = chain.upload(&mut contract_source).unwrap();
+        asserting("contract initialized properly")
+            .that(&res.events[0].attributes[0].value)
+            .is_equal_to(&String::from("1"));
+
+        let init_msg = cw20_base::msg::InstantiateMsg {
+            name: String::from("Token"),
+            symbol: String::from("TOK"),
+            decimals: 6u8,
+            initial_balances: vec![],
+            mint: None,
+            marketing: None,
+        };
+        let init_res = chain.instantiate(1, &init_msg, None, None, &[]).unwrap();
+
+        // println!("{:#?}", init_res.events[0].attributes[0].value);
+
+        let contract_address = Addr::unchecked(&init_res.events[0].attributes[0].value);
+        // let contract_address = chain.state().get_address(&"1").unwrap();
+
+        // println!("{:#?}", contract_address);
+
+        let res = chain.execute(
+            &cw20_base::msg::ExecuteMsg::Mint { recipient: recipient.to_string(), amount: Uint128::from(100u128) },
+            &[],
+            &contract_address);
+
+        println!("{:#?}", res);
+
+        // chain.query(query_msg, contract_address)
 
         assert!(false)
     }
