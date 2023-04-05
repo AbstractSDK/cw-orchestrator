@@ -1,7 +1,6 @@
 use crate::daemon::error::DaemonError;
 use base64::engine::{general_purpose::STANDARD, Engine};
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use ring::digest::SHA256;
 use secp256k1::Message;
 use secp256k1::Secp256k1;
 pub struct Signature {}
@@ -15,12 +14,8 @@ impl Signature {
         let public = STANDARD.decode(pub_key)?;
         let sig = STANDARD.decode(signature)?;
         let pk = secp256k1::PublicKey::from_slice(public.as_slice())?;
-        let mut sha = Sha256::new();
-        let mut sha_result: [u8; 32] = [0; 32];
-        sha.input_str(blob);
-        sha.result(&mut sha_result);
-
-        let message: Message = Message::from_slice(&sha_result)?;
+        let sha_result = ring::digest::digest(&SHA256, blob.as_bytes());
+        let message: Message = Message::from_slice(&sha_result.as_ref()[0..32])?;
         let secp_sig = secp256k1::ecdsa::Signature::from_compact(sig.as_slice())?;
         secp.verify_ecdsa(&message, &secp_sig, &pk)?;
         Ok(())

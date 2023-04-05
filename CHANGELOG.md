@@ -2,6 +2,12 @@
 
 ## Unpublished
 
+## v0.10.0
+
+- Update `CallAs` to be generic over environments.
+- Use updated derive macros .
+- Add `store_on` function on `Deploy` trait.
+
 ## v0.8.0
 
 - Redo crate API exposure

@@ -1,9 +1,8 @@
 use crate::daemon::error::DaemonError;
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
-use crypto::digest::Digest;
-use crypto::ripemd160::Ripemd160;
-use crypto::sha2::Sha256;
 pub use ed25519_dalek::PublicKey as Ed25519;
+use ring::digest::{Context, SHA256};
+use ripemd::{Digest as _, Ripemd160};
 use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
 static BECH32_PUBKEY_DATA_PREFIX_ED25519: [u8; 5] = [0x16, 0x24, 0xde, 0x64, 0x20]; // "eb5ae98721";
@@ -176,10 +175,10 @@ impl PublicKey {
         }
     }
     /**
-     * Gets a bech32-words pubkey from a compressed bytes Secp256K1 public key.
-     *
-     * @param publicKey raw public key
-     */
+    Gets a bech32-words pubkey from a compressed bytes Secp256K1 public key.
+
+     @param publicKey raw public key
+    */
     pub fn pubkey_from_public_key(public_key: &[u8]) -> Vec<u8> {
         [
             BECH32_PUBKEY_DATA_PREFIX_SECP256K1.to_vec(),
@@ -188,10 +187,10 @@ impl PublicKey {
         .concat()
     }
     /**
-     * Gets a bech32-words pubkey from a compressed bytes Ed25519 public key.
-     *
-     * @param publicKey raw public key
-     */
+    Gets a bech32-words pubkey from a compressed bytes Ed25519 public key.
+
+    @param publicKey raw public key
+    */
     pub fn pubkey_from_ed25519_public_key(public_key: &[u8]) -> Vec<u8> {
         [
             BECH32_PUBKEY_DATA_PREFIX_ED25519.to_vec(),
@@ -218,33 +217,24 @@ impl PublicKey {
     }
 
     /**
-    * Gets a raw address from a compressed bytes public key.
-    *
-    * @param publicKey raw public key
+    Gets a raw address from a compressed bytes public key.
 
+    @param publicKey raw public key
     */
-
     pub fn address_from_public_key(public_key: &[u8]) -> Vec<u8> {
-        // Vec<bech32::u5> {
-
         let mut hasher = Ripemd160::new();
-        let mut sha = Sha256::new();
-        let mut sha_result: [u8; 32] = [0; 32];
-        let mut ripe_result: [u8; 20] = [0; 20];
-        sha.input(public_key);
-        sha.result(&mut sha_result);
-        hasher.input(&sha_result);
-        hasher.result(&mut ripe_result);
-        let address: Vec<u8> = ripe_result.to_vec();
+        let sha_result = ring::digest::digest(&SHA256, public_key);
+        hasher.update(&sha_result.as_ref()[0..32]);
+        let ripe_result = hasher.finalize();
+        let address: Vec<u8> = ripe_result[0..20].to_vec();
         address
     }
+
     /**
-    * Gets a raw address from a  ed25519 public key.
-    *
-    * @param publicKey raw public key
+    Gets a raw address from a  ed25519 public key.
 
+    @param publicKey raw public key
     */
-
     pub fn address_from_public_ed25519_key(public_key: &[u8]) -> Result<Vec<u8>, DaemonError> {
         // Vec<bech32::u5> {
 
@@ -260,19 +250,20 @@ impl PublicKey {
                 hex::encode(public_key)
             );
             //  let mut hasher = Ripemd160::new();
-            let mut sha = Sha256::new();
+            // let mut sha = Sha256::new();
             let mut sha_result: [u8; 32] = [0; 32];
             //  let mut ripe_result: [u8; 20] = [0; 20];
             // let v = &public_key[5..37];
+            let sha_result = ring::digest::digest(&SHA256, &public_key[5..]);
 
-            sha.input(&public_key[5..]);
-            sha.result(&mut sha_result);
+            // sha.input(&public_key[5..]);
+            // sha.result(&mut sha_result);
             //    hasher.input(public_key);
             //hasher.input(v);
             //    hasher.input(&sha_result);
             //   hasher.result(&mut ripe_result);
 
-            let address: Vec<u8> = sha_result[0..20].to_vec();
+            let address: Vec<u8> = sha_result.as_ref()[0..20].to_vec();
             // let address: Vec<u8> = ripe_result.to_vec();
             //     eprintln!("address_from_public_ed_key {}", hex::encode(&address));
             log::debug!(
