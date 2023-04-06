@@ -15,10 +15,10 @@ cargo init --bin scripts
 Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:
 
 ```bash
-cargo add --path ../interfaces
+cargo add --path ../packages/interfaces
 ```
 
-and also add the `anyhow` and `dotenv` crates:
+and also add the `dotenv` crate:
 
 ```bash
 cargo add anyhow dotenv log
@@ -51,9 +51,7 @@ fn main() {
 
         // The backtrace is not always generated. Try to run this example
         // with `$env:RUST_BACKTRACE=1`.
-        //    if let Some(backtrace) = e.backtrace() {
-        //        log::debug!("backtrace: {:?}", backtrace);
-        //    }
+        // log::debug!("backtrace: {:?}", err.backtrace());
 
         ::std::process::exit(1);
     }
@@ -68,7 +66,7 @@ First, we'll define a function that will deploy our contract to the chain. This 
 // scripts/src/my_contract.rs
 use anyhow::Result;
 use boot_core::networks;
-use boot_core::{instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
+use boot_core::{Addr, instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
 // Traits for contract deployment
 use boot_core::interface::*;
 use interfaces::my_contract::MyContract;
@@ -77,7 +75,7 @@ use interfaces::my_contract::MyContract;
 const NETWORK: NetworkInfo = networks::juno::UNI_6;
 const CONTRACT_NAME: &str = "my-contract";
 
-pub fn deploy_contract() -> anyhow::Result<String> {
+pub fn deploy_contract() -> anyhow::Result<Addr> {
     // Create a runtime for the asynchronous actions
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
 
@@ -92,7 +90,7 @@ pub fn deploy_contract() -> anyhow::Result<String> {
     let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let mut contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let mut contract = MyContract::new(CONTRACT_NAME, chain);
     // Upload your contract
     contract.upload()?;
 
@@ -101,10 +99,10 @@ pub fn deploy_contract() -> anyhow::Result<String> {
         // ...
     };
     // The second argument is the admin, the third is any coins to send with the init message
-    contract.instantiate(init_msg, None, None)?;
+    contract.instantiate(&init_msg, None, None)?;
 
     // Load and return the contract address
-    let contract_addr = contract.address();
+    let contract_addr = contract.address()?;
     Ok(contract_addr)
 }
 ```
@@ -121,7 +119,7 @@ Here's an example of a script that queries the contract state:
 use my_contract::{QueryMsg};
 // ...
 
-pub fn query_contract() -> Result<()> {
+pub fn query_contract() -> anyhow::Result<()> {
     // Setup the environment
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
     let options = DaemonOptionsBuilder::default()
@@ -130,11 +128,11 @@ pub fn query_contract() -> Result<()> {
     let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let contract = MyContract::new(CONTRACT_NAME, chain);
     // Load the contract address (this will use the address set from the previous deploy script)
     let contract_addr = contract.address();
     // Query the contract
-    let res = contract.query(QueryMsg::Balance {
+    let res = contract.query(&QueryMsg::Balance {
       address: contract_addr,
     })?;
     // Print the result
@@ -151,7 +149,7 @@ use boot_core::*;
 use my_contract::{ExecuteMsg, ExecuteMsgFnsDerive};
 // ...
 
-pub fn execute_contract() -> Result<()> {
+pub fn execute_contract() -> anyhow::Result<()> {
     // Setup the environment
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
     let options = DaemonOptionsBuilder::default()
@@ -160,14 +158,14 @@ pub fn execute_contract() -> Result<()> {
     let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let contract = MyContract::new(CONTRACT_NAME, chain);
     // Load the contract address (this will use the address set from the previous deploy script)
     let contract_addr = contract.address();
     // Execute a contract method
-    let res = contract.execute(ExecuteMsg::UpdateBalance {
+    let res = contract.execute(&ExecuteMsg::UpdateBalance {
       address: contract_addr,
       balance: Uint128::from(1000000u128),
-    })?;
+    }, None)?;
     // OR, if you're usincg the `ExecuteMsgFnsDerive` derive macro
     let res = contract.update_balance(contract_addr, Uint128::from(1000000u128))?;
     // Print the result

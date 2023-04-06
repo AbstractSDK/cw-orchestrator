@@ -13,6 +13,8 @@ Following this example, the project's structure should eventually look like:
 ```path
 .
 ├── Cargo.toml
+├── artifacts
+│   └── my_contract.wasm (binary file)
 ├── my-contract
 │   ├── Cargo.toml
 │   └── src
@@ -20,15 +22,21 @@ Following this example, the project's structure should eventually look like:
 │       └── ..
 ├── packages
 │   ├── my-project
-│   │   └── my-contract.rs (msgs)
+│   │   ├── Cargo.toml
+│   │   └── src
+│   │       └── lib.rs
+│   │       └── my-contract.rs (msgs)
 │   └── interfaces
-│       └── my-contract.rs (interface)
+│       ├── Cargo.toml
+│       └── src
+│            └── lib.rs
+│            └── my-contract.rs (interface)
 └── scripts
+    ├── .env
     ├── Cargo.toml
     └── src
-        └── bin
-            ├── deploy.rs
-            └── test_my_contract.rs
+        ├── deploy.rs
+        └── test_my_contract.rs
 ```
 
 ## Sections
