@@ -16,3 +16,4 @@ Cargo.lock
 *_bak
 
 .DS_Store
+**/*.profraw
