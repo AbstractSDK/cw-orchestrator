@@ -39,7 +39,9 @@ In your new file, define a struct for your contract interface and provide the [`
 
 ```rust
 use boot_core::*;
-use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+// We use pub here to be able to import those messages directly 
+// from the interfaces crate in the next steps (scripting, intergation tests...)
+pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
