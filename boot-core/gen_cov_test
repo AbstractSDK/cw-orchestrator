@@ -1,0 +1,14 @@
+#bash
+cargo clean
+
+mkdir ./profraw_data
+
+CARGO_INCREMENTAL=0 RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="./profraw_data/cargo-test-%p-%m.profraw" cargo test
+
+mkdir -p ./target/coverage/html
+
+grcov . --binary-path ./target/debug/deps/ -s ./profraw_data/ -t html --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o target/coverage/html
+
+rm -rf ./profraw_data
+
+open target/coverage/html/index.html
