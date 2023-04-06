@@ -8,11 +8,20 @@ use cosmrs::{
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_reader, json, Value};
-use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
+use serde_json::{to_writer_pretty, from_reader, json, Value};
+use std::{collections::HashMap, env, fs::{File, OpenOptions}, rc::Rc, str::FromStr};
 use tonic::transport::{Channel, ClientTlsConfig};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
+/*
+    the proper way of using DaemonOptions is using DaemonOptionsBuilder
+    here is an example of how:
+    let options = DaemonOptionsBuilder::default()
+        .network(networks::PISCO_1)
+        .deployment_id("PISCO_1_TEST_DEPLOY".to_string())
+        .build()
+        .unwrap();
+*/
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
 pub struct DaemonOptions {
@@ -26,6 +35,7 @@ pub struct DaemonOptions {
 
 #[derive(Clone, Debug)]
 pub struct DaemonState {
+    // this is passed via env var STATE_FILE
     pub json_file_path: String,
     /// What kind of network
     pub kind: NetworkKind,
@@ -49,16 +59,20 @@ pub struct DaemonState {
 impl DaemonState {
     pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
         let network: RegistryChainInfo = options.network;
-        // find working grpc channel
 
         let mut successful_connections = vec![];
 
         log::debug!("Found {} gRPC endpoints", network.apis.grpc.len());
 
+        // find working grpc channel
         for Grpc { address, .. } in network.apis.grpc.iter() {
+            // get grpc endpoint
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
 
+            // try to connect to grpc endpoint
             let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+
+            // connection succeeded
             let mut client = if maybe_client.is_ok() {
                 maybe_client?
             } else {
@@ -68,15 +82,19 @@ impl DaemonState {
                     maybe_client.unwrap_err()
                 );
 
+                // try HTTPS approach
                 // https://github.com/hyperium/tonic/issues/363#issuecomment-638545965
                 if !(address.contains("https") || address.contains("443")) {
                     continue;
                 };
 
                 log::info!("Attempting to connect with TLS");
-                let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
 
+                // re attempt to connect
+                let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
                 let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+
+                // connection still fails
                 if maybe_client.is_err() {
                     log::warn!(
                         "Cannot connect to gRPC endpoint: {}, {:?}",
@@ -85,14 +103,17 @@ impl DaemonState {
                     );
                     continue;
                 };
+
                 maybe_client?
             };
 
+            // get client information for verification down below
             let node_info = client
                 .get_node_info(GetNodeInfoRequest {})
                 .await?
                 .into_inner();
 
+            // verify we are connected to the spected network
             if node_info.default_node_info.as_ref().unwrap().network != network.chain_id.as_str() {
                 log::error!(
                     "Network mismatch: connection:{} != config:{}",
@@ -101,14 +122,20 @@ impl DaemonState {
                 );
                 continue;
             }
+
+            // add endpoint to succesful connections
             successful_connections.push(endpoint.connect().await?)
         }
 
+        // we could not get any succesful connections
         if successful_connections.is_empty() {
             return Err(DaemonError::CannotConnectGRPC);
         }
 
+        // check if STATE_FILE en var is configured, fail if not
         let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");
+
+        // if the network we are connecting is a local kind, add it to the fn
         if network.network_type == NetworkKind::Local.to_string() {
             let name = path.split('.').next().unwrap();
             path = format!("{name}_local.json ");
@@ -128,6 +155,7 @@ impl DaemonState {
                     }
                 });
 
+        // build daemon state
         let state = DaemonState {
             json_file_path: path,
             kind: NetworkKind::from(network.network_type),
@@ -147,21 +175,47 @@ impl DaemonState {
             lcd_url: None,
             fcd_url: None,
         };
+
+        // check validity
         state.check_file_validity();
+
+        // finish
         Ok(state)
     }
 
+    // maybe we shold rename this?
     pub fn check_file_validity(&self) {
-        let file = File::open(&self.json_file_path).unwrap_or_else(|_| {
-            let file = File::create(&self.json_file_path).unwrap();
-            serde_json::to_writer_pretty(&file, &json!({})).unwrap();
-            File::open(&self.json_file_path).unwrap()
-        });
-        log::info!("Opening daemon state at {}", self.json_file_path);
-        let mut json: serde_json::Value = from_reader(file).unwrap();
+        // check file exists
+        let file_exists = std::path::Path::new(&self.json_file_path).exists();
+
+        // create file if dont exists, set read/write permissions to true
+        // dont truncate it
+        let file = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .truncate(false)
+            .open(&self.json_file_path)
+            .unwrap();
+
+        // read file content from fp
+        // return empty json object if the file was just created
+        let mut json: serde_json::Value = if file_exists {
+            if file.metadata().unwrap().len().eq(&0) {
+                json!({})
+            } else {
+                serde_json::from_reader(&file).unwrap()
+            }
+        } else {
+            json!({})
+        };
+
+        // check and add chain_id path if it's missing
         if json.get(&self.chain.chain_id).is_none() {
             json[&self.chain.chain_id] = json!({});
         }
+
+        // add deployment_id to chain_id path
         if json[&self.chain.chain_id].get(&self.id).is_none() {
             json[&self.chain.chain_id][&self.id] = json!({
                 &self.deployment_id: {},
@@ -169,7 +223,13 @@ impl DaemonState {
             });
         }
 
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+        // write JSON data
+        // use File::create so we dont append data to the file
+        // but rather write all (because we have read the data before)
+        serde_json::to_writer_pretty(
+            File::create(&self.json_file_path).unwrap(),
+            &json
+        ).unwrap();
     }
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
@@ -239,6 +299,7 @@ impl StateInterface for Rc<DaemonState> {
         }
         Ok(store)
     }
+
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, BootError> {
         let mut store = HashMap::new();
         let code_ids = self.get("code_ids");

@@ -5,6 +5,7 @@
 mod general {
     use cosmwasm_std::{Addr, Coin, Response, to_binary, DepsMut, Env, MessageInfo, StdResult, Deps, Binary, Uint128};
 
+    use serde::Serialize;
     use speculoos::prelude::*;
 
     use cw_multi_test::ContractWrapper;
@@ -17,6 +18,18 @@ mod general {
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
+
+    #[derive(Debug, Serialize)]
+    struct MigrateMsg {}
+
+    fn instantiate(
+        _deps: DepsMut,
+        _env: Env,
+        _info: MessageInfo,
+        _msg: cw20_base::msg::InstantiateMsg,
+    ) -> StdResult<Response> {
+        Ok(Response::default())
+    }
 
     fn execute(
         _deps: DepsMut,
@@ -46,15 +59,6 @@ mod general {
             cw20::Cw20ExecuteMsg::UpdateMarketing { project: _, description: _, marketing: _ } => unimplemented!(),
             cw20::Cw20ExecuteMsg::UploadLogo(_) => unimplemented!(),
         }
-    }
-
-    fn instantiate(
-        _deps: DepsMut,
-        _env: Env,
-        _info: MessageInfo,
-        _msg: cw20_base::msg::InstantiateMsg,
-    ) -> StdResult<Response> {
-        Ok(Response::default())
     }
 
     fn query(
@@ -95,8 +99,11 @@ mod general {
         chain.set_balance(recipient, vec![Coin::new(amount, denom)]).unwrap();
         let balance = chain.query_balance(recipient, denom).unwrap();
 
-        asserting("address balance amount is correct").that(&amount).is_equal_to(&balance.into());
-        asserting("sender is correct").that(sender).is_equal_to(chain.sender());
+        asserting("address balance amount is correct")
+            .that(&amount).is_equal_to(&balance.into());
+
+        asserting("sender is correct")
+            .that(sender).is_equal_to(chain.sender());
 
         let mut contract_source: ContractCodeReference = ContractCodeReference::default();
 
@@ -117,7 +124,7 @@ mod general {
             mint: None,
             marketing: None,
         };
-        let init_res = chain.instantiate(1, &init_msg, None, None, &[]).unwrap();
+        let init_res = chain.instantiate(1, &init_msg, None, Some(sender), &[]).unwrap();
 
         let contract_address = Addr::unchecked(&init_res.events[0].attributes[0].value);
 
@@ -141,8 +148,12 @@ mod general {
                 address: recipient.to_string()
             }, &contract_address).unwrap();
 
-        asserting("that exect passed on correctly")
+        asserting("that query passed on correctly")
             .that(&query_res.attributes[1].value)
             .is_equal_to(&String::from("0"));
+
+        // is migration not yet implemented?
+        // let migration_res = chain.migrate(&MigrateMsg{}, 1, &contract_address);
+        // println!("{:#?}", migration_res);
     }
 }
