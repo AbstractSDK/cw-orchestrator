@@ -12,7 +12,9 @@ Now add [boot-core](https://crates.io/crates/boot-core) to `Cargo.toml` along wi
 
 ```bash
 cargo add boot-core
-cargo add --path ../contracts
+cargo add log # optional for logging
+cargo add anyhow # optional for simple error handling
+cargo add --path ../my-project
 ```
 
 ```toml
@@ -37,7 +39,9 @@ In your new file, define a struct for your contract interface and provide the [`
 
 ```rust
 use boot_core::*;
-use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+// We use pub here to be able to import those messages directly 
+// from the interfaces crate in the next steps (scripting, intergation tests...)
+pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
@@ -47,11 +51,17 @@ pub struct MyContract<Chain>;
 
 ## Constructor
 
-Next, you'll want to define the constructor for the interface we just defined:
+Next, you'll want to define the constructor for the interface we just defined. In order to do so, first include the contract interface (`instantiate`, `execute` and `query` functions) in your package : 
+
+```bash
+cargo add --path ../../my-contract
+```
+
 
 The generic `<Chain>` argument allows you to write functions for your interface that will be executable in different environments.
 
 ```rust
+
 impl<Chain: CwEnv> MyContract<Chain> {
     /// Construct a new instance of MyContract
     /// * `contract_id` - what your contract should be called in local state (*not* on-chain)
@@ -97,23 +107,26 @@ Generic functions can be executed over any environment.
 
 ```rust
 impl<Chain: CwEnv> MyContract<Chain> {
-    pub fn deploy(&self, instantiate_msg: &InstantiateMsg) -> Self {
-        let sender = &self.chain.sender();
+    pub fn deploy(&self, instantiate_msg: &InstantiateMsg) -> Result<()> {
+        let sender = &self.get_chain().sender();
         self.upload()?;
-        let resp = self.instantiate(&instantiate_msg, Some(sender), None)?;
+        let resp = self.instantiate(instantiate_msg, Some(&sender), None)?;
         let my_contract_address = resp.instantiated_contract_address()?;
         log::info!("deployed my-contract to {}", my_contract_address);
+        Ok(())
     }
 }
 ```
+
 
 ### Daemon-only functions
 
 ```rust
 impl MyContract<Daemon> {
-    pub fn send_ibc_transaction(&self, msg: &ExecuteMsg) -> Self {
-        let resp = self.execute(&msg,None)?;
-        let destination_port = resp.event_attr_value("ibc_transfer", "destination_port");?;
+    pub fn send_ibc_transaction(&self, msg: &ExecuteMsg) -> Result<String> {
+        let resp = self.execute(msg,None)?;
+        let destination_port = resp.event_attr_value("ibc_transfer", "destination_port")?;
+        Ok(destination_port)
     }
 }
 ```
@@ -122,14 +135,17 @@ impl MyContract<Daemon> {
 
 ```rust
 impl MyContract<Mock> {
-    pub fn call_other_chain (&self, msg: &ExecuteMsg) -> Self {
-        let resp = self.execute(&msg,None)?;
-        let destination_port = resp.event_attr_value("ibc_transfer", "destination_port");?;
+    pub fn call_other_chain (&self, msg: &ExecuteMsg) -> Result<String> {
+        let resp = self.execute(msg,None)?;
+        let destination_port = resp.event_attr_value("ibc_transfer", "destination_port")?;
+        Ok(destination_port)
     }
 }
 ```
 
 ### Endpoint function generation
+
+#### Execution
 
 We can expand on this functionality with a simple macro that provides access to a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs's crate.
 > You will want to feature-flag the function generation to prevent BOOT entering as a dependency when building your contract.
@@ -143,7 +159,7 @@ pub enum ExecuteMsg{
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
     // Indicates that the call expects funds `Vec<Coin>`
-    #[payable]
+    #[cfg_attr(feature = "boot", payable)]
     Deposit {}
 }
 
@@ -161,6 +177,22 @@ impl<Chain: CwEnv + Clone> MyContract<Chain> {
     }
 }
 ```
+
+In order for the above code to work, you will need to follow those simple steps : 
+1. Add the following line to your `packages/my-project.Cargo.toml`. This will allow to activate the boot feature for creating `ExecuteFns` outside of the crate 
+    ```cargo
+    [features]
+    boot=[]
+    ```
+
+2. Add the following import in your `packages/interfaces/src/my-contract.rs` file : 
+    ```rust 
+    use my_project::my_contract::ExecuteMsgFns;
+    ```
+
+
+
+#### Query
 
 Generating query functions is a similar process but has the added advantage of using the `cosmwasm-schema` return tags to detect the query's return type.
 
@@ -195,6 +227,14 @@ impl<Chain: CwEnv + Clone> MyContract<Chain> {
 }
 
 ```
+
+In order to derive query functions, you NEED to serive the QueryResponses crate for your QueryMsgs struct. This is mandatory in order to ensure type-safety for all messages and responses.
+
+This time, add the following import in your `packages/interfaces/src/my-contract.rs` file : 
+    ```rust 
+    use my_project::my_contract::QueryMsgFns;
+    ```
+
 
 #### Refinement
 
