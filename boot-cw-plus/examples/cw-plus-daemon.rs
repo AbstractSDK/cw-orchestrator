@@ -26,7 +26,6 @@ pub fn script() -> anyhow::Result<()> {
     cw20_example(chain)
 }
 
-
 fn cw20_example<Chain: CwEnv>(chain: Chain) -> anyhow::Result<()> {
     let sender = chain.sender();
     // Upload the cw-plus contracts
