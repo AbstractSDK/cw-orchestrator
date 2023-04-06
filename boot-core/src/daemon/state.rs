@@ -8,7 +8,7 @@ use cosmrs::{
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 use serde::{Deserialize, Serialize};
-use serde_json::{to_writer_pretty, from_reader, json, Value};
+use serde_json::{from_reader, json, Value};
 use std::{collections::HashMap, env, fs::{File, OpenOptions}, rc::Rc, str::FromStr};
 use tonic::transport::{Channel, ClientTlsConfig};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
