@@ -97,7 +97,7 @@ The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but 
 
 # Contributing
 
-We'd really appreciate your help! Please read our [contributing guidelines](CONTRIBUTING.md) to get started.
+We'd really appreciate your help! Please read our [contributing guidelines](docs/src/contributing.md) to get started.
 
 ## Documentation
 
