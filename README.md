@@ -1,4 +1,4 @@
-<img alt="docs.rs" src="https://img.shields.io/docsrs/boot-core"> <img alt="Crates.io" src="https://img.shields.io/crates/d/boot-core"> <img alt="Codecov" src="https://img.shields.io/codecov/c/github/abstract-os/BOOT?token=CZZH6DJMRY"> 
+<a href="https://docs.rs/boot-core/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/boot-core"></a> <a href="https://crates.io/crates/boot-core" ><img alt="Crates.io" src="https://img.shields.io/crates/d/boot-core"></a> <a href="https://app.codecov.io/gh/abstract-os/BOOT" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/abstract-os/BOOT?token=CZZH6DJMRY"></a>
 
 
 # BOOT
