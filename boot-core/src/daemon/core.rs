@@ -20,10 +20,11 @@ use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
+    path::Path,
     rc::Rc,
     str::{from_utf8, FromStr},
     sync::Arc,
-    time::Duration, path::Path,
+    time::Duration,
 };
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
@@ -181,7 +182,10 @@ impl TxHandler for Daemon {
         let wasm_path = &contract_source.get_wasm_code_path()?;
 
         if !Path::new(wasm_path).exists() {
-            return Err(DaemonError::StdErr(format!("no .wasm file found in path {}", wasm_path.to_string())));
+            return Err(DaemonError::StdErr(format!(
+                "no .wasm file found in path {}",
+                wasm_path
+            )));
         };
 
         let file_contents = std::fs::read(wasm_path)?;
