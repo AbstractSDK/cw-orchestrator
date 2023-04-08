@@ -2,7 +2,7 @@ mod common;
 
 use boot_core::{networks::LOCAL_JUNO, *};
 use common::cw20::Cw20Base;
-use cw20::{Cw20Coin};
+use cw20::Cw20Coin;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
