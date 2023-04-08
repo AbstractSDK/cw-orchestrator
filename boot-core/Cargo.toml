@@ -13,7 +13,6 @@ readme      = "../README.md"
 exclude = [".env"]
 
 [features]
-default = ["daemon"]
 # enable the optional dependencies
 daemon = [
     "dep:ibc-chain-registry",
