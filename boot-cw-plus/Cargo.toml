@@ -31,7 +31,7 @@ wasms   = ["dep:tokio", "dep:reqwest"]
 daemon  = ["boot-core/daemon", "dep:tokio"]
 
 [dependencies]
-boot-core     = { path = "../boot-core", version = "0.10.0"}
+boot-core     = { version = "0.10.0"}
 cosmwasm-std  = { workspace = true }
 serde         = { workspace = true }
 anyhow        = { workspace = true }
