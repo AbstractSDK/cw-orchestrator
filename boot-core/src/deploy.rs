@@ -4,7 +4,7 @@ use crate::{BootError, CwEnv};
 ///
 /// ## Example:
 /// ```
-/// use boot_core::{Deploy, BootError, Empty, CwEnv, BootUpload};
+/// use boot_core::{Deploy, BootError, Empty, CwEnv, BootUpload, BootInstantiate};
 /// use boot_cw_plus::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
