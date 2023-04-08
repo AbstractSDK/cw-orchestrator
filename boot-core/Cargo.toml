@@ -15,28 +15,7 @@ exclude = [".env"]
 [features]
 default = ["daemon"]
 # enable the optional dependencies
-daemon = [
-    "dep:ibc-chain-registry",
-    "dep:tokio",
-    "dep:tonic",
-    "dep:secp256k1",
-    "dep:reqwest",
-    "dep:base64",
-    "dep:hkd32",
-    "dep:rand_core",
-    "dep:ed25519-dalek",
-    "dep:cosmrs",
-    "dep:derive_builder",
-    "dep:eyre",
-    "dep:chrono",
-    "dep:base16",
-    "dep:ripemd",
-    "dep:ring",
-    "dep:hex",
-    "dep:bitcoin",
-    "dep:prost",
-    "dep:sha256",
-]
+daemon = ["dep:ibc-chain-registry", "dep:tokio", "dep:tonic", "dep:secp256k1", "dep:reqwest", "dep:base64", "dep:hkd32", "dep:rand_core", "dep:ed25519-dalek", "dep:cosmrs", "dep:derive_builder", "dep:eyre", "dep:chrono", "dep:base16", "dep:ripemd", "dep:ring", "dep:hex", "dep:bitcoin", "dep:prost", "dep:sha256"]
 
 [dependencies]
 # Default deps
@@ -85,3 +64,7 @@ ring = { version = "0.16.20", optional = true }
 cw20-base    = { version = "1.0" }
 cw20         = { version = "1.0" }
 boot-cw-plus = { path = "../boot-cw-plus" }
+ctor = "0.2.0"
+duct = "0.13"
+once_cell = "1.8"
+libc-print = "0.1.21"
