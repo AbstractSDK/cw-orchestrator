@@ -81,3 +81,34 @@ fn shutdown_daemon() {
         }
     }
 }
+
+
+pub mod cw20 {
+    use boot_core::{contract, CwEnv, ContractWrapper, Contract};
+    use cw20_base::msg::*;
+
+
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct Cw20Base;
+
+// Implement chain-generic functions
+impl<Chain: CwEnv> Cw20Base<Chain> {
+    pub fn new(chain: Chain) -> Self {
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let file_path = &format!("{}{}", crate_path, "/tests/artifacts/cw20_base.wasm");
+        Self(
+            Contract::new("cw-plus:cw20_base", chain)
+                .with_mock(Box::new(
+                    ContractWrapper::new_with_empty(
+                        cw20_base::contract::execute,
+                        cw20_base::contract::instantiate,
+                        cw20_base::contract::query,
+                    )
+                    .with_migrate(cw20_base::contract::migrate),
+                ))
+                .with_wasm_path(file_path),
+        )
+    }
+}
+
+}
