@@ -3,10 +3,12 @@ use boot_core::{networks::LOCAL_JUNO, DaemonOptionsBuilder};
 use boot_cw_plus::{Cw20ExecuteMsgFns, Cw20QueryMsgFns, CwPlus};
 use cw20::Cw20Coin;
 use std::sync::Arc;
+use boot_core::networks::{CONSTANTINE_1, UNI_6};
 use tokio::runtime::Runtime;
 
 // shows how to deploy CwPlus to a real environment
 // Requires a running local junod with grpc enabled
+// Make sure you run junod (localjuno)
 // run `cargo run --features daemon --example cw-plus-daemon`
 pub fn script() -> anyhow::Result<()> {
     // create the tokio runtime
@@ -15,7 +17,7 @@ pub fn script() -> anyhow::Result<()> {
     let _chain_data = rt.block_on(RegistryChainData::fetch("juno".into(), None))?;
     let options = DaemonOptionsBuilder::default()
         // or provide `chain_data`
-        .network(LOCAL_JUNO)
+        .network(CONSTANTINE_1)
         // specify a custom deployment ID
         .deployment_id("v0.1.0")
         .build()?;

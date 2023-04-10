@@ -1,8 +1,9 @@
 #![recursion_limit = "128"]
 
 extern crate proc_macro;
+
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote};
 use syn::{parse_macro_input, AttributeArgs, Fields, Item, Meta, NestedMeta, Path};
 
 #[proc_macro_attribute]
@@ -37,27 +38,33 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let migrate = types_in_order[3].clone();
 
     let name = boot_struct.ident.clone();
-    let struct_def = quote!(
-            #[derive(
-                ::std::clone::Clone,
-            )]
-            pub struct #name<Chain: ::boot_core::CwEnv>(::boot_core::Contract<Chain>);
 
-            impl<Chain: ::boot_core::CwEnv> ::boot_core::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::boot_core::Contract<Chain> {
-            &self.0
+    let struct_def = quote! {
+        #[derive(
+            ::std::clone::Clone,
+        )]
+        pub struct #name {
+            pub address: ::cosmwasm_std::Addr,
         }
-            fn as_instance_mut(&mut self) -> &mut ::boot_core::Contract<Chain> {
-                &mut self.0
+
+        impl #name {
+            pub fn new(address: ::cosmwasm_std::Addr) -> Self {
+                Self { address }
             }
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::CwInterface for #name<Chain> {
+        impl ::boot_msg::CwContract for #name {
+            fn address(&self) -> ::cosmwasm_std::Addr {
+                self.address.clone()
+            }
+        }
+
+        impl ::boot_msg::CwInterface for #name {
             type InstantiateMsg = #init;
             type ExecuteMsg = #exec;
             type QueryMsg = #query;
             type MigrateMsg = #migrate;
         }
-    );
-    struct_def.into()
-}
+    };
+
+    struct_def.into()}

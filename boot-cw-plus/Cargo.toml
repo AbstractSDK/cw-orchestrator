@@ -29,14 +29,15 @@ required-features = ["daemon"]
 [features]
 wasms   = ["dep:tokio", "dep:reqwest"]
 daemon  = ["boot-core/daemon", "dep:tokio"]
+cw-derive = []
 
 [dependencies]
-boot-core     = { version = "0.10.0"}
+boot-core     = { path = "../boot-core", version = "0.10.0" }
 cosmwasm-std  = { workspace = true }
 serde         = { workspace = true }
 anyhow        = { workspace = true }
 cw-multi-test = { workspace = true }
-# packages 
+# packages
 cw1  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
 cw3  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
 cw4  = { git = "https://github.com/Abstract-OS/cw-plus.git" }

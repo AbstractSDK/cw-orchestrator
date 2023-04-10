@@ -154,7 +154,7 @@ pub trait CallAs<Chain: CwEnv>: BootExecute<Chain> + ContractInstance<Chain> + C
     /// Set the sender for the contract
     fn set_sender(&mut self, sender: &Self::Sender);
 
-    /// Call a contract as a different sender.  
+    /// Call a contract as a different sender.
     /// Creates a new copy of the contract with a different sender
     fn call_as(&self, sender: &Self::Sender) -> Self;
 }
