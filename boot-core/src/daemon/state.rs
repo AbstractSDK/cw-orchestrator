@@ -17,8 +17,8 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
     the proper way of using DaemonOptions is using DaemonOptionsBuilder
     here is an example of how:
     let options = DaemonOptionsBuilder::default()
-        .network(networks::PISCO_1)
-        .deployment_id("PISCO_1_TEST_DEPLOY".to_string())
+        .network(LOCAL_JUNO)
+        .deployment_id("v0.1.0")
         .build()
         .unwrap();
 */
@@ -138,7 +138,7 @@ impl DaemonState {
         // if the network we are connecting is a local kind, add it to the fn
         if network.network_type == NetworkKind::Local.to_string() {
             let name = path.split('.').next().unwrap();
-            path = format!("{name}_local.json ");
+            path = format!("{name}_local.json");
         }
 
         // Try to get the standard fee token (probably shortest denom)
@@ -176,15 +176,15 @@ impl DaemonState {
             fcd_url: None,
         };
 
-        // check validity
-        state.check_file_validity();
+        // write json state file
+        state.write_state_json();
 
         // finish
         Ok(state)
     }
 
     // maybe we shold rename this?
-    pub fn check_file_validity(&self) {
+    pub fn write_state_json(&self) {
         // check file exists
         let file_exists = std::path::Path::new(&self.json_file_path).exists();
 
@@ -197,6 +197,8 @@ impl DaemonState {
             .truncate(false)
             .open(&self.json_file_path)
             .unwrap();
+
+        log::info!("Opening daemon state at {}", self.json_file_path);
 
         // read file content from fp
         // return empty json object if the file was just created
@@ -234,7 +236,7 @@ impl DaemonState {
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
         self.deployment_id = deployment_id.into();
-        self.check_file_validity();
+        self.write_state_json();
     }
 
     /// Get the state filepath and read it as json
