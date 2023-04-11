@@ -194,7 +194,7 @@ impl From<StringEvent> for TxResultBlockEvent {
 
 impl TxResultBlockEvent {
     /// get all key/values from the event that have the key 'key'
-    pub fn get_attribute(&self, key: &str) -> Vec<TxResultBlockAttribute> {
+    pub fn get_attributes(&self, key: &str) -> Vec<TxResultBlockAttribute> {
         self.attributes
             .iter()
             .filter(|attr| attr.key == key)
@@ -204,7 +204,7 @@ impl TxResultBlockEvent {
 
     /// return the first value of the first attribute that has the key 'key'
     pub fn get_first_value(&self, key: &str) -> Option<String> {
-        self.get_attribute(key)
+        self.get_attributes(key)
             .first()
             .map(|attr| attr.value.clone())
     }
@@ -257,7 +257,7 @@ pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, DaemonError> {
 
 #[cfg(test)]
 mod test {
-    use super::{CosmTxResponse, TxResultBlockMsg, Event, parse_timestamp};
+    use super::{CosmTxResponse, TxResultBlockMsg, Event, parse_timestamp, IndexResponse};
     use speculoos::prelude::*;
     use cosmrs::proto::tendermint::abci::EventAttribute;
 
@@ -315,16 +315,6 @@ mod test {
         let stamp = tx_response.get("timestamp").unwrap().as_str().unwrap().clone();
         let timestamp = parse_timestamp(String::from(stamp)).unwrap();
 
-        let ts_time = timestamp.time();
-        asserting!("timestamp time is equal to dataset timestamp")
-            .that(&ts_time.to_string())
-            .is_equal_to(&String::from("00:27:04"));
-
-        let ts_date = timestamp.date_naive();
-        asserting!("timestamp date is equal to dataset timestamp")
-            .that(&ts_date.to_string())
-            .is_equal_to(&String::from("2023-04-07"));
-
         let tx_res = CosmTxResponse {
             height,
             txhash,
@@ -341,13 +331,57 @@ mod test {
         };
 
         let res = tx_res.get_attribute_from_logs(&"coin_received", &"receiver");
-        asserting!(&"get_attribute_from_logs returns correct amount")
+        asserting!("get_attribute_from_logs returns correct amount")
             .that(&res.len())
             .is_equal_to(&2);
 
         let res = tx_res.get_events(&"wasm");
-        asserting!(&"get_events returned the correct amount")
+        asserting!("get_events returns the correct amount")
             .that(&res.len())
             .is_equal_to(&2);
+
+        let attrs = res[0].get_attributes("receiver");
+        asserting!("get_attributes returns the correct amount")
+            .that(&attrs.len())
+            .is_equal_to(&1);
+
+        let value = res[0].get_first_value("_contract_address");
+        asserting!("get_first_value response is present")
+            .that(&value)
+            .is_some();
+
+        let res = tx_res.events();
+        asserting!("IndexResponse events returns the correct amount")
+            .that(&res.len())
+            .is_equal_to(&8);
+
+        asserting!("IndexResponse data is present")
+            .that(&tx_res.data())
+            .is_some();
+
+        let res = tx_res.event_attr_value("coin_spent", "c3BlbmRlcg==");
+        asserting!("IndexResponse events returns value")
+            .that(&res)
+            .is_ok();
+     }
+
+     #[test]
+     fn test_parse_timestamp() {
+        let data: Value = serde_json::from_str(TEST_TX.trim()).unwrap();
+
+        let tx_response = data.as_object().unwrap().get("tx_response").unwrap();
+
+        let stamp = tx_response.get("timestamp").unwrap().as_str().unwrap().clone();
+        let timestamp = parse_timestamp(String::from(stamp)).unwrap();
+
+        let ts_time = timestamp.time();
+        asserting!("timestamp time is equal to dataset timestamp")
+            .that(&ts_time.to_string())
+            .is_equal_to(&String::from("00:27:04"));
+
+        let ts_date = timestamp.date_naive();
+        asserting!("timestamp date is equal to dataset timestamp")
+            .that(&ts_date.to_string())
+            .is_equal_to(&String::from("2023-04-07"));
      }
 }
