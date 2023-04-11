@@ -1,4 +1,6 @@
-<!-- ![alt text](https://raw.githubusercontent.com/Abstract-OS/assets/c85b8ed5104b26bfb0f97dc9d30a8813a4a1b60b/DALL%C2%B7E%20Boot%20(2).png) -->
+<a href="https://docs.rs/boot-core/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/boot-core"></a> <a href="https://crates.io/crates/boot-core" ><img alt="Crates.io" src="https://img.shields.io/crates/d/boot-core"></a> <a href="https://app.codecov.io/gh/abstract-os/BOOT" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/abstract-os/BOOT?token=CZZH6DJMRY"></a>
+
+
 # BOOT
 
 Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [boot.abstract.money](https://boot.abstract.money).
@@ -97,7 +99,7 @@ The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but 
 
 # Contributing
 
-We'd really appreciate your help! Please read our [contributing guidelines](CONTRIBUTING.md) to get started.
+We'd really appreciate your help! Please read our [contributing guidelines](docs/src/contributing.md) to get started.
 
 ## Documentation
 
