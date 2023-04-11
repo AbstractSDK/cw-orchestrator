@@ -20,7 +20,7 @@ pub use error::BootError;
 pub use index_response::IndexResponse;
 pub use interface::{
     BootExecute, BootInstantiate, BootMigrate, BootQuery, BootUpload, CallAs, ContractInstance,
-    CwInterface,
+    ExecuteableContract, InstantiateableContract, MigrateableContract, QueryableContract,
 };
 pub use mock::{
     core::{instantiate_custom_mock_env, instantiate_default_mock_env, Mock},

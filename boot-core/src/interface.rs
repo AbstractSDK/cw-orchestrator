@@ -34,10 +34,17 @@ pub trait ContractInstance<Chain: CwEnv> {
 }
 
 /// Tells BOOT what the contract's entrypoint messages are.
-pub trait CwInterface {
+pub trait InstantiateableContract {
     type InstantiateMsg: Serialize + Debug;
+}
+
+pub trait ExecuteableContract {
     type ExecuteMsg: Serialize + Debug;
+}
+pub trait QueryableContract {
     type QueryMsg: Serialize + Debug;
+}
+pub trait MigrateableContract {
     type MigrateMsg: Serialize + Debug;
 }
 
@@ -52,8 +59,8 @@ pub trait BootExecute<Chain: CwEnv> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootExecute<Chain> for T {
-    type ExecuteMsg = <T as CwInterface>::ExecuteMsg;
+impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> BootExecute<Chain> for T {
+    type ExecuteMsg = <T as ExecuteableContract>::ExecuteMsg;
 
     fn execute(
         &self,
@@ -76,8 +83,10 @@ pub trait BootInstantiate<Chain: CwEnv> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain> for T {
-    type InstantiateMsg = <T as CwInterface>::InstantiateMsg;
+impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain>
+    for T
+{
+    type InstantiateMsg = <T as InstantiateableContract>::InstantiateMsg;
 
     fn instantiate(
         &self,
@@ -100,8 +109,8 @@ pub trait BootQuery<Chain: CwEnv> {
     ) -> Result<G, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootQuery<Chain> for T {
-    type QueryMsg = <T as CwInterface>::QueryMsg;
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> BootQuery<Chain> for T {
+    type QueryMsg = <T as QueryableContract>::QueryMsg;
 
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
@@ -122,8 +131,8 @@ pub trait BootMigrate<Chain: CwEnv> {
     ) -> Result<Chain::Response, BootError>;
 }
 
-impl<T: CwInterface + ContractInstance<Chain>, Chain: CwEnv> BootMigrate<Chain> for T {
-    type MigrateMsg = <T as CwInterface>::MigrateMsg;
+impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> BootMigrate<Chain> for T {
+    type MigrateMsg = <T as MigrateableContract>::MigrateMsg;
 
     fn migrate(
         &self,
