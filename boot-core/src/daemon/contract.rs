@@ -7,7 +7,7 @@ use std::{
     env,
     fmt::{self, Debug},
     fs,
-    path::Path
+    path::Path,
 };
 
 impl Contract<Daemon> {
@@ -22,33 +22,22 @@ impl Contract<Daemon> {
         }
     }
 
-    // Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
-    // NOTE: Should we change this?
-    // because right now this function returns Result<bool, BootError>
-    // if the error is a connection error the chain object wont be built
-    // and we wont be here in the first place
-    // so the only other error i noticed is the one we are expecting
-    // which is the contract not being found
-    // I think this function should only return bool
+    /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
     pub fn latest_is_uploaded(&self) -> Result<bool, BootError> {
         let latest_uploaded_code_id = self.code_id()?;
         let chain = self.get_chain();
 
-        let query_response = chain
-            .runtime
-            .block_on(super::querier::DaemonQuerier::code_id_hash(
-                chain.sender.channel(),
-                latest_uploaded_code_id,
-            ));
-
-        let on_chain_hash = match query_response {
-            Ok(hash) => hash,
-            Err(err) => err.to_string(),
-        };
+        let query_response =
+            chain
+                .runtime
+                .block_on(super::querier::DaemonQuerier::code_id_hash(
+                    chain.sender.channel(),
+                    latest_uploaded_code_id,
+                ))?;
 
         let local_hash = self.source.checksum(&self.id)?;
 
-        Ok(local_hash == on_chain_hash)
+        Ok(local_hash == query_response)
     }
 
     /// Only migrate the contract if it is not on the latest code-id yet
@@ -103,15 +92,7 @@ where
         Ok(wasm_code_path)
     }
 
-    // Calculate the checksum of the wasm file to compare against previous uploads
-    // NOTE: Should we change this? (and maybe move it out of here?, perhaps to an utils file or something)
-    // if this function at the bottom returns the checksum of the file
-    // when the checksums.txt file is not found what is the difference?
-    // what i mean is why is relevant here to check for the existence of a checksums.txt file
-    // parse it and find our contract in it
-    // if the default way is to do it in the function anyway
-    // for example: what if the file is named *checksums_intermediate.txt*
-    // which is the default name rust-optimizer generates?
+    /// Calculate the checksum of the wasm file to compare against previous uploads
     pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
         let wasm_code_path = &self.get_wasm_code_path()?;
 
@@ -123,8 +104,8 @@ where
             // Now get local hash from optimization script
             let checksum_path = format!("{}/checksums.txt", folder);
 
-            let contents = fs::read_to_string(checksum_path)
-                .expect("Something went wrong reading the file");
+            let contents =
+                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
 
             let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
             let name = id.split(':').last().unwrap();

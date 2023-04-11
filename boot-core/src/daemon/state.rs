@@ -9,12 +9,17 @@ use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_reader, json, Value};
-use std::{collections::HashMap, env, fs::{File, OpenOptions}, rc::Rc, str::FromStr};
+use std::{
+    collections::HashMap,
+    env,
+    fs::{File, OpenOptions},
+    rc::Rc,
+    str::FromStr,
+};
 use tonic::transport::{Channel, ClientTlsConfig};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 /*
-    the proper way of using DaemonOptions is using DaemonOptionsBuilder
     here is an example of how:
     let options = DaemonOptionsBuilder::default()
         .network(LOCAL_JUNO)
@@ -22,6 +27,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
         .build()
         .unwrap();
 */
+/// the proper way of using DaemonOptions is using DaemonOptionsBuilder
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
 pub struct DaemonOptions {
@@ -35,7 +41,7 @@ pub struct DaemonOptions {
 
 #[derive(Clone, Debug)]
 pub struct DaemonState {
-    // this is passed via env var STATE_FILE
+    /// this is passed via env var STATE_FILE
     pub json_file_path: String,
     /// What kind of network
     pub kind: NetworkKind,
@@ -227,10 +233,7 @@ impl DaemonState {
         // write JSON data
         // use File::create so we dont append data to the file
         // but rather write all (because we have read the data before)
-        serde_json::to_writer_pretty(
-            File::create(&self.json_file_path).unwrap(),
-            &json
-        ).unwrap();
+        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
