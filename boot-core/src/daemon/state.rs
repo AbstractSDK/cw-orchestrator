@@ -183,7 +183,6 @@ impl DaemonState {
         Ok(state)
     }
 
-    // maybe we shold rename this?
     pub fn write_state_json(&self) {
         // check file exists
         let file_exists = std::path::Path::new(&self.json_file_path).exists();

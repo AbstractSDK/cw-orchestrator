@@ -7,31 +7,45 @@ use std::{
     env,
     fmt::{self, Debug},
     fs,
-    path::Path,
+    path::Path
 };
 
 impl Contract<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    /// @TODO proper response
     pub fn upload_if_needed(&mut self) -> Result<Option<TxResponse<Daemon>>, BootError> {
         if self.latest_is_uploaded()? {
             log::info!("{} is already uploaded", self.id);
             Ok(None)
         } else {
+            log::info!("{} is not uploaded, uploading...", self.id);
             Some(self.upload()).transpose()
         }
     }
 
-    /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
+    // Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
+    // NOTE: Should we change this?
+    // because right now this function returns Result<bool, BootError>
+    // if the error is a connection error the chain object wont be built
+    // and we wont be here in the first place
+    // so the only other error i noticed is the one we are expecting
+    // which is the contract not being found
+    // I think this function should only return bool
     pub fn latest_is_uploaded(&self) -> Result<bool, BootError> {
         let latest_uploaded_code_id = self.code_id()?;
         let chain = self.get_chain();
-        let on_chain_hash = chain
+
+        let query_response = chain
             .runtime
             .block_on(super::querier::DaemonQuerier::code_id_hash(
                 chain.sender.channel(),
                 latest_uploaded_code_id,
-            ))?;
+            ));
+
+        let on_chain_hash = match query_response {
+            Ok(hash) => hash,
+            Err(err) => err.to_string(),
+        };
+
         let local_hash = self.source.checksum(&self.id)?;
 
         Ok(local_hash == on_chain_hash)
@@ -89,28 +103,48 @@ where
         Ok(wasm_code_path)
     }
 
-    /// Calculate the checksum of the wasm file to compare against previous uploads
+    // Calculate the checksum of the wasm file to compare against previous uploads
+    // NOTE: Should we change this? (and maybe move it out of here?, perhaps to an utils file or something)
+    // if this function at the bottom returns the checksum of the file
+    // when the checksums.txt file is not found what is the difference?
+    // what i mean is why is relevant here to check for the existence of a checksums.txt file
+    // parse it and find our contract in it
+    // if the default way is to do it in the function anyway
+    // for example: what if the file is named *checksums_intermediate.txt*
+    // which is the default name rust-optimizer generates?
     pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
         let wasm_code_path = &self.get_wasm_code_path()?;
+
         if wasm_code_path.contains("artifacts") {
+            // get_wasm_code_path always returns the .wasm on the path
+            let folder = Path::new(wasm_code_path);
+            let folder = folder.parent().unwrap().to_str().unwrap().to_string();
+
             // Now get local hash from optimization script
-            let checksum_path = format!("{wasm_code_path}/checksums.txt");
-            let contents =
-                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
+            let checksum_path = format!("{}/checksums.txt", folder);
+
+            let contents = fs::read_to_string(checksum_path)
+                .expect("Something went wrong reading the file");
+
             let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
             let name = id.split(':').last().unwrap();
             let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
-            log::debug!("{:?}", containing_line);
+
             let local_hash = containing_line
                 .trim_start_matches('\n')
                 .split_whitespace()
                 .next()
                 .unwrap();
+
+            log::debug!("checksum: {:?}", local_hash);
+
             return Ok(local_hash.into());
         }
+
         // Compute hash
         let wasm_code = Path::new(wasm_code_path);
         let checksum = sha256::try_digest(wasm_code)?;
+
         Ok(checksum)
     }
 }
