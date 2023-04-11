@@ -16,5 +16,5 @@ Cargo.lock
 *_bak
 
 .DS_Store
-**/*.profraw
-boot-core/gen_cov_test
+**/profraw_data/
+gen_cov_test

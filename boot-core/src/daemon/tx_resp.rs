@@ -155,7 +155,6 @@ impl IndexResponse for CosmTxResponse {
 #[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockMsg {
     pub msg_index: Option<usize>,
-    // pub log: Option<String>,
     pub events: Vec<TxResultBlockEvent>,
 }
 
@@ -203,7 +202,7 @@ impl TxResultBlockEvent {
     }
 
     /// return the first value of the first attribute that has the key 'key'
-    pub fn get_first_value(&self, key: &str) -> Option<String> {
+    pub fn get_first_attribute_value(&self, key: &str) -> Option<String> {
         self.get_attributes(key)
             .first()
             .map(|attr| attr.value.clone())
@@ -345,7 +344,7 @@ mod test {
             .that(&attrs.len())
             .is_equal_to(&1);
 
-        let value = res[0].get_first_value("_contract_address");
+        let value = res[0].get_first_attribute_value("_contract_address");
         asserting!("get_first_value response is present")
             .that(&value)
             .is_some();
