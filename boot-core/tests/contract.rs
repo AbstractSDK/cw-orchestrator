@@ -11,7 +11,6 @@ mod contract {
         thread::sleep,
     };
 
-    use boot_core::contract;
     use ctor::{ctor, dtor};
     use once_cell::sync::Lazy;
     use duct::cmd;
@@ -24,6 +23,7 @@ mod contract {
     use speculoos::prelude::*;
 
     use boot_core::{
+        contract,
         networks::LOCAL_JUNO,
         Contract, DaemonOptionsBuilder,
         instantiate_daemon_env,
