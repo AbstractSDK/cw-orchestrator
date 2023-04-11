@@ -61,9 +61,9 @@ impl StateInterface for MockState {
 
 #[cfg(test)]
 mod test {
-    use speculoos::prelude::*;
+    use crate::{BootError, MockState, StateInterface};
     use cosmwasm_std::Addr;
-    use crate::{MockState, StateInterface, BootError};
+    use speculoos::prelude::*;
 
     const CONTRACT_ID: &str = "123";
     const CONTRACT_ADDR: &str = "cosmos123";

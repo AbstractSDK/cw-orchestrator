@@ -256,9 +256,9 @@ pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, DaemonError> {
 
 #[cfg(test)]
 mod test {
-    use super::{CosmTxResponse, TxResultBlockMsg, Event, parse_timestamp, IndexResponse};
-    use speculoos::prelude::*;
+    use super::{parse_timestamp, CosmTxResponse, Event, IndexResponse, TxResultBlockMsg};
     use cosmrs::proto::tendermint::abci::EventAttribute;
+    use speculoos::prelude::*;
 
     use serde_json::Value;
 
@@ -270,37 +270,66 @@ mod test {
         }
     }
 
-     #[test]
-     fn tx_resp() {
+    #[test]
+    fn tx_resp() {
         let data: Value = serde_json::from_str(TEST_TX.trim()).unwrap();
 
         let tx_response = data.as_object().unwrap().get("tx_response").unwrap();
 
-        let height: u64 = tx_response.get("height").unwrap().as_str().unwrap().parse::<u64>().unwrap();
+        let height: u64 = tx_response
+            .get("height")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse::<u64>()
+            .unwrap();
         let txhash: String = String::from(tx_response.get("txhash").unwrap().as_str().unwrap());
         let data: String = String::from(tx_response.get("data").unwrap().as_str().unwrap());
         let raw_log: String = String::from(tx_response.get("raw_log").unwrap().as_str().unwrap());
 
-        let logs: Vec<TxResultBlockMsg> = tx_response.get("logs").unwrap()
-            .as_array().unwrap().iter()
+        let logs: Vec<TxResultBlockMsg> = tx_response
+            .get("logs")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .iter()
             .map(TxResultBlockMsg::from)
             .collect::<Vec<TxResultBlockMsg>>();
 
         let info: String = String::from(tx_response.get("info").unwrap().as_str().unwrap());
 
-        let gas_wanted: u64 = tx_response.get("gas_wanted").unwrap().as_str().unwrap().parse::<u64>().unwrap();
-        let gas_used: u64 = tx_response.get("gas_used").unwrap().as_str().unwrap().parse::<u64>().unwrap();
+        let gas_wanted: u64 = tx_response
+            .get("gas_wanted")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse::<u64>()
+            .unwrap();
+        let gas_used: u64 = tx_response
+            .get("gas_used")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse::<u64>()
+            .unwrap();
 
-        let events: Vec<Event> = tx_response.get("events").unwrap()
-            .as_array().unwrap().iter()
+        let events: Vec<Event> = tx_response
+            .get("events")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .iter()
             .map(|data| {
-                let attributes = data.get("attributes").unwrap().as_array().unwrap().iter()
-                    .map(|attr| {
-                        EventAttribute {
-                            key: String::from(attr.get("key").unwrap().as_str().unwrap()),
-                            value: String::from(attr.get("value").unwrap().as_str().unwrap()),
-                            index: attr.get("index").unwrap().as_bool().unwrap(),
-                        }
+                let attributes = data
+                    .get("attributes")
+                    .unwrap()
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|attr| EventAttribute {
+                        key: String::from(attr.get("key").unwrap().as_str().unwrap()),
+                        value: String::from(attr.get("value").unwrap().as_str().unwrap()),
+                        index: attr.get("index").unwrap().as_bool().unwrap(),
                     })
                     .collect::<Vec<EventAttribute>>();
 
@@ -311,7 +340,12 @@ mod test {
             })
             .collect::<Vec<Event>>();
 
-        let stamp = tx_response.get("timestamp").unwrap().as_str().unwrap().clone();
+        let stamp = tx_response
+            .get("timestamp")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .clone();
         let timestamp = parse_timestamp(String::from(stamp)).unwrap();
 
         let tx_res = CosmTxResponse {
@@ -362,15 +396,20 @@ mod test {
         asserting!("IndexResponse events returns value")
             .that(&res)
             .is_ok();
-     }
+    }
 
-     #[test]
-     fn test_parse_timestamp() {
+    #[test]
+    fn test_parse_timestamp() {
         let data: Value = serde_json::from_str(TEST_TX.trim()).unwrap();
 
         let tx_response = data.as_object().unwrap().get("tx_response").unwrap();
 
-        let stamp = tx_response.get("timestamp").unwrap().as_str().unwrap().clone();
+        let stamp = tx_response
+            .get("timestamp")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .clone();
         let timestamp = parse_timestamp(String::from(stamp)).unwrap();
 
         let ts_time = timestamp.time();
@@ -382,5 +421,5 @@ mod test {
         asserting!("timestamp date is equal to dataset timestamp")
             .that(&ts_date.to_string())
             .is_equal_to(&String::from("2023-04-07"));
-     }
+    }
 }
