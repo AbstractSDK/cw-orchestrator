@@ -399,18 +399,8 @@ mod test {
     }
 
     #[test]
-    fn test_parse_timestamp() {
-        let data: Value = serde_json::from_str(TEST_TX.trim()).unwrap();
-
-        let tx_response = data.as_object().unwrap().get("tx_response").unwrap();
-
-        let stamp = tx_response
-            .get("timestamp")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .clone();
-        let timestamp = parse_timestamp(String::from(stamp)).unwrap();
+    fn test_timestamp() {
+        let timestamp = parse_timestamp(String::from("2023-04-07T00:27:04")).unwrap();
 
         let ts_time = timestamp.time();
         asserting!("timestamp time is equal to dataset timestamp")
@@ -421,5 +411,59 @@ mod test {
         asserting!("timestamp date is equal to dataset timestamp")
             .that(&ts_date.to_string())
             .is_equal_to(&String::from("2023-04-07"));
+    }
+
+    #[test]
+    fn test_breaking_timestamp() {
+        let timestamp = parse_timestamp(String::from("2023-04-09T18:30:45-07:00"));
+
+        asserting!("timestamp is invalid")
+            .that(&timestamp)
+            .is_err();
+    }
+
+    #[test]
+    fn test_breaking_event_attr_value() {
+        let tx_res = CosmTxResponse {
+            height: Default::default(),
+            txhash: Default::default(),
+            codespace: String::from(""),
+            code: 0,
+            data: Default::default(),
+            raw_log: Default::default(),
+            logs: Default::default(),
+            info: Default::default(),
+            gas_wanted: Default::default(),
+            gas_used: Default::default(),
+            timestamp: Default::default(),
+            events: Default::default(),
+        };
+
+        let res = tx_res.event_attr_value("i_dont_exists", "something");
+        asserting!("it errors because attribute does not exists")
+            .that(&res)
+            .is_err();
+    }
+
+    #[test]
+    fn test_breaking_data_is_none() {
+        let tx_res = CosmTxResponse {
+            height: Default::default(),
+            txhash: Default::default(),
+            codespace: String::from(""),
+            code: 0,
+            data: String::from(""),
+            raw_log: Default::default(),
+            logs: Default::default(),
+            info: Default::default(),
+            gas_wanted: Default::default(),
+            gas_used: Default::default(),
+            timestamp: Default::default(),
+            events: Default::default(),
+        };
+
+        asserting!("that data is None")
+            .that(&tx_res.data())
+            .is_none();
     }
 }

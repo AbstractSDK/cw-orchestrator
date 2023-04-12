@@ -45,14 +45,15 @@ impl IndexResponse for AppResponse {
 
 #[cfg(test)]
 mod index_response {
-    use cosmwasm_std::{Event, Addr};
+    use cosmwasm_std::{Addr, Event};
     use cw_multi_test::AppResponse;
 
     use speculoos::prelude::*;
 
     use super::IndexResponse;
 
-    const CONTRACT_ADDRESS: &str = "cosmos1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr";
+    const CONTRACT_ADDRESS: &str =
+        "cosmos1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr";
 
     fn test_events(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
         asserting!("events length is 1")
@@ -63,9 +64,7 @@ mod index_response {
     }
 
     fn test_data(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("data is None")
-            .that(&idxres.data())
-            .is_none();
+        asserting!("data is None").that(&idxres.data()).is_none();
 
         Ok(())
     }
@@ -91,7 +90,8 @@ mod index_response {
         let idxres = AppResponse {
             events: vec![
                 Event::new("store_code").add_attribute("code_id", "1"),
-                Event::new("instantiate").add_attribute("_contract_address", CONTRACT_ADDRESS.to_owned()),
+                Event::new("instantiate")
+                    .add_attribute("_contract_address", CONTRACT_ADDRESS.to_owned()),
             ],
             data: None,
         };
