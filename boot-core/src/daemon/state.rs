@@ -19,15 +19,16 @@ use std::{
 use tonic::transport::{Channel, ClientTlsConfig};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
-/*
-    here is an example of how:
-    let options = DaemonOptionsBuilder::default()
-        .network(LOCAL_JUNO)
-        .deployment_id("v0.1.0")
-        .build()
-        .unwrap();
-*/
-/// the proper way of using DaemonOptions is using DaemonOptionsBuilder
+
+/// Create [`DaemonOptions`] through [`DaemonOptionsBuilder`]
+/// ## Example:
+/// ```
+/// let options = DaemonOptionsBuilder::default()
+///     .network(LOCAL_JUNO)
+///     .deployment_id("v0.1.0")
+///     .build()
+///     .unwrap();
+/// ```
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
 pub struct DaemonOptions {
