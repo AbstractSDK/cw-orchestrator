@@ -86,8 +86,10 @@ fn docker_container_stop() {
             log::info!("stopping container: {}", &*DOCKER_CONTAINER_ID);
             let _ = cmd!("docker", "container", "stop", &*DOCKER_CONTAINER_ID).read();
 
-            log::info!("removing container: {}", &*DOCKER_CONTAINER_ID);
-            let _ = cmd!("docker", "container", "rm", &*DOCKER_CONTAINER_ID).read();
+            if env::var("DEL_CONT").is_ok() {
+                log::info!("removing container: {}", &*DOCKER_CONTAINER_ID);
+                let _ = cmd!("docker", "container", "rm", &*DOCKER_CONTAINER_ID).read();
+            }
         }
     }
 }
