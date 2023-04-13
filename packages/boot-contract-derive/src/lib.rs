@@ -84,7 +84,7 @@ fn get_crate_to_struct() -> syn::Ident {
 
 fn get_wasm_name() -> String {
     let kebab_case_pkg = get_raw_crate();
-    kebab_case_pkg.to_case(Case::Snake)
+    kebab_case_pkg.replace('-', "_")
 }
 
 fn get_raw_crate() -> String {
