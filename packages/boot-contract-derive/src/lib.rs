@@ -111,7 +111,7 @@ fn get_func_type(sig: &Signature) -> TokenStream2 {
 }
 
 #[proc_macro_attribute]
-pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
+pub fn boot_contract_raw(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
     let mut item = parse_macro_input!(cloned as syn::Item);
 
