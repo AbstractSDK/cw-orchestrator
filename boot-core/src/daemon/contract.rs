@@ -11,14 +11,33 @@ use std::{
 };
 
 impl Contract<Daemon> {
-    /// Only upload the contract if it is not uploaded yet (checksum does not match)
+    /// Only upload the contract if it is not uploaded yet
     pub fn upload_if_needed(&mut self) -> Result<Option<TxResponse<Daemon>>, BootError> {
-        if self.latest_is_uploaded()? {
-            log::info!("{} is already uploaded", self.id);
-            Ok(None)
-        } else {
-            log::info!("{} is not uploaded, uploading...", self.id);
-            Some(self.upload()).transpose()
+        let upload = |se: &mut Contract<Daemon>| {
+            log::info!("{} is not uploaded, uploading...", se.id);
+            match se.upload() {
+                Ok(ok) => Ok(Some(ok)),
+                Err(err) => Err(err),
+            }
+        };
+
+        match self.latest_is_uploaded() {
+            Ok(hash_is_equal) => {
+                println!("hash_is_equal: {:#?}", hash_is_equal);
+                log::info!("{} is already uploaded", self.id);
+                Ok(None)
+            }
+            Err(err) => match err {
+                BootError::CodeIdNotInStore(_) => upload(self),
+                BootError::DaemonError(err) => {
+                    if err.to_string().contains("not found") {
+                        upload(self)
+                    } else {
+                        Err(BootError::DaemonError(err))
+                    }
+                }
+                _ => Err(err),
+            },
         }
     }
 

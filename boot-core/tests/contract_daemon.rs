@@ -8,6 +8,7 @@ mod common;
 mod contract_daemon {
     use std::sync::Arc;
 
+    use cosmwasm_std::{Addr, Uint128};
     // use cosmwasm_std::Addr;
     // use cw_multi_test::ContractWrapper;
     use tokio::runtime::Runtime;
@@ -19,7 +20,6 @@ mod contract_daemon {
     };
 
     const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
-    // const SENDER: &str = "cosmos123";
 
     #[test]
     fn general() {
@@ -31,7 +31,7 @@ mod contract_daemon {
             .build()
             .unwrap();
 
-        let (_, chain) = instantiate_daemon_env(&runtime, options).unwrap();
+        let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
 
         let info = chain.block_info().unwrap();
         asserting!("block height is 1")
@@ -54,18 +54,67 @@ mod contract_daemon {
             ))
             .with_wasm_path(wasm_path);
 
-        let code_id = contract.code_id();
-        println!("code_id: {:#?}", code_id);
+        asserting!("address is not present")
+            .that(&contract.address())
+            .is_err();
 
-        let upload_if_needed_res = contract.upload_if_needed();
-        println!("upload_if_needed_res: {:#?}", upload_if_needed_res);
+        asserting!("upload_if_needed is ok")
+            .that(&contract.upload_if_needed())
+            .is_ok();
 
-        let _res = contract.upload();
+        asserting!("latest_is_uploaded is true")
+            .that(&contract.latest_is_uploaded().unwrap())
+            .is_true();
 
-        let code_id = contract.code_id();
-        println!("code_id: {:#?}", code_id);
+        asserting!("address is not present")
+            .that(&contract.address())
+            .is_err();
 
-        let latest_is_uploaded_res = contract.latest_is_uploaded();
-        println!("latest_is_uploaded_res: {:#?}", latest_is_uploaded_res);
+        let init_msg = cw20_base::msg::InstantiateMsg {
+            name: "Token".to_owned(),
+            symbol: "TOK".to_owned(),
+            decimals: 6u8,
+            initial_balances: vec![cw20::Cw20Coin {
+                address: sender.to_string(),
+                amount: Uint128::from(10000u128),
+            }],
+            mint: None,
+            marketing: None,
+        };
+
+        let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&vec![]));
+
+        asserting!("address is present")
+            .that(&contract.address())
+            .is_ok();
+
+        asserting!("migrate_if_needed is none")
+            .that(
+                &contract
+                    .migrate_if_needed(&cw20_base::msg::MigrateMsg {})
+                    .unwrap(),
+            )
+            .is_none();
+
+        asserting!("is_running_latest is true")
+            .that(&contract.is_running_latest().unwrap())
+            .is_true();
+
+        let _ = contract.upload();
+
+        asserting!("is_running_latest is false")
+            .that(&contract.is_running_latest().unwrap())
+            .is_false();
+
+        asserting!("migrate_if_needed is some")
+            .that(
+                &contract
+                    .migrate_if_needed(&cw20_base::msg::MigrateMsg {})
+                    .unwrap(),
+            )
+            .is_some();
+
+        // TODO: assert get_wasm_code_path
+        // TODO: assert checksum
     }
 }
