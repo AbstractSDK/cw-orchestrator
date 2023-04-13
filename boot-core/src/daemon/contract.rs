@@ -6,8 +6,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{
     env,
     fmt::{self, Debug},
-    fs,
     path::Path,
+    // fs,
 };
 
 impl Contract<Daemon> {
@@ -26,18 +26,15 @@ impl Contract<Daemon> {
     pub fn latest_is_uploaded(&self) -> Result<bool, BootError> {
         let latest_uploaded_code_id = self.code_id()?;
         let chain = self.get_chain();
-
-        let query_response =
-            chain
-                .runtime
-                .block_on(super::querier::DaemonQuerier::code_id_hash(
-                    chain.sender.channel(),
-                    latest_uploaded_code_id,
-                ))?;
-
+        let on_chain_hash = chain
+            .runtime
+            .block_on(super::querier::DaemonQuerier::code_id_hash(
+                chain.sender.channel(),
+                latest_uploaded_code_id,
+            ))?;
         let local_hash = self.source.checksum(&self.id)?;
 
-        Ok(local_hash == query_response)
+        Ok(local_hash == on_chain_hash)
     }
 
     /// Only migrate the contract if it is not on the latest code-id yet
@@ -63,7 +60,6 @@ impl Contract<Daemon> {
                 chain.sender.channel(),
                 self.address()?,
             ))?;
-
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }
@@ -93,34 +89,8 @@ where
     }
 
     /// Calculate the checksum of the wasm file to compare against previous uploads
-    pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
+    pub fn checksum(&self, _id: &str) -> Result<String, DaemonError> {
         let wasm_code_path = &self.get_wasm_code_path()?;
-
-        if wasm_code_path.contains("artifacts") {
-            // get_wasm_code_path always returns the .wasm on the path
-            let folder = Path::new(wasm_code_path);
-            let folder = folder.parent().unwrap().to_str().unwrap().to_string();
-
-            // Now get local hash from optimization script
-            let checksum_path = format!("{}/checksums.txt", folder);
-
-            let contents =
-                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
-
-            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-            let name = id.split(':').last().unwrap();
-            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
-
-            let local_hash = containing_line
-                .trim_start_matches('\n')
-                .split_whitespace()
-                .next()
-                .unwrap();
-
-            log::debug!("checksum: {:?}", local_hash);
-
-            return Ok(local_hash.into());
-        }
 
         // Compute hash
         let wasm_code = Path::new(wasm_code_path);

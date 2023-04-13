@@ -2,10 +2,8 @@
 
 */
 mod common;
-
 #[cfg(test)]
 mod contract {
-
     use std::{env, sync::Arc};
 
     use tokio::runtime::Runtime;
@@ -27,7 +25,7 @@ mod contract {
     pub struct Cw20Base;
 
     #[test]
-    fn contract() {
+    fn general() {
         let rt = Arc::new(Runtime::new().unwrap());
 
         // configure daemon options
@@ -39,13 +37,12 @@ mod contract {
 
         // instantiate chain daemon
         let (sender, chain) = instantiate_daemon_env(&rt, options).unwrap();
-
-        log::info!("got wallet {}", sender);
+        log::info!("Using wallet {}", sender);
 
         // create contract base configuration
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let wasm_path = format!("{}{}", crate_path, CW20_CONTRACT_WASM);
-        log::info!("wasm path {}", wasm_path);
+        log::info!("Using wasm path {}", wasm_path);
 
         let mut contract = Contract::new("cw-plus:cw20_base", chain)
             .with_mock(Box::new(
@@ -58,12 +55,6 @@ mod contract {
             ))
             .with_wasm_path(wasm_path);
 
-        let upload_if_res = contract.upload_if_needed();
-        println!("upload_if_res: {:#?}", upload_if_res);
-
-        // let is_latest_res = contract.is_running_latest();
-        // println!("is_latest_res: {:#?}", is_latest_res);
-
         // upload contract
         let upload_res = contract.upload();
         asserting!("upload is succesful").that(&upload_res).is_ok();
@@ -72,9 +63,7 @@ mod contract {
             .value
             .clone();
 
-        log::info!("using code_id {}", code_id);
-
-        let amount = Uint128::from(10000u128);
+        log::info!("Using code_id {}", code_id);
 
         // init msg for contract
         let init_msg = cw20_base::msg::InstantiateMsg {
@@ -83,7 +72,7 @@ mod contract {
             decimals: 6u8,
             initial_balances: vec![cw20::Cw20Coin {
                 address: sender.to_string(),
-                amount,
+                amount: Uint128::from(10000u128),
             }],
             mint: None,
             marketing: None,
@@ -108,13 +97,5 @@ mod contract {
         asserting!("migrate is successful")
             .that(&migrate_res)
             .is_ok();
-
-        println!("---------------------------------------------------------------------");
-
-        let upload_if_res = contract.upload_if_needed();
-        println!("upload_if_res: {:#?}", upload_if_res);
-
-        let is_latest_res = contract.is_running_latest();
-        println!("is_latest_res: {:#?}", is_latest_res);
     }
 }
