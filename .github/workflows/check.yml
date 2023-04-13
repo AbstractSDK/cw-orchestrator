@@ -19,8 +19,8 @@ jobs:
           components: rustfmt
       - name: cargo fmt --check
         run: cargo fmt --check
-      - name: install taplo
-        run: cargo install taplo --locked
+      - name: install taplo-cli
+        run: cargo install taplo-cli --locked
       - name: taplo fmt --check
         run: find . -type f -iname "*.toml" -print0 | xargs -0 taplo format --check
   clippy:
