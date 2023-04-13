@@ -39,8 +39,8 @@ daemon = [
 
 [dependencies]
 # Default deps
-boot-contract-derive = { version = "0.10.0" }
-boot-fns-derive      = { version = "0.10.0" }
+boot-contract-derive = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface" }
+boot-fns-derive      = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface" }
 cosmwasm-std         = { workspace = true }
 cw-multi-test        = { workspace = true }
 anyhow               = { workspace = true }
@@ -83,4 +83,3 @@ ring = { version = "0.16.20", optional = true }
 [dev-dependencies]
 cw20-base    = { version = "1.0" }
 cw20         = { version = "1.0" }
-boot-cw-plus = { path = "../boot-cw-plus" }

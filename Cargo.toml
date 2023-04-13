@@ -1,5 +1,5 @@
 [workspace]
-members = ["boot-core", "boot-cw-plus", "packages/*"]
+members = ["boot-core", "packages/*"]
 
 [workspace.package]
 authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
