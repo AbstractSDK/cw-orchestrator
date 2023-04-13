@@ -1,12 +1,14 @@
 #![recursion_limit = "128"]
 
 extern crate proc_macro;
-use syn::__private::TokenStream2;
-use syn::ItemFn;
-use quote::quote;
 use proc_macro::TokenStream;
 
+use syn::__private::TokenStream2;
+use syn::ItemFn;
 use syn::parse_macro_input;
+
+use quote::quote;
+
 
 #[proc_macro_attribute]
 pub fn boot_contract(_attrs: TokenStream, input: TokenStream) -> TokenStream {
