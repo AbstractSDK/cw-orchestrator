@@ -26,9 +26,7 @@ fn remove_container(container: &String) -> duct::Expression {
     cmd!("docker", "container", "rm", container)
 }
 
-fn ensure_container_removal() {
-    let container = env::var("CONTAINER_NAME").unwrap();
-
+fn ensure_container_removal(container: &String) {
     let container_exists = find_container(&container);
 
     if container_exists.is_some() {
@@ -72,7 +70,7 @@ fn docker_container_setup() {
     );
 
     if !*init {
-        ensure_container_removal();
+        ensure_container_removal(&container);
 
         // Start Docker with the appropriate ports and the provided environment variables and script
         let container_id = cmd!(
@@ -133,7 +131,7 @@ fn docker_container_stop() {
         }
     }
 
-    ensure_container_removal();
+    ensure_container_removal(&env::var("CONTAINER_NAME").unwrap());
 
     // we need to use /tmp/boot_test_local.json instead of /tmp/boot_test.json
     // because the state file gets renamed when the network is local
