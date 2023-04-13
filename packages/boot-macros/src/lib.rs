@@ -5,8 +5,6 @@ use syn::ItemFn;
 use quote::quote;
 use proc_macro::TokenStream;
 
-extern crate boot_contract_derive;
-
 use syn::parse_macro_input;
 
 #[proc_macro_attribute]
@@ -16,7 +14,7 @@ pub fn boot_contract(_attrs: TokenStream, input: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(input as ItemFn);
 
     let boot_contract_macro = quote! {
-        #[boot_contract_raw]
+        #[::boot_contract_derive::boot_contract_raw]
         #input_fn
     };
 
