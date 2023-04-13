@@ -158,6 +158,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
         impl<Chain: ::boot_core::CwEnv> #name<Chain> {
             pub fn new(contract_id: &str, chain: Chain) -> Self {
 
+                log::info!("{:?}", #wasm_name);
                 Self(
                     ::boot_core::Contract::new(contract_id, chain)
                         .with_wasm_path(#wasm_name) // Adds the wasm path for uploading to a node is simple
