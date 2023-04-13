@@ -15,6 +15,5 @@ outside_contract=["dep:boot-contract-derive"]
 
 [dependencies]
 boot-contract-derive = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface", optional=true}
-cosmwasm-std.workspace = true
-schemars = "0.8.12"
+quote = "1.0.26"
 syn = { version = "1", features = ["full", "extra-traits"] }

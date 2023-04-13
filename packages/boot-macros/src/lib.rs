@@ -8,8 +8,6 @@ use syn::ItemFn;
 use syn::parse_macro_input;
 
 use quote::quote;
-
-
 #[proc_macro_attribute]
 pub fn boot_contract(_attrs: TokenStream, input: TokenStream) -> TokenStream {
 
