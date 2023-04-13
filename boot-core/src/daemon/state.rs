@@ -152,7 +152,12 @@ impl DaemonState {
                 .unwrap()
                 .to_str()
                 .unwrap();
-            json_file_path = format!("{name}_local.json");
+            let folder = Path::new(&json_file_path)
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            json_file_path = format!("{folder}/{name}_local.json");
         }
 
         // Try to get the standard fee token (probably shortest denom)
