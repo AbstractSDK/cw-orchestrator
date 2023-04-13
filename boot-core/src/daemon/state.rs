@@ -72,10 +72,16 @@ impl DaemonState {
 
         let mut successful_connections = vec![];
 
-        log::debug!("Found {} gRPC endpoints", network.apis.grpc.len());
+        if network.apis.grpc.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
+        log::info!("Found {} gRPC endpoints", network.apis.grpc.len());
 
         // find working grpc channel
         for Grpc { address, .. } in network.apis.grpc.iter() {
+            log::info!("Trying to connect to endpoint: {}", address);
+
             // get grpc endpoint
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
 
@@ -214,7 +220,7 @@ impl DaemonState {
             .open(&self.json_file_path)
             .unwrap();
 
-        log::info!("Opening daemon state at {:#?}", self.json_file_path);
+        log::info!("Using daemon JSON state file: {:#?}", self.json_file_path);
 
         // return empty json object if file is empty
         // return file content if not
@@ -251,7 +257,7 @@ impl DaemonState {
     /// Get the state filepath and read it as json
     fn json(&self) -> serde_json::Value {
         let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
+            .unwrap_or_else(|_| panic!("File should be present at {}", self.json_file_path));
         let json: serde_json::Value = from_reader(file).unwrap();
         json
     }
