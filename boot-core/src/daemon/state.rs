@@ -13,21 +13,24 @@ use std::{
     collections::HashMap,
     env,
     fs::{File, OpenOptions},
+    path::Path,
     rc::Rc,
     str::FromStr,
 };
 use tonic::transport::{Channel, ClientTlsConfig};
+
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
-
 /// Create [`DaemonOptions`] through [`DaemonOptionsBuilder`]
-/// ## Example:
+/// ## Example
 /// ```
-/// let options = DaemonOptionsBuilder::default()
-///     .network(LOCAL_JUNO)
-///     .deployment_id("v0.1.0")
-///     .build()
-///     .unwrap();
+///     use boot_core::{DaemonOptionsBuilder, networks};
+///
+///     let options = DaemonOptionsBuilder::default()
+///         .network(networks::LOCAL_JUNO)
+///         .deployment_id("v0.1.0")
+///         .build()
+///         .unwrap();
 /// ```
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
@@ -140,12 +143,16 @@ impl DaemonState {
         }
 
         // check if STATE_FILE en var is configured, fail if not
-        let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");
+        let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
 
         // if the network we are connecting is a local kind, add it to the fn
         if network.network_type == NetworkKind::Local.to_string() {
-            let name = path.split('.').next().unwrap();
-            path = format!("{name}_local.json");
+            let name = Path::new(&json_file_path)
+                .file_stem()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            json_file_path = format!("{name}_local.json");
         }
 
         // Try to get the standard fee token (probably shortest denom)
@@ -164,7 +171,7 @@ impl DaemonState {
 
         // build daemon state
         let state = DaemonState {
-            json_file_path: path,
+            json_file_path,
             kind: NetworkKind::from(network.network_type),
             deployment_id: options
                 .deployment_id
@@ -191,10 +198,8 @@ impl DaemonState {
     }
 
     pub fn write_state_json(&self) {
-        // check file exists
-        let file_exists = std::path::Path::new(&self.json_file_path).exists();
-
-        // create file if dont exists, set read/write permissions to true
+        // open file pointer set read/write permissions to true
+        // create it if it does not exists
         // dont truncate it
         let file = OpenOptions::new()
             .create(true)
@@ -204,18 +209,14 @@ impl DaemonState {
             .open(&self.json_file_path)
             .unwrap();
 
-        log::info!("Opening daemon state at {}", self.json_file_path);
+        log::info!("Opening daemon state at {:#?}", self.json_file_path);
 
-        // read file content from fp
-        // return empty json object if the file was just created
-        let mut json: serde_json::Value = if file_exists {
-            if file.metadata().unwrap().len().eq(&0) {
-                json!({})
-            } else {
-                serde_json::from_reader(&file).unwrap()
-            }
-        } else {
+        // return empty json object if file is empty
+        // return file content if not
+        let mut json: serde_json::Value = if file.metadata().unwrap().len().eq(&0) {
             json!({})
+        } else {
+            serde_json::from_reader(&file).unwrap()
         };
 
         // check and add chain_id path if it's missing
@@ -267,6 +268,7 @@ impl DaemonState {
 }
 
 impl StateInterface for Rc<DaemonState> {
+    /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError> {
         let value = self
             .get(&self.deployment_id)
@@ -276,6 +278,7 @@ impl StateInterface for Rc<DaemonState> {
         Ok(Addr::unchecked(value.as_str().unwrap()))
     }
 
+    /// Set address for contract in deployment id in state file
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
         self.set(&self.deployment_id, contract_id, address.as_str());
     }
@@ -295,6 +298,7 @@ impl StateInterface for Rc<DaemonState> {
         self.set("code_ids", contract_id, code_id);
     }
 
+    /// Get all addresses for deployment id from state file
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError> {
         let mut store = HashMap::new();
         let addresses = self.get(&self.deployment_id);
