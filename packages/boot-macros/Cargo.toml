@@ -11,10 +11,10 @@ description = "Attribute macro behind a boot flag for easier importing"
 proc-macro = true
 
 [features]
-outside_contract=[]#"dep:boot-contract-derive"]
+outside_contract=["dep:boot-contract-derive"]
 
 [dependencies]
-boot-contract-derive = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface" }
+boot-contract-derive = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface", optional=true}
 convert_case = "0.6.0"
 cosmwasm-std.workspace = true
 cw-multi-test.workspace = true
