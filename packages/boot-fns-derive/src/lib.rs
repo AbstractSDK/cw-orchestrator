@@ -21,9 +21,8 @@ pub fn boot_execute(input: TokenStream) -> TokenStream {
     }
 
     #[cfg(not(feature="outside_contract"))] 
-    input
+    TokenStream::new()
 
-    
 }
 
 #[proc_macro_derive(QueryFns, attributes(returns, impl_into))]
@@ -35,5 +34,5 @@ pub fn boot_query(input: TokenStream) -> TokenStream {
     }
 
     #[cfg(not(feature="outside_contract"))] 
-    input
+    TokenStream::new()
 }
