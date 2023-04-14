@@ -12,7 +12,7 @@ use syn::__private::TokenStream2;
 use quote::quote;
 
  #[cfg(feature="outside_contract")]
-use boot_contract::boot_contract_raw;
+use crate::boot_contract::boot_contract_raw;
 
 #[proc_macro_attribute]
 pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
