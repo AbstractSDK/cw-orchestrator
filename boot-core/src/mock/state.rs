@@ -1,7 +1,9 @@
-use crate::error::BootError;
-use crate::state::StateInterface;
-use cosmwasm_std::Addr;
 use std::collections::HashMap;
+use cosmwasm_std::Addr;
+use crate::{
+    error::BootError,
+    state::StateInterface
+};
 
 #[derive(Clone, Debug)]
 pub struct MockState {
