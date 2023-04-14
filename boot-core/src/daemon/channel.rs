@@ -13,7 +13,7 @@ impl DaemonChannel {
     pub async fn new(
         grpc: &Vec<Grpc>,
         chain_id: &ChainId,
-    ) -> Result<Option<Vec<Channel>>, DaemonError> {
+    ) -> Result<Option<Channel>, DaemonError> {
         let mut successful_connections = vec![];
 
         for Grpc { address, .. } in grpc.iter() {
@@ -80,6 +80,11 @@ impl DaemonChannel {
             successful_connections.push(endpoint.connect().await?)
         }
 
-        Ok(Some(successful_connections))
+        // we could not get any succesful connections
+        if successful_connections.is_empty() {
+            return Err(DaemonError::CannotConnectGRPC);
+        }
+
+        Ok(Some(successful_connections[0].clone()))
     }
 }
