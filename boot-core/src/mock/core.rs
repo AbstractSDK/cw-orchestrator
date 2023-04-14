@@ -29,7 +29,6 @@ pub fn instantiate_custom_mock_env<S: StateInterface>(
     Ok((mock_state, mock_chain))
 }
 
-
 // Generic mock-chain implementation
 // Allows for custom state storage
 #[derive(Clone)]
@@ -289,15 +288,6 @@ mod test {
     #[derive(Debug, Serialize)]
     struct MigrateMsg {}
 
-    fn instantiate(
-        _deps: DepsMut,
-        _env: Env,
-        _info: MessageInfo,
-        _msg: cw20_base::msg::InstantiateMsg,
-    ) -> StdResult<Response> {
-        Ok(Response::default())
-    }
-
     fn execute(
         _deps: DepsMut,
         _env: Env,
@@ -349,8 +339,10 @@ mod test {
 
         let mut contract_source: ContractCodeReference = ContractCodeReference::default();
 
-        contract_source.contract_endpoints =
-            Some(Box::new(ContractWrapper::new(execute, instantiate, query)));
+        contract_source.contract_endpoints = Some(Box::new(
+            ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
+                .with_migrate(cw20_base::contract::migrate),
+        ));
 
         let init_res = chain.upload(&mut contract_source).unwrap();
         asserting("contract initialized properly")
@@ -399,11 +391,10 @@ mod test {
             .that(&query_res.attributes[1].value)
             .is_equal_to(&String::from("0"));
 
-        // TODO: Figure out why this does not work...
-        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg{}, 1, &contract_address);
+        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg {}, 1, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
-            .is_err();
+            .is_ok();
     }
 
     #[test]
@@ -415,8 +406,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let mock = instantiate_custom_mock_env(sender, mock_state).unwrap();
-        let chain = mock.1;
+        let (_, chain) = instantiate_custom_mock_env(sender, mock_state).unwrap();
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
