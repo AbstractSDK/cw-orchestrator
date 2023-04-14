@@ -10,6 +10,9 @@ description = "Derive macro for generating contract interfaces."
 [lib]
 proc-macro = true
 
+[features]
+outside_contract=[]
+
 [dependencies]
 quote = "1"
 proc-macro2 = "1"

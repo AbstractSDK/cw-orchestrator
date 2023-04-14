@@ -6,7 +6,7 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::__private::TokenStream2;
 use syn::{
-    parse_macro_input, FnArg, Item, Signature,
+    parse_macro_input, FnArg, Item, Meta, NestedMeta, Path, Signature,
 };
 
 fn get_crate_to_struct() -> syn::Ident {
