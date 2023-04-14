@@ -70,10 +70,6 @@ impl DaemonState {
     pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
         let network: RegistryChainInfo = options.network;
 
-        let successful_connections = DaemonChannel::new(&network.apis.grpc, &network.chain_id)
-            .await?
-            .unwrap();
-
         if network.apis.grpc.is_empty() {
             return Err(DaemonError::GRPCListIsEmpty);
         }
@@ -81,11 +77,9 @@ impl DaemonState {
         log::info!("Found {} gRPC endpoints", network.apis.grpc.len());
 
         // find working grpc channel
-
-        // we could not get any succesful connections
-        if successful_connections.is_empty() {
-            return Err(DaemonError::CannotConnectGRPC);
-        }
+        let grpc_channel = DaemonChannel::new(&network.apis.grpc, &network.chain_id)
+            .await?
+            .unwrap();
 
         // check if STATE_FILE en var is configured, fail if not
         let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
@@ -127,7 +121,7 @@ impl DaemonState {
                 .deployment_id
                 .map(Into::into)
                 .unwrap_or_else(|| DEFAULT_DEPLOYMENT.into()),
-            grpc_channel: successful_connections[0].clone(),
+            grpc_channel,
             chain: ChainInfoOwned {
                 chain_id: network.chain_name.to_string(),
                 pub_address_prefix: network.bech32_prefix,
