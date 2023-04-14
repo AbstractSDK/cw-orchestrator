@@ -54,9 +54,9 @@ mod contract_daemon {
             ))
             .with_wasm_path(wasm_path);
 
-        // asserting!("address is not present")
-        //     .that(&contract.address())
-        //     .is_err();
+        asserting!("address is not present")
+            .that(&contract.address())
+            .is_err();
 
         asserting!("upload_if_needed is ok")
             .that(&contract.upload_if_needed())
@@ -65,10 +65,6 @@ mod contract_daemon {
         asserting!("latest_is_uploaded is true")
             .that(&contract.latest_is_uploaded().unwrap())
             .is_true();
-
-        // asserting!("address is not present")
-        //     .that(&contract.address())
-        //     .is_err();
 
         let init_msg = cw20_base::msg::InstantiateMsg {
             name: "Token".to_owned(),
@@ -84,9 +80,9 @@ mod contract_daemon {
 
         let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&vec![]));
 
-        // asserting!("address is present")
-        //     .that(&contract.address())
-        //     .is_ok();
+        asserting!("address is present")
+            .that(&contract.address())
+            .is_ok();
 
         asserting!("migrate_if_needed is none")
             .that(
@@ -113,8 +109,5 @@ mod contract_daemon {
                     .unwrap(),
             )
             .is_some();
-
-        // TODO: assert get_wasm_code_path
-        // TODO: assert checksum
     }
 }
