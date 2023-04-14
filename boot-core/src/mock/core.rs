@@ -29,6 +29,7 @@ pub fn instantiate_custom_mock_env<S: StateInterface>(
     Ok((mock_state, mock_chain))
 }
 
+
 // Generic mock-chain implementation
 // Allows for custom state storage
 #[derive(Clone)]
@@ -244,10 +245,12 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         });
         Ok(())
     }
+
     fn next_block(&self) -> Result<(), BootError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
     }
+
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, BootError> {
         Ok(self.app.borrow().block_info())
     }
@@ -306,48 +309,7 @@ mod test {
                 .add_attribute("action", "mint")
                 .add_attribute("recipient", recipient)
                 .add_attribute("amount", amount)),
-            cw20::Cw20ExecuteMsg::Transfer {
-                recipient: _,
-                amount: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::Burn { amount: _ } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::Send {
-                contract: _,
-                amount: _,
-                msg: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::IncreaseAllowance {
-                spender: _,
-                amount: _,
-                expires: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::DecreaseAllowance {
-                spender: _,
-                amount: _,
-                expires: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::TransferFrom {
-                owner: _,
-                recipient: _,
-                amount: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::SendFrom {
-                owner: _,
-                contract: _,
-                amount: _,
-                msg: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::BurnFrom {
-                owner: _,
-                amount: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::UpdateMinter { new_minter: _ } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::UpdateMarketing {
-                project: _,
-                description: _,
-                marketing: _,
-            } => unimplemented!(),
-            cw20::Cw20ExecuteMsg::UploadLogo(_) => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
 
@@ -359,28 +321,7 @@ mod test {
                     .add_attribute("balance", String::from("0")),
             )
             .unwrap()),
-            cw20_base::msg::QueryMsg::TokenInfo {} => unimplemented!(),
-            cw20_base::msg::QueryMsg::Minter {} => unimplemented!(),
-            cw20_base::msg::QueryMsg::Allowance {
-                owner: _,
-                spender: _,
-            } => unimplemented!(),
-            cw20_base::msg::QueryMsg::AllAllowances {
-                owner: _,
-                start_after: _,
-                limit: _,
-            } => unimplemented!(),
-            cw20_base::msg::QueryMsg::AllSpenderAllowances {
-                spender: _,
-                start_after: _,
-                limit: _,
-            } => unimplemented!(),
-            cw20_base::msg::QueryMsg::AllAccounts {
-                start_after: _,
-                limit: _,
-            } => unimplemented!(),
-            cw20_base::msg::QueryMsg::MarketingInfo {} => unimplemented!(),
-            cw20_base::msg::QueryMsg::DownloadLogo {} => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
 
@@ -391,8 +332,7 @@ mod test {
         let amount = 1000000u128;
         let denom = "uosmo";
 
-        let mock = instantiate_default_mock_env(sender).unwrap();
-        let chain = mock.1;
+        let (state, chain) = instantiate_default_mock_env(sender).unwrap();
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -458,5 +398,58 @@ mod test {
         asserting("that query passed on correctly")
             .that(&query_res.attributes[1].value)
             .is_equal_to(&String::from("0"));
+
+        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg{}, 1, &contract_address);
+        asserting("that migration passed on correctly")
+            .that(&migration_res)
+            .is_ok();
+    }
+
+    #[test]
+    fn custom_mock_env() {
+        let sender = &Addr::unchecked(SENDER);
+        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let amount = 1000000u128;
+        let denom = "uosmo";
+
+        let mock_state = Rc::new(RefCell::new(MockState::new()));
+
+        let mock = instantiate_custom_mock_env(sender, mock_state).unwrap();
+        let chain = mock.1;
+
+        chain
+            .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
+            .unwrap();
+
+        let balances = chain.query_all_balances(recipient).unwrap();
+        asserting("recipient balances length is 1")
+            .that(&balances.len())
+            .is_equal_to(&1);
+    }
+
+    #[test]
+    fn state_interface() {
+        let contract_id = "my_contract";
+        let code_id = 1u64;
+        let address = &Addr::unchecked(BALANCE_ADDR);
+        let mut mock_state = Rc::new(RefCell::new(MockState::new()));
+
+        mock_state.set_address(contract_id, address);
+        asserting!("that address has been set")
+            .that(&address)
+            .is_equal_to(&mock_state.get_address(contract_id).unwrap());
+
+        mock_state.set_code_id(contract_id, code_id);
+        asserting!("that code_id has been set")
+            .that(&code_id)
+            .is_equal_to(&mock_state.get_code_id(contract_id).unwrap());
+
+        asserting!("that total code_ids is 1")
+            .that(&mock_state.get_all_code_ids().unwrap().len())
+            .is_equal_to(&1);
+
+        asserting!("that total addresses is 1")
+            .that(&mock_state.get_all_addresses().unwrap().len())
+            .is_equal_to(&1);
     }
 }
