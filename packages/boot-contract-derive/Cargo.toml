@@ -11,7 +11,7 @@ description = "Attribute macro for creating a contract interface."
 proc-macro = true
 
 [features]
-default=["outside_contract"]
+#default=["outside_contract"]
 outside_contract=[]
 
 [dependencies]
