@@ -1,9 +1,7 @@
 #![recursion_limit = "128"]
 
 mod boot_contract;
-use syn::{
-    parse_macro_input, AttributeArgs, Fields, Item, Meta, NestedMeta, Path,
-};
+use syn::{parse_macro_input, AttributeArgs, Fields, Item, Meta, NestedMeta, Path};
 extern crate proc_macro;
 use proc_macro::TokenStream;
 
@@ -11,7 +9,7 @@ use syn::__private::TokenStream2;
 
 use quote::quote;
 
- #[cfg(feature="outside_contract")]
+#[cfg(feature = "outside_contract")]
 use crate::boot_contract::boot_contract_raw;
 
 #[proc_macro_attribute]
@@ -80,22 +78,21 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     struct_def.into()
 }
 
-
 #[proc_macro_attribute]
 pub fn boot_contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
-    
     // The boot macro part
     let mut new_input: TokenStream2;
-    #[cfg(feature="outside_contract")] {
-       new_input = boot_contract_raw(attrs,input).into();
+    #[cfg(feature = "outside_contract")]
+    {
+        new_input = boot_contract_raw(attrs, input).into();
     }
-    #[cfg(not(feature="outside_contract"))] {
+    #[cfg(not(feature = "outside_contract"))]
+    {
         new_input = input.into();
     }
-    
 
     // The cosmwasm_std::entry_point part
-   new_input = quote!(
+    new_input = quote!(
         #[cfg_attr(feature="library",::cosmwasm_std::entry_point)]
         #new_input
     );

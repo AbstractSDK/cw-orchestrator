@@ -3,9 +3,7 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::__private::TokenStream2;
-use syn::{
-    parse_macro_input, FnArg, Item, Signature,
-};
+use syn::{parse_macro_input, FnArg, Item, Signature};
 
 fn get_crate_to_struct() -> syn::Ident {
     let kebab_case_pkg = get_raw_crate();
@@ -41,7 +39,6 @@ fn get_func_type(sig: &Signature) -> TokenStream2 {
         fn(#(#arg_types),*) -> #output_type
     }
 }
-
 
 pub fn boot_contract_raw(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
@@ -105,7 +102,7 @@ pub fn boot_contract_raw(_attrs: TokenStream, mut input: TokenStream) -> TokenSt
                     return Some(dir.clone());
                 }
             }
-        }        
+        }
 
         // We add the contract creation script
         impl<Chain: ::boot_core::CwEnv> #name<Chain> {

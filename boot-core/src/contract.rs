@@ -52,7 +52,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn get_chain(&self) -> &Chain {
         &self.chain
     }
-    
+
     pub fn with_wasm_path(mut self, path: impl ToString) -> Self {
         self.source.wasm_code_path = Some(path.to_string());
         self
