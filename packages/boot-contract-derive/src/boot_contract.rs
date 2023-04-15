@@ -1,12 +1,10 @@
-
-
 extern crate proc_macro;
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::__private::TokenStream2;
 use syn::{
-    parse_macro_input, FnArg, Item, Meta, NestedMeta, Path, Signature,
+    parse_macro_input, FnArg, Item, Signature,
 };
 
 fn get_crate_to_struct() -> syn::Ident {
@@ -87,13 +85,39 @@ pub fn boot_contract_raw(_attrs: TokenStream, mut input: TokenStream) -> TokenSt
             }
         }
 
+        fn find_workspace_dir() -> ::std::path::PathBuf{
+            let crate_path = env!("CARGO_MANIFEST_DIR");
+            let mut current_dir = ::std::path::PathBuf::from(crate_path);
+            match find_workspace_dir_worker(&mut current_dir) {
+                Some(path) => path,
+                None => current_dir,
+            }
+        }
+
+        fn find_workspace_dir_worker(dir: &mut::std::path::PathBuf) -> Option<::std::path::PathBuf> {
+            loop {
+                // First we pop the dir
+                if !dir.pop() {
+                    return None;
+                }
+                let cargo_toml = dir.join("Cargo.toml");
+                if ::std::fs::metadata(&cargo_toml).is_ok() {
+                    return Some(dir.clone());
+                }
+            }
+        }        
 
         // We add the contract creation script
         impl<Chain: ::boot_core::CwEnv> #name<Chain> {
             pub fn new(contract_id: &str, chain: Chain) -> Self {
+
+                // We get the workspace dir
+                let workspace_dir = find_workspace_dir();
+
                 // We build the artififacts from the artifacts folder (by default) of the package
-                let crate_path = env!("CARGO_MANIFEST_DIR");
-                let file_path = &format!("{}{}{}", crate_path, "/artifacts/", #wasm_name);
+                let file_path = &format!("{}/artifacts/{}.wasm", workspace_dir.display().to_string(), #wasm_name);
+                //panic!("Wasm_file_path: {}", file_path);
+
                 Self(
                     ::boot_core::Contract::new(contract_id, chain)
                         .with_wasm_path(file_path) // Adds the wasm path for uploading to a node is simple

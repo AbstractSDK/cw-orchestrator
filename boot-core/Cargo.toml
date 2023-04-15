@@ -39,8 +39,9 @@ daemon = [
 
 [dependencies]
 # Default deps
-boot-contract-derive = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface" }
-boot-fns-derive      = { git = "https://github.com/Kayanski/BOOT", branch = "feature/new-contract-interface" }
+boot-contract-derive = { path="../packages/boot-contract-derive" }
+boot-fns-derive = { path="../packages/boot-fns-derive" }
+
 cosmwasm-std         = { workspace = true }
 cw-multi-test        = { workspace = true }
 anyhow               = { workspace = true }
