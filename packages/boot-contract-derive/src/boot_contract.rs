@@ -91,10 +91,12 @@ pub fn boot_contract_raw(_attrs: TokenStream, mut input: TokenStream) -> TokenSt
         // We add the contract creation script
         impl<Chain: ::boot_core::CwEnv> #name<Chain> {
             pub fn new(contract_id: &str, chain: Chain) -> Self {
-
+                // We build the artififacts from the artifacts folder (by default) of the package
+                let crate_path = env!("CARGO_MANIFEST_DIR");
+                let file_path = &format!("{}{}{}", crate_path, "/artifacts/", #wasm_name);
                 Self(
                     ::boot_core::Contract::new(contract_id, chain)
-                        .with_wasm_path(#wasm_name) // Adds the wasm path for uploading to a node is simple
+                        .with_wasm_path(file_path) // Adds the wasm path for uploading to a node is simple
                          .with_mock(Box::new(
                             // Adds the contract's endpoint functions for mocking
                             ::boot_core::ContractWrapper::new_with_empty(

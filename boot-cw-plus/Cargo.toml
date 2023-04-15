@@ -37,19 +37,19 @@ serde         = { workspace = true }
 anyhow        = { workspace = true }
 cw-multi-test = { workspace = true }
 # packages 
-cw1  = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw3  = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw4  = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw20 = { git = "https://github.com/Kayanski/cw-plus.git" }
+cw1  = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw3  = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw4  = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw20 = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
 # crates
-cw1-subkeys        = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw1-whitelist      = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw20-base          = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw20-ics20         = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw3-fixed-multisig = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw3-flex-multisig  = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw4-group          = { git = "https://github.com/Kayanski/cw-plus.git" }
-cw4-stake          = { git = "https://github.com/Kayanski/cw-plus.git" }
+cw1-subkeys        = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw1-whitelist      = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw20-base          = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw20-ics20         = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw3-fixed-multisig = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw3-flex-multisig  = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw4-group          = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
+cw4-stake          = { git = "https://github.com/Kayanski/cw-plus.git", branch = "features/simpler_without_flags" ,features=["script"] }
 
 # For bin
 tokio   = { version = "1", features = ["full"], optional = true }

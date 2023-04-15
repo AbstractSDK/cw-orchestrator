@@ -3,7 +3,7 @@ use boot_core::{contract, Contract, CwEnv};
 use cw20_base::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use cw_multi_test::ContractWrapper;
 
-pub use cw20::Cw20ExecuteMsgFns;
+pub use cw20::msg::Cw20ExecuteMsgFns;
 pub use cw20_base::msg::QueryMsgFns as Cw20QueryMsgFns;
 
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
