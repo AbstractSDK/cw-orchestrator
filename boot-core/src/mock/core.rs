@@ -5,8 +5,9 @@ use crate::{
     tx_handler::TxHandler,
     BootError, BootExecute, CallAs, ContractInstance,
 };
-use cosmwasm_std::{Addr, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, CustomQuery, Empty, Event, Uint128};
 use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
+use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
@@ -31,13 +32,13 @@ pub fn instantiate_custom_mock_env<S: StateInterface>(
 // Generic mock-chain implementation
 // Allows for custom state storage
 #[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState> {
+pub struct Mock<S: StateInterface = MockState, ExecC= Empty, QueryC= Empty> {
     pub sender: Addr,
     pub state: Rc<RefCell<S>>,
-    pub app: Rc<RefCell<App>>,
+    pub app: Rc<RefCell<BasicApp<ExecC,QueryC>>>,
 }
 
-impl<S: StateInterface> Mock<S> {
+impl<S: StateInterface,ExecC, QueryC> Mock<S,ExecC, QueryC> {
     /// set the Bank balance of an address
     pub fn set_balance(
         &self,
@@ -211,10 +212,14 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             .map_err(From::from)
     }
 
-    fn upload(
+    fn upload<ExecT, QueryT>(
         &self,
-        contract_source: &mut ContractCodeReference<Empty>,
-    ) -> Result<Self::Response, crate::BootError> {
+        contract_source: &mut ContractCodeReference<ExecT, QueryT>,
+    ) -> Result<Self::Response, crate::BootError>
+    where
+        ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+        QueryT: CustomQuery + DeserializeOwned + 'static,
+    {
         // transfer ownership of Boxed app to App
         if let Some(contract) = std::mem::replace(&mut contract_source.contract_endpoints, None) {
             let code_id = self.app.borrow_mut().store_code(contract);
