@@ -7,7 +7,7 @@ mod querier {
         tx::{self, Msg},
         AccountId,
     };
-    use cosmwasm_std::Uint128;
+
     use speculoos::prelude::*;
 
     use std::{str::FromStr, sync::Arc};
@@ -108,28 +108,19 @@ mod querier {
 
         let _ = contract.upload();
 
-        let init_msg = cw20_base::msg::InstantiateMsg {
-            name: "Token".to_owned(),
-            symbol: "TOK".to_owned(),
-            decimals: 6u8,
-            initial_balances: vec![cw20::Cw20Coin {
-                address: sender.to_string(),
-                amount: Uint128::from(10000u128),
-            }],
-            mint: None,
-            marketing: None,
-        };
+        let init_msg = common::contract::get_init_msg(&sender);
 
-        // instantiate contract on chain
         let _ = contract.instantiate(&init_msg, Some(&sender.clone()), None);
 
         let contract_address = contract.address().unwrap();
 
-        // NOTE: this needs a live contract
         let contract_info = rt.block_on(DaemonQuerier::contract_info(
             channel.clone(),
             contract_address,
         ));
-        println!("contract_info: {:#?}", contract_info);
+
+        asserting!("contract info is ok")
+            .that(&contract_info)
+            .is_ok();
     }
 }
