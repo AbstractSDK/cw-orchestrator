@@ -1,5 +1,6 @@
 #[cfg(test)]
 pub(crate) mod contract {
+    use cosmwasm_std::{Addr, Uint128};
     use std::sync::Arc;
     use tokio::runtime::Runtime;
 
@@ -44,5 +45,19 @@ pub(crate) mod contract {
             .with_wasm_path(wasm_path);
 
         (sender, contract)
+    }
+
+    pub fn get_init_msg(sender: &Addr) -> cw20_base::msg::InstantiateMsg {
+        cw20_base::msg::InstantiateMsg {
+            name: "Token".to_owned(),
+            symbol: "TOK".to_owned(),
+            decimals: 6u8,
+            initial_balances: vec![cw20::Cw20Coin {
+                address: sender.to_string(),
+                amount: Uint128::from(10000u128),
+            }],
+            mint: None,
+            marketing: None,
+        }
     }
 }

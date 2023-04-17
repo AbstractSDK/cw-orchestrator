@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod general {
-    use cosmwasm_std::{Addr, Uint128};
+    use cosmwasm_std::Addr;
 
     use speculoos::prelude::*;
 
@@ -26,17 +26,7 @@ mod general {
             .that(&contract.latest_is_uploaded().unwrap())
             .is_true();
 
-        let init_msg = cw20_base::msg::InstantiateMsg {
-            name: "Token".to_owned(),
-            symbol: "TOK".to_owned(),
-            decimals: 6u8,
-            initial_balances: vec![cw20::Cw20Coin {
-                address: sender.to_string(),
-                amount: Uint128::from(10000u128),
-            }],
-            mint: None,
-            marketing: None,
-        };
+        let init_msg = common::contract::get_init_msg(&sender);
 
         let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&vec![]));
 

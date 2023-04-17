@@ -5,8 +5,6 @@
 mod contract {
     use speculoos::prelude::*;
 
-    use cosmwasm_std::Uint128;
-
     use cw20_base::msg::*;
 
     use crate::{contract, tests::daemon::common};
@@ -29,17 +27,7 @@ mod contract {
         log::info!("Using code_id {}", code_id);
 
         // init msg for contract
-        let init_msg = cw20_base::msg::InstantiateMsg {
-            name: "Token".to_owned(),
-            symbol: "TOK".to_owned(),
-            decimals: 6u8,
-            initial_balances: vec![cw20::Cw20Coin {
-                address: sender.to_string(),
-                amount: Uint128::from(10000u128),
-            }],
-            mint: None,
-            marketing: None,
-        };
+        let init_msg = common::contract::get_init_msg(&sender);
 
         // instantiate contract on chain
         let init_res = contract.instantiate(&init_msg, Some(&sender.clone()), None);
