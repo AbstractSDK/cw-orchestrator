@@ -23,7 +23,7 @@ mod querier {
 
         let network = options.get_network();
 
-        let channel = DaemonChannel::new(&network.apis.grpc, &network.chain_id)
+        let channel = DaemonChannel::connect(&network.apis.grpc, &network.chain_id)
             .await
             .unwrap();
 

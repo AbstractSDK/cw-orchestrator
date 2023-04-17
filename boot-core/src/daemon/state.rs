@@ -72,7 +72,7 @@ impl DaemonState {
         log::info!("Found {} gRPC endpoints", network.apis.grpc.len());
 
         // find working grpc channel
-        let grpc_channel = DaemonChannel::new(&network.apis.grpc, &network.chain_id)
+        let grpc_channel = DaemonChannel::connect(&network.apis.grpc, &network.chain_id)
             .await?
             .unwrap();
 
