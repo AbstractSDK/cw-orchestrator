@@ -7,13 +7,10 @@ use tonic::transport::{Channel, ClientTlsConfig};
 
 use crate::DaemonError;
 
-pub struct DaemonChannel {}
+pub(crate) struct DaemonChannel {}
 
 impl DaemonChannel {
-    pub async fn new(
-        grpc: &Vec<Grpc>,
-        chain_id: &ChainId,
-    ) -> Result<Option<Channel>, DaemonError> {
+    pub async fn new(grpc: &Vec<Grpc>, chain_id: &ChainId) -> Result<Option<Channel>, DaemonError> {
         let mut successful_connections = vec![];
 
         for Grpc { address, .. } in grpc.iter() {

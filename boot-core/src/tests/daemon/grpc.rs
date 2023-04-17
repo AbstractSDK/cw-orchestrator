@@ -2,12 +2,13 @@
     This test asserts breaking issues around the GRPC connection
 */
 #[cfg(test)]
-mod contract_grpc {
+mod grpc {
     use std::sync::Arc;
 
     use boot_core::{instantiate_daemon_env, DaemonOptionsBuilder};
     use speculoos::prelude::*;
     use tokio::runtime::Runtime;
+
     #[test]
     fn no_connection() {
         let runtime = Arc::new(Runtime::new().unwrap());
@@ -36,8 +37,6 @@ mod contract_grpc {
 
     #[test]
     fn network_grpcs_list_is_empty() {
-        env_logger::init();
-
         let runtime = Arc::new(Runtime::new().unwrap());
 
         let mut network = boot_core::networks::LOCAL_JUNO;

@@ -8,6 +8,7 @@ mod interface;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
+mod utils;
 // pub mod prelude;
 mod state;
 mod tx_handler;
@@ -38,7 +39,10 @@ pub use daemon::{
     error::DaemonError,
     networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
+    // querier::DaemonQuerier,
+    // channel::DaemonChannel
 };
+
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
 
@@ -54,3 +58,5 @@ impl<T: TxHandler + Clone> BootEnvironment for T {}
 /// Signals a supported execution environment for CosmWasm contracts
 pub trait CwEnv: TxHandler + Clone {}
 impl<T: TxHandler + Clone> CwEnv for T {}
+
+mod tests;

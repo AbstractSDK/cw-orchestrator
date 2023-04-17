@@ -14,8 +14,8 @@ exclude = [".env"]
 
 [features]
 default = ["daemon"]
-# enable the optional dependencies
 
+# enable the optional dependencies
 daemon = [
     "dep:ibc-chain-registry",
     "dep:ibc-relayer-types",
