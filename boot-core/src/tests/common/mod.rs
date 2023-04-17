@@ -153,8 +153,8 @@ pub mod common {
             ))
             .with_wasm_path(wasm_path);
 
-        let v = crate::utils::json::read(&env::var("STATE_FILE").unwrap());
-        println!("{:#?}", v);
+        // let v = crate::utils::json::read(&env::var("STATE_FILE").unwrap());
+        // println!("{:#?}", v);
 
         (sender, contract)
     }

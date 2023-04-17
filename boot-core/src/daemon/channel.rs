@@ -10,7 +10,10 @@ use crate::DaemonError;
 pub(crate) struct DaemonChannel {}
 
 impl DaemonChannel {
-    pub async fn new(grpc: &Vec<Grpc>, chain_id: &ChainId) -> Result<Option<Channel>, DaemonError> {
+    pub async fn connect(
+        grpc: &[Grpc],
+        chain_id: &ChainId,
+    ) -> Result<Option<Channel>, DaemonError> {
         let mut successful_connections = vec![];
 
         for Grpc { address, .. } in grpc.iter() {
