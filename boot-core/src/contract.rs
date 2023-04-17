@@ -99,6 +99,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
         log::info!("Instantiating {} with msg {:#?}", self.id, msg);
+
         let resp = self
             .chain
             .instantiate(
@@ -110,9 +111,13 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             )
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
+
         self.set_address(&contract_address);
+
         log::info!("Instantiated {} with address {}", self.id, contract_address);
+
         log::debug!("Instantiate response: {:?}", resp);
+
         Ok(resp)
     }
 

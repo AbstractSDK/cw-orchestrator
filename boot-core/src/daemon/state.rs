@@ -1,22 +1,11 @@
 use super::error::DaemonError;
-use crate::daemon::channel::DaemonChannel;
-use crate::error::BootError;
-use crate::state::StateInterface;
-
+use crate::{daemon::channel::DaemonChannel, error::BootError, state::StateInterface, utils::json};
 use cosmrs::Denom;
-
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_reader, json, Value};
-use std::{
-    collections::HashMap,
-    env,
-    fs::{File, OpenOptions},
-    path::Path,
-    rc::Rc,
-    str::FromStr,
-};
+use serde_json::{json, Value};
+use std::{collections::HashMap, env, fs::File, path::Path, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
@@ -41,6 +30,12 @@ pub struct DaemonOptions {
     #[builder(default)]
     // #[builder(setter(strip_option))]
     deployment_id: Option<String>,
+}
+
+impl DaemonOptions {
+    pub fn get_network(&self) -> RegistryChainInfo {
+        self.network.clone()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -96,7 +91,11 @@ impl DaemonState {
                 .unwrap()
                 .to_str()
                 .unwrap();
+
             json_file_path = format!("{folder}/{name}_local.json");
+
+            // rewrite state file env var to the filename we are using
+            // env::set_var("STATE_FILE", json_file_path.to_owned());
         }
 
         // Try to get the standard fee token (probably shortest denom)
@@ -134,76 +133,47 @@ impl DaemonState {
             fcd_url: None,
         };
 
+        log::info!(
+            "Writing daemon state JSON file: {:#?}",
+            state.json_file_path
+        );
+
         // write json state file
-        state.write_state_json();
+        json::write(
+            &state.json_file_path,
+            &state.id,
+            &state.chain.chain_id,
+            &state.deployment_id,
+        );
 
         // finish
         Ok(state)
     }
 
-    pub fn write_state_json(&self) {
-        // open file pointer set read/write permissions to true
-        // create it if it does not exists
-        // dont truncate it
-        let file = OpenOptions::new()
-            .create(true)
-            .read(true)
-            .write(true)
-            .truncate(false)
-            .open(&self.json_file_path)
-            .unwrap();
-
-        log::info!("Using daemon JSON state file: {:#?}", self.json_file_path);
-
-        // return empty json object if file is empty
-        // return file content if not
-        let mut json: serde_json::Value = if file.metadata().unwrap().len().eq(&0) {
-            json!({})
-        } else {
-            serde_json::from_reader(&file).unwrap()
-        };
-
-        // check and add chain_id path if it's missing
-        if json.get(&self.chain.chain_id).is_none() {
-            json[&self.chain.chain_id] = json!({});
-        }
-
-        // add deployment_id to chain_id path
-        if json[&self.chain.chain_id].get(&self.id).is_none() {
-            json[&self.chain.chain_id][&self.id] = json!({
-                &self.deployment_id: {},
-                "code_ids": {}
-            });
-        }
-
-        // write JSON data
-        // use File::create so we dont append data to the file
-        // but rather write all (because we have read the data before)
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
-    }
-
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
         self.deployment_id = deployment_id.into();
-        self.write_state_json();
+        json::write(
+            &self.json_file_path,
+            &self.id,
+            &self.chain.chain_id,
+            &self.deployment_id,
+        );
     }
 
     /// Get the state filepath and read it as json
-    fn json(&self) -> serde_json::Value {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("File should be present at {}", self.json_file_path));
-        let json: serde_json::Value = from_reader(file).unwrap();
-        json
+    fn read_state(&self) -> serde_json::Value {
+        json::read(&self.json_file_path)
     }
 
     /// Retrieve a stateful value using the chainId and networkId
     fn get(&self, key: &str) -> Value {
-        let json = self.json();
+        let json = self.read_state();
         json[&self.chain.chain_id][&self.id.to_string()][key].clone()
     }
 
     /// Set a stateful value using the chainId and networkId
     fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
-        let mut json = self.json();
+        let mut json = self.read_state();
 
         json[&self.chain.chain_id][&self.id.to_string()][key][contract_id] = json!(value);
 

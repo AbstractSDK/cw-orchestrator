@@ -93,6 +93,7 @@ impl TxHandler for Daemon {
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
+
     fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
@@ -192,7 +193,7 @@ impl TxHandler for Daemon {
             .runtime
             .block_on(sender.commit_tx(vec![store_msg], None))?;
 
-        log::info!("uploaded: {:?}", result.txhash);
+        log::info!("Uploaded: {:?}", result.txhash);
 
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());

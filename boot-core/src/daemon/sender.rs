@@ -31,6 +31,7 @@ pub struct Sender<C: Signing + Context> {
 impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
+
         // NETWORK_MNEMONIC_GROUP
         let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
             panic!(
@@ -44,24 +45,29 @@ impl Sender<All> {
             PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
+
         let sender = Sender {
             daemon_state: daemon_state.clone(),
             private_key: cosmos_private_key,
             secp,
         };
+
         log::info!(
             "Interacting with {} using address: {}",
             daemon_state.id,
             sender.pub_addr_str()?
         );
+
         Ok(sender)
     }
+
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
         Ok(self
             .private_key
             .public_key()
             .account_id(&self.daemon_state.chain.pub_address_prefix)?)
     }
+
     pub fn address(&self) -> Result<Addr, DaemonError> {
         Ok(Addr::unchecked(
             self.private_key
@@ -93,20 +99,40 @@ impl Sender<All> {
         self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 
+    pub(crate) fn build_tx_body<T: Msg>(
+        &self,
+        msgs: Vec<T>,
+        memo: Option<&str>,
+        timeout: u64,
+    ) -> tx::Body {
+        let msgs = msgs
+            .into_iter()
+            .map(Msg::into_any)
+            .collect::<Result<Vec<Any>, _>>()
+            .unwrap();
+
+        tx::Body::new(msgs, memo.unwrap_or_default(), timeout as u32)
+    }
+
+    pub(crate) fn build_fee(&self, amount: impl Into<u128>, gas_limit: Option<u64>) -> Fee {
+        let amount = Coin {
+            amount: amount.into(),
+            denom: self.daemon_state.gas_denom.to_owned(),
+        };
+
+        let gas = gas_limit.unwrap_or(GAS_LIMIT);
+
+        Fee::from_amount_and_gas(amount, gas)
+    }
+
     pub async fn commit_tx<T: Msg>(
         &self,
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = DaemonQuerier::block_height(self.channel()).await? + 10u64;
-        let msgs: Result<Vec<Any>, _> = msgs.into_iter().map(Msg::into_any).collect();
-        let msgs = msgs?;
-        let gas_denom = self.daemon_state.gas_denom.clone();
-        let amount = Coin {
-            amount: 0u8.into(),
-            denom: gas_denom.clone(),
-        };
-        let fee = Fee::from_amount_and_gas(amount, GAS_LIMIT);
+
+        let fee = self.build_fee(0u8, None);
 
         let BaseAccount {
             account_number,
@@ -114,38 +140,41 @@ impl Sender<All> {
             ..
         } = self.base_account().await?;
 
-        let tx_body = tx::Body::new(msgs, memo.unwrap_or_default(), timeout_height as u32);
+        let tx_body = self.build_tx_body(msgs, memo, timeout_height);
+
         let auth_info =
             SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
+
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
             &Id::try_from(self.daemon_state.id.clone())?,
             account_number,
         )?;
+
         let tx_raw = sign_doc.sign(&self.private_key)?;
 
         let sim_gas_used = DaemonQuerier::simulate_tx(self.channel(), tx_raw.to_bytes()?).await?;
 
-        log::debug!("{:?}", sim_gas_used);
+        log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
         let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
         let amount_to_pay = gas_expected * (self.daemon_state.gas_price + 0.00001);
-        log::debug!("gas fee: {:?}", amount_to_pay);
-        let amount = Coin {
-            amount: (amount_to_pay as u64).into(),
-            denom: gas_denom,
-        };
-        let fee = Fee::from_amount_and_gas(amount, gas_expected as u64);
-        // log::debug!("{:?}", self.pub_addr_str());
+
+        log::debug!("Calculated gas needed: {:?}", amount_to_pay);
+
+        let fee = self.build_fee(amount_to_pay as u128, Some(gas_expected as u64));
+
         let auth_info =
             SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
+
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
             &Id::try_from(self.daemon_state.id.clone())?,
             account_number,
         )?;
+
         let tx_raw = sign_doc.sign(&self.private_key)?;
 
         self.broadcast(tx_raw).await
@@ -161,6 +190,7 @@ impl Sender<All> {
             .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
             .await?
             .into_inner();
+
         log::debug!("base account query response: {:?}", resp);
 
         let account = resp.account.unwrap().value;
@@ -170,11 +200,14 @@ impl Sender<All> {
         } else {
             // try vesting account, (used by Terra2)
             use cosmos_modules::vesting::PeriodicVestingAccount;
+
             let acc = PeriodicVestingAccount::decode(account.as_ref()).map_err(|_| {
                 DaemonError::StdErr("Unknown account type returned from QueryAccountRequest".into())
             })?;
+
             acc.base_vesting_account.unwrap().base_account.unwrap()
         };
+
         Ok(acc)
     }
 
@@ -191,6 +224,7 @@ impl Sender<All> {
                 mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
             })
             .await?;
+
         log::debug!("{:?}", commit);
 
         find_by_hash(&mut client, commit.into_inner().tx_response.unwrap().txhash).await
@@ -202,18 +236,23 @@ async fn find_by_hash(
     hash: String,
 ) -> Result<CosmTxResponse, DaemonError> {
     let attempts = 5;
+
     let request = cosmos_modules::tx::GetTxRequest { hash };
+
     for _ in 0..attempts {
-        let query_attempt = client.get_tx(request.clone()).await;
-        let Ok(tx) = query_attempt else {
-            log::debug!("tx not found with error: {:?}", query_attempt.unwrap_err());
-            log::debug!("Waiting 10s");
-            sleep(Duration::from_secs(10)).await;
-            continue;
-        };
-        let resp = tx.into_inner().tx_response.unwrap();
-        log::debug!("{:?}", resp);
-        return Ok(resp.into());
+        match client.get_tx(request.clone()).await {
+            Ok(tx) => {
+                let resp = tx.into_inner().tx_response.unwrap();
+                log::debug!("TX found: {:?}", resp);
+                return Ok(resp.into());
+            }
+            Err(err) => {
+                log::debug!("TX not found with error: {:?}", err);
+                log::debug!("Waiting 10s");
+                sleep(Duration::from_secs(10)).await;
+            }
+        }
     }
-    panic!("couldn't find transaction after {attempts} attempts!");
+
+    panic!("couldn't find transaction after {} attempts!", attempts);
 }

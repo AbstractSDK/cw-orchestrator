@@ -1,59 +1,22 @@
 /*
-
+    Daemon tests
 */
-mod common;
 #[cfg(test)]
 mod contract {
-    use std::{env, sync::Arc};
-
-    use tokio::runtime::Runtime;
-
-    use cosmwasm_std::Uint128;
-    use cw_multi_test::ContractWrapper;
-
     use speculoos::prelude::*;
 
-    use boot_core::{
-        contract, instantiate_daemon_env, networks::LOCAL_JUNO, Contract, DaemonOptionsBuilder,
-    };
+    use cosmwasm_std::Uint128;
 
     use cw20_base::msg::*;
 
-    const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
+    use crate::{contract, tests::common::common::start_contract};
 
     #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
     pub struct Cw20Base;
 
     #[test]
     fn general() {
-        let rt = Arc::new(Runtime::new().unwrap());
-
-        // configure daemon options
-        let options = DaemonOptionsBuilder::default()
-            .network(LOCAL_JUNO)
-            .deployment_id("v0.1.0")
-            .build()
-            .unwrap();
-
-        // instantiate chain daemon
-        let (sender, chain) = instantiate_daemon_env(&rt, options).unwrap();
-        log::info!("Using wallet {}", sender);
-
-        // create contract base configuration
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}{}", crate_path, CW20_CONTRACT_WASM);
-        log::info!("Using wasm path {}", wasm_path);
-
-        let mut contract = Contract::new("cw-plus:cw20_base", chain)
-            .with_mock(Box::new(
-                ContractWrapper::new_with_empty(
-                    cw20_base::contract::execute,
-                    cw20_base::contract::instantiate,
-                    cw20_base::contract::query,
-                )
-                .with_migrate(cw20_base::contract::migrate),
-            ))
-            .with_wasm_path(wasm_path);
+        let (sender, mut contract) = start_contract();
 
         // upload contract
         let upload_res = contract.upload();
