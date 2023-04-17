@@ -2,16 +2,23 @@
 */
 #[cfg(test)]
 mod querier {
+    use cosmrs::{
+        cosmwasm::MsgExecuteContract,
+        tx::{self, Msg},
+        AccountId,
+    };
+    use cosmwasm_std::Uint128;
     use speculoos::prelude::*;
 
-    use std::sync::Arc;
+    use std::{str::FromStr, sync::Arc};
     use tokio::runtime::Runtime;
 
     use crate::{
         daemon::channel::DaemonChannel,
         daemon::networks,
-        daemon::querier::DaemonQuerier,
         daemon::state::{DaemonOptions, DaemonOptionsBuilder},
+        daemon::{core::parse_cw_coins, querier::DaemonQuerier},
+        tests::daemon::common,
     };
 
     async fn build_channel() -> Option<tonic::transport::Channel> {
@@ -27,7 +34,9 @@ mod querier {
             .await
             .unwrap();
 
-        asserting!("channel is some").that(&channel).is_some();
+        asserting!("channel connection is succesful")
+            .that(&channel)
+            .is_some();
 
         channel
     }
@@ -35,7 +44,6 @@ mod querier {
     #[test]
     fn general() {
         let rt = Arc::new(Runtime::new().unwrap());
-
         let channel = rt.block_on(build_channel()).unwrap();
 
         let block_height = rt.block_on(DaemonQuerier::block_height(channel.clone()));
@@ -46,34 +54,82 @@ mod querier {
 
         let block_time = rt.block_on(DaemonQuerier::block_time(channel.clone()));
         asserting!("block_time is ok").that(&block_time).is_ok();
+    }
+
+    #[test]
+    fn simulate_tx() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        let channel = rt.block_on(build_channel()).unwrap();
+
+        let exec_msg = cw20_base::msg::ExecuteMsg::Mint {
+            recipient: "terra1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr".into(),
+            amount: 128u128.into(),
+        };
+
+        let exec_msg: MsgExecuteContract = MsgExecuteContract {
+            sender: AccountId::from_str(
+                "terra1ygcvxp9s054q8u2q4hvl52ke393zvgj0sllahlycm4mj8dm96zjsa45rzk",
+            )
+            .unwrap(),
+            contract: AccountId::from_str(
+                "terra1nsuqsk6kh58ulczatwev87ttq2z6r3pusulg9r24mfj2fvtzd4uq3exn26",
+            )
+            .unwrap(),
+            msg: serde_json::to_vec(&exec_msg).unwrap(),
+            funds: parse_cw_coins(&vec![]).unwrap(),
+        };
+
+        let msgs = [exec_msg]
+            .into_iter()
+            .map(Msg::into_any)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        let memo = String::from("");
+
+        let body = tx::Body::new(msgs, memo, 100u32);
+
+        let simulate_tx = rt.block_on(DaemonQuerier::simulate_tx(
+            channel.clone(),
+            body.into_bytes().unwrap(),
+        ));
+
+        asserting!("that simulate_tx worked but msg is wrong")
+            .that(&simulate_tx)
+            .is_err();
+    }
+
+    #[test]
+    fn contract_info() {
+        let rt = Arc::new(Runtime::new().unwrap());
+        let channel = rt.block_on(build_channel()).unwrap();
+
+        let (sender, mut contract) = common::contract::start();
+
+        let _ = contract.upload();
+
+        let init_msg = cw20_base::msg::InstantiateMsg {
+            name: "Token".to_owned(),
+            symbol: "TOK".to_owned(),
+            decimals: 6u8,
+            initial_balances: vec![cw20::Cw20Coin {
+                address: sender.to_string(),
+                amount: Uint128::from(10000u128),
+            }],
+            mint: None,
+            marketing: None,
+        };
+
+        // instantiate contract on chain
+        let _ = contract.instantiate(&init_msg, Some(&sender.clone()), None);
+
+        let contract_address = contract.address().unwrap();
 
         // NOTE: this needs a live contract
-        // let contract_info = DaemonQuerier::contract_info(channel.clone().unwrap())
-        //     .await
-        //     .unwrap();
-        // println!("contract_info: {:#?}", contract_info);
-
-        // NOTE: this needs creating a correct tx operation
-        // let exec_msg = cw20_base::msg::ExecuteMsg::Mint {
-        //     recipient: "cosmos789".into(),
-        //     amount: 128u128.into(),
-        // };
-
-        // let exec_msg: MsgExecuteContract = MsgExecuteContract {
-        //     sender: AccountId::from_str("cosmos12345").unwrap(),
-        //     contract: AccountId::from_str("contract12345").unwrap(),
-        //     msg: serde_json::to_vec(&exec_msg).unwrap(),
-        //     funds: parse_cw_coins(&vec![]).unwrap(),
-        // };
-
-        // missing lots of steps here... ooff
-
-        // let simulate_tx = DaemonQuerier::simulate_tx(
-        //     channel.clone().unwrap(),
-        //     String::into_bytes(String::from("something")),
-        // )
-        // .await
-        // .unwrap();
-        // println!("simulate_tx: {:#?}", simulate_tx);
+        let contract_info = rt.block_on(DaemonQuerier::contract_info(
+            channel.clone(),
+            contract_address,
+        ));
+        println!("contract_info: {:#?}", contract_info);
     }
 }

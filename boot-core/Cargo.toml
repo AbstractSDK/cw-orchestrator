@@ -78,6 +78,7 @@ ring                    = { version = "0.16.20", optional = true }
 
 [dev-dependencies]
 boot-core               = { features = ["daemon"], path = "." }
+uid                     = "0.1.7"
 boot-contract-derive    = { version = "0.10.0" }
 env_logger              = "0.10.0"
 cw20                    = { git = "https://github.com/Abstract-OS/cw-plus.git" }
