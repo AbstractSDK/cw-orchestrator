@@ -8,17 +8,15 @@ mod general {
 
     use speculoos::prelude::*;
 
-    use crate::tests::common::common::start_contract;
+    use crate::tests::daemon::common;
 
     #[test]
     fn general() {
-        let (sender, mut contract) = start_contract();
+        let (sender, mut contract) = common::contract::start();
 
-        // TODO: figure out why this is failing.
-        // I think it's related to the tests running at the same time in the same container
-        // asserting!("address is not present")
-        //     .that(&contract.address())
-        //     .is_err();
+        asserting!("address is not present")
+            .that(&contract.address())
+            .is_err();
 
         asserting!("upload_if_needed is ok")
             .that(&contract.upload_if_needed())
@@ -71,5 +69,9 @@ mod general {
                     .unwrap(),
             )
             .is_some();
+
+        asserting!("code_id is ok")
+            .that(&contract.code_id())
+            .is_ok();
     }
 }

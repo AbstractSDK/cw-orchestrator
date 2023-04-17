@@ -54,7 +54,7 @@ impl Sender<All> {
 
         log::info!(
             "Interacting with {} using address: {}",
-            daemon_state.id,
+            daemon_state.network_id,
             sender.pub_addr_str()?
         );
 
@@ -125,14 +125,35 @@ impl Sender<All> {
         Fee::from_amount_and_gas(amount, gas)
     }
 
+    pub async fn calculate_gas(
+        &self,
+        tx_body: &tx::Body,
+        sequence: u64,
+        account_number: u64,
+    ) -> Result<u64, DaemonError> {
+        let fee = self.build_fee(0u8, None);
+
+        let auth_info =
+            SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
+
+        let sign_doc = SignDoc::new(
+            tx_body,
+            &auth_info,
+            &Id::try_from(self.daemon_state.network_id.clone())?,
+            account_number,
+        )?;
+
+        let tx_raw = sign_doc.sign(&self.private_key)?;
+
+        DaemonQuerier::simulate_tx(self.channel(), tx_raw.to_bytes()?).await
+    }
+
     pub async fn commit_tx<T: Msg>(
         &self,
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = DaemonQuerier::block_height(self.channel()).await? + 10u64;
-
-        let fee = self.build_fee(0u8, None);
 
         let BaseAccount {
             account_number,
@@ -142,19 +163,9 @@ impl Sender<All> {
 
         let tx_body = self.build_tx_body(msgs, memo, timeout_height);
 
-        let auth_info =
-            SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
-
-        let sign_doc = SignDoc::new(
-            &tx_body,
-            &auth_info,
-            &Id::try_from(self.daemon_state.id.clone())?,
-            account_number,
-        )?;
-
-        let tx_raw = sign_doc.sign(&self.private_key)?;
-
-        let sim_gas_used = DaemonQuerier::simulate_tx(self.channel(), tx_raw.to_bytes()?).await?;
+        let sim_gas_used = self
+            .calculate_gas(&tx_body, sequence, account_number)
+            .await?;
 
         log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
@@ -171,7 +182,7 @@ impl Sender<All> {
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.daemon_state.id.clone())?,
+            &Id::try_from(self.daemon_state.network_id.clone())?,
             account_number,
         )?;
 

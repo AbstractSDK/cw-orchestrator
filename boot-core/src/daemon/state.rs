@@ -1,5 +1,5 @@
 use super::error::DaemonError;
-use crate::{daemon::channel::DaemonChannel, error::BootError, state::StateInterface, utils::json};
+use crate::{daemon::channel::DaemonChannel, error::BootError, state::StateInterface};
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
@@ -45,7 +45,7 @@ pub struct DaemonState {
     /// What kind of network
     pub kind: NetworkKind,
     /// Identifier for the network ex. columbus-2
-    pub id: String,
+    pub network_id: String,
     /// Deployment identifier
     pub deployment_id: String,
     /// gRPC channel
@@ -93,9 +93,6 @@ impl DaemonState {
                 .unwrap();
 
             json_file_path = format!("{folder}/{name}_local.json");
-
-            // rewrite state file env var to the filename we are using
-            // env::set_var("STATE_FILE", json_file_path.to_owned());
         }
 
         // Try to get the standard fee token (probably shortest denom)
@@ -126,7 +123,7 @@ impl DaemonState {
                 pub_address_prefix: network.bech32_prefix,
                 coin_type: network.slip44,
             },
-            id: network.chain_id.to_string(),
+            network_id: network.chain_id.to_string(),
             gas_denom: Denom::from_str(&shortest_denom_token.denom).unwrap(),
             gas_price: shortest_denom_token.fixed_min_gas_price,
             lcd_url: None,
@@ -139,9 +136,9 @@ impl DaemonState {
         );
 
         // write json state file
-        json::write(
+        crate::daemon::utils::json::write(
             &state.json_file_path,
-            &state.id,
+            &state.network_id,
             &state.chain.chain_id,
             &state.deployment_id,
         );
@@ -152,9 +149,9 @@ impl DaemonState {
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
         self.deployment_id = deployment_id.into();
-        json::write(
+        crate::daemon::utils::json::write(
             &self.json_file_path,
-            &self.id,
+            &self.network_id,
             &self.chain.chain_id,
             &self.deployment_id,
         );
@@ -162,20 +159,20 @@ impl DaemonState {
 
     /// Get the state filepath and read it as json
     fn read_state(&self) -> serde_json::Value {
-        json::read(&self.json_file_path)
+        crate::daemon::utils::json::read(&self.json_file_path)
     }
 
     /// Retrieve a stateful value using the chainId and networkId
     fn get(&self, key: &str) -> Value {
         let json = self.read_state();
-        json[&self.chain.chain_id][&self.id.to_string()][key].clone()
+        json[&self.chain.chain_id][&self.network_id.to_string()][key].clone()
     }
 
     /// Set a stateful value using the chainId and networkId
     fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
         let mut json = self.read_state();
 
-        json[&self.chain.chain_id][&self.id.to_string()][key][contract_id] = json!(value);
+        json[&self.chain.chain_id][&self.network_id.to_string()][key][contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }

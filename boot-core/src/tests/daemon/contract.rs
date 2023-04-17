@@ -9,14 +9,14 @@ mod contract {
 
     use cw20_base::msg::*;
 
-    use crate::{contract, tests::common::common::start_contract};
+    use crate::{contract, tests::daemon::common};
 
     #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
     pub struct Cw20Base;
 
     #[test]
     fn general() {
-        let (sender, mut contract) = start_contract();
+        let (sender, mut contract) = common::contract::start();
 
         // upload contract
         let upload_res = contract.upload();

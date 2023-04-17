@@ -7,6 +7,7 @@ pub mod querier;
 mod sender;
 pub mod state;
 pub mod tx_resp;
+pub mod utils;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;

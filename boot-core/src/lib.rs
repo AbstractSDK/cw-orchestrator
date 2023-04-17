@@ -8,7 +8,6 @@ mod interface;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
-mod utils;
 // pub mod prelude;
 mod state;
 mod tx_handler;

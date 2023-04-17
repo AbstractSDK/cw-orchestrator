@@ -2,7 +2,7 @@ pub(crate) mod json {
     use serde_json::{from_reader, json, Value};
     use std::fs::{File, OpenOptions};
 
-    pub fn write(filename: &String, state_id: &String, chain_id: &String, deploy_id: &String) {
+    pub fn write(filename: &String, network_id: &String, chain_id: &String, deploy_id: &String) {
         // open file pointer set read/write permissions to true
         // create it if it does not exists
         // dont truncate it
@@ -28,8 +28,8 @@ pub(crate) mod json {
         }
 
         // add deployment_id to chain_id path
-        if json[chain_id].get(state_id).is_none() {
-            json[chain_id][state_id] = json!({
+        if json[chain_id].get(network_id).is_none() {
+            json[chain_id][network_id] = json!({
                 deploy_id: {},
                 "code_ids": {}
             });
