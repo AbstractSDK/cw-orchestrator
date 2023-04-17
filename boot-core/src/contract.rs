@@ -11,15 +11,18 @@ use std::fmt::Debug;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: CwEnv> {
+pub struct Contract<Chain: CwEnv, ExecT = Empty, QueryT = Empty>
+where
+    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    QueryT: CustomQuery + DeserializeOwned + 'static,
+{
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
-    pub(crate) source: ContractCodeReference,
+    pub(crate) source: ContractCodeReference<ExecT, QueryT>,
     /// chain object that handles tx execution and queries.
     pub(crate) chain: Chain,
 }
 
-#[derive(Default)]
 pub struct ContractCodeReference<ExecT = Empty, QueryT = Empty>
 where
     ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
@@ -29,7 +32,11 @@ where
     pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
 }
 
-impl Clone for ContractCodeReference {
+impl<E, Q> Clone for ContractCodeReference<E, Q>
+where
+    E: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    Q: CustomQuery + DeserializeOwned + 'static,
+{
     fn clone(&self) -> Self {
         Self {
             wasm_code_path: self.wasm_code_path.clone(),
@@ -38,8 +45,25 @@ impl Clone for ContractCodeReference {
     }
 }
 
+impl<E, Q> Default for ContractCodeReference<E, Q>
+where
+    E: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    Q: CustomQuery + DeserializeOwned + 'static,
+{
+    fn default() -> Self {
+        Self {
+            wasm_code_path: None,
+            contract_endpoints: None,
+        }
+    }
+}
+
 /// Expose chain and state function to call them on the contract
-impl<Chain: CwEnv + Clone> Contract<Chain> {
+impl<Chain: CwEnv + Clone, ExecT, QueryT> Contract<Chain, ExecT, QueryT>
+where
+    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    QueryT: CustomQuery + DeserializeOwned + 'static,
+{
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),
@@ -58,12 +82,12 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self
     }
 
-    pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
+    pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<ExecT, QueryT>>) -> Self {
         self.source.contract_endpoints = Some(mock_contract);
         self
     }
 
-    pub fn set_mock(&mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) {
+    pub fn set_mock(&mut self, mock_contract: Box<dyn TestContract<ExecT, QueryT>>) {
         self.source.contract_endpoints = Some(mock_contract);
     }
 

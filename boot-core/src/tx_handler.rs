@@ -42,9 +42,12 @@ pub trait TxHandler: ChainState + Clone {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
-    fn upload(
+    fn upload<
+        ExecT: Clone + Debug + PartialEq + schemars::JsonSchema + DeserializeOwned + 'static,
+        QueryT: cosmwasm_std::CustomQuery + DeserializeOwned + 'static,
+    >(
         &self,
         // Needs to be &mut to allow mock app to take ownership of contract box-reference.
-        contract_source: &mut ContractCodeReference<Empty>,
+        contract_source: &mut ContractCodeReference<ExecT, QueryT>,
     ) -> Result<Self::Response, Self::Error>;
 }
