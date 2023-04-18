@@ -33,7 +33,7 @@ pub fn parse_network(net_id: &str) -> NetworkInfo {
         LOCAL_OSMO,
     ];
     for net in networks {
-        if net.id == net_id {
+        if net.chain_id == net_id {
             return net;
         }
     }
