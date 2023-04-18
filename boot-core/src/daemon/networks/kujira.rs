@@ -1,4 +1,4 @@
-use crate::networks::{NetworkInfo, ChainInfo, ChainKind};
+use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "kujira",

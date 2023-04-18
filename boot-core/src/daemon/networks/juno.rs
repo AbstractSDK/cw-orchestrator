@@ -1,4 +1,4 @@
-use crate::daemon::state::{NetworkInfo, ChainInfo, ChainKind};
+use crate::daemon::state::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const JUNO_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "juno",

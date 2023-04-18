@@ -3,7 +3,7 @@ use super::{
     error::DaemonError,
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
-    state::{DaemonOptions, DaemonState, ChainKind},
+    state::{ChainKind, DaemonOptions, DaemonState},
     tx_resp::CosmTxResponse,
 };
 use crate::{

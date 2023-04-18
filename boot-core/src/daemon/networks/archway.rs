@@ -1,4 +1,4 @@
-use crate::networks::{NetworkInfo, ChainInfo, ChainKind};
+use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "archway",
