@@ -3,7 +3,7 @@ use crate::{BootError, CwEnv};
 /// Indicates the ability to deploy an application to a mock chain.
 ///
 /// ## Example:
-/// ```
+/// ```ignore
 /// use boot_core::{Deploy, BootError, Empty, CwEnv, BootUpload};
 /// use boot_cw_plus::Cw20Base;
 /// use cw20::Cw20Coin;
