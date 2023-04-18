@@ -1,7 +1,7 @@
 use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
 
 pub const JUNO_CHAIN: ChainInfo = ChainInfo {
-    chain_id: "juno",
+    network_id: "juno",
     pub_address_prefix: "juno",
     coin_type: 118u32,
 };
@@ -12,7 +12,7 @@ pub const JUNO_CHAIN: ChainInfo = ChainInfo {
 )]
 pub const UNI_5: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Testnet,
-    id: "uni-5",
+    chain_id: "uni-5",
     gas_denom: "ujunox",
     gas_price: 0.025,
     grpc_urls: &["https://juno-testnet-grpc.polkachu.com:12690"],
@@ -23,7 +23,7 @@ pub const UNI_5: NetworkInfo = NetworkInfo {
 
 pub const UNI_6: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Testnet,
-    id: "uni-6",
+    chain_id: "uni-6",
     gas_denom: "ujunox",
     gas_price: 0.025,
     grpc_urls: &["http://juno-testnet-grpc.polkachu.com:12690"],
@@ -34,7 +34,7 @@ pub const UNI_6: NetworkInfo = NetworkInfo {
 
 pub const JUNO_1: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Mainnet,
-    id: "juno-1",
+    chain_id: "juno-1",
     gas_denom: "ujuno",
     gas_price: 0.0025,
     grpc_urls: &["http://65.108.235.46:26090"],
@@ -45,7 +45,7 @@ pub const JUNO_1: NetworkInfo = NetworkInfo {
 
 pub const LOCAL_JUNO: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Local,
-    id: "testing",
+    chain_id: "testing",
     gas_denom: "ujunox",
     gas_price: 0.0,
     grpc_urls: &["http://localhost:9090"],

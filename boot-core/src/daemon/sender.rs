@@ -54,7 +54,7 @@ impl Sender<All> {
 
         log::info!(
             "Interacting with {} using address: {}",
-            daemon_state.network_id,
+            daemon_state.chain_id,
             sender.pub_addr_str()?
         );
 
@@ -139,7 +139,7 @@ impl Sender<All> {
         let sign_doc = SignDoc::new(
             tx_body,
             &auth_info,
-            &Id::try_from(self.daemon_state.network_id.clone())?,
+            &Id::try_from(self.daemon_state.chain_id.clone())?,
             account_number,
         )?;
 
@@ -182,7 +182,7 @@ impl Sender<All> {
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.daemon_state.network_id.clone())?,
+            &Id::try_from(self.daemon_state.chain_id.clone())?,
             account_number,
         )?;
 

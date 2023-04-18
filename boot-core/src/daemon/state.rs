@@ -45,7 +45,7 @@ pub struct DaemonState {
     /// What kind of network
     pub kind: NetworkKind,
     /// Identifier for the network ex. columbus-2
-    pub network_id: String,
+    pub chain_id: String,
     /// Deployment identifier
     pub deployment_id: String,
     /// gRPC channel
@@ -119,11 +119,11 @@ impl DaemonState {
                 .unwrap_or_else(|| DEFAULT_DEPLOYMENT.into()),
             grpc_channel,
             chain: ChainInfoOwned {
-                chain_id: network.chain_name.to_string(),
+                network_id: network.chain_name.to_string(),
                 pub_address_prefix: network.bech32_prefix,
                 coin_type: network.slip44,
             },
-            network_id: network.chain_id.to_string(),
+            chain_id: network.chain_id.to_string(),
             gas_denom: Denom::from_str(&shortest_denom_token.denom).unwrap(),
             gas_price: shortest_denom_token.fixed_min_gas_price,
             lcd_url: None,
@@ -138,8 +138,8 @@ impl DaemonState {
         // write json state file
         crate::daemon::utils::json::write(
             &state.json_file_path,
-            &state.network_id,
-            &state.chain.chain_id,
+            &state.chain_id,
+            &state.chain.network_id,
             &state.deployment_id,
         );
 
@@ -151,8 +151,8 @@ impl DaemonState {
         self.deployment_id = deployment_id.into();
         crate::daemon::utils::json::write(
             &self.json_file_path,
-            &self.network_id,
-            &self.chain.chain_id,
+            &self.chain_id,
+            &self.chain.network_id,
             &self.deployment_id,
         );
     }
@@ -165,14 +165,14 @@ impl DaemonState {
     /// Retrieve a stateful value using the chainId and networkId
     fn get(&self, key: &str) -> Value {
         let json = self.read_state();
-        json[&self.chain.chain_id][&self.network_id.to_string()][key].clone()
+        json[&self.chain.network_id][&self.chain_id.to_string()][key].clone()
     }
 
     /// Set a stateful value using the chainId and networkId
     fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
         let mut json = self.read_state();
 
-        json[&self.chain.chain_id][&self.network_id.to_string()][key][contract_id] = json!(value);
+        json[&self.chain.network_id][&self.chain_id.to_string()][key][contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
@@ -235,8 +235,8 @@ impl StateInterface for Rc<DaemonState> {
 impl Into<RegistryChainInfo> for NetworkInfo<'_> {
     fn into(self) -> RegistryChainInfo {
         RegistryChainInfo {
-            chain_name: self.chain_info.chain_id.to_string(),
-            chain_id: self.id.to_string().into(),
+            chain_name: self.chain_info.network_id.to_string(),
+            chain_id: self.chain_id.to_string().into(),
             bech32_prefix: self.chain_info.pub_address_prefix.into(),
             fees: FeeTokens {
                 fee_tokens: vec![FeeToken {
@@ -266,7 +266,7 @@ impl Into<RegistryChainInfo> for NetworkInfo<'_> {
 #[derive(Clone, Debug)]
 pub struct NetworkInfo<'a> {
     /// Identifier for the network ex. columbus-2
-    pub id: &'a str,
+    pub chain_id: &'a str,
     /// Max gas and denom info
     // #[serde(with = "cosm_denom_format")]
     pub gas_denom: &'a str,
@@ -282,7 +282,7 @@ pub struct NetworkInfo<'a> {
 
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct ChainInfo<'a> {
-    pub chain_id: &'a str,
+    pub network_id: &'a str,
     /// address prefix
     pub pub_address_prefix: &'a str,
     /// coin type for key derivation
@@ -291,7 +291,7 @@ pub struct ChainInfo<'a> {
 
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct ChainInfoOwned {
-    pub chain_id: String,
+    pub network_id: String,
     /// address prefix
     pub pub_address_prefix: String,
     /// coin type for key derivation
@@ -301,7 +301,7 @@ pub struct ChainInfoOwned {
 impl From<ChainInfo<'_>> for ChainInfoOwned {
     fn from(info: ChainInfo<'_>) -> Self {
         Self {
-            chain_id: info.chain_id.to_owned(),
+            network_id: info.network_id.to_owned(),
             pub_address_prefix: info.pub_address_prefix.to_owned(),
             coin_type: info.coin_type,
         }
@@ -329,16 +329,16 @@ impl NetworkKind {
     pub fn mnemonic_name(&self) -> &str {
         match *self {
             NetworkKind::Local => "LOCAL_MNEMONIC",
-            NetworkKind::Mainnet => "MAIN_MNEMONIC",
             NetworkKind::Testnet => "TEST_MNEMONIC",
+            NetworkKind::Mainnet => "MAIN_MNEMONIC",
         }
     }
 
     pub fn multisig_name(&self) -> &str {
         match *self {
             NetworkKind::Local => "LOCAL_MULTISIG",
-            NetworkKind::Mainnet => "MAIN_MULTISIG",
             NetworkKind::Testnet => "TEST_MULTISIG",
+            NetworkKind::Mainnet => "MAIN_MULTISIG",
         }
     }
 }
@@ -347,8 +347,8 @@ impl ToString for NetworkKind {
     fn to_string(&self) -> String {
         match *self {
             NetworkKind::Local => "local",
-            NetworkKind::Mainnet => "mainnet",
             NetworkKind::Testnet => "testnet",
+            NetworkKind::Mainnet => "mainnet",
         }
         .into()
     }
@@ -358,8 +358,8 @@ impl From<String> for NetworkKind {
     fn from(str: String) -> Self {
         match str.as_str() {
             "local" => NetworkKind::Local,
-            "mainnet" => NetworkKind::Mainnet,
             "testnet" => NetworkKind::Testnet,
+            "mainnet" => NetworkKind::Mainnet,
             _ => NetworkKind::Local,
         }
     }
