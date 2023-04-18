@@ -1,23 +1,24 @@
-
-
-
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::service::ContainerSummary;
 use bollard::Docker;
-use futures_util::{StreamExt};
+use futures_util::StreamExt;
 use tokio::runtime::Runtime;
 
 use crate::{ContractInstance, Daemon};
 
 pub const HERMES_ID: &str = "hermes";
 
-pub struct Hermes{ pub container: ContainerSummary,
-pub channels: String,
+pub struct Hermes {
+    pub container: ContainerSummary,
+    pub channels: String,
 }
 
 impl Hermes {
     pub fn new(container: ContainerSummary) -> Self {
-        Self{container, channels: String::new()}
+        Self {
+            container,
+            channels: String::new(),
+        }
     }
 
     /// Execute a command in the hermes container
@@ -46,14 +47,13 @@ impl Hermes {
     else {
         panic!("expected attached exec, got detached");
     };
-        while let Some(a) = output.next().await {
-            if let Ok(a) = a {
-                println!("{}", &a);
-            } else {
-                panic!("expected attached exec, got detached");
-            };
-        }
-
+            while let Some(a) = output.next().await {
+                if let Ok(a) = a {
+                    println!("{}", &a);
+                } else {
+                    panic!("expected attached exec, got detached");
+                };
+            }
         })
     }
 
@@ -62,6 +62,7 @@ impl Hermes {
     pub fn create_channel(
         &self,
         runtime: &Runtime,
+        connection: &str,
         channel_version: &str,
         contract_a: &dyn ContractInstance<Daemon>,
         contract_b: &dyn ContractInstance<Daemon>,
@@ -75,42 +76,37 @@ impl Hermes {
             "channel",
             "--channel-version",
             channel_version,
+            "--a-connection",
+            connection,
             "--a-chain",
             &contract_a.get_chain().state.id,
-            "--b-chain",
-            &contract_b.get_chain().state.id,
+            // "--b-chain",
+            // &contract_b.get_chain().state.id,
             "--a-port",
             &port_a,
             "--b-port",
             &port_b,
-            "--new-client-connection",
             "--yes",
         ]
         .to_vec();
 
-       self.exec_command(runtime, command)
+        self.exec_command(runtime, command)
     }
 
-    // pub fn flush() {
-    //     let command = [
-    //         "hermes",
-    //         "create",
-    //         "channel",
-    //         "--channel-version",
-    //         channel_version,
-    //         "--a-chain",
-    //         &contract_a.get_chain().state.id,
-    //         "--b-chain",
-    //         &contract_b.get_chain().state.id,
-    //         "--a-port",
-    //         &port_a,
-    //         "--b-port",
-    //         &port_b,
-    //         "--new-client-connection",
-    //         "--yes",
-    //     ]
-    //     .to_vec(); 
-    // }
+    /// Create an IBC channel between two contracts with an existing client.
+    pub fn start(
+        &self,
+        runtime: &Runtime,
+    ) {
+        let command = [
+            "hermes",
+            "start",
+            "--full-scan",
+        ]
+        .to_vec();
+
+        self.exec_command(runtime, command)
+    }
 }
 
 /// format the port for a contract

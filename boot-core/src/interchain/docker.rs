@@ -120,7 +120,16 @@ impl DockerHelper {
     pub fn get_hermes(&self) -> IcResult<Hermes> {
         self.containers
             .iter()
-            .find(|container| {eprintln!("{:?}", container.names); container.names.as_ref().unwrap().first().unwrap().contains(HERMES_ID)})
+            .find(|container| {
+                eprintln!("{:?}", container.names);
+                container
+                    .names
+                    .as_ref()
+                    .unwrap()
+                    .first()
+                    .unwrap()
+                    .contains(HERMES_ID)
+            })
             .ok_or(InterchainError::HermesContainerNotFound)
             .map(|cs| Hermes::new(cs.clone()))
     }
