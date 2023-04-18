@@ -3,7 +3,7 @@ use super::{
     error::DaemonError,
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
-    state::{DaemonOptions, DaemonState, NetworkKind},
+    state::{ChainKind, DaemonOptions, DaemonState},
     tx_resp::CosmTxResponse,
 };
 use crate::{
@@ -61,9 +61,9 @@ impl Daemon {
 
     async fn wait(&self) {
         match self.state.kind {
-            NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-            NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-            NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
+            ChainKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
+            ChainKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
+            ChainKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
         }
     }
 
@@ -93,6 +93,7 @@ impl TxHandler for Daemon {
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
+
     fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
@@ -192,7 +193,7 @@ impl TxHandler for Daemon {
             .runtime
             .block_on(sender.commit_tx(vec![store_msg], None))?;
 
-        log::info!("uploaded: {:?}", result.txhash);
+        log::info!("Uploaded: {:?}", result.txhash);
 
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());

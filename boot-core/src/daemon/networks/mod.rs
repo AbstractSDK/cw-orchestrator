@@ -6,7 +6,7 @@ pub mod neutron;
 pub mod osmosis;
 pub mod terra;
 
-pub use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
+pub use crate::daemon::state::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::CONSTANTINE_1;
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
@@ -16,7 +16,7 @@ pub use osmosis::{LOCAL_OSMO, OSMO_4};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 
 /// Returns a [`NetworkInfo`] given its id
-pub fn parse_network(net_id: &str) -> NetworkInfo {
+pub fn parse_network(net_id: &str) -> ChainInfo {
     let networks = vec![
         UNI_6,
         JUNO_1,
@@ -33,7 +33,7 @@ pub fn parse_network(net_id: &str) -> NetworkInfo {
         LOCAL_OSMO,
     ];
     for net in networks {
-        if net.id == net_id {
+        if net.chain_id == net_id {
             return net;
         }
     }
