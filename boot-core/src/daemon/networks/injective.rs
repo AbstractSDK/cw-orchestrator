@@ -1,12 +1,12 @@
-use crate::networks::{ChainInfo, NetworkInfo, NetworkKind};
+use crate::networks::{NetworkInfo, ChainInfo, NetworkKind};
 
-pub const INJECTIVE_CHAIN: ChainInfo = ChainInfo {
+pub const INJECTIVE_CHAIN: NetworkInfo = NetworkInfo {
     network_id: "injective",
     pub_address_prefix: "inj",
     coin_type: 60u32,
 };
 
-pub const INJECTIVE_1: NetworkInfo = NetworkInfo {
+pub const INJECTIVE_1: ChainInfo = ChainInfo {
     kind: NetworkKind::Mainnet,
     chain_id: "injective-1",
     gas_denom: "inj",
@@ -19,7 +19,7 @@ pub const INJECTIVE_1: NetworkInfo = NetworkInfo {
 
 /// https://docs.injective.network/develop/public-endpoints
 /// https://testnet.status.injective.network/
-pub const INJECTIVE_888: NetworkInfo = NetworkInfo {
+pub const INJECTIVE_888: ChainInfo = ChainInfo {
     kind: NetworkKind::Testnet,
     chain_id: "injective-888",
     gas_denom: "inj",

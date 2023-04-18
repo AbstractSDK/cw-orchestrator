@@ -1,12 +1,12 @@
-use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
+use crate::daemon::state::{NetworkInfo, ChainInfo, NetworkKind};
 
-pub const OSMO_CHAIN: ChainInfo = ChainInfo {
+pub const OSMO_CHAIN: NetworkInfo = NetworkInfo {
     network_id: "osmosis",
     pub_address_prefix: "osmo",
     coin_type: 118u32,
 };
 
-pub const OSMO_4: NetworkInfo = NetworkInfo {
+pub const OSMO_4: ChainInfo = ChainInfo {
     kind: NetworkKind::Testnet,
     chain_id: "osmo-test-4",
     gas_denom: "uosmo",
@@ -28,7 +28,7 @@ pub const OSMO_4: NetworkInfo = NetworkInfo {
 //     fcd_url: None,
 // };
 
-pub const LOCAL_OSMO: NetworkInfo = NetworkInfo {
+pub const LOCAL_OSMO: ChainInfo = ChainInfo {
     kind: NetworkKind::Local,
     chain_id: "localosmosis",
     gas_denom: "uosmo",

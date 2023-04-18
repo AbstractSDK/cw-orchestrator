@@ -232,7 +232,7 @@ impl StateInterface for Rc<DaemonState> {
 }
 
 #[allow(clippy::from_over_into)]
-impl Into<RegistryChainInfo> for NetworkInfo<'_> {
+impl Into<RegistryChainInfo> for ChainInfo<'_> {
     fn into(self) -> RegistryChainInfo {
         RegistryChainInfo {
             chain_name: self.chain_info.network_id.to_string(),
@@ -264,7 +264,7 @@ impl Into<RegistryChainInfo> for NetworkInfo<'_> {
 }
 
 #[derive(Clone, Debug)]
-pub struct NetworkInfo<'a> {
+pub struct ChainInfo<'a> {
     /// Identifier for the network ex. columbus-2
     pub chain_id: &'a str,
     /// Max gas and denom info
@@ -276,12 +276,12 @@ pub struct NetworkInfo<'a> {
     /// Optional urls for custom functionality
     pub lcd_url: Option<&'a str>,
     pub fcd_url: Option<&'a str>,
-    pub chain_info: ChainInfo<'a>,
+    pub chain_info: NetworkInfo<'a>,
     pub kind: NetworkKind,
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
-pub struct ChainInfo<'a> {
+pub struct NetworkInfo<'a> {
     pub network_id: &'a str,
     /// address prefix
     pub pub_address_prefix: &'a str,
@@ -298,8 +298,8 @@ pub struct ChainInfoOwned {
     pub coin_type: u32,
 }
 
-impl From<ChainInfo<'_>> for ChainInfoOwned {
-    fn from(info: ChainInfo<'_>) -> Self {
+impl From<NetworkInfo<'_>> for ChainInfoOwned {
+    fn from(info: NetworkInfo<'_>) -> Self {
         Self {
             network_id: info.network_id.to_owned(),
             pub_address_prefix: info.pub_address_prefix.to_owned(),

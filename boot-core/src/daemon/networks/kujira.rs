@@ -1,12 +1,12 @@
-use crate::networks::{ChainInfo, NetworkInfo, NetworkKind};
+use crate::networks::{NetworkInfo, ChainInfo, NetworkKind};
 
-pub const KUJIRA_CHAIN: ChainInfo = ChainInfo {
+pub const KUJIRA_CHAIN: NetworkInfo = NetworkInfo {
     network_id: "kujira",
     pub_address_prefix: "kujira",
     coin_type: 118u32,
 };
 
-pub const HARPOON_4: NetworkInfo = NetworkInfo {
+pub const HARPOON_4: ChainInfo = ChainInfo {
     kind: NetworkKind::Testnet,
     chain_id: "harpoon-4",
     gas_denom: "ukuji",
