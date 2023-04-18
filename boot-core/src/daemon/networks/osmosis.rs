@@ -21,7 +21,7 @@ pub const OSMO_2: NetworkInfo = NetworkInfo {
     kind: NetworkKind::Mainnet,
     id: "osmosis-2",
     gas_denom: "uosmo",
-    gas_price: 0.0026,
+    gas_price: 0.003,
     grpc_urls: &[],
     chain_info: OSMO_CHAIN,
     lcd_url: None,
