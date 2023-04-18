@@ -136,7 +136,7 @@ impl DaemonState {
         );
 
         // write json state file
-        crate::daemon::utils::json::write(
+        crate::daemon::json_file::write(
             &state.json_file_path,
             &state.chain_id,
             &state.chain.network_id,
@@ -149,7 +149,7 @@ impl DaemonState {
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
         self.deployment_id = deployment_id.into();
-        crate::daemon::utils::json::write(
+        crate::daemon::json_file::write(
             &self.json_file_path,
             &self.chain_id,
             &self.chain.network_id,
@@ -159,7 +159,7 @@ impl DaemonState {
 
     /// Get the state filepath and read it as json
     fn read_state(&self) -> serde_json::Value {
-        crate::daemon::utils::json::read(&self.json_file_path)
+        crate::daemon::json_file::read(&self.json_file_path)
     }
 
     /// Retrieve a stateful value using the chainId and networkId

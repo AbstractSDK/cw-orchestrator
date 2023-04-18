@@ -2,7 +2,7 @@ use super::cosmos_modules;
 use super::error::DaemonError;
 use cosmrs::tendermint::{Block, Time};
 use tonic::transport::Channel;
-pub(crate) struct DaemonQuerier;
+pub struct DaemonQuerier;
 
 impl DaemonQuerier {
     pub async fn latest_block(channel: Channel) -> Result<Block, DaemonError> {
@@ -70,3 +70,6 @@ impl DaemonQuerier {
         Ok(contract_info)
     }
 }
+
+#[cfg(test)]
+mod tests {}
