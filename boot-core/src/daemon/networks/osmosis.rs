@@ -1,4 +1,4 @@
-use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
+use crate::daemon::state::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "osmosis",
@@ -18,7 +18,7 @@ pub const OSMO_4: ChainInfo = ChainInfo {
 };
 
 // pub const JUNO_1: NetworkInfo = NetworkInfo {
-//     kind: NetworkKind::Mainnet,
+//     kind: ChainKind::Mainnet,
 //     id: "juno-1",
 //     gas_denom: "ujuno",
 //     gas_price: 0.0026,
