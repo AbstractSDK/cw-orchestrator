@@ -5,6 +5,9 @@ pub mod common {
     use ctor::{ctor, dtor};
     use duct::cmd;
 
+    // Config
+    const JUNO_IMAGE: &str = "ghcr.io/cosmoscontracts/juno:v12.0.0";
+
     // Defaults for env vars
     const CONTAINER_NAME: &str = "juno_node_1";
     // NOTE: this get renamed to boot_test_local.json because we are using juno local
@@ -17,10 +20,10 @@ pub mod common {
 
         pub fn exists(file: &str) -> bool {
             if Path::new(file).exists() {
-                log::info!("File found");
+                log::info!("File found: {}", file);
                 true
             } else {
-                log::info!("File not found");
+                log::info!("File not found: {}", file);
                 false
             }
         }
@@ -53,7 +56,7 @@ pub mod common {
             }
         }
 
-        pub fn start(name: &String) -> bool {
+        pub fn start(name: &String, image: &String) -> bool {
             if self::find(name) {
                 return false;
             }
@@ -75,7 +78,7 @@ pub mod common {
                 "STAKE_TOKEN=ujunox",
                 "-e",
                 "UNSAFE_CORS=true",
-                "ghcr.io/cosmoscontracts/juno:v14.0.0",
+                image,
                 "./setup_and_run.sh",
                 "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"
             )
@@ -131,6 +134,11 @@ pub mod common {
         }
         let container = env::var("CONTAINER_NAME").unwrap();
 
+        if env::var("JUNO_IMAGE").is_err() {
+            env::set_var("JUNO_IMAGE", JUNO_IMAGE);
+        }
+        let image = env::var("JUNO_IMAGE").unwrap();
+
         if env::var("STATE_FILE").is_err() {
             env::set_var("STATE_FILE", STATE_FILE);
         }
@@ -147,7 +155,7 @@ pub mod common {
             env::var("LOCAL_MNEMONIC").unwrap()
         );
 
-        container::start(&container);
+        container::start(&container, &image);
 
         // Wait for docker to start
         sleep(Duration::from_secs(6));
