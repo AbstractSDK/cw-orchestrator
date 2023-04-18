@@ -1,6 +1,6 @@
-use crate::daemon::state::{ChainInfo, NetworkInfo, NetworkKind};
+use crate::daemon::state::{NetworkInfo, ChainInfo, NetworkKind};
 
-pub const JUNO_CHAIN: ChainInfo = ChainInfo {
+pub const JUNO_CHAIN: NetworkInfo = NetworkInfo {
     network_id: "juno",
     pub_address_prefix: "juno",
     coin_type: 118u32,
@@ -10,7 +10,7 @@ pub const JUNO_CHAIN: ChainInfo = ChainInfo {
     since = "0.6.1",
     note = "Uni-5 does not exist anymore. Use Uni-6 instead."
 )]
-pub const UNI_5: NetworkInfo = NetworkInfo {
+pub const UNI_5: ChainInfo = ChainInfo {
     kind: NetworkKind::Testnet,
     chain_id: "uni-5",
     gas_denom: "ujunox",
@@ -21,7 +21,7 @@ pub const UNI_5: NetworkInfo = NetworkInfo {
     fcd_url: None,
 };
 
-pub const UNI_6: NetworkInfo = NetworkInfo {
+pub const UNI_6: ChainInfo = ChainInfo {
     kind: NetworkKind::Testnet,
     chain_id: "uni-6",
     gas_denom: "ujunox",
@@ -32,7 +32,7 @@ pub const UNI_6: NetworkInfo = NetworkInfo {
     fcd_url: None,
 };
 
-pub const JUNO_1: NetworkInfo = NetworkInfo {
+pub const JUNO_1: ChainInfo = ChainInfo {
     kind: NetworkKind::Mainnet,
     chain_id: "juno-1",
     gas_denom: "ujuno",
@@ -43,7 +43,7 @@ pub const JUNO_1: NetworkInfo = NetworkInfo {
     fcd_url: None,
 };
 
-pub const LOCAL_JUNO: NetworkInfo = NetworkInfo {
+pub const LOCAL_JUNO: ChainInfo = ChainInfo {
     kind: NetworkKind::Local,
     chain_id: "testing",
     gas_denom: "ujunox",

@@ -1,13 +1,13 @@
-use crate::networks::{ChainInfo, NetworkInfo, NetworkKind};
+use crate::networks::{NetworkInfo, ChainInfo, NetworkKind};
 
-pub const ARCHWAY_CHAIN: ChainInfo = ChainInfo {
+pub const ARCHWAY_CHAIN: NetworkInfo = NetworkInfo {
     network_id: "archway",
     pub_address_prefix: "archway",
     coin_type: 118u32,
 };
 
 /// https://docs.archway.io/docs/overview/network
-pub const CONSTANTINE_1: NetworkInfo = NetworkInfo {
+pub const CONSTANTINE_1: ChainInfo = ChainInfo {
     kind: NetworkKind::Testnet,
     chain_id: "constantine-1",
     gas_denom: "uconst",
