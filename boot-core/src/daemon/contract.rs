@@ -22,8 +22,7 @@ impl Contract<Daemon> {
         };
 
         match self.latest_is_uploaded() {
-            Ok(hash_is_equal) => {
-                println!("hash_is_equal: {:#?}", hash_is_equal);
+            Ok(_) => {
                 log::info!("{} is already uploaded", self.id);
                 Ok(None)
             }

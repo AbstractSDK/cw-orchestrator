@@ -48,5 +48,9 @@ mod contract {
         asserting!("migrate is successful")
             .that(&migrate_res)
             .is_ok();
+
+        asserting!("that upload_if_needed returns None")
+            .that(&contract.upload_if_needed().unwrap())
+            .is_none();
     }
 }
