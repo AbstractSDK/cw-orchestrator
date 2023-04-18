@@ -1,18 +1,18 @@
-use crate::networks::{NetworkInfo, ChainInfo, NetworkKind};
+use crate::networks::{NetworkInfo, ChainInfo, ChainKind};
 
-pub const INJECTIVE_CHAIN: NetworkInfo = NetworkInfo {
+pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "injective",
     pub_address_prefix: "inj",
     coin_type: 60u32,
 };
 
 pub const INJECTIVE_1: ChainInfo = ChainInfo {
-    kind: NetworkKind::Mainnet,
+    kind: ChainKind::Mainnet,
     chain_id: "injective-1",
     gas_denom: "inj",
     gas_price: 0.025,
     grpc_urls: &["https://k8s.global.mainnet.chain.grpc.injective.network:443"],
-    chain_info: INJECTIVE_CHAIN,
+    chain_info: INJECTIVE_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
@@ -20,12 +20,12 @@ pub const INJECTIVE_1: ChainInfo = ChainInfo {
 /// https://docs.injective.network/develop/public-endpoints
 /// https://testnet.status.injective.network/
 pub const INJECTIVE_888: ChainInfo = ChainInfo {
-    kind: NetworkKind::Testnet,
+    kind: ChainKind::Testnet,
     chain_id: "injective-888",
     gas_denom: "inj",
     gas_price: 0.025,
     grpc_urls: &["https://testnet.grpc.injective.network:443"],
-    chain_info: INJECTIVE_CHAIN,
+    chain_info: INJECTIVE_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };

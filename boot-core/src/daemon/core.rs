@@ -3,7 +3,7 @@ use super::{
     error::DaemonError,
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
-    state::{DaemonOptions, DaemonState, NetworkKind},
+    state::{DaemonOptions, DaemonState, ChainKind},
     tx_resp::CosmTxResponse,
 };
 use crate::{
@@ -61,9 +61,9 @@ impl Daemon {
 
     async fn wait(&self) {
         match self.state.kind {
-            NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-            NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-            NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
+            ChainKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
+            ChainKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
+            ChainKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
         }
     }
 
