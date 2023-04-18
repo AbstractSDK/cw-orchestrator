@@ -1,4 +1,7 @@
-use boot_core::*;
+use boot_core::{
+    networks::{osmosis::OSMO_2, JUNO_1},
+    *,
+};
 use boot_cw_plus::{Cw20, CW20_BASE};
 use cosmwasm_std::{Addr, Empty};
 use simple_ica_controller::msg::{self as controller_msgs, AccountResponse};
@@ -6,7 +9,10 @@ use simple_ica_host::msg::{self as host_msgs, ListAccountsResponse};
 use std::sync::Arc;
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
-
+const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort grow essence fish husband seven hollow envelope wedding host dry permit game april present panic move";
+const OSMOSIS_MNEMONIC: &str = "settle gas lobster judge silk stem act shoulder pluck waste pistol word comfort require early mouse provide marine butter crowd clock tube move wool";
+const JUNO: &str = "juno-1";
+const OSMOSIS: &str = "osmosis-2";
 #[boot_contract(
     controller_msgs::InstantiateMsg,
     controller_msgs::ExecuteMsg,
@@ -51,48 +57,55 @@ impl<Chain: BootEnvironment> Cw1<Chain> {
 
 // Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {
-    let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
+    let rt: Arc<tokio::runtime::Runtime> = Arc::new(tokio::runtime::Runtime::new().unwrap());
 
-    let interchain = InterchainInfrastructure::new(&rt)?;
-    
-    let mut cw1 = Cw1::new("cw1", interchain.chain_a.clone());
-    let mut host = Host::new("host", interchain.chain_a.clone());
-    let mut controller = Controller::new("controller", interchain.chain_b);
-    
-    // cw1.upload()?;
-    // host.upload()?;
-    // controller.upload()?;
-    
-    // host.instantiate(
-    //     &host_msgs::InstantiateMsg {
-    //         cw1_code_id: cw1.code_id()?,
-    //     },
-    //     None,
-    //     None,
-    // )?;
-    
-    // controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
-    
-    // let res: controller_msgs::ListAccountsResponse =
-    // controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-    // println!("Before channel creation: {:?}", res);
-    // interchain.hermes.create_channel(&rt, "simple-ica-v2", &host, &controller);
-    // let res: controller_msgs::ListAccountsResponse =
-    // controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-    // println!("After channel creation: {:?}", res);
+    let interchain = InterchainInfrastructure::new(
+        &rt,
+        vec![(JUNO_1, JUNO_MNEMONIC), (OSMO_2, OSMOSIS_MNEMONIC)],
+    )?;
 
-    let remote_accounts: ListAccountsResponse = host.query(&host_msgs::QueryMsg::ListAccounts {  })?;
+    let juno = interchain.daemon(JUNO);
+    let osmosis = interchain.daemon(OSMOSIS);
+
+    let mut cw1 = Cw1::new("cw1", juno.clone());
+    let mut host = Host::new("host", juno.clone());
+    let mut controller = Controller::new("controller", osmosis);
+
+    // ### SETUP ###
+    deploy_contracts(&mut cw1, &mut host, &mut controller)?;
+    interchain.hermes.create_channel(&rt, "connection-0","simple-ica-v2", &host, &controller);
+    interchain.hermes.start(&rt);
+
+    // Get account information
+    let res: controller_msgs::ListAccountsResponse =
+        controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
+    println!("After channel creation: {:?}", res);
+    let remote_accounts: ListAccountsResponse =
+        host.query(&host_msgs::QueryMsg::ListAccounts {})?;
     println!("Remote accounts: {:?}", remote_accounts);
     let remote_account = remote_accounts.accounts[0].clone();
     // send some funds to the remote account
-    // let res = interchain.chain_a.runtime.block_on(interchain.chain_a.sender.bank_send(&remote_account.account, vec![cosmwasm_std::coin(100u128,"ujuno")]))?;
-    // println!("Send funds result: {:?}", res);
+    let res = rt
+        .block_on(juno.sender.bank_send(
+            &remote_account.account,
+            vec![cosmwasm_std::coin(100u128, "ujuno")],
+        ))?;
+    println!("Send funds result: {:?}", res);
     let channel = remote_account.channel_id;
 
-    // controller.execute(&controller_msgs::ExecuteMsg::CheckRemoteBalance { channel_id: channel.clone() }, None)?;
+    controller.execute(
+        &controller_msgs::ExecuteMsg::SendFunds {
+            ica_channel_id: channel.clone(),
+            transfer_channel_id: "channel-0".to_string(),
+        },
+        Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
+    )?;
     // wait a bit
-    // std::thread::sleep(std::time::Duration::from_secs(40));
-    let balance_result: AccountResponse = controller.query(&controller_msgs::QueryMsg::Account { channel_id: channel })?;
+    std::thread::sleep(std::time::Duration::from_secs(60));
+    let balance_result: AccountResponse =
+        controller.query(&controller_msgs::QueryMsg::Account {
+            channel_id: channel,
+        })?;
     println!("Balance result: {:?}", balance_result);
     Ok(())
 }
@@ -111,3 +124,41 @@ fn main() {
         ::std::process::exit(1);
     }
 }
+
+
+fn deploy_contracts(cw1: &mut Cw1<Daemon>, host: &mut Host<Daemon>, controller: &mut Controller<Daemon>) -> anyhow::Result<()> {
+    cw1.upload()?;
+    host.upload()?;
+    controller.upload()?;
+    host.instantiate(
+        &host_msgs::InstantiateMsg {
+            cw1_code_id: cw1.code_id()?,
+        },
+        None,
+        None,
+    )?;
+    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
+    Ok(())
+}
+
+/*
+
+hermes query channels  --chain juno-1
+hermes query channels  --chain osmosis-2
+
+hermes query packet pending --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
+hermes query packet pending --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
+
+hermes query packet commitments --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
+hermes query packet commitments --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
+
+hermes query packet pending-sends --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
+hermes query packet pending-sends --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
+
+hermes clear packets --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
+hermes clear packets --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
+
+hermes clear packets --chain osmosis-2 --port transfer --channel channel-0
+
+
+ */
