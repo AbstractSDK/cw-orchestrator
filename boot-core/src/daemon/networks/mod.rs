@@ -6,7 +6,7 @@ pub mod neutron;
 pub mod osmosis;
 pub mod terra;
 
-pub use crate::daemon::state::{NetworkInfo, ChainInfo, NetworkKind};
+pub use crate::daemon::state::{NetworkInfo, ChainInfo, ChainKind};
 pub use archway::CONSTANTINE_1;
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};

@@ -1,18 +1,18 @@
-use crate::networks::{NetworkInfo, ChainInfo, NetworkKind};
+use crate::networks::{NetworkInfo, ChainInfo, ChainKind};
 
-pub const KUJIRA_CHAIN: NetworkInfo = NetworkInfo {
+pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "kujira",
     pub_address_prefix: "kujira",
     coin_type: 118u32,
 };
 
 pub const HARPOON_4: ChainInfo = ChainInfo {
-    kind: NetworkKind::Testnet,
+    kind: ChainKind::Testnet,
     chain_id: "harpoon-4",
     gas_denom: "ukuji",
     gas_price: 0.025,
     grpc_urls: &["http://kujira-testnet-grpc.polkachu.com:11890"],
-    chain_info: KUJIRA_CHAIN,
+    chain_info: KUJIRA_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };

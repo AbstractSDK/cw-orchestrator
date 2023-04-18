@@ -43,7 +43,7 @@ pub struct DaemonState {
     /// this is passed via env var STATE_FILE
     pub json_file_path: String,
     /// What kind of network
-    pub kind: NetworkKind,
+    pub kind: ChainKind,
     /// Identifier for the network ex. columbus-2
     pub chain_id: String,
     /// Deployment identifier
@@ -80,7 +80,7 @@ impl DaemonState {
         let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
 
         // if the network we are connecting is a local kind, add it to the fn
-        if network.network_type == NetworkKind::Local.to_string() {
+        if network.network_type == ChainKind::Local.to_string() {
             let name = Path::new(&json_file_path)
                 .file_stem()
                 .unwrap()
@@ -112,7 +112,7 @@ impl DaemonState {
         // build daemon state
         let state = DaemonState {
             json_file_path,
-            kind: NetworkKind::from(network.network_type),
+            kind: ChainKind::from(network.network_type),
             deployment_id: options
                 .deployment_id
                 .map(Into::into)
@@ -277,7 +277,7 @@ pub struct ChainInfo<'a> {
     pub lcd_url: Option<&'a str>,
     pub fcd_url: Option<&'a str>,
     pub chain_info: NetworkInfo<'a>,
-    pub kind: NetworkKind,
+    pub kind: ChainKind,
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
@@ -309,58 +309,58 @@ impl From<NetworkInfo<'_>> for ChainInfoOwned {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum NetworkKind {
+pub enum ChainKind {
     Local,
     Mainnet,
     Testnet,
 }
 
-impl NetworkKind {
+impl ChainKind {
     pub fn new() -> Result<Self, BootError> {
         let network_id = env::var("NETWORK").expect("NETWORK is not set");
         let network = match network_id.as_str() {
-            "testnet" => NetworkKind::Testnet,
-            "mainnet" => NetworkKind::Mainnet,
-            _ => NetworkKind::Local,
+            "testnet" => ChainKind::Testnet,
+            "mainnet" => ChainKind::Mainnet,
+            _ => ChainKind::Local,
         };
         Ok(network)
     }
 
     pub fn mnemonic_name(&self) -> &str {
         match *self {
-            NetworkKind::Local => "LOCAL_MNEMONIC",
-            NetworkKind::Testnet => "TEST_MNEMONIC",
-            NetworkKind::Mainnet => "MAIN_MNEMONIC",
+            ChainKind::Local => "LOCAL_MNEMONIC",
+            ChainKind::Testnet => "TEST_MNEMONIC",
+            ChainKind::Mainnet => "MAIN_MNEMONIC",
         }
     }
 
     pub fn multisig_name(&self) -> &str {
         match *self {
-            NetworkKind::Local => "LOCAL_MULTISIG",
-            NetworkKind::Testnet => "TEST_MULTISIG",
-            NetworkKind::Mainnet => "MAIN_MULTISIG",
+            ChainKind::Local => "LOCAL_MULTISIG",
+            ChainKind::Testnet => "TEST_MULTISIG",
+            ChainKind::Mainnet => "MAIN_MULTISIG",
         }
     }
 }
 
-impl ToString for NetworkKind {
+impl ToString for ChainKind {
     fn to_string(&self) -> String {
         match *self {
-            NetworkKind::Local => "local",
-            NetworkKind::Testnet => "testnet",
-            NetworkKind::Mainnet => "mainnet",
+            ChainKind::Local => "local",
+            ChainKind::Testnet => "testnet",
+            ChainKind::Mainnet => "mainnet",
         }
         .into()
     }
 }
 
-impl From<String> for NetworkKind {
+impl From<String> for ChainKind {
     fn from(str: String) -> Self {
         match str.as_str() {
-            "local" => NetworkKind::Local,
-            "testnet" => NetworkKind::Testnet,
-            "mainnet" => NetworkKind::Mainnet,
-            _ => NetworkKind::Local,
+            "local" => ChainKind::Local,
+            "testnet" => ChainKind::Testnet,
+            "mainnet" => ChainKind::Mainnet,
+            _ => ChainKind::Local,
         }
     }
 }

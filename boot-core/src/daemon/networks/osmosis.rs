@@ -1,18 +1,18 @@
-use crate::daemon::state::{NetworkInfo, ChainInfo, NetworkKind};
+use crate::daemon::state::{NetworkInfo, ChainInfo, ChainKind};
 
-pub const OSMO_CHAIN: NetworkInfo = NetworkInfo {
+pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "osmosis",
     pub_address_prefix: "osmo",
     coin_type: 118u32,
 };
 
 pub const OSMO_4: ChainInfo = ChainInfo {
-    kind: NetworkKind::Testnet,
+    kind: ChainKind::Testnet,
     chain_id: "osmo-test-4",
     gas_denom: "uosmo",
     gas_price: 0.025,
     grpc_urls: &["http://grpc-test.osmosis.zone:443"],
-    chain_info: OSMO_CHAIN,
+    chain_info: OSMO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
@@ -29,12 +29,12 @@ pub const OSMO_4: ChainInfo = ChainInfo {
 // };
 
 pub const LOCAL_OSMO: ChainInfo = ChainInfo {
-    kind: NetworkKind::Local,
+    kind: ChainKind::Local,
     chain_id: "localosmosis",
     gas_denom: "uosmo",
     gas_price: 0.0026,
     grpc_urls: &["http://65.108.235.46:9094"],
-    chain_info: OSMO_CHAIN,
+    chain_info: OSMO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
