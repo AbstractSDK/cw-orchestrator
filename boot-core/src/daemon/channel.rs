@@ -7,6 +7,7 @@ use tonic::transport::{Channel, ClientTlsConfig};
 
 use crate::DaemonError;
 
+/// Used to create a connection to the GRPC
 pub struct DaemonChannel {}
 
 impl DaemonChannel {

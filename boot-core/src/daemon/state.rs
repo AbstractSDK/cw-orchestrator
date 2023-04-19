@@ -10,17 +10,19 @@ use tonic::transport::Channel;
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
-/// Create [`DaemonOptions`] through [`DaemonOptionsBuilder`]
-/// ## Example
-/// ```
-///     use boot_core::{DaemonOptionsBuilder, networks};
-///
-///     let options = DaemonOptionsBuilder::default()
-///         .network(networks::LOCAL_JUNO)
-///         .deployment_id("v0.1.0")
-///         .build()
-///         .unwrap();
-/// ```
+/**
+ Create [`DaemonOptions`] through [`DaemonOptionsBuilder`]
+## Example
+```
+use boot_core::{DaemonOptionsBuilder, networks};
+
+let options = DaemonOptionsBuilder::default()
+    .network(networks::LOCAL_JUNO)
+    .deployment_id("v0.1.0")
+    .build()
+    .unwrap();
+```
+*/
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
 pub struct DaemonOptions {

@@ -7,7 +7,6 @@ use std::{
     env,
     fmt::{self, Debug},
     path::Path,
-    // fs,
 };
 
 impl Contract<Daemon> {
@@ -28,13 +27,10 @@ impl Contract<Daemon> {
             }
             Err(err) => match err {
                 BootError::CodeIdNotInStore(_) => upload(self),
-                BootError::DaemonError(err) => {
-                    if err.to_string().contains("not found") {
-                        upload(self)
-                    } else {
-                        Err(BootError::DaemonError(err))
-                    }
-                }
+                BootError::DaemonError(err) => match err.to_string().as_str() {
+                    "not found" => upload(self),
+                    _ => Err(BootError::DaemonError(err)),
+                },
                 _ => Err(err),
             },
         }

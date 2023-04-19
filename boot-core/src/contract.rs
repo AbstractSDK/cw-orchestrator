@@ -8,8 +8,46 @@ use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
-/// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
-/// The state is used to store contract addresses/code-ids
+/**
+An instance of a contract.
+
+Contains references to the execution environment (chain) and a local state (state).
+
+The state is used to store contract addresses/code-ids
+
+## Example
+```
+use std::sync::Arc;
+use tokio::runtime::Runtime;
+
+use boot_core::{
+    instantiate_daemon_env, networks::LOCAL_JUNO,
+    Contract, ContractWrapper, Daemon,
+    DaemonOptionsBuilder,
+};
+
+let runtime = Arc::new(Runtime::new().unwrap());
+
+let options = DaemonOptionsBuilder::default()
+    .network(LOCAL_JUNO)
+    .deployment_id("v0.1.0")
+    .build()
+    .unwrap();
+
+let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
+
+let contract = Contract::new("cw-plus:cw20_base", chain)
+    .with_mock(Box::new(
+        ContractWrapper::new_with_empty(
+            cw20_base::contract::execute,
+            cw20_base::contract::instantiate,
+            cw20_base::contract::query,
+        )
+        .with_migrate(cw20_base::contract::migrate),
+    ))
+    .with_wasm_path("cw20_base.wasm");
+```
+*/
 #[derive(Clone)]
 pub struct Contract<Chain: CwEnv> {
     /// ID of the contract, used to retrieve addr/code-id
@@ -26,7 +64,9 @@ where
     ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
+    /// This wasm file will be uploaded
     pub wasm_code_path: Option<String>,
+    /// Such as instantiate, execute and query
     pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
 }
 
@@ -54,16 +94,19 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self.chain
     }
 
+    /// Full path to the wasm file to be uploaded
     pub fn with_wasm_path(mut self, path: impl ToString) -> Self {
         self.source.wasm_code_path = Some(path.to_string());
         self
     }
 
+    /// Create with mock contract
     pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
         self.source.contract_endpoints = Some(mock_contract);
         self
     }
 
+    /// Change mock contract
     pub fn set_mock(&mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) {
         self.source.contract_endpoints = Some(mock_contract);
     }

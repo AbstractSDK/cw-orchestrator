@@ -28,6 +28,27 @@ use std::{
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
+/**
+Used to create a daemon environment
+
+## Example
+```
+use std::sync::Arc;
+use tokio::runtime::Runtime;
+
+use boot_core::{DaemonOptionsBuilder, networks, instantiate_daemon_env};
+
+let runtime = Arc::new(Runtime::new().unwrap());
+
+let options = DaemonOptionsBuilder::default()
+    .network(networks::LOCAL_JUNO)
+    .deployment_id("v0.1.0")
+    .build()
+    .unwrap();
+
+let (sender_address, chain) = instantiate_daemon_env(&runtime, options).unwrap();
+```
+*/
 pub fn instantiate_daemon_env(
     runtime: &Arc<Runtime>,
     options: DaemonOptions,
