@@ -6,19 +6,37 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{
     env,
     fmt::{self, Debug},
-    fs,
     path::Path,
+    // fs,
 };
 
 impl Contract<Daemon> {
-    /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    /// @TODO proper response
+    /// Only upload the contract if it is not uploaded yet
     pub fn upload_if_needed(&mut self) -> Result<Option<TxResponse<Daemon>>, BootError> {
-        if self.latest_is_uploaded()? {
-            log::info!("{} is already uploaded", self.id);
-            Ok(None)
-        } else {
-            Some(self.upload()).transpose()
+        let upload = |se: &mut Contract<Daemon>| {
+            log::info!("{} is not uploaded, uploading...", se.id);
+            match se.upload() {
+                Ok(ok) => Ok(Some(ok)),
+                Err(err) => Err(err),
+            }
+        };
+
+        match self.latest_is_uploaded() {
+            Ok(_) => {
+                log::info!("{} is already uploaded", self.id);
+                Ok(None)
+            }
+            Err(err) => match err {
+                BootError::CodeIdNotInStore(_) => upload(self),
+                BootError::DaemonError(err) => {
+                    if err.to_string().contains("not found") {
+                        upload(self)
+                    } else {
+                        Err(BootError::DaemonError(err))
+                    }
+                }
+                _ => Err(err),
+            },
         }
     }
 
@@ -60,7 +78,6 @@ impl Contract<Daemon> {
                 chain.sender.channel(),
                 self.address()?,
             ))?;
-
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }
@@ -97,27 +114,13 @@ where
     }
 
     /// Calculate the checksum of the wasm file to compare against previous uploads
-    pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
+    pub fn checksum(&self, _id: &str) -> Result<String, DaemonError> {
         let wasm_code_path = &self.get_wasm_code_path()?;
-        if wasm_code_path.contains("artifacts") {
-            // Now get local hash from optimization script
-            let checksum_path = format!("{wasm_code_path}/checksums.txt");
-            let contents =
-                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
-            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-            let name = id.split(':').last().unwrap();
-            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
-            log::debug!("{:?}", containing_line);
-            let local_hash = containing_line
-                .trim_start_matches('\n')
-                .split_whitespace()
-                .next()
-                .unwrap();
-            return Ok(local_hash.into());
-        }
+
         // Compute hash
         let wasm_code = Path::new(wasm_code_path);
         let checksum = sha256::try_digest(wasm_code)?;
+
         Ok(checksum)
     }
 }

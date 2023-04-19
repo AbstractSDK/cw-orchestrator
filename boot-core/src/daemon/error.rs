@@ -90,4 +90,6 @@ pub enum DaemonError {
     NewNetwork(String),
     #[error("Can not connect to any grpc endpoint that was provided.")]
     CannotConnectGRPC,
+    #[error("The list of grpc endpoints is empty")]
+    GRPCListIsEmpty,
 }

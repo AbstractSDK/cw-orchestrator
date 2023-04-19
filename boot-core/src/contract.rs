@@ -14,8 +14,9 @@ use std::fmt::Debug;
 pub struct Contract<Chain: CwEnv> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
+    /// Contract end points
     pub(crate) source: ContractCodeReference,
-    /// chain object that handles tx execution and queries.
+    /// Chain object that handles tx execution and queries.
     pub(crate) chain: Chain,
 }
 
@@ -76,6 +77,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     }
 
     // Chain interfaces
+    /// Executes an operation on the contract
     pub fn execute<E: Serialize + Debug>(
         &self,
         msg: &E,
@@ -89,6 +91,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         resp.map_err(Into::into)
     }
 
+    /// Initializes the contract
     pub fn instantiate<I: Serialize + Debug>(
         &self,
         msg: &I,
@@ -96,6 +99,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, BootError> {
         log::info!("Instantiating {} with msg {:#?}", self.id, msg);
+
         let resp = self
             .chain
             .instantiate(
@@ -107,12 +111,17 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             )
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
+
         self.set_address(&contract_address);
+
         log::info!("Instantiated {} with address {}", self.id, contract_address);
+
         log::debug!("Instantiate response: {:?}", resp);
+
         Ok(resp)
     }
 
+    /// Uploads the contract
     pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(&mut self.source).map_err(Into::into)?;
@@ -123,6 +132,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
+    /// Queries the contract
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
@@ -136,6 +146,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
+    /// Migrates the contract
     pub fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -148,15 +159,22 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     }
 
     // State interfaces
+    /// Returns state address for contract
     pub fn address(&self) -> Result<Addr, BootError> {
         self.chain.state().get_address(&self.id)
     }
-    pub fn code_id(&self) -> Result<u64, BootError> {
-        self.chain.state().get_code_id(&self.id)
-    }
+
+    /// Sets state address for contract
     pub fn set_address(&self, address: &Addr) {
         self.chain.state().set_address(&self.id, address)
     }
+
+    /// Returns state code_id for contract
+    pub fn code_id(&self) -> Result<u64, BootError> {
+        self.chain.state().get_code_id(&self.id)
+    }
+
+    /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
     }
