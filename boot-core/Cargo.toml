@@ -13,10 +13,6 @@ readme      = "../README.md"
 exclude = [".env"]
 
 [[example]]
-name = "cw20"
-required-features = ["daemon"]
-
-[[example]]
 name = "ica-demo"
 required-features = ["interchain"]
 
