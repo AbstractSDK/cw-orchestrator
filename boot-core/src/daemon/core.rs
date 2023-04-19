@@ -220,6 +220,13 @@ impl TxHandler for Daemon {
         Ok(())
     }
 
+    fn wait_time(&self, secs: u64) -> Result<(), DaemonError> {
+        self.runtime
+            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
+
+        Ok(())
+    }
+
     fn next_block(&self) -> Result<(), DaemonError> {
         let channel: Channel = self.sender.channel();
         let mut last_height = self
