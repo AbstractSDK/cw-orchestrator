@@ -92,4 +92,6 @@ pub enum DaemonError {
     CannotConnectGRPC,
     #[error("The list of grpc endpoints is empty")]
     GRPCListIsEmpty,
+    #[error("no wasm path provided for contract.")]
+    MissingWasmPath,
 }
