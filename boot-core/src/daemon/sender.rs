@@ -241,32 +241,6 @@ impl Sender<All> {
 
         log::debug!("{:?}", commit);
 
-        find_by_hash(&mut client, commit.into_inner().tx_response.unwrap().txhash).await
+        DaemonQuerier::find_tx_by_hash(self.channel(), commit.into_inner().tx_response.unwrap().txhash).await
     }
-}
-
-async fn find_by_hash(
-    client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
-    hash: String,
-) -> Result<CosmTxResponse, DaemonError> {
-    let attempts = 5;
-
-    let request = cosmos_modules::tx::GetTxRequest { hash };
-
-    for _ in 0..attempts {
-        match client.get_tx(request.clone()).await {
-            Ok(tx) => {
-                let resp = tx.into_inner().tx_response.unwrap();
-                log::debug!("TX found: {:?}", resp);
-                return Ok(resp.into());
-            }
-            Err(err) => {
-                log::debug!("TX not found with error: {:?}", err);
-                log::debug!("Waiting 10s");
-                sleep(Duration::from_secs(10)).await;
-            }
-        }
-    }
-
-    panic!("couldn't find transaction after {} attempts!", attempts);
 }

@@ -1,6 +1,10 @@
-use super::cosmos_modules;
+use std::time::Duration;
+
+use super::{cosmos_modules, tx_resp::CosmTxResponse};
 use super::error::DaemonError;
 use cosmrs::tendermint::{Block, Time};
+use cosmwasm_std::Coin;
+use tokio::time::sleep;
 use tonic::transport::Channel;
 pub struct DaemonQuerier;
 
@@ -69,7 +73,62 @@ impl DaemonQuerier {
         let contract_info = resp.contract_info.unwrap();
         Ok(contract_info)
     }
-}
 
-#[cfg(test)]
-mod tests {}
+    pub async fn find_tx_by_hash(
+        channel: Channel,
+        hash: impl Into<String>,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(channel);
+        let attempts = 5;
+    
+        let request = cosmos_modules::tx::GetTxRequest { hash: hash.into() };
+    
+        for _ in 0..attempts {
+            match client.get_tx(request.clone()).await {
+                Ok(tx) => {
+                    let resp = tx.into_inner().tx_response.unwrap();
+                    log::debug!("TX found: {:?}", resp);
+                    return Ok(resp.into());
+                }
+                Err(err) => {
+                    log::debug!("TX not found with error: {:?}", err);
+                    log::debug!("Waiting 10s");
+                    sleep(Duration::from_secs(10)).await;
+                }
+            }
+        }
+    
+        panic!("couldn't find transaction after {} attempts!", attempts);
+    }
+
+    /// Query the bank balance of a given address
+    /// If denom is None, returns all balances
+    pub async fn coin_balance(
+        channel: Channel,
+        address: impl Into<String>,
+        denom: Option<impl Into<String>>,
+    ) -> Result<Vec<Coin>, DaemonError> {
+        use cosmos_modules::bank::query_client::QueryClient;
+        if let Some(denom) = denom {
+            let mut client: QueryClient<Channel> = QueryClient::new(channel);
+            let request = cosmos_modules::bank::QueryBalanceRequest {
+                address: address.into(),
+                denom: denom.into(),
+            };
+            let resp = client.balance(request).await?.into_inner();
+            let coin = resp.balance.unwrap();
+            Ok(vec![coin.into()])
+        } else {
+            let mut client: QueryClient<Channel> = QueryClient::new(channel);
+            let request = cosmos_modules::bank::QueryAllBalancesRequest {
+                address: address.into(),
+                ..Default::default()
+            };
+            let resp = client.all_balances(request).await?.into_inner();
+            let coins = resp.balances;
+            Ok(coins.into_iter().map(|c| c.into()).collect())
+        } 
+    }
+
+    
+}
