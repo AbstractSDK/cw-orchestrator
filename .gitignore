@@ -3,8 +3,8 @@
 target
 scripts
 
-terra-rust-script-derive
-**/*_local.json
+**/*.json
+
 .env
 !example.env
 **/daemon_state.json
@@ -17,3 +17,5 @@ Cargo.lock
 *_bak
 
 .DS_Store
+**/profraw_data/
+gen_cov_test

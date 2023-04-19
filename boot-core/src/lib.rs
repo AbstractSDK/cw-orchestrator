@@ -15,7 +15,7 @@ mod keys;
 #[cfg(feature = "interchain")]
 mod interchain;
 
-pub use boot_contract_derive::boot_contract;
+pub use boot_contract_derive::contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::{Contract, ContractCodeReference};
 pub use deploy::Deploy;
@@ -37,15 +37,21 @@ pub use cw_multi_test::ContractWrapper;
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
+    channel::DaemonChannel,
     core::{instantiate_daemon_env, Daemon},
     error::DaemonError,
     networks,
+    querier::DaemonQuerier,
     state::{DaemonOptions, DaemonOptionsBuilder},
+    Wallet,
 };
 
 #[cfg(feature = "interchain")]
 pub use interchain::{hermes::Hermes, infrastructure::InterchainInfrastructure};
 
-/// Signals a supported execution environment
-pub trait BootEnvironment: TxHandler + Clone {}
-impl<T: TxHandler + Clone> BootEnvironment for T {}
+#[cfg(feature = "daemon")]
+pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
+
+/// Signals a supported execution environment for CosmWasm contracts
+pub trait CwEnv: TxHandler + Clone {}
+impl<T: TxHandler + Clone> CwEnv for T {}

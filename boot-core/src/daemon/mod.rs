@@ -1,9 +1,12 @@
+pub mod channel;
 pub mod contract;
 pub mod core;
 pub mod error;
 pub mod networks;
 pub mod querier;
-pub mod sender;
+mod sender;
+pub use sender::Wallet;
+pub mod json_file;
 pub mod state;
 pub mod tx_resp;
 
