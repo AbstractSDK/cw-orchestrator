@@ -1,7 +1,8 @@
 use super::cosmos_modules::{self, auth::BaseAccount};
+use super::queriers::DaemonQuerier;
+use super::queriers::Node;
 use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
 use crate::daemon::core::parse_cw_coins;
-use crate::daemon::querier::DaemonQuerier;
 use crate::keys::private::PrivateKey;
 use cosmrs::{
     bank::MsgSend,
@@ -13,8 +14,8 @@ use cosmrs::{
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
-use tokio::time::sleep;
+use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
+
 use tonic::transport::Channel;
 
 const GAS_LIMIT: u64 = 1_000_000;
@@ -145,7 +146,9 @@ impl Sender<All> {
 
         let tx_raw = sign_doc.sign(&self.private_key)?;
 
-        DaemonQuerier::simulate_tx(self.channel(), tx_raw.to_bytes()?).await
+        Node::new(self.channel())
+            .simulate_tx(tx_raw.to_bytes()?)
+            .await
     }
 
     pub async fn commit_tx<T: Msg>(
@@ -153,7 +156,7 @@ impl Sender<All> {
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = DaemonQuerier::block_height(self.channel()).await? + 10u64;
+        let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
 
         let BaseAccount {
             account_number,
@@ -228,7 +231,6 @@ impl Sender<All> {
 
     async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, DaemonError> {
         let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-
         let commit = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
                 tx_bytes: tx.to_bytes()?,
@@ -238,32 +240,8 @@ impl Sender<All> {
 
         log::debug!("{:?}", commit);
 
-        find_by_hash(&mut client, commit.into_inner().tx_response.unwrap().txhash).await
+        Node::new(self.channel())
+            .find_tx_by_hash(commit.into_inner().tx_response.unwrap().txhash)
+            .await
     }
-}
-
-async fn find_by_hash(
-    client: &mut cosmos_modules::tx::service_client::ServiceClient<Channel>,
-    hash: String,
-) -> Result<CosmTxResponse, DaemonError> {
-    let attempts = 5;
-
-    let request = cosmos_modules::tx::GetTxRequest { hash };
-
-    for _ in 0..attempts {
-        match client.get_tx(request.clone()).await {
-            Ok(tx) => {
-                let resp = tx.into_inner().tx_response.unwrap();
-                log::debug!("TX found: {:?}", resp);
-                return Ok(resp.into());
-            }
-            Err(err) => {
-                log::debug!("TX not found with error: {:?}", err);
-                log::debug!("Waiting 10s");
-                sleep(Duration::from_secs(10)).await;
-            }
-        }
-    }
-
-    panic!("couldn't find transaction after {} attempts!", attempts);
 }

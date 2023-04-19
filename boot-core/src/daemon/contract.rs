@@ -1,4 +1,4 @@
-use super::error::DaemonError;
+use super::{error::DaemonError, queriers::CosmWasm};
 use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse};
 use cosmwasm_std::CustomQuery;
 use schemars::JsonSchema;
@@ -44,12 +44,11 @@ impl Contract<Daemon> {
     pub fn latest_is_uploaded(&self) -> Result<bool, BootError> {
         let latest_uploaded_code_id = self.code_id()?;
         let chain = self.get_chain();
-        let on_chain_hash = chain
-            .runtime
-            .block_on(super::querier::DaemonQuerier::code_id_hash(
-                chain.sender.channel(),
-                latest_uploaded_code_id,
-            ))?;
+        let on_chain_hash = chain.runtime.block_on(
+            chain
+                .query::<CosmWasm>()
+                .code_id_hash(latest_uploaded_code_id),
+        )?;
         let local_hash = self.source.checksum(&self.id)?;
 
         Ok(local_hash == on_chain_hash)
@@ -74,10 +73,7 @@ impl Contract<Daemon> {
         let chain = self.get_chain();
         let info = chain
             .runtime
-            .block_on(super::querier::DaemonQuerier::contract_info(
-                chain.sender.channel(),
-                self.address()?,
-            ))?;
+            .block_on(chain.query::<CosmWasm>().contract_info(self.address()?))?;
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }
