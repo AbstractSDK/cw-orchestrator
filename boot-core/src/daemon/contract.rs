@@ -6,8 +6,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{
     env,
     fmt::{self, Debug},
+    fs,
     path::Path,
-    // fs,
 };
 
 impl Contract<Daemon> {
@@ -88,19 +88,27 @@ where
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
+    /// If the path does not contain a .wasm file, we assume it is in the artifacts dir where it's searched by name.
+    /// If the path contains a .wasm file, we assume it is the path to the wasm file.
     pub fn get_wasm_code_path(&self) -> Result<String, DaemonError> {
-        let wasm_code_path = self.wasm_code_path.as_ref().ok_or_else(|| {
-            DaemonError::StdErr("Wasm file is required to determine hash.".into())
-        })?;
+        let wasm_code_path = self
+            .wasm_code_path
+            .as_ref()
+            .ok_or_else(|| DaemonError::MissingWasmPath)?;
 
         let wasm_code_path = if wasm_code_path.contains(".wasm") {
             wasm_code_path.to_string()
         } else {
-            format!(
-                "{}/{}.wasm",
-                env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set"),
-                wasm_code_path
-            )
+            // If the path does not contain a .wasm file, we assume it is in the artifacts dir
+            // find the wasm file with the name of the contract
+            let artifacts_dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set");
+            let artifacts_dir = Path::new(&artifacts_dir);
+            find_wasm_with_name_in_artifacts(artifacts_dir, wasm_code_path).ok_or_else(|| {
+                DaemonError::StdErr(format!(
+                    "Could not find wasm file with name {} in artifacts dir",
+                    wasm_code_path
+                ))
+            })?
         };
 
         Ok(wasm_code_path)
@@ -116,4 +124,23 @@ where
 
         Ok(checksum)
     }
+}
+
+/// Get the wasm file with the name of the contract
+fn find_wasm_with_name_in_artifacts(dir_path: &Path, target_string: &str) -> Option<String> {
+    fs::read_dir(dir_path)
+        .ok()?
+        .filter_map(|entry| {
+            let path = entry.ok()?.path();
+            let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+            if path.is_file()
+                && path.extension().unwrap_or_default() == "wasm"
+                && file_name.contains(target_string)
+            {
+                Some(file_name.into_owned())
+            } else {
+                None
+            }
+        })
+        .next()
 }
