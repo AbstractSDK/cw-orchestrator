@@ -1,18 +1,26 @@
 use super::error::DaemonError;
-use crate::error::BootError;
-use crate::state::StateInterface;
-use cosmrs::{
-    proto::cosmos::base::tendermint::v1beta1::{service_client::ServiceClient, GetNodeInfoRequest},
-    Denom,
-};
+use crate::{daemon::channel::DaemonChannel, error::BootError, state::StateInterface};
+use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_reader, json, Value};
-use std::{collections::HashMap, env, fs::File, rc::Rc, str::FromStr};
-use tonic::transport::{Channel, ClientTlsConfig};
+use serde_json::{json, Value};
+use std::{collections::HashMap, env, fs::File, path::Path, rc::Rc, str::FromStr};
+use tonic::transport::Channel;
+
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
+/// Create [`DaemonOptions`] through [`DaemonOptionsBuilder`]
+/// ## Example
+/// ```
+///     use boot_core::{DaemonOptionsBuilder, networks};
+///
+///     let options = DaemonOptionsBuilder::default()
+///         .network(networks::LOCAL_JUNO)
+///         .deployment_id("v0.1.0")
+///         .build()
+///         .unwrap();
+/// ```
 #[derive(derive_builder::Builder)]
 #[builder(pattern = "owned")]
 pub struct DaemonOptions {
@@ -24,13 +32,20 @@ pub struct DaemonOptions {
     deployment_id: Option<String>,
 }
 
+impl DaemonOptions {
+    pub fn get_network(&self) -> RegistryChainInfo {
+        self.network.clone()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct DaemonState {
+    /// this is passed via env var STATE_FILE
     pub json_file_path: String,
     /// What kind of network
-    pub kind: NetworkKind,
+    pub kind: ChainKind,
     /// Identifier for the network ex. columbus-2
-    pub id: String,
+    pub chain_id: String,
     /// Deployment identifier
     pub deployment_id: String,
     /// gRPC channel
@@ -49,69 +64,35 @@ pub struct DaemonState {
 impl DaemonState {
     pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
         let network: RegistryChainInfo = options.network;
+
+        if network.apis.grpc.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
+        log::info!("Found {} gRPC endpoints", network.apis.grpc.len());
+
         // find working grpc channel
+        let grpc_channel = DaemonChannel::connect(&network.apis.grpc, &network.chain_id)
+            .await?
+            .unwrap();
 
-        let mut successful_connections = vec![];
+        // check if STATE_FILE en var is configured, fail if not
+        let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
 
-        log::debug!("Found {} gRPC endpoints", network.apis.grpc.len());
+        // if the network we are connecting is a local kind, add it to the fn
+        if network.network_type == ChainKind::Local.to_string() {
+            let name = Path::new(&json_file_path)
+                .file_stem()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            let folder = Path::new(&json_file_path)
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap();
 
-        for Grpc { address, .. } in network.apis.grpc.iter() {
-            let endpoint = Channel::builder(address.clone().try_into().unwrap());
-
-            let maybe_client = ServiceClient::connect(endpoint.clone()).await;
-            let mut client = if maybe_client.is_ok() {
-                maybe_client?
-            } else {
-                log::warn!(
-                    "Cannot connect to gRPC endpoint: {}, {:?}",
-                    address,
-                    maybe_client.unwrap_err()
-                );
-
-                // https://github.com/hyperium/tonic/issues/363#issuecomment-638545965
-                if !(address.contains("https") || address.contains("443")) {
-                    continue;
-                };
-
-                log::info!("Attempting to connect with TLS");
-                let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
-
-                let maybe_client = ServiceClient::connect(endpoint.clone()).await;
-                if maybe_client.is_err() {
-                    log::warn!(
-                        "Cannot connect to gRPC endpoint: {}, {:?}",
-                        address,
-                        maybe_client.unwrap_err()
-                    );
-                    continue;
-                };
-                maybe_client?
-            };
-
-            let node_info = client
-                .get_node_info(GetNodeInfoRequest {})
-                .await?
-                .into_inner();
-
-            if node_info.default_node_info.as_ref().unwrap().network != network.chain_id.as_str() {
-                log::error!(
-                    "Network mismatch: connection:{} != config:{}",
-                    node_info.default_node_info.as_ref().unwrap().network,
-                    network.chain_id.as_str()
-                );
-                continue;
-            }
-            successful_connections.push(endpoint.connect().await?)
-        }
-
-        if successful_connections.is_empty() {
-            return Err(DaemonError::CannotConnectGRPC);
-        }
-
-        let mut path = env::var("STATE_FILE").expect("STATE_FILE is not set");
-        if network.network_type == NetworkKind::Local.to_string() {
-            let name = path.split('.').next().unwrap();
-            path = format!("{name}_local.json ");
+            json_file_path = format!("{folder}/{name}_local.json");
         }
 
         // Try to get the standard fee token (probably shortest denom)
@@ -128,80 +109,77 @@ impl DaemonState {
                     }
                 });
 
+        // build daemon state
         let state = DaemonState {
-            json_file_path: path,
-            kind: NetworkKind::from(network.network_type),
+            json_file_path,
+            kind: ChainKind::from(network.network_type),
             deployment_id: options
                 .deployment_id
                 .map(Into::into)
                 .unwrap_or_else(|| DEFAULT_DEPLOYMENT.into()),
-            grpc_channel: successful_connections[0].clone(),
+            grpc_channel,
             chain: ChainInfoOwned {
-                chain_id: network.chain_name.to_string(),
+                network_id: network.chain_name.to_string(),
                 pub_address_prefix: network.bech32_prefix,
                 coin_type: network.slip44,
             },
-            id: network.chain_id.to_string(),
+            chain_id: network.chain_id.to_string(),
             gas_denom: Denom::from_str(&shortest_denom_token.denom).unwrap(),
             gas_price: shortest_denom_token.fixed_min_gas_price,
             lcd_url: None,
             fcd_url: None,
         };
-        state.check_file_validity();
+
+        log::info!(
+            "Writing daemon state JSON file: {:#?}",
+            state.json_file_path
+        );
+
+        // write json state file
+        crate::daemon::json_file::write(
+            &state.json_file_path,
+            &state.chain_id,
+            &state.chain.network_id,
+            &state.deployment_id,
+        );
+
+        // finish
         Ok(state)
-    }
-
-    pub fn check_file_validity(&self) {
-        let file = File::open(&self.json_file_path).unwrap_or_else(|_| {
-            let file = File::create(&self.json_file_path).unwrap();
-            serde_json::to_writer_pretty(&file, &json!({})).unwrap();
-            File::open(&self.json_file_path).unwrap()
-        });
-        log::info!("Opening daemon state at {}", self.json_file_path);
-        let mut json: serde_json::Value = from_reader(file).unwrap();
-        if json.get(&self.chain.chain_id).is_none() {
-            json[&self.chain.chain_id] = json!({});
-        }
-        if json[&self.chain.chain_id].get(&self.id).is_none() {
-            json[&self.chain.chain_id][&self.id] = json!({
-                &self.deployment_id: {},
-                "code_ids": {}
-            });
-        }
-
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
         self.deployment_id = deployment_id.into();
-        self.check_file_validity();
+        crate::daemon::json_file::write(
+            &self.json_file_path,
+            &self.chain_id,
+            &self.chain.network_id,
+            &self.deployment_id,
+        );
     }
 
     /// Get the state filepath and read it as json
-    fn json(&self) -> serde_json::Value {
-        let file = File::open(&self.json_file_path)
-            .unwrap_or_else(|_| panic!("file should be present at {}", self.json_file_path));
-        let json: serde_json::Value = from_reader(file).unwrap();
-        json
+    fn read_state(&self) -> serde_json::Value {
+        crate::daemon::json_file::read(&self.json_file_path)
     }
 
     /// Retrieve a stateful value using the chainId and networkId
     fn get(&self, key: &str) -> Value {
-        let json = self.json();
-        json[&self.chain.chain_id][&self.id.to_string()][key].clone()
+        let json = self.read_state();
+        json[&self.chain.network_id][&self.chain_id.to_string()][key].clone()
     }
 
     /// Set a stateful value using the chainId and networkId
     fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
-        let mut json = self.json();
+        let mut json = self.read_state();
 
-        json[&self.chain.chain_id][&self.id.to_string()][key][contract_id] = json!(value);
+        json[&self.chain.network_id][&self.chain_id.to_string()][key][contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
 }
 
 impl StateInterface for Rc<DaemonState> {
+    /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, BootError> {
         let value = self
             .get(&self.deployment_id)
@@ -211,6 +189,7 @@ impl StateInterface for Rc<DaemonState> {
         Ok(Addr::unchecked(value.as_str().unwrap()))
     }
 
+    /// Set address for contract in deployment id in state file
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
         self.set(&self.deployment_id, contract_id, address.as_str());
     }
@@ -230,6 +209,7 @@ impl StateInterface for Rc<DaemonState> {
         self.set("code_ids", contract_id, code_id);
     }
 
+    /// Get all addresses for deployment id from state file
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, BootError> {
         let mut store = HashMap::new();
         let addresses = self.get(&self.deployment_id);
@@ -239,6 +219,7 @@ impl StateInterface for Rc<DaemonState> {
         }
         Ok(store)
     }
+
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, BootError> {
         let mut store = HashMap::new();
         let code_ids = self.get("code_ids");
@@ -251,11 +232,11 @@ impl StateInterface for Rc<DaemonState> {
 }
 
 #[allow(clippy::from_over_into)]
-impl Into<RegistryChainInfo> for NetworkInfo<'_> {
+impl Into<RegistryChainInfo> for ChainInfo<'_> {
     fn into(self) -> RegistryChainInfo {
         RegistryChainInfo {
-            chain_name: self.chain_info.chain_id.to_string(),
-            chain_id: self.id.to_string().into(),
+            chain_name: self.chain_info.network_id.to_string(),
+            chain_id: self.chain_id.to_string().into(),
             bech32_prefix: self.chain_info.pub_address_prefix.into(),
             fees: FeeTokens {
                 fee_tokens: vec![FeeToken {
@@ -283,9 +264,9 @@ impl Into<RegistryChainInfo> for NetworkInfo<'_> {
 }
 
 #[derive(Clone, Debug)]
-pub struct NetworkInfo<'a> {
+pub struct ChainInfo<'a> {
     /// Identifier for the network ex. columbus-2
-    pub id: &'a str,
+    pub chain_id: &'a str,
     /// Max gas and denom info
     // #[serde(with = "cosm_denom_format")]
     pub gas_denom: &'a str,
@@ -295,13 +276,13 @@ pub struct NetworkInfo<'a> {
     /// Optional urls for custom functionality
     pub lcd_url: Option<&'a str>,
     pub fcd_url: Option<&'a str>,
-    pub chain_info: ChainInfo<'a>,
-    pub kind: NetworkKind,
+    pub chain_info: NetworkInfo<'a>,
+    pub kind: ChainKind,
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
-pub struct ChainInfo<'a> {
-    pub chain_id: &'a str,
+pub struct NetworkInfo<'a> {
+    pub network_id: &'a str,
     /// address prefix
     pub pub_address_prefix: &'a str,
     /// coin type for key derivation
@@ -310,17 +291,17 @@ pub struct ChainInfo<'a> {
 
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct ChainInfoOwned {
-    pub chain_id: String,
+    pub network_id: String,
     /// address prefix
     pub pub_address_prefix: String,
     /// coin type for key derivation
     pub coin_type: u32,
 }
 
-impl From<ChainInfo<'_>> for ChainInfoOwned {
-    fn from(info: ChainInfo<'_>) -> Self {
+impl From<NetworkInfo<'_>> for ChainInfoOwned {
+    fn from(info: NetworkInfo<'_>) -> Self {
         Self {
-            chain_id: info.chain_id.to_owned(),
+            network_id: info.network_id.to_owned(),
             pub_address_prefix: info.pub_address_prefix.to_owned(),
             coin_type: info.coin_type,
         }
@@ -328,58 +309,58 @@ impl From<ChainInfo<'_>> for ChainInfoOwned {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum NetworkKind {
+pub enum ChainKind {
     Local,
     Mainnet,
     Testnet,
 }
 
-impl NetworkKind {
+impl ChainKind {
     pub fn new() -> Result<Self, BootError> {
         let network_id = env::var("NETWORK").expect("NETWORK is not set");
         let network = match network_id.as_str() {
-            "testnet" => NetworkKind::Testnet,
-            "mainnet" => NetworkKind::Mainnet,
-            _ => NetworkKind::Local,
+            "testnet" => ChainKind::Testnet,
+            "mainnet" => ChainKind::Mainnet,
+            _ => ChainKind::Local,
         };
         Ok(network)
     }
 
     pub fn mnemonic_name(&self) -> &str {
         match *self {
-            NetworkKind::Local => "LOCAL_MNEMONIC",
-            NetworkKind::Mainnet => "MAIN_MNEMONIC",
-            NetworkKind::Testnet => "TEST_MNEMONIC",
+            ChainKind::Local => "LOCAL_MNEMONIC",
+            ChainKind::Testnet => "TEST_MNEMONIC",
+            ChainKind::Mainnet => "MAIN_MNEMONIC",
         }
     }
 
     pub fn multisig_name(&self) -> &str {
         match *self {
-            NetworkKind::Local => "LOCAL_MULTISIG",
-            NetworkKind::Mainnet => "MAIN_MULTISIG",
-            NetworkKind::Testnet => "TEST_MULTISIG",
+            ChainKind::Local => "LOCAL_MULTISIG",
+            ChainKind::Testnet => "TEST_MULTISIG",
+            ChainKind::Mainnet => "MAIN_MULTISIG",
         }
     }
 }
 
-impl ToString for NetworkKind {
+impl ToString for ChainKind {
     fn to_string(&self) -> String {
         match *self {
-            NetworkKind::Local => "local",
-            NetworkKind::Mainnet => "mainnet",
-            NetworkKind::Testnet => "testnet",
+            ChainKind::Local => "local",
+            ChainKind::Testnet => "testnet",
+            ChainKind::Mainnet => "mainnet",
         }
         .into()
     }
 }
 
-impl From<String> for NetworkKind {
+impl From<String> for ChainKind {
     fn from(str: String) -> Self {
         match str.as_str() {
-            "local" => NetworkKind::Local,
-            "mainnet" => NetworkKind::Mainnet,
-            "testnet" => NetworkKind::Testnet,
-            _ => NetworkKind::Local,
+            "local" => ChainKind::Local,
+            "testnet" => ChainKind::Testnet,
+            "mainnet" => ChainKind::Mainnet,
+            _ => ChainKind::Local,
         }
     }
 }

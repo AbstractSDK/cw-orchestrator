@@ -3,10 +3,13 @@ use super::{
     error::DaemonError,
     querier::DaemonQuerier,
     sender::{Sender, Wallet},
-    state::{DaemonOptions, DaemonState},
+    state::{ChainKind, DaemonOptions, DaemonState},
     tx_resp::CosmTxResponse,
 };
-use crate::{contract::ContractCodeReference, state::ChainState, tx_handler::TxHandler};
+use crate::{
+    contract::ContractCodeReference, state::ChainState, tx_handler::TxHandler, BootExecute, CallAs,
+    ContractInstance,
+};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,
@@ -58,11 +61,6 @@ impl Daemon {
 
     async fn wait(&self) {
         tokio::time::sleep(Duration::from_secs(3)).await
-        // match self.state.kind {
-        //     NetworkKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-        //     NetworkKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-        //     NetworkKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
-        // }
     }
 
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), DaemonError> {
@@ -91,6 +89,7 @@ impl TxHandler for Daemon {
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
+
     fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
@@ -190,7 +189,7 @@ impl TxHandler for Daemon {
             .runtime
             .block_on(sender.commit_tx(vec![store_msg], None))?;
 
-        log::info!("uploaded: {:?}", result.txhash);
+        log::info!("Uploaded: {:?}", result.txhash);
 
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());
@@ -248,6 +247,20 @@ impl TxHandler for Daemon {
             time,
             chain_id: block.header.chain_id.to_string(),
         })
+    }
+}
+
+impl<T: BootExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
+    type Sender = Wallet;
+
+    fn set_sender(&mut self, sender: &Self::Sender) {
+        self.as_instance_mut().chain.sender = sender.clone();
+    }
+
+    fn call_as(&self, sender: &Self::Sender) -> Self {
+        let mut contract = self.clone();
+        contract.set_sender(sender);
+        contract
     }
 }
 

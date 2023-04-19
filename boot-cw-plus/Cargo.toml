@@ -1,31 +1,63 @@
 [package]
-name = "boot-cw-plus"
-version = { workspace = true}
-authors = { workspace = true}
-edition = { workspace = true}
-license = { workspace = true}
-repository = { workspace = true}
+name        = "boot-cw-plus"
+version     = "0.10.0"
+authors     = { workspace = true }
+edition     = { workspace = true }
+license     = { workspace = true }
+repository  = { workspace = true }
 description = "Environment generic CosmWasm-plus scripting interfaces"
-keywords = ["cosmwasm", "blockchain"]
-readme = "README.md"
+keywords    = ["cosmwasm", "blockchain"]
+readme      = "README.md"
 
-exclude = [
-    ".env",
-]
+exclude = [".env"]
+
+[[bin]]
+name              = "release_wasms"
+path              = "fetch/download_wasms.rs"
+required-features = ["wasms"]
+
+# Mock example does not require any features
+[[example]]
+name = "cw-plus-mock"
+
+# Using the daemon requires the daemon feature
+[[example]]
+name              = "cw-plus-daemon"
+required-features = ["daemon"]
+
+
+[features]
+wasms   = ["dep:tokio", "dep:reqwest"]
+daemon  = ["boot-core/daemon", "dep:tokio"]
 
 [dependencies]
-
-boot-core ={workspace = true}
-cosmwasm-std = { workspace = true }
-serde =  { workspace = true }
-anyhow = { workspace = true }
+boot-core     = { version = "0.10.0"}
+cosmwasm-std  = { workspace = true }
+serde         = { workspace = true }
+anyhow        = { workspace = true }
 cw-multi-test = { workspace = true }
-cw20 = "1.0.1"
-cw20-base = "1.0.1"
-cw1-whitelist = "1.0.1"
+# packages 
+cw1  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw3  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw4  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw20 = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+# crates
+cw1-subkeys        = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw1-whitelist      = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw20-base          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw20-ics20         = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw3-fixed-multisig = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw3-flex-multisig  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw4-group          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw4-stake          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+
+# For bin
+tokio   = { version = "1", features = ["full"], optional = true }
+reqwest = { version = "0.11", features = ["json"], optional = true }
 
 [dev-dependencies]
-tokio = "1.19.1"
-dotenv="0.15.0"
+dotenv     = "0.15.0"
 env_logger = "0.10.0"
-log="0.4.14"
+log        = "0.4.14"
+serde      = "1.0"
+serde_json = "1.0"

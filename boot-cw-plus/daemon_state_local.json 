@@ -1,0 +1,14 @@
+{
+  "juno": {
+    "testing": {
+      "code_ids": {
+        "cw-plus:cw1_subkeys": 11,
+        "cw-plus:cw1_whitelist": 10,
+        "cw-plus:cw20_base": 9,
+        "cw-plus:cw20_ics20": 12,
+        "cw-plus:cw3_fixed_multisig": 13
+      },
+      "v0.1.0": {}
+    }
+  }
+}

@@ -8,8 +8,7 @@
 
 
         <!-- Custom HTML head -->
-
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -35,13 +34,13 @@
     </head>
     <body>
         <!-- Provide site root to javascript -->
-        <script type="text/javascript">
+        <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script type="text/javascript">
+        <script>
             try {
                 var theme = localStorage.getItem('mdbook-theme');
                 var sidebar = localStorage.getItem('mdbook-sidebar');
@@ -57,7 +56,7 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script type="text/javascript">
+        <script>
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
@@ -69,7 +68,7 @@
         </script>
 
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script type="text/javascript">
+        <script>
             var html = document.querySelector('html');
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080) {
@@ -82,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="quick_start/integration.html"><strong aria-hidden="true">2.4.</strong> Integration</a></li></ol></li><li class="chapter-item expanded "><a href="integration-tests.html"><strong aria-hidden="true">3.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="advanced/ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start/index.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="quick_start/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="quick_start/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="quick_start/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="quick_start/integration-tests.html"><strong aria-hidden="true">2.4.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="quick_start/integration.html"><strong aria-hidden="true">2.5.</strong> Product Integrations</a></li></ol></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">3.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="advanced/ci-cd.html"><strong aria-hidden="true">3.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">4.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">5.</strong> References</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -100,7 +99,7 @@
                             <i class="fa fa-paint-brush"></i>
                         </button>
                         <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
@@ -133,7 +132,7 @@
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script type="text/javascript">
+                <script>
                     document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
                     document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
                     Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
@@ -143,7 +142,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="boot-v060"><a class="header" href="#boot-v060">BOOT (v0.6.1)</a></h1>
+                        <h1 id="boot-v0100"><a class="header" href="#boot-v0100">BOOT (v0.10.0)</a></h1>
 <p>BOOT is a testing and deployment tool for CosmWasm smart-contracts. It features execute and query endpoint function generation, network-agnostic transaction execution and a mock environment wrapper for complex multi-contract testing scenarios.</p>
 <p>These docs will run you through the setup and directory layout, letting you reliably interact with your contracts in minutes.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
@@ -156,6 +155,8 @@
 <p>Following this example, the project's structure should eventually look like:</p>
 <pre><code class="language-path">.
 ├── Cargo.toml
+├── artifacts
+│   └── my_contract.wasm (binary file)
 ├── my-contract
 │   ├── Cargo.toml
 │   └── src
@@ -163,15 +164,21 @@
 │       └── ..
 ├── packages
 │   ├── my-project
-│   │   └── my-contract.rs (msgs)
+│   │   ├── Cargo.toml
+│   │   └── src
+│   │       └── lib.rs
+│   │       └── my-contract.rs (msgs)
 │   └── interfaces
-│       └── my-contract.rs (interface)
+│       ├── Cargo.toml
+│       └── src
+│            └── lib.rs
+│            └── my-contract.rs (interface)
 └── scripts
+    ├── .env
     ├── Cargo.toml
     └── src
-        └── bin
-            ├── deploy.rs
-            └── test_my_contract.rs
+        ├── deploy.rs
+        └── test_my_contract.rs
 </code></pre>
 <h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
 <ul>
@@ -204,10 +211,12 @@ cd interfaces
 </code></pre>
 <p>Now add <a href="https://crates.io/crates/boot-core">boot-core</a> to <code>Cargo.toml</code> along with the package that contains the contract's endpoint messages.</p>
 <pre><code class="language-bash">cargo add boot-core
-cargo add --path ../contracts
+cargo add log # optional for logging
+cargo add anyhow # optional for simple error handling
+cargo add --path ../my-project
 </code></pre>
 <pre><code class="language-toml">[dependencies]
-boot-core = &quot;0.6.1&quot; # latest version as of writing this article
+boot-core = &quot;0.10.0&quot; # latest version as of writing this article
 my-project = { path = &quot;../my-project&quot;}
 # ...other dependencies
 </code></pre>
@@ -217,25 +226,29 @@ my-project = { path = &quot;../my-project&quot;}
 <pre><code class="language-bash">touch src/my-contract.rs
 echo 'pub mod my_contract;' &gt;&gt; src/lib.rs
 </code></pre>
-<p>In your new file, define a struct for your contract interface and provide the [<code>Instantiate</code>|<code>Execute</code>|<code>Query</code>|<code>Migrate</code>] messages to the <code>boot_contract</code> macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.</p>
+<p>In your new file, define a struct for your contract interface and provide the [<code>Instantiate</code>|<code>Execute</code>|<code>Query</code>|<code>Migrate</code>] messages to the <code>contract</code> macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use boot_core::prelude::*;
-use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+</span>use boot_core::*;
+// We use pub here to be able to import those messages directly 
+// from the interfaces crate in the next steps (scripting, intergation tests...)
+pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract&lt;Chain&gt;;
-<span class="boring">}
-</span></code></pre></pre>
-<p>The generic <code>&lt;Chain&gt;</code> argument allows you to write functions for your interface that will be executable in different environments.</p>
+<span class="boring">}</span></code></pre></pre>
 <blockquote>
 <p><em>If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.</em></p>
 </blockquote>
 <h2 id="constructor"><a class="header" href="#constructor">Constructor</a></h2>
-<p>Next, you'll want to define the constructor for the interface we just defined:</p>
+<p>Next, you'll want to define the constructor for the interface we just defined. In order to do so, first include the contract interface (<code>instantiate</code>, <code>execute</code> and <code>query</code> functions) in your package : </p>
+<pre><code class="language-bash">cargo add --path ../../my-contract
+</code></pre>
+<p>The generic <code>&lt;Chain&gt;</code> argument allows you to write functions for your interface that will be executable in different environments.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
+</span>
+<span class="boring">fn main() {
+</span>impl&lt;Chain: CwEnv&gt; MyContract&lt;Chain&gt; {
     /// Construct a new instance of MyContract
     /// * `contract_id` - what your contract should be called in local state (*not* on-chain)
     /// * `chain` - the environment to deploy to
@@ -246,70 +259,74 @@ pub struct MyContract&lt;Chain&gt;;
        let wasm_path = &quot;my-contract&quot;;
         Self(
             Contract::new(contract_id, chain)
-            .with_wasm_path(wasm_path),
-            // Mocked environments are also available and can be used for integartion testing... See Integration Testing
+            // Adds the wasm path for uploading to a node
+            .with_wasm_path(wasm_path)
+            // Adds the contract's endpoint functions for mocking
+            .with_mock(Box::new(
+                   ContractWrapper::new_with_empty(
+                     my_contract::contract::execute,
+                     my_contract::contract::instantiate,
+                     my_contract::contract::query,
+                ))),
         )
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
-<blockquote>
-<p>See <a href="quick_start/../integration-tests.html">Integration Testing</a> for details on using mocks for integration testing.</p>
-</blockquote>
+<span class="boring">}</span></code></pre></pre>
 <p>Notice that we build the <code>Contract</code> instance and point it to the contract code using <code>with_wasm_path(...)</code>, where we provide the contract name <code>&quot;my-contract&quot;</code>.
 This contract name will be used to search the artifacts directory (set by <code>ARTIFACTS_DIR</code> env variable) for a <code>my-contract.wasm</code> file.</p>
-<p>Alternatively you can specify a path to the wasm artifact after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the <a href="https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/">CosmWasm documentation on compiling your contract</a> for more information.</p>
+<p>Alternatively you can specify a path to the wasm artifact that's generated after running <code>RUSTFLAGS='-C link-arg=-s' cargo wasm</code> in the contract's directory. See the <a href="https://docs.cosmwasm.com/docs/1.0/getting-started/compile-contract/">CosmWasm documentation on compiling your contract</a> for more information.</p>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
-<p>Now we can start writing executable functions for our contracts with ensured type safety.
-We can define functions that are generic or that can only be used called in a specific environment.
+<p>Now you can start writing executable functions for your contracts with ensured type safety.
+You can write functions that are generic or that can only be used called in a specific environment.
 The environments that are currently supported are:</p>
 <ol>
 <li><a href="https://crates.io/crates/cw-multi-test">cw-multi-test</a></li>
-<li>Blockchain daemons <a href="https://github.com/CosmosContracts/juno">junod</a>, <a href="https://github.com/osmosis-labs/osmosis">osmosisd</a>,...</li>
+<li>Blockchain daemons with CosmWasm enabled: <a href="https://github.com/CosmosContracts/juno">junod</a>, <a href="https://github.com/osmosis-labs/osmosis">osmosisd</a>,...</li>
 </ol>
 <h3 id="generic-function"><a class="header" href="#generic-function">Generic function</a></h3>
 <p>Generic functions can be executed over any environment.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
-    pub fn deploy(&amp;self, instantiate_msg: &amp;InstantiateMsg) -&gt; Self {
-        let sender = &amp;self.chain.sender();
+</span>impl&lt;Chain: CwEnv&gt; MyContract&lt;Chain&gt; {
+    pub fn deploy(&amp;self, instantiate_msg: &amp;InstantiateMsg) -&gt; Result&lt;()&gt; {
+        let sender = &amp;self.get_chain().sender();
         self.upload()?;
-        let resp = self.instantiate(&amp;instantiate_msg, Some(sender), None)?;
+        let resp = self.instantiate(instantiate_msg, Some(&amp;sender), None)?;
         let my_contract_address = resp.instantiated_contract_address()?;
         log::info!(&quot;deployed my-contract to {}&quot;, my_contract_address);
+        Ok(())
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h3 id="daemon-only-functions"><a class="header" href="#daemon-only-functions">Daemon-only functions</a></h3>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl MyContract&lt;Daemon&gt; {
-    pub fn send_ibc_transaction(&amp;self, msg: &amp;ExecuteMsg) -&gt; Self {
-        let resp = self.execute(&amp;msg,None)?;
-        let destination_port = resp.event_attr_value(&quot;ibc_transfer&quot;, &quot;destination_port&quot;);?;
+    pub fn send_ibc_transaction(&amp;self, msg: &amp;ExecuteMsg) -&gt; Result&lt;String&gt; {
+        let resp = self.execute(msg,None)?;
+        let destination_port = resp.event_attr_value(&quot;ibc_transfer&quot;, &quot;destination_port&quot;)?;
+        Ok(destination_port)
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h3 id="mock-only-functions"><a class="header" href="#mock-only-functions">Mock-only functions</a></h3>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl MyContract&lt;Mock&gt; {
-    pub fn call_other_chain (&amp;self, msg: &amp;ExecuteMsg) -&gt; Self {
-        let resp = self.execute(&amp;msg,None)?;
-        let destination_port = resp.event_attr_value(&quot;ibc_transfer&quot;, &quot;destination_port&quot;);?;
+    pub fn call_other_chain (&amp;self, msg: &amp;ExecuteMsg) -&gt; Result&lt;String&gt; {
+        let resp = self.execute(msg,None)?;
+        let destination_port = resp.event_attr_value(&quot;ibc_transfer&quot;, &quot;destination_port&quot;)?;
+        Ok(destination_port)
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h3 id="endpoint-function-generation"><a class="header" href="#endpoint-function-generation">Endpoint function generation</a></h3>
-<p>We can expand on this functionality with a simple macro that generates a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs.</p>
+<h4 id="execution"><a class="header" href="#execution">Execution</a></h4>
+<p>We can expand on this functionality with a simple macro that provides access to a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs's crate.</p>
 <blockquote>
 <p>You will want to feature-flag the function generation to prevent BOOT entering as a dependency when building your contract.</p>
 </blockquote>
-<p>Here's an example:</p>
+<p>Here's an example with the macro shielded behind a &quot;boot&quot; feature flag:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[cw_serde]
@@ -318,16 +335,16 @@ pub enum ExecuteMsg{
     Freeze {},
     UpdateAdmins { admins: Vec&lt;String&gt; },
     // Indicates that the call expects funds `Vec&lt;Coin&gt;`
-    #[payable]
+    #[cfg_attr(feature = &quot;boot&quot;, payable)]
     Deposit {}
 }
 
 // If we now define a BOOTable contract with this execute message
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract&lt;Chain&gt;;
 
 // Then the message variants are available as functions on the struct through an &quot;ExecuteFns&quot; trait.
-impl&lt;Chain: BootEnvironment + Clone&gt; MyContract&lt;Chain&gt; {
+impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
     pub fn test_macro(&amp;self) -&gt; Result&lt;(),BootError&gt; {
         self.freeze()?;
         self.update_admins(vec![])?;
@@ -335,9 +352,25 @@ impl&lt;Chain: BootEnvironment + Clone&gt; MyContract&lt;Chain&gt; {
         Ok(())
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
-<p>Generating query functions is a similar process but has the added advantage of using the <code>cosmwasm-schema</code> return tags to expect the correct return type.</p>
+<span class="boring">}</span></code></pre></pre>
+<p>In order for the above code to work, you will need to follow those simple steps : </p>
+<ol>
+<li>
+<p>Add the following line to your <code>packages/my-project.Cargo.toml</code>. This will allow to activate the boot feature for creating <code>ExecuteFns</code> outside of the crate </p>
+<pre><code class="language-cargo">[features]
+boot=[]
+</code></pre>
+</li>
+<li>
+<p>Add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file : </p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use my_project::my_contract::ExecuteMsgFns;
+<span class="boring">}</span></code></pre></pre>
+</li>
+</ol>
+<h4 id="query"><a class="header" href="#query">Query</a></h4>
+<p>Generating query functions is a similar process but has the added advantage of using the <code>cosmwasm-schema</code> return tags to detect the query's return type.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>#[cosmwasm_schema::cw_serde]
@@ -355,21 +388,24 @@ pub struct InfoResponse {
 }
 
 // If we now define a BOOTable contract with this execute message
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract&lt;Chain&gt;;
 
 // Then the message variants are available as functions on the struct through an &quot;ExecuteFns&quot; trait.
-impl&lt;Chain: BootEnvironment + Clone&gt; MyContract&lt;Chain&gt; {
+impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
     pub fn test_macro(&amp;self) -&gt; Result&lt;(),BootError&gt; {
         // No need to specify returned type!
+        // info of type `InfoResponse` is returned
         let info = self.info()?;
         let admin: Addr = info.admin;
         Ok(())
     }
 }
 
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
+<p>In order to derive query functions, you NEED to serive the QueryResponses crate for your QueryMsgs struct. This is mandatory in order to ensure type-safety for all messages and responses.</p>
+<p>This time, add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file : 
+<code>rust  use my_project::my_contract::QueryMsgFns; </code></p>
 <h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
 <p>You can also refine your contract interface manually to add more complex interactions.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -379,7 +415,7 @@ impl&lt;Chain: BootEnvironment + Clone&gt; MyContract&lt;Chain&gt; {
 use boot_core::interface::*;
 // ...
 
-impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
+impl&lt;Chain: CwEnv&gt; MyContract&lt;Chain&gt; {
     pub fn new(contract_id: &amp;str, chain: Chain) -&gt; Self {
       // ...
     }
@@ -403,8 +439,7 @@ impl&lt;Chain: BootEnvironment&gt; MyContract&lt;Chain&gt; {
     }
 }
 
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h2 id="learn-more"><a class="header" href="#learn-more">Learn more</a></h2>
 <p>Got questions? Join the <a href="https://discord.gg/vAQVnz3tzj">Abstract Discord</a> and ask in the <code>#boot</code> channel.
 Learn more about Abstract at <a href="https://abstract.money">abstract.money</a>.</p>
@@ -415,6 +450,7 @@ Learn more about Abstract at <a href="https://abstract.money">abstract.money</a>
 <li><a href="https://crates.io/crates/abstract-boot">Abstract Contract Interfaces</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="environment-variables"><a class="header" href="#environment-variables">Environment Variables</a></h1>
+<p>These variables are used by BOOT when interacting with a node using the <code>daemon</code> feature.</p>
 <pre><code class="language-bash"># .env
 
 # info, debug, trace
@@ -423,7 +459,7 @@ RUST_LOG=info
 # where the contract wasms are located
 ARTIFACTS_DIR=&quot;../artifacts&quot;
 
-# where to store the output state data
+# where to store the state of your deployments
 STATE_FILE=&quot;./daemon_state.json&quot;
 
 # Mnemonics of the account that will be used to sign transactions
@@ -444,10 +480,13 @@ MAIN_MNEMONIC=&quot;&quot;
 <p>If your cargo project is a workspace, be sure to add <code>scripts</code> to the [workspace].members array at the workspace root.</p>
 </blockquote>
 <p>Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:</p>
-<pre><code class="language-bash">cargo add --path ../interfaces
+<pre><code class="language-bash">cargo add --path ../packages/interfaces
 </code></pre>
-<p>and also add the <code>anyhow</code> and <code>dotenv</code> crates:</p>
+<p>and also add the <code>dotenv</code> crate:</p>
 <pre><code class="language-bash">cargo add anyhow dotenv log
+</code></pre>
+<p>and, we must enable the <code>daemon</code> feature on <code>boot_core</code></p>
+<pre><code class="language-bash">cargo add boot_core --features daemon
 </code></pre>
 <h2 id="main-function"><a class="header" href="#main-function">Main Function</a></h2>
 <p>Now that we have our dependencies setup, we can start writing our script. Either create a new file in the <code>src</code> directory of the <code>scripts/src</code> package, or use the <code>main.rs</code> file that was created by default.</p>
@@ -466,14 +505,11 @@ MAIN_MNEMONIC=&quot;&quot;
 
         // The backtrace is not always generated. Try to run this example
         // with `$env:RUST_BACKTRACE=1`.
-        //    if let Some(backtrace) = e.backtrace() {
-        //        log::debug!(&quot;backtrace: {:?}&quot;, backtrace);
-        //    }
+        // log::debug!(&quot;backtrace: {:?}&quot;, err.backtrace());
 
         ::std::process::exit(1);
     }
-}
-</code></pre></pre>
+}</code></pre></pre>
 <h2 id="deployment-function"><a class="header" href="#deployment-function">Deployment Function</a></h2>
 <p>First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a <code>Result</code> with the contract address.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -481,7 +517,7 @@ MAIN_MNEMONIC=&quot;&quot;
 </span>// scripts/src/my_contract.rs
 use anyhow::Result;
 use boot_core::networks;
-use boot_core::prelude::{instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
+use boot_core::{Addr, instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
 // Traits for contract deployment
 use boot_core::interface::*;
 use interfaces::my_contract::MyContract;
@@ -490,7 +526,7 @@ use interfaces::my_contract::MyContract;
 const NETWORK: NetworkInfo = networks::juno::UNI_6;
 const CONTRACT_NAME: &amp;str = &quot;my-contract&quot;;
 
-pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
+pub fn deploy_contract() -&gt; anyhow::Result&lt;Addr&gt; {
     // Create a runtime for the asynchronous actions
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
 
@@ -505,7 +541,7 @@ pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
     let (_sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let mut contract = MyContract::new(CONTRACT_NAME, chain);
     // Upload your contract
     contract.upload()?;
 
@@ -514,14 +550,13 @@ pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
         // ...
     };
     // The second argument is the admin, the third is any coins to send with the init message
-    contract.instantiate(init_msg, None, None)?;
+    contract.instantiate(&amp;init_msg, None, None)?;
 
     // Load and return the contract address
-    let contract_addr = contract.address();
+    let contract_addr = contract.address()?;
     Ok(contract_addr)
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h3 id="additional-scripts"><a class="header" href="#additional-scripts">Additional Scripts</a></h3>
 <p>So you have your contract deployed, but what now? You can write additional scripts to interact with your contract. For example, you can write a script to query the contract state, or to execute a contract method.</p>
 <p>Here's an example of a script that queries the contract state:</p>
@@ -532,7 +567,7 @@ pub fn deploy_contract() -&gt; anyhow::Result&lt;String&gt; {
 use my_contract::{QueryMsg};
 // ...
 
-pub fn query_contract() -&gt; Result&lt;()&gt; {
+pub fn query_contract() -&gt; anyhow::Result&lt;()&gt; {
     // Setup the environment
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
     let options = DaemonOptionsBuilder::default()
@@ -541,28 +576,27 @@ pub fn query_contract() -&gt; Result&lt;()&gt; {
     let (_sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let contract = MyContract::new(CONTRACT_NAME, chain);
     // Load the contract address (this will use the address set from the previous deploy script)
     let contract_addr = contract.address();
     // Query the contract
-    let res = contract.query(QueryMsg::Balance {
+    let res = contract.query(&amp;QueryMsg::Balance {
       address: contract_addr,
     })?;
     // Print the result
     println!(&quot;{:?}&quot;, res);
     Ok(())
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>And one that executes a contract method:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// scripts/src/my_contract.rs
-use boot_core::prelude::*;
+use boot_core::*;
 use my_contract::{ExecuteMsg, ExecuteMsgFnsDerive};
 // ...
 
-pub fn execute_contract() -&gt; Result&lt;()&gt; {
+pub fn execute_contract() -&gt; anyhow::Result&lt;()&gt; {
     // Setup the environment
     let rt = Arc::new(tokio::runtime::Runtime::new().unwrap());
     let options = DaemonOptionsBuilder::default()
@@ -571,54 +605,101 @@ pub fn execute_contract() -&gt; Result&lt;()&gt; {
     let (_sender, chain) = instantiate_daemon_env(&amp;rt, options)?;
 
     // Create a new instance of your contract interface
-    let contract = MyContract::new(CONTRACT_NAME, chain.clone());
+    let contract = MyContract::new(CONTRACT_NAME, chain);
     // Load the contract address (this will use the address set from the previous deploy script)
     let contract_addr = contract.address();
     // Execute a contract method
-    let res = contract.execute(ExecuteMsg::UpdateBalance {
+    let res = contract.execute(&amp;ExecuteMsg::UpdateBalance {
       address: contract_addr,
       balance: Uint128::from(1000000u128),
-    })?;
+    }, None)?;
     // OR, if you're usincg the `ExecuteMsgFnsDerive` derive macro
     let res = contract.update_balance(contract_addr, Uint128::from(1000000u128))?;
     // Print the result
     println!(&quot;{:?}&quot;, res);
     Ok(())
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="integration-tests"><a class="header" href="#integration-tests">Integration Tests</a></h1>
+<p>To get started writing integration tests with BOOT, first add <code>boot-core</code> to your dependencies.</p>
+<pre><code class="language-bash">cargo add --dev boot-core
+</code></pre>
+<p>The following assumes that you have written your interfaces as described in <a href="quick_start/./quick_start/interfaces.html">Interfaces</a>.</p>
+<h2 id="test-setup"><a class="header" href="#test-setup">Test Setup</a></h2>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// contracts/my-contract/tests/integration_tests.rs  
+use interfaces::MyContract;
+use boot_core::*;  
+use semver::Version;
+use my_contract::contract;
+use my_contract::{ExecuteMsg};
+  
+fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {  
+    let sender = Addr::unchecked(&quot;sender&quot;); 
+    // note that we are instantiating the mock environment instead of the daemon_environment
+    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;  
+
+    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);  
+
+    // entrypoint endpoints for your contract
+    my_contract.as_instance_mut().set_mock(Box::new(  
+        ContractWrapper::new_with_empty(
+            contract::execute,  
+            contract::instantiate,  
+            contract::query,  
+        ),
+    ));
+
+    // &quot;upload&quot; the contract to the test environment
+    // stores the code_id at the key &quot;testing:contract&quot;.
+    my_contract.upload(); 
+  
+    Ok(my_contract)  
+}  
+  
+#[test]  
+fn test_something() -&gt; anyhow::Result&lt;()&gt; {  
+  let my_contract = setup()?;  
+
+  my_contract.instantiate(...)?;
+
+  // execute on the contract
+  my_contract.execute(&amp;ExecuteMsg::MyContractCall {
+    something: Some(Addr::unchecked(&quot;arg&quot;))
+  });
+}
+<span class="boring">}</span></code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="integration"><a class="header" href="#integration">Integration</a></h1>
-<p>Given your contract interfaces you can export a comprehensive deployment of your application to be used by others.</p>
-<p>The idea is simple. If you can provide an easy way for others to instantiate your contracts in their environments then you're making it extremely pleasant for them to use your application as a dependency in their application.</p>
+<p>Now that you have your contract interfaces you can export a comprehensive deployment of your application that can easily be used by others.</p>
+<p>The idea is simple. If you can provide an easy way for others to deploy your contracts/application to their environments, then you're making it extremely easy for them to use and build on your application.</p>
 <p>As an example we will create a deployment for the <a href="https://abstract.money/">Abstract smart-contract framework</a>.</p>
 <h2 id="the-deployment"><a class="header" href="#the-deployment">The deployment</a></h2>
-<p>The deployment can be represented by a struct containing all the contracts that are instantiated when the protocol is deployed.</p>
+<p>The deployment can be represented by a struct containing all the contracts that are uploaded and instantiated when the protocol is deployed.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// Our Abstract deployment
-pub struct Abstract&lt;Chain: BootEnvironment&gt; {
-    pub version: Version,
+pub struct Abstract&lt;Chain: CwEnv&gt; {
     pub ans_host: AnsHost&lt;Chain&gt;,
     pub version_control: VersionControl&lt;Chain&gt;,
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h3 id="implementing-deploy"><a class="header" href="#implementing-deploy">Implementing <code>Deploy</code></a></h3>
 <p>Now we can implement the <code>boot_core::Deploy</code> trait for the <code>Abstract</code> struct.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>impl&lt;Chain: BootEnvironment&gt; boot_core::Deploy&lt;Chain&gt; for Abstract&lt;Chain&gt; {
+</span>impl&lt;Chain: CwEnv&gt; boot_core::Deploy&lt;Chain&gt; for Abstract&lt;Chain&gt; {
     // We don't have a custom error type
     type Error = BootError;
     type DeployData = semver::Version;
 
-    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, BootError&gt; {
-        let mut ans_host = AnsHost::new(ANS_HOST, chain.clone());
-        let mut version_control = VersionControl::new(VERSION_CONTROL, chain.clone());
+    fn store_on(chain: Chain) -&gt; Result&lt;Self, Self::Error&gt; {
+        // &quot;abstract&quot; is a reserved keyword in rust!
+        let mut abstrct = Self::new(chain);
 
         // Only include mock when `integration` flag is set
         if cfg!(feature = &quot;integration&quot;) {
-            ans_host
+            abstrct.ans_host
                 .as_instance_mut()
                 .set_mock(Box::new(ContractWrapper::new_with_empty(
                     ::ans_host::contract::execute,
@@ -626,7 +707,7 @@ pub struct Abstract&lt;Chain: BootEnvironment&gt; {
                     ::ans_host::contract::query,
                 )));
 
-            version_control.as_instance_mut().set_mock(Box::new(
+            abstrct.version_control.as_instance_mut().set_mock(Box::new(
                 cw_multi_test::ContractWrapper::new_with_empty(
                     ::version_control::contract::execute,
                     ::version_control::contract::instantiate,
@@ -635,53 +716,42 @@ pub struct Abstract&lt;Chain: BootEnvironment&gt; {
             ));
         }
 
-        // ########### Upload ##############
+        // Upload the contracts to the chain
+        abstrct.ans_host.upload()?;
+        abstrct.version_control.upload()?;
 
-        ans_host.upload()?;
-        version_control.upload()?;
+        Ok(abstrct)
+    }
+
+    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, BootError&gt; {        
+        // ########### Upload ##############
+        let abstrct = Self::store_on(chain)?;
 
         // ########### Instantiate ##############
 
-        ans_host.instantiate(
+        abstrct.ans_host.instantiate(
             &amp;abstract_os::ans_host::InstantiateMsg {},
             Some(sender),
             None,
         )?;
 
-        version_control.instantiate(
+        abstrct.version_control.instantiate(
             &amp;abstract_os::version_control::InstantiateMsg {},
             Some(sender),
             None,
         )?;
 
-        // ...
+        // ... 
 
-        let deployment = Abstract {
-            version,
-            ans_host,
-            version_control,
-        };
-
-        Ok(deployment)
+        Ok(abstrct)
     }
 
     fn load_from(chain: Chain) -&gt; Result&lt;Self, Self::Error&gt; {
-        // Construct the same structs as above (same names)
-        let ans_host = AnsHost::new(ANS_HOST, chain.clone());
-        let version_control = VersionControl::new(VERSION_CONTROL, chain.clone());
-        let version = env!(&quot;CARGO_PKG_VERSION&quot;).parse().unwrap();
-        Ok(Self {
-            chain,
-            version,
-            ans_host,
-            version_control,
-            os_factory,
-            module_factory,
-        })
+        let abstrct = Self::new(chain);
+        Ok(abstrct)
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>Now <code>Abstract</code> is an application that can be deployed to a mock and real environment with <strong>one</strong> line of code.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -690,12 +760,11 @@ pub struct Abstract&lt;Chain: BootEnvironment&gt; {
     // Deploy abstract
     let abstract_ = Abstract::deploy_on(mock.clone(), version)?;
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>And then when setting up your own deployment you can load these applications to access their contracts (for accessing configuration, addresses, ...)</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>impl&lt;Chain: BootEnvironment&gt; boot_core::Deploy&lt;Chain&gt; for MyApplication&lt;Chain&gt; {
+</span>impl&lt;Chain: CwEnv&gt; boot_core::Deploy&lt;Chain&gt; for MyApplication&lt;Chain&gt; {
     /// ...
     fn deploy_on(chain: Chain, _data: Empty) -&gt; Result&lt;Self, BootError&gt; {
 
@@ -704,101 +773,7 @@ pub struct Abstract&lt;Chain: BootEnvironment&gt; {
         /// ... do stuff with Abstract
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="integration-tests"><a class="header" href="#integration-tests">Integration Tests</a></h1>
-<p>To get started writing integration tests with BOOT, first take dependencis on <code>boot-core</code> and <code>cw-multi-test</code>.</p>
-<pre><code class="language-bash">cargo add --dev boot-core cw-multi-test
-</code></pre>
-<p>The following assumes that you have written your interfaces as described in <a href="./quick_start/interfaces.html">Interfaces</a> Iy you want to define a mock interface explicitly, see below.</p>
-<h2 id="test-setup"><a class="header" href="#test-setup">Test Setup</a></h2>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>// contracts/my-contract/src/integration_tests.rs
-
-use boot_core::networks;
-use interfaces::MyContract;
-use boot_core::prelude::*;
-use cosmwasm_std::Addr;
-use cw_multi_test::ContractWrapper;
-use semver::Version;
-use crate::contract;
-use my_contract::{ExecuteMsg};
-
-const TEST_VERSION: Version = Version::new(0, 0, 0);
-
-fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {
-    let sender = Addr::unchecked(&quot;sender&quot;);
-
-    // note that we are instantiating the mock environment instead of the daemon_environment
-    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;
-
-
-    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);
-
-    // entrypoint endpoints for your contract
-    my_contract.as_instance_mut().set_mock(Box::new(
-        ContractWrapper::new_with_empty(
-            contract::execute,
-            contract::instantiate,
-            contract::query,
-        ),
-    ));
-
-    // &quot;upload&quot; the contract to the test environment, storing the code_id
-    my_contract.upload();
-
-    Ok(my_contract)
-}
-
-#[test]
-fn test_something() {
-  let my_contract = setup();
-
-
-  // test my contract
-  my_contract.execute(ExecuteMsg::MyContractCall {
-    something: Some(Addr::unchecked(&quot;arg&quot;))
-  });
-}
-<span class="boring">}
-</span></code></pre></pre>
-<h2 id="exclusively-mock-interfaces"><a class="header" href="#exclusively-mock-interfaces">Exclusively Mock Interfaces</a></h2>
-<p>See <a href="./quick_start/interfaces.html">Interfaces</a>  for explanations.</p>
-<p>To define an interface <em>exclusively</em> for use in integration testing, create an interface using the <code>with_mock</code> builder method:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>// contracts/my-contract/src/tests/mock-my-contract.rs
-
-use my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
-
-#[boot_contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct MockMyContract&lt;Chain&gt;;
-use cw_multi_test::ContractWrapper;
-use crate::contract;
-use boot_prelude::*;
-
-
-impl&lt;Chain: BootEnvironment&gt; MockMyContract&lt;Chain&gt; {
-    /// Construct a new instance of MyContract
-    /// * `contract_id` - what your contract should be called in local state (*not* on-chain)
-    /// * `chain` - the environment to deploy to
-    pub fn new(contract_id: &amp;str, chain: &amp;Chain) -&gt; Self {
-        Self(
-            Contract::new(contract_id, chain)
-                // Mocked entry points allow for use in the mock environment (cw-multi-test)
-                .with_mock(Box::new(
-                   ContractWrapper::new_with_empty(
-                     my_contract::contract::execute,
-                     my_contract::contract::instantiate,
-                     my_contract::contract::query,
-                )))
-                ,
-        )
-    }
-}
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="advanced"><a class="header" href="#advanced">Advanced</a></h1>
 <h2 id="sections-1"><a class="header" href="#sections-1">Sections</a></h2>
 <ul>
@@ -813,70 +788,134 @@ impl&lt;Chain: BootEnvironment&gt; MockMyContract&lt;Chain&gt; {
 <p>BOOT does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="advanced/interfaces.html">interfaces</a> can be found below:</p>
 <pre><code class="language-yaml"># .github/workflows/deploy.yml
 ---
-name: Deploy Contracts
-on:
-  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
-  workflow_dispatch:
-  push:
-    branches: [ 'mainline' ]
-    paths:
-      - 'contracts/src/**/*.rs'
-      - '.github/workflows/deploy.yml'
-
+name: Deploy Contracts  
+on:  
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
+  workflow_dispatch:  
+  push:  
+    branches: [ 'mainline' ]  
+    paths:  
+      - 'contracts/src/**/*.rs'  
+      - '.github/workflows/deploy.yml'  
+  
 env:
-  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu
-  STATE_FILE: &quot;./daemon_state.json&quot;
-  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;
-  SCHEMA_DIR: &quot;./schema&quot;
+  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
+  STATE_FILE: &quot;./daemon_state.json&quot;  
+  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;  
+  SCHEMA_DIR: &quot;./schema&quot;  
+  
+jobs:  
+  deploy:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v3  
+      - uses: actions-rs/toolchain@v1  
+        with:  
+          toolchain: nightly  
+          target: wasm32-unknown-unknown  
+          override: true  
+      - name: Run cargo wasm  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: build  
+          args: --package counter-app --release --target wasm32-unknown-unknown  
+        env:  
+          RUSTFLAGS: '-C link-arg=-s'  
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          target: wasm32-unknown-unknown
-          override: true
-      - name: Run cargo wasm
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --package counter-app --release --target wasm32-unknown-unknown
-        env:
-          RUSTFLAGS: '-C link-arg=-s'
+      - name: Run deployment script  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: run  
+          args: --package scripts --bin deploy_app  
+        env:  
+          CHAIN: &quot;juno&quot;  
+          DEPLOYMENT: &quot;debugging&quot;  
+          NETWORK: &quot;local&quot;  
+          RUST_LOG: info  
+          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}  
+          STATE_FILE: ${{ env.STATE_FILE }}  
+  
+          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
+          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  
 
-      - name: Run deployment script
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: --package scripts --bin deploy_app
-        env:
-          CHAIN: &quot;juno&quot;
-          DEPLOYMENT: &quot;debugging&quot;
-          NETWORK: &quot;local&quot;
-          RUST_LOG: info
-          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}
-          STATE_FILE: ${{ env.STATE_FILE }}
-
-          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}
-          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}
-
-      - name: Upload deployment daemon state
-        uses: actions/upload-artifact@v2
-        with:
-          name: deployment.json
-          path: ${{ env.STATE_FILE }}
-      - name: Upload WASM
-        uses: actions/upload-artifact@v2
-        with:
-          # TODO: name env or from cargo
-          name: counter_app.wasm
+      - name: Upload deployment daemon state  
+        uses: actions/upload-artifact@v2  
+        with:  
+          name: deployment.json  
+          path: ${{ env.STATE_FILE }}  
+      - name: Upload WASM  
+        uses: actions/upload-artifact@v2  
+        with:  
+          # TODO: name env or from cargo  
+          name: counter_app.wasm  
           path: ${{ env.ARTIFACTS_DIR }}/counter_app.wasm
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
-<p>Find an issue you want to work on? Great! Feel free to open a PR and we'll review it as soon as possible.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contributing-to-boot"><a class="header" href="#contributing-to-boot">Contributing to BOOT</a></h1>
+<p>Thank you for considering to contribute to the BOOT project! We appreciate your support and welcome contributions to help improve this multi-environment CosmWasm smart-contract scripting library. This document provides guidelines and instructions on how to contribute to the project effectively.</p>
+<h2 id="table-of-contents"><a class="header" href="#table-of-contents">Table of Contents</a></h2>
+<ul>
+<li><a href="contributing.html#code-of-conduct">Code of Conduct</a></li>
+<li><a href="contributing.html#getting-started">Getting Started</a></li>
+<li><a href="contributing.html#how-to-contribute">How to Contribute</a>
+<ul>
+<li><a href="contributing.html#reporting-bugs">Reporting Bugs</a></li>
+<li><a href="contributing.html#suggesting-enhancements">Suggesting Enhancements</a></li>
+<li><a href="contributing.html#code-contributions">Code Contributions</a>
+<ul>
+<li><a href="contributing.html#pull-requests">Pull Requests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="contributing.html#style-guide">Style Guide</a></li>
+<li><a href="contributing.html#community">Community</a></li>
+</ul>
+<h2 id="code-of-conduct"><a class="header" href="#code-of-conduct">Code of Conduct</a></h2>
+<p>By participating in this project, you are expected to uphold our <a href="CODE_OF_CONDUCT.html">Code of Conduct</a>. Please read the Code of Conduct to ensure that you follow the community guidelines and contribute positively to the project.</p>
+<h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
+<p>To get started with contributing to the BOOT project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's <a href="https://github.com/Abstract-OS/BOOT/">README</a> to understand the purpose, features, and usage of the BOOT library as well as its <a href="https://boot.abstract.money">documentation</a>.</p>
+<h2 id="how-to-contribute"><a class="header" href="#how-to-contribute">How to Contribute</a></h2>
+<p>There are multiple ways to contribute to the BOOT project, including reporting bugs, suggesting enhancements, and submitting code contributions.</p>
+<h2 id="reporting-bugs"><a class="header" href="#reporting-bugs">Reporting Bugs</a></h2>
+<p>If you encounter any bugs or issues while using the BOOT library, please report them by creating a new issue in the <a href="https://github.com/Abstract-OS/BOOT/issues">issue tracker</a>. When reporting a bug, please provide the following information:</p>
+<ul>
+<li>A clear and descriptive title</li>
+<li>A detailed description of the issue, including steps to reproduce it</li>
+<li>Any relevant logs, error messages, or screenshots</li>
+<li>Information about your environment, such as the OS, software versions, and hardware specifications</li>
+</ul>
+<h2 id="suggesting-enhancements"><a class="header" href="#suggesting-enhancements">Suggesting Enhancements</a></h2>
+<p>We welcome suggestions for new features or improvements to the existing functionality of the BOOT library. To suggest an enhancement, create a new issue in the <a href="https://github.com/Abstract-OS/BOOT/issues">issue tracker</a> with the following information:</p>
+<ul>
+<li>A clear and descriptive title</li>
+<li>A detailed explanation of the proposed enhancement, including its benefits and potential use cases</li>
+<li>If applicable, any examples or mockups of the proposed feature</li>
+</ul>
+<h2 id="code-contributions"><a class="header" href="#code-contributions">Code Contributions</a></h2>
+<p>To contribute code to the BOOT project, please follow these steps:</p>
+<ol>
+<li>Fork the repository to your own GitHub account.</li>
+<li>Clone your fork to your local machine.</li>
+<li>Create a new branch for your changes using the <code>git checkout -b feature/your-feature-name</code> command.</li>
+<li>Make your changes and commit them with a clear and concise commit message.</li>
+<li>Push your branch to your fork on GitHub.</li>
+<li>Create a new pull request against the main branch of the BOOT repository.</li>
+</ol>
+<h2 id="pull-requests"><a class="header" href="#pull-requests">Pull Requests</a></h2>
+<p>When submitting a pull request, please make sure that your code follows the <a href="contributing.html#style-guide">Style Guide</a> and that all tests pass. Please provide a detailed description of your changes, including the motivation for the changes and any potential impact on the project. This will help maintainers review your pull request more effectively.</p>
+<h2 id="style-guide"><a class="header" href="#style-guide">Style Guide</a></h2>
+<p>The BOOT project follows the Rust coding style and conventions. Please ensure that your code adheres to these guidelines to maintain consistency and readability throughout the codebase.</p>
+<ul>
+<li>Use proper indentation (4 spaces) and consistent formatting (<code>cargo fmt</code>).</li>
+<li>Write descriptive variable and function names.</li>
+<li>Use comments to explain complex or non-obvious code.</li>
+<li>Follow the <a href="https://rust-lang.github.io/api-guidelines/">Rust API Guidelines</a> for API design.</li>
+<li>Add documentation for public functions, types, and modules.</li>
+<li>Write <a href="https://doc.rust-lang.org/rustdoc/documentation-tests.html">doc tests</a>
+for public functions and methods.</li>
+</ul>
+<h2 id="community"><a class="header" href="#community">Community</a></h2>
+<p>To join the BOOT community, please join the <a href="https://discord.gg/uch3Tq3aym">Abstract Discord server</a> and the <code>#boot</code> channel. You can also follow the project on <a href="https://twitter.com/AbstractSDK">Twitter</a> and <a href="https://github.com/Abstract-OS">GitHub</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="references-1"><a class="header" href="#references-1">References</a></h1>
 <p>Easy, right? Try building your contracts with <a href="https://abstract.money">Abstract</a> for the same experience with smart contracts.
 Get started <a href="https://docs.abstract.money/building-on-abstract/writing-modules/writing-an-app">here</a>.</p>
@@ -898,41 +937,25 @@ Get started <a href="https://docs.abstract.money/building-on-abstract/writing-mo
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
 
-        <script type="text/javascript">
+        <script>
             window.playground_copyable = true;
         </script>
 
 
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
 
-        <script type="text/javascript">
+        <script>
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);
         });

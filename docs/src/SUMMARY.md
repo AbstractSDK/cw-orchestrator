@@ -9,5 +9,5 @@
   - [Product Integrations](./quick_start/integration.md)
 - [Advanced](./advanced/index.md)
   - [CI/CD](./advanced/ci-cd.md)
-- [Contributing](contributing.md)
+- [Contributing](./contributing.md)
 - [References](references.md)
