@@ -6,8 +6,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{
     env,
     fmt::{self, Debug},
+    fs,
     path::Path,
-    // fs,
 };
 
 impl Contract<Daemon> {
@@ -100,14 +100,12 @@ where
             // find the wasm file with the name of the contract
             let artifacts_dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set");
             let artifacts_dir = Path::new(&artifacts_dir);
-            let file_path = find_wasm_with_name_in_artifacts(artifacts_dir, wasm_code_path)
-                .ok_or_else(|| {
-                    DaemonError::StdErr(format!(
-                        "Could not find wasm file with name {} in artifacts dir",
-                        wasm_code_path
-                    ))
-                })?;
-            file_path
+            find_wasm_with_name_in_artifacts(artifacts_dir, wasm_code_path).ok_or_else(|| {
+                DaemonError::StdErr(format!(
+                    "Could not find wasm file with name {} in artifacts dir",
+                    wasm_code_path
+                ))
+            })?
         };
 
         Ok(wasm_code_path)
