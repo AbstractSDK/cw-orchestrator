@@ -78,6 +78,24 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     struct_def.into()
 }
 
+/**  
+Procedural macro to generate a boot-interface contract with the kebab-case name of the crate.
+Add this macro to the entry point functions of your contract to use it. 
+## Example
+```rust,ignore
+#[cfg_attr(feature="boot", boot_contract)]
+#[cfg_attr(feature="export", entry_point)]
+pub fn instantiate(
+   deps: DepsMut,
+   env: Env,
+   info: MessageInfo,
+   msg: InstantiateMsg,
+ -> StdResult<Response> {
+    // ...
+}
+// ... other entrypoints (execute, query, migrate)
+```
+*/
 #[proc_macro_attribute]
 pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
