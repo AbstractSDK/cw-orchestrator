@@ -88,9 +88,11 @@ where
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
+    /// If the path does not contain a .wasm file, we assume it is in the artifacts dir where it's searched by name. 
+    /// If the path contains a .wasm file, we assume it is the path to the wasm file.
     pub fn get_wasm_code_path(&self) -> Result<String, DaemonError> {
         let wasm_code_path = self.wasm_code_path.as_ref().ok_or_else(|| {
-            DaemonError::StdErr("Wasm file is required to determine hash.".into())
+            DaemonError::MissingWasmPath
         })?;
 
         let wasm_code_path = if wasm_code_path.contains(".wasm") {
