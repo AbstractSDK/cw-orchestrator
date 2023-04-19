@@ -11,14 +11,32 @@ use std::{
 };
 
 impl Contract<Daemon> {
-    /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    /// @TODO proper response
+    /// Only upload the contract if it is not uploaded yet
     pub fn upload_if_needed(&mut self) -> Result<Option<TxResponse<Daemon>>, BootError> {
-        if self.latest_is_uploaded()? {
-            log::info!("{} is already uploaded", self.id);
-            Ok(None)
-        } else {
-            Some(self.upload()).transpose()
+        let upload = |se: &mut Contract<Daemon>| {
+            log::info!("{} is not uploaded, uploading...", se.id);
+            match se.upload() {
+                Ok(ok) => Ok(Some(ok)),
+                Err(err) => Err(err),
+            }
+        };
+
+        match self.latest_is_uploaded() {
+            Ok(_) => {
+                log::info!("{} is already uploaded", self.id);
+                Ok(None)
+            }
+            Err(err) => match err {
+                BootError::CodeIdNotInStore(_) => upload(self),
+                BootError::DaemonError(err) => {
+                    if err.to_string().contains("not found") {
+                        upload(self)
+                    } else {
+                        Err(BootError::DaemonError(err))
+                    }
+                }
+                _ => Err(err),
+            },
         }
     }
 
@@ -60,7 +78,6 @@ impl Contract<Daemon> {
                 chain.sender.channel(),
                 self.address()?,
             ))?;
-
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }
@@ -71,46 +88,59 @@ where
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
+    /// If the path does not contain a .wasm file, we assume it is in the artifacts dir where it's searched by name.
+    /// If the path contains a .wasm file, we assume it is the path to the wasm file.
     pub fn get_wasm_code_path(&self) -> Result<String, DaemonError> {
-        let wasm_code_path = self.wasm_code_path.as_ref().ok_or_else(|| {
-            DaemonError::StdErr("Wasm file is required to determine hash.".into())
-        })?;
+        let wasm_code_path = self
+            .wasm_code_path
+            .as_ref()
+            .ok_or_else(|| DaemonError::MissingWasmPath)?;
 
         let wasm_code_path = if wasm_code_path.contains(".wasm") {
             wasm_code_path.to_string()
         } else {
-            format!(
-                "{}/{}.wasm",
-                env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set"),
-                wasm_code_path
-            )
+            // If the path does not contain a .wasm file, we assume it is in the artifacts dir
+            // find the wasm file with the name of the contract
+            let artifacts_dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR is not set");
+            let artifacts_dir = Path::new(&artifacts_dir);
+            find_wasm_with_name_in_artifacts(artifacts_dir, wasm_code_path).ok_or_else(|| {
+                DaemonError::StdErr(format!(
+                    "Could not find wasm file with name {} in artifacts dir",
+                    wasm_code_path
+                ))
+            })?
         };
 
         Ok(wasm_code_path)
     }
 
     /// Calculate the checksum of the wasm file to compare against previous uploads
-    pub fn checksum(&self, id: &str) -> Result<String, DaemonError> {
+    pub fn checksum(&self, _id: &str) -> Result<String, DaemonError> {
         let wasm_code_path = &self.get_wasm_code_path()?;
-        if wasm_code_path.contains("artifacts") {
-            // Now get local hash from optimization script
-            let checksum_path = format!("{wasm_code_path}/checksums.txt");
-            let contents =
-                fs::read_to_string(checksum_path).expect("Something went wrong reading the file");
-            let parsed: Vec<&str> = contents.rsplit(".wasm").collect();
-            let name = id.split(':').last().unwrap();
-            let containing_line = parsed.iter().find(|line| line.contains(name)).unwrap();
-            log::debug!("{:?}", containing_line);
-            let local_hash = containing_line
-                .trim_start_matches('\n')
-                .split_whitespace()
-                .next()
-                .unwrap();
-            return Ok(local_hash.into());
-        }
+
         // Compute hash
         let wasm_code = Path::new(wasm_code_path);
         let checksum = sha256::try_digest(wasm_code)?;
+
         Ok(checksum)
     }
+}
+
+/// Get the wasm file with the name of the contract
+fn find_wasm_with_name_in_artifacts(dir_path: &Path, target_string: &str) -> Option<String> {
+    fs::read_dir(dir_path)
+        .ok()?
+        .filter_map(|entry| {
+            let path = entry.ok()?.path();
+            let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+            if path.is_file()
+                && path.extension().unwrap_or_default() == "wasm"
+                && file_name.contains(target_string)
+            {
+                Some(file_name.into_owned())
+            } else {
+                None
+            }
+        })
+        .next()
 }
