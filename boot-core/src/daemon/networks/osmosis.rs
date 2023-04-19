@@ -23,7 +23,7 @@ pub const OSMO_2: ChainInfo = ChainInfo {
     gas_denom: "uosmo",
     gas_price: 0.003,
     grpc_urls: &[],
-    chain_info: OSMO_CHAIN,
+    chain_info: OSMO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };

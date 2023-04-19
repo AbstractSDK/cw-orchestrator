@@ -79,7 +79,7 @@ impl Hermes {
             "--a-connection",
             connection,
             "--a-chain",
-            &contract_a.get_chain().state.id,
+            &contract_a.get_chain().state.chain_id,
             // "--b-chain",
             // &contract_b.get_chain().state.id,
             "--a-port",
@@ -94,16 +94,8 @@ impl Hermes {
     }
 
     /// Create an IBC channel between two contracts with an existing client.
-    pub fn start(
-        &self,
-        runtime: &Runtime,
-    ) {
-        let command = [
-            "hermes",
-            "start",
-            "--full-scan",
-        ]
-        .to_vec();
+    pub fn start(&self, runtime: &Runtime) {
+        let command = ["hermes", "start", "--full-scan"].to_vec();
 
         self.exec_command(runtime, command)
     }

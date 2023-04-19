@@ -2,8 +2,7 @@ use boot_core::{
     networks::{osmosis::OSMO_2, JUNO_1},
     *,
 };
-use boot_cw_plus::{Cw20, CW20_BASE};
-use cosmwasm_std::{Addr, Empty};
+use cosmwasm_std::Empty;
 use simple_ica_controller::msg::{self as controller_msgs, AccountResponse};
 use simple_ica_host::msg::{self as host_msgs, ListAccountsResponse};
 use std::sync::Arc;
@@ -13,7 +12,7 @@ const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort
 const OSMOSIS_MNEMONIC: &str = "settle gas lobster judge silk stem act shoulder pluck waste pistol word comfort require early mouse provide marine butter crowd clock tube move wool";
 const JUNO: &str = "juno-1";
 const OSMOSIS: &str = "osmosis-2";
-#[boot_contract(
+#[contract(
     controller_msgs::InstantiateMsg,
     controller_msgs::ExecuteMsg,
     controller_msgs::QueryMsg,
@@ -21,7 +20,7 @@ const OSMOSIS: &str = "osmosis-2";
 )]
 struct Controller;
 
-impl<Chain: BootEnvironment> Controller<Chain> {
+impl<Chain: CwEnv> Controller<Chain> {
     pub fn new(name: &str, chain: Chain) -> Self {
         let mut contract = Contract::new(name, chain);
         contract = contract.with_wasm_path(format!(
@@ -31,9 +30,9 @@ impl<Chain: BootEnvironment> Controller<Chain> {
     }
 }
 
-#[boot_contract(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
+#[contract(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
 struct Host;
-impl<Chain: BootEnvironment> Host<Chain> {
+impl<Chain: CwEnv> Host<Chain> {
     pub fn new(name: &str, chain: Chain) -> Self {
         let mut contract = Contract::new(name, chain);
         contract =
@@ -43,10 +42,10 @@ impl<Chain: BootEnvironment> Host<Chain> {
 }
 
 // just for uploading
-#[boot_contract(Empty, Empty, Empty, Empty)]
+#[contract(Empty, Empty, Empty, Empty)]
 struct Cw1;
 
-impl<Chain: BootEnvironment> Cw1<Chain> {
+impl<Chain: CwEnv> Cw1<Chain> {
     pub fn new(name: &str, chain: Chain) -> Self {
         let mut contract = Contract::new(name, chain);
         contract =
@@ -73,7 +72,9 @@ pub fn script() -> anyhow::Result<()> {
 
     // ### SETUP ###
     deploy_contracts(&mut cw1, &mut host, &mut controller)?;
-    interchain.hermes.create_channel(&rt, "connection-0","simple-ica-v2", &host, &controller);
+    interchain
+        .hermes
+        .create_channel(&rt, "connection-0", "simple-ica-v2", &host, &controller);
     interchain.hermes.start(&rt);
 
     // Get account information
@@ -85,11 +86,10 @@ pub fn script() -> anyhow::Result<()> {
     println!("Remote accounts: {:?}", remote_accounts);
     let remote_account = remote_accounts.accounts[0].clone();
     // send some funds to the remote account
-    let res = rt
-        .block_on(juno.sender.bank_send(
-            &remote_account.account,
-            vec![cosmwasm_std::coin(100u128, "ujuno")],
-        ))?;
+    let res = rt.block_on(juno.sender.bank_send(
+        &remote_account.account,
+        vec![cosmwasm_std::coin(100u128, "ujuno")],
+    ))?;
     println!("Send funds result: {:?}", res);
     let channel = remote_account.channel_id;
 
@@ -125,8 +125,11 @@ fn main() {
     }
 }
 
-
-fn deploy_contracts(cw1: &mut Cw1<Daemon>, host: &mut Host<Daemon>, controller: &mut Controller<Daemon>) -> anyhow::Result<()> {
+fn deploy_contracts(
+    cw1: &mut Cw1<Daemon>,
+    host: &mut Host<Daemon>,
+    controller: &mut Controller<Daemon>,
+) -> anyhow::Result<()> {
     cw1.upload()?;
     host.upload()?;
     controller.upload()?;

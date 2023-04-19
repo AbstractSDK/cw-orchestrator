@@ -29,12 +29,7 @@ pub struct Sender<C: Signing + Context> {
 }
 
 impl Sender<All> {
-    pub fn from_mnemonic(
-        daemon_state: &Rc<DaemonState>,
-        mnemonic: &str,
-    ) -> Result<Sender<All>, DaemonError> {
-        let secp = Secp256k1::new();
-
+    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         // NETWORK_MNEMONIC_GROUP
         let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
             panic!(
@@ -43,24 +38,29 @@ impl Sender<All> {
             )
         });
 
-        // use deployment mnemonic if specified, else use default network mnemonic
+        Self::from_mnemonic(daemon_state, &mnemonic)
+    }
+
+    /// Construct a new Sender from a mnemonic
+    pub fn from_mnemonic(
+        daemon_state: &Rc<DaemonState>,
+        mnemonic: &str,
+    ) -> Result<Sender<All>, DaemonError> {
+        let secp = Secp256k1::new();
         let p_key: PrivateKey =
             PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
-
         let sender = Sender {
             daemon_state: daemon_state.clone(),
             private_key: cosmos_private_key,
             secp,
         };
-
         log::info!(
             "Interacting with {} using address: {}",
             daemon_state.chain_id,
             sender.pub_addr_str()?
         );
-
         Ok(sender)
     }
 

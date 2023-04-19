@@ -4,7 +4,7 @@ pub mod core;
 pub mod error;
 pub mod networks;
 pub mod querier;
-mod sender;
+pub(crate) mod sender;
 pub use sender::Wallet;
 pub mod json_file;
 pub mod state;

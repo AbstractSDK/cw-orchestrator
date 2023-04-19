@@ -9,7 +9,6 @@ use tokio::runtime::Runtime;
 
 use crate::{
     daemon::{sender::Sender, state::DaemonState},
-    networks::{osmosis::OSMO_2, JUNO_1},
     Daemon, DaemonError, DaemonOptionsBuilder,
 };
 
