@@ -5,7 +5,7 @@ pub mod error;
 pub mod networks;
 pub mod queriers;
 mod sender;
-pub use sender::Wallet;
+pub use sender::{Sender, Wallet};
 pub mod json_file;
 pub mod state;
 pub mod tx_resp;

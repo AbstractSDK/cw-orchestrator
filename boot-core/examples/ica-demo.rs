@@ -5,8 +5,8 @@ use boot_core::{
 use cosmwasm_std::{CosmosMsg, Empty};
 use simple_ica_controller::msg::{self as controller_msgs, AccountResponse};
 use simple_ica_host::msg::{self as host_msgs, ListAccountsResponse};
-use tokio::runtime::Runtime;
 use std::sync::Arc;
+use tokio::runtime::Runtime;
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort grow essence fish husband seven hollow envelope wedding host dry permit game april present panic move";
@@ -64,15 +64,13 @@ pub fn script() -> anyhow::Result<()> {
         vec![(JUNO_1, JUNO_MNEMONIC), (OSMO_2, OSMOSIS_MNEMONIC)],
     )?;
 
-    let juno = interchain.daemon(JUNO);
-    let osmosis = interchain.daemon(OSMOSIS);
+    let juno = interchain.daemon(JUNO)?;
+    let osmosis = interchain.daemon(OSMOSIS)?;
 
     let mut cw1 = Cw1::new("cw1", juno.clone());
     let mut host = Host::new("host", juno.clone());
     let mut controller = Controller::new("controller", osmosis.clone());
 
-
-    juno.
     // ### SETUP ###
     // deploy_contracts(&mut cw1, &mut host, &mut controller)?;
     // interchain
@@ -103,8 +101,11 @@ pub fn script() -> anyhow::Result<()> {
     //     Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
     // )?;
 
-    
-    query_tx(&rt, &osmosis,"DF7E4A25663D0A4472DFE0546FA561129C9CF36C3E78EEFAB79C00460A9C3711" );
+    query_tx(
+        &rt,
+        &osmosis,
+        "DF7E4A25663D0A4472DFE0546FA561129C9CF36C3E78EEFAB79C00460A9C3711",
+    );
     // let cont_accounts: controller_msgs::ListAccountsResponse = controller.query(&controller_msgs::QueryMsg::ListAccounts {  })?;
 
     // println!("Controller accounts: {:?}", cont_accounts);
@@ -186,9 +187,10 @@ hermes clear packets --chain osmosis-2 --port transfer --channel channel-0
 
  */
 
-
 fn query_tx(rt: &Runtime, chain: &Daemon, hash: &str) {
     let osmo_grpc_channel = chain.sender.as_ref().channel();
-    let tx = rt.block_on(DaemonQuerier::find_tx_by_hash(osmo_grpc_channel,hash)).unwrap();
+    let tx = rt
+        .block_on(DaemonQuerier::find_tx_by_hash(osmo_grpc_channel, hash))
+        .unwrap();
     println!("tx: {:?}", tx);
 }

@@ -7,10 +7,9 @@ use std::default::Default;
 use std::{rc::Rc, sync::Arc};
 use tokio::runtime::Runtime;
 
-use crate::{
-    daemon::{sender::Sender, state::DaemonState},
-    Daemon, DaemonError, DaemonOptionsBuilder,
-};
+use super::super::daemon::Sender;
+use super::error::InterchainError;
+use crate::{daemon::state::DaemonState, Daemon, DaemonError, DaemonOptionsBuilder};
 
 use super::docker::DockerHelper;
 use super::hermes::Hermes;
@@ -54,15 +53,15 @@ impl InterchainInfrastructure {
     }
 
     /// Get the daemon for a network-id in the interchain.
-    pub fn daemon(&self, chain_id: &str) -> Daemon {
+    pub fn daemon(&self, chain_id: impl ToString) -> Result<Daemon, InterchainError> {
         self.daemons
-            .get(chain_id)
-            .expect(format!("Daemon for {} not found in interchain", chain_id).as_str())
-            .clone()
+            .get(&chain_id.to_string())
+            .ok_or(InterchainError::DaemonNotFound(chain_id.to_string()))
+            .cloned()
     }
 
     /// Get the gRPC ports for the local daemons and set them in the `ChainData` objects.
-    async fn configure_networks(networks: &mut Vec<ChainData>) -> IcResult<()> {
+    async fn configure_networks(networks: &mut [ChainData]) -> IcResult<()> {
         let docker_helper = DockerHelper::new().await?;
 
         // use chain data network name as to filter container ids
@@ -105,7 +104,7 @@ impl InterchainInfrastructure {
                 .build()
                 .unwrap();
             let chain_a_state = Rc::new(runtime.block_on(DaemonState::new(options))?);
-            let chain_a_sender = Rc::new(Sender::from_mnemonic(&chain_a_state, &mnemonic)?);
+            let chain_a_sender = Rc::new(Sender::from_mnemonic(&chain_a_state, mnemonic)?);
             daemons.insert(
                 chain.chain_id.to_string(),
                 Daemon::new(&chain_a_sender, &chain_a_state, runtime)?,

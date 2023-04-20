@@ -49,7 +49,7 @@ impl Sender<All> {
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey =
-            PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain.coin_type)?;
+            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
         let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
         let sender = Sender {
