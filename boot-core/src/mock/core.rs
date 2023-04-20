@@ -245,7 +245,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         Ok(())
     }
 
-    fn wait_time(&self, secs: u64) -> Result<(), BootError> {
+    fn wait_seconds(&self, secs: u64) -> Result<(), BootError> {
         self.app.borrow_mut().update_block(|b| {
             b.time = b.time.plus_seconds(secs);
         });
