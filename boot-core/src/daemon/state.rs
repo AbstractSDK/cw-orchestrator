@@ -64,6 +64,11 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
+    /// Returns a new instance of [DaemonState] on sucess or [DaemonError] on error
+    ///
+    /// ## Arguments
+    ///
+    /// * `options` - A [DaemonOptions] struct that contains the options for creating the [DaemonState] instance.
     pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
         let network: RegistryChainInfo = options.network;
 
@@ -149,6 +154,7 @@ impl DaemonState {
         Ok(state)
     }
 
+    /// Change the deployment id to be used
     pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
         self.deployment_id = deployment_id.into();
         crate::daemon::json_file::write(
@@ -159,7 +165,7 @@ impl DaemonState {
         );
     }
 
-    /// Get the state filepath and read it as json
+    /// Read the state file and return it as JSON ([serde_json::Value])
     fn read_state(&self) -> serde_json::Value {
         crate::daemon::json_file::read(&self.json_file_path)
     }

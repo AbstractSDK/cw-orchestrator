@@ -15,6 +15,7 @@ impl DaemonQuerier for CosmWasm {
 }
 
 impl CosmWasm {
+    /// Returns hash of the given contract using the code_id for it
     pub async fn code_id_hash(&self, code_id: u64) -> Result<String, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryCodeRequest;
@@ -27,6 +28,7 @@ impl CosmWasm {
         Ok(on_chain_hash)
     }
 
+    /// Returns contract information
     pub async fn contract_info(
         &self,
         address: impl Into<String>,

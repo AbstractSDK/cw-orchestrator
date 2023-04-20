@@ -11,6 +11,15 @@ use crate::DaemonError;
 pub struct DaemonChannel {}
 
 impl DaemonChannel {
+    /// Attempt to connect to a gRPC endpoint specified in the `grpc` slice.
+    ///
+    /// Returns an [Channel] containing the first successful connection, or [DaemonError::CannotConnectGRPC] if all attempts fail.
+    ///
+    /// # Arguments
+    ///
+    /// * `grpc` - A vector of [Grpc] structs containing the address and other information of each gRPC endpoint to attempt to connect to.
+    /// * `chain_id` - A reference to a [ChainId] struct containing the chain ID to verify the connection against.
+    ///
     pub async fn connect(
         grpc: &[Grpc],
         chain_id: &ChainId,

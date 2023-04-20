@@ -90,6 +90,7 @@ impl Sender<All> {
             .to_string())
     }
 
+    /// Call Bank module to send native tokens
     pub async fn bank_send(
         &self,
         recipient: &str,
@@ -130,6 +131,7 @@ impl Sender<All> {
         Fee::from_amount_and_gas(amount, gas)
     }
 
+    /// Calculte TX gas needed
     pub async fn calculate_gas(
         &self,
         tx_body: &tx::Body,

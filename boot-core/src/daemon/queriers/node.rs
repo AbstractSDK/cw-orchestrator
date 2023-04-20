@@ -26,7 +26,7 @@ impl DaemonQuerier for Node {
 }
 
 impl Node {
-    /// Returns latests block information
+    /// Returns the latest block information from the daemon.
     pub async fn latest_block(&self) -> Result<Block, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());

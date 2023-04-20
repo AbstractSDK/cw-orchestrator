@@ -28,9 +28,25 @@ use std::{
 use tokio::runtime::Runtime;
 
 /**
-Used to create a daemon environment
+# instantiate_daemon_env
+
+Creates a new [Daemon] instance and returns the sender address using within the instance and the daemon instance.
+
+## Arguments
+
+* `runtime` - An [Arc] reference to a [Runtime] instance.
+* `options` - A [DaemonOptions] struct that contains the options for creating the [Daemon] instance.
+
+## Returns
+
+* ([Addr], [Daemon]) - sender address being used and the daemon instance
+
+## Errors
+
+Returns an [anyhow::Error] if there was an error while creating the [DaemonState].
 
 ## Example
+
 ```ignore
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -45,7 +61,7 @@ let options = DaemonOptionsBuilder::default()
     .build()
     .unwrap();
 
-let (sender_address, chain) = instantiate_daemon_env(&runtime, options).unwrap();
+let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
 ```
 */
 pub fn instantiate_daemon_env(
@@ -110,15 +126,60 @@ impl ChainState for Daemon {
     }
 }
 
-// Execute on the real chain, returns tx response
+/// [Daemon] implements the [TxHandler] trait which defines how transactions
+/// are handled by a CosmWasm-based daemon.
+///
+/// ## Example
+/// ```ignore
+/// use cosmwasm_std::{Coin, Addr};
+///
+/// let daemon = Daemon::new("tcp://127.0.0.1:26657".to_string());
+/// let coins = vec![Coin::new(1000, "token")];
+/// let contract_addr = Addr::unchecked("contract_address");
+///
+/// // Execute a message on the smart contract at the specified address
+/// let exec_msg = ExecuteMsg::Deposit {};
+/// let response = daemon.execute(&exec_msg, &coins, &contract_addr)?;
+///
+/// // Upload smart contract code
+/// let mut code = ContractCodeReference::<Empty>::new();
+/// code.set_wasm("contract.wasm".to_string());
+/// let response = daemon.upload(&mut code)?;
+///
+/// // Wait for a number of blocks to be confirmed
+/// daemon.wait_blocks(5)?;
+///
+/// // Get block information
+/// let block_info = daemon.block_info()?;
+/// ```
 impl TxHandler for Daemon {
+    /// The `Response` type associated with the [TxHandler] trait for this struct is [CosmTxResponse].
     type Response = CosmTxResponse;
+
+    /// The `Error` type associated with the [TxHandler] trait for this struct is [DaemonError].
     type Error = DaemonError;
 
+    /// Returns the address of the sender.
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
 
+    /// Executes a contract on the blockchain network with the given input parameters.
+    ///
+    /// ## Arguments
+    ///
+    /// * `exec_msg` - A reference to the ExecuteMsg to be sent to the contract.
+    /// * `coins` - A reference to an array of [Coin] objects that should be sent with the message.
+    /// * `contract_address` - The address of the contract to execute.
+    ///
+    /// ## Returns
+    ///
+    /// Returns a [CosmTxResponse] object as the result of the operation.
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
@@ -137,6 +198,24 @@ impl TxHandler for Daemon {
         Ok(result)
     }
 
+    /// Instantiates a new contract on the blockchain network with the given input parameters.
+    ///
+    /// ## Arguments
+    ///
+    /// * `code_id` - The ID of the code associated with the uploaded contract.
+    /// * `init_msg` - A reference to the `InstantiateMsg` to be sent to the new contract.
+    /// * `label` - An optional label (str) to be associated with the new contract.
+    /// * `admin` - An optional reference of an address to be designated as the administrator.
+    /// * `coins` - A reference to an array of [Coin] objects that should be sent with the message.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<Self::Response, DaemonError> - a [CosmTxResponse] containing the response from executing the migration or a [DaemonError]
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
@@ -159,18 +238,34 @@ impl TxHandler for Daemon {
         let result = self
             .runtime
             .block_on(sender.commit_tx(vec![init_msg], None))?;
-        // let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
 
         Ok(result)
     }
 
+    /// Queries a contract on the blockchain network with the given `QueryMsg`
+    ///
+    /// ## Arguments
+    ///
+    /// * `query_msg` - A reference to the `QueryMsg` to be sent to the contract.
+    /// * `contract_address` - The address of the contract to query.
+    ///
+    /// ## Returns
+    ///
+    /// * `Result<T, DaemonError>` - The deserialized response from the contract, or an error of type [DaemonError] if the query fails.
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, DaemonError> {
         let sender = &self.sender;
+
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
+
         let resp = self.runtime.block_on(client.smart_contract_state(
             cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),
@@ -181,6 +276,24 @@ impl TxHandler for Daemon {
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
+    /// Executes a migration of a contract to a new version with the given `new_code_id`. The contract is
+    /// identified by its `contract_address` and the migration message is passed as a reference to
+    /// `migrate_msg`.
+    ///
+    /// ## Arguments
+    ///
+    /// * `migrate_msg` - A reference to the `MigrateMsg` to be passed to the contract.
+    /// * `new_code_id` - The ID of the new version of the contract.
+    /// * `contract_address` - The address of the contract to be migrated.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<Self::Response, DaemonError> - a [CosmTxResponse] containing the response from executing the migration or a [DaemonError]
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -199,6 +312,20 @@ impl TxHandler for Daemon {
         Ok(result)
     }
 
+    /// Uploads the given contract source code to the blockchain.
+    ///
+    /// ## Arguments
+    ///
+    /// * `contract_source` - A mutable reference to a [ContractCodeReference] object that contains the contract code to be uploaded.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<Self::Response, DaemonError> - a [CosmTxResponse] containing the response from uploading the contract or a [DaemonError]
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn upload(
         &self,
         contract_source: &mut ContractCodeReference<Empty>,
@@ -214,6 +341,7 @@ impl TxHandler for Daemon {
             wasm_byte_code: file_contents,
             instantiate_permission: None,
         };
+
         let result = self
             .runtime
             .block_on(sender.commit_tx(vec![store_msg], None))?;
@@ -222,9 +350,24 @@ impl TxHandler for Daemon {
 
         // Extra time-out to ensure contract code propagation
         self.runtime.block_on(self.wait());
+
         Ok(result)
     }
 
+    /// Wait for a specified number of blocks to be produced.
+    ///
+    /// ## Arguments
+    ///
+    /// * `amount` - The u64 number of blocks to wait for.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<(), DaemonError> - void or a [DaemonError]
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + amount;
@@ -237,9 +380,24 @@ impl TxHandler for Daemon {
             // ping latest block
             last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         }
+
         Ok(())
     }
 
+    /// Wait for a specified number of seconds.
+    ///
+    /// ## Arguments
+    ///
+    /// * `secs` - The u64 number of seconds to wait for.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<(), DaemonError> - void or a [DaemonError]
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
         self.runtime
             .block_on(tokio::time::sleep(Duration::from_secs(secs)));
@@ -247,6 +405,20 @@ impl TxHandler for Daemon {
         Ok(())
     }
 
+    /// Wait until the next block is produced and confirmed by the network.
+    ///
+    /// This method polls the node's block height until a new block is produced and
+    /// confirmed by the network. It blocks the current thread until the next block
+    /// is confirmed.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<(), DaemonError> - void or a [DaemonError]
+    ///
+    /// ## Errors
+    ///
+    /// Returns a [DaemonError] if the operation fails for any reason.
+    ///
     fn next_block(&self) -> Result<(), DaemonError> {
         let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + 1;
@@ -259,13 +431,21 @@ impl TxHandler for Daemon {
             // ping latest block
             last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         }
+
         Ok(())
     }
 
+    /// Get the current block information from the chain.
+    ///
+    /// ## Returns
+    ///
+    /// * Result<cosmwasm_std::BlockInfo, DaemonError> - [cosmwasm_std::BlockInfo] or a [DaemonError]
+    ///
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
         let block = self.runtime.block_on(self.query::<Node>().latest_block())?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
+
         Ok(cosmwasm_std::BlockInfo {
             height: block.header.height.value(),
             time,
@@ -274,13 +454,16 @@ impl TxHandler for Daemon {
     }
 }
 
+/// Provides a trait implementation to call a contract instance as a given sender
 impl<T: BootExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
     type Sender = Wallet;
 
+    /// Sets the sender of the contract instance
     fn set_sender(&mut self, sender: &Self::Sender) {
         self.as_instance_mut().chain.sender = sender.clone();
     }
 
+    /// Returns a clone of the contract instance with the given sender
     fn call_as(&self, sender: &Self::Sender) -> Self {
         let mut contract = self.clone();
         contract.set_sender(sender);
@@ -288,6 +471,15 @@ impl<T: BootExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> f
     }
 }
 
+/// Parses a vector of [cosmwasm_std::Coin] into a vector of [cosmrs::Coin]
+///
+/// ## Arguments
+///
+/// * `coins` - A slice of [cosmwasm_std::Coin] to be parsed
+///
+/// ## Errors
+///
+/// Returns a [DaemonError] if the conversion fails.
 pub(crate) fn parse_cw_coins(
     coins: &[cosmwasm_std::Coin],
 ) -> Result<Vec<cosmrs::Coin>, DaemonError> {

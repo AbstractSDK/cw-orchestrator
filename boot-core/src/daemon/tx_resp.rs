@@ -29,8 +29,22 @@ pub struct CosmTxResponse {
 }
 
 impl CosmTxResponse {
-    /// find a attribute's value from TX logs.
-    /// returns: msg_index and value
+    /// Gets the value of a given attribute key from the events logs of a transaction.
+    ///
+    /// ## Arguments
+    ///
+    /// * `event_type` - The event type to look for.
+    /// * `attribute_key` - The attribute key to search for.
+    ///
+    /// ## Returns
+    ///
+    /// Returns a vector of tuples, where each tuple contains the index of the message and the value of the attribute key.
+    ///
+    /// ## Example
+    ///
+    /// ```ignore
+    /// let events = tx_result.get_attribute_from_logs(&"coin_received", &"receiver");
+    /// ```
     pub fn get_attribute_from_logs(
         &self,
         event_type: &str,
@@ -65,7 +79,17 @@ impl CosmTxResponse {
         response
     }
 
-    /// get the list of event types from a TX record
+    /// Extracts all the events of a specific type from the transaction logs.
+    ///
+    /// ## Arguments
+    ///
+    /// * `event_type` - A string representing the event type to search for.
+    ///
+    /// ## Example
+    ///
+    /// ```ignore
+    /// let block_events = tx_result.get_events("message");
+    /// ```
     pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
         let mut response: Vec<TxResultBlockEvent> = Default::default();
 
