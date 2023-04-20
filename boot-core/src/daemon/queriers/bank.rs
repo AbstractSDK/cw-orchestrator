@@ -43,7 +43,7 @@ impl Bank {
                 };
                 let resp = client.all_balances(request).await?.into_inner();
                 let coins = resp.balances;
-                Ok(coins.into_iter().map(|coin| coin).collect())
+                Ok(coins.into_iter().collect())
             }
         }
     }
