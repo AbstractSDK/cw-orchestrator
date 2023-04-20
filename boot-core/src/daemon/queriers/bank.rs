@@ -33,7 +33,7 @@ impl Bank {
                 };
                 let resp = client.balance(request).await?.into_inner();
                 let coin = resp.balance.unwrap();
-                Ok(vec![coin.into()])
+                Ok(vec![coin])
             }
             None => {
                 let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
@@ -43,7 +43,7 @@ impl Bank {
                 };
                 let resp = client.all_balances(request).await?.into_inner();
                 let coins = resp.balances;
-                Ok(coins.into_iter().map(|c| c.into()).collect())
+                Ok(coins.into_iter().map(|coin| coin).collect())
             }
         }
     }
