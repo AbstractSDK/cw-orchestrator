@@ -1,3 +1,4 @@
+use super::channel::ChannelAccess;
 use super::cosmos_modules::{self, auth::BaseAccount};
 use super::queriers::DaemonQuerier;
 use super::queriers::Node;
@@ -63,10 +64,6 @@ impl Sender<All> {
             sender.pub_addr_str()?
         );
         Ok(sender)
-    }
-
-    pub fn channel(&self) -> Channel {
-        self.daemon_state.grpc_channel.clone()
     }
 
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
@@ -246,5 +243,11 @@ impl Sender<All> {
         Node::new(self.channel())
             .find_tx_by_hash(commit.into_inner().tx_response.unwrap().txhash)
             .await
+    }
+}
+
+impl ChannelAccess for Sender<All> {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.daemon_state.grpc_channel.clone()
     }
 }

@@ -1,4 +1,5 @@
 use super::{
+    channel::ChannelAccess,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
@@ -246,6 +247,12 @@ impl TxHandler for Daemon {
             time,
             chain_id: block.header.chain_id.to_string(),
         })
+    }
+}
+
+impl ChannelAccess for Daemon {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.sender.channel()
     }
 }
 

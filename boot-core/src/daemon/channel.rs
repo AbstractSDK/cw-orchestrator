@@ -7,6 +7,11 @@ use tonic::transport::{Channel, ClientTlsConfig};
 
 use crate::DaemonError;
 
+/// indicate that the object has access to a gRPC channel
+pub trait ChannelAccess {
+    fn channel(&self) -> Channel;
+}
+
 pub struct DaemonChannel {}
 
 impl DaemonChannel {
