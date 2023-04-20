@@ -3,7 +3,7 @@ pub mod contract;
 pub mod core;
 pub mod error;
 pub mod networks;
-pub mod querier;
+pub mod queriers;
 mod sender;
 pub use sender::Wallet;
 pub mod json_file;
