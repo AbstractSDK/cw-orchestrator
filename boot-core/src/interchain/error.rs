@@ -8,4 +8,6 @@ pub enum InterchainError {
     Daemon(#[from] crate::daemon::error::DaemonError),
     #[error("Could not find hermes container. Ensure it is running.")]
     HermesContainerNotFound,
+    #[error("daemon for chain {0} not found")]
+    DaemonNotFound(String),
 }

@@ -89,25 +89,21 @@ impl DockerHelper {
             .map(|(docker_item, container_item)| {
                 async move {
                     // Call your function on docker_item and container_item here
-                    let result = Self::ports((docker_item, container_item)).await.unwrap();
-                    result
+                    Self::ports((docker_item, container_item)).await.unwrap()
                 }
             })
             .buffer_unordered(2) // Run up to 2 tasks concurrently
             .boxed();
         let mut results = result_stream.collect::<Vec<_>>().await;
         // only return validator containers
-        results = results
-            .into_iter()
-            .filter(|(id, _)| id.contains("val"))
-            .collect();
+        results.retain(|(id, _)| id.contains("val"));
 
         Ok(results)
     }
 
     /// Get the grpc ports for all the running validator containers
     pub async fn grpc_ports(&self) -> IcResult<Vec<(ContainerId, Port)>> {
-        Self::container_ports(&self)
+        Self::container_ports(self)
             .await
             .map(|container_binded_ports| {
                 container_binded_ports
