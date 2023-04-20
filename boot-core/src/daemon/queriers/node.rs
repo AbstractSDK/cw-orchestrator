@@ -4,6 +4,7 @@ use crate::{
     daemon::{cosmos_modules, tx_resp::CosmTxResponse},
     DaemonError,
 };
+
 use cosmrs::tendermint::{Block, Time};
 use tokio::time::sleep;
 use tonic::transport::Channel;
@@ -25,17 +26,21 @@ impl DaemonQuerier for Node {
 }
 
 impl Node {
+    /// Returns latests block information
     pub async fn latest_block(&self) -> Result<Block, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
+
         #[allow(deprecated)]
         let resp = client
             .get_latest_block(cosmos_modules::tendermint::GetLatestBlockRequest {})
             .await?
             .into_inner();
+
         Ok(Block::try_from(resp.block.unwrap())?)
     }
 
+    /// Returns current block height
     pub async fn block_height(&self) -> Result<u64, DaemonError> {
         let block = self.latest_block().await?;
         Ok(block.header.height.value())
@@ -51,6 +56,19 @@ impl Node {
             .as_nanos())
     }
 
+    /// Simulate TX
+    pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+        #[allow(deprecated)]
+        let resp = client
+            .simulate(cosmos_modules::tx::SimulateRequest { tx: None, tx_bytes })
+            .await?
+            .into_inner();
+        let gas_used = resp.gas_info.unwrap().gas_used;
+        Ok(gas_used)
+    }
+
+    /// Returns all the block info
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
         let block = self.latest_block().await?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
@@ -62,18 +80,7 @@ impl Node {
         })
     }
 
-    pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
-        let mut client =
-            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
-        #[allow(deprecated)]
-        let resp = client
-            .simulate(cosmos_modules::tx::SimulateRequest { tx: None, tx_bytes })
-            .await?
-            .into_inner();
-        let gas_used = resp.gas_info.unwrap().gas_used;
-        Ok(gas_used)
-    }
-
+    /// Find TX by hash
     pub async fn find_tx_by_hash(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());

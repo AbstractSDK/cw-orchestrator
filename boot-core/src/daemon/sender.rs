@@ -62,6 +62,10 @@ impl Sender<All> {
         Ok(sender)
     }
 
+    pub fn channel(&self) -> Channel {
+        self.daemon_state.grpc_channel.clone()
+    }
+
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
         Ok(self
             .private_key
@@ -223,10 +227,6 @@ impl Sender<All> {
         };
 
         Ok(acc)
-    }
-
-    pub fn channel(&self) -> Channel {
-        self.daemon_state.grpc_channel.clone()
     }
 
     async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, DaemonError> {
