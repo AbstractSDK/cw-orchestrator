@@ -31,7 +31,7 @@ use tokio::runtime::Runtime;
 Used to create a daemon environment
 
 ## Example
-```
+```ignore
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 

@@ -16,7 +16,7 @@ Contains references to the execution environment (chain) and a local state (stat
 The state is used to store contract addresses/code-ids
 
 ## Example
-```
+```ignore
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 

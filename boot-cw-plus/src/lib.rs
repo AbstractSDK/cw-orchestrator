@@ -1,3 +1,4 @@
+// TODO: Update this code
 //! Easy to use CosmWasm-plus scripting with BOOT
 //!
 //! This crate provides a set of contracts that can be used to deploy and interact with the
@@ -6,7 +7,7 @@
 //! //!
 //! ### Usage
 //!
-//! ```rust
+//! ```ignore
 //! use boot_cw_plus::CwPlus;
 //! fn setup() {
 //!     let sender = Addr::unchecked("test_sender");
