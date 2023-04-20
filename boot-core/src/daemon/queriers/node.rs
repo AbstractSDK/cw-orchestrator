@@ -58,7 +58,8 @@ impl Node {
 
     /// Simulate TX
     pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+        let mut client =
+            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
         #[allow(deprecated)]
         let resp = client
             .simulate(cosmos_modules::tx::SimulateRequest { tx: None, tx_bytes })
