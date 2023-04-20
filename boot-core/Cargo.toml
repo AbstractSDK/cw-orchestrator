@@ -91,6 +91,6 @@ boot-contract-derive = { version = "0.10.0" }
 env_logger = "0.10.0"
 cw20 = { git = "https://github.com/Abstract-OS/cw-plus.git" }
 cw20-base = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-speculoos = "0.9.0"
+speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
