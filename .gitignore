@@ -18,3 +18,5 @@ Cargo.lock
 .DS_Store
 **/profraw_data/
 gen_cov_test
+
+**/bin/
