@@ -1,24 +1,21 @@
 #[macro_export]
 macro_rules! cosmos_query {
-    ($self: ident, $module:ident, $request_type:ident { $($field:ident : $value:expr),* $(,)? }) => {{
+    ($self:ident, $module:ident, $func_name:ident, $request_type:ident { $($field:ident : $value:expr),* $(,)?  }) => {
+        {
         use crate::daemon::cosmos_modules::$module::{
             query_client::QueryClient, $request_type,
         };
-        use paste::paste;
-
         let mut client = QueryClient::new($self.channel.clone());
         let request = $request_type { $($field : $value),* };
-
-        paste! {
-            client.[<$request_type:snake>](request).await?.into_inner()
-        }
+        let response = client.$func_name(request.clone()).await?.into_inner();
         ::log::debug!(
             "cosmos_query: {:?} resulted in: {:?}",
             request,
-            resp
+            response
         );
-        resp
-    }};
+        response
+    }
+};
 }
 
 mod bank;
