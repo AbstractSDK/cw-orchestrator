@@ -1,7 +1,7 @@
 use super::{
     cosmos_modules,
     error::DaemonError,
-    querier::DaemonQuerier,
+    queriers::{DaemonQuerier, Node},
     sender::{Sender, Wallet},
     state::{DaemonOptions, DaemonState},
     tx_resp::CosmTxResponse,
@@ -26,7 +26,6 @@ use std::{
     time::Duration,
 };
 use tokio::runtime::Runtime;
-use tonic::transport::Channel;
 
 pub fn instantiate_daemon_env(
     runtime: &Arc<Runtime>,
@@ -70,6 +69,11 @@ impl Daemon {
             .ok_or(DaemonError::SharedDaemonState)?
             .set_deployment(deployment_id);
         Ok(())
+    }
+
+    /// Perform a query with a given querier
+    pub fn query<Querier: DaemonQuerier>(&self) -> Querier {
+        Querier::new(self.sender.channel())
     }
 }
 
@@ -197,10 +201,7 @@ impl TxHandler for Daemon {
     }
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let channel: Channel = self.sender.channel();
-        let mut last_height = self
-            .runtime
-            .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + amount;
 
         while last_height < end_height {
@@ -209,18 +210,20 @@ impl TxHandler for Daemon {
                 .block_on(tokio::time::sleep(Duration::from_secs(4)));
 
             // ping latest block
-            last_height = self
-                .runtime
-                .block_on(DaemonQuerier::block_height(channel.clone()))?;
+            last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         }
         Ok(())
     }
 
+    fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
+        self.runtime
+            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
+
+        Ok(())
+    }
+
     fn next_block(&self) -> Result<(), DaemonError> {
-        let channel: Channel = self.sender.channel();
-        let mut last_height = self
-            .runtime
-            .block_on(DaemonQuerier::block_height(channel.clone()))?;
+        let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + 1;
 
         while last_height < end_height {
@@ -229,17 +232,13 @@ impl TxHandler for Daemon {
                 .block_on(tokio::time::sleep(Duration::from_secs(4)));
 
             // ping latest block
-            last_height = self
-                .runtime
-                .block_on(DaemonQuerier::block_height(channel.clone()))?;
+            last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         }
         Ok(())
     }
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self
-            .runtime
-            .block_on(DaemonQuerier::latest_block(self.sender.channel()))?;
+        let block = self.runtime.block_on(self.query::<Node>().latest_block())?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
         Ok(cosmwasm_std::BlockInfo {

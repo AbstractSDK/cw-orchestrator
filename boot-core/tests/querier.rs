@@ -1,7 +1,10 @@
 mod common;
 use std::{str::FromStr, sync::Arc};
 
-use boot_core::{DaemonError, DaemonQuerier};
+use boot_core::{
+    queriers::{CosmWasm, DaemonQuerier, Node},
+    DaemonError,
+};
 use common::channel::build_channel;
 use speculoos::prelude::*;
 use tokio::runtime::Runtime;
@@ -19,13 +22,14 @@ fn general() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel()).unwrap();
 
-    let block_height = rt.block_on(DaemonQuerier::block_height(channel.clone()));
+    let node = Node::new(channel.clone());
+    let block_height = rt.block_on(node.block_height());
     asserting!("block_height is ok").that(&block_height).is_ok();
 
-    let latest_block = rt.block_on(DaemonQuerier::latest_block(channel.clone()));
+    let latest_block = rt.block_on(node.latest_block());
     asserting!("latest_block is ok").that(&latest_block).is_ok();
 
-    let block_time = rt.block_on(DaemonQuerier::block_time(channel.clone()));
+    let block_time = rt.block_on(node.block_time());
     asserting!("block_time is ok").that(&block_time).is_ok();
 }
 
@@ -33,6 +37,7 @@ fn general() {
 fn simulate_tx() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel()).unwrap();
+    let node = Node::new(channel.clone());
 
     let exec_msg = cw20_base::msg::ExecuteMsg::Mint {
         recipient: "terra1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr".into(),
@@ -62,10 +67,7 @@ fn simulate_tx() {
 
     let body = tx::Body::new(msgs, memo, 100u32);
 
-    let simulate_tx = rt.block_on(DaemonQuerier::simulate_tx(
-        channel.clone(),
-        body.into_bytes().unwrap(),
-    ));
+    let simulate_tx = rt.block_on(node.simulate_tx(body.into_bytes().unwrap()));
 
     asserting!("that simulate_tx worked but msg is wrong")
         .that(&simulate_tx)
@@ -76,6 +78,7 @@ fn simulate_tx() {
 fn contract_info() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel()).unwrap();
+    let cosm_wasm = CosmWasm::new(channel.clone());
 
     let (sender, mut contract) = common::contract::start();
 
@@ -87,10 +90,7 @@ fn contract_info() {
 
     let contract_address = contract.address().unwrap();
 
-    let contract_info = rt.block_on(DaemonQuerier::contract_info(
-        channel.clone(),
-        contract_address,
-    ));
+    let contract_info = rt.block_on(cosm_wasm.contract_info(contract_address));
 
     asserting!("contract info is ok")
         .that(&contract_info)
