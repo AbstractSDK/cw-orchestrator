@@ -1,7 +1,8 @@
 use super::cosmos_modules::{self, auth::BaseAccount};
+use super::queriers::DaemonQuerier;
+use super::queriers::Node;
 use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
 use crate::daemon::core::parse_cw_coins;
-use crate::daemon::querier::DaemonQuerier;
 use crate::keys::private::PrivateKey;
 use cosmrs::{
     bank::MsgSend,
@@ -13,8 +14,8 @@ use cosmrs::{
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
-use tokio::time::sleep;
+use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
+
 use tonic::transport::Channel;
 
 const GAS_LIMIT: u64 = 1_000_000;
@@ -62,6 +63,10 @@ impl Sender<All> {
             sender.pub_addr_str()?
         );
         Ok(sender)
+    }
+
+    pub fn channel(&self) -> Channel {
+        self.daemon_state.grpc_channel.clone()
     }
 
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
@@ -148,7 +153,9 @@ impl Sender<All> {
 
         let tx_raw = sign_doc.sign(&self.private_key)?;
 
-        DaemonQuerier::simulate_tx(self.channel(), tx_raw.to_bytes()?).await
+        Node::new(self.channel())
+            .simulate_tx(tx_raw.to_bytes()?)
+            .await
     }
 
     pub async fn commit_tx<T: Msg>(
@@ -156,7 +163,7 @@ impl Sender<All> {
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = DaemonQuerier::block_height(self.channel()).await? + 10u64;
+        let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
 
         let BaseAccount {
             account_number,
@@ -225,13 +232,8 @@ impl Sender<All> {
         Ok(acc)
     }
 
-    pub fn channel(&self) -> Channel {
-        self.daemon_state.grpc_channel.clone()
-    }
-
     async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, DaemonError> {
         let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-
         let commit = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
                 tx_bytes: tx.to_bytes()?,
@@ -241,6 +243,8 @@ impl Sender<All> {
 
         log::debug!("{:?}", commit);
 
-        DaemonQuerier::find_tx_by_hash(self.channel(), commit.into_inner().tx_response.unwrap().txhash).await
+        Node::new(self.channel())
+            .find_tx_by_hash(commit.into_inner().tx_response.unwrap().txhash)
+            .await
     }
 }

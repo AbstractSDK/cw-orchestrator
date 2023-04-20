@@ -3,3 +3,6 @@ docs:
 
 watch: 
   cargo watch -x lcheck
+  
+test:
+  cargo test
