@@ -10,6 +10,7 @@ use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
+/// # instantiate_default_mock_env
 pub fn instantiate_default_mock_env(
     sender: &Addr,
 ) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
@@ -19,6 +20,7 @@ pub fn instantiate_default_mock_env(
     Ok((mock_state, mock_chain))
 }
 
+/// # instantiate_custom_mock_env
 pub fn instantiate_custom_mock_env<S: StateInterface>(
     sender: &Addr,
     custom_state: S,
@@ -143,23 +145,6 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         self.sender.clone()
     }
 
-    fn execute<E: Serialize + Debug>(
-        &self,
-        exec_msg: &E,
-        coins: &[cosmwasm_std::Coin],
-        contract_address: &Addr,
-    ) -> Result<Self::Response, crate::BootError> {
-        self.app
-            .borrow_mut()
-            .execute_contract(
-                self.sender.clone(),
-                contract_address.to_owned(),
-                exec_msg,
-                coins,
-            )
-            .map_err(From::from)
-    }
-
     fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
@@ -184,6 +169,23 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             ..Default::default()
         };
         Ok(resp)
+    }
+
+    fn execute<E: Serialize + Debug>(
+        &self,
+        exec_msg: &E,
+        coins: &[cosmwasm_std::Coin],
+        contract_address: &Addr,
+    ) -> Result<Self::Response, crate::BootError> {
+        self.app
+            .borrow_mut()
+            .execute_contract(
+                self.sender.clone(),
+                contract_address.to_owned(),
+                exec_msg,
+                coins,
+            )
+            .map_err(From::from)
     }
 
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(

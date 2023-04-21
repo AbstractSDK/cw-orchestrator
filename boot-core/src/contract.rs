@@ -8,45 +8,11 @@ use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
+
 /**
 An instance of a contract.
-
 Contains references to the execution environment (chain) and a local state (state).
-
 The state is used to store contract addresses/code-ids
-
-## Example
-```ignore
-use std::sync::Arc;
-use tokio::runtime::Runtime;
-
-use boot_core::{
-    instantiate_daemon_env, networks::LOCAL_JUNO,
-    Contract, ContractWrapper, Daemon,
-    DaemonOptionsBuilder,
-};
-
-let runtime = Arc::new(Runtime::new().unwrap());
-
-let options = DaemonOptionsBuilder::default()
-    .network(LOCAL_JUNO)
-    .deployment_id("v0.1.0")
-    .build()
-    .unwrap();
-
-let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
-
-let contract = Contract::new("cw-plus:cw20_base", chain)
-    .with_mock(Box::new(
-        ContractWrapper::new_with_empty(
-            cw20_base::contract::execute,
-            cw20_base::contract::instantiate,
-            cw20_base::contract::query,
-        )
-        .with_migrate(cw20_base::contract::migrate),
-    ))
-    .with_wasm_path("cw20_base.wasm");
-```
 */
 #[derive(Clone)]
 pub struct Contract<Chain: CwEnv> {
@@ -119,22 +85,35 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self
     }
 
-    // Chain interfaces
-    /// Executes an operation on the contract
-    pub fn execute<E: Serialize + Debug>(
-        &self,
-        msg: &E,
-        coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("Executing {:#?} on {}", msg, self.id);
-        let resp = self
-            .chain
-            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
-        log::debug!("execute response: {:?}", resp);
-        resp.map_err(Into::into)
+    /**
+        # upload
+        Uploads the contract to the chain
+
+        ## Returns
+        Result<[TxResponse<Chain>], [BootError]>
+    */
+    pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
+        log::info!("Uploading {}", self.id);
+        let resp = self.chain.upload(&mut self.source).map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!("uploaded {} with code id {}", self.id, code_id);
+        log::debug!("Upload response: {:?}", resp);
+        Ok(resp)
     }
 
-    /// Initializes the contract
+    /**
+        # instantiate
+        Initializes the contract
+
+        ## Arguments
+        * `msg` - A reference to the `InstantiateMsg` to be sent to the new contract.
+        * `admin` - An optional reference of an address to be designated as the administrator.
+        * `coins` - An optional reference to a vector of [Coin] objects that should be sent with the message.
+
+        ## Returns
+        Result<[TxResponse<Chain>], [BootError]>
+    */
     pub fn instantiate<I: Serialize + Debug>(
         &self,
         msg: &I,
@@ -153,6 +132,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
                 coins.unwrap_or(&[]),
             )
             .map_err(Into::into)?;
+
         let contract_address = resp.instantiated_contract_address()?;
 
         self.set_address(&contract_address);
@@ -164,15 +144,19 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
-    /// Uploads the contract
-    pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("Uploading {}", self.id);
-        let resp = self.chain.upload(&mut self.source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
-        Ok(resp)
+    // Chain interfaces
+    /// Executes an operation on the contract
+    pub fn execute<E: Serialize + Debug>(
+        &self,
+        msg: &E,
+        coins: Option<&[Coin]>,
+    ) -> Result<TxResponse<Chain>, BootError> {
+        log::info!("Executing {:#?} on {}", msg, self.id);
+        let resp = self
+            .chain
+            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
+        log::debug!("execute response: {:?}", resp);
+        resp.map_err(Into::into)
     }
 
     /// Queries the contract

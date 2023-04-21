@@ -1,13 +1,13 @@
-pub mod channel;
-pub mod contract;
-pub mod core;
+pub mod json_file;
 pub mod error;
 pub mod networks;
+pub mod channel;
 pub mod queriers;
+pub mod core;
+pub mod state;
+pub mod contract;
 mod sender;
 pub use sender::Wallet;
-pub mod json_file;
-pub mod state;
 pub mod tx_resp;
 
 pub(crate) mod cosmos_modules {

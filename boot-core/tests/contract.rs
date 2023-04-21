@@ -33,6 +33,15 @@ fn general() {
         .that(&init_res)
         .is_ok();
 
+    // test execution
+    let exec_msg = cw20_base::msg::ExecuteMsg::Burn {
+        amount: 10u128.into()
+    };
+    let exec_res = contract.execute(&exec_msg, None);
+    asserting!("execution is successful")
+        .that(&exec_res)
+        .is_ok();
+
     // do a query and validate its successful
     let query_res = contract.query::<cw20_base::msg::QueryMsg, cw20::BalanceResponse>(
         &cw20_base::msg::QueryMsg::Balance {
