@@ -43,6 +43,7 @@ pub use daemon::{
     networks, queriers,
     state::{DaemonOptions, DaemonOptionsBuilder},
     Wallet,
+    ibc_tracker::IbcTracker,
 };
 
 #[cfg(feature = "interchain")]

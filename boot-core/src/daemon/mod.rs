@@ -2,7 +2,7 @@ pub mod channel;
 pub mod contract;
 pub mod core;
 pub mod error;
-mod ibc_tracker;
+pub mod ibc_tracker;
 pub mod networks;
 pub mod queriers;
 mod sender;

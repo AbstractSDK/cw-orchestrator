@@ -10,7 +10,7 @@ use tonic::async_trait;
 
 use crate::{
     queriers::{DaemonQuerier, Ibc},
-    DaemonError, TxHandler,
+    DaemonError, TxHandler, Daemon,
 };
 
 use super::channel::ChannelAccess;
@@ -78,3 +78,6 @@ fn generate_log_file_path(chain_id: &str) -> PathBuf {
 
     log_path
 }
+
+
+impl IbcTracker for Daemon {}
