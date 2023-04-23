@@ -1,5 +1,5 @@
-use super::{builder::DaemonBuilder, error::DaemonError};
-use crate::{daemon::channel::DaemonChannel, error::BootError, state::StateInterface, Daemon};
+use super::error::DaemonError;
+use crate::{daemon::channel::DaemonChannel, error::BootError, state::StateInterface};
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};

@@ -3,7 +3,7 @@ use super::{
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
-    sender::{Sender, Wallet},
+    sender::Wallet,
     state::{ChainKind, DaemonState},
     tx_resp::CosmTxResponse,
 };
@@ -23,10 +23,9 @@ use std::{
     fmt::Debug,
     rc::Rc,
     str::{from_utf8, FromStr},
-    sync::Arc,
     time::Duration,
 };
-use tokio::runtime::{Handle, Runtime};
+use tokio::runtime::Handle;
 
 #[derive(Clone)]
 /**

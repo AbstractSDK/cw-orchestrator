@@ -1,10 +1,10 @@
 use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
-use secp256k1::All;
+
 use tokio::runtime::Handle;
 
-use crate::{Daemon, DaemonError, Wallet};
+use crate::{Daemon, DaemonError};
 
 use super::{sender::Sender, state::DaemonState};
 
