@@ -96,7 +96,7 @@ mod tests {
     */
     use std::sync::Arc;
 
-    use crate::{instantiate_daemon_env, DaemonOptionsBuilder};
+    use crate::Daemon;
     use speculoos::prelude::*;
     use tokio::runtime::Runtime;
 
@@ -104,23 +104,18 @@ mod tests {
     fn no_connection() {
         let runtime = Arc::new(Runtime::new().unwrap());
 
-        let mut network = boot_core::networks::LOCAL_JUNO;
+        let mut chain = boot_core::networks::LOCAL_JUNO;
         let grpcs = &vec!["https://127.0.0.1:99999"];
-        network.grpc_urls = grpcs;
+        chain.grpc_urls = grpcs;
 
-        let options = DaemonOptionsBuilder::default()
-            .network(network)
+        let build_res = Daemon::builder()
+            .handle(runtime.handle())
+            .chain(chain)
             .deployment_id("v0.1.0")
-            .build()
-            .unwrap();
+            .build();
 
         asserting!("there is no GRPC connection")
-            .that(
-                &instantiate_daemon_env(&runtime, options)
-                    .err()
-                    .unwrap()
-                    .to_string(),
-            )
+            .that(&build_res.err().unwrap().to_string())
             .is_equal_to(String::from(
                 "Can not connect to any grpc endpoint that was provided.",
             ))

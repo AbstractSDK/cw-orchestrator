@@ -33,12 +33,8 @@ pub use cw_multi_test::ContractWrapper;
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
-    channel::DaemonChannel,
-    core::{instantiate_daemon_env, Daemon},
-    error::DaemonError,
-    networks, queriers,
-    state::{DaemonOptions, DaemonOptionsBuilder},
-    Wallet,
+    builder::DaemonBuilder, channel::DaemonChannel, core::Daemon, error::DaemonError, networks,
+    queriers, Wallet,
 };
 
 #[cfg(feature = "daemon")]
