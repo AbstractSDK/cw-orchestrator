@@ -1,9 +1,9 @@
+
 use crate::CwEnv;
-use crate::tx_handler::Uploadable;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
-use cosmwasm_std::{Addr, Coin, CustomQuery, Empty, CustomMsg};
+use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::Contract as TestContract;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -11,84 +11,25 @@ use std::fmt::Debug;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: CwEnv>
-where
-    ExecT: CustomMsg + DeserializeOwned + 'static,
-    QueryT: CustomQuery + DeserializeOwned + 'static,
-{
+pub struct Contract<Chain: CwEnv> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
-    pub(crate) source: ContractCodeReference<ExecT, QueryT>,
     /// chain object that handles tx execution and queries.
     pub(crate) chain: Chain,
 }
 
-pub struct ContractCodeReference<ExecT = Empty, QueryT = Empty>
-where
-    ExecT: CustomMsg + DeserializeOwned + 'static,
-    QueryT: CustomQuery + DeserializeOwned + 'static,
-{
-    pub wasm_code_path: Option<String>,
-    pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
-}
-
-impl<E, Q> Clone for ContractCodeReference<E, Q>
-where
-    E: CustomMsg + DeserializeOwned + 'static,
-    Q: CustomQuery + DeserializeOwned + 'static,
-{
-    fn clone(&self) -> Self {
-        Self {
-            wasm_code_path: self.wasm_code_path.clone(),
-            contract_endpoints: None,
-        }
-    }
-}
-
-impl<E, Q> Default for ContractCodeReference<E, Q>
-where
-    E: CustomMsg + DeserializeOwned + 'static,
-    Q: CustomQuery + DeserializeOwned + 'static,
-{
-    fn default() -> Self {
-        Self {
-            wasm_code_path: None,
-            contract_endpoints: None,
-        }
-    }
-}
-
 /// Expose chain and state function to call them on the contract
-impl<Chain: CwEnv + Clone, ExecT, QueryT> Contract<Chain, ExecT, QueryT>
-where
-    ExecT: CustomMsg + DeserializeOwned + 'static,
-    QueryT: CustomQuery + DeserializeOwned + 'static,
-{
+impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),
             chain,
-            source: ContractCodeReference::default(),
         }
     }
 
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
     pub fn get_chain(&self) -> &Chain {
         &self.chain
-    }
-
-    pub fn with_wasm_path(mut self, path: impl ToString) -> Self {
-        self.source.wasm_code_path = Some(path.to_string());
-        self
-    }
-
-    pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<ExecT, QueryT>>) -> Self {
-        self.source.contract_endpoints = Some(mock_contract);
-        self
-    }
-
-    pub fn set_mock(&mut self, mock_contract: Box<dyn TestContract<ExecT, QueryT>>) {
-        self.source.contract_endpoints = Some(mock_contract);
     }
 
     /// Sets the address of the contract in the local state
@@ -137,16 +78,6 @@ where
         Ok(resp)
     }
 
-    pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("Uploading {}", self.id);
-        let resp = self.chain.upload(&mut self.source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
-        Ok(resp)
-    }
-
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
@@ -169,6 +100,16 @@ where
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
             .map_err(Into::into)
+    }
+
+    pub fn upload(&self, source: Chain::ContractSource) -> Result<TxResponse<Chain>, BootError> {
+        log::info!("Uploading {}", self.id);
+        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!("uploaded {} with code id {}", self.id, code_id);
+        log::debug!("Upload response: {:?}", resp);
+        Ok(resp)
     }
 
     // State interfaces
