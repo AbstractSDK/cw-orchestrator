@@ -1,19 +1,13 @@
 use super::state::MockState;
 use crate::{
-    contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
     BootError, BootExecute, CallAs, ContractInstance,
 };
 use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
-use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
-use schemars::JsonSchema;
+use cw_multi_test::{next_block, AppResponse, BasicApp, Contract, Executor};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{
-    cell::RefCell,
-    fmt::{self, Debug},
-    rc::Rc,
-};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 pub fn instantiate_default_mock_env(
     sender: &Addr,
@@ -157,6 +151,8 @@ where
 {
     type Response = AppResponse;
     type Error = BootError;
+    type ContractSource = Box<dyn Contract<ExecC, QueryC>>;
+
     fn sender(&self) -> Addr {
         self.sender.clone()
     }
@@ -232,30 +228,19 @@ where
             .map_err(From::from)
     }
 
-    fn upload<ExecT, QueryT>(
+    fn upload(
         &self,
-        contract_source: &mut ContractCodeReference<ExecT, QueryT>,
-    ) -> Result<Self::Response, crate::BootError>
-    where
-        ExecT: CustomMsg + DeserializeOwned + 'static,
-        QueryT: CustomQuery + DeserializeOwned + 'static,
-    {
-        // transfer ownership of Boxed app to App
-        if let Some(contract) = std::mem::replace(&mut contract_source.contract_endpoints, None) {
-            let code_id = self.app.borrow_mut().store_code(contract);
-            // add contract code_id to events manually
-            let mut event = Event::new("store_code");
-            event = event.add_attribute("code_id", code_id.to_string());
-            let resp = AppResponse {
-                events: vec![event],
-                ..Default::default()
-            };
-            Ok(resp)
-        } else {
-            Err(BootError::StdErr(
-                "Contract reference must be cosm-multi-test contract object.".into(),
-            ))
-        }
+        contract_source: Box<dyn Contract<ExecC, QueryC>>,
+    ) -> Result<Self::Response, crate::BootError> {
+        let code_id = self.app.borrow_mut().store_code(contract_source);
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
     }
 
     fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
