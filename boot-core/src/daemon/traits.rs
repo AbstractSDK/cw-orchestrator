@@ -1,11 +1,4 @@
-
-use crate::{
-    tx_handler::Uploadable, BootError, BootMigrate, BootUpload, Daemon, TxResponse,
-};
-
-
-
-
+use crate::{BootError, BootMigrate, BootUpload, Daemon, TxResponse};
 
 pub trait UploadHelpers: BootUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)

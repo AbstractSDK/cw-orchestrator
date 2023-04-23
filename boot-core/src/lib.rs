@@ -4,7 +4,7 @@ mod daemon;
 mod deploy;
 mod error;
 mod index_response;
-mod interface;
+mod interface_traits;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
@@ -14,13 +14,13 @@ mod tx_handler;
 
 pub use boot_contract_derive::contract;
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
-pub use contract::{Contract, ContractCodeReference};
+pub use contract::Contract;
 pub use deploy::Deploy;
 pub use error::BootError;
 pub use index_response::IndexResponse;
-pub use interface::{
+pub use interface_traits::{
     BootExecute, BootInstantiate, BootMigrate, BootQuery, BootUpload, CallAs, ContractInstance,
-    CwInterface,
+    CwInterface, Uploadable,
 };
 pub use mock::{
     core::{instantiate_custom_mock_env, instantiate_default_mock_env, Mock},
@@ -34,10 +34,12 @@ pub use cw_multi_test::ContractWrapper;
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
+    artifacts_dir::ArtifactsDir,
     core::{instantiate_daemon_env, Daemon},
     error::DaemonError,
     networks,
     state::{DaemonOptions, DaemonOptionsBuilder},
+    wasm_path::WasmPath,
 };
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};

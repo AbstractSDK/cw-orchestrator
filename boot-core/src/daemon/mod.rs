@@ -1,11 +1,14 @@
-pub mod contract;
+pub mod artifacts_dir;
 pub mod core;
 pub mod error;
 pub mod networks;
 pub mod querier;
 mod sender;
 pub mod state;
+/// Custom traits for Daemon contracts
+pub mod traits;
 pub mod tx_resp;
+pub mod wasm_path;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;
