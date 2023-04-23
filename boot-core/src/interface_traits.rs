@@ -95,7 +95,10 @@ pub trait BootMigrate<Chain: CwEnv>: CwInterface + ContractInstance<Chain> {
 }
 
 /// Trait to implement on the contract to enable it to be uploaded
+/// Should return [`WasmPath`](crate::WasmPath) for `Chain = Daemon`
+/// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable<Chain: TxHandler> {
+    /// Return an object that can be used to upload the contract to the environment.
     fn source(&self) -> Chain::ContractSource;
 }
 
