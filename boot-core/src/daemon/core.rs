@@ -165,21 +165,6 @@ impl TxHandler for Daemon {
     }
 
     /// Executes a contract on the blockchain network with the given input parameters.
-    ///
-    /// ## Arguments
-    ///
-    /// * `exec_msg` - A reference to the ExecuteMsg to be sent to the contract.
-    /// * `coins` - A reference to an array of [Coin] objects that should be sent with the message.
-    /// * `contract_address` - The address of the contract to execute.
-    ///
-    /// ## Returns
-    ///
-    /// Returns a [CosmTxResponse] object as the result of the operation.
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
@@ -199,23 +184,6 @@ impl TxHandler for Daemon {
     }
 
     /// Instantiates a new contract on the blockchain network with the given input parameters.
-    ///
-    /// ## Arguments
-    ///
-    /// * `code_id` - The ID of the code associated with the uploaded contract.
-    /// * `init_msg` - A reference to the `InstantiateMsg` to be sent to the new contract.
-    /// * `label` - An optional label (str) to be associated with the new contract.
-    /// * `admin` - An optional reference of an address to be designated as the administrator.
-    /// * `coins` - A reference to an array of [Coin] objects that should be sent with the message.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<Self::Response, DaemonError> - a [CosmTxResponse] containing the response from executing the migration or a [DaemonError]
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
@@ -243,20 +211,6 @@ impl TxHandler for Daemon {
     }
 
     /// Queries a contract on the blockchain network with the given `QueryMsg`
-    ///
-    /// ## Arguments
-    ///
-    /// * `query_msg` - A reference to the `QueryMsg` to be sent to the contract.
-    /// * `contract_address` - The address of the contract to query.
-    ///
-    /// ## Returns
-    ///
-    /// * `Result<T, DaemonError>` - The deserialized response from the contract, or an error of type [DaemonError] if the query fails.
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
@@ -277,23 +231,6 @@ impl TxHandler for Daemon {
     }
 
     /// Executes a migration of a contract to a new version with the given `new_code_id`. The contract is
-    /// identified by its `contract_address` and the migration message is passed as a reference to
-    /// `migrate_msg`.
-    ///
-    /// ## Arguments
-    ///
-    /// * `migrate_msg` - A reference to the `MigrateMsg` to be passed to the contract.
-    /// * `new_code_id` - The ID of the new version of the contract.
-    /// * `contract_address` - The address of the contract to be migrated.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<Self::Response, DaemonError> - a [CosmTxResponse] containing the response from executing the migration or a [DaemonError]
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -313,19 +250,6 @@ impl TxHandler for Daemon {
     }
 
     /// Uploads the given contract source code to the blockchain.
-    ///
-    /// ## Arguments
-    ///
-    /// * `contract_source` - A mutable reference to a [ContractCodeReference] object that contains the contract code to be uploaded.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<Self::Response, DaemonError> - a [CosmTxResponse] containing the response from uploading the contract or a [DaemonError]
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn upload(
         &self,
         contract_source: &mut ContractCodeReference<Empty>,
@@ -355,19 +279,6 @@ impl TxHandler for Daemon {
     }
 
     /// Wait for a specified number of blocks to be produced.
-    ///
-    /// ## Arguments
-    ///
-    /// * `amount` - The u64 number of blocks to wait for.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<(), DaemonError> - void or a [DaemonError]
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + amount;
@@ -385,19 +296,6 @@ impl TxHandler for Daemon {
     }
 
     /// Wait for a specified number of seconds.
-    ///
-    /// ## Arguments
-    ///
-    /// * `secs` - The u64 number of seconds to wait for.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<(), DaemonError> - void or a [DaemonError]
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
         self.runtime
             .block_on(tokio::time::sleep(Duration::from_secs(secs)));
@@ -406,19 +304,6 @@ impl TxHandler for Daemon {
     }
 
     /// Wait until the next block is produced and confirmed by the network.
-    ///
-    /// This method polls the node's block height until a new block is produced and
-    /// confirmed by the network. It blocks the current thread until the next block
-    /// is confirmed.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<(), DaemonError> - void or a [DaemonError]
-    ///
-    /// ## Errors
-    ///
-    /// Returns a [DaemonError] if the operation fails for any reason.
-    ///
     fn next_block(&self) -> Result<(), DaemonError> {
         let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + 1;
@@ -436,11 +321,6 @@ impl TxHandler for Daemon {
     }
 
     /// Get the current block information from the chain.
-    ///
-    /// ## Returns
-    ///
-    /// * Result<cosmwasm_std::BlockInfo, DaemonError> - [cosmwasm_std::BlockInfo] or a [DaemonError]
-    ///
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
         let block = self.runtime.block_on(self.query::<Node>().latest_block())?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
