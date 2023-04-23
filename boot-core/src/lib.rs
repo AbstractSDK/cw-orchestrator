@@ -8,7 +8,6 @@ mod interface_traits;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
-// pub mod prelude;
 mod state;
 mod tx_handler;
 
@@ -35,12 +34,15 @@ pub use cw_multi_test::ContractWrapper;
 #[cfg(feature = "daemon")]
 pub use daemon::{
     artifacts_dir::ArtifactsDir,
+    channel::DaemonChannel,
     core::{instantiate_daemon_env, Daemon},
     error::DaemonError,
-    networks,
+    networks, queriers,
     state::{DaemonOptions, DaemonOptionsBuilder},
     wasm_path::WasmPath,
+    Wallet,
 };
+
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
 

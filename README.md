@@ -111,6 +111,13 @@ cd docs && mdbook serve --open --port 5000
 
 to view the changes.
 
+# Testing
+To test the full application you can run the following command:
+
+```shell
+cargo test --jobs 1 --all-features
+```
+
 # References
 
 Enjoy scripting your smart contracts with ease? Build your contracts with ease by using [Abstract](https://abstract.money).
