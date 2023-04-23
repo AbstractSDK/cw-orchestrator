@@ -89,6 +89,7 @@ impl ChainState for Daemon {
 impl TxHandler for Daemon {
     type Response = CosmTxResponse;
     type Error = DaemonError;
+    type ContractSource = String;
 
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -175,7 +176,7 @@ impl TxHandler for Daemon {
 
     fn upload(
         &self,
-        contract_source: &mut ContractCodeReference<Empty>,
+        contract_source: &mut ContractCodeReference,
     ) -> Result<Self::Response, DaemonError> {
         let sender = &self.sender;
         let wasm_path = &contract_source.get_wasm_code_path()?;

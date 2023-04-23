@@ -1,19 +1,19 @@
 use crate::CwEnv;
+use crate::tx_handler::Uploadable;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
-use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
+use cosmwasm_std::{Addr, Coin, CustomQuery, Empty, CustomMsg};
 use cw_multi_test::Contract as TestContract;
-use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: CwEnv, ExecT = Empty, QueryT = Empty>
+pub struct Contract<Chain: CwEnv>
 where
-    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    ExecT: CustomMsg + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     /// ID of the contract, used to retrieve addr/code-id
@@ -25,7 +25,7 @@ where
 
 pub struct ContractCodeReference<ExecT = Empty, QueryT = Empty>
 where
-    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    ExecT: CustomMsg + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     pub wasm_code_path: Option<String>,
@@ -34,7 +34,7 @@ where
 
 impl<E, Q> Clone for ContractCodeReference<E, Q>
 where
-    E: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    E: CustomMsg + DeserializeOwned + 'static,
     Q: CustomQuery + DeserializeOwned + 'static,
 {
     fn clone(&self) -> Self {
@@ -47,7 +47,7 @@ where
 
 impl<E, Q> Default for ContractCodeReference<E, Q>
 where
-    E: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    E: CustomMsg + DeserializeOwned + 'static,
     Q: CustomQuery + DeserializeOwned + 'static,
 {
     fn default() -> Self {
@@ -61,7 +61,7 @@ where
 /// Expose chain and state function to call them on the contract
 impl<Chain: CwEnv + Clone, ExecT, QueryT> Contract<Chain, ExecT, QueryT>
 where
-    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    ExecT: CustomMsg + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     pub fn new(id: impl ToString, chain: Chain) -> Self {

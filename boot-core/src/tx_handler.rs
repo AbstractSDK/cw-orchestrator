@@ -1,5 +1,5 @@
 use crate::{contract::ContractCodeReference, state::ChainState, BootError, IndexResponse};
-use cosmwasm_std::{Addr, BlockInfo, Coin, Empty};
+use cosmwasm_std::{Addr, BlockInfo, Coin, CustomMsg, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 // Functions that are callable on the cosmwasm chain/mock
@@ -9,6 +9,7 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 pub trait TxHandler: ChainState + Clone {
     type Response: IndexResponse + Debug;
     type Error: Into<BootError> + Debug;
+    type ContractSource;
 
     // Gets current sender
     fn sender(&self) -> Addr;
@@ -42,12 +43,14 @@ pub trait TxHandler: ChainState + Clone {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
-    fn upload<
-        ExecT: Clone + Debug + PartialEq + schemars::JsonSchema + DeserializeOwned + 'static,
-        QueryT: cosmwasm_std::CustomQuery + DeserializeOwned + 'static,
-    >(
+    fn upload(
         &self,
         // Needs to be &mut to allow mock app to take ownership of contract box-reference.
-        contract_source: &mut ContractCodeReference<ExecT, QueryT>,
+        contract_source: impl Uploadable<Self>,
     ) -> Result<Self::Response, Self::Error>;
+}
+
+
+pub trait Uploadable<Chain: TxHandler> {
+    fn source(&self) -> Chain::ContractSource;
 }

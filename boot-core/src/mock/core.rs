@@ -5,11 +5,15 @@ use crate::{
     tx_handler::TxHandler,
     BootError, BootExecute, CallAs, ContractInstance,
 };
-use cosmwasm_std::{Addr, CustomQuery, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
 use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::{self, Debug},
+    rc::Rc,
+};
 
 pub fn instantiate_default_mock_env(
     sender: &Addr,
@@ -32,13 +36,17 @@ pub fn instantiate_custom_mock_env<S: StateInterface>(
 // Generic mock-chain implementation
 // Allows for custom state storage
 #[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState, ExecC= Empty, QueryC= Empty> {
+pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
     pub sender: Addr,
     pub state: Rc<RefCell<S>>,
-    pub app: Rc<RefCell<BasicApp<ExecC,QueryC>>>,
+    pub app: Rc<RefCell<BasicApp<ExecC, QueryC>>>,
 }
 
-impl<S: StateInterface,ExecC, QueryC> Mock<S,ExecC, QueryC> {
+impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     /// set the Bank balance of an address
     pub fn set_balance(
         &self,
@@ -85,11 +93,15 @@ impl<S: StateInterface,ExecC, QueryC> Mock<S,ExecC, QueryC> {
     }
 }
 
-impl<S: StateInterface> Mock<S> {
+impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     pub fn new(
         sender: &Addr,
         state: &Rc<RefCell<S>>,
-        app: &Rc<RefCell<App>>,
+        app: &Rc<RefCell<BasicApp<ExecC, QueryC>>>,
     ) -> anyhow::Result<Self> {
         let instance = Self {
             sender: sender.clone(),
@@ -100,7 +112,11 @@ impl<S: StateInterface> Mock<S> {
     }
 }
 
-impl<S: StateInterface> ChainState for Mock<S> {
+impl<S: StateInterface, ExecC, QueryC> ChainState for Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -134,7 +150,11 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for Mock<S> {
+impl<S: StateInterface, ExecC, QueryC> TxHandler for Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     type Response = AppResponse;
     type Error = BootError;
     fn sender(&self) -> Addr {
@@ -217,7 +237,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         contract_source: &mut ContractCodeReference<ExecT, QueryT>,
     ) -> Result<Self::Response, crate::BootError>
     where
-        ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+        ExecT: CustomMsg + DeserializeOwned + 'static,
         QueryT: CustomQuery + DeserializeOwned + 'static,
     {
         // transfer ownership of Boxed app to App

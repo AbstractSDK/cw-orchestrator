@@ -1,6 +1,6 @@
 use super::error::DaemonError;
-use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse};
-use cosmwasm_std::CustomQuery;
+use crate::{contract::ContractCodeReference, BootError, Contract, Daemon, TxResponse, tx_handler::Uploadable};
+use cosmwasm_std::{CustomQuery, CustomMsg};
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
@@ -9,6 +9,12 @@ use std::{
     fs,
     path::Path,
 };
+
+impl Uploadable<Daemon> for ContractCodeReference {
+    fn source(&self) -> String {
+        self.wasm_code_path.unwrap()
+    }
+}
 
 impl Contract<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
@@ -67,7 +73,7 @@ impl Contract<Daemon> {
 
 impl<ExecT, QueryT> ContractCodeReference<ExecT, QueryT>
 where
-    ExecT: Clone + fmt::Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
+    ExecT: CustomMsg + DeserializeOwned + 'static,
     QueryT: CustomQuery + DeserializeOwned + 'static,
 {
     /// Checks the environment for the wasm dir configuration and returns the path to the wasm file
