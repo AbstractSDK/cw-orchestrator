@@ -5,7 +5,6 @@ pub fn write(filename: &String, network_id: &String, chain_id: &String, deploy_i
     // open file pointer set read/write permissions to true
     // create it if it does not exists
     // dont truncate it
-    eprintln!("filename: {}", filename);
     let file = OpenOptions::new()
         .create(true)
         .read(true)
