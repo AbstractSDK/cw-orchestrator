@@ -125,23 +125,18 @@ mod tests {
     fn network_grpcs_list_is_empty() {
         let runtime = Arc::new(Runtime::new().unwrap());
 
-        let mut network = boot_core::networks::LOCAL_JUNO;
+        let mut chain = boot_core::networks::LOCAL_JUNO;
         let grpcs: &Vec<&str> = &vec![];
-        network.grpc_urls = grpcs;
+        chain.grpc_urls = grpcs;
 
-        let options = DaemonOptionsBuilder::default()
-            .network(network)
+        let build_res = Daemon::builder()
+            .handle(runtime.handle())
+            .chain(chain)
             .deployment_id("v0.1.0")
-            .build()
-            .unwrap();
+            .build();
 
         asserting!("GRPC list is empty")
-            .that(
-                &instantiate_daemon_env(&runtime, options)
-                    .err()
-                    .unwrap()
-                    .to_string(),
-            )
+            .that(&build_res.err().unwrap().to_string())
             .is_equal_to(String::from("The list of grpc endpoints is empty"))
     }
 }
