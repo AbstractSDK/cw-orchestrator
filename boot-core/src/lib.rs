@@ -40,11 +40,16 @@ pub use daemon::{
     channel::DaemonChannel,
     core::{instantiate_daemon_env, Daemon},
     error::DaemonError,
+    ibc_tracker::IbcTracker,
     networks, queriers,
     state::{DaemonOptions, DaemonOptionsBuilder},
     Wallet,
-    ibc_tracker::IbcTracker,
 };
+
+#[cfg(feature = "daemon")]
+pub mod channel {
+    pub use crate::daemon::channel::ChannelAccess;
+}
 
 #[cfg(feature = "interchain")]
 pub use interchain::{hermes::Hermes, infrastructure::InterchainInfrastructure};

@@ -16,6 +16,9 @@ exclude = [".env"]
 name = "ica-demo"
 required-features = ["interchain"]
 
+[[bin]]
+name              = "ibc_queries"
+path              = "bin/ibc_queries.rs"
 
 [features]
 default = ["interchain"]
@@ -43,6 +46,7 @@ daemon = [
   "dep:prost",
   "dep:sha256",
   "dep:log4rs",
+  "dep:diff-struct",
 ]
 # Interact with interchaintest's docker nodes
 interchain = [
@@ -52,6 +56,9 @@ interchain = [
 ]
 
 [dependencies]
+dotenv     = "0.15.0"
+env_logger = "0.10.0"
+
 # Default deps
 boot-contract-derive = { version = "0.10.0" }
 boot-fns-derive = { version = "0.10.0" }
@@ -94,6 +101,7 @@ chrono = { version = "0.4", optional = true }
 base16 = { version = "0.2.1", optional = true }
 derive_builder = { version = "0.12.0", optional = true }
 ring = { version = "0.16.20", optional = true }
+diff-struct = { version = "0.5", optional = true }
 
 # Interchain deps
 bollard = {version = "0.14.0", optional = true }

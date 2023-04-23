@@ -1,0 +1,87 @@
+2023-04-21 10:15:10 - DEBUG: debug info
+2023-04-21 10:15:10 - INFO: relevant general info
+2023-04-21 10:15:10 - WARN: warning this program doesn't do much
+2023-04-21 10:15:10 - ERROR: error message here
+2023-04-21 10:15:18 - INFO: Logging IBC events
+2023-04-21 10:15:22 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:15:26 - INFO: Logging IBC events
+2023-04-21 10:15:30 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:15:34 - INFO: Logging IBC events
+2023-04-21 10:15:37 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:15:42 - INFO: Logging IBC events
+2023-04-21 10:15:45 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:15:50 - INFO: Logging IBC events
+2023-04-21 10:15:53 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:15:57 - INFO: Logging IBC events
+2023-04-21 10:16:01 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:05 - INFO: Logging IBC events
+2023-04-21 10:16:09 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:13 - INFO: Logging IBC events
+2023-04-21 10:16:17 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:21 - INFO: Logging IBC events
+2023-04-21 10:16:24 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:28 - INFO: Logging IBC events
+2023-04-21 10:16:32 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:36 - INFO: Logging IBC events
+2023-04-21 10:16:40 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:44 - INFO: Logging IBC events
+2023-04-21 10:16:48 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:16:52 - INFO: Logging IBC events
+2023-04-21 10:16:56 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:00 - INFO: Logging IBC events
+2023-04-21 10:17:03 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:07 - INFO: Logging IBC events
+2023-04-21 10:17:11 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:15 - INFO: Logging IBC events
+2023-04-21 10:17:19 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:23 - INFO: Logging IBC events
+2023-04-21 10:17:27 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:31 - INFO: Logging IBC events
+2023-04-21 10:17:34 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:39 - INFO: Logging IBC events
+2023-04-21 10:17:42 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:46 - INFO: Logging IBC events
+2023-04-21 10:17:50 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:17:54 - INFO: Logging IBC events
+2023-04-21 10:17:58 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:02 - INFO: Logging IBC events
+2023-04-21 10:18:05 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:10 - INFO: Logging IBC events
+2023-04-21 10:18:13 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:17 - INFO: Logging IBC events
+2023-04-21 10:18:21 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:25 - INFO: Logging IBC events
+2023-04-21 10:18:29 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:33 - INFO: Logging IBC events
+2023-04-21 10:18:36 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:41 - INFO: Logging IBC events
+2023-04-21 10:18:44 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:48 - INFO: Logging IBC events
+2023-04-21 10:18:52 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:18:56 - INFO: Logging IBC events
+2023-04-21 10:19:00 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:19:04 - INFO: Logging IBC events
+2023-04-21 10:19:07 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:19:11 - INFO: Logging IBC events
+2023-04-21 10:19:15 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:19:19 - INFO: Logging IBC events
+2023-04-21 10:19:23 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:22:45 - DEBUG: debug info
+2023-04-21 10:22:45 - INFO: relevant general info
+2023-04-21 10:22:45 - WARN: warning this program doesn't do much
+2023-04-21 10:22:45 - ERROR: error message here
+2023-04-21 10:22:49 - INFO: Logging IBC events
+2023-04-21 10:22:53 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:22:57 - INFO: Logging IBC events
+2023-04-21 10:23:01 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:23:05 - INFO: Logging IBC events
+2023-04-21 10:23:08 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:23:12 - INFO: Logging IBC events
+2023-04-21 10:23:16 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:23:20 - INFO: Logging IBC events
+2023-04-21 10:23:24 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:23:28 - INFO: Logging IBC events
+2023-04-21 10:23:31 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:23:35 - INFO: Logging IBC events
+2023-04-21 10:23:39 - INFO: Osmosis connection: ["connection-0", "connection-1", "connection-106", "connection-147", "connection-148"]
+2023-04-21 10:23:43 - INFO: Logging IBC events

@@ -12,6 +12,12 @@ pub trait ChannelAccess {
     fn channel(&self) -> Channel;
 }
 
+impl ChannelAccess for Channel {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.clone()
+    }
+}
+
 pub struct DaemonChannel {}
 
 impl DaemonChannel {
