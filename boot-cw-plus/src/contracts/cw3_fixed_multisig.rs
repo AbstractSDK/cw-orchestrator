@@ -7,7 +7,7 @@ pub use cw3_fixed_multisig::msg::{
     ExecuteMsgFns as Cw3FixedMultisigExecuteMsgFns, QueryMsgFns as Cw3FixedMultisigQueryMsgFns,
 };
 
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+#[contract(InstantiateMsg, ExecuteMsg<Empty>, QueryMsg, Empty)]
 pub struct Cw3FixedMultisig;
 
 // implement chain-generic functions
