@@ -106,13 +106,23 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         # instantiate
         Initializes the contract
 
-        ## Arguments
-        * `msg` - A reference to the `InstantiateMsg` to be sent to the new contract.
-        * `admin` - An optional reference of an address to be designated as the administrator.
-        * `coins` - An optional reference to a vector of [Coin] objects that should be sent with the message.
+        ## Example
 
-        ## Returns
-        Result<[TxResponse<Chain>], [BootError]>
+        ```ignore
+        let init_msg = cw20_base::msg::InstantiateMsg {
+            name: "Token".to_owned(),
+            symbol: "TOK".to_owned(),
+            decimals: 6u8,
+            initial_balances: vec![cw20::Cw20Coin {
+                address: admin.to_string(),
+                amount: Uint128::from(10000u128),
+            }],
+            mint: None,
+            marketing: None,
+        };
+
+        let init_res = contract.instantiate(&init_msg, Some(&admin.clone()), None);
+        ```
     */
     pub fn instantiate<I: Serialize + Debug>(
         &self,
@@ -145,7 +155,20 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     }
 
     // Chain interfaces
-    /// Executes an operation on the contract
+    /**
+        # execute
+        Executes an operation on the contract
+
+        ## Example
+
+        ```ignore
+        let exec_msg = cw20_base::msg::ExecuteMsg::Burn {
+            amount: 10u128.into()
+        };
+
+        let exec_res = contract.execute(&exec_msg, None);
+        ```
+    */
     pub fn execute<E: Serialize + Debug>(
         &self,
         msg: &E,
@@ -159,7 +182,19 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         resp.map_err(Into::into)
     }
 
-    /// Queries the contract
+    /**
+        # query
+        Queries the contract
+
+        ## Example
+        ```ignore
+        let query_res = contract.query::<cw20_base::msg::QueryMsg, cw20::BalanceResponse>(
+            &cw20_base::msg::QueryMsg::Balance {
+                address: sender.to_string(),
+            },
+        );
+        ```
+    */
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
@@ -173,7 +208,16 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
-    /// Migrates the contract
+    /**
+        # migrate
+        Migrates the contract
+
+        ## Example
+
+        ```ignore
+        let migrate_res = contract.migrate(&MigrateMsg {}, code_id.parse::<u64>().unwrap());
+        ```
+    */
     pub fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,

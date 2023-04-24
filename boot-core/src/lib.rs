@@ -16,6 +16,12 @@
 //!
 //! # Quick start
 //!
+//!
+//! ## Environment
+//!
+//! * `STATE_FILE` - holds the path for your state file, which contains, addresses and code ids for your contracts in different environments.
+//! * `LOCAL_MNEMONIC` - mnemonic to use for local development, used for genesis wallets.
+//!
 //! ## Contract instance initialization
 //!
 //! In this example we are using cw20_base contract that is contained inside [boot_cw_plus].

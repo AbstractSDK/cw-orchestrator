@@ -20,6 +20,7 @@ use crate::{BootError, CwEnv};
 ///         token.upload()?;
 ///         Ok(Self { token })
 ///     }
+///
 ///     // deploys the token to the chain
 ///     fn deploy_on(chain: Chain, data: Empty) -> Result<Self, BootError> {
 ///         let my_app: MyApplication<Chain> = Self::store_on(chain)?;
@@ -35,6 +36,7 @@ use crate::{BootError, CwEnv};
 ///         my_app.token.instantiate(&cw20_init_msg, None, None)?;
 ///         Ok(my_app)
 ///    }
+///
 ///    // loads the token from the chain
 ///    fn load_from(chain: Chain) -> Result<Self, BootError> {
 ///        // loads the token and uses the "my-token" key to get its information
@@ -48,16 +50,20 @@ use crate::{BootError, CwEnv};
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: CwEnv>: Sized {
     type Error: From<BootError>;
+
     /// Data required to deploy the application.
     type DeployData;
+
     /// Stores/uploads the application to the chain.
     fn store_on(chain: Chain) -> Result<Self, Self::Error>;
+
     /// Deploy the application to the chain. This could include instantiating contracts.
     #[allow(unused_variables)]
     fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error> {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
     }
+
     /// Load the application from the chain, assuming it has already been deployed.
     fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
