@@ -90,7 +90,7 @@ where
         let wasm_code_path = self
             .wasm_code_path
             .as_ref()
-            .ok_or_else(|| DaemonError::MissingWasmPath)?;
+            .ok_or(DaemonError::MissingWasmPath)?;
 
         let wasm_code_path = if wasm_code_path.contains(".wasm") {
             wasm_code_path.to_string()
