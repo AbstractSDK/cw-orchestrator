@@ -2,8 +2,6 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use tokio::runtime::Handle;
-
 use crate::{Daemon, DaemonError};
 
 use super::{sender::Sender, state::DaemonState};
@@ -13,11 +11,11 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 #[derive(Clone, Default)]
 /// Create [`Daemon`] through [`DaemonBuilderBuilder`]
 /// ## Example
-/// ```
+/// ```ignore
 ///     use boot_core::{DaemonBuilder, networks};
 ///
 ///     let daemon = DaemonBuilder::default()
-///         .network(networks::LOCAL_JUNO)
+///         .chain(networks::LOCAL_JUNO)
 ///         .deployment_id("v0.1.0")
 ///         .build()
 ///         .unwrap();

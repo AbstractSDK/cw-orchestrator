@@ -66,14 +66,17 @@ impl DaemonChannel {
                 .await?
                 .into_inner();
 
-            // verify we are connected to the spected network
-            if node_info.default_node_info.as_ref().unwrap().network != chain_id.as_str() {
-                log::error!(
-                    "Network mismatch: connection:{} != config:{}",
-                    node_info.default_node_info.as_ref().unwrap().network,
-                    chain_id.as_str()
-                );
-                continue;
+            // local juno does not return a proper ChainId with epoch format
+            if ChainId::is_epoch_format(&node_info.default_node_info.as_ref().unwrap().network) {
+                // verify we are connected to the spected network
+                if node_info.default_node_info.as_ref().unwrap().network != chain_id.as_str() {
+                    log::error!(
+                        "Network mismatch: connection:{} != config:{}",
+                        node_info.default_node_info.as_ref().unwrap().network,
+                        chain_id.as_str()
+                    );
+                    continue;
+                }
             }
 
             // add endpoint to succesful connections

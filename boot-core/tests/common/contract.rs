@@ -13,9 +13,7 @@ use boot_core::{networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon};
 
 const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
 
-pub fn start() -> (cosmwasm_std::Addr, Contract<Daemon>) {
-    let runtime = Arc::new(Runtime::new().unwrap());
-
+pub fn start(runtime: &Arc<Runtime>) -> (cosmwasm_std::Addr, Contract<Daemon>) {
     let id = Id::new();
 
     let daemon = Daemon::builder()
