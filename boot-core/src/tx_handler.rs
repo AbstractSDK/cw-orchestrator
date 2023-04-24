@@ -14,6 +14,7 @@ pub trait TxHandler: ChainState + Clone {
     fn sender(&self) -> Addr;
     // Skip x amount of blocks
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
+    fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error>;
     fn next_block(&self) -> Result<(), Self::Error>;
     fn block_info(&self) -> Result<BlockInfo, Self::Error>;
     // Actions //
