@@ -1,6 +1,6 @@
 [package]
 name        = "boot-cw-plus"
-version     = "0.10.0"
+version     = "0.10.1"
 authors     = { workspace = true }
 edition     = { workspace = true }
 license     = { workspace = true }
@@ -31,25 +31,25 @@ wasms   = ["dep:tokio", "dep:reqwest"]
 daemon  = ["boot-core/daemon", "dep:tokio"]
 
 [dependencies]
-boot-core     = { git = "https://github.com/Abstract-OS/BOOT.git" }
+boot-core     = { version = "0.10.0" }
 cosmwasm-std  = { workspace = true }
 serde         = { workspace = true }
 anyhow        = { workspace = true }
 cw-multi-test = { workspace = true }
 # packages 
-cw1  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw3  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw4  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw20 = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw1  = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw3  = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw4  = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw20 = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
 # crates
-cw1-subkeys        = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw1-whitelist      = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw20-base          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw20-ics20         = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw3-fixed-multisig = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw3-flex-multisig  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw4-group          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw4-stake          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw1-subkeys        = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw1-whitelist      = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw20-base          = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw20-ics20         = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw3-fixed-multisig = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw3-flex-multisig  = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw4-group          = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
+cw4-stake          = { git = "https://github.com/Abstract-OS/cw-plus.git", tag = "v0.10.0" }
 
 # For bin
 tokio   = { version = "1", features = ["full"], optional = true }
