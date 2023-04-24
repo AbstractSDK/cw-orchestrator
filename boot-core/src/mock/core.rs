@@ -1,31 +1,38 @@
-use super::state::MockState;
-use crate::{
-    state::{ChainState, StateInterface},
-    tx_handler::TxHandler,
-    BootError, BootExecute, CallAs, ContractInstance,
-};
-use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
-use cw_multi_test::{next_block, AppResponse, BasicApp, Contract, Executor};
-use serde::{de::DeserializeOwned, Serialize};
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
+use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
+use cw_multi_test::{AppResponse, BasicApp, Contract, custom_app, Executor, next_block};
+use serde::{de::DeserializeOwned, Serialize};
+
+use crate::{
+    BootError,
+    BootExecute,
+    CallAs, ContractInstance, state::{ChainState, StateInterface}, tx_handler::TxHandler,
+};
+
+use super::state::MockState;
+
+#[deprecated(
+    since = "0.11.0",
+    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::create`"
+)]
 pub fn instantiate_default_mock_env(
     sender: &Addr,
 ) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
-    let mock_state = Rc::new(RefCell::new(MockState::new()));
-    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
-    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
-    Ok((mock_state, mock_chain))
+    let mock_chain = Mock::new(sender)?;
+    Ok((mock_chain.state(), mock_chain))
 }
 
+#[deprecated(
+    since = "0.11.0",
+    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::create_custom`"
+)]
 pub fn instantiate_custom_mock_env<S: StateInterface>(
     sender: &Addr,
     custom_state: S,
 ) -> anyhow::Result<(Rc<RefCell<S>>, Mock<S>)> {
-    let mock_state = Rc::new(RefCell::new(custom_state));
-    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
-    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
-    Ok((mock_state, mock_chain))
+    let mock_chain = Mock::new_custom(sender, custom_state)?;
+    Ok((mock_chain.state(), mock_chain))
 }
 
 // Generic mock-chain implementation
@@ -88,20 +95,33 @@ where
     }
 }
 
+impl<ExecC, QueryC> Mock<MockState, ExecC, QueryC>
+    where
+        ExecC: CustomMsg + DeserializeOwned + 'static,
+        QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
+    /// Create the default mock environment with the chain.
+    pub fn new(
+        sender: &Addr,
+    ) -> anyhow::Result<Self> {
+        Mock::new_custom(sender, MockState::new())
+    }
+}
+
 impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
 where
     ExecC: CustomMsg + DeserializeOwned + 'static,
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
-    pub fn new(
-        sender: &Addr,
-        state: &Rc<RefCell<S>>,
-        app: &Rc<RefCell<BasicApp<ExecC, QueryC>>>,
-    ) -> anyhow::Result<Self> {
+    /// Create a custom mock environment with the chain.
+    pub fn new_custom(sender: &Addr, custom_state: S) -> anyhow::Result<Self> {
+        let state = Rc::new(RefCell::new(custom_state));
+        let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
+
         let instance = Self {
             sender: sender.clone(),
-            state: state.clone(),
-            app: app.clone(),
+            state,
+            app,
         };
         Ok(instance)
     }
@@ -289,15 +309,14 @@ impl<T: BootExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
 #[cfg(test)]
 mod test {
     use cosmwasm_std::{
-        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+        Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_binary,
         Uint128,
     };
     use cw_multi_test::ContractWrapper;
-
     use serde::Serialize;
     use speculoos::prelude::*;
 
-    use crate::{mock::core::*, ContractCodeReference, TxHandler};
+    use crate::{ContractCodeReference, mock::core::*, TxHandler};
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";

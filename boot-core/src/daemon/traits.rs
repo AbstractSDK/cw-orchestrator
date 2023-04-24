@@ -1,4 +1,4 @@
-use crate::{queriers::CosmWasm, BootError, BootMigrate, BootUpload, Contract, Daemon, TxResponse};
+use crate::{queriers::CosmWasm, BootError, BootMigrate, BootUpload, Daemon, TxResponse};
 
 pub trait UploadHelpers: BootUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
