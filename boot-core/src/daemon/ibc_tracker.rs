@@ -1,13 +1,17 @@
 use cosmrs::proto::ibc::core::channel::v1::State;
 use diff::Diff;
+use futures_util::{future::join_all, Future};
 use log::*;
 use log4rs::{
     append::file::FileAppender,
     config::{Appender, Config, Root},
     encode::pattern::PatternEncoder,
 };
-use std::time::Duration;
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{hash_map::RandomState, HashMap},
+    path::PathBuf,
+};
+use std::{fmt::Display, time::Duration};
 use tonic::{async_trait, transport::Channel};
 
 use crate::{
@@ -15,7 +19,7 @@ use crate::{
     DaemonError,
 };
 
-use self::ibc_state::LoggedState;
+use self::logged_state::LoggedState;
 
 use super::channel::ChannelAccess;
 
@@ -28,24 +32,29 @@ pub struct IbcTrackerConfig<S: LoggedState> {
     /// Customize the log level. If not set, the default is `Info`.
     pub(crate) log_level: log::LevelFilter,
     #[builder(default)]
+    #[builder(setter(strip_option, into))]
+
     /// Customize the log file name. If not set, the chain ID will be used.
     pub(crate) log_file_name: Option<String>,
     #[builder(default)]
     /// Customize a trackable Ibc state. This could be the received packets on a channel.
-    /// If not set, no IBC state will be tracked.
-    pub(crate) ibc_state: Option<S>,
+    /// This is the state that will be logged when changes are detected
+    pub(crate) ibc_state: S,
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
     /// Spawn this task in a separate thread.
     /// It will check the block height of the chain and trigger an IBC log when new blocks are produced.
-    async fn cron_log(&self, config: IbcTrackerConfig<S>) -> Result<(), DaemonError> {
+    async fn cron_log(&self, config: IbcTrackerConfig<S>) -> ()
+    where
+        S: 'async_trait,
+    {
         let node = Node::new(self.channel());
         let latest_block = node.block_info().await.unwrap();
         let block_height = latest_block.height;
         let chain_id = latest_block.chain_id;
-        let log_id = config.log_file_name.unwrap_or(chain_id);
+        let log_id = config.log_file_name.unwrap_or(chain_id.clone());
 
         let log_file_path = generate_log_file_path(&log_id);
         std::fs::create_dir_all(log_file_path.parent().unwrap()).unwrap();
@@ -60,34 +69,27 @@ pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
 
         let log4rs_config = Config::builder()
             .appender(Appender::builder().build(&log_id, Box::new(file_appender)))
-            .build(Root::builder().appender(chain_id).build(config.log_level))
+            .build(
+                Root::builder()
+                    .appender(chain_id.clone())
+                    .build(config.log_level),
+            )
             .unwrap();
 
         log4rs::init_config(log4rs_config).unwrap();
 
+        debug!("Logging started for chain {}", chain_id);
+
+        let mut state = config.ibc_state;
         loop {
             let new_block_height = node.block_info().await.unwrap().height;
             // ensure to only update when a new block is produced
             if new_block_height > block_height {
-                self.log_ibc_events().await?;
+                trace!("updating state {}", state);
+                state.update_state(self.channel()).await
             }
             tokio::time::sleep(config.log_interval).await;
         }
-    }
-
-    async fn log_ibc_events(&self) -> Result<(), DaemonError> {
-        let ibc = Ibc::new(self.channel());
-        log::info!("Logging IBC events");
-        let connections = ibc
-            .open_connections("osmosis-1")
-            .await?
-            .into_iter()
-            .map(|con| con.id)
-            .collect::<Vec<_>>();
-
-        log::info!("Osmosis connection: {:?}", connections);
-
-        Ok(())
     }
 }
 
@@ -103,34 +105,37 @@ fn generate_log_file_path(chain_id: &str) -> PathBuf {
 
 impl<S: LoggedState> IbcTracker<S> for Channel {}
 
-mod ibc_state {
-    use std::fmt::Debug;
+mod logged_state {
+    use std::fmt::{Debug, Display};
 
     use diff::Diff;
     use tonic::{async_trait, transport::Channel};
 
-    #[async_trait(?Send)]
-    pub trait LoggedState: Debug + PartialEq + Sized + Diff {
-        /// Top-level function that logs the state if it has changed.
-        async fn update_state(&mut self, channel: Channel) {
-            let new_state = self.new_state(channel).await;
-            log::trace!("new ibc state: {:?}", new_state);
-            if new_state != *self {
-                self.log_state(&new_state).await;
-            }
-            *self = new_state;
-        }
+    #[async_trait]
+    pub trait LoggedState:
+        Debug + PartialEq + Sized + Diff + Default + Display + Send + Sync
+    {
         /// Retrieve the new state, is called on every update.
         async fn new_state(&self, channel: Channel) -> Self;
         /// Logs the state, only called when the state has changed.
         async fn log_state(&self, new_self: &Self) {
             let diff = self.diff(new_self);
-            log::info!("new ibc state: {:?}", diff.ch);
+            let mut changes_to_print = Self::default();
+            changes_to_print.apply(&diff);
+            log::info!("New state: {}", changes_to_print);
+        }
+        /// Top-level function that logs the state if it has changed.
+        async fn update_state(&mut self, channel: Channel) {
+            let new_state = self.new_state(channel).await;
+            if new_state != *self {
+                self.log_state(&new_state).await;
+            }
+            *self = new_state;
         }
     }
 }
 
-#[derive(Debug, PartialEq, Default, Diff)]
+#[derive(Debug, PartialEq, Default, Diff, Clone)]
 /// Store the current state of a contract's IBC connection.
 pub struct CwIbcContractState {
     /// Connection over which the contract will establish channels.
@@ -140,12 +145,22 @@ pub struct CwIbcContractState {
     /// The channels connected to the contract
     pub channel_ids: Vec<String>,
     /// map of the received packets on a channel
-    pub received_packets: HashMap<String, u32>,
+    pub received_packets: HashMap<String, Vec<u64>>,
     /// map of the acknowledged packets on a channel
-    pub acknowledged_packets: HashMap<String, u32>,
+    pub acknowledged_packets: HashMap<String, Vec<u64>>,
 }
 
-#[async_trait(?Send)]
+impl CwIbcContractState {
+    pub fn new(connection_id: impl ToString, port_id: impl ToString) -> Self {
+        Self {
+            connection_id: connection_id.to_string(),
+            port_id: port_id.to_string(),
+            ..Default::default()
+        }
+    }
+}
+
+#[async_trait]
 impl LoggedState for CwIbcContractState {
     async fn new_state(&self, channel: Channel) -> Self {
         let ibc = Ibc::new(channel);
@@ -162,16 +177,53 @@ impl LoggedState for CwIbcContractState {
             })
             .collect::<Vec<_>>();
 
+        // get the packets received on each channel
+        let packets_per_channel =
+            join_all(channel_ids.iter().map(|channel_id| {
+                ibc.packet_commitments(self.port_id.clone(), channel_id.clone())
+            }))
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        let received_packets: HashMap<std::string::String, std::vec::Vec<u64>, RandomState> =
+            HashMap::from_iter(channel_ids.clone().into_iter().zip(
+                packets_per_channel.iter().map(|packets| {
+                    packets
+                        .iter()
+                        .map(|packet| packet.sequence)
+                        .collect::<Vec<_>>()
+                }),
+            ));
+
         Self {
             connection_id: self.connection_id.clone(),
             port_id: self.port_id.clone(),
-            channel_ids: self.channel_ids.clone(),
-            received_packets: self.received_packets.clone(),
+            channel_ids,
+            received_packets: received_packets,
             acknowledged_packets: self.acknowledged_packets.clone(),
         }
     }
+}
 
-    async fn log_state(&self) {
-        log::info!("new state: {:?}", self);
+impl Display for CwIbcContractState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self {
+            acknowledged_packets,
+            channel_ids,
+            received_packets,
+            ..
+        } = self;
+        if !acknowledged_packets.is_empty() {
+            write!(f, "acknowledged_packet(s): {:?}", acknowledged_packets)?;
+        }
+        if !received_packets.is_empty() {
+            write!(f, "received_packet(s): {:?}", acknowledged_packets)?;
+        }
+        if !channel_ids.is_empty() {
+            write!(f, "new_channel(s): {:?}", channel_ids)?;
+        }
+        Ok(())
     }
 }

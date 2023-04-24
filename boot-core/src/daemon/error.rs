@@ -103,3 +103,5 @@ impl DaemonError {
         Self::IbcError(msg.to_string())
     }
 }
+
+unsafe impl Send for DaemonError {}

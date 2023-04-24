@@ -1,0 +1,24 @@
+2023-04-24 12:44:56 - INFO: New state: received_packet(s): {}new_channel(s): ["channel-1"]
+2023-04-24 12:45:02 - INFO: Executing SendFunds {
+    ica_channel_id: "channel-1",
+    transfer_channel_id: "channel-0",
+} on controller
+2023-04-24 12:45:12 - INFO: Executing SendMsgs {
+    channel_id: "channel-1",
+    msgs: [
+        Bank(
+            Burn {
+                amount: [
+                    Coin {
+                        denom: "ujuno",
+                        amount: Uint128(
+                            100,
+                        ),
+                    },
+                ],
+            },
+        ),
+    ],
+    callback_id: None,
+} on controller
+2023-04-24 12:45:16 - INFO: New state: received_packet(s): {}

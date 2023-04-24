@@ -1,9 +1,12 @@
 use boot_core::channel::ChannelAccess;
+use boot_core::ibc_tracker::{
+    CwIbcContractState, IbcTracker, IbcTrackerConfig, IbcTrackerConfigBuilder,
+};
 use boot_core::{queriers::Ibc, *};
-use tokio::select;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Runtime;
+use tokio::select;
 use tokio::time::sleep;
 
 pub fn script() -> anyhow::Result<()> {
@@ -19,13 +22,17 @@ pub fn script() -> anyhow::Result<()> {
     // get sender form .env file mnemonic
     let (_sender, chain) = instantiate_daemon_env(&rt, options)?;
 
-    // get the IBC querier
-    let ibc = chain.query::<Ibc>();
-
     let juno_channel = chain.channel();
 
-    // spawn juno logging on a different thread. 
-    tokio::spawn(juno_channel.cron_log());
+    let tracker = IbcTrackerConfigBuilder::default()
+        .ibc_state(CwIbcContractState::new("connection-0", "transfer"))
+        .log_level(log::LevelFilter::Info)
+        .build()?;
+
+    // spawn juno logging on a different thread.
+    rt.spawn(async move {
+        juno_channel.cron_log(tracker).await;
+    });
 
     rt.block_on(async { sleep(Duration::from_secs(100)).await });
 
@@ -38,7 +45,6 @@ pub fn script() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[tokio::main]
 fn main() {
     dotenv().ok();
     // env_logger::init();

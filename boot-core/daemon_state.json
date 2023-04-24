@@ -3,11 +3,11 @@
     "juno-1": {
       "code_ids": {
         "cw-plus:cw20_base": 1,
-        "cw1": 2,
-        "host": 3
+        "cw1": 1,
+        "host": 2
       },
       "interchain": {
-        "host": "juno1hrpna9v7vs3stzyd4z3xf00676kf78zpe2u5ksvljswn2vnjp3ys7tlgu0"
+        "host": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
       }
     }
   },
