@@ -29,7 +29,7 @@ pub use state::{ChainState, StateInterface};
 pub use tx_handler::{TxHandler, TxResponse};
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
-pub use cw_multi_test::ContractWrapper;
+pub use cw_multi_test::{ContractWrapper, BasicApp};
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
