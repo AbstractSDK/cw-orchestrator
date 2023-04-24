@@ -1,6 +1,9 @@
+use syn::GenericParam;
+use syn::Generics;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::parse_quote;
 use std::cmp::Ordering;
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, GenericArgument,
@@ -20,14 +23,26 @@ pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
     None
 }
 
+pub fn to_generic_argument(p : &GenericParam)-> GenericArgument{
+    match p{
+        GenericParam::Type(t) => {
+                let ident = &t.ident;
+                GenericArgument::Type(parse_quote!(#ident))
+        },
+        GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
+        GenericParam::Const(c) => GenericArgument::Const(parse_quote!(#c))
+    }
+}
+
 pub(crate) fn process_impl_into(
     attrs: &Vec<Attribute>,
     ident: &Ident,
+    generics: Generics
 ) -> (TokenStream, TokenStream, Punctuated<GenericArgument, Comma>) {
     // Does the struct have an #[impl_into] attribute?
     let impl_into = impl_into(attrs);
     // expect empty generics
-    let mut type_generics = Punctuated::<GenericArgument, Comma>::new();
+    let mut type_generics = generics.params.iter().map(to_generic_argument).collect();
     // If so, we need to add a .into() to the execute fn and set the entrypoint message message
     if let Some(entrypoint_msg_type) = impl_into {
         // extract the type generics

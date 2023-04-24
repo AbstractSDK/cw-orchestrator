@@ -23,7 +23,11 @@ fn parse_query(v: &syn::Variant) -> (String, Type) {
 pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let name = &input.ident;
     let bname = Ident::new(&format!("{name}Fns"), name.span());
-    let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name);
+
+    let generics = input.generics.clone();
+    let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl().clone();
+    let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name, input.generics);
+
 
     let variants = input.variants;
 
@@ -60,7 +64,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::boot_core::CwEnv, #type_generics>: ::boot_core::BootQuery<Chain, QueryMsg = #entrypoint_msg_type> {
+        pub trait #bname<Chain: ::boot_core::CwEnv, #type_generics>: ::boot_core::BootQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
             #(#variant_fns)*
         }
     );
@@ -68,7 +72,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let derived_trait_impl = quote!(
         impl<SupportedContract, Chain: ::boot_core::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            SupportedContract: ::boot_core::BootQuery<Chain, QueryMsg = #entrypoint_msg_type>{}
+            SupportedContract: ::boot_core::BootQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
     );
 
     let expand = quote!(
