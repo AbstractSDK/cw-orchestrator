@@ -40,8 +40,7 @@ pub use daemon::{
     channel::DaemonChannel,
     core::{instantiate_daemon_env, Daemon},
     error::DaemonError,
-    ibc_tracker::IbcTracker,
-    networks, queriers,
+    ibc_tracker, networks, queriers,
     state::{DaemonOptions, DaemonOptionsBuilder},
     Wallet,
 };

@@ -1,4 +1,6 @@
 use boot_core::{
+    channel::ChannelAccess,
+    ibc_tracker::{CwIbcContractState, IbcTracker, IbcTrackerConfigBuilder},
     networks::{osmosis::OSMO_2, JUNO_1},
     *,
 };
@@ -76,6 +78,33 @@ pub fn script() -> anyhow::Result<()> {
     // interchain
     //     .hermes
     //     .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
+    // Track IBC on JUNO
+    // let juno_channel = juno.channel();
+    // let tracker = IbcTrackerConfigBuilder::default()
+    //     .ibc_state(CwIbcContractState::new(
+    //         "connection-0",
+    //         format!("wasm.{}", host.addr_str()?),
+    //     ))
+    //     .log_level(log::LevelFilter::Info)
+    //     .build()?;
+    // // spawn juno logging on a different thread.
+    // rt.spawn(async move {
+    //     juno_channel.cron_log(tracker).await;
+    // });
+
+    // Track IBC on OSMOSIS
+    let osmosis_channel = osmosis.channel();
+    let tracker = IbcTrackerConfigBuilder::default()
+        .ibc_state(CwIbcContractState::new(
+            "connection-0",
+            format!("wasm.{}", controller.addr_str()?),
+        ))
+        .log_level(log::LevelFilter::Info)
+        .build()?;
+    // spawn osmosis logging on a different thread.
+    rt.spawn(async move {
+        osmosis_channel.cron_log(tracker).await;
+    });
 
     // Get account information
     // let res: controller_msgs::ListAccountsResponse =
@@ -84,56 +113,52 @@ pub fn script() -> anyhow::Result<()> {
     let remote_accounts: ListAccountsResponse =
         host.query(&host_msgs::QueryMsg::ListAccounts {})?;
     println!("Remote accounts: {:?}", remote_accounts);
-    let remote_account = remote_accounts.accounts[1].clone();
+    let remote_account = remote_accounts.accounts[0].clone();
     // send some funds to the remote account
-    // let res = rt.block_on(juno.sender.bank_send(
-    //     &remote_account.account,
-    //     vec![cosmwasm_std::coin(100u128, "uosmo")],
-    // ))?;
+    let res = rt.block_on(juno.sender.bank_send(
+        &remote_account.account,
+        vec![cosmwasm_std::coin(100u128, "ujuno")],
+    ))?;
     // println!("Send funds result: {:?}", res);
     let channel = remote_account.channel_id;
 
-    // controller.execute(
-    //     &controller_msgs::ExecuteMsg::SendFunds {
-    //         ica_channel_id: channel.clone(),
-    //         transfer_channel_id: "channel-0".to_string(),
-    //     },
-    //     Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
-    // )?;
+    controller.execute(
+        &controller_msgs::ExecuteMsg::SendFunds {
+            ica_channel_id: channel.clone(),
+            transfer_channel_id: "channel-0".to_string(),
+        },
+        Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
+    )?;
 
-    query_tx(
-        &rt,
-        &osmosis,
-        "DF7E4A25663D0A4472DFE0546FA561129C9CF36C3E78EEFAB79C00460A9C3711",
-    );
     // let cont_accounts: controller_msgs::ListAccountsResponse = controller.query(&controller_msgs::QueryMsg::ListAccounts {  })?;
 
     // println!("Controller accounts: {:?}", cont_accounts);
 
-    // controller.execute(
-    //     &controller_msgs::ExecuteMsg::SendMsgs {
-    //         channel_id: "channel-3".to_string(),
-    //         msgs: vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
-    //             amount: vec![cosmwasm_std::coin(100u128, "ujuno")],
-    //         })],
-    //         callback_id: None,
-    //     },
-    //     None,
-    // )?;
+    controller.execute(
+        &controller_msgs::ExecuteMsg::SendMsgs {
+            channel_id: "channel-1".to_string(),
+            msgs: vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
+                amount: vec![cosmwasm_std::coin(100u128, "ujuno")],
+            })],
+            callback_id: None,
+        },
+        None,
+    )?;
 
     // // wait a bit
-    // std::thread::sleep(std::time::Duration::from_secs(60));
+    std::thread::sleep(std::time::Duration::from_secs(60));
     // let balance_result: AccountResponse =
     //     controller.query(&controller_msgs::QueryMsg::Account {
     //         channel_id: channel,
     //     })?;
     // println!("Balance result: {:?}", balance_result);
+
     Ok(())
 }
 
 fn main() {
     dotenv().ok();
-    env_logger::init();
+    // env_logger::init();
 
     use dotenv::dotenv;
 
@@ -187,10 +212,10 @@ hermes clear packets --chain osmosis-2 --port transfer --channel channel-0
 
  */
 
-fn query_tx(rt: &Runtime, chain: &Daemon, hash: &str) {
-    let osmo_grpc_channel = chain.sender.as_ref().channel();
-    let tx = rt
-        .block_on(DaemonQuerier::find_tx_by_hash(osmo_grpc_channel, hash))
-        .unwrap();
-    println!("tx: {:?}", tx);
-}
+// fn query_tx(rt: &Runtime, chain: &Daemon, hash: &str) {
+//     let osmo_grpc_channel = chain.sender.as_ref().channel();
+//     let tx = rt
+//         .block_on(DaemonQuerier::find_tx_by_hash(osmo_grpc_channel, hash))
+//         .unwrap();
+//     println!("tx: {:?}", tx);
+// }
