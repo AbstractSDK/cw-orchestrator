@@ -76,7 +76,7 @@ impl DaemonBuilder {
             .chain
             .clone()
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
-        let rt_handle = self.handle.clone().unwrap_or(Handle::current());
+        let rt_handle = self.handle.clone().ok_or(DaemonError::BuilderMissing("runtime handle".into()))?;
         let deployment_id = self
             .deployment_id
             .clone()
