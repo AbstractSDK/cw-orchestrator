@@ -11,7 +11,7 @@ mod mock;
 mod state;
 mod tx_handler;
 
-pub use boot_contract_derive::contract;
+pub use boot_contract_derive::{contract, boot_contract};
 pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::{Contract, ContractCodeReference};
 pub use deploy::Deploy;
