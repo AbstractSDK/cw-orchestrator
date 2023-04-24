@@ -26,8 +26,8 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     let generics = input.generics.clone();
     let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl().clone();
-    let (maybe_into, entrypoint_msg_type, type_generics) = process_impl_into(&input.attrs, name, input.generics);
-
+    let (maybe_into, entrypoint_msg_type, type_generics) =
+        process_impl_into(&input.attrs, name, input.generics);
 
     let variants = input.variants;
 

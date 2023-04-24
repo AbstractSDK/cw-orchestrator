@@ -5,10 +5,10 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 
-use syn::token::Comma;
 use syn::punctuated::Punctuated;
+use syn::token::Comma;
 
-use syn::parse::{Parse,ParseStream};
+use syn::parse::{Parse, ParseStream};
 use syn::{parse_macro_input, Fields, Item, Path};
 
 // This is used to parse the types into a list of types separated by Commas
@@ -27,8 +27,8 @@ impl Parse for TypesInput {
 #[proc_macro_attribute]
 pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
-    
-    // Try to parse the attributes to a 
+
+    // Try to parse the attributes to a
     let attributes = parse_macro_input!(attrs as TypesInput);
 
     let types_in_order = attributes.expressions;
