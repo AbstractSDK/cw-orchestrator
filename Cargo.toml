@@ -1,5 +1,5 @@
 [workspace]
-members = ["cw-orchestrate", "packages/*"]
+members = ["cw-orc", "packages/*"]
 
 [workspace.package]
 authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
@@ -14,5 +14,5 @@ anyhow        = "1.0"
 serde         = { version = "1.0.103", default-features = false, features = ["derive"] }
 
 [patch.crates-io]
-cw-orchestrate-contract-derive = { path="packages/cw-orchestrate-contract-derive"  }
-cw-orchestrate-fns-derive = { path="packages/cw-orchestrate-fns-derive" }
+cw-orc-contract-derive = { path="packages/cw-orc-contract-derive"  }
+cw-orc-fns-derive = { path="packages/cw-orc-fns-derive" }
