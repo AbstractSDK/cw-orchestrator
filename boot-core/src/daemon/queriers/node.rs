@@ -81,6 +81,11 @@ impl Node {
         })
     }
 
+    pub async fn chain_id(&self) -> Result<String, DaemonError> {
+        let block = self.latest_block().await?;
+        Ok(block.header.chain_id.to_string())
+    }
+
     /// Find TX by hash
     pub async fn find_tx_by_hash(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
         let mut client =
