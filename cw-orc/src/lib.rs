@@ -15,10 +15,10 @@ pub use contract::Contract;
 pub use cw_orc_contract_derive::{contract, interface};
 pub use cw_orc_fns_derive::{ExecuteFns, QueryFns};
 pub use deploy::Deploy;
-pub use error::BootError;
+pub use error::CwOrcError;
 pub use index_response::IndexResponse;
 pub use interface_traits::{
-    BootExecute, BootInstantiate, BootMigrate, BootQuery, BootUpload, CallAs, ContractInstance,
+    CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery, CwOrcUpload, CallAs, ContractInstance,
     ExecuteableContract, InstantiateableContract, MigrateableContract, QueryableContract,
     Uploadable,
 };

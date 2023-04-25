@@ -8,7 +8,7 @@ use super::{
     tx_resp::CosmTxResponse,
     wasm_path::WasmPath,
 };
-use crate::{state::ChainState, tx_handler::TxHandler, BootExecute, CallAs, ContractInstance};
+use crate::{state::ChainState, tx_handler::TxHandler, CwOrcExecute, CallAs, ContractInstance};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,
@@ -246,7 +246,7 @@ impl TxHandler for Daemon {
     }
 }
 
-impl<T: BootExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
+impl<T: CwOrcExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
     type Sender = Wallet;
 
     fn set_sender(&mut self, sender: &Self::Sender) {

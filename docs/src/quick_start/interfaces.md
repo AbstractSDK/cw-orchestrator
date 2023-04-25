@@ -169,7 +169,7 @@ pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
 impl<Chain: CwEnv + Clone> MyContract<Chain> {
-    pub fn test_macro(&self) -> Result<(),BootError> {
+    pub fn test_macro(&self) -> Result<(),CwOrcError> {
         self.freeze()?;
         self.update_admins(vec![])?;
         self.deposit(&[Coin::new(13,"juno")])?;
@@ -217,7 +217,7 @@ pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
 impl<Chain: CwEnv + Clone> MyContract<Chain> {
-    pub fn test_macro(&self) -> Result<(),BootError> {
+    pub fn test_macro(&self) -> Result<(),CwOrcError> {
         // No need to specify returned type!
         // info of type `InfoResponse` is returned
         let info = self.info()?;
