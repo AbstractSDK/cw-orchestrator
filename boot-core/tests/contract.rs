@@ -2,13 +2,22 @@
     Daemon tests
 */
 mod common;
-use boot_core::*;
-use cw20_base::msg::*;
+use std::sync::Arc;
+
+use boot_core::contract;
 use speculoos::prelude::*;
+
+use cw20_base::msg::*;
+use tokio::runtime::Runtime;
+
+#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct Cw20Base;
 
 #[test]
 fn general() {
-    let (sender, contract) = common::contract::start();
+    let runtime = Arc::new(Runtime::new().unwrap());
+
+    let (sender, mut contract) = common::contract::start();
 
     // upload contract
     let upload_res = contract.upload();

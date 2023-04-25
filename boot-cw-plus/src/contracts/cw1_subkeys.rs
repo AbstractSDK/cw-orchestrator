@@ -7,7 +7,7 @@ pub use cw1_subkeys::msg::{
 use cw1_whitelist::msg::InstantiateMsg;
 use cw_multi_test::ContractWrapper;
 
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+#[contract(InstantiateMsg, ExecuteMsg<Empty>, QueryMsg<Empty>, Empty)]
 pub struct Cw1Subkeys;
 
 // implement chain-generic functions

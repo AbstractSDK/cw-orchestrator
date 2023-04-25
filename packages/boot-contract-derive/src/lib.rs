@@ -1,24 +1,37 @@
 #![recursion_limit = "128"]
 
 extern crate proc_macro;
+
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, Fields, Item, Meta, NestedMeta, Path};
+
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
+
+use syn::parse::{Parse, ParseStream};
+use syn::{parse_macro_input, Fields, Item, Path};
+
+// This is used to parse the types into a list of types separated by Commas
+struct TypesInput {
+    expressions: Punctuated<Path, Comma>,
+}
+
+// Implement the `Parse` trait for your input struct
+impl Parse for TypesInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let expressions = input.parse_terminated(Path::parse)?;
+        Ok(Self { expressions })
+    }
+}
 
 #[proc_macro_attribute]
 pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
-    let attributes = parse_macro_input!(attrs as AttributeArgs);
 
-    let types_in_order: Vec<Path> = attributes
-        .into_iter()
-        .map(|attr| {
-            let NestedMeta::Meta(Meta::Path(type_path)) = attr else {
-            panic!("Expected a contract endpoint type.");
-        };
-            type_path
-        })
-        .collect();
+    // Try to parse the attributes to a
+    let attributes = parse_macro_input!(attrs as TypesInput);
+
+    let types_in_order = attributes.expressions;
 
     if types_in_order.len() != 4 {
         panic!("Expected four endpoint types (InstantiateMsg,ExecuteMsg,QueryMsg,MigrateMsg). Use cosmwasm_std::Empty if not implemented.")

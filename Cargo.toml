@@ -5,10 +5,33 @@ members = ["boot-core", "boot-cw-plus", "packages/*"]
 authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition    = "2021"
 license    = "GPL-3.0-only"
-repository = "https://github.com/Abstract-OS/BOOT"
+repository = "https://github.com/AbstractSDK/BOOT"
 
 [workspace.dependencies]
 cosmwasm-std  = { version = "1.1" }
 cw-multi-test = { version = "0.16.0" }
 anyhow        = "1.0"
 serde         = { version = "1.0.103", default-features = false, features = ["derive"] }
+
+
+[patch.crates-io]
+boot-contract-derive = { path="packages/boot-contract-derive" }
+boot-fns-derive = { path="packages/boot-fns-derive" }
+boot-core = { path="boot-core" }
+
+[patch."https://github.com/Abstract-OS/cw-plus.git"]
+cw1  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn"}
+cw3  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw4  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw20 = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+# crates
+cw1-subkeys        = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw1-whitelist      = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw20-base          = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw20-ics20         = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw3-fixed-multisig = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw3-flex-multisig  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw4-group          = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+cw4-stake          = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
+
+

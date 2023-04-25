@@ -7,7 +7,7 @@ pub use cw1_whitelist::msg::{
     ExecuteMsgFns as Cw1WhitelistExecuteMsgFns, QueryMsgFns as Cw1WhitelistQueryMsgFns,
 };
 
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, Empty)]
+#[contract(InstantiateMsg, ExecuteMsg<Empty>, QueryMsg<Empty>, Empty)]
 pub struct Cw1Whitelist;
 
 impl<Chain: CwEnv + Clone> Cw1Whitelist<Chain> {

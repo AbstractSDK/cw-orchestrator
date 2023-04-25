@@ -36,20 +36,20 @@ cosmwasm-std  = { workspace = true }
 serde         = { workspace = true }
 anyhow        = { workspace = true }
 cw-multi-test = { workspace = true }
-# packages 
-cw1  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw3  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw4  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw20 = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+# packages
+cw1  = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw3  = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw4  = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 # crates
-cw1-subkeys        = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw1-whitelist      = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw20-base          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw20-ics20         = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw3-fixed-multisig = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw3-flex-multisig  = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw4-group          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
-cw4-stake          = { git = "https://github.com/Abstract-OS/cw-plus.git" }
+cw1-subkeys        = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw1-whitelist      = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw20-base          = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw20-ics20         = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw3-fixed-multisig = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw3-flex-multisig  = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw4-group          = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw4-stake          = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
 # For bin
 tokio   = { version = "1", features = ["full"], optional = true }

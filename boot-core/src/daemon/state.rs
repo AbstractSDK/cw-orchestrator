@@ -8,36 +8,6 @@ use serde_json::{json, Value};
 use std::{collections::HashMap, env, fs::File, path::Path, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 
-pub const DEFAULT_DEPLOYMENT: &str = "default";
-
-/// Create [`DaemonOptions`] through [`DaemonOptionsBuilder`]
-/// ## Example
-/// ```
-///     use boot_core::{DaemonOptionsBuilder, networks};
-///
-///     let options = DaemonOptionsBuilder::default()
-///         .network(networks::LOCAL_JUNO)
-///         .deployment_id("v0.1.0")
-///         .build()
-///         .unwrap();
-/// ```
-#[derive(derive_builder::Builder)]
-#[builder(pattern = "owned")]
-pub struct DaemonOptions {
-    #[builder(setter(into))]
-    network: RegistryChainInfo,
-    #[builder(setter(into, strip_option))]
-    #[builder(default)]
-    // #[builder(setter(strip_option))]
-    deployment_id: Option<String>,
-}
-
-impl DaemonOptions {
-    pub fn get_network(&self) -> RegistryChainInfo {
-        self.network.clone()
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct DaemonState {
     /// this is passed via env var STATE_FILE
@@ -62,17 +32,18 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
-    pub async fn new(options: DaemonOptions) -> Result<DaemonState, DaemonError> {
-        let network: RegistryChainInfo = options.network;
-
-        if network.apis.grpc.is_empty() {
+    pub async fn new(
+        chain_info: RegistryChainInfo,
+        deployment_id: String,
+    ) -> Result<DaemonState, DaemonError> {
+        if chain_info.apis.grpc.is_empty() {
             return Err(DaemonError::GRPCListIsEmpty);
         }
 
-        log::info!("Found {} gRPC endpoints", network.apis.grpc.len());
+        log::info!("Found {} gRPC endpoints", chain_info.apis.grpc.len());
 
         // find working grpc channel
-        let grpc_channel = DaemonChannel::connect(&network.apis.grpc, &network.chain_id)
+        let grpc_channel = DaemonChannel::connect(&chain_info.apis.grpc, &chain_info.chain_id)
             .await?
             .unwrap();
 
@@ -80,7 +51,7 @@ impl DaemonState {
         let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
 
         // if the network we are connecting is a local kind, add it to the fn
-        if network.network_type == ChainKind::Local.to_string() {
+        if chain_info.network_type == ChainKind::Local.to_string() {
             let name = Path::new(&json_file_path)
                 .file_stem()
                 .unwrap()
@@ -96,34 +67,29 @@ impl DaemonState {
         }
 
         // Try to get the standard fee token (probably shortest denom)
-        let shortest_denom_token =
-            network
-                .fees
-                .fee_tokens
-                .iter()
-                .fold(network.fees.fee_tokens[0].clone(), |acc, item| {
-                    if item.denom.len() < acc.denom.len() {
-                        item.clone()
-                    } else {
-                        acc
-                    }
-                });
+        let shortest_denom_token = chain_info.fees.fee_tokens.iter().fold(
+            chain_info.fees.fee_tokens[0].clone(),
+            |acc, item| {
+                if item.denom.len() < acc.denom.len() {
+                    item.clone()
+                } else {
+                    acc
+                }
+            },
+        );
 
         // build daemon state
         let state = DaemonState {
             json_file_path,
-            kind: ChainKind::from(network.network_type),
-            deployment_id: options
-                .deployment_id
-                .map(Into::into)
-                .unwrap_or_else(|| DEFAULT_DEPLOYMENT.into()),
+            kind: ChainKind::from(chain_info.network_type),
+            deployment_id,
             grpc_channel,
             chain: ChainInfoOwned {
-                network_id: network.chain_name.to_string(),
-                pub_address_prefix: network.bech32_prefix,
-                coin_type: network.slip44,
+                network_id: chain_info.chain_name.to_string(),
+                pub_address_prefix: chain_info.bech32_prefix,
+                coin_type: chain_info.slip44,
             },
-            chain_id: network.chain_id.to_string(),
+            chain_id: chain_info.chain_id.to_string(),
             gas_denom: Denom::from_str(&shortest_denom_token.denom).unwrap(),
             gas_price: shortest_denom_token.fixed_min_gas_price,
             lcd_url: None,

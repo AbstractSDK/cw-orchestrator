@@ -48,17 +48,15 @@ impl Uploadable<Daemon> for Cw20<Daemon> {
 }
 
 pub fn start() -> (cosmwasm_std::Addr, Cw20<Daemon>) {
-    let runtime = Arc::new(Runtime::new().unwrap());
-
     let id = Id::new();
 
-    let options = DaemonOptionsBuilder::default()
-        .network(LOCAL_JUNO)
-        .deployment_id(format!("{}", id))
+    let daemon = Daemon::builder()
+        .chain(LOCAL_JUNO)
+        .handle(runtime.handle())
         .build()
         .unwrap();
 
-    let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
+    let sender = daemon.sender.address().unwrap();
 
     let contract = Cw20(Contract::new(format!("cw-plus:cw20_base:{}", id), chain));
 
