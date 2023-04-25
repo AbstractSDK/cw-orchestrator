@@ -28,14 +28,14 @@ pub struct IbcTrackerConfig<S: LoggedState> {
     #[builder(default = "Duration::from_secs(4)")]
     /// Customize the log interval. If not set, the default is 4 seconds.
     pub(crate) log_interval: Duration,
-    #[builder(default = "log::LevelFilter::Info")]
+    // #[builder(default = "log::LevelFilter::Info")]
     /// Customize the log level. If not set, the default is `Info`.
-    pub(crate) log_level: log::LevelFilter,
-    #[builder(default)]
-    #[builder(setter(strip_option, into))]
+    // pub(crate) log_level: log::LevelFilter,
+    // #[builder(default)]
+    // #[builder(setter(strip_option, into))]
 
-    /// Customize the log file name. If not set, the chain ID will be used.
-    pub(crate) log_file_name: Option<String>,
+    // /// Customize the log file name. If not set, the chain ID will be used.
+    // pub(crate) log_file_name: Option<String>,
     #[builder(default)]
     /// Customize a trackable Ibc state. This could be the received packets on a channel.
     /// This is the state that will be logged when changes are detected
@@ -54,53 +54,40 @@ pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
         let latest_block = node.block_info().await.unwrap();
         let block_height = latest_block.height;
         let chain_id = latest_block.chain_id;
-        let log_id = config.log_file_name.unwrap_or(chain_id.clone());
+        // let log_id = config.log_file_name.unwrap_or(chain_id.clone());
 
-        let log_file_path = generate_log_file_path(&log_id);
-        std::fs::create_dir_all(log_file_path.parent().unwrap()).unwrap();
+        // let encoder = Box::new(PatternEncoder::new(
+        //     "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
+        // ));
+        // let file_appender = FileAppender::builder()
+        //     .encoder(encoder)
+        //     .build(log_file_path)
+        //     .unwrap();
 
-        let encoder = Box::new(PatternEncoder::new(
-            "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
-        ));
-        let file_appender = FileAppender::builder()
-            .encoder(encoder)
-            .build(log_file_path)
-            .unwrap();
+        // let log4rs_config = Config::builder()
+        //     .appender(Appender::builder().build(&log_id, Box::new(file_appender)))
+        //     .build(
+        //         Root::builder()
+        //             .appender(chain_id.clone())
+        //             .build(config.log_level),
+        //     )
+        //     .unwrap();
 
-        let log4rs_config = Config::builder()
-            .appender(Appender::builder().build(&log_id, Box::new(file_appender)))
-            .build(
-                Root::builder()
-                    .appender(chain_id.clone())
-                    .build(config.log_level),
-            )
-            .unwrap();
+        // log4rs::init_config(log4rs_config).unwrap();
 
-        log4rs::init_config(log4rs_config).unwrap();
-
-        debug!("Logging started for chain {}", chain_id);
+        // debug!("Logging started for chain {}", chain_id);
 
         let mut state = config.ibc_state;
         loop {
             let new_block_height = node.block_info().await.unwrap().height;
             // ensure to only update when a new block is produced
             if new_block_height > block_height {
-                trace!("updating state {}", state);
-                state.update_state(self.channel()).await
+                state.update_state(self.channel()).await;
+                info!(target: &chain_id, "New state: {}", state);
             }
             tokio::time::sleep(config.log_interval).await;
         }
     }
-}
-
-fn generate_log_file_path(chain_id: &str) -> PathBuf {
-    let file_name = format!("{}.log", chain_id);
-
-    let mut log_path = std::env::current_dir().unwrap();
-    log_path.push("logs");
-    log_path.push(file_name);
-
-    log_path
 }
 
 impl<S: LoggedState> IbcTracker<S> for Channel {}
