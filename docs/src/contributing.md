@@ -24,7 +24,7 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 Getting Started
 ---------------
 
-To get started with contributing to the BOOT project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's [README](https://github.com/Abstract-OS/BOOT/) to understand the purpose, features, and usage of the BOOT library as well as its [documentation](https://boot.abstract.money).
+To get started with contributing to the BOOT project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's [README](https://github.com/AbstractSDK/BOOT/) to understand the purpose, features, and usage of the BOOT library as well as its [documentation](https://boot.abstract.money).
 
 How to Contribute
 -----------------
@@ -34,7 +34,7 @@ There are multiple ways to contribute to the BOOT project, including reporting b
 Reporting Bugs
 ------------------
 
-If you encounter any bugs or issues while using the BOOT library, please report them by creating a new issue in the [issue tracker](https://github.com/Abstract-OS/BOOT/issues). When reporting a bug, please provide the following information:
+If you encounter any bugs or issues while using the BOOT library, please report them by creating a new issue in the [issue tracker](https://github.com/AbstractSDK/BOOT/issues). When reporting a bug, please provide the following information:
 
 * A clear and descriptive title
 * A detailed description of the issue, including steps to reproduce it
@@ -44,7 +44,7 @@ If you encounter any bugs or issues while using the BOOT library, please report 
 Suggesting Enhancements
 ------------------
 
-We welcome suggestions for new features or improvements to the existing functionality of the BOOT library. To suggest an enhancement, create a new issue in the [issue tracker](https://github.com/Abstract-OS/BOOT/issues) with the following information:
+We welcome suggestions for new features or improvements to the existing functionality of the BOOT library. To suggest an enhancement, create a new issue in the [issue tracker](https://github.com/AbstractSDK/BOOT/issues) with the following information:
 
 * A clear and descriptive title
 * A detailed explanation of the proposed enhancement, including its benefits and potential use cases
@@ -83,4 +83,4 @@ The BOOT project follows the Rust coding style and conventions. Please ensure th
 Community
 ---------
 
-To join the BOOT community, please join the [Abstract Discord server](https://discord.gg/uch3Tq3aym) and the `#boot` channel. You can also follow the project on [Twitter](https://twitter.com/AbstractSDK) and [GitHub](https://github.com/Abstract-OS).
+To join the BOOT community, please join the [Abstract Discord server](https://discord.gg/uch3Tq3aym) and the `#boot` channel. You can also follow the project on [Twitter](https://twitter.com/AbstractSDK) and [GitHub](https://github.com/AbstractSDK).
