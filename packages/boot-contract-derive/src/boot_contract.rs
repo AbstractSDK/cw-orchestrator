@@ -1,7 +1,7 @@
 extern crate proc_macro;
-use syn::Signature;
 use convert_case::{Case, Casing};
 use quote::{format_ident, quote};
+use syn::Signature;
 use syn::__private::TokenStream2;
 
 pub fn get_crate_to_struct() -> syn::Ident {
@@ -38,4 +38,3 @@ pub fn get_func_type(sig: &Signature) -> TokenStream2 {
         fn(#(#arg_types),*) -> #output_type
     }
 }
-

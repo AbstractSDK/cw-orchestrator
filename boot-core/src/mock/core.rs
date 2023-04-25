@@ -1,13 +1,13 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
-use cw_multi_test::{AppResponse, BasicApp, Contract, custom_app, Executor, next_block};
+use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    BootError,
-    BootExecute,
-    CallAs, ContractInstance, state::{ChainState, StateInterface}, tx_handler::TxHandler,
+    state::{ChainState, StateInterface},
+    tx_handler::TxHandler,
+    BootError, BootExecute, CallAs, ContractInstance,
 };
 
 use super::state::MockState;
@@ -96,14 +96,12 @@ where
 }
 
 impl<ExecC, QueryC> Mock<MockState, ExecC, QueryC>
-    where
-        ExecC: CustomMsg + DeserializeOwned + 'static,
-        QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
     /// Create the default mock environment with the chain.
-    pub fn new(
-        sender: &Addr,
-    ) -> anyhow::Result<Self> {
+    pub fn new(sender: &Addr) -> anyhow::Result<Self> {
         Mock::new_custom(sender, MockState::new())
     }
 }
@@ -309,14 +307,14 @@ impl<T: BootExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
 #[cfg(test)]
 mod test {
     use cosmwasm_std::{
-        Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_binary,
+        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
         Uint128,
     };
     use cw_multi_test::ContractWrapper;
     use serde::Serialize;
     use speculoos::prelude::*;
 
-    use crate::{ContractCodeReference, mock::core::*, TxHandler};
+    use crate::{mock::core::*, ContractCodeReference, TxHandler};
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";

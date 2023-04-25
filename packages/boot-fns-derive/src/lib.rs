@@ -14,7 +14,6 @@ pub fn boot_execute(input: TokenStream) -> TokenStream {
     // We only parse and return the modified code if the flag is activated
     let ast = parse_macro_input!(input as DeriveInput);
     execute_fns::execute_fns_derive(ast)
-    
 }
 
 #[proc_macro_derive(QueryFns, attributes(returns, impl_into))]

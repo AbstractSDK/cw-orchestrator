@@ -2,15 +2,15 @@
 
 mod boot_contract;
 
-use crate::boot_contract::{get_func_type,get_wasm_name,get_crate_to_struct};
+use crate::boot_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
 
-use convert_case::{Casing, Case};
-use syn::{parse_macro_input, Fields, Item, Path, FnArg};
+use convert_case::{Case, Casing};
+use syn::{parse_macro_input, Fields, FnArg, Item, Path};
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
 
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
@@ -90,9 +90,9 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     struct_def.into()
 }
 
-/**  
+/**
 Procedural macro to generate a boot-interface contract with the kebab-case name of the crate.
-Add this macro to the entry point functions of your contract to use it. 
+Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```rust,ignore
 #[cfg_attr(feature="boot", boot_contract)]
@@ -222,7 +222,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
 
 
         /*
-    
+
 
                         .with_wasm_path(file_path) // Adds the wasm path for uploading to a node is simple
                          .with_mock(Box::new(

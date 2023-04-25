@@ -75,7 +75,10 @@ pub trait BootInstantiate<Chain: CwEnv>: InstantiateableContract + ContractInsta
     }
 }
 
-impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain> for T {}
+impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain>
+    for T
+{
+}
 
 /// Smart Contract query endpoint
 pub trait BootQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> {
@@ -101,7 +104,6 @@ pub trait BootMigrate<Chain: CwEnv>: MigrateableContract + ContractInstance<Chai
 }
 
 impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> BootMigrate<Chain> for T {}
-
 
 /// Trait to implement on the contract to enable it to be uploaded
 /// Should return [`WasmPath`](crate::WasmPath) for `Chain = Daemon`
