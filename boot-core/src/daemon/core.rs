@@ -1,9 +1,10 @@
 use super::{
+    builder::DaemonBuilder,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
-    sender::{Sender, Wallet},
-    state::{ChainKind, DaemonOptions, DaemonState},
+    sender::Wallet,
+    state::{ChainKind, DaemonState},
     tx_resp::CosmTxResponse,
 };
 use crate::{
@@ -22,40 +23,40 @@ use std::{
     fmt::Debug,
     rc::Rc,
     str::{from_utf8, FromStr},
-    sync::Arc,
     time::Duration,
 };
-use tokio::runtime::Runtime;
-
-pub fn instantiate_daemon_env(
-    runtime: &Arc<Runtime>,
-    options: DaemonOptions,
-) -> anyhow::Result<(Addr, Daemon)> {
-    let state = Rc::new(runtime.block_on(DaemonState::new(options))?);
-    let sender = Rc::new(Sender::new(&state)?);
-    let chain = Daemon::new(&sender, &state, runtime)?;
-    Ok((sender.address()?, chain))
-}
+use tokio::runtime::Handle;
 
 #[derive(Clone)]
+/**
+    Represents a connection to a chain.
+    Is constructed with the [DaemonBuilder].
+*/
 pub struct Daemon {
     pub sender: Wallet,
     pub state: Rc<DaemonState>,
-    pub runtime: Arc<Runtime>,
+    pub rt_handle: Handle,
 }
 
 impl Daemon {
-    pub fn new(
-        sender: &Wallet,
-        state: &Rc<DaemonState>,
-        runtime: &Arc<Runtime>,
-    ) -> anyhow::Result<Self> {
-        let instance = Self {
-            sender: sender.clone(),
-            state: state.clone(),
-            runtime: runtime.clone(),
-        };
-        Ok(instance)
+    /// Get the daemon builder
+    pub fn builder() -> DaemonBuilder {
+        DaemonBuilder::default()
+    }
+
+    /// set the deployment after daemon
+    // pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), DaemonError> {
+    //     // This ensures that you don't change the deployment of any contract that has been used before.
+    //     // It reduces the probability of shooting yourself in the foot.
+    //     Rc::get_mut(&mut self.state)
+    //         .ok_or(DaemonError::SharedDaemonState)?
+    //         .set_deployment(deployment_id);
+    //     Ok(())
+    // }
+
+    /// Perform a query with a given querier
+    pub fn query<Querier: DaemonQuerier>(&self) -> Querier {
+        Querier::new(self.sender.channel())
     }
 
     async fn wait(&self) {
@@ -64,20 +65,6 @@ impl Daemon {
             ChainKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
             ChainKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
         }
-    }
-
-    pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), DaemonError> {
-        // This ensures that you don't change the deployment of any contract that has been used before.
-        // It reduces the probability of shooting yourself in the foot.
-        Rc::get_mut(&mut self.state)
-            .ok_or(DaemonError::SharedDaemonState)?
-            .set_deployment(deployment_id);
-        Ok(())
-    }
-
-    /// Perform a query with a given querier
-    pub fn query<Querier: DaemonQuerier>(&self) -> Querier {
-        Querier::new(self.sender.channel())
     }
 }
 
@@ -111,7 +98,7 @@ impl TxHandler for Daemon {
             funds: parse_cw_coins(coins)?,
         };
         let result = self
-            .runtime
+            .rt_handle
             .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
@@ -136,7 +123,7 @@ impl TxHandler for Daemon {
         };
 
         let result = self
-            .runtime
+            .rt_handle
             .block_on(sender.commit_tx(vec![init_msg], None))?;
         // let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
 
@@ -150,7 +137,7 @@ impl TxHandler for Daemon {
     ) -> Result<T, DaemonError> {
         let sender = &self.sender;
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
-        let resp = self.runtime.block_on(client.smart_contract_state(
+        let resp = self.rt_handle.block_on(client.smart_contract_state(
             cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),
                 query_data: serde_json::to_vec(&query_msg)?,
@@ -173,7 +160,7 @@ impl TxHandler for Daemon {
             code_id: new_code_id,
         };
         let result = self
-            .runtime
+            .rt_handle
             .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
         Ok(result)
     }
@@ -194,55 +181,65 @@ impl TxHandler for Daemon {
             instantiate_permission: None,
         };
         let result = self
-            .runtime
+            .rt_handle
             .block_on(sender.commit_tx(vec![store_msg], None))?;
 
         log::info!("Uploaded: {:?}", result.txhash);
 
         // Extra time-out to ensure contract code propagation
-        self.runtime.block_on(self.wait());
+        self.rt_handle.block_on(self.wait());
         Ok(result)
     }
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
+        let mut last_height = self
+            .rt_handle
+            .block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + amount;
 
         while last_height < end_height {
             // wait
-            self.runtime
+            self.rt_handle
                 .block_on(tokio::time::sleep(Duration::from_secs(4)));
 
             // ping latest block
-            last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
+            last_height = self
+                .rt_handle
+                .block_on(self.query::<Node>().block_height())?;
         }
         Ok(())
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        self.runtime
+        self.rt_handle
             .block_on(tokio::time::sleep(Duration::from_secs(secs)));
 
         Ok(())
     }
 
     fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
+        let mut last_height = self
+            .rt_handle
+            .block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + 1;
 
         while last_height < end_height {
             // wait
-            self.runtime
+            self.rt_handle
                 .block_on(tokio::time::sleep(Duration::from_secs(4)));
 
             // ping latest block
-            last_height = self.runtime.block_on(self.query::<Node>().block_height())?;
+            last_height = self
+                .rt_handle
+                .block_on(self.query::<Node>().block_height())?;
         }
         Ok(())
     }
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self.runtime.block_on(self.query::<Node>().latest_block())?;
+        let block = self
+            .rt_handle
+            .block_on(self.query::<Node>().latest_block())?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
         Ok(cosmwasm_std::BlockInfo {
