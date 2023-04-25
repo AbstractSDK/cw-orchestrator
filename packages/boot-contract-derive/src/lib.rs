@@ -52,8 +52,8 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
 
             impl<Chain: ::boot_core::CwEnv> ::boot_core::ContractInstance<Chain> for #name<Chain> {
                 fn as_instance(&self) -> &::boot_core::Contract<Chain> {
-            &self.0
-        }
+                &self.0
+            }
             fn as_instance_mut(&mut self) -> &mut ::boot_core::Contract<Chain> {
                 &mut self.0
             }
