@@ -165,7 +165,7 @@ Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```ignore,ignore
 // In crate "my-contract"
-#[cfg_attr(feature="boot", interface)]
+#[cfg_attr(feature="interface", interface)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
    deps: DepsMut,
