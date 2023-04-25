@@ -168,7 +168,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
                 // We get the workspace dir
                 let workspace_dir = find_workspace_dir();
 
-                // We build the artififacts from the artifacts folder (by default) of the package
+                // We build the artifacts from the artifacts folder (by default) of the package
                 let file_path = &format!("{}/artifacts/{}.wasm", workspace_dir.display().to_string(), #wasm_name);
                 //panic!("Wasm_file_path: {}", file_path);
 
