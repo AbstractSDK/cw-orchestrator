@@ -194,7 +194,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
         impl ::boot_core::Uploadable<::boot_core::Mock> for #name<::boot_core::Mock>{
             fn source(&self) -> <::boot_core::Mock as ::boot_core::TxHandler>::ContractSource{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let contract = ::cw_multi_test::ContractWrapper::new(
+                let contract = ::boot_core::ContractWrapper::new(
                     #name::<::boot_core::Mock>::get_execute(),
                     #name::<::boot_core::Mock>::get_instantiate(),
                     #name::<::boot_core::Mock>::get_query()
