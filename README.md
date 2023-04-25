@@ -6,7 +6,7 @@ Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting lib
 
 > [cw-orchestrator](cw-orc/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
 
-[cw-plus-orchestrate](cw-plus-orchestrate/README.md) uses cw-orchestrator to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
+[cw-plus-orc](cw-plus-orc/README.md) uses cw-orchestrator to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
 cw-orchestrator makes it easier to quickly deploy and iterate on your contracts. It provides a set of macros that allow you to define your contracts in a way that is more similar to how you would write them in Rust. This allows you to use the full power of Rust's type system to ensure that you are not sending invalid messages to your contracts.
 .
@@ -24,7 +24,7 @@ pub struct MyContract;
 
 The macro implements a set of traits for the struct. These traits contain functions that can then be used to interact with the contract and they prevent us from executing a faulty message on a contract.
 
-As an example you can have a look at the the implementation for a CW20 token [here.](cw-plus-orchestrate/src/contracts/cw20_base.rs)
+As an example you can have a look at the the implementation for a CW20 token [here.](cw-plus-orc/src/contracts/cw20_base.rs)
 
 You can then use this interface to interact with the contract:
 
@@ -49,7 +49,7 @@ cw20_base.instantiate(&cw20_init_msg, None, None)?;
 let balance = cw20_base.balance(sender.to_string())?;
 ```
 
-You can find [the full cw20 implementation here](cw-orc/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](cw-plus-orchestrate/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](cw-plus-orchestrate/examples/cw-plus-daemon.rs).
+You can find [the full cw20 implementation here](cw-orc/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](cw-plus-orc/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](cw-plus-orc/examples/cw-plus-daemon.rs).
 
 ## Advanced features
 
