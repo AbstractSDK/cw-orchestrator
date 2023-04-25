@@ -10,13 +10,44 @@ struct DeployId(());
 type Id = IdT<DeployId>;
 
 use boot_core::{
-    instantiate_daemon_env, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon,
-    DaemonOptionsBuilder,
+    contract, instantiate_daemon_env, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon,
+    DaemonOptionsBuilder, Mock, Uploadable, WasmPath,
 };
 
 const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
 
-pub fn start() -> (cosmwasm_std::Addr, Contract<Daemon>) {
+#[contract(
+    cw20_base::msg::InstantiateMsg,
+    cw20_base::msg::ExecuteMsg,
+    cw20_base::msg::QueryMsg,
+    cw20_base::msg::MigrateMsg
+)]
+pub struct Cw20;
+
+impl Uploadable<Mock> for Cw20<Mock> {
+    fn source(&self) -> <Mock as boot_core::TxHandler>::ContractSource {
+        Box::new(
+            ContractWrapper::new_with_empty(
+                cw20_base::contract::execute,
+                cw20_base::contract::instantiate,
+                cw20_base::contract::query,
+            )
+            .with_migrate(cw20_base::contract::migrate),
+        )
+    }
+}
+
+impl Uploadable<Daemon> for Cw20<Daemon> {
+    fn source(&self) -> <Daemon as boot_core::TxHandler>::ContractSource {
+        // create contract base configuration
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let wasm_path = format!("{}{}", crate_path, CW20_CONTRACT_WASM);
+        log::info!("Using wasm path {}", wasm_path);
+        WasmPath::new(wasm_path).unwrap()
+    }
+}
+
+pub fn start() -> (cosmwasm_std::Addr, Cw20<Daemon>) {
     let runtime = Arc::new(Runtime::new().unwrap());
 
     let id = Id::new();
@@ -29,21 +60,7 @@ pub fn start() -> (cosmwasm_std::Addr, Contract<Daemon>) {
 
     let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
 
-    // create contract base configuration
-    let crate_path = env!("CARGO_MANIFEST_DIR");
-    let wasm_path = format!("{}{}", crate_path, CW20_CONTRACT_WASM);
-    log::info!("Using wasm path {}", wasm_path);
-
-    let contract = Contract::new(format!("cw-plus:cw20_base:{}", id), chain)
-        .with_mock(Box::new(
-            ContractWrapper::new_with_empty(
-                cw20_base::contract::execute,
-                cw20_base::contract::instantiate,
-                cw20_base::contract::query,
-            )
-            .with_migrate(cw20_base::contract::migrate),
-        ))
-        .with_wasm_path(wasm_path);
+    let contract = Cw20(Contract::new(format!("cw-plus:cw20_base:{}", id), chain));
 
     (sender, contract)
 }
