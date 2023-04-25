@@ -9,12 +9,14 @@ pub struct ArtifactsDir(PathBuf);
 
 impl ArtifactsDir {
     /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`
-    pub fn env() -> Option<Self> {
-        env::var("ARTIFACTS_DIR").ok().map(Self::new)
+    pub fn env() -> Self {
+        let dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR env variable not set");
+        Self::new(dir)
     }
 
     pub fn new(path: impl Into<PathBuf>) -> Self {
-        // TODO: check if path exists
+        let path: PathBuf = path.into();
+        assert!(path.exists(), "provided path {} does not exist", path.display());
         Self(path.into())
     }
 
