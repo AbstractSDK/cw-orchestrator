@@ -2,6 +2,7 @@
     Daemon contract general tests
 */
 mod common;
+use boot_core::*;
 use std::sync::Arc;
 
 use cosmwasm_std::Addr;
@@ -13,7 +14,7 @@ use tokio::runtime::Runtime;
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, mut contract) = common::contract::start(&runtime);
+    let (sender, contract) = common::contract::start(&runtime);
 
     asserting!("address is not present")
         .that(&contract.address())
