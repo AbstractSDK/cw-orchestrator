@@ -36,8 +36,7 @@ pub use daemon::{
     channel::DaemonChannel,
     core::{instantiate_daemon_env, Daemon},
     error::DaemonError,
-    networks,
-    querier::DaemonQuerier,
+    networks, queriers,
     state::{DaemonOptions, DaemonOptionsBuilder},
     Wallet,
 };
