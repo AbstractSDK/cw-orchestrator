@@ -40,8 +40,11 @@ daemon = [
 
 [dependencies]
 # Default deps
-cw-orc-contract-derive = { version="0.10.0" }
-cw-orc-fns-derive = { version="0.10.0" }
+# cw-orc-contract-derive = { version="0.10.0" }
+# cw-orc-fns-derive = { version="0.10.0" }
+
+cw-orc-contract-derive = { path="../packages/cw-orc-contract-derive"  }
+cw-orc-fns-derive = { path="../packages/cw-orc-fns-derive" }
 
 cosmwasm-std         = { workspace = true }
 cw-multi-test        = { workspace = true }
