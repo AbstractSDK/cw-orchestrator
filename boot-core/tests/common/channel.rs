@@ -1,20 +1,21 @@
-use boot_core::{networks, DaemonChannel, DaemonOptions, DaemonOptionsBuilder};
+use boot_core::{networks, DaemonChannel};
 
+use ibc_chain_registry::chain::Grpc;
+use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use speculoos::{asserting, prelude::OptionAssertions};
 
 #[allow(unused)]
 pub async fn build_channel() -> Option<tonic::transport::Channel> {
-    let options: DaemonOptions = DaemonOptionsBuilder::default()
-        .network(networks::LOCAL_JUNO)
-        .deployment_id("v0.1.0")
-        .build()
-        .unwrap();
+    let network = networks::LOCAL_JUNO;
 
-    let network = options.get_network();
+    let grpcs: Vec<Grpc> = vec![Grpc {
+        address: network.grpc_urls[0].into(),
+        provider: None,
+    }];
 
-    let channel = DaemonChannel::connect(&network.apis.grpc, &network.chain_id)
-        .await
-        .unwrap();
+    let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
+
+    let channel = DaemonChannel::connect(&grpcs, &chain).await.unwrap();
 
     asserting!("channel connection is succesful")
         .that(&channel)

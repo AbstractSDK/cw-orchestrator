@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use boot_core::{
     queriers::{CosmWasm, DaemonQuerier, Node},
-    DaemonError,
+    BootInstantiate, BootUpload, ContractInstance, DaemonError,
 };
 use common::channel::build_channel;
 use speculoos::prelude::*;
@@ -36,7 +36,9 @@ fn general() {
 #[test]
 fn simulate_tx() {
     let rt = Arc::new(Runtime::new().unwrap());
+
     let channel = rt.block_on(build_channel()).unwrap();
+
     let node = Node::new(channel.clone());
 
     let exec_msg = cw20_base::msg::ExecuteMsg::Mint {
@@ -80,7 +82,7 @@ fn contract_info() {
     let channel = rt.block_on(build_channel()).unwrap();
     let cosm_wasm = CosmWasm::new(channel.clone());
 
-    let (sender, mut contract) = common::contract::start();
+    let (sender, contract) = common::contract::start(&rt);
 
     let _ = contract.upload();
 
