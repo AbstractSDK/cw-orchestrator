@@ -1,6 +1,6 @@
 # Environment Variables
 
-These variables are used by BOOT when interacting with a node using the `daemon` feature.
+These variables are used by cw-orchestrator when interacting with a node using the `daemon` feature.
 
 ```bash
 # .env

@@ -1,7 +1,7 @@
 # Continuous Integration and Deployment
 One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments. 
 
-BOOT does not *currently* add additional support for actions, but an example using the directory structure specified in [interfaces](interfaces.md) can be found below:
+cw-orchestrator does not *currently* add additional support for actions, but an example using the directory structure specified in [interfaces](interfaces.md) can be found below:
 
 ```yaml
 # .github/workflows/deploy.yml
