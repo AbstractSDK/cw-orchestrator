@@ -94,4 +94,12 @@ pub enum DaemonError {
     GRPCListIsEmpty,
     #[error("no wasm path provided for contract.")]
     MissingWasmPath,
+    #[error("ibc error: {0}")]
+    IbcError(String),
+}
+
+impl DaemonError {
+    pub fn ibc_err(msg: impl ToString) -> Self {
+        Self::IbcError(msg.to_string())
+    }
 }
