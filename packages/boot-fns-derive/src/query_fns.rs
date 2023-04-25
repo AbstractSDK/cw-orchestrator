@@ -1,5 +1,5 @@
 extern crate proc_macro;
-use crate::helpers::{process_impl_into, LexiographicMatching};
+use crate::helpers::{process_impl_into, process_fn_name, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -8,8 +8,7 @@ use syn::{visit_mut::VisitMut, Fields, Ident, ItemEnum, Type};
 const RETURNS: &str = "returns";
 
 /// Extract the query -> response mapping out of an enum variant.
-fn parse_query(v: &syn::Variant) -> (String, Type) {
-    let query = v.ident.to_string().to_case(Case::Snake);
+fn parse_query_type(v: &syn::Variant) -> Type {
     let response_ty: syn::Type = v
         .attrs
         .iter()
@@ -17,7 +16,7 @@ fn parse_query(v: &syn::Variant) -> (String, Type) {
         .unwrap_or_else(|| panic!("missing return type for query: {}", v.ident))
         .parse_args()
         .unwrap_or_else(|_| panic!("return for {} must be a type", v.ident));
-    (query, response_ty)
+    response_ty
 }
 
 pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
@@ -33,10 +32,11 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     let variant_fns = variants.into_iter().map( |mut variant|{
         let variant_name = variant.ident.clone();
-        let (query_ident,response) = parse_query(&variant);
+        let response = parse_query_type(&variant);
         let mut variant_func_name =
-                format_ident!("{}",query_ident);
-                variant_func_name.set_span(variant_name.span());
+                format_ident!("{}", process_fn_name(&variant).to_case(Case::Snake));
+        variant_func_name.set_span(variant_name.span());
+
         match &mut variant.fields {
             Fields::Unnamed(_) => panic!("Expected named variant"),
             Fields::Unit => panic!("Expected named variant"),

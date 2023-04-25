@@ -7,7 +7,7 @@ use syn::GenericParam;
 use syn::Generics;
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, GenericArgument,
-    PathArguments, Type,
+    PathArguments, Type, Meta, NestedMeta, Lit
 };
 
 pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
@@ -21,6 +21,21 @@ pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
         }
     }
     None
+}
+
+pub (crate) fn process_fn_name(v: &syn::Variant) -> String {
+    for attr in &v.attrs {
+        if let Ok(Meta::List(list)) = attr.parse_meta() {
+            if let Some(ident) = list.path.get_ident() {
+                if ident == "fn_name" {
+                    if let Some(NestedMeta::Lit(Lit::Str(lit_str))) = list.nested.last() {
+                        return lit_str.value();
+                    }
+                }
+            }
+        }
+    }
+    v.ident.to_string()
 }
 
 pub fn to_generic_argument(p: &GenericParam) -> GenericArgument {
