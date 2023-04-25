@@ -103,4 +103,5 @@ pub enum DaemonError {
 impl DaemonError {
     pub fn ibc_err(msg: impl ToString) -> Self {
         Self::IbcError(msg.to_string())
+    }
 }

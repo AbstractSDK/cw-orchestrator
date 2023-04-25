@@ -62,8 +62,8 @@ impl DaemonBuilder {
         self.handle = Some(handle.clone());
         self
     }
-    
-    /// Set the mnemonic to use with this chain. 
+
+    /// Set the mnemonic to use with this chain.
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
         self
@@ -75,7 +75,10 @@ impl DaemonBuilder {
             .chain
             .clone()
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
-        let rt_handle = self.handle.clone().ok_or(DaemonError::BuilderMissing("runtime handle".into()))?;
+        let rt_handle = self
+            .handle
+            .clone()
+            .ok_or(DaemonError::BuilderMissing("runtime handle".into()))?;
         let deployment_id = self
             .deployment_id
             .clone()
