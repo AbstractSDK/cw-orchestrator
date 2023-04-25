@@ -279,6 +279,6 @@ Learn more about Abstract at [abstract.money](https://abstract.money).
 
 ## References
 
-- [Boot Core](https://crates.io/crates/cw-orc)
-- [Boot Cw-plus](https://crates.io/crates/cw-plus-orc)
+- [cw-orchestrator](https://crates.io/crates/cw-orc)
+- [cw-plus-orc](https://crates.io/crates/cw-plus-orc)
 - [Abstract Contract Interfaces](https://crates.io/crates/abstract-cw-orc)
