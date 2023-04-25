@@ -51,7 +51,7 @@ impl Sender<All> {
         let p_key: PrivateKey =
             PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain.coin_type)?;
 
-        let cosmos_private_key = SigningKey::from_bytes(&p_key.raw_key()).unwrap();
+        let cosmos_private_key = SigningKey::from_slice(&p_key.raw_key()).unwrap();
         let sender = Sender {
             daemon_state: daemon_state.clone(),
             private_key: cosmos_private_key,
