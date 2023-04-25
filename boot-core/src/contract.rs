@@ -3,7 +3,6 @@ use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
 use cosmwasm_std::{Addr, Coin};
-use cw_multi_test::Contract as TestContract;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 

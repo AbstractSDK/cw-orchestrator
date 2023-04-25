@@ -8,7 +8,7 @@ use speculoos::prelude::*;
 
 #[test]
 fn general() {
-    let (sender, mut contract) = common::contract::start();
+    let (sender, contract) = common::contract::start();
 
     // upload contract
     let upload_res = contract.upload();

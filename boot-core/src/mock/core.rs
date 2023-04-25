@@ -440,7 +440,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let (_, chain) = instantiate_custom_mock_env(sender, mock_state).unwrap();
+        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state).unwrap();
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])

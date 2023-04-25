@@ -10,7 +10,7 @@ use speculoos::prelude::*;
 
 #[test]
 fn general() {
-    let (sender, mut contract) = common::contract::start();
+    let (sender, contract) = common::contract::start();
 
     asserting!("address is not present")
         .that(&contract.address())
