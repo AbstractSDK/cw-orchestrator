@@ -78,19 +78,21 @@ pub fn script() -> anyhow::Result<()> {
     // interchain
     //     .hermes
     //     .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
+    
+    
     // Track IBC on JUNO
-    // let juno_channel = juno.channel();
-    // let tracker = IbcTrackerConfigBuilder::default()
-    //     .ibc_state(CwIbcContractState::new(
-    //         "connection-0",
-    //         format!("wasm.{}", host.addr_str()?),
-    //     ))
-    //     .log_level(log::LevelFilter::Info)
-    //     .build()?;
-    // // spawn juno logging on a different thread.
-    // rt.spawn(async move {
-    //     juno_channel.cron_log(tracker).await;
-    // });
+    let juno_channel = juno.channel();
+    let tracker = IbcTrackerConfigBuilder::default()
+        .ibc_state(CwIbcContractState::new(
+            "connection-0",
+            format!("wasm.{}", host.addr_str()?),
+        ))
+        // .log_level(log::LevelFilter::Info)
+        .build()?;
+    // spawn juno logging on a different thread.
+    rt.spawn(async move {
+        juno_channel.cron_log(tracker).await;
+    });
 
     // Track IBC on OSMOSIS
     let osmosis_channel = osmosis.channel();
@@ -99,7 +101,7 @@ pub fn script() -> anyhow::Result<()> {
             "connection-0",
             format!("wasm.{}", controller.addr_str()?),
         ))
-        .log_level(log::LevelFilter::Info)
+        // .log_level(log::LevelFilter::Info)
         .build()?;
     // spawn osmosis logging on a different thread.
     rt.spawn(async move {
@@ -146,7 +148,7 @@ pub fn script() -> anyhow::Result<()> {
     )?;
 
     // // wait a bit
-    std::thread::sleep(std::time::Duration::from_secs(60));
+    std::thread::sleep(std::time::Duration::from_secs(600));
     // let balance_result: AccountResponse =
     //     controller.query(&controller_msgs::QueryMsg::Account {
     //         channel_id: channel,
@@ -189,6 +191,9 @@ fn deploy_contracts(
     controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
     Ok(())
 }
+
+
+fn test_ica() -> 
 
 /*
 
