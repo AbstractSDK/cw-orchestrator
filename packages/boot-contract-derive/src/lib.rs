@@ -3,9 +3,10 @@
 mod boot_contract;
 
 use crate::boot_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
+use syn::__private::TokenStream2;
 
 use convert_case::{Case, Casing};
-use syn::{parse_macro_input, Fields, FnArg, Item, Path};
+use syn::{parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
@@ -28,6 +29,21 @@ impl Parse for TypesInput {
         let expressions = input.parse_terminated(Path::parse)?;
         Ok(Self { expressions })
     }
+}
+
+// Gets the generics associated with a type
+fn get_generics_from_path(p: &Path) -> Punctuated<GenericArgument, Comma> {
+    let mut generics = Punctuated::new();
+
+    for segment in p.segments.clone() {
+        if let syn::PathArguments::AngleBracketed(generic_args) = &segment.arguments {
+            for arg in generic_args.args.clone() {
+                generics.push(arg);
+            }
+        }
+    }
+
+    generics
 }
 
 #[proc_macro_attribute]
@@ -55,14 +71,43 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let query = types_in_order[2].clone();
     let migrate = types_in_order[3].clone();
 
+    // We create all generics for all types
+    let all_generics: Punctuated<GenericArgument, Comma> = types_in_order
+        .iter()
+        .flat_map(get_generics_from_path)
+        .collect();
+    // We create all phantom markers because else types are unused
+    let all_phantom_markers: Vec<TokenStream2> = all_generics
+        .iter()
+        .map(|t| {
+            quote!(
+                ::std::marker::PhantomData<#t>
+            )
+        })
+        .collect();
+    // We create necessary Debug + Serialize traits
+    let all_debug_serialize: Vec<TokenStream2> = all_generics
+        .iter()
+        .map(|t| {
+            quote!(
+                #t: ::std::fmt::Debug + ::serde::Serialize
+            )
+        })
+        .collect();
+    let all_debug_serialize = if !all_debug_serialize.is_empty(){
+        quote!(where #(#all_debug_serialize,)*)
+    }else{
+        quote!()
+    };
+
     let name = boot_struct.ident.clone();
     let struct_def = quote!(
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::boot_core::CwEnv>(::boot_core::Contract<Chain>);
+            pub struct #name<Chain: ::boot_core::CwEnv, #all_generics>(::boot_core::Contract<Chain>, #(#all_phantom_markers,)*);
 
-            impl<Chain: ::boot_core::CwEnv> ::boot_core::ContractInstance<Chain> for #name<Chain> {
+            impl<Chain: ::boot_core::CwEnv, #all_generics> ::boot_core::ContractInstance<Chain> for #name<Chain, #all_generics> {
                 fn as_instance(&self) -> &::boot_core::Contract<Chain> {
                 &self.0
             }
@@ -71,19 +116,19 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::InstantiateableContract for #name<Chain> {
+        impl<Chain: ::boot_core::CwEnv, #all_generics> ::boot_core::InstantiateableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type InstantiateMsg = #init;
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::ExecuteableContract for #name<Chain> {
+        impl<Chain: ::boot_core::CwEnv, #all_generics> ::boot_core::ExecuteableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type ExecuteMsg = #exec;
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::QueryableContract for #name<Chain> {
+        impl<Chain: ::boot_core::CwEnv, #all_generics> ::boot_core::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize{
             type QueryMsg = #query;
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::MigrateableContract for #name<Chain> {
+        impl<Chain: ::boot_core::CwEnv, #all_generics> ::boot_core::MigrateableContract for #name<Chain, #all_generics> #all_debug_serialize{
             type MigrateMsg = #migrate;
         }
     );
