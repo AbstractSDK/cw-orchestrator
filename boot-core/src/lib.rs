@@ -21,6 +21,8 @@ pub use interface_traits::{
     BootExecute, BootInstantiate, BootMigrate, BootQuery, BootUpload, CallAs, ContractInstance,
     CwInterface, Uploadable,
 };
+
+#[allow(deprecated)]
 pub use mock::{
     core::{instantiate_custom_mock_env, instantiate_default_mock_env, Mock},
     state::MockState,

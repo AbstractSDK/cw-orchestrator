@@ -14,7 +14,7 @@ use super::state::MockState;
 
 #[deprecated(
     since = "0.11.0",
-    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::create`"
+    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::new`"
 )]
 pub fn instantiate_default_mock_env(
     sender: &Addr,
@@ -25,7 +25,7 @@ pub fn instantiate_default_mock_env(
 
 #[deprecated(
     since = "0.11.0",
-    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::create_custom`"
+    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::new_custom`"
 )]
 pub fn instantiate_custom_mock_env<S: StateInterface>(
     sender: &Addr,
