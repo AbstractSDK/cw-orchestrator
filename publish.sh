@@ -16,7 +16,7 @@ fi
 # these are imported by other packages
 BASE_PACKAGES="cw-orc-contract-derive cw-orc-fns-derive"
 UTILS_PACKAGES="cw-orc"
-ALL_PACKAGES="cw-plus-orchestrate"
+ALL_PACKAGES="cw-plus-orc"
 
 for pack in $BASE_PACKAGES; do
   (
