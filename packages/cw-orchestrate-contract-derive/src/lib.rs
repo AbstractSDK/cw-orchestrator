@@ -35,7 +35,7 @@ Procedural macro to generate a cw-orchestrate interface
 
 ## Example
 
-```rust
+```ignore
 #[contract(
     cw20_base::msg::InstantiateMsg,
     cw20_base::msg::ExecuteMsg,
@@ -46,7 +46,7 @@ pub struct Cw20;
 ```
 This generated the following code:
 
-```rust, ignore
+```ignore
 
 // This struct represents the interface to the contract.
 pub struct Cw20<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
@@ -74,7 +74,7 @@ impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for 
 
 The interface can be linked to its source code by implementing the `Uploadable` trait for the interface.
 
-```rust
+```ignore
 use cw_orchestrate::{
     Mock, Daemon, Uploadable, WasmPath, ContractWrapper,
 }
@@ -163,7 +163,7 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
 Procedural macro to generate a cw-orchestrate interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
 ## Example
-```rust,ignore
+```ignore,ignore
 // In crate "my-contract"
 #[cfg_attr(feature="boot", interface)]
 #[cfg_attr(feature="export", entry_point)]
@@ -179,7 +179,7 @@ pub fn instantiate(
 ```
 ### Generated code
 
-```rust,ignore
+```ignore,ignore
 // This struct represents the interface to the contract.
 pub struct MyContract<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
 
@@ -206,7 +206,7 @@ impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for 
 
 Now you can use the generated interface to call the contract's entry points in your tests/scripts.
 
-```rust,ignore
+```ignore,ignore
 use my_contract::contract::MyContract;
 
 pub fn my_script() {
