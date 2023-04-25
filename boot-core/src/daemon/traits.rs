@@ -17,7 +17,7 @@ pub trait UploadHelpers: BootUpload<Daemon> {
         };
 
         let chain = self.get_chain();
-        let on_chain_hash = chain.runtime.block_on(
+        let on_chain_hash = chain.rt_handle.block_on(
             chain
                 .query::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
@@ -34,7 +34,7 @@ pub trait UploadHelpers: BootUpload<Daemon> {
         };
         let chain = self.get_chain();
         let info = chain
-            .runtime
+            .rt_handle
             .block_on(chain.query::<CosmWasm>().contract_info(self.address()?))?;
         Ok(latest_uploaded_code_id == info.code_id)
     }

@@ -82,7 +82,7 @@ fn contract_info() {
     let channel = rt.block_on(build_channel()).unwrap();
     let cosm_wasm = CosmWasm::new(channel.clone());
 
-    let (sender, mut contract) = common::contract::start(&rt);
+    let (sender, contract) = common::contract::start(&rt);
 
     let _ = contract.upload();
 

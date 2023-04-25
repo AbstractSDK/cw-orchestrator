@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Uint128};
-use std::sync::Arc;
 use tokio::runtime::Runtime;
 
 use uid::Id as IdT;
@@ -10,8 +9,7 @@ struct DeployId(());
 type Id = IdT<DeployId>;
 
 use boot_core::{
-    contract, instantiate_daemon_env, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon,
-    DaemonOptionsBuilder, Mock, Uploadable, WasmPath,
+    contract, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon, Mock, Uploadable, WasmPath,
 };
 
 const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
@@ -58,7 +56,7 @@ pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<Daemon>) {
 
     let sender = daemon.sender.address().unwrap();
 
-    let contract = Cw20(Contract::new(format!("cw-plus:cw20_base:{}", id), chain));
+    let contract = Cw20(Contract::new(format!("cw-plus:cw20_base:{}", id), daemon));
 
     (sender, contract)
 }

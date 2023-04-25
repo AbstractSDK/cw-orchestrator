@@ -14,7 +14,7 @@ use tokio::runtime::Runtime;
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, mut contract) = common::contract::start(&runtime);
+    let (sender, contract) = common::contract::start(&runtime);
 
     asserting!("address is not present")
         .that(&contract.address())

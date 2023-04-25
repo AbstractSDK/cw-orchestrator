@@ -4,7 +4,7 @@
 mod common;
 use std::sync::Arc;
 
-use boot_core::contract;
+use boot_core::*;
 use speculoos::prelude::*;
 
 use cw20_base::msg::*;
@@ -17,7 +17,7 @@ pub struct Cw20Base;
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, mut contract) = common::contract::start(&runtime);
+    let (sender, contract) = common::contract::start(&runtime);
 
     // upload contract
     let upload_res = contract.upload();
