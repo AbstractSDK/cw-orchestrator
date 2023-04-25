@@ -1,14 +1,23 @@
 //! Interactions with docker using bollard
 
 use ibc_chain_registry::chain::{ChainData, Grpc};
+use log::{warn, LevelFilter};
+use log4rs::append::file::FileAppender;
+use log4rs::config::{Appender, Logger, Root};
+use log4rs::encode::pattern::PatternEncoder;
+use log4rs::filter::FilterConfig;
+use log4rs::Config;
 
 use std::collections::HashMap;
 use std::default::Default;
+use std::path::PathBuf;
 use std::{rc::Rc, sync::Arc};
 use tokio::runtime::Runtime;
 
 use super::super::daemon::Sender;
 use super::error::InterchainError;
+use crate::daemon::channel::ChannelAccess;
+use crate::queriers::{DaemonQuerier, Node};
 use crate::{daemon::state::DaemonState, Daemon, DaemonError, DaemonOptionsBuilder};
 
 use super::docker::DockerHelper;
@@ -46,9 +55,57 @@ impl InterchainInfrastructure {
 
         let daemons = Self::build_daemons(
             runtime,
+            // combine the chain with its mnemonic
             &chains.into_iter().zip(mnemonics).collect::<Vec<_>>(),
         )?;
         let hermes = runtime.block_on(Self::get_hermes())?;
+
+        // set up logging for the chains
+
+        let encoder = Box::new(PatternEncoder::new(
+            "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
+        ));
+        let main_log_path = generate_log_file_path("main");
+        let main_appender = FileAppender::builder()
+            .encoder(encoder.clone())
+            .build(&main_log_path)
+            .unwrap();
+        // ensure dir exists
+        std::fs::create_dir_all(main_log_path.parent().unwrap()).unwrap();
+        // add main appender to config
+        let mut config =
+            Config::builder().appender(Appender::builder().build("main", Box::new(main_appender)));
+
+        // add appender for each daemon
+        for daemon in daemons.values() {
+            let chain_id = daemon.state.chain_id.clone();
+            let log_path = generate_log_file_path(&chain_id);
+            let daemon_appender = FileAppender::builder()
+                .encoder(encoder.clone())
+                .build(&log_path)
+                .unwrap();
+
+            config = config
+                .appender(Appender::builder().build(&chain_id, Box::new(daemon_appender)))
+                .logger(
+                    Logger::builder()
+                        .appender(&chain_id)
+                        .build(&chain_id, LevelFilter::Info),
+                );
+        }
+
+        let config = config
+            .build(Root::builder().appender("main").build(LevelFilter::Info))
+            .unwrap();
+
+        log4rs::init_config(config).unwrap();
+
+        for daemon in daemons.values() {
+            let log_target = &daemon.state.chain_id;
+            // log startup to each daemon log
+            log::info!(target: &log_target, "Starting daemon {log_target}");
+        }
+
         Ok(Self { daemons, hermes })
     }
 
@@ -112,4 +169,15 @@ impl InterchainInfrastructure {
         }
         Ok(daemons)
     }
+}
+
+/// Get the file path for the log target
+fn generate_log_file_path(file: &str) -> PathBuf {
+    let file_name = format!("{}.log", file);
+
+    let mut log_path = std::env::current_dir().unwrap();
+    log_path.push("logs");
+    log_path.push(file_name);
+
+    log_path
 }
