@@ -5,17 +5,15 @@ use super::{
     sender::{Sender, Wallet},
     state::{ChainKind, DaemonOptions, DaemonState},
     tx_resp::CosmTxResponse,
+    wasm_path::WasmPath,
 };
-use crate::{
-    contract::ContractCodeReference, state::ChainState, tx_handler::TxHandler, BootExecute, CallAs,
-    ContractInstance,
-};
+use crate::{state::ChainState, tx_handler::TxHandler, BootExecute, CallAs, ContractInstance};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,
     AccountId, Denom,
 };
-use cosmwasm_std::{Addr, Coin, Empty};
+use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
@@ -93,6 +91,7 @@ impl ChainState for Daemon {
 impl TxHandler for Daemon {
     type Response = CosmTxResponse;
     type Error = DaemonError;
+    type ContractSource = WasmPath;
 
     fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -178,14 +177,11 @@ impl TxHandler for Daemon {
         Ok(result)
     }
 
-    fn upload(
-        &self,
-        contract_source: &mut ContractCodeReference<Empty>,
-    ) -> Result<Self::Response, DaemonError> {
+    fn upload(&self, contract_source: WasmPath) -> Result<Self::Response, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = &contract_source.get_wasm_code_path()?;
+        let wasm_path = contract_source.path();
 
-        log::debug!("{}", wasm_path);
+        log::debug!("Uploading file at {:?}", wasm_path);
 
         let file_contents = std::fs::read(wasm_path)?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {

@@ -2,9 +2,8 @@ use crate::CwEnv;
 use crate::{
     error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
-use cosmwasm_std::{Addr, Coin, CustomQuery, Empty};
+use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::Contract as TestContract;
-use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -14,29 +13,8 @@ use std::fmt::Debug;
 pub struct Contract<Chain: CwEnv> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
-    /// Contract end points
-    pub(crate) source: ContractCodeReference,
     /// Chain object that handles tx execution and queries.
     pub(crate) chain: Chain,
-}
-
-#[derive(Default)]
-pub struct ContractCodeReference<ExecT = Empty, QueryT = Empty>
-where
-    ExecT: Clone + Debug + PartialEq + JsonSchema + DeserializeOwned + 'static,
-    QueryT: CustomQuery + DeserializeOwned + 'static,
-{
-    pub wasm_code_path: Option<String>,
-    pub contract_endpoints: Option<Box<dyn TestContract<ExecT, QueryT>>>,
-}
-
-impl Clone for ContractCodeReference {
-    fn clone(&self) -> Self {
-        Self {
-            wasm_code_path: self.wasm_code_path.clone(),
-            contract_endpoints: None,
-        }
-    }
 }
 
 /// Expose chain and state function to call them on the contract
@@ -45,27 +23,12 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Contract {
             id: id.to_string(),
             chain,
-            source: ContractCodeReference::default(),
         }
     }
 
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
     pub fn get_chain(&self) -> &Chain {
         &self.chain
-    }
-
-    pub fn with_wasm_path(mut self, path: impl ToString) -> Self {
-        self.source.wasm_code_path = Some(path.to_string());
-        self
-    }
-
-    pub fn with_mock(mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) -> Self {
-        self.source.contract_endpoints = Some(mock_contract);
-        self
-    }
-
-    pub fn set_mock(&mut self, mock_contract: Box<dyn TestContract<Empty, Empty>>) {
-        self.source.contract_endpoints = Some(mock_contract);
     }
 
     /// Sets the address of the contract in the local state
@@ -121,18 +84,6 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
-    /// Uploads the contract
-    pub fn upload(&mut self) -> Result<TxResponse<Chain>, BootError> {
-        log::info!("Uploading {}", self.id);
-        let resp = self.chain.upload(&mut self.source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
-        Ok(resp)
-    }
-
-    /// Queries the contract
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
@@ -156,6 +107,16 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
             .map_err(Into::into)
+    }
+
+    pub fn upload(&self, source: Chain::ContractSource) -> Result<TxResponse<Chain>, BootError> {
+        log::info!("Uploading {}", self.id);
+        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!("uploaded {} with code id {}", self.id, code_id);
+        log::debug!("Upload response: {:?}", resp);
+        Ok(resp)
     }
 
     // State interfaces

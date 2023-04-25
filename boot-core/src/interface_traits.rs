@@ -1,11 +1,13 @@
-use crate::{contract::Contract, error::BootError, CwEnv};
+use crate::{contract::Contract, error::BootError, CwEnv, TxHandler};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 pub trait ContractInstance<Chain: CwEnv> {
+    /// Return a reference to the underlying Contract instance
     fn as_instance(&self) -> &Contract<Chain>;
+    /// Return a mutable reference to the underlying Contract instance
     fn as_instance_mut(&mut self) -> &mut Contract<Chain>;
 
     // Returns the contract id
@@ -34,12 +36,11 @@ pub trait ContractInstance<Chain: CwEnv> {
 }
 
 /// Tells BOOT what the contract's entrypoint messages are.
-pub trait InstantiateableContract {
-    type InstantiateMsg: Serialize + Debug;
-}
-
 pub trait ExecuteableContract {
     type ExecuteMsg: Serialize + Debug;
+}
+pub trait InstantiateableContract {
+    type InstantiateMsg: Serialize + Debug;
 }
 pub trait QueryableContract {
     type QueryMsg: Serialize + Debug;
@@ -49,19 +50,7 @@ pub trait MigrateableContract {
 }
 
 /// Smart Contract execute endpoint
-pub trait BootExecute<Chain: CwEnv> {
-    type ExecuteMsg: Serialize;
-
-    fn execute(
-        &self,
-        execute_msg: &Self::ExecuteMsg,
-        coins: Option<&[Coin]>,
-    ) -> Result<Chain::Response, BootError>;
-}
-
-impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> BootExecute<Chain> for T {
-    type ExecuteMsg = <T as ExecuteableContract>::ExecuteMsg;
-
+pub trait BootExecute<Chain: CwEnv>: ExecuteableContract + ContractInstance<Chain> {
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
@@ -71,23 +60,10 @@ impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> BootExecute
     }
 }
 
+impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> BootExecute<Chain> for T {}
+
 /// Smart Contract instantiate endpoint
-pub trait BootInstantiate<Chain: CwEnv> {
-    type InstantiateMsg: Serialize;
-
-    fn instantiate(
-        &self,
-        instantiate_msg: &Self::InstantiateMsg,
-        admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
-    ) -> Result<Chain::Response, BootError>;
-}
-
-impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain>
-    for T
-{
-    type InstantiateMsg = <T as InstantiateableContract>::InstantiateMsg;
-
+pub trait BootInstantiate<Chain: CwEnv>: InstantiateableContract + ContractInstance<Chain> {
     fn instantiate(
         &self,
         instantiate_msg: &Self::InstantiateMsg,
@@ -99,19 +75,10 @@ impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> BootIns
     }
 }
 
+impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> BootInstantiate<Chain> for T {}
+
 /// Smart Contract query endpoint
-pub trait BootQuery<Chain: CwEnv> {
-    type QueryMsg: Serialize;
-
-    fn query<G: Serialize + DeserializeOwned + Debug>(
-        &self,
-        query_msg: &Self::QueryMsg,
-    ) -> Result<G, BootError>;
-}
-
-impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> BootQuery<Chain> for T {
-    type QueryMsg = <T as QueryableContract>::QueryMsg;
-
+pub trait BootQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> {
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Self::QueryMsg,
@@ -120,20 +87,10 @@ impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> BootQuery<Cha
     }
 }
 
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> BootQuery<Chain> for T {}
+
 /// Smart Contract migrate endpoint
-pub trait BootMigrate<Chain: CwEnv> {
-    type MigrateMsg: Serialize;
-
-    fn migrate(
-        &self,
-        migrate_msg: &Self::MigrateMsg,
-        new_code_id: u64,
-    ) -> Result<Chain::Response, BootError>;
-}
-
-impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> BootMigrate<Chain> for T {
-    type MigrateMsg = <T as MigrateableContract>::MigrateMsg;
-
+pub trait BootMigrate<Chain: CwEnv>: MigrateableContract + ContractInstance<Chain> {
     fn migrate(
         &self,
         migrate_msg: &Self::MigrateMsg,
@@ -143,17 +100,26 @@ impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> BootMigrate
     }
 }
 
-/// Smart Contract migrate endpoint
+impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> BootMigrate<Chain> for T {}
 
-pub trait BootUpload<Chain: CwEnv> {
-    fn upload(&mut self) -> Result<Chain::Response, BootError>;
+
+/// Trait to implement on the contract to enable it to be uploaded
+/// Should return [`WasmPath`](crate::WasmPath) for `Chain = Daemon`
+/// and [`Box<&dyn Contract>`] for `Chain = Mock`
+pub trait Uploadable<Chain: TxHandler> {
+    /// Return an object that can be used to upload the contract to the environment.
+    fn source(&self) -> Chain::ContractSource;
 }
 
-impl<T: ContractInstance<Chain>, Chain: CwEnv> BootUpload<Chain> for T {
-    fn upload(&mut self) -> Result<Chain::Response, BootError> {
-        self.as_instance_mut().upload()
+/// Smart Contract upload endpoint
+pub trait BootUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable<Chain> {
+    fn upload(&self) -> Result<Chain::Response, BootError> {
+        self.as_instance().upload(self.source())
     }
 }
+
+/// enable `.upload()` for contracts that implement `Uploadable` for that environment.
+impl<T: ContractInstance<Chain> + Uploadable<Chain>, Chain: CwEnv> BootUpload<Chain> for T {}
 
 /// Call a contract with a different sender
 /// Clones the contract interface to prevent mutation of the original

@@ -16,3 +16,8 @@ serde         = { version = "1.0.103", default-features = false, features = ["de
 [patch.crates-io]
 boot-contract-derive = { git="https://github.com/Kayanski/BOOT.git", branch="feature/new-contract-interface"  }
 boot-fns-derive = { git="https://github.com/Kayanski/BOOT.git", branch="feature/new-contract-interface"  }
+
+
+[patch."https://github.com/Kayanski/BOOT.git"]
+boot-contract-derive = { path="packages/boot-contract-derive"  }
+boot-fns-derive = { path="packages/boot-fns-derive" }

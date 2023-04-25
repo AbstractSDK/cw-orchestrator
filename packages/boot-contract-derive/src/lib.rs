@@ -174,6 +174,44 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
 
                 Self(
                     ::boot_core::Contract::new(contract_id, chain)
+                )
+            }
+        }
+
+        // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
+        impl ::boot_core::Uploadable<::boot_core::Mock> for #name<::boot_core::Mock>{
+            fn source(&self) -> <::boot_core::Mock as ::boot_core::TxHandler>::ContractSource{
+                // For Mock contract, we need to return a cw_multi_test Contract trait
+                let contract = ::cw_multi_test::ContractWrapper::new(
+                    #name::<::boot_core::Mock>::get_execute(),
+                    #name::<::boot_core::Mock>::get_instantiate(),
+                    #name::<::boot_core::Mock>::get_query()
+                );
+                Box::new(contract)
+            }
+        }
+
+        impl ::boot_core::Uploadable<::boot_core::Daemon> for #name<::boot_core::Daemon>{
+            fn source(&self) -> <::boot_core::Daemon as ::boot_core::TxHandler>::ContractSource{
+                // For Daemon contract, we need to return a path for the artifacts to be uploaded
+                // Remember that this is a helper for easy definitino of all the traits needed.
+                // We just need to get the local artifacts folder at the root of the workspace
+                // 1. We get the path to the local artifacts dir
+                // We get the workspace dir
+                let mut workspace_dir = find_workspace_dir();
+
+                // We build the artifacts from the artifacts folder (by default) of the package
+                workspace_dir.push("artifacts");
+                let artifacts_dir = ::boot_core::ArtifactsDir::new(workspace_dir);
+                artifacts_dir.find_wasm_path(#wasm_name).unwrap()
+            }
+        }
+
+
+
+        /*
+    
+
                         .with_wasm_path(file_path) // Adds the wasm path for uploading to a node is simple
                          .with_mock(Box::new(
                             // Adds the contract's endpoint functions for mocking
@@ -183,9 +221,10 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
                                 #name::<Chain>::get_query(),
                             ),
                         )),
-                )
-            }
-        }
+
+        */
+
+
     );
 
     let new_func_name = format_ident!("get_{}", func_ident);
