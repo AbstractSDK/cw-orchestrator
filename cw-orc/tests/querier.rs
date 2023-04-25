@@ -4,7 +4,7 @@ use std::{str::FromStr, sync::Arc};
 use common::channel::build_channel;
 use cw_orc::{
     queriers::{CosmWasm, DaemonQuerier, Node},
-    CwOrcInstantiate, CwOrcUpload, ContractInstance, DaemonError,
+    ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
 };
 use speculoos::prelude::*;
 use tokio::runtime::Runtime;

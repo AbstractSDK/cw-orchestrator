@@ -18,9 +18,9 @@ pub use deploy::Deploy;
 pub use error::CwOrcError;
 pub use index_response::IndexResponse;
 pub use interface_traits::{
-    CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery, CwOrcUpload, CallAs, ContractInstance,
-    ExecuteableContract, InstantiateableContract, MigrateableContract, QueryableContract,
-    Uploadable,
+    CallAs, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery,
+    CwOrcUpload, ExecuteableContract, InstantiateableContract, MigrateableContract,
+    QueryableContract, Uploadable,
 };
 
 #[allow(deprecated)]

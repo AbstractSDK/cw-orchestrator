@@ -7,7 +7,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    CwOrcError, CwOrcExecute, CallAs, ContractInstance,
+    CallAs, ContractInstance, CwOrcError, CwOrcExecute,
 };
 
 use super::state::MockState;
@@ -91,7 +91,10 @@ where
 
     /// Query all balances of the address
     /// Returns a vector of coins
-    pub fn query_all_balances(&self, address: &Addr) -> Result<Vec<cosmwasm_std::Coin>, CwOrcError> {
+    pub fn query_all_balances(
+        &self,
+        address: &Addr,
+    ) -> Result<Vec<cosmwasm_std::Coin>, CwOrcError> {
         let amount = self.app.borrow().wrap().query_all_balances(address)?;
         Ok(amount)
     }
