@@ -20,10 +20,10 @@ pub struct Abstract<Chain: CwEnv> {
 
 ### Implementing `Deploy`
 
-Now we can implement the `cw_orchestrate::Deploy` trait for the `Abstract` struct.
+Now we can implement the `cw_orc::Deploy` trait for the `Abstract` struct.
 
 ```rust
-impl<Chain: CwEnv> cw_orchestrate::Deploy<Chain> for Abstract<Chain> {
+impl<Chain: CwEnv> cw_orc::Deploy<Chain> for Abstract<Chain> {
     // We don't have a custom error type
     type Error = BootError;
     type DeployData = semver::Version;
@@ -101,7 +101,7 @@ fn setup_test(mock: Mock) -> Result<(), BootError> {
 And then when setting up your own deployment you can load these applications to access their contracts (for accessing configuration, addresses, ...)
 
 ```rust
-impl<Chain: CwEnv> cw_orchestrate::Deploy<Chain> for MyApplication<Chain> {
+impl<Chain: CwEnv> cw_orc::Deploy<Chain> for MyApplication<Chain> {
     /// ...
     fn deploy_on(chain: Chain, _data: Empty) -> Result<Self, BootError> {
 

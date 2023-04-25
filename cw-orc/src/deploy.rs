@@ -4,7 +4,7 @@ use crate::{BootError, CwEnv};
 ///
 /// ## Example:
 /// ```ignore
-/// use cw_orchestrate::{Deploy, BootError, Empty, CwEnv, BootUpload};
+/// use cw_orc::{Deploy, BootError, Empty, CwEnv, BootUpload};
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///

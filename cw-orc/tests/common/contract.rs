@@ -8,7 +8,7 @@ struct DeployId(());
 
 type Id = IdT<DeployId>;
 
-use cw_orchestrate::{
+use cw_orc::{
     contract, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon, Mock, Uploadable, WasmPath,
 };
 
@@ -24,7 +24,7 @@ const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
 pub struct Cw20;
 
 impl Uploadable<Mock> for Cw20<Mock> {
-    fn source(&self) -> <Mock as cw_orchestrate::TxHandler>::ContractSource {
+    fn source(&self) -> <Mock as cw_orc::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -37,7 +37,7 @@ impl Uploadable<Mock> for Cw20<Mock> {
 }
 
 impl Uploadable<Daemon> for Cw20<Daemon> {
-    fn source(&self) -> <Daemon as cw_orchestrate::TxHandler>::ContractSource {
+    fn source(&self) -> <Daemon as cw_orc::TxHandler>::ContractSource {
         // create contract base configuration
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);

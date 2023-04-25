@@ -1,8 +1,8 @@
 #![recursion_limit = "128"]
 
-mod cw_orchestrate_contract;
+mod cw_orc_contract;
 
-use crate::cw_orchestrate_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
+use crate::cw_orc_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
 
 use convert_case::{Case, Casing};
 use syn::{parse_macro_input, Fields, FnArg, Item, Path};
@@ -31,7 +31,7 @@ impl Parse for TypesInput {
 }
 
 /**
-Procedural macro to generate a cw-orchestrate interface 
+Procedural macro to generate a cw-orchestrator interface 
 
 ## Example
 
@@ -49,22 +49,22 @@ This generated the following code:
 ```ignore
 
 // This struct represents the interface to the contract.
-pub struct Cw20<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
+pub struct Cw20<Chain: ::cw_orc::CwEnv>(::cw_orc::Contract<Chain>);
 
-impl <Chain: ::cw_orchestrate::CwEnv> Cw20<Chain> {
+impl <Chain: ::cw_orc::CwEnv> Cw20<Chain> {
     /// Constructor for the contract interface
      pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
         Self(
-            ::cw_orchestrate::Contract::new(contract_id, chain)
+            ::cw_orc::Contract::new(contract_id, chain)
         )
     }
 }
 
-// Traits for signaling cw-orchestrate with what messages to call the contract's entry points.
-impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::InstantiateableContract for Cw20<Chain> {
+// Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
+impl <Chain: ::cw_orc::CwEnv> ::cw_orc::InstantiateableContract for Cw20<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for Cw20<Chain> {
+impl <Chain: ::cw_orc::CwEnv> ::cw_orc::ExecuteableContract for Cw20<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
@@ -75,12 +75,12 @@ impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for 
 The interface can be linked to its source code by implementing the `Uploadable` trait for the interface.
 
 ```ignore
-use cw_orchestrate::{
+use cw_orc::{
     Mock, Daemon, Uploadable, WasmPath, ContractWrapper,
 }
 
 impl Uploadable<Mock> for Cw20<Mock> {
-    fn source(&self) -> <Mock as cw_orchestrate::TxHandler>::ContractSource {
+    fn source(&self) -> <Mock as cw_orc::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -93,7 +93,7 @@ impl Uploadable<Mock> for Cw20<Mock> {
 }
 
 impl Uploadable<Daemon> for Cw20<Daemon> {
-    fn source(&self) -> <Daemon as cw_orchestrate::TxHandler>::ContractSource {
+    fn source(&self) -> <Daemon as cw_orc::TxHandler>::ContractSource {
         WasmPath::new("path/to/cw20.wasm").unwrap()
     }
 }
@@ -112,10 +112,10 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
         panic!("Expected four endpoint types (InstantiateMsg,ExecuteMsg,QueryMsg,MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
     }
 
-    let Item::Struct(cw_orchestrate_struct) = &mut item else {
+    let Item::Struct(cw_orc_struct) = &mut item else {
         panic!("Only works on structs");
     };
-    let Fields::Unit = &mut cw_orchestrate_struct.fields else {
+    let Fields::Unit = &mut cw_orc_struct.fields else {
         panic!("Struct must be unit-struct");
     };
 
@@ -124,35 +124,35 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let query = types_in_order[2].clone();
     let migrate = types_in_order[3].clone();
 
-    let name = cw_orchestrate_struct.ident.clone();
+    let name = cw_orc_struct.ident.clone();
     let struct_def = quote!(
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
+            pub struct #name<Chain: ::cw_orc::CwEnv>(::cw_orc::Contract<Chain>);
 
-            impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::cw_orchestrate::Contract<Chain> {
+            impl<Chain: ::cw_orc::CwEnv> ::cw_orc::ContractInstance<Chain> for #name<Chain> {
+                fn as_instance(&self) -> &::cw_orc::Contract<Chain> {
                 &self.0
             }
-            fn as_instance_mut(&mut self) -> &mut ::cw_orchestrate::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orc::Contract<Chain> {
                 &mut self.0
             }
         }
 
-        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::InstantiateableContract for #name<Chain> {
+        impl<Chain: ::cw_orc::CwEnv> ::cw_orc::InstantiateableContract for #name<Chain> {
             type InstantiateMsg = #init;
         }
 
-        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for #name<Chain> {
+        impl<Chain: ::cw_orc::CwEnv> ::cw_orc::ExecuteableContract for #name<Chain> {
             type ExecuteMsg = #exec;
         }
 
-        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::QueryableContract for #name<Chain> {
+        impl<Chain: ::cw_orc::CwEnv> ::cw_orc::QueryableContract for #name<Chain> {
             type QueryMsg = #query;
         }
 
-        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::MigrateableContract for #name<Chain> {
+        impl<Chain: ::cw_orc::CwEnv> ::cw_orc::MigrateableContract for #name<Chain> {
             type MigrateMsg = #migrate;
         }
     );
@@ -160,7 +160,7 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /**
-Procedural macro to generate a cw-orchestrate interface with the kebab-case name of the crate.
+Procedural macro to generate a cw-orchestrator interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```ignore,ignore
@@ -181,22 +181,22 @@ pub fn instantiate(
 
 ```ignore,ignore
 // This struct represents the interface to the contract.
-pub struct MyContract<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
+pub struct MyContract<Chain: ::cw_orc::CwEnv>(::cw_orc::Contract<Chain>);
 
-impl <Chain: ::cw_orchestrate::CwEnv> MyContract<Chain> {
+impl <Chain: ::cw_orc::CwEnv> MyContract<Chain> {
     /// Constructor for the contract interface
      pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
         Self(
-            ::cw_orchestrate::Contract::new(contract_id, chain)
+            ::cw_orc::Contract::new(contract_id, chain)
         )
     }
 }
 
-// Traits for signaling cw-orchestrate with what messages to call the contract's entry points.
-impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::InstantiateableContract for MyContract<Chain> {
+// Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
+impl <Chain: ::cw_orc::CwEnv> ::cw_orc::InstantiateableContract for MyContract<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for MyContract<Chain> {
+impl <Chain: ::cw_orc::CwEnv> ::cw_orc::ExecuteableContract for MyContract<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
@@ -233,12 +233,12 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
     let mut item = parse_macro_input!(cloned as syn::Item);
 
-    let Item::Fn(cw_orchestrate_func) = &mut item else {
+    let Item::Fn(cw_orc_func) = &mut item else {
         panic!("Only works on functions");
     };
 
     // Now we get the fourth function argument that should be the instantiate message
-    let signature = &mut cw_orchestrate_func.sig;
+    let signature = &mut cw_orc_func.sig;
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
@@ -260,13 +260,13 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
+            pub struct #name<Chain: ::cw_orc::CwEnv>(::cw_orc::Contract<Chain>);
 
-            impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::cw_orchestrate::Contract<Chain> {
+            impl<Chain: ::cw_orc::CwEnv> ::cw_orc::ContractInstance<Chain> for #name<Chain> {
+                fn as_instance(&self) -> &::cw_orc::Contract<Chain> {
             &self.0
         }
-            fn as_instance_mut(&mut self) -> &mut ::cw_orchestrate::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orc::Contract<Chain> {
                 &mut self.0
             }
         }
@@ -294,29 +294,29 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         }
 
         // We add the contract creation script
-        impl<Chain: ::cw_orchestrate::CwEnv> #name<Chain> {
+        impl<Chain: ::cw_orc::CwEnv> #name<Chain> {
             pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
                 Self(
-                    ::cw_orchestrate::Contract::new(contract_id, chain)
+                    ::cw_orc::Contract::new(contract_id, chain)
                 )
             }
         }
 
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
-        impl ::cw_orchestrate::Uploadable<::cw_orchestrate::Mock> for #name<::cw_orchestrate::Mock>{
-            fn source(&self) -> <::cw_orchestrate::Mock as ::cw_orchestrate::TxHandler>::ContractSource{
+        impl ::cw_orc::Uploadable<::cw_orc::Mock> for #name<::cw_orc::Mock>{
+            fn source(&self) -> <::cw_orc::Mock as ::cw_orc::TxHandler>::ContractSource{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let contract = ::cw_orchestrate::ContractWrapper::new(
-                    #name::<::cw_orchestrate::Mock>::get_execute(),
-                    #name::<::cw_orchestrate::Mock>::get_instantiate(),
-                    #name::<::cw_orchestrate::Mock>::get_query()
+                let contract = ::cw_orc::ContractWrapper::new(
+                    #name::<::cw_orc::Mock>::get_execute(),
+                    #name::<::cw_orc::Mock>::get_instantiate(),
+                    #name::<::cw_orc::Mock>::get_query()
                 );
                 Box::new(contract)
             }
         }
 
-        impl ::cw_orchestrate::Uploadable<::cw_orchestrate::Daemon> for #name<::cw_orchestrate::Daemon>{
-            fn source(&self) -> <::cw_orchestrate::Daemon as ::cw_orchestrate::TxHandler>::ContractSource{
+        impl ::cw_orc::Uploadable<::cw_orc::Daemon> for #name<::cw_orc::Daemon>{
+            fn source(&self) -> <::cw_orc::Daemon as ::cw_orc::TxHandler>::ContractSource{
                 // For Daemon contract, we need to return a path for the artifacts to be uploaded
                 // Remember that this is a helper for easy definition of all the traits needed.
                 // We just need to get the local artifacts folder at the root of the workspace
@@ -326,7 +326,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
 
                 // We build the artifacts from the artifacts folder (by default) of the package
                 workspace_dir.push("artifacts");
-                let artifacts_dir = ::cw_orchestrate::ArtifactsDir::new(workspace_dir);
+                let artifacts_dir = ::cw_orc::ArtifactsDir::new(workspace_dir);
                 artifacts_dir.find_wasm_path(#wasm_name).unwrap()
             }
         }
@@ -339,7 +339,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                         .with_wasm_path(file_path) // Adds the wasm path for uploading to a node is simple
                          .with_mock(Box::new(
                             // Adds the contract's endpoint functions for mocking
-                            ::cw_orchestrate::ContractWrapper::new_with_empty(
+                            ::cw_orc::ContractWrapper::new_with_empty(
                                 #name::<Chain>::get_execute(),
                                 #name::<Chain>::get_instantiate(),
                                 #name::<Chain>::get_query(),
@@ -359,13 +359,13 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
 
     let func_part = quote!(
 
-        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::#trait_name for #name<Chain> {
+        impl<Chain: ::cw_orc::CwEnv> ::cw_orc::#trait_name for #name<Chain> {
             type #message_name = #message;
         }
 
 
-        impl<Chain: ::cw_orchestrate::CwEnv> #name<Chain>{
-            fn #new_func_name() ->  #func_type /*(cw_orchestrate_func.sig.inputs) -> cw_orchestrate_func.sig.output*/
+        impl<Chain: ::cw_orc::CwEnv> #name<Chain>{
+            fn #new_func_name() ->  #func_type /*(cw_orc_func.sig.inputs) -> cw_orc_func.sig.output*/
             {
                 return #func_ident;
             }

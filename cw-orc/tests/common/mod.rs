@@ -138,7 +138,7 @@ pub fn docker_container_start() {
     let image = env::var("JUNO_IMAGE").unwrap();
 
     let temp_dir = env::temp_dir();
-    let state_file = temp_dir.join("cw_orchestrate_test.json");
+    let state_file = temp_dir.join("cw_orc_test.json");
 
     if env::var("STATE_FILE").is_err() {
         env::set_var("STATE_FILE", state_file);
@@ -166,7 +166,7 @@ pub fn docker_container_stop() {
     log::info!("Running docker_container_stop");
     container::ensure_removal(&env::var("CONTAINER_NAME").unwrap());
     let temp_dir = env::temp_dir();
-    let expected_state_file = temp_dir.join("cw_orchestrate_test_local.json");
+    let expected_state_file = temp_dir.join("cw_orc_test_local.json");
     state_file::remove(expected_state_file.to_str().unwrap());
 }
 

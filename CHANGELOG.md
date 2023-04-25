@@ -1,4 +1,4 @@
-# cw-orchestrate Changelog
+# cw-orchestrator Changelog
 
 ## Unpublished
 

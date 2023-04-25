@@ -1,4 +1,4 @@
-use cw_orchestrate::{networks, DaemonChannel};
+use cw_orc::{networks, DaemonChannel};
 
 use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
