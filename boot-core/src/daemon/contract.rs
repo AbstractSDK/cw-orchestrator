@@ -44,7 +44,7 @@ impl Contract<Daemon> {
     pub fn latest_is_uploaded(&self) -> Result<bool, BootError> {
         let latest_uploaded_code_id = self.code_id()?;
         let chain = self.get_chain();
-        let on_chain_hash = chain.runtime.block_on(
+        let on_chain_hash = chain.rt_handle.block_on(
             chain
                 .query::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
@@ -72,7 +72,7 @@ impl Contract<Daemon> {
         let latest_uploaded_code_id = self.code_id()?;
         let chain = self.get_chain();
         let info = chain
-            .runtime
+            .rt_handle
             .block_on(chain.query::<CosmWasm>().contract_info(self.address()?))?;
         Ok(latest_uploaded_code_id == info.code_id)
     }

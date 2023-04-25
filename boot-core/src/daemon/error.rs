@@ -94,6 +94,8 @@ pub enum DaemonError {
     GRPCListIsEmpty,
     #[error("no wasm path provided for contract.")]
     MissingWasmPath,
+    #[error("daemon builder missing {0}")]
+    BuilderMissing(String),
     #[error("ibc error: {0}")]
     IbcError(String),
 }
