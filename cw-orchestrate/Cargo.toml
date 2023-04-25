@@ -1,5 +1,5 @@
 [package]
-name = "boot-core"
+name = "cw-orchestrate"
 version = "0.10.0"
 authors = { workspace = true }
 edition = { workspace = true }
@@ -40,8 +40,8 @@ daemon = [
 
 [dependencies]
 # Default deps
-boot-contract-derive = { version="0.10.0" }
-boot-fns-derive = { version="0.10.0" }
+cw-orchestrate-contract-derive = { version="0.10.0" }
+cw-orchestrate-fns-derive = { version="0.10.0" }
 
 cosmwasm-std         = { workspace = true }
 cw-multi-test        = { workspace = true }
@@ -85,7 +85,7 @@ ring = { version = "0.16.20", optional = true }
 
 [dev-dependencies]
 
-boot-core = { features = ["daemon"], path = "." }
+cw-orchestrate = { features = ["daemon"], path = "." }
 uid = "0.1.7"
 env_logger = "0.10.0"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }

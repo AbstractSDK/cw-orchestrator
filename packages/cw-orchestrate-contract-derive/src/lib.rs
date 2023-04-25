@@ -1,8 +1,8 @@
 #![recursion_limit = "128"]
 
-mod boot_contract;
+mod cw_orchestrate_contract;
 
-use crate::boot_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
+use crate::cw_orchestrate_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
 
 use convert_case::{Case, Casing};
 use syn::{parse_macro_input, Fields, FnArg, Item, Path};
@@ -43,10 +43,10 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
         panic!("Expected four endpoint types (InstantiateMsg,ExecuteMsg,QueryMsg,MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
     }
 
-    let Item::Struct(boot_struct) = &mut item else {
+    let Item::Struct(cw_orchestrate_struct) = &mut item else {
         panic!("Only works on structs");
     };
-    let Fields::Unit = &mut boot_struct.fields else {
+    let Fields::Unit = &mut cw_orchestrate_struct.fields else {
         panic!("Struct must be unit-struct");
     };
 
@@ -55,35 +55,35 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let query = types_in_order[2].clone();
     let migrate = types_in_order[3].clone();
 
-    let name = boot_struct.ident.clone();
+    let name = cw_orchestrate_struct.ident.clone();
     let struct_def = quote!(
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::boot_core::CwEnv>(::boot_core::Contract<Chain>);
+            pub struct #name<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
 
-            impl<Chain: ::boot_core::CwEnv> ::boot_core::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::boot_core::Contract<Chain> {
+            impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ContractInstance<Chain> for #name<Chain> {
+                fn as_instance(&self) -> &::cw_orchestrate::Contract<Chain> {
                 &self.0
             }
-            fn as_instance_mut(&mut self) -> &mut ::boot_core::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orchestrate::Contract<Chain> {
                 &mut self.0
             }
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::InstantiateableContract for #name<Chain> {
+        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::InstantiateableContract for #name<Chain> {
             type InstantiateMsg = #init;
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::ExecuteableContract for #name<Chain> {
+        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for #name<Chain> {
             type ExecuteMsg = #exec;
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::QueryableContract for #name<Chain> {
+        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::QueryableContract for #name<Chain> {
             type QueryMsg = #query;
         }
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::MigrateableContract for #name<Chain> {
+        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::MigrateableContract for #name<Chain> {
             type MigrateMsg = #migrate;
         }
     );
@@ -91,11 +91,11 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /**
-Procedural macro to generate a boot-interface contract with the kebab-case name of the crate.
+Procedural macro to generate a cw-orchestrate-interface contract with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```rust,ignore
-#[cfg_attr(feature="boot", boot_contract)]
+#[cfg_attr(feature="boot", cw_orchestrate_contract)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
    deps: DepsMut,
@@ -109,16 +109,16 @@ pub fn instantiate(
 ```
 */
 #[proc_macro_attribute]
-pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
+pub fn cw_orchestrate_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
     let mut item = parse_macro_input!(cloned as syn::Item);
 
-    let Item::Fn(boot_func) = &mut item else {
+    let Item::Fn(cw_orchestrate_func) = &mut item else {
         panic!("Only works on functions");
     };
 
     // Now we get the fourth function argument that should be the instantiate message
-    let signature = &mut boot_func.sig;
+    let signature = &mut cw_orchestrate_func.sig;
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
@@ -140,13 +140,13 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::boot_core::CwEnv>(::boot_core::Contract<Chain>);
+            pub struct #name<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
 
-            impl<Chain: ::boot_core::CwEnv> ::boot_core::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::boot_core::Contract<Chain> {
+            impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ContractInstance<Chain> for #name<Chain> {
+                fn as_instance(&self) -> &::cw_orchestrate::Contract<Chain> {
             &self.0
         }
-            fn as_instance_mut(&mut self) -> &mut ::boot_core::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orchestrate::Contract<Chain> {
                 &mut self.0
             }
         }
@@ -174,29 +174,29 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
         }
 
         // We add the contract creation script
-        impl<Chain: ::boot_core::CwEnv> #name<Chain> {
+        impl<Chain: ::cw_orchestrate::CwEnv> #name<Chain> {
             pub fn new(contract_id: &str, chain: Chain) -> Self {
                 Self(
-                    ::boot_core::Contract::new(contract_id, chain)
+                    ::cw_orchestrate::Contract::new(contract_id, chain)
                 )
             }
         }
 
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
-        impl ::boot_core::Uploadable<::boot_core::Mock> for #name<::boot_core::Mock>{
-            fn source(&self) -> <::boot_core::Mock as ::boot_core::TxHandler>::ContractSource{
+        impl ::cw_orchestrate::Uploadable<::cw_orchestrate::Mock> for #name<::cw_orchestrate::Mock>{
+            fn source(&self) -> <::cw_orchestrate::Mock as ::cw_orchestrate::TxHandler>::ContractSource{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let contract = ::boot_core::ContractWrapper::new(
-                    #name::<::boot_core::Mock>::get_execute(),
-                    #name::<::boot_core::Mock>::get_instantiate(),
-                    #name::<::boot_core::Mock>::get_query()
+                let contract = ::cw_orchestrate::ContractWrapper::new(
+                    #name::<::cw_orchestrate::Mock>::get_execute(),
+                    #name::<::cw_orchestrate::Mock>::get_instantiate(),
+                    #name::<::cw_orchestrate::Mock>::get_query()
                 );
                 Box::new(contract)
             }
         }
 
-        impl ::boot_core::Uploadable<::boot_core::Daemon> for #name<::boot_core::Daemon>{
-            fn source(&self) -> <::boot_core::Daemon as ::boot_core::TxHandler>::ContractSource{
+        impl ::cw_orchestrate::Uploadable<::cw_orchestrate::Daemon> for #name<::cw_orchestrate::Daemon>{
+            fn source(&self) -> <::cw_orchestrate::Daemon as ::cw_orchestrate::TxHandler>::ContractSource{
                 // For Daemon contract, we need to return a path for the artifacts to be uploaded
                 // Remember that this is a helper for easy definition of all the traits needed.
                 // We just need to get the local artifacts folder at the root of the workspace
@@ -206,7 +206,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
 
                 // We build the artifacts from the artifacts folder (by default) of the package
                 workspace_dir.push("artifacts");
-                let artifacts_dir = ::boot_core::ArtifactsDir::new(workspace_dir);
+                let artifacts_dir = ::cw_orchestrate::ArtifactsDir::new(workspace_dir);
                 artifacts_dir.find_wasm_path(#wasm_name).unwrap()
             }
         }
@@ -219,7 +219,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
                         .with_wasm_path(file_path) // Adds the wasm path for uploading to a node is simple
                          .with_mock(Box::new(
                             // Adds the contract's endpoint functions for mocking
-                            ::boot_core::ContractWrapper::new_with_empty(
+                            ::cw_orchestrate::ContractWrapper::new_with_empty(
                                 #name::<Chain>::get_execute(),
                                 #name::<Chain>::get_instantiate(),
                                 #name::<Chain>::get_query(),
@@ -239,13 +239,13 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
 
     let func_part = quote!(
 
-        impl<Chain: ::boot_core::CwEnv> ::boot_core::#trait_name for #name<Chain> {
+        impl<Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::#trait_name for #name<Chain> {
             type #message_name = #message;
         }
 
 
-        impl<Chain: ::boot_core::CwEnv> #name<Chain>{
-            fn #new_func_name() ->  #func_type /*(boot_func.sig.inputs) -> boot_func.sig.output*/
+        impl<Chain: ::cw_orchestrate::CwEnv> #name<Chain>{
+            fn #new_func_name() ->  #func_type /*(cw_orchestrate_func.sig.inputs) -> cw_orchestrate_func.sig.output*/
             {
                 return #func_ident;
             }

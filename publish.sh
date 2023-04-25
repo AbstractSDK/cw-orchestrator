@@ -14,9 +14,9 @@ then
 fi
 
 # these are imported by other packages
-BASE_PACKAGES="boot-contract-derive boot-fns-derive"
-UTILS_PACKAGES="boot-core"
-ALL_PACKAGES="boot-cw-plus"
+BASE_PACKAGES="cw-orchestrate-contract-derive cw-orchestrate-fns-derive"
+UTILS_PACKAGES="cw-orchestrate"
+ALL_PACKAGES="cw-plus-orchestrate"
 
 for pack in $BASE_PACKAGES; do
   (

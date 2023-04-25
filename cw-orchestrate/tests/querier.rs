@@ -1,11 +1,11 @@
 mod common;
 use std::{str::FromStr, sync::Arc};
 
-use boot_core::{
+use common::channel::build_channel;
+use cw_orchestrate::{
     queriers::{CosmWasm, DaemonQuerier, Node},
     BootInstantiate, BootUpload, ContractInstance, DaemonError,
 };
-use common::channel::build_channel;
 use speculoos::prelude::*;
 use tokio::runtime::Runtime;
 

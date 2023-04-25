@@ -4,8 +4,8 @@ use crate::{BootError, CwEnv};
 ///
 /// ## Example:
 /// ```ignore
-/// use boot_core::{Deploy, BootError, Empty, CwEnv, BootUpload};
-/// use boot_cw_plus::Cw20Base;
+/// use cw_orchestrate::{Deploy, BootError, Empty, CwEnv, BootUpload};
+/// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
 /// pub struct MyApplication<Chain: CwEnv> {
