@@ -60,11 +60,11 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 let variant_attr = variant_idents.iter();
                 Some(quote!(
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orchestrate::TxResponse<Chain>, ::cw_orchestrate::BootError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orc::TxResponse<Chain>, ::cw_orc::BootError> {
                         let msg = #name::#variant_name {
                             #(#variant_ident_content_names,)*
                         };
-                        <Self as ::cw_orchestrate::BootExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                        <Self as ::cw_orc::BootExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
                     }
                 ))
             }
@@ -72,16 +72,16 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     });
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::cw_orchestrate::CwEnv, #type_generics>: ::cw_orchestrate::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics #where_clause> {
+        pub trait #bname<Chain: ::cw_orc::CwEnv, #type_generics>: ::cw_orc::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics #where_clause> {
             #(#variant_fns)*
         }
     );
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: ::cw_orchestrate::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::cw_orc::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            SupportedContract: ::cw_orchestrate::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
+            SupportedContract: ::cw_orc::BootExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
     );
 
     let expand = quote!(

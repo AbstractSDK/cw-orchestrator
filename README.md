@@ -1,14 +1,14 @@
-<a href="https://docs.rs/cw-orchestrate/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/cw-orchestrate"></a> <a href="https://crates.io/crates/cw-orchestrate" ><img alt="Crates.io" src="https://img.shields.io/crates/d/cw-orchestrate"></a> <a href="https://app.codecov.io/gh/AbstractSDK/cw-orchestrate" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/AbstractSDK/cw-orchestrate?token=CZZH6DJMRY"></a>
+<a href="https://docs.rs/cw-orc/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/cw-orc"></a> <a href="https://crates.io/crates/cw-orc" ><img alt="Crates.io" src="https://img.shields.io/crates/d/cw-orc"></a> <a href="https://app.codecov.io/gh/AbstractSDK/cw-orc" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/AbstractSDK/cw-orc?token=CZZH6DJMRY"></a>
 
-# cw-orchestrate
+# cw-orchestrator
 
-Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [boot.abstract.money](https://boot.abstract.money).
+Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [orchestrator.abstract.money](https://orchestrator.abstract.money).
 
-> [cw-orchestrate](cw-orchestrate/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
+> [cw-orchestrator](cw-orc/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
 
-[cw-plus-orchestrate](cw-plus-orchestrate/README.md) uses cw-orchestrate to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
+[cw-plus-orchestrate](cw-plus-orchestrate/README.md) uses cw-orchestrator to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
-cw-orchestrate makes it easier to quickly deploy and iterate on your contracts. It provides a set of macros that allow you to define your contracts in a way that is more similar to how you would write them in Rust. This allows you to use the full power of Rust's type system to ensure that you are not sending invalid messages to your contracts.
+cw-orchestrator makes it easier to quickly deploy and iterate on your contracts. It provides a set of macros that allow you to define your contracts in a way that is more similar to how you would write them in Rust. This allows you to use the full power of Rust's type system to ensure that you are not sending invalid messages to your contracts.
 .
 
 ## How it works
@@ -49,11 +49,11 @@ cw20_base.instantiate(&cw20_init_msg, None, None)?;
 let balance = cw20_base.balance(sender.to_string())?;
 ```
 
-You can find [the full cw20 implementation here](cw-orchestrate/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](cw-plus-orchestrate/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](cw-plus-orchestrate/examples/cw-plus-daemon.rs).
+You can find [the full cw20 implementation here](cw-orc/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](cw-plus-orchestrate/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](cw-plus-orchestrate/examples/cw-plus-daemon.rs).
 
 ## Advanced features
 
-cw-orchestrate provides two additional macros that can be used to improve the scripting experience.
+cw-orchestrator provides two additional macros that can be used to improve the scripting experience.
 
 ### ExecuteFns
 
@@ -87,8 +87,8 @@ impl<Chain: CwEnv> Cw1<Chain> {
 }
 ```
 
-> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `cw-orchestrate` by default.
-> The resulting derive would look like this: `#[cfg_attr(feature = "boot", derive(cw_orchestrate::ExecuteFns))]`
+> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `cw-orchestrator` by default.
+> The resulting derive would look like this: `#[cfg_attr(feature = "interface", derive(cw_orc::ExecuteFns))]`
 
 For nested execute messages you can add an `impl_into` attribute. This expects the message to implement the `Into` trait for the provided type.
 

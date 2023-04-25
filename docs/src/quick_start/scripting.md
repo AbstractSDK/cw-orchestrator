@@ -24,10 +24,10 @@ and also add the `dotenv` crate:
 cargo add anyhow dotenv log
 ```
 
-and, we must enable the `daemon` feature on `cw_orchestrate`
+and, we must enable the `daemon` feature on `cw_orc`
 
 ```bash
-cargo add cw_orchestrate --features daemon
+cargo add cw_orc --features daemon
 ```
 
 ## Main Function
@@ -65,10 +65,10 @@ First, we'll define a function that will deploy our contract to the chain. This 
 ```rust
 // scripts/src/my_contract.rs
 use anyhow::Result;
-use cw_orchestrate::networks;
-use cw_orchestrate::{Addr, instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
+use cw_orc::networks;
+use cw_orc::{Addr, instantiate_daemon_env, NetworkInfo, DaemonOptionsBuilder};
 // Traits for contract deployment
-use cw_orchestrate::interface::*;
+use cw_orc::interface::*;
 use interfaces::my_contract::MyContract;
 
 // Select the chain to deploy to
@@ -145,7 +145,7 @@ pub fn query_contract() -> anyhow::Result<()> {
 
 ```rust
 // scripts/src/my_contract.rs
-use cw_orchestrate::*;
+use cw_orc::*;
 use my_contract::{ExecuteMsg, ExecuteMsgFnsDerive};
 // ...
 

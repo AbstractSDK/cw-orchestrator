@@ -35,7 +35,7 @@ pub trait ContractInstance<Chain: CwEnv> {
     }
 }
 
-/// Tells cw-orchestrate what the contract's entrypoint messages are.
+/// Tells cw-orchestrator what the contract's entrypoint messages are.
 pub trait ExecuteableContract {
     type ExecuteMsg: Serialize + Debug;
 }
