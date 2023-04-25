@@ -40,6 +40,8 @@ pub trait UploadHelpers: BootUpload<Daemon> {
     }
 }
 
+impl<T> UploadHelpers for T where T: BootUpload<Daemon> {}
+
 pub trait MigrateHelpers: BootMigrate<Daemon> + UploadHelpers {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
@@ -54,3 +56,5 @@ pub trait MigrateHelpers: BootMigrate<Daemon> + UploadHelpers {
         }
     }
 }
+
+impl<T> MigrateHelpers for T where T: BootMigrate<Daemon> + BootUpload<Daemon> {}
