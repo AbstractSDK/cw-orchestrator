@@ -11,7 +11,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 #[derive(Clone, Default)]
 /// Create [`Daemon`] through [`DaemonBuilderBuilder`]
 /// ## Example
-/// ```ignore
+/// ```no_run
 ///     use boot_core::{DaemonBuilder, networks};
 ///
 ///     let daemon = DaemonBuilder::default()
