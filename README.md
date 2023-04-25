@@ -1,4 +1,4 @@
-<a href="https://docs.rs/boot-core/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/boot-core"></a> <a href="https://crates.io/crates/boot-core" ><img alt="Crates.io" src="https://img.shields.io/crates/d/boot-core"></a> <a href="https://app.codecov.io/gh/abstract-os/BOOT" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/abstract-os/BOOT?token=CZZH6DJMRY"></a>
+<a href="https://docs.rs/boot-core/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/boot-core"></a> <a href="https://crates.io/crates/boot-core" ><img alt="Crates.io" src="https://img.shields.io/crates/d/boot-core"></a> <a href="https://app.codecov.io/gh/AbstractSDK/BOOT" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/AbstractSDK/BOOT?token=CZZH6DJMRY"></a>
 
 
 # BOOT
@@ -23,7 +23,7 @@ In order to perform actions on the contract you can define an interface to your 
 pub struct MyContract;
 ```
 
-The macro implements a set of traits for the struct. These traits contain functions that can then be used to interact with the contract and they prevent us from executing a faulty message on a contract. 
+The macro implements a set of traits for the struct. These traits contain functions that can then be used to interact with the contract and they prevent us from executing a faulty message on a contract.
 
 As an example you can have a look at the the implementation for a CW20 token [here.](boot-cw-plus/src/contracts/cw20_base.rs)
 
@@ -82,7 +82,7 @@ struct Cw1
 impl<Chain: CwEnv> Cw1<Chain> {
     pub fn test_macro(&self) {
         self.freeze().unwrap();
-        self.update_admins(vec![]).unwrap(); 
+        self.update_admins(vec![]).unwrap();
         self.deposit(&[Coin::new(13,"juno")]).unwrap();
     }
 }
