@@ -4,7 +4,7 @@
 mod common;
 use std::sync::Arc;
 
-use boot_core::contract;
+use boot_core::*;
 use speculoos::prelude::*;
 
 use cw20_base::msg::*;
@@ -17,7 +17,7 @@ pub struct Cw20Base;
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, mut contract) = common::contract::start(&runtime);
+    let (sender, contract) = common::contract::start(&runtime);
 
     // upload contract
     let upload_res = contract.upload();
@@ -39,11 +39,9 @@ fn general() {
         .is_ok();
 
     // do a query and validate its successful
-    let query_res = contract.query::<cw20_base::msg::QueryMsg, cw20::BalanceResponse>(
-        &cw20_base::msg::QueryMsg::Balance {
-            address: sender.to_string(),
-        },
-    );
+    let query_res = contract.query::<cw20::BalanceResponse>(&cw20_base::msg::QueryMsg::Balance {
+        address: sender.to_string(),
+    });
     asserting!("query is successful").that(&query_res).is_ok();
 
     // validate migrations are successful

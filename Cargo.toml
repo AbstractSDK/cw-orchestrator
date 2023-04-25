@@ -18,20 +18,3 @@ serde         = { version = "1.0.103", default-features = false, features = ["de
 boot-contract-derive = { path="packages/boot-contract-derive" }
 boot-fns-derive = { path="packages/boot-fns-derive" }
 boot-core = { path="boot-core" }
-
-[patch."https://github.com/Abstract-OS/cw-plus.git"]
-cw1  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn"}
-cw3  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw4  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw20 = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-# crates
-cw1-subkeys        = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw1-whitelist      = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw20-base          = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw20-ics20         = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw3-fixed-multisig = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw3-flex-multisig  = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw4-group          = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-cw4-stake          = { git = "https://github.com/Kayanski/cw-plus.git", branch="feature/integrate-generics-in-fn" }
-
-

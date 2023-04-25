@@ -1,6 +1,6 @@
+pub mod artifacts_dir;
 pub mod builder;
 pub mod channel;
-pub mod contract;
 pub mod core;
 pub mod error;
 pub mod networks;
@@ -9,7 +9,10 @@ mod sender;
 pub use sender::Wallet;
 pub mod json_file;
 pub mod state;
+/// Custom traits for Daemon contracts
+pub mod traits;
 pub mod tx_resp;
+pub mod wasm_path;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;

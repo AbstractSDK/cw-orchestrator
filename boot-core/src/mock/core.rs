@@ -1,44 +1,56 @@
-use super::state::MockState;
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
+
+use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
+use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use serde::{de::DeserializeOwned, Serialize};
+
 use crate::{
-    contract::ContractCodeReference,
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
     BootError, BootExecute, CallAs, ContractInstance,
 };
-use cosmwasm_std::{Addr, Empty, Event, Uint128};
-use cw_multi_test::{next_block, App, AppResponse, BasicApp, Executor};
-use serde::{de::DeserializeOwned, Serialize};
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
+use super::state::MockState;
+
+#[deprecated(
+    since = "0.11.0",
+    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::new`"
+)]
 pub fn instantiate_default_mock_env(
     sender: &Addr,
 ) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
-    let mock_state = Rc::new(RefCell::new(MockState::new()));
-    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
-    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
-    Ok((mock_state, mock_chain))
+    let mock_chain = Mock::new(sender)?;
+    Ok((mock_chain.state(), mock_chain))
 }
 
+#[deprecated(
+    since = "0.11.0",
+    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::new_custom`"
+)]
 pub fn instantiate_custom_mock_env<S: StateInterface>(
     sender: &Addr,
     custom_state: S,
 ) -> anyhow::Result<(Rc<RefCell<S>>, Mock<S>)> {
-    let mock_state = Rc::new(RefCell::new(custom_state));
-    let mock_app = Rc::new(RefCell::new(BasicApp::new(|_, _, _| {})));
-    let mock_chain = Mock::new(sender, &mock_state, &mock_app)?;
-    Ok((mock_state, mock_chain))
+    let mock_chain = Mock::new_custom(sender, custom_state)?;
+    Ok((mock_chain.state(), mock_chain))
 }
 
 // Generic mock-chain implementation
 // Allows for custom state storage
 #[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState> {
+pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
     pub sender: Addr,
+    /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
-    pub app: Rc<RefCell<App>>,
+    /// Inner mutable cw-multi-test app backend
+    pub app: Rc<RefCell<BasicApp<ExecC, QueryC>>>,
 }
 
-impl<S: StateInterface> Mock<S> {
+impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     /// set the Bank balance of an address
     pub fn set_balance(
         &self,
@@ -85,22 +97,41 @@ impl<S: StateInterface> Mock<S> {
     }
 }
 
-impl<S: StateInterface> Mock<S> {
-    pub fn new(
-        sender: &Addr,
-        state: &Rc<RefCell<S>>,
-        app: &Rc<RefCell<App>>,
-    ) -> anyhow::Result<Self> {
+impl<ExecC, QueryC> Mock<MockState, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
+    /// Create a mock environment with the default mock state.
+    pub fn new(sender: &Addr) -> anyhow::Result<Self> {
+        Mock::new_custom(sender, MockState::new())
+    }
+}
+
+impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
+    /// Create a mock environment with a custom mock store.
+    pub fn new_custom(sender: &Addr, custom_state: S) -> anyhow::Result<Self> {
+        let state = Rc::new(RefCell::new(custom_state));
+        let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
+
         let instance = Self {
             sender: sender.clone(),
-            state: state.clone(),
-            app: app.clone(),
+            state,
+            app,
         };
         Ok(instance)
     }
 }
 
-impl<S: StateInterface> ChainState for Mock<S> {
+impl<S: StateInterface, ExecC, QueryC> ChainState for Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -135,9 +166,14 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for Mock<S> {
+impl<S: StateInterface, ExecC, QueryC> TxHandler for Mock<S, ExecC, QueryC>
+where
+    ExecC: CustomMsg + DeserializeOwned + 'static,
+    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
+{
     type Response = AppResponse;
     type Error = BootError;
+    type ContractSource = Box<dyn Contract<ExecC, QueryC>>;
 
     fn sender(&self) -> Addr {
         self.sender.clone()
@@ -217,24 +253,17 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 
     fn upload(
         &self,
-        contract_source: &mut ContractCodeReference<Empty>,
+        contract_source: Box<dyn Contract<ExecC, QueryC>>,
     ) -> Result<Self::Response, crate::BootError> {
-        // transfer ownership of Boxed app to App
-        if let Some(contract) = std::mem::replace(&mut contract_source.contract_endpoints, None) {
-            let code_id = self.app.borrow_mut().store_code(contract);
-            // add contract code_id to events manually
-            let mut event = Event::new("store_code");
-            event = event.add_attribute("code_id", code_id.to_string());
-            let resp = AppResponse {
-                events: vec![event],
-                ..Default::default()
-            };
-            Ok(resp)
-        } else {
-            Err(BootError::StdErr(
-                "Contract reference must be cosm-multi-test contract object.".into(),
-            ))
-        }
+        let code_id = self.app.borrow_mut().store_code(contract_source);
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
     }
 
     fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
@@ -284,7 +313,6 @@ mod test {
         Uint128,
     };
     use cw_multi_test::ContractWrapper;
-
     use serde::Serialize;
     use speculoos::prelude::*;
 
@@ -330,7 +358,7 @@ mod test {
         let amount = 1000000u128;
         let denom = "uosmo";
 
-        let (_state, chain) = instantiate_default_mock_env(sender).unwrap();
+        let chain = Mock::new(sender).unwrap();
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -345,14 +373,12 @@ mod test {
             .that(sender)
             .is_equal_to(chain.sender());
 
-        let mut contract_source: ContractCodeReference = ContractCodeReference::default();
-
-        contract_source.contract_endpoints = Some(Box::new(
+        let contract_source = Box::new(
             ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
                 .with_migrate(cw20_base::contract::migrate),
-        ));
+        );
 
-        let init_res = chain.upload(&mut contract_source).unwrap();
+        let init_res = chain.upload(contract_source).unwrap();
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
             .is_equal_to(&String::from("1"));
@@ -414,7 +440,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let (_, chain) = instantiate_custom_mock_env(sender, mock_state).unwrap();
+        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state).unwrap();
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
