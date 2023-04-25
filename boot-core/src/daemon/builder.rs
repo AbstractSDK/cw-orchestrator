@@ -62,7 +62,8 @@ impl DaemonBuilder {
         self.handle = Some(handle.clone());
         self
     }
-
+    
+    /// Set the mnemonic to use with this chain. 
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
         self
