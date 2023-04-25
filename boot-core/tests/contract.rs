@@ -17,7 +17,7 @@ pub struct Cw20Base;
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, mut contract) = common::contract::start();
+    let (sender, mut contract) = common::contract::start(&runtime);
 
     // upload contract
     let upload_res = contract.upload();

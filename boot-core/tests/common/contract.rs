@@ -47,7 +47,7 @@ impl Uploadable<Daemon> for Cw20<Daemon> {
     }
 }
 
-pub fn start() -> (cosmwasm_std::Addr, Cw20<Daemon>) {
+pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<Daemon>) {
     let id = Id::new();
 
     let daemon = Daemon::builder()
