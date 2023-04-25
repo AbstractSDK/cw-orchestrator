@@ -30,6 +30,10 @@ impl Parse for TypesInput {
     }
 }
 
+/**
+Procedural macro to generate a cw-orchestrate-interface 
+
+*/
 #[proc_macro_attribute]
 pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
@@ -91,11 +95,12 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /**
-Procedural macro to generate a cw-orchestrate-interface contract with the kebab-case name of the crate.
+Procedural macro to generate a cw-orchestrate interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```rust,ignore
-#[cfg_attr(feature="boot", cw_orchestrate_contract)]
+// In crate "my-contract"
+#[cfg_attr(feature="boot", interface)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
    deps: DepsMut,
@@ -105,11 +110,61 @@ pub fn instantiate(
  -> StdResult<Response> {
     // ...
 }
-// ... other entrypoints (execute, query, migrate)
+// ... other entry points (execute, query, migrate)
+```
+### Generated code
+
+```rust,ignore
+// This struct represents the interface to the contract.
+pub struct MyContract<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
+
+impl <Chain: ::cw_orchestrate::CwEnv> MyContract<Chain> {
+    /// Constructor for the contract interface
+     pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+        Self(
+            ::cw_orchestrate::Contract::new(contract_id, chain)
+        )
+    }
+}
+
+// Traits for signaling cw-orchestrate with what messages to call the contract's entry points.
+impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::InstantiateableContract for MyContract<Chain> {
+    type InstantiateMsg = InstantiateMsg;
+}
+impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for MyContract<Chain> {
+    type ExecuteMsg = ExecuteMsg;
+}
+// ... other entry point & upload traits
+```
+
+### Usage
+
+Now you can use the generated interface to call the contract's entry points in your tests/scripts.
+
+```rust,ignore
+use my_contract::contract::MyContract;
+
+pub fn my_script() {
+    let sender = "my_address";
+    let mock_chain = Mock::new(sender);
+    // create a new interface for the contract
+    let my_contract = MyContract::new("my_contract", mock_chain.clone());
+    // upload it
+    my_contract.upload().unwrap();
+
+    // Instantiate the contract
+    let instantiate_msg = InstantiateMsg {
+        // ...
+    };
+    my_contract.instantiate(instantiate_msg, None, &[]).unwrap();
+
+    // Execute, Query, Migrate, etc.
+    //...
+}
 ```
 */
 #[proc_macro_attribute]
-pub fn cw_orchestrate_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
+pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
     let mut item = parse_macro_input!(cloned as syn::Item);
 
@@ -175,7 +230,7 @@ pub fn cw_orchestrate_contract(_attrs: TokenStream, mut input: TokenStream) -> T
 
         // We add the contract creation script
         impl<Chain: ::cw_orchestrate::CwEnv> #name<Chain> {
-            pub fn new(contract_id: &str, chain: Chain) -> Self {
+            pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
                 Self(
                     ::cw_orchestrate::Contract::new(contract_id, chain)
                 )
