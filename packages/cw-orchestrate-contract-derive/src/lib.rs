@@ -31,7 +31,72 @@ impl Parse for TypesInput {
 }
 
 /**
-Procedural macro to generate a cw-orchestrate-interface 
+Procedural macro to generate a cw-orchestrate interface 
+
+## Example
+
+```rust
+#[contract(
+    cw20_base::msg::InstantiateMsg,
+    cw20_base::msg::ExecuteMsg,
+    cw20_base::msg::QueryMsg,
+    cw20_base::msg::MigrateMsg
+)]
+pub struct Cw20;
+```
+This generated the following code:
+
+```rust, ignore
+
+// This struct represents the interface to the contract.
+pub struct Cw20<Chain: ::cw_orchestrate::CwEnv>(::cw_orchestrate::Contract<Chain>);
+
+impl <Chain: ::cw_orchestrate::CwEnv> Cw20<Chain> {
+    /// Constructor for the contract interface
+     pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+        Self(
+            ::cw_orchestrate::Contract::new(contract_id, chain)
+        )
+    }
+}
+
+// Traits for signaling cw-orchestrate with what messages to call the contract's entry points.
+impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::InstantiateableContract for Cw20<Chain> {
+    type InstantiateMsg = InstantiateMsg;
+}
+impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for Cw20<Chain> {
+    type ExecuteMsg = ExecuteMsg;
+}
+// ... other entry point & upload traits
+```
+
+## Linking the interface to its source code
+
+The interface can be linked to its source code by implementing the `Uploadable` trait for the interface.
+
+```rust
+use cw_orchestrate::{
+    Mock, Daemon, Uploadable, WasmPath, ContractWrapper,
+}
+
+impl Uploadable<Mock> for Cw20<Mock> {
+    fn source(&self) -> <Mock as cw_orchestrate::TxHandler>::ContractSource {
+        Box::new(
+            ContractWrapper::new_with_empty(
+                cw20_base::contract::execute,
+                cw20_base::contract::instantiate,
+                cw20_base::contract::query,
+            )
+            .with_migrate(cw20_base::contract::migrate),
+        )
+    }
+}
+
+impl Uploadable<Daemon> for Cw20<Daemon> {
+    fn source(&self) -> <Daemon as cw_orchestrate::TxHandler>::ContractSource {
+        WasmPath::new("path/to/cw20.wasm").unwrap()
+    }
+}
 
 */
 #[proc_macro_attribute]
@@ -137,7 +202,7 @@ impl <Chain: ::cw_orchestrate::CwEnv> ::cw_orchestrate::ExecuteableContract for 
 // ... other entry point & upload traits
 ```
 
-### Usage
+### Interface usage
 
 Now you can use the generated interface to call the contract's entry points in your tests/scripts.
 
