@@ -2,13 +2,9 @@
     Daemon tests
 */
 mod common;
-use boot_core::contract;
-use speculoos::prelude::*;
-
+use boot_core::*;
 use cw20_base::msg::*;
-
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Cw20Base;
+use speculoos::prelude::*;
 
 #[test]
 fn general() {
@@ -34,11 +30,9 @@ fn general() {
         .is_ok();
 
     // do a query and validate its successful
-    let query_res = contract.query::<cw20_base::msg::QueryMsg, cw20::BalanceResponse>(
-        &cw20_base::msg::QueryMsg::Balance {
-            address: sender.to_string(),
-        },
-    );
+    let query_res = contract.query::<cw20::BalanceResponse>(&cw20_base::msg::QueryMsg::Balance {
+        address: sender.to_string(),
+    });
     asserting!("query is successful").that(&query_res).is_ok();
 
     // validate migrations are successful

@@ -2,6 +2,8 @@
     Daemon contract general tests
 */
 mod common;
+use boot_core::UploadHelpers;
+use boot_core::*;
 use cosmwasm_std::Addr;
 
 use speculoos::prelude::*;

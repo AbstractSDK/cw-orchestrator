@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use boot_core::{
     queriers::{CosmWasm, DaemonQuerier, Node},
-    DaemonError,
+    BootInstantiate, BootUpload, ContractInstance, DaemonError,
 };
 use common::channel::build_channel;
 use speculoos::prelude::*;
@@ -80,7 +80,7 @@ fn contract_info() {
     let channel = rt.block_on(build_channel()).unwrap();
     let cosm_wasm = CosmWasm::new(channel.clone());
 
-    let (sender, mut contract) = common::contract::start();
+    let (sender, contract) = common::contract::start();
 
     let _ = contract.upload();
 

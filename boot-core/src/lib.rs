@@ -29,7 +29,7 @@ pub use state::{ChainState, StateInterface};
 pub use tx_handler::{TxHandler, TxResponse};
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
-pub use cw_multi_test::{ContractWrapper, BasicApp, custom_app};
+pub use cw_multi_test::{custom_app, BasicApp, ContractWrapper};
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
@@ -39,6 +39,7 @@ pub use daemon::{
     error::DaemonError,
     networks, queriers,
     state::{DaemonOptions, DaemonOptionsBuilder},
+    traits::{MigrateHelpers, UploadHelpers},
     wasm_path::WasmPath,
     Wallet,
 };
