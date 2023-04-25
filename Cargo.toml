@@ -1,5 +1,5 @@
 [workspace]
-members = ["boot-core", "boot-cw-plus", "packages/*"]
+members = ["boot-core", "packages/*"]
 
 [workspace.package]
 authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
@@ -13,8 +13,6 @@ cw-multi-test = { version = "0.16.0" }
 anyhow        = "1.0"
 serde         = { version = "1.0.103", default-features = false, features = ["derive"] }
 
-
 [patch.crates-io]
-boot-contract-derive = { path="packages/boot-contract-derive" }
+boot-contract-derive = { path="packages/boot-contract-derive"  }
 boot-fns-derive = { path="packages/boot-fns-derive" }
-boot-core = { path="boot-core" }

@@ -12,7 +12,8 @@ use boot_core::{
     contract, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon, Mock, Uploadable, WasmPath,
 };
 
-const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
+// path to local cw20.wasm artifact
+const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
 
 #[contract(
     cw20_base::msg::InstantiateMsg,
@@ -39,7 +40,7 @@ impl Uploadable<Daemon> for Cw20<Daemon> {
     fn source(&self) -> <Daemon as boot_core::TxHandler>::ContractSource {
         // create contract base configuration
         let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}{}", crate_path, CW20_CONTRACT_WASM);
+        let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);
         log::info!("Using wasm path {}", wasm_path);
         WasmPath::new(wasm_path).unwrap()
     }
