@@ -1,5 +1,5 @@
 [package]
-name = "boot-fns-derive"
+name = "cw-orchestrate-fns-derive"
 version = "0.10.0"
 authors = { workspace = true}
 edition = { workspace = true}

@@ -11,9 +11,9 @@ mod mock;
 mod state;
 mod tx_handler;
 
-pub use boot_contract_derive::{boot_contract, contract};
-pub use boot_fns_derive::{ExecuteFns, QueryFns};
 pub use contract::Contract;
+pub use cw_orchestrate_contract_derive::{contract, cw_orchestrate_contract};
+pub use cw_orchestrate_fns_derive::{ExecuteFns, QueryFns};
 pub use deploy::Deploy;
 pub use error::BootError;
 pub use index_response::IndexResponse;

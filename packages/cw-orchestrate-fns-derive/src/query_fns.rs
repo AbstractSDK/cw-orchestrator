@@ -51,7 +51,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 let variant_attr = variant_fields.iter();
                 quote!(
                         #[allow(clippy::too_many_arguments)]
-                        fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::boot_core::BootError> {
+                        fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orchestrate::BootError> {
                             let msg = #name::#variant_name {
                                 #(#variant_idents,)*
                             };
@@ -64,15 +64,15 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::boot_core::CwEnv, #type_generics>: ::boot_core::BootQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
+        pub trait #bname<Chain: ::cw_orchestrate::CwEnv, #type_generics>: ::cw_orchestrate::BootQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
             #(#variant_fns)*
         }
     );
 
     let derived_trait_impl = quote!(
-        impl<SupportedContract, Chain: ::boot_core::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::cw_orchestrate::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            SupportedContract: ::boot_core::BootQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
+            SupportedContract: ::cw_orchestrate::BootQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
     );
 
     let expand = quote!(

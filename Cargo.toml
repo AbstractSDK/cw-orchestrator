@@ -1,11 +1,11 @@
 [workspace]
-members = ["boot-core", "packages/*"]
+members = ["cw-orchestrate", "packages/*"]
 
 [workspace.package]
 authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition    = "2021"
 license    = "GPL-3.0-only"
-repository = "https://github.com/AbstractSDK/BOOT"
+repository = "https://github.com/AbstractSDK/cw-orchestrate"
 
 [workspace.dependencies]
 cosmwasm-std  = { version = "1.1" }
@@ -14,5 +14,5 @@ anyhow        = "1.0"
 serde         = { version = "1.0.103", default-features = false, features = ["derive"] }
 
 [patch.crates-io]
-boot-contract-derive = { path="packages/boot-contract-derive"  }
-boot-fns-derive = { path="packages/boot-fns-derive" }
+cw-orchestrate-contract-derive = { path="packages/cw-orchestrate-contract-derive"  }
+cw-orchestrate-fns-derive = { path="packages/cw-orchestrate-fns-derive" }
