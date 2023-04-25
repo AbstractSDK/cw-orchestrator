@@ -176,14 +176,6 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
         // We add the contract creation script
         impl<Chain: ::boot_core::CwEnv> #name<Chain> {
             pub fn new(contract_id: &str, chain: Chain) -> Self {
-
-                // We get the workspace dir
-                let workspace_dir = find_workspace_dir();
-
-                // We build the artifacts from the artifacts folder (by default) of the package
-                let file_path = &format!("{}/artifacts/{}.wasm", workspace_dir.display().to_string(), #wasm_name);
-                //panic!("Wasm_file_path: {}", file_path);
-
                 Self(
                     ::boot_core::Contract::new(contract_id, chain)
                 )
@@ -206,7 +198,7 @@ pub fn boot_contract(_attrs: TokenStream, mut input: TokenStream) -> TokenStream
         impl ::boot_core::Uploadable<::boot_core::Daemon> for #name<::boot_core::Daemon>{
             fn source(&self) -> <::boot_core::Daemon as ::boot_core::TxHandler>::ContractSource{
                 // For Daemon contract, we need to return a path for the artifacts to be uploaded
-                // Remember that this is a helper for easy definitino of all the traits needed.
+                // Remember that this is a helper for easy definition of all the traits needed.
                 // We just need to get the local artifacts folder at the root of the workspace
                 // 1. We get the path to the local artifacts dir
                 // We get the workspace dir

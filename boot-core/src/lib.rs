@@ -22,6 +22,8 @@ pub use interface_traits::{
     ExecuteableContract, InstantiateableContract, MigrateableContract, QueryableContract,
     Uploadable,
 };
+
+#[allow(deprecated)]
 pub use mock::{
     core::{instantiate_custom_mock_env, instantiate_default_mock_env, Mock},
     state::MockState,
@@ -35,26 +37,18 @@ pub use cw_multi_test::{custom_app, BasicApp, ContractWrapper};
 #[cfg(feature = "daemon")]
 pub use daemon::{
     artifacts_dir::ArtifactsDir,
+    builder::DaemonBuilder,
     channel::DaemonChannel,
-    core::{instantiate_daemon_env, Daemon},
+    core::Daemon,
     error::DaemonError,
     networks, queriers,
-    state::{DaemonOptions, DaemonOptionsBuilder},
+    traits::{MigrateHelpers, UploadHelpers},
     wasm_path::WasmPath,
     Wallet,
 };
 
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
-
-#[deprecated(
-    since = "0.8.1",
-    note = "Phasing out the use of `BootEnvironment` in favor of `CwEnv`"
-)]
-/// Signals a supported execution environment
-pub trait BootEnvironment: TxHandler + Clone {}
-#[allow(deprecated)]
-impl<T: TxHandler + Clone> BootEnvironment for T {}
 
 /// Signals a supported execution environment for CosmWasm contracts
 pub trait CwEnv: TxHandler + Clone {}

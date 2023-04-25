@@ -14,7 +14,7 @@ use super::state::MockState;
 
 #[deprecated(
     since = "0.11.0",
-    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::create`"
+    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::new`"
 )]
 pub fn instantiate_default_mock_env(
     sender: &Addr,
@@ -25,7 +25,7 @@ pub fn instantiate_default_mock_env(
 
 #[deprecated(
     since = "0.11.0",
-    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::create_custom`"
+    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::new_custom`"
 )]
 pub fn instantiate_custom_mock_env<S: StateInterface>(
     sender: &Addr,
@@ -40,7 +40,9 @@ pub fn instantiate_custom_mock_env<S: StateInterface>(
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
     pub sender: Addr,
+    /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
+    /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<BasicApp<ExecC, QueryC>>>,
 }
 
@@ -100,7 +102,7 @@ where
     ExecC: CustomMsg + DeserializeOwned + 'static,
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
-    /// Create the default mock environment with the chain.
+    /// Create a mock environment with the default mock state.
     pub fn new(sender: &Addr) -> anyhow::Result<Self> {
         Mock::new_custom(sender, MockState::new())
     }
@@ -111,7 +113,7 @@ where
     ExecC: CustomMsg + DeserializeOwned + 'static,
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
-    /// Create a custom mock environment with the chain.
+    /// Create a mock environment with a custom mock store.
     pub fn new_custom(sender: &Addr, custom_state: S) -> anyhow::Result<Self> {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
@@ -314,7 +316,7 @@ mod test {
     use serde::Serialize;
     use speculoos::prelude::*;
 
-    use crate::{mock::core::*, ContractCodeReference, TxHandler};
+    use crate::{mock::core::*, TxHandler};
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
@@ -356,7 +358,7 @@ mod test {
         let amount = 1000000u128;
         let denom = "uosmo";
 
-        let (_state, chain) = instantiate_default_mock_env(sender).unwrap();
+        let chain = Mock::new(sender).unwrap();
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -371,14 +373,12 @@ mod test {
             .that(sender)
             .is_equal_to(chain.sender());
 
-        let mut contract_source: ContractCodeReference = ContractCodeReference::default();
-
-        contract_source.contract_endpoints = Some(Box::new(
+        let contract_source = Box::new(
             ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
                 .with_migrate(cw20_base::contract::migrate),
-        ));
+        );
 
-        let init_res = chain.upload(&mut contract_source).unwrap();
+        let init_res = chain.upload(contract_source).unwrap();
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
             .is_equal_to(&String::from("1"));
@@ -440,7 +440,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let (_, chain) = instantiate_custom_mock_env(sender, mock_state).unwrap();
+        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state).unwrap();
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])

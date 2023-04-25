@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Uint128};
-use std::sync::Arc;
 use tokio::runtime::Runtime;
 
 use uid::Id as IdT;
@@ -10,40 +9,55 @@ struct DeployId(());
 type Id = IdT<DeployId>;
 
 use boot_core::{
-    instantiate_daemon_env, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon,
-    DaemonOptionsBuilder,
+    contract, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon, Mock, Uploadable, WasmPath,
 };
 
-const CW20_CONTRACT_WASM: &str = "/../boot-cw-plus/cw-artifacts/cw20_base.wasm";
+// path to local cw20.wasm artifact
+const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
 
-pub fn start() -> (cosmwasm_std::Addr, Contract<Daemon>) {
-    let runtime = Arc::new(Runtime::new().unwrap());
+#[contract(
+    cw20_base::msg::InstantiateMsg,
+    cw20_base::msg::ExecuteMsg,
+    cw20_base::msg::QueryMsg,
+    cw20_base::msg::MigrateMsg
+)]
+pub struct Cw20;
 
-    let id = Id::new();
-
-    let options = DaemonOptionsBuilder::default()
-        .network(LOCAL_JUNO)
-        .deployment_id(format!("{}", id))
-        .build()
-        .unwrap();
-
-    let (sender, chain) = instantiate_daemon_env(&runtime, options).unwrap();
-
-    // create contract base configuration
-    let crate_path = env!("CARGO_MANIFEST_DIR");
-    let wasm_path = format!("{}{}", crate_path, CW20_CONTRACT_WASM);
-    log::info!("Using wasm path {}", wasm_path);
-
-    let contract = Contract::new(format!("cw-plus:cw20_base:{}", id), chain)
-        .with_mock(Box::new(
+impl Uploadable<Mock> for Cw20<Mock> {
+    fn source(&self) -> <Mock as boot_core::TxHandler>::ContractSource {
+        Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
                 cw20_base::contract::instantiate,
                 cw20_base::contract::query,
             )
             .with_migrate(cw20_base::contract::migrate),
-        ))
-        .with_wasm_path(wasm_path);
+        )
+    }
+}
+
+impl Uploadable<Daemon> for Cw20<Daemon> {
+    fn source(&self) -> <Daemon as boot_core::TxHandler>::ContractSource {
+        // create contract base configuration
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);
+        log::info!("Using wasm path {}", wasm_path);
+        WasmPath::new(wasm_path).unwrap()
+    }
+}
+
+pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<Daemon>) {
+    let id = Id::new();
+
+    let daemon = Daemon::builder()
+        .chain(LOCAL_JUNO)
+        .handle(runtime.handle())
+        .build()
+        .unwrap();
+
+    let sender = daemon.sender.address().unwrap();
+
+    let contract = Cw20(Contract::new(format!("cw-plus:cw20_base:{}", id), daemon));
 
     (sender, contract)
 }
