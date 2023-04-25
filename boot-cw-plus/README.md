@@ -8,7 +8,7 @@ Add this to your `Cargo.toml` and fill in the version of BOOT that you want to u
 
 ```toml
 [dependencies]
-boot-cw-plus = { git = "https://github.com/Abstract-OS/BOOT", tag = "..."}
+boot-cw-plus = { git = "https://github.com/AbstractSDK/BOOT", tag = "..."}
 ```
 
 and then import CwPlus and deploy it to the environment:
