@@ -31,7 +31,7 @@ impl Parse for TypesInput {
 }
 
 /**
-Procedural macro to generate a cw-orchestrator interface 
+Procedural macro to generate a cw-orchestrator interface
 
 ## Example
 

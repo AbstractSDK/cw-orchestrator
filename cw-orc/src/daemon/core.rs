@@ -8,7 +8,7 @@ use super::{
     tx_resp::CosmTxResponse,
     wasm_path::WasmPath,
 };
-use crate::{state::ChainState, tx_handler::TxHandler, CwOrcExecute, CallAs, ContractInstance};
+use crate::{state::ChainState, tx_handler::TxHandler, CallAs, ContractInstance, CwOrcExecute};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,

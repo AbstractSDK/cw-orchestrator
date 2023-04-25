@@ -63,7 +63,9 @@ pub trait CwOrcExecute<Chain: CwEnv>: ExecuteableContract + ContractInstance<Cha
 impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute<Chain> for T {}
 
 /// Smart Contract instantiate endpoint
-pub trait CwOrcInstantiate<Chain: CwEnv>: InstantiateableContract + ContractInstance<Chain> {
+pub trait CwOrcInstantiate<Chain: CwEnv>:
+    InstantiateableContract + ContractInstance<Chain>
+{
     fn instantiate(
         &self,
         instantiate_msg: &Self::InstantiateMsg,
