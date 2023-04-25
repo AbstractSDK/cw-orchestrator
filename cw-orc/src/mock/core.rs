@@ -7,7 +7,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{
     state::{ChainState, StateInterface},
     tx_handler::TxHandler,
-    BootError, BootExecute, CallAs, ContractInstance,
+    CwOrcError, CwOrcExecute, CallAs, ContractInstance,
 };
 
 use super::state::MockState;
@@ -56,7 +56,7 @@ where
         &self,
         address: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), BootError> {
+    ) -> Result<(), CwOrcError> {
         self.app
             .borrow_mut()
             .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
@@ -66,10 +66,10 @@ where
     pub fn set_balances(
         &self,
         balances: &[(&Addr, &[cosmwasm_std::Coin])],
-    ) -> Result<(), BootError> {
+    ) -> Result<(), CwOrcError> {
         self.app
             .borrow_mut()
-            .init_modules(|router, _, storage| -> Result<(), BootError> {
+            .init_modules(|router, _, storage| -> Result<(), CwOrcError> {
                 for (addr, coins) in balances {
                     router.bank.init_balance(storage, addr, coins.to_vec())?;
                 }
@@ -79,7 +79,7 @@ where
 
     /// Query the balance of a native token for and address
     /// Returns the amount of the native token
-    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, BootError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwOrcError> {
         let amount = self
             .app
             .borrow()
@@ -91,7 +91,7 @@ where
 
     /// Query all balances of the address
     /// Returns a vector of coins
-    pub fn query_all_balances(&self, address: &Addr) -> Result<Vec<cosmwasm_std::Coin>, BootError> {
+    pub fn query_all_balances(&self, address: &Addr) -> Result<Vec<cosmwasm_std::Coin>, CwOrcError> {
         let amount = self.app.borrow().wrap().query_all_balances(address)?;
         Ok(amount)
     }
@@ -140,7 +140,7 @@ where
 }
 
 impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
-    fn get_address(&self, contract_id: &str) -> Result<Addr, BootError> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrcError> {
         self.borrow().get_address(contract_id)
     }
 
@@ -148,7 +148,7 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow_mut().set_address(contract_id, address)
     }
 
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, BootError> {
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrcError> {
         self.borrow().get_code_id(contract_id)
     }
 
@@ -156,11 +156,11 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow_mut().set_code_id(contract_id, code_id)
     }
 
-    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, BootError> {
+    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwOrcError> {
         self.borrow().get_all_addresses()
     }
 
-    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, BootError> {
+    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwOrcError> {
         self.borrow().get_all_code_ids()
     }
 }
@@ -172,7 +172,7 @@ where
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
     type Response = AppResponse;
-    type Error = BootError;
+    type Error = CwOrcError;
     type ContractSource = Box<dyn Contract<ExecC, QueryC>>;
 
     fn sender(&self) -> Addr {
@@ -184,7 +184,7 @@ where
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, crate::BootError> {
+    ) -> Result<Self::Response, crate::CwOrcError> {
         self.app
             .borrow_mut()
             .execute_contract(
@@ -203,7 +203,7 @@ where
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
-    ) -> Result<Self::Response, crate::BootError> {
+    ) -> Result<Self::Response, crate::CwOrcError> {
         let addr = self.app.borrow_mut().instantiate_contract(
             code_id,
             self.sender.clone(),
@@ -226,7 +226,7 @@ where
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, crate::BootError> {
+    ) -> Result<T, crate::CwOrcError> {
         self.app
             .borrow()
             .wrap()
@@ -239,7 +239,7 @@ where
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, crate::BootError> {
+    ) -> Result<Self::Response, crate::CwOrcError> {
         self.app
             .borrow_mut()
             .migrate_contract(
@@ -254,7 +254,7 @@ where
     fn upload(
         &self,
         contract_source: Box<dyn Contract<ExecC, QueryC>>,
-    ) -> Result<Self::Response, crate::BootError> {
+    ) -> Result<Self::Response, crate::CwOrcError> {
         let code_id = self.app.borrow_mut().store_code(contract_source);
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
@@ -266,7 +266,7 @@ where
         Ok(resp)
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), BootError> {
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrcError> {
         self.app.borrow_mut().update_block(|b| {
             b.height += amount;
             b.time = b.time.plus_seconds(5 * amount);
@@ -274,7 +274,7 @@ where
         Ok(())
     }
 
-    fn wait_seconds(&self, secs: u64) -> Result<(), BootError> {
+    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrcError> {
         self.app.borrow_mut().update_block(|b| {
             b.time = b.time.plus_seconds(secs);
             b.height += secs / 5;
@@ -282,17 +282,17 @@ where
         Ok(())
     }
 
-    fn next_block(&self) -> Result<(), BootError> {
+    fn next_block(&self) -> Result<(), CwOrcError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
     }
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, BootError> {
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrcError> {
         Ok(self.app.borrow().block_info())
     }
 }
 
-impl<T: BootExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
+impl<T: CwOrcExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
     type Sender = Addr;
 
     fn set_sender(&mut self, sender: &Addr) {

@@ -1,4 +1,4 @@
-use crate::{state::ChainState, BootError, IndexResponse};
+use crate::{state::ChainState, CwOrcError, IndexResponse};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -8,7 +8,7 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
     type Response: IndexResponse + Debug;
-    type Error: Into<BootError> + Debug;
+    type Error: Into<CwOrcError> + Debug;
     type ContractSource;
 
     // Gets current sender

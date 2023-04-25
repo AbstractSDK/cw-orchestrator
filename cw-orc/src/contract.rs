@@ -1,6 +1,6 @@
 use crate::CwEnv;
 use crate::{
-    error::BootError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
+    error::CwOrcError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
@@ -44,7 +44,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self,
         msg: &E,
         coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, BootError> {
+    ) -> Result<TxResponse<Chain>, CwOrcError> {
         log::info!("Executing {:#?} on {}", msg, self.id);
         let resp = self
             .chain
@@ -59,7 +59,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         msg: &I,
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, BootError> {
+    ) -> Result<TxResponse<Chain>, CwOrcError> {
         log::info!("Instantiating {} with msg {:#?}", self.id, msg);
 
         let resp = self
@@ -86,7 +86,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
-    ) -> Result<T, BootError> {
+    ) -> Result<T, CwOrcError> {
         log::info!("Querying {:#?} on {}", query_msg, self.id);
         let resp = self
             .chain
@@ -101,14 +101,14 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self,
         migrate_msg: &M,
         new_code_id: u64,
-    ) -> Result<TxResponse<Chain>, BootError> {
+    ) -> Result<TxResponse<Chain>, CwOrcError> {
         log::info!("Migrating {:?} to code_id {}", self.id, new_code_id);
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
             .map_err(Into::into)
     }
 
-    pub fn upload(&self, source: Chain::ContractSource) -> Result<TxResponse<Chain>, BootError> {
+    pub fn upload(&self, source: Chain::ContractSource) -> Result<TxResponse<Chain>, CwOrcError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
@@ -120,7 +120,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 
     // State interfaces
     /// Returns state address for contract
-    pub fn address(&self) -> Result<Addr, BootError> {
+    pub fn address(&self) -> Result<Addr, CwOrcError> {
         self.chain.state().get_address(&self.id)
     }
 
@@ -130,7 +130,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     }
 
     /// Returns state code_id for contract
-    pub fn code_id(&self) -> Result<u64, BootError> {
+    pub fn code_id(&self) -> Result<u64, CwOrcError> {
         self.chain.state().get_code_id(&self.id)
     }
 

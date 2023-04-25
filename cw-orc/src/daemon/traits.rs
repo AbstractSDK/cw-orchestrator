@@ -1,8 +1,8 @@
-use crate::{queriers::CosmWasm, BootError, BootMigrate, BootUpload, Daemon, TxResponse};
+use crate::{queriers::CosmWasm, CwOrcError, CwOrcMigrate, CwOrcUpload, Daemon, TxResponse};
 
-pub trait UploadHelpers: BootUpload<Daemon> {
+pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, BootError> {
+    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrcError> {
         if self.latest_is_uploaded()? {
             Ok(None)
         } else {
@@ -11,7 +11,7 @@ pub trait UploadHelpers: BootUpload<Daemon> {
     }
 
     /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
-    fn latest_is_uploaded(&self) -> Result<bool, BootError> {
+    fn latest_is_uploaded(&self) -> Result<bool, CwOrcError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
@@ -28,7 +28,7 @@ pub trait UploadHelpers: BootUpload<Daemon> {
     }
 
     /// Returns a bool whether the contract is running the latest uploaded code for it
-    fn is_running_latest(&self) -> Result<bool, BootError> {
+    fn is_running_latest(&self) -> Result<bool, CwOrcError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
@@ -40,14 +40,14 @@ pub trait UploadHelpers: BootUpload<Daemon> {
     }
 }
 
-impl<T> UploadHelpers for T where T: BootUpload<Daemon> {}
+impl<T> UploadHelpers for T where T: CwOrcUpload<Daemon> {}
 
-pub trait MigrateHelpers: BootMigrate<Daemon> + UploadHelpers {
+pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
         migrate_msg: &Self::MigrateMsg,
-    ) -> Result<Option<TxResponse<Daemon>>, BootError> {
+    ) -> Result<Option<TxResponse<Daemon>>, CwOrcError> {
         if self.is_running_latest()? {
             log::info!("{} is already running the latest code", self.id());
             Ok(None)
@@ -57,4 +57,4 @@ pub trait MigrateHelpers: BootMigrate<Daemon> + UploadHelpers {
     }
 }
 
-impl<T> MigrateHelpers for T where T: BootMigrate<Daemon> + BootUpload<Daemon> {}
+impl<T> MigrateHelpers for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}

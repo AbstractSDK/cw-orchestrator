@@ -25,7 +25,7 @@ Now we can implement the `cw_orc::Deploy` trait for the `Abstract` struct.
 ```rust
 impl<Chain: CwEnv> cw_orc::Deploy<Chain> for Abstract<Chain> {
     // We don't have a custom error type
-    type Error = BootError;
+    type Error = CwOrcError;
     type DeployData = semver::Version;
 
     fn store_on(chain: Chain) -> Result<Self, Self::Error> {
@@ -58,7 +58,7 @@ impl<Chain: CwEnv> cw_orc::Deploy<Chain> for Abstract<Chain> {
         Ok(abstrct)
     }
 
-    fn deploy_on(chain: Chain, version: semver::Version) -> Result<Self, BootError> {        
+    fn deploy_on(chain: Chain, version: semver::Version) -> Result<Self, CwOrcError> {        
         // ########### Upload ##############
         let abstrct = Self::store_on(chain)?;
 
@@ -91,7 +91,7 @@ impl<Chain: CwEnv> cw_orc::Deploy<Chain> for Abstract<Chain> {
 Now `Abstract` is an application that can be deployed to a mock and real environment with **one** line of code.
 
 ```rust
-fn setup_test(mock: Mock) -> Result<(), BootError> {
+fn setup_test(mock: Mock) -> Result<(), CwOrcError> {
     let version = "1.0.0".parse().unwrap();
     // Deploy abstract
     let abstract_ = Abstract::deploy_on(mock.clone(), version)?;
@@ -103,7 +103,7 @@ And then when setting up your own deployment you can load these applications to 
 ```rust
 impl<Chain: CwEnv> cw_orc::Deploy<Chain> for MyApplication<Chain> {
     /// ...
-    fn deploy_on(chain: Chain, _data: Empty) -> Result<Self, BootError> {
+    fn deploy_on(chain: Chain, _data: Empty) -> Result<Self, CwOrcError> {
 
         let abstract_: Abstract = Abstract::load_from(chain)?;
 
