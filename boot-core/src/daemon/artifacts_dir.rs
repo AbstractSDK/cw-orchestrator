@@ -16,8 +16,12 @@ impl ArtifactsDir {
 
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path: PathBuf = path.into();
-        assert!(path.exists(), "provided path {} does not exist", path.display());
-        Self(path.into())
+        assert!(
+            path.exists(),
+            "provided path {} does not exist",
+            path.display()
+        );
+        Self(path)
     }
 
     /// Get the path to the artifacts directory
