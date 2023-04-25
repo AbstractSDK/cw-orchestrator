@@ -11,7 +11,11 @@ pub struct WasmPath(PathBuf);
 impl WasmPath {
     pub fn new(path: impl Into<PathBuf>) -> Result<Self, DaemonError> {
         let path: PathBuf = path.into();
-        path.try_exists()?;
+        assert!(
+            path.exists(),
+            "provided path {} does not exist",
+            path.display()
+        );
         ensure_eq!(
             path.extension(),
             Some("wasm".as_ref()),
