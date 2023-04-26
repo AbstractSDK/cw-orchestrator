@@ -10,6 +10,9 @@ description = "Attribute macro for creating a contract interface."
 [lib]
 proc-macro = true
 
+[features]
+propagate_daemon = []
+
 [dependencies]
 convert_case = "0.6.0"
 log = "0.4.17"
