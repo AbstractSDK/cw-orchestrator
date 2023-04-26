@@ -78,8 +78,7 @@ pub fn script() -> anyhow::Result<()> {
     // interchain
     //     .hermes
     //     .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
-    
-    
+
     // Track IBC on JUNO
     let juno_channel = juno.channel();
     let tracker = IbcTrackerConfigBuilder::default()
@@ -192,8 +191,7 @@ fn deploy_contracts(
     Ok(())
 }
 
-
-fn test_ica() -> 
+fn test_ica() {}
 
 /*
 

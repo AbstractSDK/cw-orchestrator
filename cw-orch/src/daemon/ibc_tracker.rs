@@ -1,23 +1,13 @@
 use cosmrs::proto::ibc::core::channel::v1::State;
 use diff::Diff;
-use futures_util::{future::join_all, Future};
+use futures_util::future::join_all;
 use log::*;
-use log4rs::{
-    append::file::FileAppender,
-    config::{Appender, Config, Root},
-    encode::pattern::PatternEncoder,
-};
-use std::{
-    collections::{hash_map::RandomState, HashMap},
-    path::PathBuf,
-};
+
+use std::collections::{hash_map::RandomState, HashMap};
 use std::{fmt::Display, time::Duration};
 use tonic::{async_trait, transport::Channel};
 
-use crate::{
-    queriers::{DaemonQuerier, Ibc, Node},
-    DaemonError,
-};
+use crate::queriers::{DaemonQuerier, Ibc, Node};
 
 use self::logged_state::LoggedState;
 

@@ -1,10 +1,12 @@
 mod contract;
+#[cfg(feature = "daemon")]
+mod daemon;
 mod deploy;
 mod error;
 mod index_response;
+#[cfg(feature = "interchain")]
+mod interchain;
 mod interface_traits;
-#[cfg(feature = "daemon")]
-mod daemon;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
@@ -41,10 +43,9 @@ pub use daemon::{
     channel::DaemonChannel,
     core::Daemon,
     error::DaemonError,
-    networks, queriers,
+    ibc_tracker, networks, queriers,
     traits::{MigrateHelpers, UploadHelpers},
     wasm_path::WasmPath,
-    ibc_tracker,
     Wallet,
 };
 
