@@ -315,24 +315,6 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
-        impl ::cw_orch::Uploadable<::cw_orch::Daemon> for #name<::cw_orch::Daemon>{
-            fn source(&self) -> <::cw_orch::Daemon as ::cw_orch::TxHandler>::ContractSource{
-                // For Daemon contract, we need to return a path for the artifacts to be uploaded
-                // Remember that this is a helper for easy definition of all the traits needed.
-                // We just need to get the local artifacts folder at the root of the workspace
-                // 1. We get the path to the local artifacts dir
-                // We get the workspace dir
-                let mut workspace_dir = find_workspace_dir();
-
-                // We build the artifacts from the artifacts folder (by default) of the package
-                workspace_dir.push("artifacts");
-                let artifacts_dir = ::cw_orch::ArtifactsDir::new(workspace_dir);
-                artifacts_dir.find_wasm_path(#wasm_name).unwrap()
-            }
-        }
-
-
-
         /*
 
 
@@ -347,9 +329,28 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                         )),
 
         */
-
-
     );
+
+    // if daemon is enabled on cw-orc it will implement Uploadable<Daemon>
+
+    #[cfg(feature = "propagate_daemon")]
+    let daemon_uploadable: TokenStream = quote!(
+            impl ::cw_orch::Uploadable<::cw_orch::Daemon> for #name<::cw_orch::Daemon>{
+            fn source(&self) -> <::cw_orch::Daemon as ::cw_orch::TxHandler>::ContractSource{
+                // For Daemon contract, we need to return a path for the artifacts to be uploaded
+                // Remember that this is a helper for easy definition of all the traits needed.
+                // We just need to get the local artifacts folder at the root of the workspace
+                // 1. We get the path to the local artifacts dir
+                // We get the workspace dir
+                let mut workspace_dir = find_workspace_dir();
+
+                // We build the artifacts from the artifacts folder (by default) of the package
+                workspace_dir.push("artifacts");
+                let artifacts_dir = ::cw_orch::ArtifactsDir::new(workspace_dir);
+                artifacts_dir.find_wasm_path(#wasm_name).unwrap()
+            }
+        }
+    ).into();
 
     let new_func_name = format_ident!("get_{}", func_ident);
 
@@ -373,12 +374,17 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     );
 
     let addition: TokenStream = if func_ident == "instantiate" {
-        quote!(
+        let mut interface_def: TokenStream = quote!(
          #struct_def
 
         #func_part
         )
-        .into()
+        .into();
+        // Add the Uploadable<Daemon> trait for the contract
+        #[cfg(feature = "propagate_daemon")]
+        interface_def.extend(daemon_uploadable);
+        
+        interface_def
     } else {
         func_part.into()
     };
