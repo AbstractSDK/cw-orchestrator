@@ -8,7 +8,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -33,6 +33,7 @@
 
     </head>
     <body>
+    <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
@@ -70,10 +71,12 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
@@ -230,7 +233,7 @@ echo 'pub mod my_contract;' &gt;&gt; src/lib.rs
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use boot_core::*;
-// We use pub here to be able to import those messages directly 
+// We use pub here to be able to import those messages directly
 // from the interfaces crate in the next steps (scripting, intergation tests...)
 pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
@@ -404,7 +407,7 @@ impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
 
 <span class="boring">}</span></code></pre></pre>
 <p>In order to derive query functions, you NEED to serive the QueryResponses crate for your QueryMsgs struct. This is mandatory in order to ensure type-safety for all messages and responses.</p>
-<p>This time, add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file : 
+<p>This time, add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file :
 <code>rust  use my_project::my_contract::QueryMsgFns; </code></p>
 <h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
 <p>You can also refine your contract interface manually to add more complex interactions.</p>
@@ -628,39 +631,39 @@ pub fn execute_contract() -&gt; anyhow::Result&lt;()&gt; {
 <h2 id="test-setup"><a class="header" href="#test-setup">Test Setup</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>// contracts/my-contract/tests/integration_tests.rs  
+</span>// contracts/my-contract/tests/integration_tests.rs
 use interfaces::MyContract;
-use boot_core::*;  
+use boot_core::*;
 use semver::Version;
 use my_contract::contract;
 use my_contract::{ExecuteMsg};
-  
-fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {  
-    let sender = Addr::unchecked(&quot;sender&quot;); 
-    // note that we are instantiating the mock environment instead of the daemon_environment
-    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;  
 
-    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);  
+fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {
+    let sender = Addr::unchecked(&quot;sender&quot;);
+    // note that we are instantiating the mock environment instead of the daemon_environment
+    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;
+
+    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);
 
     // entrypoint endpoints for your contract
-    my_contract.as_instance_mut().set_mock(Box::new(  
+    my_contract.as_instance_mut().set_mock(Box::new(
         ContractWrapper::new_with_empty(
-            contract::execute,  
-            contract::instantiate,  
-            contract::query,  
+            contract::execute,
+            contract::instantiate,
+            contract::query,
         ),
     ));
 
     // &quot;upload&quot; the contract to the test environment
     // stores the code_id at the key &quot;testing:contract&quot;.
-    my_contract.upload(); 
-  
-    Ok(my_contract)  
-}  
-  
-#[test]  
-fn test_something() -&gt; anyhow::Result&lt;()&gt; {  
-  let my_contract = setup()?;  
+    my_contract.upload();
+
+    Ok(my_contract)
+}
+
+#[test]
+fn test_something() -&gt; anyhow::Result&lt;()&gt; {
+  let my_contract = setup()?;
 
   my_contract.instantiate(...)?;
 
@@ -723,7 +726,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
         Ok(abstrct)
     }
 
-    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, BootError&gt; {        
+    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, BootError&gt; {
         // ########### Upload ##############
         let abstrct = Self::store_on(chain)?;
 
@@ -741,7 +744,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
             None,
         )?;
 
-        // ... 
+        // ...
 
         Ok(abstrct)
     }
@@ -788,66 +791,66 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
 <p>BOOT does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="advanced/interfaces.html">interfaces</a> can be found below:</p>
 <pre><code class="language-yaml"># .github/workflows/deploy.yml
 ---
-name: Deploy Contracts  
-on:  
-  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
-  workflow_dispatch:  
-  push:  
-    branches: [ 'mainline' ]  
-    paths:  
-      - 'contracts/src/**/*.rs'  
-      - '.github/workflows/deploy.yml'  
-  
+name: Deploy Contracts
+on:
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
+  workflow_dispatch:
+  push:
+    branches: [ 'mainline' ]
+    paths:
+      - 'contracts/src/**/*.rs'
+      - '.github/workflows/deploy.yml'
+
 env:
-  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
-  STATE_FILE: &quot;./daemon_state.json&quot;  
-  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;  
-  SCHEMA_DIR: &quot;./schema&quot;  
-  
-jobs:  
-  deploy:  
-    runs-on: ubuntu-latest  
-    steps:  
-      - uses: actions/checkout@v3  
-      - uses: actions-rs/toolchain@v1  
-        with:  
-          toolchain: nightly  
-          target: wasm32-unknown-unknown  
-          override: true  
-      - name: Run cargo wasm  
-        uses: actions-rs/cargo@v1  
-        with:  
-          command: build  
-          args: --package counter-app --release --target wasm32-unknown-unknown  
-        env:  
-          RUSTFLAGS: '-C link-arg=-s'  
+  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu
+  STATE_FILE: &quot;./daemon_state.json&quot;
+  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;
+  SCHEMA_DIR: &quot;./schema&quot;
 
-      - name: Run deployment script  
-        uses: actions-rs/cargo@v1  
-        with:  
-          command: run  
-          args: --package scripts --bin deploy_app  
-        env:  
-          CHAIN: &quot;juno&quot;  
-          DEPLOYMENT: &quot;debugging&quot;  
-          NETWORK: &quot;local&quot;  
-          RUST_LOG: info  
-          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}  
-          STATE_FILE: ${{ env.STATE_FILE }}  
-  
-          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
-          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+          override: true
+      - name: Run cargo wasm
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --package counter-app --release --target wasm32-unknown-unknown
+        env:
+          RUSTFLAGS: '-C link-arg=-s'
 
-      - name: Upload deployment daemon state  
-        uses: actions/upload-artifact@v2  
-        with:  
-          name: deployment.json  
-          path: ${{ env.STATE_FILE }}  
-      - name: Upload WASM  
-        uses: actions/upload-artifact@v2  
-        with:  
-          # TODO: name env or from cargo  
-          name: counter_app.wasm  
+      - name: Run deployment script
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --package scripts --bin deploy_app
+        env:
+          CHAIN: &quot;juno&quot;
+          DEPLOYMENT: &quot;debugging&quot;
+          NETWORK: &quot;local&quot;
+          RUST_LOG: info
+          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}
+          STATE_FILE: ${{ env.STATE_FILE }}
+
+          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}
+          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}
+
+      - name: Upload deployment daemon state
+        uses: actions/upload-artifact@v2
+        with:
+          name: deployment.json
+          path: ${{ env.STATE_FILE }}
+      - name: Upload WASM
+        uses: actions/upload-artifact@v2
+        with:
+          # TODO: name env or from cargo
+          name: counter_app.wasm
           path: ${{ env.ARTIFACTS_DIR }}/counter_app.wasm
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing-to-boot"><a class="header" href="#contributing-to-boot">Contributing to BOOT</a></h1>
@@ -873,11 +876,11 @@ jobs:
 <h2 id="code-of-conduct"><a class="header" href="#code-of-conduct">Code of Conduct</a></h2>
 <p>By participating in this project, you are expected to uphold our <a href="CODE_OF_CONDUCT.html">Code of Conduct</a>. Please read the Code of Conduct to ensure that you follow the community guidelines and contribute positively to the project.</p>
 <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
-<p>To get started with contributing to the BOOT project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's <a href="https://github.com/Abstract-OS/BOOT/">README</a> to understand the purpose, features, and usage of the BOOT library as well as its <a href="https://boot.abstract.money">documentation</a>.</p>
+<p>To get started with contributing to the BOOT project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's <a href="https://github.com/AbstractSDK/BOOT/">README</a> to understand the purpose, features, and usage of the BOOT library as well as its <a href="https://boot.abstract.money">documentation</a>.</p>
 <h2 id="how-to-contribute"><a class="header" href="#how-to-contribute">How to Contribute</a></h2>
 <p>There are multiple ways to contribute to the BOOT project, including reporting bugs, suggesting enhancements, and submitting code contributions.</p>
 <h2 id="reporting-bugs"><a class="header" href="#reporting-bugs">Reporting Bugs</a></h2>
-<p>If you encounter any bugs or issues while using the BOOT library, please report them by creating a new issue in the <a href="https://github.com/Abstract-OS/BOOT/issues">issue tracker</a>. When reporting a bug, please provide the following information:</p>
+<p>If you encounter any bugs or issues while using the BOOT library, please report them by creating a new issue in the <a href="https://github.com/AbstractSDK/BOOT/issues">issue tracker</a>. When reporting a bug, please provide the following information:</p>
 <ul>
 <li>A clear and descriptive title</li>
 <li>A detailed description of the issue, including steps to reproduce it</li>
@@ -885,7 +888,7 @@ jobs:
 <li>Information about your environment, such as the OS, software versions, and hardware specifications</li>
 </ul>
 <h2 id="suggesting-enhancements"><a class="header" href="#suggesting-enhancements">Suggesting Enhancements</a></h2>
-<p>We welcome suggestions for new features or improvements to the existing functionality of the BOOT library. To suggest an enhancement, create a new issue in the <a href="https://github.com/Abstract-OS/BOOT/issues">issue tracker</a> with the following information:</p>
+<p>We welcome suggestions for new features or improvements to the existing functionality of the BOOT library. To suggest an enhancement, create a new issue in the <a href="https://github.com/AbstractSDK/BOOT/issues">issue tracker</a> with the following information:</p>
 <ul>
 <li>A clear and descriptive title</li>
 <li>A detailed explanation of the proposed enhancement, including its benefits and potential use cases</li>
@@ -915,7 +918,7 @@ jobs:
 for public functions and methods.</li>
 </ul>
 <h2 id="community"><a class="header" href="#community">Community</a></h2>
-<p>To join the BOOT community, please join the <a href="https://discord.gg/uch3Tq3aym">Abstract Discord server</a> and the <code>#boot</code> channel. You can also follow the project on <a href="https://twitter.com/AbstractSDK">Twitter</a> and <a href="https://github.com/Abstract-OS">GitHub</a>.</p>
+<p>To join the BOOT community, please join the <a href="https://discord.gg/uch3Tq3aym">Abstract Discord server</a> and the <code>#boot</code> channel. You can also follow the project on <a href="https://twitter.com/AbstractSDK">Twitter</a> and <a href="https://github.com/AbstractSDK">GitHub</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="references-1"><a class="header" href="#references-1">References</a></h1>
 <p>Easy, right? Try building your contracts with <a href="https://abstract.money">Abstract</a> for the same experience with smart contracts.
 Get started <a href="https://docs.abstract.money/building-on-abstract/writing-modules/writing-an-app">here</a>.</p>
@@ -961,5 +964,6 @@ Get started <a href="https://docs.abstract.money/building-on-abstract/writing-mo
         });
         </script>
 
+    </div>
     </body>
 </html>

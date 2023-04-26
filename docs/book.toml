@@ -3,4 +3,4 @@ authors = ["CyberHoward", "Riada"]
 language = "en"
 multilingual = false
 src = "src"
-title = "BOOT documentation"
+title = "cw-orchestrator documentation"
