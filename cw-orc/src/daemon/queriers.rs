@@ -21,19 +21,19 @@ macro_rules! cosmos_query {
 
 mod bank;
 mod cosmwasm;
+mod feegrant;
 mod gov;
 mod ibc;
 mod node;
 mod staking;
-mod feegrant;
 
 pub use bank::Bank;
 pub use cosmwasm::CosmWasm;
+pub use feegrant::Feegrant;
 pub use gov::Gov;
 pub use ibc::Ibc;
 pub use node::Node;
 pub use staking::Staking;
-pub use feegrant::Feegrant;
 
 use tonic::transport::Channel;
 
