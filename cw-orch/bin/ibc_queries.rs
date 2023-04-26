@@ -1,8 +1,8 @@
-use boot_core::channel::ChannelAccess;
-use boot_core::ibc_tracker::{
+use cw_orch::channel::ChannelAccess;
+use cw_orch::ibc_tracker::{
     CwIbcContractState, IbcTracker, IbcTrackerConfig, IbcTrackerConfigBuilder,
 };
-use boot_core::{queriers::Ibc, *};
+use cw_orch::{queriers::Ibc, *};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Runtime;

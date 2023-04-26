@@ -1,10 +1,11 @@
 use super::{
     builder::DaemonBuilder,
+    channel::ChannelAccess,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
     sender::Wallet,
-    state::{ChainKind, DaemonState},
+    state::DaemonState,
     tx_resp::CosmTxResponse,
     wasm_path::WasmPath,
 };

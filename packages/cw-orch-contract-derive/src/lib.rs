@@ -350,7 +350,8 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                 artifacts_dir.find_wasm_path(#wasm_name).unwrap()
             }
         }
-    ).into();
+    )
+    .into();
 
     let new_func_name = format_ident!("get_{}", func_ident);
 
@@ -383,7 +384,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         // Add the Uploadable<Daemon> trait for the contract
         #[cfg(feature = "propagate_daemon")]
         interface_def.extend(daemon_uploadable);
-        
+
         interface_def
     } else {
         func_part.into()

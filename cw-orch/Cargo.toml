@@ -17,8 +17,9 @@ name = "ica-demo"
 required-features = ["interchain"]
 
 [[bin]]
-name              = "ibc_queries"
-path              = "bin/ibc_queries.rs"
+name = "ibc_queries"
+path = "bin/ibc_queries.rs"
+required-features = ["interchain"]
 
 # Interact with local/remote daemons over gRPC
 [features]
@@ -47,34 +48,31 @@ daemon = [
   "dep:sha256",
   "dep:log4rs",
   "dep:diff-struct",
+  "dep:futures-util",
   "cw-orch-contract-derive/propagate_daemon",
 ]
 # Interact with interchaintest's docker nodes
-interchain = [
-    "daemon",
-    "dep:bollard",
-    "dep:futures-util",
-]
+interchain = ["daemon", "dep:bollard"]
 
 [dependencies]
-dotenv     = "0.15.0"
+dotenv = "0.15.0"
 env_logger = "0.10.0"
 
 # Default deps
 # cw-orch-contract-derive = { version="0.10.0" }
 # cw-orch-fns-derive = { version="0.10.0" }
 
-cw-orch-contract-derive = { path="../packages/cw-orch-contract-derive"  }
-cw-orch-fns-derive = { path="../packages/cw-orch-fns-derive" }
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
 
-cosmwasm-std         = { workspace = true }
-cw-multi-test        = { workspace = true }
-anyhow               = { workspace = true }
-serde                = { workspace = true }
-schemars             = "0.8.10"
-log        = "0.4.14"
+cosmwasm-std = { workspace = true }
+cw-multi-test = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+schemars = "0.8.10"
+log = "0.4.14"
 serde_json = "1.0.79"
-thiserror  = { version = "1.0.21" }
+thiserror = { version = "1.0.21" }
 
 # Daemon deps
 sha256 = { version = "1.1.1", optional = true }
@@ -109,15 +107,15 @@ ring = { version = "0.16.20", optional = true }
 diff-struct = { version = "0.5", optional = true }
 
 # Interchain deps
-bollard = {version = "0.14.0", optional = true }
-futures-util = {version = "0.3.26", optional = true }
+bollard = { version = "0.14.0", optional = true }
+futures-util = { version = "0.3.28", optional = true }
 log4rs = { version = "1", optional = true }
 
 [dev-dependencies]
-dotenv = {version = "0.15.0"}
-env_logger = {version = "0.10.0"}
-simple-ica-controller = {git = "https://github.com/confio/cw-ibc-demo.git"}
-simple-ica-host = {git = "https://github.com/confio/cw-ibc-demo.git"}
+dotenv = { version = "0.15.0" }
+env_logger = { version = "0.10.0" }
+simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git" }
+simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git" }
 cw-orch = { features = ["daemon"], path = "." }
 uid = "0.1.7"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
