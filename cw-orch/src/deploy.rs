@@ -4,7 +4,7 @@ use crate::{CwEnv, CwOrcError};
 ///
 /// ## Example:
 /// ```ignore
-/// use cw_orc::{Deploy, CwOrcError, Empty, CwEnv, CwOrcUpload};
+/// use cw_orch::{Deploy, CwOrcError, Empty, CwEnv, CwOrcUpload};
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///

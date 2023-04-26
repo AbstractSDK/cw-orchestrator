@@ -2,7 +2,7 @@ mod common;
 use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
-use cw_orc::{
+use cw_orch::{
     queriers::{CosmWasm, DaemonQuerier, Node},
     ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
 };

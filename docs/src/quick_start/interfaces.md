@@ -8,10 +8,10 @@ cargo init --lib interfaces
 cd interfaces
 ```
 
-Now add [cw-orchestrator](https://crates.io/crates/cw-orc) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
+Now add [cw-orchestrator](https://crates.io/crates/cw-orch) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
 
 ```bash
-cargo add cw-orc
+cargo add cw-orch
 cargo add log # optional for logging
 cargo add anyhow # optional for simple error handling
 cargo add --path ../my-project
@@ -19,7 +19,7 @@ cargo add --path ../my-project
 
 ```toml
 [dependencies]
-cw-orc = "0.10.0" # latest version as of writing this article
+cw-orch = "0.10.0" # latest version as of writing this article
 my-project = { path = "../my-project"}
 # ...other dependencies
 ```
@@ -38,7 +38,7 @@ echo 'pub mod my_contract;' >> src/lib.rs
 In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
 
 ```rust
-use cw_orc::*;
+use cw_orch::*;
 // We use pub here to be able to import those messages directly 
 // from the interfaces crate in the next steps (scripting, intergation tests...)
 pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
@@ -154,7 +154,7 @@ Here's an example with the macro shielded behind a "interface" feature flag:
 
 ```rust
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orc::ExecuteFns))]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg{
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
@@ -199,7 +199,7 @@ Generating query functions is a similar process but has the added advantage of u
 ```rust
 #[cosmwasm_schema::cw_serde]
 #[derive(QueryResponses)]
-#[cfg_attr(feature = "interface", derive(cw_orc::QueryFns))]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 pub enum QueryMsg {
     /// Returns [`InfoResponse`]
     #[returns(InfoResponse)]
@@ -243,7 +243,7 @@ You can also refine your contract interface manually to add more complex interac
 ```rust
 // interfaces/src/my_contract.rs
 // Import the cw-orchestrator traits
-use cw_orc::interface::*;
+use cw_orch::interface::*;
 // ...
 
 impl<Chain: CwEnv> MyContract<Chain> {
@@ -279,6 +279,6 @@ Learn more about Abstract at [abstract.money](https://abstract.money).
 
 ## References
 
-- [cw-orchestrator](https://crates.io/crates/cw-orc)
+- [cw-orchestrator](https://crates.io/crates/cw-orch)
 - [cw-plus-orc](https://crates.io/crates/cw-plus-orc)
-- [Abstract Contract Interfaces](https://crates.io/crates/abstract-cw-orc)
+- [Abstract Contract Interfaces](https://crates.io/crates/abstract-cw-orch)

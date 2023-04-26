@@ -12,8 +12,8 @@ mod state;
 mod tx_handler;
 
 pub use contract::Contract;
-pub use cw_orc_contract_derive::{contract, interface};
-pub use cw_orc_fns_derive::{ExecuteFns, QueryFns};
+pub use cw_orch_contract_derive::{contract, interface};
+pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 pub use deploy::Deploy;
 pub use error::CwOrcError;
 pub use index_response::IndexResponse;
