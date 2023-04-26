@@ -1,10 +1,10 @@
 use crate::{daemon::cosmos_modules, DaemonError};
-use cosmrs::proto::cosmos::base::{v1beta1::Coin, query::v1beta1::PageRequest};
+use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-/// Queries the node for information
+/// Queries for CosmWasm Bank Module
 pub struct Bank {
     channel: Channel,
 }
@@ -52,7 +52,7 @@ impl Bank {
     pub async fn spendable_balances(
         &self,
         address: impl Into<String>,
-        pagination: Option<PageRequest>
+        pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::bank::QuerySpendableBalancesResponse, DaemonError> {
         let spendable_balances: cosmos_modules::bank::QuerySpendableBalancesResponse = cosmos_query!(
             self,
@@ -69,7 +69,7 @@ impl Bank {
     /// Query total supply in the bank
     pub async fn total_supply(
         &self,
-        pagination: Option<PageRequest>
+        pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::bank::QueryTotalSupplyResponse, DaemonError> {
         let total_supply: cosmos_modules::bank::QueryTotalSupplyResponse = cosmos_query!(
             self,
@@ -85,7 +85,7 @@ impl Bank {
     /// Query total supply in the bank for a denom
     pub async fn supply_of(
         &self,
-        denom: impl Into<String>
+        denom: impl Into<String>,
     ) -> Result<cosmos_modules::bank::QuerySupplyOfResponse, DaemonError> {
         let supply_of: cosmos_modules::bank::QuerySupplyOfResponse = cosmos_query!(
             self,
@@ -99,22 +99,16 @@ impl Bank {
     }
 
     /// Query params
-    pub async fn params(
-        &self
-    ) -> Result<cosmos_modules::bank::QueryParamsResponse, DaemonError> {
-        let params: cosmos_modules::bank::QueryParamsResponse = cosmos_query!(
-            self,
-            bank,
-            params,
-            QueryParamsRequest {}
-        );
+    pub async fn params(&self) -> Result<cosmos_modules::bank::QueryParamsResponse, DaemonError> {
+        let params: cosmos_modules::bank::QueryParamsResponse =
+            cosmos_query!(self, bank, params, QueryParamsRequest {});
         Ok(params)
     }
 
     /// Query denom metadata
     pub async fn denom_metadata(
         &self,
-        denom: impl Into<String>
+        denom: impl Into<String>,
     ) -> Result<cosmos_modules::bank::QueryDenomMetadataResponse, DaemonError> {
         let denom_metadata: cosmos_modules::bank::QueryDenomMetadataResponse = cosmos_query!(
             self,
@@ -130,7 +124,7 @@ impl Bank {
     /// Query denoms metadata
     pub async fn denoms_metadata(
         &self,
-        pagination: Option<PageRequest>
+        pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::bank::QueryDenomsMetadataResponse, DaemonError> {
         let denoms_metadata: cosmos_modules::bank::QueryDenomsMetadataResponse = cosmos_query!(
             self,

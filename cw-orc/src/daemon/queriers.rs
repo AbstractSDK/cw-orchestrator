@@ -21,11 +21,13 @@ macro_rules! cosmos_query {
 
 mod bank;
 mod cosmwasm;
+mod gov;
 mod ibc;
 mod node;
 
 pub use bank::Bank;
 pub use cosmwasm::CosmWasm;
+pub use gov::Gov;
 pub use ibc::Ibc;
 pub use node::Node;
 
