@@ -16,9 +16,10 @@ use cosmrs::{
 };
 
 /*
+    Querier - Node
 */
 #[test]
-fn general() {
+fn general_node() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel()).unwrap();
 

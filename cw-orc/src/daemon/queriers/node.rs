@@ -103,10 +103,9 @@ impl Node {
 
         #[allow(deprecated)]
         let resp = client
-            .get_validator_set_by_height(cosmos_modules::tendermint::GetValidatorSetByHeightRequest {
-                height,
-                pagination,
-            })
+            .get_validator_set_by_height(
+                cosmos_modules::tendermint::GetValidatorSetByHeightRequest { height, pagination },
+            )
             .await?
             .into_inner();
 

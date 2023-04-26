@@ -141,7 +141,7 @@ impl Staking {
         Ok(delegator_delegations)
     }
 
-    /// DelegatorUnbondingDelegations queries all unbonding delegations of a given delegator address.
+    /// Queries all unbonding delegations of a given delegator address.
     pub async fn delegator_unbonding_delegations(
         &self,
         delegator_addr: impl Into<String>,

@@ -26,7 +26,7 @@ impl DaemonQuerier for Ibc {
 impl Ibc {
     // ### Client queries ###
 
-    /// get all the IBC clients for this daemon
+    /// Get all the IBC clients for this daemon
     pub async fn clients(&self) -> Result<Vec<IdentifiedClientState>, DaemonError> {
         let ibc_clients: QueryClientStatesResponse = cosmos_query!(
             self,
@@ -37,7 +37,7 @@ impl Ibc {
         Ok(ibc_clients.client_states)
     }
 
-    /// Geth the state of a specific IBC client
+    /// Get the state of a specific IBC client
     pub async fn client_state(
         &self,
         client_id: impl ToString,

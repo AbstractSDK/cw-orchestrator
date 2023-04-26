@@ -54,7 +54,7 @@ impl Gov {
         Ok(proposals)
     }
 
-    /// Vote queries voted information based on proposalID, voterAddr.
+    /// Vote queries voted information based on proposal_id for voter address.
     pub async fn vote(
         &self,
         proposal_id: u64,
