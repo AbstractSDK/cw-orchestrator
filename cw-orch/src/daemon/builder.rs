@@ -12,7 +12,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 /// Create [`Daemon`] through [`DaemonBuilderBuilder`]
 /// ## Example
 /// ```no_run
-///     use cw_orc::{DaemonBuilder, networks};
+///     use cw_orch::{DaemonBuilder, networks};
 ///
 ///     let daemon = DaemonBuilder::default()
 ///         .chain(networks::LOCAL_JUNO)
@@ -49,7 +49,7 @@ impl DaemonBuilder {
     ///
     /// ## Example
     /// ```no_run
-    /// use cw_orc::Daemon;
+    /// use cw_orch::Daemon;
     /// use tokio::runtime::Runtime;
     /// let rt = Runtime::new().unwrap();
     /// let daemon = Daemon::builder()
