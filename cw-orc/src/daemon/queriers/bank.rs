@@ -21,7 +21,7 @@ impl Bank {
     pub async fn coin_balance(
         &self,
         address: impl Into<String>,
-        denom: Option<impl Into<String>>,
+        denom: Option<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
         use cosmos_modules::bank::query_client::QueryClient;
         match denom {

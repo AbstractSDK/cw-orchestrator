@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
 use cw_orc::{
-    queriers::{CosmWasm, DaemonQuerier, Node},
+    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Node, Staking},
     ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
 };
 use speculoos::prelude::*;
@@ -16,6 +16,94 @@ use cosmrs::{
 };
 
 /*
+    Querier - Staking
+*/
+#[test]
+fn general_staking() {
+    let rt = Arc::new(Runtime::new().unwrap());
+    let channel = rt.block_on(build_channel()).unwrap();
+
+    let staking = Staking::new(channel.clone());
+
+    let params = rt.block_on(staking.params());
+    asserting!("params is ok").that(&params).is_ok();
+
+    let validators = rt.block_on(staking.validators("BOND_STATUS_BONDED", None));
+    asserting!("validators is ok").that(&validators).is_ok();
+    asserting!("validators is not empty")
+        .that(&validators.unwrap().validators.len())
+        .is_equal_to(&1);
+}
+
+/*
+    Querier - Gov
+*/
+#[test]
+fn general_gov() {
+    let rt = Arc::new(Runtime::new().unwrap());
+    let channel = rt.block_on(build_channel()).unwrap();
+
+    let gov = Gov::new(channel.clone());
+
+    let params = rt.block_on(gov.params("voting"));
+    asserting!("params is ok").that(&params).is_ok();
+}
+
+/*
+    Querier - Bank
+*/
+#[test]
+fn general_bank() {
+    let rt = Arc::new(Runtime::new().unwrap());
+    let channel = rt.block_on(build_channel()).unwrap();
+
+    let bank = Bank::new(channel.clone());
+
+    let params = rt.block_on(bank.params());
+    asserting!("params is ok").that(&params).is_ok();
+
+    let balances =
+        rt.block_on(bank.coin_balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+    asserting!("balances is ok").that(&balances).is_ok();
+
+    let spendable_balances =
+        rt.block_on(bank.spendable_balances("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+    asserting!("spendable_balances is ok")
+        .that(&spendable_balances)
+        .is_ok();
+
+    let total_supply = rt.block_on(bank.total_supply(None));
+    asserting!("total_supply is ok").that(&total_supply).is_ok();
+
+    let supply_of = rt.block_on(bank.supply_of("ujunox"));
+    asserting!("supply_of is ok").that(&supply_of).is_ok();
+
+    let denom_metadata = rt.block_on(bank.denom_metadata("ucosm"));
+    asserting!("denom_metadata is err, should not exists")
+        .that(&denom_metadata)
+        .is_err();
+
+    let denoms_metadata = rt.block_on(bank.denoms_metadata(None));
+    asserting!("denoms_metadata is ok, but empty")
+        .that(&denoms_metadata)
+        .is_ok();
+}
+
+/*
+    Querier - CosmWasm
+*/
+#[test]
+fn general_cosmwasm() {
+    let rt = Arc::new(Runtime::new().unwrap());
+    let channel = rt.block_on(build_channel()).unwrap();
+
+    let cw = CosmWasm::new(channel.clone());
+
+    let params = rt.block_on(cw.params());
+    asserting!("params is ok").that(&params).is_ok();
+}
+
+/*
     Querier - Node
 */
 #[test]
@@ -24,6 +112,7 @@ fn general_node() {
     let channel = rt.block_on(build_channel()).unwrap();
 
     let node = Node::new(channel.clone());
+
     let block_height = rt.block_on(node.block_height());
     asserting!("block_height is ok").that(&block_height).is_ok();
 

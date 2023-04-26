@@ -70,6 +70,16 @@
 //!
 //! ### Staking querier
 //!
+//! #### validators
+//!
+//! Fetch list of validators under a given status:
+//! BOND_STATUS_BONDED, BOND_STATUS_UNBONDING, BOND_STATUS_UNBONDED, BOND_STATUS_UNSPECIFIED
+//!
+//! ```rust
+//! let staking = Staking::new(channel.clone());
+//! let list = staking.validators("BOND_STATUS_BONDED", None)
+//! ```
+//!
 //! #### delegation
 //!
 //! Fetch staked balance for given delegator to given validator
