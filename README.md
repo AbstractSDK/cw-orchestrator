@@ -1,15 +1,14 @@
-<a href="https://docs.rs/boot-core/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/boot-core"></a> <a href="https://crates.io/crates/boot-core" ><img alt="Crates.io" src="https://img.shields.io/crates/d/boot-core"></a> <a href="https://app.codecov.io/gh/abstract-os/BOOT" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/abstract-os/BOOT?token=CZZH6DJMRY"></a>
+<a href="https://docs.rs/cw-orch/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/cw-orch"></a> <a href="https://crates.io/crates/cw-orch" ><img alt="Crates.io" src="https://img.shields.io/crates/d/cw-orch"></a> <a href="https://app.codecov.io/gh/AbstractSDK/cw-orch" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/AbstractSDK/cw-orch?token=CZZH6DJMRY"></a>
 
+# cw-orchestrator
 
-# BOOT
+Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [orchestrator.abstract.money](https://orchestrator.abstract.money).
 
-Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library.  Documentation is available at [boot.abstract.money](https://boot.abstract.money).
+> [cw-orchestrator](cw-orch/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
 
-> [BOOT](boot-core/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
+[cw-plus-orc](cw-plus-orc/README.md) uses cw-orchestrator to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
 
-[boot-cw-plus](boot-cw-plus/README.md) uses BOOT to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
-
-BOOT makes it easier to quickly deploy and iterate on your contracts. It provides a set of macros that allow you to define your contracts in a way that is more similar to how you would write them in Rust. This allows you to use the full power of Rust's type system to ensure that you are not sending invalid messages to your contracts.
+cw-orchestrator makes it easier to quickly deploy and iterate on your contracts. It provides a set of macros that allow you to define your contracts in a way that is more similar to how you would write them in Rust. This allows you to use the full power of Rust's type system to ensure that you are not sending invalid messages to your contracts.
 
 ## How it works
 
@@ -22,9 +21,9 @@ In order to perform actions on the contract you can define an interface to your 
 pub struct MyContract;
 ```
 
-The macro implements a set of traits for the struct. These traits contain functions that can then be used to interact with the contract and they prevent us from executing a faulty message on a contract. 
+The macro implements a set of traits for the struct. These traits contain functions that can then be used to interact with the contract and they prevent us from executing a faulty message on a contract.
 
-As an example you can have a look at the the implementation for a CW20 token [here.](boot-cw-plus/src/contracts/cw20_base.rs)
+As an example you can have a look at the the implementation for a CW20 token [here.](cw-plus-orc/src/contracts/cw20_base.rs)
 
 You can then use this interface to interact with the contract:
 
@@ -49,11 +48,11 @@ cw20_base.instantiate(&cw20_init_msg, None, None)?;
 let balance = cw20_base.balance(sender.to_string())?;
 ```
 
-You can find [the full cw20 implementation here](boot-core/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](boot-cw-plus/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](boot-cw-plus/examples/cw-plus-daemon.rs).
+You can find [the full cw20 implementation here](cw-orch/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](cw-plus-orc/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](cw-plus-orc/examples/cw-plus-daemon.rs).
 
 ## Advanced features
 
-BOOT provides two additional macros that can be used to improve the scripting experience.
+cw-orchestrator provides two additional macros that can be used to improve the scripting experience.
 
 ### ExecuteFns
 
@@ -81,14 +80,14 @@ struct Cw1
 impl<Chain: CwEnv> Cw1<Chain> {
     pub fn test_macro(&self) {
         self.freeze().unwrap();
-        self.update_admins(vec![]).unwrap(); 
+        self.update_admins(vec![]).unwrap();
         self.deposit(&[Coin::new(13,"juno")]).unwrap();
     }
 }
 ```
 
-> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `boot-core` by default.
-> The resulting derive would look like this: `#[cfg_attr(feature = "boot", derive(boot_core::ExecuteFns))]`
+> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `cw-orchestrator` by default.
+> The resulting derive would look like this: `#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]`
 
 For nested execute messages you can add an `impl_into` attribute. This expects the message to implement the `Into` trait for the provided type.
 

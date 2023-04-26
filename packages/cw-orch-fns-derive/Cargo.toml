@@ -1,0 +1,20 @@
+[package]
+name = "cw-orch-fns-derive"
+version = "0.10.0"
+authors = { workspace = true}
+edition = { workspace = true}
+license = { workspace = true}
+repository = { workspace = true}
+description = "Derive macro for generating contract interfaces."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1"
+syn = { version = "1", features = ["full", "extra-traits", "visit-mut"] }
+convert_case = "0.6.0"
+
+[dev-dependencies]
+colored-diff = "0.2.3"
