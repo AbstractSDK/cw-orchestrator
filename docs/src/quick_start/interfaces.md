@@ -1,6 +1,6 @@
 # Interfaces
 
-To get started with BOOT, create a new folder in your project's package directory and add it to the workspace members.
+To get started with cw-orchestrator, create a new folder in your project's package directory and add it to the workspace members.
 
 ```shell
 cd packages
@@ -8,10 +8,10 @@ cargo init --lib interfaces
 cd interfaces
 ```
 
-Now add [boot-core](https://crates.io/crates/boot-core) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
+Now add [cw-orchestrator](https://crates.io/crates/cw-orch) to `Cargo.toml` along with the package that contains the contract's endpoint messages.
 
 ```bash
-cargo add boot-core
+cargo add cw-orch
 cargo add log # optional for logging
 cargo add anyhow # optional for simple error handling
 cargo add --path ../my-project
@@ -19,7 +19,7 @@ cargo add --path ../my-project
 
 ```toml
 [dependencies]
-boot-core = "0.10.0" # latest version as of writing this article
+cw-orch = "0.10.0" # latest version as of writing this article
 my-project = { path = "../my-project"}
 # ...other dependencies
 ```
@@ -38,7 +38,7 @@ echo 'pub mod my_contract;' >> src/lib.rs
 In your new file, define a struct for your contract interface and provide the [`Instantiate`|`Execute`|`Query`|`Migrate`] messages to the `contract` macro, which will generate fully-typed instantiate, execute, query, and migrate methods for this struct.
 
 ```rust
-use boot_core::*;
+use cw_orch::*;
 // We use pub here to be able to import those messages directly 
 // from the interfaces crate in the next steps (scripting, intergation tests...)
 pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
@@ -148,28 +148,28 @@ impl MyContract<Mock> {
 #### Execution
 
 We can expand on this functionality with a simple macro that provides access to a contract's endpoints as callable functions. This functionality is only available if you have access to the message structs's crate.
-> You will want to feature-flag the function generation to prevent BOOT entering as a dependency when building your contract.
+> You will want to feature-flag the function generation to prevent cw-orchestrator entering as a dependency when building your contract.
 
-Here's an example with the macro shielded behind a "boot" feature flag:
+Here's an example with the macro shielded behind a "interface" feature flag:
 
 ```rust
 #[cw_serde]
-#[cfg_attr(feature = "boot", derive(boot_core::ExecuteFns))]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg{
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
     // Indicates that the call expects funds `Vec<Coin>`
-    #[cfg_attr(feature = "boot", payable)]
+    #[cfg_attr(feature = "interface", payable)]
     Deposit {}
 }
 
-// If we now define a BOOTable contract with this execute message
+// If we now define a orchestrateable contract with this execute message
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
 impl<Chain: CwEnv + Clone> MyContract<Chain> {
-    pub fn test_macro(&self) -> Result<(),BootError> {
+    pub fn test_macro(&self) -> Result<(),CwOrcError> {
         self.freeze()?;
         self.update_admins(vec![])?;
         self.deposit(&[Coin::new(13,"juno")])?;
@@ -179,10 +179,10 @@ impl<Chain: CwEnv + Clone> MyContract<Chain> {
 ```
 
 In order for the above code to work, you will need to follow those simple steps : 
-1. Add the following line to your `packages/my-project.Cargo.toml`. This will allow to activate the boot feature for creating `ExecuteFns` outside of the crate 
+1. Add the following line to your `packages/my-project.Cargo.toml`. This will allow to activate the interface feature for creating `ExecuteFns` outside of the crate 
     ```cargo
     [features]
-    boot=[]
+    interface=[]
     ```
 
 2. Add the following import in your `packages/interfaces/src/my-contract.rs` file : 
@@ -199,7 +199,7 @@ Generating query functions is a similar process but has the added advantage of u
 ```rust
 #[cosmwasm_schema::cw_serde]
 #[derive(QueryResponses)]
-#[cfg_attr(feature = "boot", derive(boot_core::QueryFns))]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 pub enum QueryMsg {
     /// Returns [`InfoResponse`]
     #[returns(InfoResponse)]
@@ -211,13 +211,13 @@ pub struct InfoResponse {
     pub admin: Addr,
 }
 
-// If we now define a BOOTable contract with this execute message
+// If we now define a orchestrateable contract with this execute message
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
 impl<Chain: CwEnv + Clone> MyContract<Chain> {
-    pub fn test_macro(&self) -> Result<(),BootError> {
+    pub fn test_macro(&self) -> Result<(),CwOrcError> {
         // No need to specify returned type!
         // info of type `InfoResponse` is returned
         let info = self.info()?;
@@ -242,8 +242,8 @@ You can also refine your contract interface manually to add more complex interac
 
 ```rust
 // interfaces/src/my_contract.rs
-// Import the boot traits
-use boot_core::interface::*;
+// Import the cw-orchestrator traits
+use cw_orch::interface::*;
 // ...
 
 impl<Chain: CwEnv> MyContract<Chain> {
@@ -274,11 +274,11 @@ impl<Chain: CwEnv> MyContract<Chain> {
 
 ## Learn more
 
-Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#boot` channel.
+Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#cw-orchestrator` channel.
 Learn more about Abstract at [abstract.money](https://abstract.money).
 
 ## References
 
-- [Boot Core](https://crates.io/crates/boot-core)
-- [Boot Cw-plus](https://crates.io/crates/boot-cw-plus)
-- [Abstract Contract Interfaces](https://crates.io/crates/abstract-boot)
+- [cw-orchestrator](https://crates.io/crates/cw-orch)
+- [cw-plus-orc](https://crates.io/crates/cw-plus-orc)
+- [Abstract Contract Interfaces](https://crates.io/crates/abstract-cw-orch)
