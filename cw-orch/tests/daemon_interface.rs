@@ -14,7 +14,7 @@ use tokio::runtime::Runtime;
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, contract) = common::contract::start(&runtime);
+    let (sender, contract) = common::interface::start(&runtime);
 
     asserting!("address is not present")
         .that(&contract.address())
@@ -28,7 +28,7 @@ fn general() {
         .that(&contract.latest_is_uploaded().unwrap())
         .is_true();
 
-    let init_msg = common::contract::get_init_msg(&sender);
+    let init_msg = common::interface::get_init_msg(&sender);
 
     let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
 

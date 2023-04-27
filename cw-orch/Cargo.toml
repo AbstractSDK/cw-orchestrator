@@ -14,6 +14,7 @@ exclude = [".env"]
 
 [features]
 # enable the optional dependencies
+default=["daemon"]
 daemon = [
   "dep:ibc-chain-registry",
   "dep:ibc-relayer-types",
@@ -91,8 +92,9 @@ ring = { version = "0.16.20", optional = true }
 cw-orch = { features = ["daemon"], path = "." }
 uid = "0.1.7"
 env_logger = "0.10.0"
-cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
-cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git", features=["interface"] }
+cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git", features=["interface"] }
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
+

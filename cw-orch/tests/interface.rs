@@ -10,14 +10,11 @@ use speculoos::prelude::*;
 use cw20_base::msg::*;
 use tokio::runtime::Runtime;
 
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Cw20Base;
-
 #[test]
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
-    let (sender, contract) = common::contract::start(&runtime);
+    let (sender, contract) = common::interface::start(&runtime);
 
     // upload contract
     let upload_res = contract.upload();
@@ -30,7 +27,7 @@ fn general() {
     log::info!("Using code_id {}", code_id);
 
     // init msg for contract
-    let init_msg = common::contract::get_init_msg(&sender);
+    let init_msg = common::interface::get_init_msg(&sender);
 
     // instantiate contract on chain
     let init_res = contract.instantiate(&init_msg, Some(&sender), None);
