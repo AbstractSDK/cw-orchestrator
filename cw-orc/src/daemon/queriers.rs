@@ -5,47 +5,43 @@
 //! ### Requirements
 //!
 //! You will need to build the channel to be able to use the queriers.
-//! Here is an example of how to build it:
+//! Here is an example of how to build it using the Daemon builder.
 //!
 //! ```rust
+//! // include tokio runtime
+//! use tokio::runtime::Runtime;
+//!
+//! // require the querier you want to use, in this case Node
+//! use cw_orc::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
+//!
+//! // prepare a runtime
 //! let runtime = Runtime::new().unwrap();
 //!
+//! // call the builder and configure it as you need
 //! let daemon = Daemon::builder()
 //!     .chain(networks::LOCAL_JUNO)
 //!     .handle(runtime.handle())
 //!     .build()
 //!     .unwrap();
 //!
-//! let node = queriers::Node::new(daemon.state.grpc_channel.clone());
-//! ```
-//!
-//! Another example of how to build a channel:
-//!
-//! ```rust
-//! pub async fn build_channel() -> Option<tonic::transport::Channel> {
-//!     let network = networks::LOCAL_JUNO;
-//!
-//!     let grpcs: Vec<Grpc> = vec![Grpc {
-//!         address: network.grpc_urls[0].into(),
-//!         provider: None,
-//!     }];
-//!
-//!     let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
-//!
-//!     let channel = DaemonChannel::connect(&grpcs, &chain).await.unwrap();
-//!
-//!     asserting!("channel connection is succesful")
-//!         .that(&channel)
-//!         .is_some();
-//!
-//!     channel
-//! }
+//! // now you can use the Node querier:
+//! let node = Node::new(daemon.channel());
+//! let node_info = node.info();
 //! ```
 //!
 //! ### Node querier
 //!
 //! ```rust
-//! let node = Node::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let node = Node::new(daemon.channel());
 //! let block_height = node.block_height();
 //! ```
 //!
@@ -56,10 +52,19 @@
 //! Fetch the bank balance of a given address If denom is None, returns all balances
 //!
 //! ```rust
-//! let bank = Bank::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let bank = Bank::new(daemon.channel());
 //! let holder_address = "...";
-//! let denom = "ujunox";
-//! let balance = bank.coin_balance(holder_address, denom);
+//! let denom = "ujunox".to_string();
+//! let balance = bank.coin_balance(holder_address, Some(denom));
 //! ```
 //!
 //! #### total_supply
@@ -67,7 +72,16 @@
 //! Fetch total supply in the bank module
 //!
 //! ```rust
-//! let bank = Bank::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let bank = Bank::new(daemon.channel());
 //! let supply = bank.total_supply();
 //! ```
 //!
@@ -80,12 +94,22 @@
 //! Unspecified = 0, DepositPeriod = 1, VotingPeriod = 2, Passed = 3, Rejected = 4, Failed = 5,
 //!
 //! ```rust
-//! let gov = Gov::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+//! # use cw_orc::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let gov = Gov::new(daemon.channel());
 //! let proposal_status = 0i32;
 //! let voter = "...";
 //! let depositor = "...";
-//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
-//! let props = gov.proposals(proposal_status, voter, depositor, pagination);
+//! let pagination = PageRequest { key: vec![], offset: 0u64, limit: 30u64, count_total: true, reverse: false };
+//! let props = gov.proposals(proposal_status, voter, depositor, Some(pagination));
 //! ```
 //!
 //! #### vote
@@ -93,7 +117,16 @@
 //! Fetch voter information for given proposal
 //!
 //! ```rust
-//! let gov = Gov::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let gov = Gov::new(daemon.channel());
 //! let proposal_id = 100u64;
 //! let voter = "...";
 //! let vote_info = gov.vote(proposal_id, voter);
@@ -103,10 +136,20 @@
 //! Fetch all votes information for given proposal
 //!
 //! ```rust
-//! let gov = Gov::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+//! # use cw_orc::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let gov = Gov::new(daemon.channel());
 //! let proposal_id = 100u64;
-//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
-//! let props = gov.votes(proposal_id, pagination);
+//! let pagination = PageRequest { key: vec![], offset: 0u64, limit: 30u64, count_total: true, reverse: false };
+//! let props = gov.votes(proposal_id, Some(pagination));
 //! ```
 //!
 //! ### Staking querier
@@ -117,8 +160,17 @@
 //! BOND_STATUS_BONDED, BOND_STATUS_UNBONDING, BOND_STATUS_UNBONDED, BOND_STATUS_UNSPECIFIED
 //!
 //! ```rust
-//! let staking = Staking::new(channel.clone());
-//! let list = staking.validators("BOND_STATUS_BONDED")
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let staking = Staking::new(daemon.channel());
+//! let list = staking.validators("BOND_STATUS_BONDED");
 //! ```
 //!
 //! #### delegation
@@ -126,7 +178,16 @@
 //! Fetch staked balance for given delegator to given validator
 //!
 //! ```rust
-//! let staking = Staking::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let staking = Staking::new(daemon.channel());
 //! let validator_addr = "...";
 //! let delegator_addr = "...";
 //! let staked = staking.delegation(validator_addr, delegator_addr);
@@ -137,7 +198,16 @@
 //! Fetch all unbonding delegations of a given delegator address.
 //!
 //! ```rust
-//! let staking = Staking::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let staking = Staking::new(daemon.channel());
 //! let validator_addr = "...";
 //! let delegator_addr = "...";
 //! let unbonding = staking.unbonding_delegation(validator_addr, delegator_addr);
@@ -148,12 +218,22 @@
 //! Fetch redelegations of given address.
 //!
 //! ```rust
-//! let staking = Staking::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let staking = Staking::new(daemon.channel());
 //! let delegator_addr = "...";
 //! let src_validator_addr = "...";
 //! let dst_validator_addr = "...";
-//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
-//! let redelegation = staking.redelegations(delegator_addr, src_validator_addr, dst_validator_addr);
+//! let pagination = PageRequest { key: vec![], offset: 0u64, limit: 30u64, count_total: true, reverse: false };
+//! let redelegation = staking.redelegations(delegator_addr, src_validator_addr, dst_validator_addr, Some(pagination));
 //! ```
 //!
 //! ### Feegrant
@@ -163,7 +243,16 @@
 //! Fetch fee granted to a grantee
 //!
 //! ```rust
-//! let feegrant = Feegrant::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let feegrant = Feegrant::new(daemon.channel());
 //! let granter = "...";
 //! let grantee = "...";
 //! let allowance = feegrant.allowance(granter, grantee);
@@ -174,10 +263,20 @@
 //! Fetch all grants to a grantee
 //!
 //! ```rust
-//! let feegrant = Feegrant::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+//! # use cw_orc::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let feegrant = Feegrant::new(daemon.channel());
 //! let grantee = "...";
-//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
-//! let allowances = feegrant.allowances(granter, pagination);
+//! let pagination = PageRequest { key: vec![], offset: 0u64, limit: 30u64, count_total: true, reverse: false };
+//! let allowances = feegrant.allowances(grantee, Some(pagination));
 //! ```
 //!
 //! ### CosmWasm
@@ -187,7 +286,16 @@
 //! Fetch contract information
 //!
 //! ```rust
-//! let cw = CosmWasm::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let cw = CosmWasm::new(daemon.channel());
 //! let contract_address = "...";
 //! let info = cw.contract_info(contract_address);
 //! ```
@@ -197,10 +305,20 @@
 //! Fetch contract history
 //!
 //! ```rust
-//! let cw = CosmWasm::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+//! # use cw_orc::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let cw = CosmWasm::new(daemon.channel());
 //! let contract_address = "...";
-//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
-//! let history = cw.contract_history(contract_address, pagination);
+//! let pagination = PageRequest { key: vec![], offset: 0u64, limit: 30u64, count_total: true, reverse: false };
+//! let history = cw.contract_history(contract_address, Some(pagination));
 //! ```
 //!
 //! ### IBC
@@ -210,7 +328,16 @@
 //! Fetch known clients
 //!
 //! ```rust
-//! let ibc = Ibc::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let ibc = Ibc::new(daemon.channel());
 //! let clients = ibc.clients();
 //! ```
 //!
@@ -219,7 +346,16 @@
 //! Fetch the state of a specific IBC client
 //!
 //! ```rust
-//! let ibc = Ibc::new(channel.clone());
+//! # use tokio::runtime::Runtime;
+//! # use cw_orc::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
+//! # let runtime = Runtime::new().unwrap();
+//! # let daemon = Daemon::builder()
+//! #    .chain(networks::LOCAL_JUNO)
+//! #    .handle(runtime.handle())
+//! #    .build()
+//! #    .unwrap();
+//!
+//! let ibc = Ibc::new(daemon.channel());
 //! let client_id = "...";
 //! let state = ibc.client_state(client_id);
 //! ```

@@ -17,6 +17,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
+use tonic::transport::Channel;
 use std::{
     fmt::Debug,
     rc::Rc,
@@ -60,9 +61,14 @@ impl Daemon {
     async fn wait(&self) {
         match self.state.kind {
             ChainKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-            ChainKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
             ChainKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
+            ChainKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
         }
+    }
+
+    /// Get the channel configured for this Daemon
+    pub fn channel(&self) -> Channel {
+        self.state().grpc_channel.clone()
     }
 }
 

@@ -18,7 +18,7 @@ impl DaemonQuerier for Feegrant {
 impl Feegrant {
     /// Allowance returns fee granted to the grantee by the granter.
     pub async fn allowance(
-        &mut self,
+        &self,
         granter: impl Into<String>,
         grantee: impl Into<String>,
     ) -> Result<cosmos_modules::feegrant::Grant, DaemonError> {
@@ -36,7 +36,7 @@ impl Feegrant {
 
     /// Allowances returns all the grants for address.
     pub async fn allowances(
-        &mut self,
+        &self,
         grantee: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::feegrant::Grant>, DaemonError> {
