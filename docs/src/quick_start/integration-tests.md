@@ -1,9 +1,9 @@
 # Integration Tests
 
-To get started writing integration tests with BOOT, first add `boot-core` to your dependencies.
+To get started writing integration tests with cw-orchestrator, first add `cw-orchestrator` to your dependencies.
 
 ```bash
-cargo add --dev boot-core
+cargo add --dev cw-orch
 ```
 
 The following assumes that you have written your interfaces as described in [Interfaces](./quick_start/interfaces.md).
@@ -13,7 +13,7 @@ The following assumes that you have written your interfaces as described in [Int
 ```rust
 // contracts/my-contract/tests/integration_tests.rs  
 use interfaces::MyContract;
-use boot_core::*;  
+use cw_orch::*;  
 use semver::Version;
 use my_contract::contract;
 use my_contract::{ExecuteMsg};
