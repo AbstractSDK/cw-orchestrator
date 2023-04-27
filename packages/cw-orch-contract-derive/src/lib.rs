@@ -5,8 +5,8 @@ mod cw_orch_contract;
 use crate::cw_orch_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
 
 use convert_case::{Case, Casing};
-use syn::{parse_macro_input, Fields, FnArg, Item, Path, GenericArgument};
 use syn::__private::TokenStream2;
+use syn::{parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
@@ -44,7 +44,6 @@ fn get_generics_from_path(p: &Path) -> Punctuated<GenericArgument, Comma> {
 
     generics
 }
-
 
 /**
 Procedural macro to generate a cw-orchestrator interface
@@ -163,9 +162,9 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             )
         })
         .collect();
-    let all_debug_serialize = if !all_debug_serialize.is_empty(){
+    let all_debug_serialize = if !all_debug_serialize.is_empty() {
         quote!(where #(#all_debug_serialize,)*)
-    }else{
+    } else {
         quote!()
     };
 
@@ -380,7 +379,8 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                 artifacts_dir.find_wasm_path(#wasm_name).unwrap()
             }
         }
-    ).into();
+    )
+    .into();
 
     let new_func_name = format_ident!("get_{}", func_ident);
 
@@ -413,7 +413,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         // Add the Uploadable<Daemon> trait for the contract
         #[cfg(feature = "propagate_daemon")]
         interface_def.extend(daemon_uploadable);
-        
+
         interface_def
     } else {
         func_part.into()
