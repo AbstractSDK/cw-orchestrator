@@ -1,5 +1,5 @@
 extern crate proc_macro;
-use crate::helpers::{process_impl_into, LexiographicMatching};
+use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -33,6 +33,12 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
     let variant_fns = variants.into_iter().filter_map( |mut variant|{
         let variant_name = variant.ident.clone();
+
+        // We rename the variant if it has a fn_name attribute associated with it
+        let mut variant_func_name =
+                format_ident!("{}", process_fn_name(&variant).to_case(Case::Snake));
+        variant_func_name.set_span(variant_name.span());
+
         let is_payable = payable(&variant);
         match &mut variant.fields {
             Fields::Unnamed(_) => None,
@@ -42,10 +48,6 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 LexiographicMatching::default().visit_fields_named_mut(variant_fields);
 
                 // parse these fields as arguments to function
-                let mut variant_func_name =
-                format_ident!("{}", variant_name.to_string().to_case(Case::Snake));
-                variant_func_name.set_span(variant_name.span());
-
                 let mut variant_idents = variant_fields.named.clone();
                 // remove any attributes for use in fn arguments
                 variant_idents.iter_mut().for_each(|f| f.attrs = vec![]);
