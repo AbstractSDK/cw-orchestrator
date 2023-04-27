@@ -7,6 +7,7 @@ use cosmrs::proto::ibc::{
         client::v1::{IdentifiedClientState, QueryClientStatesResponse},
         connection::v1::{IdentifiedConnection, State},
     },
+    applications::transfer::v1::{DenomTrace, QueryDenomTraceResponse},
     lightclients::tendermint::v1::ClientState,
 };
 use prost::Message;
@@ -24,6 +25,20 @@ impl DaemonQuerier for Ibc {
 }
 
 impl Ibc {
+    // ### Application queries ### //
+    pub async fn denom_trace(
+        &self,
+        hash: String,
+    ) -> Result<DenomTrace, DaemonError> {
+        let denom_trace: QueryDenomTraceResponse = cosmos_query!(
+            self,
+            ibc_application,
+            denom_trace,
+            QueryDenomTraceRequest { hash: hash }
+        );
+        Ok(denom_trace.denom_trace.unwrap())
+    }
+
     // ### Client queries ###
 
     /// Get all the IBC clients for this daemon

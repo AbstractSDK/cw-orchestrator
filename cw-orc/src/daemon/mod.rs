@@ -36,5 +36,6 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::ibc::core::channel::v1 as ibc_channel;
     pub use cosmrs::proto::ibc::core::client::v1 as ibc_client;
     pub use cosmrs::proto::ibc::core::connection::v1 as ibc_connection;
+    pub use cosmrs::proto::ibc::applications::transfer::v1 as ibc_application;
     pub use cosmrs::proto::tendermint::abci as tendermint_abci;
 }
