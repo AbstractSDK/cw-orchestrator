@@ -65,7 +65,7 @@ impl CosmWasm {
         &self,
         address: impl Into<String>,
         query_data: Vec<u8>,
-    ) -> Result<cosmos_modules::cosmwasm::QuerySmartContractStateResponse, DaemonError> {
+    ) -> Result<Vec<u8>, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QuerySmartContractStateRequest;
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
@@ -73,7 +73,7 @@ impl CosmWasm {
             address: address.into(),
             query_data,
         };
-        Ok(client.smart_contract_state(request).await?.into_inner())
+        Ok(client.smart_contract_state(request).await?.into_inner().data)
     }
 
     /// Query all contract state
@@ -81,7 +81,7 @@ impl CosmWasm {
         &self,
         address: impl Into<String>,
         pagination: Option<PageRequest>,
-    ) -> Result<cosmos_modules::cosmwasm::QueryAllContractStateResponse, DaemonError> {
+    ) -> Result<Vec<cosmos_modules::cosmwasm::Model>, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryAllContractStateRequest;
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
@@ -89,42 +89,41 @@ impl CosmWasm {
             address: address.into(),
             pagination,
         };
-        Ok(client.all_contract_state(request).await?.into_inner())
+        Ok(client.all_contract_state(request).await?.into_inner().models)
     }
 
     /// Query code
     pub async fn code(
         &self,
         code_id: u64,
-    ) -> Result<cosmos_modules::cosmwasm::QueryCodeResponse, DaemonError> {
+    ) -> Result<cosmos_modules::cosmwasm::CodeInfoResponse, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryCodeRequest;
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodeRequest { code_id };
-        Ok(client.code(request).await?.into_inner())
+        Ok(client.code(request).await?.into_inner().code_info.unwrap())
     }
 
     /// Query codes
     pub async fn codes(
         &self,
         pagination: Option<PageRequest>,
-    ) -> Result<cosmos_modules::cosmwasm::QueryCodesResponse, DaemonError> {
+    ) -> Result<Vec<cosmos_modules::cosmwasm::CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryCodesRequest;
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodesRequest { pagination };
-        Ok(client.codes(request).await?.into_inner())
+        Ok(client.codes(request).await?.into_inner().code_infos)
     }
 
     /// Query pinned codes
     pub async fn pinned_codes(
         &self,
-        pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::cosmwasm::QueryPinnedCodesResponse, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryPinnedCodesRequest;
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
-        let request = QueryPinnedCodesRequest { pagination };
+        let request = QueryPinnedCodesRequest { pagination: None };
         Ok(client.pinned_codes(request).await?.into_inner())
     }
 
@@ -132,14 +131,13 @@ impl CosmWasm {
     pub async fn contract_by_codes(
         &self,
         code_id: u64,
-        pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::cosmwasm::QueryContractsByCodeResponse, DaemonError> {
         use cosmos_modules::cosmwasm::query_client::*;
         use cosmos_modules::cosmwasm::QueryContractsByCodeRequest;
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryContractsByCodeRequest {
             code_id,
-            pagination,
+            pagination: None,
         };
         Ok(client.contracts_by_code(request).await?.into_inner())
     }

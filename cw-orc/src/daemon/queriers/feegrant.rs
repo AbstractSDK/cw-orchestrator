@@ -21,7 +21,7 @@ impl Feegrant {
         &mut self,
         granter: impl Into<String>,
         grantee: impl Into<String>,
-    ) -> Result<cosmos_modules::feegrant::QueryAllowanceResponse, DaemonError> {
+    ) -> Result<cosmos_modules::feegrant::Grant, DaemonError> {
         let allowance: cosmos_modules::feegrant::QueryAllowanceResponse = cosmos_query!(
             self,
             feegrant,
@@ -31,7 +31,7 @@ impl Feegrant {
                 grantee: grantee.into(),
             }
         );
-        Ok(allowance)
+        Ok(allowance.allowance.unwrap())
     }
 
     /// Allowances returns all the grants for address.
@@ -39,7 +39,7 @@ impl Feegrant {
         &mut self,
         grantee: impl Into<String>,
         pagination: Option<PageRequest>,
-    ) -> Result<cosmos_modules::feegrant::QueryAllowancesResponse, DaemonError> {
+    ) -> Result<Vec<cosmos_modules::feegrant::Grant>, DaemonError> {
         let allowances: cosmos_modules::feegrant::QueryAllowancesResponse = cosmos_query!(
             self,
             feegrant,
@@ -49,6 +49,6 @@ impl Feegrant {
                 pagination: pagination
             }
         );
-        Ok(allowances)
+        Ok(allowances.allowances)
     }
 }

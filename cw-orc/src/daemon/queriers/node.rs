@@ -46,7 +46,7 @@ impl Node {
     /// Queries node syncing
     pub async fn syncing(
         &self,
-    ) -> Result<cosmos_modules::tendermint::GetSyncingResponse, DaemonError> {
+    ) -> Result<bool, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
@@ -56,7 +56,7 @@ impl Node {
             .await?
             .into_inner();
 
-        Ok(resp)
+        Ok(resp.syncing)
     }
 
     /// Returns latests block information

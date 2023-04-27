@@ -28,10 +28,10 @@ fn general_staking() {
     let params = rt.block_on(staking.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let validators = rt.block_on(staking.validators("BOND_STATUS_BONDED", None));
+    let validators = rt.block_on(staking.validators("BOND_STATUS_BONDED"));
     asserting!("validators is ok").that(&validators).is_ok();
     asserting!("validators is not empty")
-        .that(&validators.unwrap().validators.len())
+        .that(&validators.unwrap().len())
         .is_equal_to(&1);
 }
 
@@ -67,12 +67,12 @@ fn general_bank() {
     asserting!("balances is ok").that(&balances).is_ok();
 
     let spendable_balances =
-        rt.block_on(bank.spendable_balances("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+        rt.block_on(bank.spendable_balances("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"));
     asserting!("spendable_balances is ok")
         .that(&spendable_balances)
         .is_ok();
 
-    let total_supply = rt.block_on(bank.total_supply(None));
+    let total_supply = rt.block_on(bank.total_supply());
     asserting!("total_supply is ok").that(&total_supply).is_ok();
 
     let supply_of = rt.block_on(bank.supply_of("ujunox"));
@@ -83,7 +83,7 @@ fn general_bank() {
         .that(&denom_metadata)
         .is_err();
 
-    let denoms_metadata = rt.block_on(bank.denoms_metadata(None));
+    let denoms_metadata = rt.block_on(bank.denoms_metadata());
     asserting!("denoms_metadata is ok, but empty")
         .that(&denoms_metadata)
         .is_ok();

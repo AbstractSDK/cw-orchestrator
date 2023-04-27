@@ -20,7 +20,7 @@ impl Gov {
     pub async fn proposal(
         &self,
         proposal_id: u64,
-    ) -> Result<cosmos_modules::gov::QueryProposalResponse, DaemonError> {
+    ) -> Result<cosmos_modules::gov::Proposal, DaemonError> {
         let proposal: cosmos_modules::gov::QueryProposalResponse = cosmos_query!(
             self,
             gov,
@@ -29,7 +29,7 @@ impl Gov {
                 proposal_id: proposal_id,
             }
         );
-        Ok(proposal)
+        Ok(proposal.proposal.unwrap())
     }
 
     /// Proposals queries all proposals based on given status.
@@ -59,7 +59,7 @@ impl Gov {
         &self,
         proposal_id: u64,
         voter: impl Into<String>,
-    ) -> Result<cosmos_modules::gov::QueryVoteResponse, DaemonError> {
+    ) -> Result<cosmos_modules::gov::Vote, DaemonError> {
         let vote: cosmos_modules::gov::QueryVoteResponse = cosmos_query!(
             self,
             gov,
@@ -69,7 +69,7 @@ impl Gov {
                 voter: voter.into()
             }
         );
-        Ok(vote)
+        Ok(vote.vote.unwrap())
     }
 
     /// Votes queries votes of a given proposal.
@@ -111,7 +111,7 @@ impl Gov {
         &self,
         proposal_id: u64,
         depositor: impl Into<String>,
-    ) -> Result<cosmos_modules::gov::QueryDepositResponse, DaemonError> {
+    ) -> Result<cosmos_modules::gov::Deposit, DaemonError> {
         let deposit: cosmos_modules::gov::QueryDepositResponse = cosmos_query!(
             self,
             gov,
@@ -121,7 +121,7 @@ impl Gov {
                 depositor: depositor.into()
             }
         );
-        Ok(deposit)
+        Ok(deposit.deposit.unwrap())
     }
 
     /// Deposits queries all deposits of a single proposal.
@@ -146,7 +146,7 @@ impl Gov {
     pub async fn tally_result(
         &mut self,
         proposal_id: u64,
-    ) -> Result<cosmos_modules::gov::QueryTallyResultResponse, DaemonError> {
+    ) -> Result<cosmos_modules::gov::TallyResult, DaemonError> {
         let tally_result: cosmos_modules::gov::QueryTallyResultResponse = cosmos_query!(
             self,
             gov,
@@ -155,6 +155,6 @@ impl Gov {
                 proposal_id: proposal_id,
             }
         );
-        Ok(tally_result)
+        Ok(tally_result.tally.unwrap())
     }
 }
