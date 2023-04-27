@@ -1,18 +1,18 @@
 [workspace]
-members = ["boot-core", "packages/*"]
+members = ["cw-orch", "packages/*"]
 
 [workspace.package]
-authors    = ["CyberHoward <cyberhoward@protonmail.com>"]
-edition    = "2021"
-license    = "GPL-3.0-only"
-repository = "https://github.com/AbstractSDK/BOOT"
+authors = ["CyberHoward <cyberhoward@protonmail.com>"]
+edition = "2021"
+license = "GPL-3.0-only"
+repository = "https://github.com/AbstractSDK/cw-orchestrator"
 
 [workspace.dependencies]
-cosmwasm-std  = { version = "1.1" }
-cw-multi-test = { version = "0.16.0" }
-anyhow        = "1.0"
-serde         = { version = "1.0.103", default-features = false, features = ["derive"] }
+cosmwasm-std = { version = "1.1" }
+cw-multi-test = { version = "0.16.4" }
+anyhow = "1.0"
+serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 
 [patch.crates-io]
-boot-contract-derive = { path="packages/boot-contract-derive"  }
-boot-fns-derive = { path="packages/boot-fns-derive" }
+cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive" }
+cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive" }
