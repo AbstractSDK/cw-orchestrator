@@ -9,7 +9,7 @@ use super::{sender::Sender, state::DaemonState};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Default)]
-/// Create [`Daemon`] through [`DaemonBuilderBuilder`]
+/// Create [`Daemon`] through [`DaemonBuilder`]
 /// ## Example
 /// ```no_run
 ///     use cw_orc::{DaemonBuilder, networks};

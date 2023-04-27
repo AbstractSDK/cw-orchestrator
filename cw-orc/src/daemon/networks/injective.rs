@@ -17,8 +17,8 @@ pub const INJECTIVE_1: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-/// https://docs.injective.network/develop/public-endpoints
-/// https://testnet.status.injective.network/
+/// <https://docs.injective.network/develop/public-endpoints>
+/// <https://testnet.status.injective.network/>
 pub const INJECTIVE_888: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "injective-888",

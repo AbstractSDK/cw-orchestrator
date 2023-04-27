@@ -68,8 +68,7 @@
 //!
 //! ```rust
 //! let bank = Bank::new(channel.clone());
-//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
-//! let supply = bank.total_supply(pagination);
+//! let supply = bank.total_supply();
 //! ```
 //!
 //! ### Gov querier
@@ -88,7 +87,8 @@
 //! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
 //! let props = gov.proposals(proposal_status, voter, depositor, pagination);
 //! ```
-//! #### Vote
+//!
+//! #### vote
 //!
 //! Fetch voter information for given proposal
 //!
@@ -96,7 +96,17 @@
 //! let gov = Gov::new(channel.clone());
 //! let proposal_id = 100u64;
 //! let voter = "...";
-//! let props = gov.vote(proposal_id, voter);
+//! let vote_info = gov.vote(proposal_id, voter);
+//! ```
+//! #### votes
+//!
+//! Fetch all votes information for given proposal
+//!
+//! ```rust
+//! let gov = Gov::new(channel.clone());
+//! let proposal_id = 100u64;
+//! let pagination = PageRequest { offset: 0u64, limit: 30u64 };
+//! let props = gov.votes(proposal_id, pagination);
 //! ```
 //!
 //! ### Staking querier
@@ -108,7 +118,7 @@
 //!
 //! ```rust
 //! let staking = Staking::new(channel.clone());
-//! let list = staking.validators("BOND_STATUS_BONDED", None)
+//! let list = staking.validators("BOND_STATUS_BONDED")
 //! ```
 //!
 //! #### delegation

@@ -12,7 +12,7 @@ use tokio::runtime::Runtime;
 use cosmrs::{
     cosmwasm::MsgExecuteContract,
     tx::{self, Msg},
-    AccountId, Denom, proto::ibc::core::client,
+    AccountId, Denom,
 };
 
 /*
