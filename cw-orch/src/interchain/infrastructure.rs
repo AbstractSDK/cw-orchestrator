@@ -1,24 +1,23 @@
 //! Interactions with docker using bollard
 
 use ibc_chain_registry::chain::{ChainData, Grpc};
-use log::{warn, LevelFilter};
+use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use log4rs::filter::FilterConfig;
+
 use log4rs::Config;
 
 use std::collections::HashMap;
 use std::default::Default;
 use std::path::PathBuf;
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 use tokio::runtime::Runtime;
 
-use super::super::daemon::Sender;
 use super::error::InterchainError;
-use crate::daemon::channel::ChannelAccess;
-use crate::queriers::{DaemonQuerier, Node};
-use crate::{daemon::state::DaemonState, Daemon, DaemonError, DaemonOptionsBuilder};
+
+use crate::queriers::DaemonQuerier;
+use crate::{Daemon, DaemonError};
 
 use super::docker::DockerHelper;
 use super::hermes::Hermes;
@@ -155,17 +154,15 @@ impl InterchainInfrastructure {
     ) -> Result<HashMap<NetworkId, Daemon>, DaemonError> {
         let mut daemons = HashMap::new();
         for (chain, mnemonic) in chain_data {
-            let options = DaemonOptionsBuilder::default()
-                .network(chain.clone())
+            let daemon = Daemon::builder()
+                .chain(chain.clone())
                 .deployment_id("interchain")
+                .handle(runtime.handle())
+                .mnemonic(mnemonic)
                 .build()
                 .unwrap();
-            let chain_a_state = Rc::new(runtime.block_on(DaemonState::new(options))?);
-            let chain_a_sender = Rc::new(Sender::from_mnemonic(&chain_a_state, mnemonic)?);
-            daemons.insert(
-                chain.chain_id.to_string(),
-                Daemon::new(&chain_a_sender, &chain_a_state, runtime)?,
-            );
+
+            daemons.insert(chain.chain_id.to_string(), daemon);
         }
         Ok(daemons)
     }
