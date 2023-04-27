@@ -25,12 +25,12 @@ impl DaemonQuerier for Ibc {
 }
 
 impl Ibc {
-    // ### Application queries ### //
+    // ### Transfer queries ### //
 
     pub async fn denom_trace(&self, hash: String) -> Result<DenomTrace, DaemonError> {
         let denom_trace: QueryDenomTraceResponse = cosmos_query!(
             self,
-            ibc_application,
+            ibc_transfer,
             denom_trace,
             QueryDenomTraceRequest { hash: hash }
         );
