@@ -1,5 +1,5 @@
 extern crate proc_macro;
-use crate::helpers::{process_impl_into, process_fn_name, LexiographicMatching};
+use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};

@@ -6,8 +6,8 @@ use syn::parse_quote;
 use syn::GenericParam;
 use syn::Generics;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, GenericArgument,
-    PathArguments, Type, Meta, NestedMeta, Lit
+    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, GenericArgument, Lit,
+    Meta, NestedMeta, PathArguments, Type,
 };
 
 pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
@@ -23,7 +23,7 @@ pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
     None
 }
 
-pub (crate) fn process_fn_name(v: &syn::Variant) -> String {
+pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
     for attr in &v.attrs {
         if let Ok(Meta::List(list)) = attr.parse_meta() {
             if let Some(ident) = list.path.get_ident() {
