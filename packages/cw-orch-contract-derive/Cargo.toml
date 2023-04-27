@@ -1,10 +1,10 @@
 [package]
 name = "cw-orch-contract-derive"
 version = "0.10.0"
-authors = { workspace = true}
-edition = { workspace = true}
-license = { workspace = true}
-repository = { workspace = true}
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
 description = "Attribute macro for creating a contract interface."
 
 [lib]
