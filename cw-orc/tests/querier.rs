@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
 use cw_orc::{
-    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Node, Staking},
+    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Node, Staking, Ibc},
     ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
 };
 use speculoos::prelude::*;
@@ -12,8 +12,22 @@ use tokio::runtime::Runtime;
 use cosmrs::{
     cosmwasm::MsgExecuteContract,
     tx::{self, Msg},
-    AccountId, Denom,
+    AccountId, Denom, proto::ibc::core::client,
 };
+
+/*
+    Querier - Ibc
+*/
+#[test]
+fn general_ibc() {
+    let rt = Arc::new(Runtime::new().unwrap());
+    let channel = rt.block_on(build_channel()).unwrap();
+
+    let ibc = Ibc::new(channel.clone());
+
+    let clients = rt.block_on(ibc.clients());
+    asserting!("clients is ok").that(&clients).is_ok();
+}
 
 /*
     Querier - Staking
