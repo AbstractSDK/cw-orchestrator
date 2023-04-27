@@ -2,13 +2,44 @@
 //!
 //! ## Usage examples
 //!
-//! Note: all following examples need the following code:
+//! ### Requirements
+//!
+//! You will need to build the channel to be able to use the queriers.
+//! Here is an example of how to build it:
 //!
 //! ```rust
-//! use std::sync::Arc;
-//! use tokio::runtime::Runtime;
-//! let rt = Arc::new(Runtime::new().unwrap());
-//! let channel = rt.block_on(build_channel()).unwrap();
+//! let runtime = Runtime::new().unwrap();
+//!
+//! let daemon = Daemon::builder()
+//!     .chain(networks::LOCAL_JUNO)
+//!     .handle(runtime.handle())
+//!     .build()
+//!     .unwrap();
+//!
+//! let node = queriers::Node::new(daemon.state.grpc_channel.clone());
+//! ```
+//!
+//! Another example of how to build a channel:
+//!
+//! ```rust
+//! pub async fn build_channel() -> Option<tonic::transport::Channel> {
+//!     let network = networks::LOCAL_JUNO;
+//!
+//!     let grpcs: Vec<Grpc> = vec![Grpc {
+//!         address: network.grpc_urls[0].into(),
+//!         provider: None,
+//!     }];
+//!
+//!     let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
+//!
+//!     let channel = DaemonChannel::connect(&grpcs, &chain).await.unwrap();
+//!
+//!     asserting!("channel connection is succesful")
+//!         .that(&channel)
+//!         .is_some();
+//!
+//!     channel
+//! }
 //! ```
 //!
 //! ### Node querier
