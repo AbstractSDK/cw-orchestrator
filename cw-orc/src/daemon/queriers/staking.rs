@@ -70,8 +70,7 @@ impl Staking {
     pub async fn validator_unbonding_delegations(
         &self,
         validator_addr: impl Into<String>,
-    ) -> Result<Vec<cosmos_modules::staking::UnbondingDelegation>, DaemonError>
-    {
+    ) -> Result<Vec<cosmos_modules::staking::UnbondingDelegation>, DaemonError> {
         let validator_unbonding_delegations: cosmos_modules::staking::QueryValidatorUnbondingDelegationsResponse = cosmos_query!(
             self,
             staking,

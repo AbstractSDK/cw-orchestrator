@@ -73,7 +73,11 @@ impl CosmWasm {
             address: address.into(),
             query_data,
         };
-        Ok(client.smart_contract_state(request).await?.into_inner().data)
+        Ok(client
+            .smart_contract_state(request)
+            .await?
+            .into_inner()
+            .data)
     }
 
     /// Query all contract state
@@ -89,7 +93,11 @@ impl CosmWasm {
             address: address.into(),
             pagination,
         };
-        Ok(client.all_contract_state(request).await?.into_inner().models)
+        Ok(client
+            .all_contract_state(request)
+            .await?
+            .into_inner()
+            .models)
     }
 
     /// Query code

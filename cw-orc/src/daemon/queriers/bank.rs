@@ -66,25 +66,18 @@ impl Bank {
     }
 
     /// Query total supply in the bank
-    pub async fn total_supply(
-        &self,
-    ) -> Result<Vec<Coin>, DaemonError> {
+    pub async fn total_supply(&self) -> Result<Vec<Coin>, DaemonError> {
         let total_supply: cosmos_modules::bank::QueryTotalSupplyResponse = cosmos_query!(
             self,
             bank,
             total_supply,
-            QueryTotalSupplyRequest {
-                pagination: None,
-            }
+            QueryTotalSupplyRequest { pagination: None }
         );
         Ok(total_supply.supply)
     }
 
     /// Query total supply in the bank for a denom
-    pub async fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<Coin, DaemonError> {
+    pub async fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, DaemonError> {
         let supply_of: cosmos_modules::bank::QuerySupplyOfResponse = cosmos_query!(
             self,
             bank,
@@ -127,9 +120,7 @@ impl Bank {
             self,
             bank,
             denoms_metadata,
-            QueryDenomsMetadataRequest {
-                pagination: None
-            }
+            QueryDenomsMetadataRequest { pagination: None }
         );
         Ok(denoms_metadata.metadatas)
     }

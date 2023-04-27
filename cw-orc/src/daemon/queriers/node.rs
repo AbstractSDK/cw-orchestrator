@@ -44,9 +44,7 @@ impl Node {
     }
 
     /// Queries node syncing
-    pub async fn syncing(
-        &self,
-    ) -> Result<bool, DaemonError> {
+    pub async fn syncing(&self) -> Result<bool, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
