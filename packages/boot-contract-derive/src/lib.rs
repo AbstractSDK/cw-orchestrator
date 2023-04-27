@@ -94,9 +94,9 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             )
         })
         .collect();
-    let all_debug_serialize = if !all_debug_serialize.is_empty() {
+    let all_debug_serialize = if !all_debug_serialize.is_empty(){
         quote!(where #(#all_debug_serialize,)*)
-    } else {
+    }else{
         quote!()
     };
 
