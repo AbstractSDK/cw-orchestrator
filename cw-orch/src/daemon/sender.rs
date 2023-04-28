@@ -243,8 +243,19 @@ impl Sender<All> {
 
         log::debug!("{:?}", commit);
 
-        Node::new(self.channel())
+        let resp = Node::new(self.channel())
             .find_tx_by_hash(commit.into_inner().tx_response.unwrap().txhash)
-            .await
+            .await?;
+
+        // if tx result != 0 then the tx failed, so we return an error
+        // if tx result == 0 then the tx succeeded, so we return the tx response
+        if resp.code == 0 {
+            Ok(resp)
+        } else {
+            Err(DaemonError::TxFailed {
+                code: resp.code,
+                reason: resp.raw_log,
+            })
+        }
     }
 }
