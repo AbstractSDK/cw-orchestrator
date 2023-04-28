@@ -13,7 +13,7 @@ impl DaemonChannel {
     pub async fn connect(
         grpc: &[Grpc],
         chain_id: &ChainId,
-    ) -> Result<Option<Channel>, DaemonError> {
+    ) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 
         for Grpc { address, .. } in grpc.iter() {
@@ -88,7 +88,7 @@ impl DaemonChannel {
             return Err(DaemonError::CannotConnectGRPC);
         }
 
-        Ok(Some(successful_connections[0].clone()))
+        Ok(successful_connections.pop().unwrap())
     }
 }
 
