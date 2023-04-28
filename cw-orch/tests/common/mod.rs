@@ -1,5 +1,6 @@
 pub mod channel;
 pub mod contract;
+pub mod daemon;
 
 use std::{env, fs, path::Path, thread::sleep, time::Duration};
 
