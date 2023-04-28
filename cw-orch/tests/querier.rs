@@ -20,7 +20,7 @@ use cosmrs::{
 #[test]
 fn general() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let node = Node::new(channel.clone());
     let block_height = rt.block_on(node.block_height());
@@ -37,7 +37,7 @@ fn general() {
 fn simulate_tx() {
     let rt = Arc::new(Runtime::new().unwrap());
 
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let node = Node::new(channel.clone());
 
@@ -79,7 +79,7 @@ fn simulate_tx() {
 #[test]
 fn contract_info() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
     let cosm_wasm = CosmWasm::new(channel.clone());
 
     let (sender, contract) = common::contract::start(&rt);
