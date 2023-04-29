@@ -43,9 +43,8 @@ impl DaemonState {
         log::info!("Found {} gRPC endpoints", chain_info.apis.grpc.len());
 
         // find working grpc channel
-        let grpc_channel = DaemonChannel::connect(&chain_info.apis.grpc, &chain_info.chain_id)
-            .await?
-            .unwrap();
+        let grpc_channel =
+            DaemonChannel::connect(&chain_info.apis.grpc, &chain_info.chain_id).await?;
 
         // check if STATE_FILE en var is configured, fail if not
         let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");

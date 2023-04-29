@@ -2,10 +2,10 @@ use cw_orch::{networks, DaemonChannel};
 
 use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
-use speculoos::{asserting, prelude::OptionAssertions};
+use speculoos::{asserting, prelude::OptionAssertions, result::ResultAssertions};
 
 #[allow(unused)]
-pub async fn build_channel() -> Option<tonic::transport::Channel> {
+pub async fn build_channel() -> tonic::transport::Channel {
     let network = networks::LOCAL_JUNO;
 
     let grpcs: Vec<Grpc> = vec![Grpc {
@@ -15,11 +15,11 @@ pub async fn build_channel() -> Option<tonic::transport::Channel> {
 
     let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
 
-    let channel = DaemonChannel::connect(&grpcs, &chain).await.unwrap();
+    let channel = DaemonChannel::connect(&grpcs, &chain).await;
 
     asserting!("channel connection is succesful")
         .that(&channel)
-        .is_some();
+        .is_ok();
 
-    channel
+    channel.unwrap()
 }
