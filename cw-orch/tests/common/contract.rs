@@ -9,7 +9,8 @@ struct DeployId(());
 type Id = IdT<DeployId>;
 
 use cw_orch::{
-    contract, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon, Mock, Uploadable, WasmPath,
+    contract, networks::LOCAL_JUNO, Contract, ContractWrapper, CwEnv, Daemon, Mock, Uploadable,
+    WasmPath,
 };
 
 // path to local cw20.wasm artifact
@@ -22,6 +23,15 @@ const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
     cw20_base::msg::MigrateMsg
 )]
 pub struct Cw20;
+
+impl<Chain: CwEnv> Cw20<Chain> {
+    pub fn new(chain: Chain) -> Self {
+        let id = Id::new();
+        Self {
+            0: Contract::new(format!("cw-plus:cw20_base:{}", id), chain),
+        }
+    }
+}
 
 impl Uploadable<Mock> for Cw20<Mock> {
     fn source(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {

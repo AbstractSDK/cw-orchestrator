@@ -5,13 +5,16 @@ use crate::{
     DaemonError,
 };
 
-use cosmrs::tendermint::{Block, Time};
+use cosmrs::{
+    proto::cosmos::tx::v1beta1::SimulateResponse,
+    tendermint::{Block, Time},
+};
 use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-const MAX_TX_QUERY_RETRIES: u64 = 5;
+const MAX_TX_QUERY_RETRIES: usize = 5;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -61,7 +64,7 @@ impl Node {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
         #[allow(deprecated)]
-        let resp = client
+        let resp: SimulateResponse = client
             .simulate(cosmos_modules::tx::SimulateRequest { tx: None, tx_bytes })
             .await?
             .into_inner();
@@ -91,7 +94,7 @@ impl Node {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
-        let request = cosmos_modules::tx::GetTxRequest { hash };
+        let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
 
         for _ in 0..MAX_TX_QUERY_RETRIES {
             match client.get_tx(request.clone()).await {
@@ -107,10 +110,7 @@ impl Node {
                 }
             }
         }
-
-        panic!(
-            "couldn't find transaction after {} attempts!",
-            MAX_TX_QUERY_RETRIES
-        );
+        // return error if tx not found by now
+        Err(DaemonError::TXNotFound(hash, MAX_TX_QUERY_RETRIES))
     }
 }
