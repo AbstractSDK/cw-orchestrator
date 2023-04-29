@@ -1,10 +1,12 @@
 //! # DaemonQuerier
+//! 
+//! Daemon queriers are gRPC query clients for the CosmosSDK modules.
 //!
-//! ## Usage examples
+//! ## Usage
 //!
-//! ### Requirements
-//!
-//! You will need to build the channel to be able to use the queriers.
+//! You will need to acquire a [gRPC channel](Channel) to the CosmosSDK node to be able to use the queriers.  
+//! You can retrieve a channel using the `ChannelAccess` trait which is implemented for;
+//! - [`cw_orc::Daemon`]
 //! Here is an example of how to build it using the Daemon builder.
 //!
 //! ```rust
