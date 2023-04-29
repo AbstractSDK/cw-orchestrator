@@ -14,8 +14,8 @@ then
 fi
 
 # these are imported by other packages
-BASE_PACKAGES="cw-orc-contract-derive cw-orc-fns-derive"
-UTILS_PACKAGES="cw-orc"
+BASE_PACKAGES="cw-orch-contract-derive cw-orch-fns-derive"
+UTILS_PACKAGES="cw-orch"
 ALL_PACKAGES="cw-plus-orc"
 
 for pack in $BASE_PACKAGES; do
