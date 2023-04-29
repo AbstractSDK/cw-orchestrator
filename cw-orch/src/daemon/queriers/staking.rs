@@ -4,7 +4,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-/// Querier for the CosmWasm Staking module
+/// Querier for the Cosmos Staking module
 pub struct Staking {
     channel: Channel,
 }

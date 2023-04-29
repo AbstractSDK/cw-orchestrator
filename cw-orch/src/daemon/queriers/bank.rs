@@ -4,7 +4,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-/// Queries for CosmWasm Bank Module
+/// Queries for Cosmos Bank Module
 pub struct Bank {
     channel: Channel,
 }

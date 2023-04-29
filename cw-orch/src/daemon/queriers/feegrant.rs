@@ -4,7 +4,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-/// Querier for the CosmWasm Gov module
+/// Querier for the Cosmos Gov module
 pub struct Feegrant {
     channel: Channel,
 }

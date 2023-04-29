@@ -13,7 +13,7 @@ use cosmrs::proto::ibc::{
 use prost::Message;
 use tonic::transport::Channel;
 
-/// Queries the node for information
+/// Querier for the Cosmos IBC module
 pub struct Ibc {
     channel: Channel,
 }

@@ -1,20 +1,18 @@
 //! # DaemonQuerier
 //!
-//! Daemon queriers are gRPC query clients for the CosmosSDK modules.
+//! Daemon queriers are gRPC query clients for the CosmosSDK modules. They can be used to query the different modules (Bank, Ibc, Authz, ...).
 //!
 //! ## Usage
 //!
-//! You will need to acquire a [gRPC channel](Channel) to the CosmosSDK node to be able to use the queriers.  
-//! You can retrieve a channel using the `ChannelAccess` trait which is implemented for;
-//! - [`cw_orc::Daemon`]
-//! Here is an example of how to build it using the Daemon builder.
+//! You will need to acquire a [gRPC channel](Channel) to a running CosmosSDK node to be able to use the queriers.  
+//! Here is an example of how to acquire one using the Daemon builder.
 //!
 //! ```rust
 //! // include tokio runtime
 //! use tokio::runtime::Runtime;
 //!
 //! // require the querier you want to use, in this case Node
-//! use cw_orc::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
+//! use cw_orch::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
 //!
 //! // prepare a runtime
 //! let runtime = Runtime::new().unwrap();
@@ -35,7 +33,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -55,7 +53,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -75,7 +73,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -98,7 +96,7 @@
 //! ```rust
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-//! # use cw_orc::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -120,7 +118,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -140,7 +138,7 @@
 //! ```rust
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-//! # use cw_orc::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -163,7 +161,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -181,7 +179,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -201,7 +199,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -222,7 +220,7 @@
 //! ```rust
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-//! # use cw_orc::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -246,7 +244,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -267,7 +265,7 @@
 //! ```rust
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-//! # use cw_orc::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -289,7 +287,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -309,7 +307,7 @@
 //! ```rust
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-//! # use cw_orc::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -331,7 +329,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
@@ -349,7 +347,7 @@
 //!
 //! ```rust
 //! # use tokio::runtime::Runtime;
-//! # use cw_orc::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
+//! # use cw_orch::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
 //! # let daemon = Daemon::builder()
 //! #    .chain(networks::LOCAL_JUNO)
