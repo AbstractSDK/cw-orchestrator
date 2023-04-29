@@ -17,7 +17,6 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
-use tonic::transport::Channel;
 use std::{
     fmt::Debug,
     rc::Rc,
@@ -25,6 +24,7 @@ use std::{
     time::Duration,
 };
 use tokio::runtime::Handle;
+use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**

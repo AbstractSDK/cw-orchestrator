@@ -3,8 +3,8 @@ use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
 use cw_orch::{
+    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
     ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
-    ::queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Node, Staking, Ibc},
 };
 
 use speculoos::prelude::*;
@@ -22,7 +22,7 @@ use cosmrs::{
 #[test]
 fn general_ibc() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let ibc = Ibc::new(channel.clone());
 
@@ -36,7 +36,7 @@ fn general_ibc() {
 #[test]
 fn general_staking() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let staking = Staking::new(channel.clone());
 
@@ -56,7 +56,7 @@ fn general_staking() {
 #[test]
 fn general_gov() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let gov = Gov::new(channel.clone());
 
@@ -70,7 +70,7 @@ fn general_gov() {
 #[test]
 fn general_bank() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let bank = Bank::new(channel.clone());
 
@@ -110,7 +110,7 @@ fn general_bank() {
 #[test]
 fn general_cosmwasm() {
     let rt = Arc::new(Runtime::new().unwrap());
-    let channel = rt.block_on(build_channel()).unwrap();
+    let channel = rt.block_on(build_channel());
 
     let cw = CosmWasm::new(channel.clone());
 

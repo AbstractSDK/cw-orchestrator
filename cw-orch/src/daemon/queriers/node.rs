@@ -6,7 +6,7 @@ use crate::{
 };
 
 use cosmrs::{
-    proto::cosmos::{tx::v1beta1::SimulateResponse, base::query::v1beta1::PageRequest},
+    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
     tendermint::{Block, Time},
 };
 use tokio::time::sleep;

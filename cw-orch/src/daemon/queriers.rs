@@ -1,5 +1,5 @@
 //! # DaemonQuerier
-//! 
+//!
 //! Daemon queriers are gRPC query clients for the CosmosSDK modules.
 //!
 //! ## Usage

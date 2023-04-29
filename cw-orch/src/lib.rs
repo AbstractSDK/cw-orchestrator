@@ -7,7 +7,6 @@
     allow(unused_extern_crates, unused),
 )))]
 
-
 mod contract;
 #[cfg(feature = "daemon")]
 mod daemon;
