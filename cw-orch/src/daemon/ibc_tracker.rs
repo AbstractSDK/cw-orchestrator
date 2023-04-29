@@ -3,6 +3,7 @@ use diff::Diff;
 use futures_util::future::join_all;
 use log::*;
 
+use std::collections::HashSet;
 use std::collections::{hash_map::RandomState, HashMap};
 use std::{fmt::Display, time::Duration};
 use tonic::{async_trait, transport::Channel};
@@ -96,9 +97,9 @@ mod logged_state {
         async fn new_state(&self, channel: Channel) -> Self;
         /// Logs the state, only called when the state has changed.
         async fn log_state(&self, new_self: &Self) {
-            // let diff = self.diff(new_self);
-            // let mut changes_to_print = Self::default();
-            // changes_to_print.apply(&diff);
+            let diff = self.diff(new_self);
+            let mut changes_to_print = Self::identity();
+            changes_to_print.apply(&diff);
             log::info!("New state: {}", new_self);
         }
         /// Top-level function that logs the state if it has changed.
@@ -120,11 +121,11 @@ pub struct CwIbcContractState {
     /// The port of the contract "wasm.{contract_address}"
     port_id: String,
     /// The channels connected to the contract
-    pub channel_ids: Vec<String>,
+    pub channel_ids: HashSet<String>,
     /// map of the received packets on a channel
-    pub received_packets: HashMap<String, Vec<u64>>,
+    pub received_packets: HashMap<String, HashSet<u64>>,
     /// map of the acknowledged packets on a channel
-    pub acknowledged_packets: HashMap<String, Vec<u64>>,
+    pub acknowledged_packets: HashMap<String, HashSet<u64>>,
 }
 
 impl CwIbcContractState {
