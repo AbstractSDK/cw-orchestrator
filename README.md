@@ -6,10 +6,7 @@ Multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting lib
 
 > [cw-orchestrator](cw-orc/README.md) is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
 
-[cw-plus-orc](cw-plus-orc/README.md) uses cw-orchestrator to provide standard type-safe interfaces for interacting with [cw-plus](https://github.com/CosmWasm/cw-plus) contracts.
-
 cw-orchestrator makes it easier to quickly deploy and iterate on your contracts. It provides a set of macros that allow you to define your contracts in a way that is more similar to how you would write them in Rust. This allows you to use the full power of Rust's type system to ensure that you are not sending invalid messages to your contracts.
-.
 
 ## How it works
 
