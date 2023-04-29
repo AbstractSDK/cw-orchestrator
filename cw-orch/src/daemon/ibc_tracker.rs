@@ -96,10 +96,10 @@ mod logged_state {
         async fn new_state(&self, channel: Channel) -> Self;
         /// Logs the state, only called when the state has changed.
         async fn log_state(&self, new_self: &Self) {
-            let diff = self.diff(new_self);
-            let mut changes_to_print = Self::default();
-            changes_to_print.apply(&diff);
-            log::info!("New state: {}", changes_to_print);
+            // let diff = self.diff(new_self);
+            // let mut changes_to_print = Self::default();
+            // changes_to_print.apply(&diff);
+            log::info!("New state: {}", new_self);
         }
         /// Top-level function that logs the state if it has changed.
         async fn update_state(&mut self, channel: Channel) {
