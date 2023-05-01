@@ -17,35 +17,36 @@ impl DaemonQuerier for Bank {
 
 impl Bank {
     /// Query the bank balance of a given address
-    /// If denom is None, returns all balances
     pub async fn coin_balance(
         &self,
         address: impl Into<String>,
-        denom: Option<String>,
+        denom: impl Into<String>,
+    ) -> Result<Coin, DaemonError> {
+        use cosmos_modules::bank::query_client::QueryClient;
+        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let request = cosmos_modules::bank::QueryBalanceRequest {
+            address: address.into(),
+            denom: denom.into(),
+        };
+        let resp = client.balance(request).await?.into_inner();
+        let coin = resp.balance.unwrap();
+        Ok(coin)
+    }
+
+    /// Query all the balances of a given address
+    pub async fn coin_balances(
+        &self,
+        address: impl Into<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
         use cosmos_modules::bank::query_client::QueryClient;
-        match denom {
-            Some(denom) => {
-                let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
-                let request = cosmos_modules::bank::QueryBalanceRequest {
-                    address: address.into(),
-                    denom: denom.into(),
-                };
-                let resp = client.balance(request).await?.into_inner();
-                let coin = resp.balance.unwrap();
-                Ok(vec![coin])
-            }
-            None => {
-                let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
-                let request = cosmos_modules::bank::QueryAllBalancesRequest {
-                    address: address.into(),
-                    ..Default::default()
-                };
-                let resp = client.all_balances(request).await?.into_inner();
-                let coins = resp.balances;
-                Ok(coins.into_iter().collect())
-            }
-        }
+        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let request = cosmos_modules::bank::QueryAllBalancesRequest {
+            address: address.into(),
+            ..Default::default()
+        };
+        let resp = client.all_balances(request).await?.into_inner();
+        let coins = resp.balances;
+        Ok(coins.into_iter().collect())
     }
 
     /// Query spendable balance for address
