@@ -2,6 +2,7 @@ use super::DaemonQuerier;
 use crate::{daemon::cosmos_modules, DaemonError};
 use cosmos_modules::ibc_channel;
 use cosmrs::proto::ibc::{
+    applications::transfer::v1::{DenomTrace, QueryDenomTraceResponse},
     core::{
         channel::v1::QueryPacketCommitmentResponse,
         client::v1::{IdentifiedClientState, QueryClientStatesResponse},
@@ -12,7 +13,7 @@ use cosmrs::proto::ibc::{
 use prost::Message;
 use tonic::transport::Channel;
 
-/// Queries the node for information
+/// Querier for the Cosmos IBC module
 pub struct Ibc {
     channel: Channel,
 }
@@ -24,9 +25,21 @@ impl DaemonQuerier for Ibc {
 }
 
 impl Ibc {
+    // ### Transfer queries ### //
+
+    pub async fn denom_trace(&self, hash: String) -> Result<DenomTrace, DaemonError> {
+        let denom_trace: QueryDenomTraceResponse = cosmos_query!(
+            self,
+            ibc_transfer,
+            denom_trace,
+            QueryDenomTraceRequest { hash: hash }
+        );
+        Ok(denom_trace.denom_trace.unwrap())
+    }
+
     // ### Client queries ###
 
-    /// get all the IBC clients for this daemon
+    /// Get all the IBC clients for this daemon
     pub async fn clients(&self) -> Result<Vec<IdentifiedClientState>, DaemonError> {
         let ibc_clients: QueryClientStatesResponse = cosmos_query!(
             self,
@@ -37,7 +50,7 @@ impl Ibc {
         Ok(ibc_clients.client_states)
     }
 
-    /// Geth the state of a specific IBC client
+    /// Get the state of a specific IBC client
     pub async fn client_state(
         &self,
         client_id: impl ToString,

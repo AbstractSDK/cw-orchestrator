@@ -6,7 +6,7 @@ use crate::{
 };
 
 use cosmrs::{
-    proto::cosmos::tx::v1beta1::SimulateResponse,
+    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
     tendermint::{Block, Time},
 };
 use tokio::time::sleep;
@@ -29,6 +29,36 @@ impl DaemonQuerier for Node {
 }
 
 impl Node {
+    /// Returns node info
+    pub async fn info(
+        &self,
+    ) -> Result<cosmos_modules::tendermint::GetNodeInfoResponse, DaemonError> {
+        let mut client =
+            cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
+
+        #[allow(deprecated)]
+        let resp = client
+            .get_node_info(cosmos_modules::tendermint::GetNodeInfoRequest {})
+            .await?
+            .into_inner();
+
+        Ok(resp)
+    }
+
+    /// Queries node syncing
+    pub async fn syncing(&self) -> Result<bool, DaemonError> {
+        let mut client =
+            cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
+
+        #[allow(deprecated)]
+        let resp = client
+            .get_syncing(cosmos_modules::tendermint::GetSyncingRequest {})
+            .await?
+            .into_inner();
+
+        Ok(resp.syncing)
+    }
+
     /// Returns latests block information
     pub async fn latest_block(&self) -> Result<Block, DaemonError> {
         let mut client =
@@ -41,6 +71,45 @@ impl Node {
             .into_inner();
 
         Ok(Block::try_from(resp.block.unwrap())?)
+    }
+
+    /// Returns latests validator set
+    pub async fn latest_validator_set(
+        &self,
+        pagination: Option<PageRequest>,
+    ) -> Result<cosmos_modules::tendermint::GetLatestValidatorSetResponse, DaemonError> {
+        let mut client =
+            cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
+
+        #[allow(deprecated)]
+        let resp = client
+            .get_latest_validator_set(cosmos_modules::tendermint::GetLatestValidatorSetRequest {
+                pagination,
+            })
+            .await?
+            .into_inner();
+
+        Ok(resp)
+    }
+
+    /// Returns latests validator set fetched by height
+    pub async fn validator_set_by_height(
+        &self,
+        height: i64,
+        pagination: Option<PageRequest>,
+    ) -> Result<cosmos_modules::tendermint::GetValidatorSetByHeightResponse, DaemonError> {
+        let mut client =
+            cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
+
+        #[allow(deprecated)]
+        let resp = client
+            .get_validator_set_by_height(
+                cosmos_modules::tendermint::GetValidatorSetByHeightRequest { height, pagination },
+            )
+            .await?
+            .into_inner();
+
+        Ok(resp)
     }
 
     /// Returns current block height
