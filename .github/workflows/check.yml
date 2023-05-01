@@ -56,6 +56,8 @@ jobs:
         run: cargo doc --no-deps --all-features
         env:
           RUSTDOCFLAGS: --cfg docsrs
+      - name: mdbook doc
+        run: mdbook test docs
   hack:
     runs-on: ubuntu-latest
     name: ubuntu / stable / features

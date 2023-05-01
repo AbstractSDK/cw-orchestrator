@@ -6,7 +6,7 @@ pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
-/// https://github.com/neutron-org/cosmos-testnets/tree/master/replicated-security/baryon-1
+/// <https://github.com/neutron-org/cosmos-testnets/tree/master/replicated-security/baryon-1>
 pub const BARYON_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "baryon-1",

@@ -6,7 +6,7 @@ pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
-/// https://docs.archway.io/docs/overview/network
+/// <https://docs.archway.io/docs/overview/network>
 pub const CONSTANTINE_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "constantine-1",
