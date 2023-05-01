@@ -23,7 +23,6 @@ pub struct CosmTxResponse {
     pub info: String,
     pub gas_wanted: u64,
     pub gas_used: u64,
-    // pub tx: serde_json::Value,
     pub timestamp: DateTime<Utc>,
     pub events: Vec<Event>,
 }
@@ -159,7 +158,7 @@ impl IndexResponse for CosmTxResponse {
     }
 }
 
-#[derive(Deserialize, Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct TxResultBlockMsg {
     pub msg_index: Option<usize>,
     pub events: Vec<TxResultBlockEvent>,
