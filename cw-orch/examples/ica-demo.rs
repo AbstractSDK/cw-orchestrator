@@ -32,16 +32,18 @@
 //! [Hermes](https://hermes.informal.systems/)
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
-use cosmwasm_std::{Empty};
+use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::{
     channel::ChannelAccess,
     ibc_tracker::{CwIbcContractState, IbcTracker, IbcTrackerConfigBuilder},
     networks::{osmosis::OSMO_2, JUNO_1},
-    *,
+    *, queriers::Bank,
 };
 use simple_ica_controller::msg::{self as controller_msgs};
-use simple_ica_host::msg::{self as host_msgs};
-use std::sync::Arc;
+use simple_ica_host::msg::{self as host_msgs, ListAccountsResponse};
+use speculoos::assert_that;
+use std::{sync::Arc, time::Duration};
+use tokio::{runtime::Handle, time::sleep};
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort grow essence fish husband seven hollow envelope wedding host dry permit game april present panic move";
@@ -121,10 +123,10 @@ pub fn script() -> anyhow::Result<()> {
     let controller = Controller::new("controller", osmosis.clone());
 
     // ### SETUP ###
-    deploy_contracts(&cw1, &host, &controller)?;
-    interchain
-        .hermes
-        .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
+    // deploy_contracts(&cw1, &host, &controller)?;
+    // interchain
+    //     .hermes
+    //     .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
 
     // Track IBC on JUNO
     let juno_channel = juno.channel();
@@ -154,6 +156,12 @@ pub fn script() -> anyhow::Result<()> {
         osmosis_channel.cron_log(tracker).await;
     });
 
+    // interchain.hermes.start(&rt);
+
+    // ### EXECUTE ###
+    test_ica(rt.handle().clone(), &host, &controller, &juno)?;
+
+    std::thread::sleep(std::time::Duration::from_secs(600));
     Ok(())
 }
 
@@ -191,55 +199,66 @@ fn deploy_contracts(
     Ok(())
 }
 
-// fn test_ica() {
-//     // Get account information
-//     // let res: controller_msgs::ListAccountsResponse =
-//     //     controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-//     // println!("After channel creation: {:?}", res);
-//     let remote_accounts: ListAccountsResponse =
-//         host.query(&host_msgs::QueryMsg::ListAccounts {})?;
-//     println!("Remote accounts: {:?}", remote_accounts);
-//     let remote_account = remote_accounts.accounts[0].clone();
-//     // send some funds to the remote account
-//     let res = rt.block_on(juno.sender.bank_send(
-//         &remote_account.account,
-//         vec![cosmwasm_std::coin(100u128, "ujuno")],
-//     ))?;
-//     // println!("Send funds result: {:?}", res);
-//     let channel = remote_account.channel_id;
+/// Test the cw-ica contract
+fn test_ica(
+    rt: Handle,
+    host: &Host<Daemon>,
+    controller: &Controller<Daemon>,
+    juno: &Daemon,
+) -> anyhow::Result<()> {
+    // get the information about the remote account
+    let remote_accounts: ListAccountsResponse =
+        controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
+    println!("Remote accounts: {:?}", remote_accounts);
 
-//     controller.execute(
-//         &controller_msgs::ExecuteMsg::SendFunds {
-//             ica_channel_id: channel.clone(),
-//             transfer_channel_id: "channel-0".to_string(),
-//         },
-//         Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
-//     )?;
+    assert_that!(remote_accounts.accounts.len()).is_equal_to(1);
 
-//     // let cont_accounts: controller_msgs::ListAccountsResponse = controller.query(&controller_msgs::QueryMsg::ListAccounts {  })?;
+    // get the account information
+    let remote_account = remote_accounts.accounts[0].clone();
+    // send some funds to the remote account
+    let res = rt.block_on(juno.sender.bank_send(
+        &remote_account.account,
+        vec![cosmwasm_std::coin(100u128, "ujuno")],
+    ))?;
 
-//     // println!("Controller accounts: {:?}", cont_accounts);
+    // assert that the remote account got funds 
+    let balance = rt.block_on(juno.query::<Bank>().coin_balance(remote_account.account, Some("ujuno")))?;
+    assert_that!(balance[0]).is_equal_to(coin(100u128, "ujuno"));
 
-//     controller.execute(
-//         &controller_msgs::ExecuteMsg::SendMsgs {
-//             channel_id: "channel-1".to_string(),
-//             msgs: vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
-//                 amount: vec![cosmwasm_std::coin(100u128, "ujuno")],
-//             })],
-//             callback_id: None,
-//         },
-//         None,
-//     )?;
+    // now send osmo to the remote account
+    let channel = remote_account.channel_id;
+    controller.execute(
+        &controller_msgs::ExecuteMsg::SendFunds {
+            ica_channel_id: channel.clone(),
+            transfer_channel_id: "channel-0".to_string(),
+        },
+        Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
+    )?;
 
-//     // // wait a bit
-//     std::thread::sleep(std::time::Duration::from_secs(600));
-//     // let balance_result: AccountResponse =
-//     //     controller.query(&controller_msgs::QueryMsg::Account {
-//     //         channel_id: channel,
-//     //     })?;
-//     // println!("Balance result: {:?}", balance_result);
+    // let cont_accounts: controller_msgs::ListAccountsResponse = controller.query(&controller_msgs::QueryMsg::ListAccounts {  })?;
 
-// }
+    // println!("Controller accounts: {:?}", cont_accounts);
+
+    controller.execute(
+        &controller_msgs::ExecuteMsg::SendMsgs {
+            channel_id: "channel-1".to_string(),
+            msgs: vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
+                amount: vec![cosmwasm_std::coin(100u128, "ujuno")],
+            })],
+            callback_id: None,
+        },
+        None,
+    )?;
+
+    // // wait a bit
+    std::thread::sleep(std::time::Duration::from_secs(600));
+    // let balance_result: AccountResponse =
+    //     controller.query(&controller_msgs::QueryMsg::Account {
+    //         channel_id: channel,
+    //     })?;
+    // println!("Balance result: {:?}", balance_result);
+    Ok(())
+}
 
 /*
 
