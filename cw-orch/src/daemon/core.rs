@@ -25,6 +25,7 @@ use std::{
     time::Duration,
 };
 use tokio::runtime::Handle;
+use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**
@@ -60,6 +61,11 @@ impl Daemon {
 
     async fn wait(&self) {
         tokio::time::sleep(Duration::from_secs(3)).await
+    }
+
+    /// Get the channel configured for this Daemon
+    pub fn channel(&self) -> Channel {
+        self.state().grpc_channel.clone()
     }
 }
 

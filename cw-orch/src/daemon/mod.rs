@@ -34,6 +34,7 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::tx::v1beta1 as tx;
     pub use cosmrs::proto::cosmos::vesting::v1beta1 as vesting;
     pub use cosmrs::proto::cosmwasm::wasm::v1 as cosmwasm;
+    pub use cosmrs::proto::ibc::applications::transfer::v1 as ibc_transfer;
     pub use cosmrs::proto::ibc::core::channel::v1 as ibc_channel;
     pub use cosmrs::proto::ibc::core::client::v1 as ibc_client;
     pub use cosmrs::proto::ibc::core::connection::v1 as ibc_connection;
