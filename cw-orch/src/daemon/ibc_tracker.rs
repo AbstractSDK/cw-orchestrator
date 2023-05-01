@@ -45,36 +45,14 @@ pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
         let latest_block = node.block_info().await.unwrap();
         let block_height = latest_block.height;
         let chain_id = latest_block.chain_id;
-        // let log_id = config.log_file_name.unwrap_or(chain_id.clone());
-
-        // let encoder = Box::new(PatternEncoder::new(
-        //     "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
-        // ));
-        // let file_appender = FileAppender::builder()
-        //     .encoder(encoder)
-        //     .build(log_file_path)
-        //     .unwrap();
-
-        // let log4rs_config = Config::builder()
-        //     .appender(Appender::builder().build(&log_id, Box::new(file_appender)))
-        //     .build(
-        //         Root::builder()
-        //             .appender(chain_id.clone())
-        //             .build(config.log_level),
-        //     )
-        //     .unwrap();
-
-        // log4rs::init_config(log4rs_config).unwrap();
-
-        // debug!("Logging started for chain {}", chain_id);
 
         let mut state = config.ibc_state;
         loop {
             let new_block_height = node.block_info().await.unwrap().height;
             // ensure to only update when a new block is produced
             if new_block_height > block_height {
-                state.update_state(self.channel()).await;
-                info!(target: &chain_id, "New state: {}", state);
+                state.update_state(self.channel(), &chain_id).await;
+                debug!(target: &chain_id, "state updated");
             }
             tokio::time::sleep(config.log_interval).await;
         }
@@ -96,17 +74,17 @@ mod logged_state {
         /// Retrieve the new state, is called on every update.
         async fn new_state(&self, channel: Channel) -> Self;
         /// Logs the state, only called when the state has changed.
-        async fn log_state(&self, new_self: &Self) {
+        async fn log_state(&self, new_self: &Self, target: &str) {
             let diff = self.diff(new_self);
             let mut changes_to_print = Self::identity();
             changes_to_print.apply(&diff);
-            log::info!("New state: {}", new_self);
+            log::info!(target: target, "Update diff: {}", changes_to_print);
         }
         /// Top-level function that logs the state if it has changed.
-        async fn update_state(&mut self, channel: Channel) {
+        async fn update_state(&mut self, channel: Channel, target: &str) {
             let new_state = self.new_state(channel).await;
             if new_state != *self {
-                self.log_state(&new_state).await;
+                self.log_state(&new_state, target).await;
             }
             *self = new_state;
         }
@@ -123,7 +101,7 @@ pub struct CwIbcContractState {
     /// The channels connected to the contract
     pub channel_ids: HashSet<String>,
     /// map of the received packets on a channel
-    pub received_packets: HashMap<String, HashSet<u64>>,
+    pub committed_packets: HashMap<String, HashSet<u64>>,
     /// map of the acknowledged packets on a channel
     pub acknowledged_packets: HashMap<String, HashSet<u64>>,
 }
@@ -153,10 +131,10 @@ impl LoggedState for CwIbcContractState {
                     Some(channel.channel_id)
                 }
             })
-            .collect::<Vec<_>>();
+            .collect::<HashSet<_>>();
 
         // get the packets received on each channel
-        let packets_per_channel =
+        let committed_packets_per_channel =
             join_all(channel_ids.iter().map(|channel_id| {
                 ibc.packet_commitments(self.port_id.clone(), channel_id.clone())
             }))
@@ -165,13 +143,41 @@ impl LoggedState for CwIbcContractState {
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
 
-        let received_packets: HashMap<std::string::String, std::vec::Vec<u64>, RandomState> =
+        let committed_packets: HashMap<std::string::String, HashSet<u64>, _> =
             HashMap::from_iter(channel_ids.clone().into_iter().zip(
-                packets_per_channel.iter().map(|packets| {
+                committed_packets_per_channel.iter().map(|packets| {
                     packets
                         .iter()
                         .map(|packet| packet.sequence)
-                        .collect::<Vec<_>>()
+                        .collect::<HashSet<_>>()
+                }),
+            ));
+
+        let acknowledged_packets_per_channel = join_all(channel_ids.iter().map(|channel_id| {
+            ibc.packet_acknowledgements(
+                self.port_id.clone(),
+                channel_id.clone(),
+                // channel commitments
+                committed_packets
+                    .get(channel_id)
+                    .unwrap()
+                    .clone()
+                    .into_iter()
+                    .collect(),
+            )
+        }))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+        let acknowledged_packets: HashMap<std::string::String, HashSet<u64>, _> =
+            HashMap::from_iter(channel_ids.clone().into_iter().zip(
+                acknowledged_packets_per_channel.iter().map(|packets| {
+                    packets
+                        .iter()
+                        .map(|packet| packet.sequence)
+                        .collect::<HashSet<_>>()
                 }),
             ));
 
@@ -179,8 +185,8 @@ impl LoggedState for CwIbcContractState {
             connection_id: self.connection_id.clone(),
             port_id: self.port_id.clone(),
             channel_ids,
-            received_packets: received_packets,
-            acknowledged_packets: self.acknowledged_packets.clone(),
+            committed_packets,
+            acknowledged_packets,
         }
     }
 }
@@ -190,17 +196,17 @@ impl Display for CwIbcContractState {
         let Self {
             acknowledged_packets,
             channel_ids,
-            received_packets,
+            committed_packets,
             ..
         } = self;
-        if !acknowledged_packets.is_empty() {
-            write!(f, "acknowledged_packet(s): {:?}", acknowledged_packets)?;
-        }
-        if !received_packets.is_empty() {
-            write!(f, "received_packet(s): {:?}", acknowledged_packets)?;
-        }
         if !channel_ids.is_empty() {
-            write!(f, "new_channel(s): {:?}", channel_ids)?;
+            write!(f, "new_channel(s): {:#?}", channel_ids)?;
+        }
+        if !committed_packets.is_empty() {
+            write!(f, "received_packet(s): {:#?}", committed_packets)?;
+        }
+        if !acknowledged_packets.is_empty() {
+            write!(f, "acknowledged_packet(s): {:#?}", acknowledged_packets)?;
         }
         Ok(())
     }
