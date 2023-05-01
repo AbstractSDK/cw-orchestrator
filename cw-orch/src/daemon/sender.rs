@@ -18,7 +18,7 @@ use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
 const GAS_LIMIT: u64 = 1_000_000;
-const GAS_BUFFER: f64 = 1.2;
+const GAS_BUFFER: f64 = 1.5;
 
 pub type Wallet = Rc<Sender<All>>;
 
