@@ -1,5 +1,5 @@
 [workspace]
-members = ["cw-orch", "packages/*"]
+members = ["cw-orch", "packages/*", "examples/*"]
 
 [workspace.package]
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
