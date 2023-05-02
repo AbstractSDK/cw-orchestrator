@@ -147,6 +147,7 @@ impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
 
         // We start our contract
         let contract = CounterContract(Contract::new(
+            // this is used to identify our contract in the state file
             &env::var("DEPLOYMENT_ID").unwrap(),
             mock.clone(),
         ));
@@ -167,18 +168,23 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
     fn new() -> Self {
         let runtime = Runtime::new().unwrap();
 
-        // to generate a daemon we use Daemon::builder
+        // To generate a daemon we use Daemon::builder
         // which provides an easy to use interface
-        // where step by step we can configure our daemon
-        // to our needs
+        // where step by step we can configure our daemon to our needs
         let res = Daemon::builder()
             // using the networks module we can provide a network
             // in this case we are using the helper parse_network that converts a string to a variant
-            // but we can use networks::LOCAL_JUNO for example
+            // but we can use networks::LOCAL_JUNO or networks::JUNO_1 for example
             .chain(networks::parse_network(&env::var("CHAIN").unwrap()))
             // here we provide the runtime to be used
+            // if none is provided it will try to get one if its inside one
             .handle(runtime.handle())
             // we configure the mnemonic
+            // if we dont provide an mnemonic here it will tride to read it
+            // from LOCAL_MNEMONIC environment variable
+            // this is the one we are using in this scenario
+            // but you can also use TEST_MNEMONIC and MAIN_MNEMONIC
+            // depending to where you are deploying
             .mnemonic(env::var("LOCAL_MNEMONIC").unwrap())
             // and we build our daemon
             .build();
@@ -187,11 +193,12 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
             panic!("Error: {}", res.err().unwrap().to_string());
         };
 
-        // once more here we see the sender method for adquiring our sender address configured to our daemon
+        // once more here we see the sender method for adquiring our sender address configured now to our daemon
         let sender = daemon.sender();
 
         // We start our contract
         let contract = CounterContract(Contract::new(
+            // this is used to identify our contract in the state file
             &env::var("DEPLOYMENT_ID").unwrap(),
             daemon.clone(),
         ));
