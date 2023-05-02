@@ -16,11 +16,6 @@ exclude = [".env"]
 name = "ica-demo"
 required-features = ["interchain"]
 
-[[bin]]
-name = "ibc_queries"
-path = "bin/ibc_queries.rs"
-required-features = ["interchain"]
-
 # Interact with local/remote daemons over gRPC
 [features]
 # enable the optional dependencies
@@ -57,11 +52,6 @@ interchain = ["daemon", "dep:bollard"]
 [dependencies]
 dotenv = "0.15.0"
 env_logger = "0.10.0"
-
-# Default deps
-# cw-orch-contract-derive = { version="0.10.0" }
-# cw-orch-fns-derive = { version="0.10.0" }
-
 cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
 cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
 

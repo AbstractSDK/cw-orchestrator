@@ -34,16 +34,17 @@
 
 use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::{
-    channel::ChannelAccess,
     ibc_tracker::{CwIbcContractState, IbcTracker, IbcTrackerConfigBuilder},
     networks::{osmosis::OSMO_2, JUNO_1},
-    *, queriers::Bank,
+    queriers::Bank,
+    *,
 };
+
 use simple_ica_controller::msg::{self as controller_msgs};
-use simple_ica_host::msg::{self as host_msgs, ListAccountsResponse};
+use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
-use std::{sync::Arc, time::Duration};
-use tokio::{runtime::Handle, time::sleep};
+
+use tokio::runtime::Handle;
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort grow essence fish husband seven hollow envelope wedding host dry permit game april present panic move";
@@ -108,10 +109,10 @@ impl Uploadable<Daemon> for Cw1<Daemon> {
 
 // Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {
-    let rt: Arc<tokio::runtime::Runtime> = Arc::new(tokio::runtime::Runtime::new().unwrap());
+    let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
 
     let interchain = InterchainInfrastructure::new(
-        &rt,
+        rt.handle(),
         vec![(JUNO_1, JUNO_MNEMONIC), (OSMO_2, OSMOSIS_MNEMONIC)],
     )?;
 
@@ -123,10 +124,10 @@ pub fn script() -> anyhow::Result<()> {
     let controller = Controller::new("controller", osmosis.clone());
 
     // ### SETUP ###
-    // deploy_contracts(&cw1, &host, &controller)?;
-    // interchain
-    //     .hermes
-    //     .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
+    deploy_contracts(&cw1, &host, &controller)?;
+    interchain
+        .hermes
+        .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
 
     // Track IBC on JUNO
     let juno_channel = juno.channel();
@@ -135,7 +136,6 @@ pub fn script() -> anyhow::Result<()> {
             "connection-0",
             format!("wasm.{}", host.addr_str()?),
         ))
-        // .log_level(log::LevelFilter::Info)
         .build()?;
     // spawn juno logging on a different thread.
     rt.spawn(async move {
@@ -149,19 +149,15 @@ pub fn script() -> anyhow::Result<()> {
             "connection-0",
             format!("wasm.{}", controller.addr_str()?),
         ))
-        // .log_level(log::LevelFilter::Info)
         .build()?;
     // spawn osmosis logging on a different thread.
     rt.spawn(async move {
         osmosis_channel.cron_log(tracker).await;
     });
 
-    // interchain.hermes.start(&rt);
+    // test the ica implementation
+    test_ica(rt.handle().clone(), &controller, &juno)?;
 
-    // ### EXECUTE ###
-    test_ica(rt.handle().clone(), &host, &controller, &juno)?;
-
-    std::thread::sleep(std::time::Duration::from_secs(600));
     Ok(())
 }
 
@@ -202,43 +198,30 @@ fn deploy_contracts(
 /// Test the cw-ica contract
 fn test_ica(
     rt: Handle,
-    host: &Host<Daemon>,
+    // controller on osmosis
     controller: &Controller<Daemon>,
     juno: &Daemon,
 ) -> anyhow::Result<()> {
     // get the information about the remote account
-    let remote_accounts: ListAccountsResponse =
+    let remote_accounts: controller_msgs::ListAccountsResponse =
         controller.query(&controller_msgs::QueryMsg::ListAccounts {})?;
-    println!("Remote accounts: {:?}", remote_accounts);
-
     assert_that!(remote_accounts.accounts.len()).is_equal_to(1);
 
     // get the account information
     let remote_account = remote_accounts.accounts[0].clone();
+    let remote_addr = remote_account.remote_addr.unwrap();
+
     // send some funds to the remote account
-    let res = rt.block_on(juno.sender.bank_send(
-        &remote_account.account,
-        vec![cosmwasm_std::coin(100u128, "ujuno")],
-    ))?;
-
-    // assert that the remote account got funds 
-    let balance = rt.block_on(juno.query::<Bank>().coin_balance(remote_account.account, Some("ujuno")))?;
-    assert_that!(balance[0]).is_equal_to(coin(100u128, "ujuno"));
-
-    // now send osmo to the remote account
-    let channel = remote_account.channel_id;
-    controller.execute(
-        &controller_msgs::ExecuteMsg::SendFunds {
-            ica_channel_id: channel.clone(),
-            transfer_channel_id: "channel-0".to_string(),
-        },
-        Some(&[cosmwasm_std::coin(100u128, "uosmo")]),
+    rt.block_on(
+        juno.sender
+            .bank_send(&remote_addr, vec![cosmwasm_std::coin(100u128, "ujuno")]),
     )?;
 
-    // let cont_accounts: controller_msgs::ListAccountsResponse = controller.query(&controller_msgs::QueryMsg::ListAccounts {  })?;
+    // assert that the remote account got funds
+    let balance = rt.block_on(juno.query::<Bank>().coin_balance(&remote_addr, "ujuno"))?;
+    assert_that!(&balance.amount).is_equal_to(100u128.to_string());
 
-    // println!("Controller accounts: {:?}", cont_accounts);
-
+    // burn the juno remotely
     controller.execute(
         &controller_msgs::ExecuteMsg::SendMsgs {
             channel_id: "channel-1".to_string(),
@@ -250,34 +233,10 @@ fn test_ica(
         None,
     )?;
 
-    // // wait a bit
-    std::thread::sleep(std::time::Duration::from_secs(600));
-    // let balance_result: AccountResponse =
-    //     controller.query(&controller_msgs::QueryMsg::Account {
-    //         channel_id: channel,
-    //     })?;
-    // println!("Balance result: {:?}", balance_result);
+    // wait a bit
+    std::thread::sleep(std::time::Duration::from_secs(60));
+    // check that the balance decreased
+    let balance = rt.block_on(juno.query::<Bank>().coin_balance(&remote_addr, "ujuno"))?;
+    assert_that!(&balance.amount).is_equal_to(0u128.to_string());
     Ok(())
 }
-
-/*
-
-hermes query channels  --chain juno-1
-hermes query channels  --chain osmosis-2
-
-hermes query packet pending --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
-hermes query packet pending --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
-
-hermes query packet commitments --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
-hermes query packet commitments --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
-
-hermes query packet pending-sends --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
-hermes query packet pending-sends --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
-
-hermes clear packets --chain juno-1 --port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --channel channel-1
-hermes clear packets --chain osmosis-2 --port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --channel channel-1
-
-hermes clear packets --chain osmosis-2 --port transfer --channel channel-0
-
-
- */
