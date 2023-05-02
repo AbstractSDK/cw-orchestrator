@@ -41,13 +41,13 @@ pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
 
         let mut state = config.ibc_state;
         // log initial state
-        state.update_state(self.channel(), &chain_id).await;
+        state.update_state(self.channel(), &chain_id).await?;
         info!(target: &chain_id, "initial state: \n{state}");
         loop {
             let new_block_height = node.block_info().await?.height;
             // ensure to only update when a new block is produced
             if new_block_height > block_height {
-                state.update_state(self.channel(), &chain_id).await;
+                state.update_state(self.channel(), &chain_id).await?;
                 debug!(target: &chain_id, "state updated");
             }
             tokio::time::sleep(config.log_interval).await;
@@ -58,7 +58,10 @@ pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
 impl<S: LoggedState> IbcTracker<S> for Channel {}
 
 mod logged_state {
-    use std::{fmt::{Debug, Display}, error::Error};
+    use std::{
+        error::Error,
+        fmt::{Debug, Display},
+    };
 
     use diff::Diff;
     use tonic::{async_trait, transport::Channel};
@@ -68,7 +71,7 @@ mod logged_state {
         Debug + PartialEq + Sized + Diff + Default + Display + Send + Sync
     {
         /// Retrieve the new state, is called on every update.
-        async fn new_state(&self, channel: Channel) -> Result<Self, Box<dyn Error> >;
+        async fn new_state(&self, channel: Channel) -> Result<Self, Box<dyn Error>>;
         /// Logs the state, only called when the state has changed.
         fn log_state(&self, new_self: &Self, target: &str) {
             let diff = self.diff(new_self);
@@ -77,7 +80,11 @@ mod logged_state {
             log::info!(target: target, "{}", changes_to_print);
         }
         /// Top-level function that logs the state if it has changed.
-        async fn update_state(&mut self, channel: Channel, target: &str) -> Result<(), Box<dyn Error> > {
+        async fn update_state(
+            &mut self,
+            channel: Channel,
+            target: &str,
+        ) -> Result<(), Box<dyn Error>> {
             let new_state = self.new_state(channel).await?;
             if new_state != *self {
                 self.log_state(&new_state, target);
@@ -119,7 +126,7 @@ impl CwIbcContractState {
 
 #[async_trait]
 impl LoggedState for CwIbcContractState {
-    async fn new_state(&self, channel: Channel) -> Self {
+    async fn new_state(&self, channel: Channel) -> Result<Self, Box<dyn Error>> {
         let ibc = Ibc::new(channel);
 
         let channels_over_connection = ibc.connection_channels(&self.connection_id).await.unwrap();
@@ -155,23 +162,30 @@ impl LoggedState for CwIbcContractState {
             ));
 
         // get the packets received on each channel
-        let unreceived_packets_per_channel =
-            join_all(channel_ids.iter().map(|channel_id| {
-                ibc.unreceived_packets(self.port_id.clone(), channel_id.clone(), committed_packets.get(channel_id).unwrap().clone().into_iter().collect())
-            }))
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap();
+        let unreceived_packets_per_channel = join_all(channel_ids.iter().map(|channel_id| {
+            ibc.unreceived_packets(
+                self.port_id.clone(),
+                channel_id.clone(),
+                committed_packets
+                    .get(channel_id)
+                    .unwrap()
+                    .clone()
+                    .into_iter()
+                    .collect(),
+            )
+        }))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
 
-        let unreceived_packets: HashMap<std::string::String, HashSet<u64>, _> =
-            HashMap::from_iter(channel_ids.clone().into_iter().zip(
-                unreceived_packets_per_channel.into_iter().map(|packets| {
-                    packets
-                        .into_iter()
-                        .collect::<HashSet<_>>()
-                }),
-            ));
+        let unreceived_packets: HashMap<std::string::String, HashSet<u64>, _> = HashMap::from_iter(
+            channel_ids.clone().into_iter().zip(
+                unreceived_packets_per_channel
+                    .into_iter()
+                    .map(|packets| packets.into_iter().collect::<HashSet<_>>()),
+            ),
+        );
 
         let acknowledged_packets_per_channel = join_all(channel_ids.iter().map(|channel_id| {
             ibc.packet_acknowledgements(
@@ -201,33 +215,32 @@ impl LoggedState for CwIbcContractState {
                 }),
             ));
 
-            let unreceived_acks_per_channel = join_all(channel_ids.iter().map(|channel_id| {
-                ibc.unreceived_acks(
-                    self.port_id.clone(),
-                    channel_id.clone(),
-                    // channel commitments
-                    committed_packets
-                        .get(channel_id)
-                        .unwrap()
-                        .clone()
-                        .into_iter()
-                        .collect(),
-                )
-            }))
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap();
-    
-            let unreceived_acks: HashMap<std::string::String, HashSet<u64>, _> =
-                HashMap::from_iter(channel_ids.clone().into_iter().zip(
-                    unreceived_acks_per_channel.into_iter().map(|packets| {
-                        packets
-                            .into_iter()
-                            .collect::<HashSet<_>>()
-                    }),
-                ));
-        Self {
+        let unreceived_acks_per_channel = join_all(channel_ids.iter().map(|channel_id| {
+            ibc.unreceived_acks(
+                self.port_id.clone(),
+                channel_id.clone(),
+                // channel commitments
+                committed_packets
+                    .get(channel_id)
+                    .unwrap()
+                    .clone()
+                    .into_iter()
+                    .collect(),
+            )
+        }))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+        let unreceived_acks: HashMap<std::string::String, HashSet<u64>, _> = HashMap::from_iter(
+            channel_ids.clone().into_iter().zip(
+                unreceived_acks_per_channel
+                    .into_iter()
+                    .map(|packets| packets.into_iter().collect::<HashSet<_>>()),
+            ),
+        );
+        Ok(Self {
             connection_id: self.connection_id.clone(),
             port_id: self.port_id.clone(),
             channel_ids,
@@ -235,7 +248,7 @@ impl LoggedState for CwIbcContractState {
             acknowledged_packets,
             unreceived_acks,
             unreceived_packets,
-        }
+        })
     }
 }
 
