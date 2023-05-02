@@ -73,7 +73,7 @@ pub fn script() -> anyhow::Result<()> {
         .hermes
         .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
 
-    wait for channel creation to complete
+    // wait for channel creation to complete
     std::thread::sleep(std::time::Duration::from_secs(30));
 
     // Track IBC on JUNO
@@ -86,7 +86,7 @@ pub fn script() -> anyhow::Result<()> {
         .build()?;
     // spawn juno logging on a different thread.
     rt.spawn(async move {
-        juno_channel.cron_log(tracker).await;
+        juno_channel.cron_log(tracker).await.unwrap();
     });
 
     // Track IBC on OSMOSIS
@@ -99,7 +99,7 @@ pub fn script() -> anyhow::Result<()> {
         .build()?;
     // spawn osmosis logging on a different thread.
     rt.spawn(async move {
-        osmosis_channel.cron_log(tracker).await;
+        osmosis_channel.cron_log(tracker).await.unwrap();
     });
 
     // test the ica implementation
