@@ -52,62 +52,6 @@ const OSMOSIS_MNEMONIC: &str = "settle gas lobster judge silk stem act shoulder 
 const JUNO: &str = "juno-1";
 const OSMOSIS: &str = "osmosis-2";
 
-#[contract(
-    controller_msgs::InstantiateMsg,
-    controller_msgs::ExecuteMsg,
-    controller_msgs::QueryMsg,
-    Empty
-)]
-struct Controller;
-
-impl<Chain: CwEnv> Controller<Chain> {
-    pub fn new(name: &str, chain: Chain) -> Self {
-        let contract = Contract::new(name, chain);
-        Self(contract)
-    }
-}
-
-impl Uploadable<Daemon> for Controller<Daemon> {
-    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
-        WasmPath::new(format!(
-            "{CRATE_PATH}/examples/wasms/simple_ica_controller.wasm"
-        ))
-        .unwrap()
-    }
-}
-
-#[contract(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
-struct Host;
-impl<Chain: CwEnv> Host<Chain> {
-    pub fn new(name: &str, chain: Chain) -> Self {
-        let contract = Contract::new(name, chain);
-        Self(contract)
-    }
-}
-
-impl Uploadable<Daemon> for Host<Daemon> {
-    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
-        WasmPath::new(format!("{CRATE_PATH}/examples/wasms/simple_ica_host.wasm")).unwrap()
-    }
-}
-
-// just for uploading
-#[contract(Empty, Empty, Empty, Empty)]
-struct Cw1;
-impl<Chain: CwEnv> Cw1<Chain> {
-    pub fn new(name: &str, chain: Chain) -> Self {
-        let contract = Contract::new(name, chain);
-        Self(contract)
-    }
-}
-
-impl Uploadable<Daemon> for Cw1<Daemon> {
-    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
-        WasmPath::new(format!("{CRATE_PATH}/examples/wasms/cw1_whitelist.wasm")).unwrap()
-    }
-}
-
-// Requires a running local junod with grpc enabled
 pub fn script() -> anyhow::Result<()> {
     let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -163,8 +107,6 @@ pub fn script() -> anyhow::Result<()> {
 
 fn main() {
     dotenv().ok();
-    // env_logger::init();
-
     use dotenv::dotenv;
 
     if let Err(ref err) = script() {
@@ -234,9 +176,66 @@ fn test_ica(
     )?;
 
     // wait a bit
-    std::thread::sleep(std::time::Duration::from_secs(60));
-    // check that the balance decreased
+    std::thread::sleep(std::time::Duration::from_secs(30));
+    // check that the balance became 0
     let balance = rt.block_on(juno.query::<Bank>().coin_balance(&remote_addr, "ujuno"))?;
     assert_that!(&balance.amount).is_equal_to(0u128.to_string());
     Ok(())
+}
+
+// Contract interface definitions
+
+#[contract(
+    controller_msgs::InstantiateMsg,
+    controller_msgs::ExecuteMsg,
+    controller_msgs::QueryMsg,
+    Empty
+)]
+struct Controller;
+
+impl<Chain: CwEnv> Controller<Chain> {
+    pub fn new(name: &str, chain: Chain) -> Self {
+        let contract = Contract::new(name, chain);
+        Self(contract)
+    }
+}
+
+impl Uploadable<Daemon> for Controller<Daemon> {
+    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
+        WasmPath::new(format!(
+            "{CRATE_PATH}/examples/wasms/simple_ica_controller.wasm"
+        ))
+        .unwrap()
+    }
+}
+
+#[contract(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
+struct Host;
+impl<Chain: CwEnv> Host<Chain> {
+    pub fn new(name: &str, chain: Chain) -> Self {
+        let contract = Contract::new(name, chain);
+        Self(contract)
+    }
+}
+
+impl Uploadable<Daemon> for Host<Daemon> {
+    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
+        WasmPath::new(format!("{CRATE_PATH}/examples/wasms/simple_ica_host.wasm")).unwrap()
+    }
+}
+
+// just for uploading
+#[contract(Empty, Empty, Empty, Empty)]
+struct Cw1;
+impl<Chain: CwEnv> Cw1<Chain> {
+    pub fn new(name: &str, chain: Chain) -> Self {
+        let contract = Contract::new(name, chain);
+        Self(contract)
+    }
+}
+
+impl Uploadable<Daemon> for Cw1<Daemon> {
+    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
+        WasmPath::new(format!("{CRATE_PATH}/examples/wasms/cw1_whitelist.wasm")).unwrap()
+    }
 }
