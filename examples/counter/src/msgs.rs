@@ -28,5 +28,5 @@ pub enum ExecuteMsg {
 #[cw_serde]
 pub struct MigrateMsg<T> {
     pub conf: T,
-    pub version: String
+    pub version: String,
 }

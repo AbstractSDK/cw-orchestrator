@@ -1,13 +1,13 @@
 // Dependencies
-use std::{env, path::Path};
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
+use std::{env, path::Path};
 use tokio::runtime::Runtime;
 
 // cw-orchestrator Dependencies
 use cw_orch::{
     networks, Addr, Contract, CwOrcError, CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload,
-    Daemon, Mock, TxHandler, TxResponse,
+    Daemon, Mock, TxHandler, TxResponse, Uploadable,
 };
 
 // We define our contract dependencies
@@ -106,13 +106,23 @@ pub fn execute(
     Ok(response)
 }
 
-// Now that we have setup our contract entry points above, We can continue to the next step.
+// Now that we have setup for our contract entry points, We can continue to the next step.
+// This is where the magic of cw-orchestrator occurs
 // In this case we will prepare a trait for our two scenarios Mock and Daemon
 // Daemon is our production scenario, deploying to a blockchain, be it a local testnet, a tesnet our a mainnet
 // and Mock is our development scenario, used for unit testing and fine tuning our contract
 trait CounterWrapper<T: TxHandler> {
     fn new() -> Self;
-    fn upload(&self) -> Result<TxResponse<T>, CwOrcError>;
+
+    fn get_inner(&self) -> CounterContract<T>;
+
+    fn upload(&self) -> Result<TxResponse<T>, CwOrcError>
+    where
+        T: TxHandler,
+        CounterContract<T>: Uploadable<T>,
+    {
+        self.get_inner().upload()
+    }
 }
 
 // Prepare our contract struct
@@ -124,16 +134,21 @@ struct Counter<T> {
 // Implement Mock scenario
 impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
     fn new() -> Self {
-        let daemon_mock = Mock::new(&Addr::unchecked(
+        // We are going to use a genesis wallet from juno local
+        // this is the way we setup our mock environment
+        let mock = Mock::new(&Addr::unchecked(
             "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y",
         ))
         .unwrap();
 
-        let sender = daemon_mock.sender();
+        // this is an example in how we can acquire the sender address configured to our operations
+        // that is configured to our environment, be it a Mock or Daemon (see below)
+        let sender = mock.sender();
 
+        // We start our contract
         let contract = CounterContract(Contract::new(
             &env::var("DEPLOYMENT_ID").unwrap(),
-            daemon_mock.clone(),
+            mock.clone(),
         ));
 
         Self {
@@ -142,8 +157,8 @@ impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
         }
     }
 
-    fn upload(&self) -> Result<TxResponse<Mock>, CwOrcError> {
-        self.inner.upload()
+    fn get_inner(&self) -> CounterContract<Mock> {
+        self.inner.clone()
     }
 }
 
@@ -152,18 +167,30 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
     fn new() -> Self {
         let runtime = Runtime::new().unwrap();
 
+        // to generate a daemon we use Daemon::builder
+        // which provides an easy to use interface
+        // where step by step we can configure our daemon
+        // to our needs
         let res = Daemon::builder()
+            // using the networks module we can provide a network
+            // in this case we are using the helper parse_network that converts a string to a variant
+            // but we can use networks::LOCAL_JUNO for example
             .chain(networks::parse_network(&env::var("CHAIN").unwrap()))
+            // here we provide the runtime to be used
             .handle(runtime.handle())
+            // we configure the mnemonic
             .mnemonic(env::var("LOCAL_MNEMONIC").unwrap())
+            // and we build our daemon
             .build();
 
         let Some(daemon) = res.as_ref().ok() else {
             panic!("Error: {}", res.err().unwrap().to_string());
         };
 
-        let sender = daemon.sender.address().unwrap();
+        // once more here we see the sender method for adquiring our sender address configured to our daemon
+        let sender = daemon.sender();
 
+        // We start our contract
         let contract = CounterContract(Contract::new(
             &env::var("DEPLOYMENT_ID").unwrap(),
             daemon.clone(),
@@ -175,9 +202,71 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
         }
     }
 
-    fn upload(&self) -> Result<TxResponse<Daemon>, CwOrcError> {
-        self.inner.upload()
+    fn get_inner(&self) -> CounterContract<Daemon> {
+        self.inner.clone()
     }
+}
+
+fn dev() {
+    let contract_counter = Counter::<CounterContract<Mock>>::new();
+
+    let upload_res = contract_counter.upload().unwrap();
+    println!("upload_res: {:#?}", upload_res);
+
+    let init_res = contract_counter
+        .inner
+        .instantiate(
+            &msgs::InstantiateMsg {
+                initial_value: 0u128.into(),
+            },
+            Some(&contract_counter.sender),
+            None,
+        )
+        .unwrap();
+    println!("init_res: {:#?}", init_res);
+
+    let exec_res = contract_counter
+        .inner
+        .execute(&msgs::ExecuteMsg::Increase, None)
+        .unwrap();
+    println!("exec_res: {:#?}", exec_res);
+
+    let query_res = contract_counter
+        .inner
+        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
+        .unwrap();
+    println!("query_res: {:#?}", query_res);
+}
+
+fn prod() {
+    let contract_counter = Counter::<CounterContract<Daemon>>::new();
+
+    let upload_res = contract_counter.upload().unwrap();
+    println!("upload_res: {:#?}", upload_res);
+
+    let init_res = contract_counter
+        .inner
+        .instantiate(
+            &msgs::InstantiateMsg {
+                initial_value: 0u128.into(),
+            },
+            Some(&contract_counter.sender),
+            None,
+        )
+        .unwrap();
+    println!("init_res: {:#?}", init_res);
+
+    let exec_res = contract_counter
+        .inner
+        .execute(&msgs::ExecuteMsg::Increase, None)
+        .unwrap();
+    println!("exec_res: {:#?}", exec_res);
+
+    let query_res = contract_counter
+        .inner
+        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
+        .unwrap();
+    println!("query_res: {:#?}", query_res);
 }
 
 fn main() {
@@ -187,35 +276,9 @@ fn main() {
 
     let args = std::env::args();
 
-    println!("{:#?}", args.last());
-
-    let my_contract = Counter::<CounterContract<Mock>>::new();
-
-    let upload_res = my_contract.upload().unwrap();
-    println!("upload_res: {:#?}", upload_res);
-
-    let init_res = my_contract
-        .inner
-        .instantiate(
-            &msgs::InstantiateMsg {
-                initial_value: 0u128.into(),
-            },
-            Some(&my_contract.sender),
-            None,
-        )
-        .unwrap();
-    println!("init_res: {:#?}", init_res);
-
-    let exec_res = my_contract
-        .inner
-        .execute(&msgs::ExecuteMsg::Increase, None)
-        .unwrap();
-    println!("exec_res: {:#?}", exec_res);
-
-    let query_res = my_contract
-        .inner
-        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
-        .unwrap();
-
-    println!("query_res: {:#?}", query_res);
+    match args.last().unwrap().as_str() {
+        "prod" => prod(),
+        "dev" => dev(),
+        _ => dev(),
+    };
 }
