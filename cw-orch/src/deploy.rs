@@ -58,6 +58,11 @@ pub trait Deploy<Chain: CwEnv>: Sized {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
     }
+}
+
+/// Load a 
+pub trait Load<Chain: CwEnv>: Sized {
+    type Error: From<CwOrcError>;
     /// Load the application from the chain, assuming it has already been deployed.
     fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
