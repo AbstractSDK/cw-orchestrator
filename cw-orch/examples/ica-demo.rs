@@ -73,6 +73,9 @@ pub fn script() -> anyhow::Result<()> {
         .hermes
         .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
 
+    wait for channel creation to complete
+    std::thread::sleep(std::time::Duration::from_secs(30));
+
     // Track IBC on JUNO
     let juno_channel = juno.channel();
     let tracker = IbcTrackerConfigBuilder::default()
