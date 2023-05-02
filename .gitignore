@@ -21,3 +21,4 @@ Cargo.lock
 gen_cov_test
 
 **/logs/
+**/bin/
