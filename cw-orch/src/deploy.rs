@@ -46,18 +46,23 @@ use crate::{CwEnv, CwOrcError};
 ///
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
-pub trait Deploy<Chain: CwEnv>: Sized {
+pub trait Deploy<Chain: CwEnv>: Sized + Load<Chain> {
     type Error: From<CwOrcError>;
     /// Data required to deploy the application.
     type DeployData;
     /// Stores/uploads the application to the chain.
-    fn store_on(chain: Chain) -> Result<Self, Self::Error>;
+    fn store_on(chain: Chain) -> Result<Self, <Self as Deploy<Chain>>::Error>;
     /// Deploy the application to the chain. This could include instantiating contracts.
     #[allow(unused_variables)]
-    fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error> {
+    fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, <Self as Deploy<Chain>>::Error> {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
     }
+}
+
+/// Trait to load an application from a chain
+pub trait Load<Chain: CwEnv>: Sized {
+    type Error: From<CwOrcError>;
     /// Load the application from the chain, assuming it has already been deployed.
     fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
