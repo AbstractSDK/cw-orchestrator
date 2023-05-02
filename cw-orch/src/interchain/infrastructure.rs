@@ -11,8 +11,7 @@ use log4rs::Config;
 use std::collections::HashMap;
 use std::default::Default;
 use std::path::PathBuf;
-use std::sync::Arc;
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
 
 use super::error::InterchainError;
 
@@ -41,7 +40,7 @@ impl InterchainInfrastructure {
     /// 2. Clone test file to interchain test dir and run it
     /// 3. Wait for X amount of time
     /// 4. Get container information (daemons and Hermes)
-    pub fn new<T>(runtime: &Arc<Runtime>, chains: Vec<(T, &str)>) -> IcResult<Self>
+    pub fn new<T>(runtime: &Handle, chains: Vec<(T, &str)>) -> IcResult<Self>
     where
         T: Into<ChainData>,
     {
@@ -102,7 +101,7 @@ impl InterchainInfrastructure {
         for daemon in daemons.values() {
             let log_target = &daemon.state.chain_id;
             // log startup to each daemon log
-            log::info!(target: &log_target, "Starting daemon {log_target}");
+            log::info!(target: log_target, "Starting daemon {log_target}");
         }
 
         Ok(Self { daemons, hermes })
@@ -149,7 +148,7 @@ impl InterchainInfrastructure {
 
     /// Build the daemons from the shared runtime and chain data
     fn build_daemons(
-        runtime: &Arc<Runtime>,
+        runtime_handle: &Handle,
         chain_data: &[(ChainData, Mnemonic)],
     ) -> Result<HashMap<NetworkId, Daemon>, DaemonError> {
         let mut daemons = HashMap::new();
@@ -157,7 +156,7 @@ impl InterchainInfrastructure {
             let daemon = Daemon::builder()
                 .chain(chain.clone())
                 .deployment_id("interchain")
-                .handle(runtime.handle())
+                .handle(runtime_handle)
                 .mnemonic(mnemonic)
                 .build()
                 .unwrap();

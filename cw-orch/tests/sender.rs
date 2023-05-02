@@ -1,11 +1,8 @@
 mod common;
 
-use cosmwasm_std::{coin, Uint128};
+use cosmwasm_std::Uint128;
 use cw_orch::{networks::LOCAL_JUNO, *};
-use speculoos::{
-    result::{ContainingResultAssertions, ResultAssertions},
-    *,
-};
+use speculoos::{result::ResultAssertions, *};
 use tokio::runtime::Runtime;
 
 #[test]

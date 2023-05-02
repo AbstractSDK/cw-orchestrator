@@ -3,8 +3,8 @@ use diff::Diff;
 use futures_util::future::join_all;
 use log::*;
 
+use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::{hash_map::RandomState, HashMap};
 use std::{fmt::Display, time::Duration};
 use tonic::{async_trait, transport::Channel};
 
