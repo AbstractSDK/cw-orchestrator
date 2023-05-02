@@ -15,7 +15,6 @@ use tokio::runtime::Handle;
 
 use super::error::InterchainError;
 
-use crate::queriers::DaemonQuerier;
 use crate::{Daemon, DaemonError};
 
 use super::docker::DockerHelper;
@@ -35,11 +34,7 @@ pub struct InterchainInfrastructure {
 }
 
 impl InterchainInfrastructure {
-    /// Build a new `InterchainInfrastructure` instance.
-    /// 1. Check if interchain_test is installed
-    /// 2. Clone test file to interchain test dir and run it
-    /// 3. Wait for X amount of time
-    /// 4. Get container information (daemons and Hermes)
+    /// Builds a new `InterchainInfrastructure` instance.
     pub fn new<T>(runtime: &Handle, chains: Vec<(T, &str)>) -> IcResult<Self>
     where
         T: Into<ChainData>,

@@ -117,7 +117,6 @@ impl DockerHelper {
         self.containers
             .iter()
             .find(|container| {
-                eprintln!("{:?}", container.names);
                 container
                     .names
                     .as_ref()
