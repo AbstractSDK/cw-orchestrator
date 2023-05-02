@@ -1,3 +1,16 @@
+// Dependencies
+use std::{env, path::Path};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cw2::set_contract_version;
+use tokio::runtime::Runtime;
+
+// cw-orchestrator Dependencies
+use cw_orch::{
+    networks, Addr, Contract, CwOrcError, CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload,
+    Daemon, Mock, TxHandler, TxResponse,
+};
+
+// We define our contract dependencies
 pub mod error;
 pub mod msgs;
 pub mod state;
@@ -6,23 +19,30 @@ use error::ContractError;
 use msgs::CurrentCount;
 use state::{Count, COUNT};
 
-use std::env;
-
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-
-use cw2::set_contract_version;
-
-use cw_orch::{
-    networks, Addr, Contract, CwOrcError, CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload,
-    Daemon, Mock, TxHandler, TxResponse,
-};
-
-use dotenvy::dotenv;
-use tokio::runtime::Runtime;
-
-pub const CONTRACT_NAME: &str = "myDev:my-contract";
+// Contract version and name
+pub const CONTRACT_NAME: &str = "mydev:CounterContract";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+// Most of our contract will look the same to the average CosmWasm contract
+// the main difference is the amount of code that we need to get started.
+
+// In this example we are going to use Junos local testnet.
+
+// We are going to need the following system environment variables set up for this example to work
+
+// this first two are essential to any integration we do using cw-orchestrator
+// STATE_FILE= "./my-contract-state.json"
+// LOCAL_MNEMONIC= "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose"
+
+// this two are used only within this example
+// CHAIN= "testing"
+// DEPLOYMENT_ID= "my-contract-counter"
+
+// After that is configured we can continue to our next step which is start coding!
+
+// Using cw_orch::interface macro we can define our entry points.
+// this also generates a struct using our contract cargo name using PascalCase
+// in this example the name is CounterContract
 #[cw_orch::interface]
 pub fn instantiate(
     deps: DepsMut,
@@ -44,14 +64,16 @@ pub fn query(deps: Deps, _env: Env, msg: msgs::QueryMsg) -> StdResult<Binary> {
     }
 }
 
-// #[cw_orch::interface]
-// pub fn migrate(
-//     deps: DepsMut,
-//     env: Env,
-//     msg: cw20_base::msg::MigrateMsg,
-// ) -> Result<Response, ContractError> {
-//     Ok(cw20_base::contract::migrate(deps, env, msg)?)
-// }
+#[cw_orch::interface]
+pub fn migrate(
+    deps: DepsMut,
+    _env: Env,
+    msg: msgs::MigrateMsg<msgs::InstantiateMsg>,
+) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, msg.version)?;
+    COUNT.save(deps.storage, &Count(msg.conf.initial_value))?;
+    Ok(Response::default().add_attribute("action", "migrate"))
+}
 
 #[cw_orch::interface]
 pub fn execute(
@@ -84,20 +106,23 @@ pub fn execute(
     Ok(response)
 }
 
-// Prepare our trait for multiple scenarios
-trait MyContractWrapper<T: TxHandler> {
+// Now that we have setup our contract entry points above, We can continue to the next step.
+// In this case we will prepare a trait for our two scenarios Mock and Daemon
+// Daemon is our production scenario, deploying to a blockchain, be it a local testnet, a tesnet our a mainnet
+// and Mock is our development scenario, used for unit testing and fine tuning our contract
+trait CounterWrapper<T: TxHandler> {
     fn new() -> Self;
     fn upload(&self) -> Result<TxResponse<T>, CwOrcError>;
 }
 
-// Prepare our struct
-struct MyContract<T> {
+// Prepare our contract struct
+struct Counter<T> {
     pub inner: T,
     pub sender: Addr,
 }
 
 // Implement Mock scenario
-impl MyContractWrapper<Mock> for MyContract<QuickStart<Mock>> {
+impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
     fn new() -> Self {
         let daemon_mock = Mock::new(&Addr::unchecked(
             "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y",
@@ -106,7 +131,7 @@ impl MyContractWrapper<Mock> for MyContract<QuickStart<Mock>> {
 
         let sender = daemon_mock.sender();
 
-        let contract = QuickStart(Contract::new(
+        let contract = CounterContract(Contract::new(
             &env::var("DEPLOYMENT_ID").unwrap(),
             daemon_mock.clone(),
         ));
@@ -123,7 +148,7 @@ impl MyContractWrapper<Mock> for MyContract<QuickStart<Mock>> {
 }
 
 // Implement Daemon or real scenario
-impl MyContractWrapper<Daemon> for MyContract<QuickStart<Daemon>> {
+impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
     fn new() -> Self {
         let runtime = Runtime::new().unwrap();
 
@@ -139,7 +164,7 @@ impl MyContractWrapper<Daemon> for MyContract<QuickStart<Daemon>> {
 
         let sender = daemon.sender.address().unwrap();
 
-        let contract = QuickStart(Contract::new(
+        let contract = CounterContract(Contract::new(
             &env::var("DEPLOYMENT_ID").unwrap(),
             daemon.clone(),
         ));
@@ -157,16 +182,17 @@ impl MyContractWrapper<Daemon> for MyContract<QuickStart<Daemon>> {
 
 fn main() {
     pretty_env_logger::init();
-    dotenv().ok();
+
+    let _ = dotenvy::from_path(&Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
 
     let args = std::env::args();
 
     println!("{:#?}", args.last());
 
-    let my_contract = MyContract::<QuickStart<Mock>>::new();
+    let my_contract = Counter::<CounterContract<Mock>>::new();
 
     let upload_res = my_contract.upload().unwrap();
-    println!("{:#?}", upload_res);
+    println!("upload_res: {:#?}", upload_res);
 
     let init_res = my_contract
         .inner
@@ -178,18 +204,18 @@ fn main() {
             None,
         )
         .unwrap();
-    println!("{:#?}", init_res);
+    println!("init_res: {:#?}", init_res);
 
     let exec_res = my_contract
         .inner
         .execute(&msgs::ExecuteMsg::Increase, None)
         .unwrap();
-    println!("{:#?}", exec_res);
+    println!("exec_res: {:#?}", exec_res);
 
     let query_res = my_contract
         .inner
         .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
         .unwrap();
 
-    println!("{:#?}", query_res);
+    println!("query_res: {:#?}", query_res);
 }
