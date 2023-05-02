@@ -23,7 +23,7 @@ mod tx_handler;
 pub use contract::Contract;
 pub use cw_orch_contract_derive::{contract, interface};
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
-pub use deploy::Deploy;
+pub use deploy::{Deploy, Load};
 pub use error::CwOrcError;
 pub use index_response::IndexResponse;
 pub use interface_traits::{
