@@ -1,7 +1,8 @@
-use crate::CwEnv;
+use crate::tx_handler::ChainUpload;
 use crate::{
     error::CwOrcError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
+use crate::{CwEnv, Uploadable};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -108,16 +109,6 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             .map_err(Into::into)
     }
 
-    pub fn upload(&self, source: Chain::ContractSource) -> Result<TxResponse<Chain>, CwOrcError> {
-        log::info!("Uploading {}", self.id);
-        let resp = self.chain.upload(source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
-        Ok(resp)
-    }
-
     // State interfaces
     /// Returns state address for contract
     pub fn address(&self) -> Result<Addr, CwOrcError> {
@@ -137,5 +128,17 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
+    }
+}
+
+impl<Chain: CwEnv + Clone + ChainUpload> Contract<Chain> {
+    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrcError> {
+        log::info!("Uploading {}", self.id);
+        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!("uploaded {} with code id {}", self.id, code_id);
+        log::debug!("Upload response: {:?}", resp);
+        Ok(resp)
     }
 }
