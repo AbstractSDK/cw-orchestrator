@@ -54,7 +54,10 @@ pub trait Deploy<Chain: CwEnv>: Sized + Load<Chain> {
     fn store_on(chain: Chain) -> Result<Self, <Self as Deploy<Chain>>::Error>;
     /// Deploy the application to the chain. This could include instantiating contracts.
     #[allow(unused_variables)]
-    fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, <Self as Deploy<Chain>>::Error> {
+    fn deploy_on(
+        chain: Chain,
+        data: Self::DeployData,
+    ) -> Result<Self, <Self as Deploy<Chain>>::Error> {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
     }
