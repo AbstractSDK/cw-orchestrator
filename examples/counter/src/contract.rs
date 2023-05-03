@@ -87,7 +87,7 @@ pub fn execute(
         }
         msgs::ExecuteMsg::IncreaseBy(amount) => {
             let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_add(amount.into())?;
+            value = value.checked_add(amount)?;
             COUNT.save(deps.storage, &Count(value))?;
             Response::default().add_attribute("action", "increase_by")
         }
@@ -149,8 +149,8 @@ impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
         // We start our contract
         let contract = CounterContract(Contract::new(
             // this is used to identify our contract in the state file
-            &env::var("DEPLOYMENT_ID").unwrap(),
-            mock.clone(),
+            env::var("DEPLOYMENT_ID").unwrap(),
+            mock,
         ));
 
         Self {
@@ -191,7 +191,7 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
             .build();
 
         let Some(daemon) = res.as_ref().ok() else {
-            panic!("Error: {}", res.err().unwrap().to_string());
+            panic!("Error: {}", res.err().unwrap());
         };
 
         // once more here we see the sender method for adquiring our sender address configured now to our daemon
@@ -200,7 +200,7 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
         // We start our contract
         let contract = CounterContract(Contract::new(
             // this is used to identify our contract in the state file
-            &env::var("DEPLOYMENT_ID").unwrap(),
+            env::var("DEPLOYMENT_ID").unwrap(),
             daemon.clone(),
         ));
 
@@ -282,7 +282,7 @@ fn local() {
 fn main() {
     pretty_env_logger::init();
 
-    let _ = dotenvy::from_path(&Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
+    let _ = dotenvy::from_path(Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
 
     let args = std::env::args();
 
