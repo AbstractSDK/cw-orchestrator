@@ -7,7 +7,7 @@ Here we plan to quickly set you up with what you need to get going with using th
 
 You will need this setup and configured to follow this quick start guide and in life in general! 😉
 
-* [git]((https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
+* [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Rust (of course!)](https://www.rust-lang.org/learn/get-started)
 * [Rust WASM target](https://www.hellorust.com/setup/wasm-target/)
 * [Docker](https://docs.docker.com/engine/install/)
