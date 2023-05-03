@@ -38,7 +38,7 @@ pub use mock::{
     state::MockState,
 };
 pub use state::{ChainState, StateInterface};
-pub use tx_handler::{TxHandler, TxResponse};
+pub use tx_handler::{TxHandler, TxResponse, ChainUpload};
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
 pub use cw_multi_test::{custom_app, BasicApp, ContractWrapper};
