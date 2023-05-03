@@ -203,8 +203,8 @@ impl<Chain: CwEnv> Controller<Chain> {
     }
 }
 
-impl Uploadable<Daemon> for Controller<Daemon> {
-    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
+impl Uploadable for Controller<Daemon> {
+    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         WasmPath::new(format!(
             "{CRATE_PATH}/examples/wasms/simple_ica_controller.wasm"
         ))
@@ -221,8 +221,8 @@ impl<Chain: CwEnv> Host<Chain> {
     }
 }
 
-impl Uploadable<Daemon> for Host<Daemon> {
-    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
+impl Uploadable for Host<Daemon> {
+    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         WasmPath::new(format!("{CRATE_PATH}/examples/wasms/simple_ica_host.wasm")).unwrap()
     }
 }
@@ -237,8 +237,8 @@ impl<Chain: CwEnv> Cw1<Chain> {
     }
 }
 
-impl Uploadable<Daemon> for Cw1<Daemon> {
-    fn source(&self) -> <Daemon as TxHandler>::ContractSource {
+impl Uploadable for Cw1<Daemon> {
+    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         WasmPath::new(format!("{CRATE_PATH}/examples/wasms/cw1_whitelist.wasm")).unwrap()
     }
 }
