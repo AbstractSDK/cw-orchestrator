@@ -1,5 +1,8 @@
-use crate::{contract::Contract, error::CwOrcError, CwEnv, TxHandler};
-use cosmwasm_std::{Addr, Coin};
+use crate::{
+    contract::Contract, error::CwOrcError, tx_handler::ChainUpload, CwEnv, TxHandler, WasmPath,
+};
+use cosmwasm_std::{Addr, Coin, Empty};
+use cw_multi_test::Contract as MockContract;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -110,20 +113,27 @@ impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcMigrat
 /// Trait to implement on the contract to enable it to be uploaded
 /// Should return [`WasmPath`](crate::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
-pub trait Uploadable<Chain: TxHandler> {
+pub trait Uploadable {
     /// Return an object that can be used to upload the contract to the environment.
-    fn source(&self) -> Chain::ContractSource;
+    fn wasm(&self) -> WasmPath {
+        unimplemented!("no wasm file provided for this contract")
+    }
+    /// Return the wrapper object for the contract, only works for non-custom mock environments
+    fn wrapper(&self) -> Box<dyn MockContract<Empty, Empty>> {
+        unimplemented!("no wrapper function implemented for this contract")
+    }
 }
-
 /// Smart Contract upload endpoint
-pub trait CwOrcUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable<Chain> {
+pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
+    ContractInstance<Chain> + Uploadable + Sized
+{
     fn upload(&self) -> Result<Chain::Response, CwOrcError> {
-        self.as_instance().upload(self.source())
+        self.as_instance().upload(self)
     }
 }
 
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
-impl<T: ContractInstance<Chain> + Uploadable<Chain>, Chain: CwEnv> CwOrcUpload<Chain> for T {}
+impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrcUpload<Chain> for T {}
 
 /// Call a contract with a different sender
 /// Clones the contract interface to prevent mutation of the original
