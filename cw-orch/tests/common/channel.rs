@@ -2,7 +2,7 @@ use cw_orch::{networks, DaemonChannel};
 
 use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
-use speculoos::{asserting, prelude::OptionAssertions, result::ResultAssertions};
+use speculoos::{asserting, result::ResultAssertions};
 
 #[allow(unused)]
 pub async fn build_channel() -> tonic::transport::Channel {
