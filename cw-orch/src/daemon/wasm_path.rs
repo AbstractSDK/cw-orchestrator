@@ -6,6 +6,7 @@ use crate::DaemonError;
 
 /// Direct path to a `.wasm` file
 // Store as `PathBuf` to avoid lifetimes
+#[derive(Debug, Clone)]
 pub struct WasmPath(PathBuf);
 
 impl WasmPath {

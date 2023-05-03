@@ -10,9 +10,6 @@ use speculoos::prelude::*;
 use cw20_base::msg::*;
 use tokio::runtime::Runtime;
 
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Cw20Base;
-
 #[test]
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());

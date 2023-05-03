@@ -6,8 +6,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     state::{ChainState, StateInterface},
-    tx_handler::TxHandler,
-    CallAs, ContractInstance, CwOrcError, CwOrcExecute,
+    tx_handler::{ChainUpload, TxHandler},
+    CallAs, ContractInstance, CwOrcError, CwOrcExecute, Uploadable,
 };
 
 use super::state::MockState;
@@ -127,6 +127,24 @@ where
             app,
         };
         Ok(instance)
+    }
+
+    pub fn upload_custom(
+        &self,
+        contract_id: &str,
+        wrapper: Box<dyn Contract<ExecC, QueryC>>,
+    ) -> Result<AppResponse, crate::CwOrcError> {
+        let code_id = self.app.borrow_mut().store_code(wrapper);
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        let code_id = crate::IndexResponse::uploaded_code_id(&resp)?;
+        self.state.borrow_mut().set_code_id(contract_id, code_id);
+        Ok(resp)
     }
 }
 
@@ -254,21 +272,6 @@ where
             .map_err(From::from)
     }
 
-    fn upload(
-        &self,
-        contract_source: Box<dyn Contract<ExecC, QueryC>>,
-    ) -> Result<Self::Response, crate::CwOrcError> {
-        let code_id = self.app.borrow_mut().store_code(contract_source);
-        // add contract code_id to events manually
-        let mut event = Event::new("store_code");
-        event = event.add_attribute("code_id", code_id.to_string());
-        let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
-        };
-        Ok(resp)
-    }
-
     fn wait_blocks(&self, amount: u64) -> Result<(), CwOrcError> {
         self.app.borrow_mut().update_block(|b| {
             b.height += amount;
@@ -292,6 +295,20 @@ where
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrcError> {
         Ok(self.app.borrow().block_info())
+    }
+}
+
+impl ChainUpload for Mock {
+    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, crate::CwOrcError> {
+        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
     }
 }
 
@@ -381,7 +398,7 @@ mod test {
                 .with_migrate(cw20_base::contract::migrate),
         );
 
-        let init_res = chain.upload(contract_source).unwrap();
+        let init_res = chain.upload_custom("cw20", contract_source).unwrap();
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
             .is_equal_to(&String::from("1"));
