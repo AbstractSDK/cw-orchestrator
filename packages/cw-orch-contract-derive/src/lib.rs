@@ -379,7 +379,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     #[cfg(feature = "propagate_daemon")]
     let daemon_uploadable: TokenStream = quote!(
             impl ::cw_orch::Uploadable<::cw_orch::Daemon> for #name<::cw_orch::Daemon>{
-            
+
         }
     )
     .into();
