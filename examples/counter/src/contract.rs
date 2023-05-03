@@ -31,18 +31,19 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 // We are going to need the following system environment variables set up for this example to work
 
 // this first two are essential to any integration we do using cw-orchestrator
-// STATE_FILE= "./my-contract-state.json"
-// LOCAL_MNEMONIC= "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose"
+// STATE_FILE="./my-contract-state.json"
+// LOCAL_MNEMONIC="clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose"
 
 // this two are used only within this example
-// CHAIN= "testing"
-// DEPLOYMENT_ID= "my-contract-counter"
+// CHAIN="testing"
+// DEPLOYMENT_ID="my-contract-counter"
 
 // After that is configured we can continue to our next step which is start coding!
 
-// Using cw_orch::interface macro we can define our entry points.
-// this also generates a struct using our contract cargo name using PascalCase
-// in this example the name is CounterContract
+// Using the Rust macro cw_orch::interface provided by cw-orchestrator we can define our contract entry points.
+// This also generates a struct using our contract cargo name using PascalCase.
+// In this example the name is CounterContract.
+// This macro helps us with basic logic, keeps our contracts DRY and more important, it helps us speed our development process up
 #[cw_orch::interface]
 pub fn instantiate(
     deps: DepsMut,
@@ -62,17 +63,6 @@ pub fn query(deps: Deps, _env: Env, msg: msgs::QueryMsg) -> StdResult<Binary> {
     match msg {
         msgs::QueryMsg::GetCount => Ok(to_binary(&CurrentCount(COUNT.load(deps.storage)?.0))?),
     }
-}
-
-#[cw_orch::interface]
-pub fn migrate(
-    deps: DepsMut,
-    _env: Env,
-    msg: msgs::MigrateMsg<msgs::InstantiateMsg>,
-) -> Result<Response, ContractError> {
-    set_contract_version(deps.storage, CONTRACT_NAME, msg.version)?;
-    COUNT.save(deps.storage, &Count(msg.conf.initial_value))?;
-    Ok(Response::default().add_attribute("action", "migrate"))
 }
 
 #[cw_orch::interface]
@@ -106,11 +96,22 @@ pub fn execute(
     Ok(response)
 }
 
+#[cw_orch::interface]
+pub fn migrate(
+    deps: DepsMut,
+    _env: Env,
+    msg: msgs::MigrateMsg<msgs::InstantiateMsg>,
+) -> Result<Response, ContractError> {
+    set_contract_version(deps.storage, CONTRACT_NAME, msg.version)?;
+    COUNT.save(deps.storage, &Count(msg.conf.initial_value))?;
+    Ok(Response::default().add_attribute("action", "migrate"))
+}
+
 // Now that we have setup for our contract entry points, We can continue to the next step.
-// This is where the magic of cw-orchestrator occurs
+// This is where more of the magic of cw-orchestrator occurs
 // In this case we will prepare a trait for our two scenarios Mock and Daemon
-// Daemon is our production scenario, deploying to a blockchain, be it a local testnet, a tesnet our a mainnet
-// and Mock is our development scenario, used for unit testing and fine tuning our contract
+// Daemon is our production scenario, deploying to a real blockchain, be it a local testnet, a tesnet our a mainnet
+// and Mock is our development scenario, used for unit testing and fine tuning our contract with speed
 trait CounterWrapper<T: TxHandler> {
     fn new() -> Self;
 
@@ -131,7 +132,7 @@ struct Counter<T> {
     pub sender: Addr,
 }
 
-// Implement Mock scenario
+// Implement Mock or development scenario
 impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
     fn new() -> Self {
         // We are going to use a genesis wallet from juno local
@@ -163,7 +164,7 @@ impl CounterWrapper<Mock> for Counter<CounterContract<Mock>> {
     }
 }
 
-// Implement Daemon or real scenario
+// Implement Daemon or deployment scenario
 impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
     fn new() -> Self {
         let runtime = Runtime::new().unwrap();
@@ -180,7 +181,7 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
             // if none is provided it will try to get one if its inside one
             .handle(runtime.handle())
             // we configure the mnemonic
-            // if we dont provide an mnemonic here it will tride to read it
+            // if we dont provide an mnemonic here it will try to read it
             // from LOCAL_MNEMONIC environment variable
             // this is the one we are using in this scenario
             // but you can also use TEST_MNEMONIC and MAIN_MNEMONIC
@@ -214,6 +215,7 @@ impl CounterWrapper<Daemon> for Counter<CounterContract<Daemon>> {
     }
 }
 
+// our strategy for mock testing of the contract
 fn dev() {
     let contract_counter = Counter::<CounterContract<Mock>>::new();
 
@@ -245,7 +247,8 @@ fn dev() {
     println!("query_res: {:#?}", query_res);
 }
 
-fn prod() {
+// this is our strategy for local deployment
+fn local() {
     let contract_counter = Counter::<CounterContract<Daemon>>::new();
 
     let upload_res = contract_counter.upload().unwrap();
@@ -284,7 +287,7 @@ fn main() {
     let args = std::env::args();
 
     match args.last().unwrap().as_str() {
-        "prod" => prod(),
+        "local" => local(),
         "dev" => dev(),
         _ => dev(),
     };

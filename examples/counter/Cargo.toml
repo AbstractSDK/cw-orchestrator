@@ -19,8 +19,9 @@ serde = { workspace = true, default-features = false, features = ["derive"] }
 cw-orch = { git = "https://github.com/AbstractSDK/cw-orchestrator.git", features = ["daemon"] }
 cw2 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cosmwasm-schema = "1.2"
+thiserror = "1"
+dotenvy = "0.15"
+# optional
 log = "0.4.14"
 env_logger = "0.10.0"
 pretty_env_logger = "0.4"
-dotenvy = "0.15"
-thiserror = "1"
