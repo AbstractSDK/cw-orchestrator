@@ -33,8 +33,15 @@ impl<Chain: CwEnv> Cw20<Chain> {
     }
 }
 
-impl Uploadable<Mock> for Cw20<Mock> {
-    fn source(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+impl<Chain: CwEnv> Uploadable for Cw20<Chain> {
+    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+        // create contract base configuration
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);
+        log::info!("Using wasm path {}", wasm_path);
+        WasmPath::new(wasm_path).unwrap()
+    }
+    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -43,16 +50,6 @@ impl Uploadable<Mock> for Cw20<Mock> {
             )
             .with_migrate(cw20_base::contract::migrate),
         )
-    }
-}
-
-impl Uploadable<Daemon> for Cw20<Daemon> {
-    fn source(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
-        // create contract base configuration
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);
-        log::info!("Using wasm path {}", wasm_path);
-        WasmPath::new(wasm_path).unwrap()
     }
 }
 
