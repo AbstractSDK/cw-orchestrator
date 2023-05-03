@@ -38,7 +38,7 @@ pub use mock::{
     state::MockState,
 };
 pub use state::{ChainState, StateInterface};
-pub use tx_handler::{TxHandler, TxResponse, ChainUpload};
+pub use tx_handler::{ChainUpload, TxHandler, TxResponse};
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
 pub use cw_multi_test::{custom_app, BasicApp, ContractWrapper};
@@ -60,5 +60,5 @@ pub use daemon::{
 pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + Clone {}
-impl<T: TxHandler + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + ChainUpload + Clone {}
+impl<T: TxHandler + ChainUpload + Clone> CwEnv for T {}
