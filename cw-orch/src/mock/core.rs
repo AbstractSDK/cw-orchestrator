@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     state::{ChainState, StateInterface},
-    tx_handler::{ChainUpload, TxHandler},
+    tx_handler::{TxHandler},
     CallAs, ContractInstance, CwOrcError, CwOrcExecute, Uploadable,
 };
 
@@ -187,7 +187,7 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface, ExecC, QueryC> TxHandler for Mock<S, ExecC, QueryC>
+impl<S: StateInterface, ExecC, QueryC> TxHandler<ExecC, QueryC> for Mock<S, ExecC, QueryC>
 where
     ExecC: CustomMsg + DeserializeOwned + 'static,
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
@@ -255,6 +255,18 @@ where
             .map_err(From::from)
     }
 
+    fn upload(&self, contract: &impl Uploadable<>) -> Result<Self::Response, crate::CwOrcError> {
+        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
+    }
+
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -295,20 +307,6 @@ where
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrcError> {
         Ok(self.app.borrow().block_info())
-    }
-}
-
-impl ChainUpload for Mock {
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, crate::CwOrcError> {
-        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
-        // add contract code_id to events manually
-        let mut event = Event::new("store_code");
-        event = event.add_attribute("code_id", code_id.to_string());
-        let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
-        };
-        Ok(resp)
     }
 }
 

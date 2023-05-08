@@ -1,4 +1,3 @@
-use crate::tx_handler::ChainUpload;
 use crate::{
     error::CwOrcError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
 };
@@ -10,7 +9,7 @@ use std::fmt::Debug;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: CwEnv> {
+pub struct Contract<Chain: CwEnv<E,Q>, E,Q> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     /// Chain object that handles tx execution and queries.
@@ -129,9 +128,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
     }
-}
 
-impl<Chain: CwEnv + Clone + ChainUpload> Contract<Chain> {
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrcError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;

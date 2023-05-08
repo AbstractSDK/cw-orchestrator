@@ -18,7 +18,7 @@ fn custom_app() {
     let app = Mock::<_, Foo>::new(sender).unwrap();
     let cw20 = common::contract::Cw20::new(app.clone());
 
-    app.upload_custom(Box::new(
+    app.upload_custom("abc", Box::new(
         ContractWrapper::new_with_empty(
             cw20_base::contract::execute,
             cw20_base::contract::instantiate,

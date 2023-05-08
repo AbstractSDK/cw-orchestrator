@@ -9,7 +9,7 @@ use super::{
 };
 use crate::{
     state::ChainState,
-    tx_handler::{ChainUpload, TxHandler},
+    tx_handler::{TxHandler},
     CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath,
 };
 use cosmrs::{
@@ -17,7 +17,7 @@ use cosmrs::{
     tendermint::Time,
     AccountId, Denom,
 };
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Coin, Empty};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
@@ -84,7 +84,7 @@ impl ChainState for Daemon {
 }
 
 // Execute on the real chain, returns tx response
-impl TxHandler for Daemon {
+impl <CustomExec,CustomQuery>TxHandler<CustomExec,CustomQuery> for Daemon {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
@@ -230,17 +230,15 @@ impl TxHandler for Daemon {
             chain_id: block.header.chain_id.to_string(),
         })
     }
-}
 
-impl ChainUpload for Daemon {
-    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+    fn upload<T>(&self, uploadable: T) -> Result<Self::Response, DaemonError> where T: Uploadable<CustomExec = CustomExec, CustomQuery = CustomQuery>{
         let sender = &self.sender;
         let wasm_path = uploadable.wasm();
 
         log::debug!("Uploading file at {:?}", wasm_path);
 
         let file_contents = std::fs::read(wasm_path.path())?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+        let store_msg  = cosmrs::cosmwasm::MsgStoreCode {
             sender: sender.pub_addr()?,
             wasm_byte_code: file_contents,
             instantiate_permission: None,
