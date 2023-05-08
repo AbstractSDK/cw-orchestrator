@@ -6,13 +6,8 @@ use super::{
     sender::Wallet,
     state::{ChainKind, DaemonState},
     tx_resp::CosmTxResponse,
-    wasm_path::WasmPath,
 };
-use crate::{
-    state::ChainState,
-    tx_handler::{ChainUpload, TxHandler},
-    CallAs, ContractInstance, CwOrcExecute, Uploadable,
-};
+use crate::{state::ChainState, tx_handler::{ChainUpload, TxHandler}, CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,

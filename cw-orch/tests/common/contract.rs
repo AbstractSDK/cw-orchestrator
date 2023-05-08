@@ -27,9 +27,7 @@ pub struct Cw20;
 impl<Chain: CwEnv> Cw20<Chain> {
     pub fn new(chain: Chain) -> Self {
         let id = Id::new();
-        Self {
-            0: Contract::new(format!("cw-plus:cw20_base:{}", id), chain),
-        }
+        Self(Contract::new(format!("cw-plus:cw20_base:{}", id), chain))
     }
 }
 

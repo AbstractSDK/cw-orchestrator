@@ -40,7 +40,7 @@ fn cosmwasm_exec_fails() {
     // init msg for contract
     let init_msg = common::contract::get_init_msg(&sender);
     contract
-        .instantiate(&init_msg, Some(&sender.clone()), None)
+        .instantiate(&init_msg, Some(&sender), None)
         .unwrap();
 
     // burn more than we have amount
