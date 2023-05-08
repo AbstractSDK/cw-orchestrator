@@ -286,17 +286,6 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
-    let message_idx = match func_ident.to_string().as_ref() {
-        "instantiate" | "execute" => 3,
-        "query" | "migrate" => 2,
-        _ => panic!("Function name not supported for the macro"),
-    };
-
-    let message = match signature.inputs[message_idx].clone() {
-        FnArg::Typed(syn::PatType { ty, .. }) => *ty,
-        _ => panic!("Only typed arguments"),
-    };
-
     let wasm_name = get_wasm_name();
     let name = get_crate_to_struct();
 
@@ -337,6 +326,20 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
+        // We create the Reply trait, it's only there for signaling the reply function is being defined
+        pub trait DefaultSudo<T>{
+            fn get_sudo() -> Option<T> { 
+                None
+            }
+        }
+        pub trait DefaultReply<T>{
+            fn get_reply() -> Option<T>{
+                None
+            }
+        }
+        impl<Chain: ::cw_orch::CwEnv, T> DefaultSudo<T> for #name<Chain> {}
+        impl<Chain: ::cw_orch::CwEnv, T> DefaultReply<T> for #name<Chain> {}
+
         // We add the contract creation script
         impl<Chain: ::cw_orch::CwEnv> #name<Chain> {
             pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
@@ -350,11 +353,22 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         impl ::cw_orch::Uploadable<::cw_orch::Mock> for #name<::cw_orch::Mock>{
             fn source(&self) -> <::cw_orch::Mock as ::cw_orch::TxHandler>::ContractSource{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let contract = ::cw_orch::ContractWrapper::new(
+                let mut contract = ::cw_orch::ContractWrapper::new(
                     #name::<::cw_orch::Mock>::get_execute(),
                     #name::<::cw_orch::Mock>::get_instantiate(),
                     #name::<::cw_orch::Mock>::get_query()
                 );
+
+                // If we implement the reply trait --> Add reply
+                if let Some(reply) = #name::<::cw_orch::Mock>::get_reply(){
+                    contract = contract.with_reply(reply);
+                }
+
+                // If we implement the sudo trait --> Add sudo
+                if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
+                    contract = contract.with_sudo(sudo);
+                }
+
                 Box::new(contract)
             }
         }
@@ -388,26 +402,66 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let trait_name = format_ident!("{}ableContract", pascal_function_name);
     let message_name = format_ident!("{}Msg", pascal_function_name);
 
-    let func_part = quote!(
+    let func_name: String = func_ident.to_string();
+    
 
-        impl<Chain: ::cw_orch::CwEnv> ::cw_orch::#trait_name for #name<Chain> {
-            type #message_name = #message;
-        }
+    let message_part = match func_name.as_str(){
+        "instantiate" | "execute" | "query" | "migrate" => { // If we have the instantiate / execute / query / migrate, we define user-messages
+            let message_idx = match func_name.as_str() {
+                "instantiate" | "execute" => 3,
+                "query" | "migrate" => 2,
+                _=> panic!("Unreachable")
+            };
+            let message = match signature.inputs[message_idx].clone() {
+                FnArg::Typed(syn::PatType { ty, .. }) => *ty,
+                _ => panic!("Only typed arguments"),
+            };
+            quote!(
+                impl<Chain: ::cw_orch::CwEnv> ::cw_orch::#trait_name for #name<Chain> {
+                    type #message_name = #message;
+                }
+            )
 
+        },
+        // in the next 2 cases case we implement the optional Sudo or Reply traits on the contract, to signal the function exists
+        "sudo" => { 
+            quote!()
+        },
+        "reply" => {
+            quote!()
+        },
+        _ => panic!("Macro not supported for this funciton name")
+    };
 
-        impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
-            fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
-            {
-                return #func_ident;
-            }
-        }
-    );
+    let func_part = match func_name.as_str(){
+        "instantiate" | "execute" | "query" | "migrate" => {
+            quote!(
+                impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
+                    fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
+                    {
+                        return #func_ident;
+                    }
+                }
+            )
+        },
+        "sudo" | "reply" => {
+            quote!(
+                impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
+                    fn #new_func_name() -> Option<#func_type> /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
+                    {
+                        return Some(#func_ident);
+                    }
+                }
+            )
+        },
+        _ => panic!("Unreachable")
+    };
 
     let addition: TokenStream = if func_ident == "instantiate" {
         let mut interface_def: TokenStream = quote!(
-         #struct_def
-
-        #func_part
+            #struct_def
+            #message_part
+            #func_part
         )
         .into();
         // Add the Uploadable<Daemon> trait for the contract
@@ -416,7 +470,10 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
 
         interface_def
     } else {
-        func_part.into()
+        quote!(
+            #message_part
+            #func_part
+        ).into()
     };
 
     input.extend(addition);
