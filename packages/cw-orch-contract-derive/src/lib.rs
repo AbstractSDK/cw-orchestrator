@@ -359,81 +359,50 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
+        // We implement the Contract trait directly for our structure
+        impl cw_multi_test::Contract<Empty, Empty> for #name<::cw_orch::Mock>{
+            fn execute(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::Mock>::get_execute()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
+            }
+            fn instantiate(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::Mock>::get_instantiate()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
+            }
+            fn query(&self, deps: ::cosmwasm_std::Deps, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Binary, anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::Mock>::get_query()(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
+            }
+            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
+                if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo() {
+                    let msg = ::cosmwasm_std::from_slice(&msg)?;
+                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err)) 
+                }else{
+                    panic!("No sudo registered");
+                }
+            }
+            fn reply(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, reply_msg: ::cosmwasm_std::Reply) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
+                    reply(deps, env, reply_msg).map_err(|err| anyhow::anyhow!(err)) 
+                }else{
+                    panic!("No reply registered");
+                }
+            }
+            fn migrate(&self, deps: cosmwasm_std::DepsMut, env: cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                if let Some(migrate) = #name::<::cw_orch::Mock>::get_migrate() {
+                    let msg = ::cosmwasm_std::from_slice(&msg)?;
+                    migrate(deps, env, msg).map_err(|err| anyhow::anyhow!(err)) 
+                }else{
+                    panic!("No migrate registered");
+                }
+            }
+        }
+
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
         impl ::cw_orch::Uploadable<::cw_orch::Mock> for #name<::cw_orch::Mock>{
             fn source(&self) -> <::cw_orch::Mock as ::cw_orch::TxHandler>::ContractSource{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-
-                // Because of the different types used we need to use this nested complexity
-                // TODO : Simplify this, this is a mess, is there a way to do better ?
-
-                if let Some(migrate) = #name::<::cw_orch::Mock>::get_migrate() {
-                    if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
-                        if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
-                            Box::new(::cw_orch::ContractWrapper::new(
-                                #name::<::cw_orch::Mock>::get_execute(),
-                                #name::<::cw_orch::Mock>::get_instantiate(),
-                                #name::<::cw_orch::Mock>::get_query()
-                            )
-                            .with_migrate(migrate)
-                            .with_reply(reply)
-                            .with_sudo(sudo))
-                        }else{
-                            Box::new(::cw_orch::ContractWrapper::new(
-                                #name::<::cw_orch::Mock>::get_execute(),
-                                #name::<::cw_orch::Mock>::get_instantiate(),
-                                #name::<::cw_orch::Mock>::get_query()
-                            )
-                            .with_migrate(migrate)
-                            .with_reply(reply))
-                        }
-                    }else if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
-                        Box::new(::cw_orch::ContractWrapper::new(
-                            #name::<::cw_orch::Mock>::get_execute(),
-                            #name::<::cw_orch::Mock>::get_instantiate(),
-                            #name::<::cw_orch::Mock>::get_query()
-                        )
-                        .with_migrate(migrate)
-                        .with_sudo(sudo))
-                    }else{
-                        Box::new(::cw_orch::ContractWrapper::new(
-                            #name::<::cw_orch::Mock>::get_execute(),
-                            #name::<::cw_orch::Mock>::get_instantiate(),
-                            #name::<::cw_orch::Mock>::get_query()
-                        )
-                        .with_migrate(migrate))
-                    }
-                }else if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
-                    if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
-                        Box::new(::cw_orch::ContractWrapper::new(
-                            #name::<::cw_orch::Mock>::get_execute(),
-                            #name::<::cw_orch::Mock>::get_instantiate(),
-                            #name::<::cw_orch::Mock>::get_query()
-                        )
-                        .with_reply(reply)
-                        .with_sudo(sudo))
-                    }else{
-                        Box::new(::cw_orch::ContractWrapper::new(
-                            #name::<::cw_orch::Mock>::get_execute(),
-                            #name::<::cw_orch::Mock>::get_instantiate(),
-                            #name::<::cw_orch::Mock>::get_query()
-                        )
-                        .with_reply(reply))
-                    }
-                }else if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
-                    Box::new(::cw_orch::ContractWrapper::new(
-                            #name::<::cw_orch::Mock>::get_execute(),
-                            #name::<::cw_orch::Mock>::get_instantiate(),
-                            #name::<::cw_orch::Mock>::get_query()
-                        )
-                    .with_sudo(sudo))
-                }else{
-                    Box::new(::cw_orch::ContractWrapper::new(
-                        #name::<::cw_orch::Mock>::get_execute(),
-                        #name::<::cw_orch::Mock>::get_instantiate(),
-                        #name::<::cw_orch::Mock>::get_query()
-                    ))
-                }
+                Box::new(self.clone())
             }
         }
     );
