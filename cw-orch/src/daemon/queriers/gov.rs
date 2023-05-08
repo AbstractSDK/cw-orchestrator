@@ -35,7 +35,7 @@ impl Gov {
     /// Proposals queries all proposals based on given status.
     pub async fn proposals(
         &self,
-        proposal_status: i32,
+        proposal_status: GovProposalStatus,
         voter: impl Into<String>,
         depositor: impl Into<String>,
         pagination: Option<PageRequest>,
@@ -45,7 +45,7 @@ impl Gov {
             gov,
             proposals,
             QueryProposalsRequest {
-                proposal_status: proposal_status,
+                proposal_status: proposal_status as i32,
                 voter: voter.into(),
                 depositor: depositor.into(),
                 pagination: pagination
@@ -72,10 +72,18 @@ impl Gov {
         Ok(vote.vote.unwrap())
     }
 
-    /// Votes queries votes of a given proposal.
+    /// Query votes of a given proposal.
     pub async fn votes(
         &self,
-        proposal_id: u64,
+        proposal_id: impl Into<u64>
+    ) -> Result<cosmos_modules::gov::QueryVotesResponse, DaemonError> {
+        self.votes_with_pagination(proposal_id.into(), None).await
+    }
+
+    /// Query votes of a given proposal with pagination
+    pub async fn votes_with_pagination(
+        &self,
+        proposal_id: impl Into<u64>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::gov::QueryVotesResponse, DaemonError> {
         let votes: cosmos_modules::gov::QueryVotesResponse = cosmos_query!(
@@ -83,7 +91,7 @@ impl Gov {
             gov,
             votes,
             QueryVotesRequest {
-                proposal_id: proposal_id,
+                proposal_id: proposal_id.into(),
                 pagination: pagination
             }
         );
@@ -157,4 +165,13 @@ impl Gov {
         );
         Ok(tally_result.tally.unwrap())
     }
+}
+
+pub enum GovProposalStatus {
+    Unspecified = 0,
+    DepositPeriod = 1,
+    VotingPeriod = 2,
+    Passed = 3,
+    Rejected = 4,
+    Failed = 5,
 }

@@ -16,7 +16,7 @@ impl DaemonQuerier for Feegrant {
 }
 
 impl Feegrant {
-    /// Allowance returns fee granted to the grantee by the granter.
+    /// Query all allowances granted to the grantee address by a granter address
     pub async fn allowance(
         &self,
         granter: impl Into<String>,
@@ -34,8 +34,16 @@ impl Feegrant {
         Ok(allowance.allowance.unwrap())
     }
 
-    /// Allowances returns all the grants for address.
+    /// Query all allowances for grantee address
     pub async fn allowances(
+        &self,
+        grantee: impl Into<String>,
+    ) -> Result<Vec<cosmos_modules::feegrant::Grant>, DaemonError> {
+        self.allowances_with_pagination(grantee, None).await
+    }
+
+    /// Query allowances for grantee address with a given pagination
+    pub async fn allowances_with_pagination(
         &self,
         grantee: impl Into<String>,
         pagination: Option<PageRequest>,

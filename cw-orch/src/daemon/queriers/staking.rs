@@ -35,14 +35,14 @@ impl Staking {
     /// Validators queries all validators that match the given status.
     pub async fn validators(
         &self,
-        status: impl Into<String>,
+        status: StakingBondStatus,
     ) -> Result<Vec<cosmos_modules::staking::Validator>, DaemonError> {
         let validators: cosmos_modules::staking::QueryValidatorsResponse = cosmos_query!(
             self,
             staking,
             validators,
             QueryValidatorsRequest {
-                status: status.into(),
+                status: status.as_str().to_string(),
                 pagination: None,
             }
         );
@@ -244,3 +244,26 @@ impl Staking {
         Ok(params)
     }
 }
+
+pub enum StakingBondStatus {
+    /// UNSPECIFIED defines an invalid validator status.
+    Unspecified = 0,
+    /// UNBONDED defines a validator that is not bonded.
+    Unbonded = 1,
+    /// UNBONDING defines a validator that is unbonding.
+    Unbonding = 2,
+    /// BONDED defines a validator that is bonded.
+    Bonded = 3,
+}
+
+impl StakingBondStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            StakingBondStatus::Unspecified => "BOND_STATUS_UNSPECIFIED",
+            StakingBondStatus::Unbonded => "BOND_STATUS_UNBONDED",
+            StakingBondStatus::Unbonding => "BOND_STATUS_UNBONDING",
+            StakingBondStatus::Bonded => "BOND_STATUS_BONDED",
+        }
+    }
+}
+

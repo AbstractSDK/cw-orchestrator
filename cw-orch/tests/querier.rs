@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
 use cw_orch::{
-    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
+    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking, StakingBondStatus},
     ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
 };
 
@@ -43,7 +43,7 @@ fn general_staking() {
     let params = rt.block_on(staking.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let validators = rt.block_on(staking.validators("BOND_STATUS_BONDED"));
+    let validators = rt.block_on(staking.validators(StakingBondStatus::Bonded));
     asserting!("validators is ok").that(&validators).is_ok();
     asserting!("validators is not empty")
         .that(&validators.unwrap().len())

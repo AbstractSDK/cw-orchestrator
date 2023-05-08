@@ -244,7 +244,7 @@ impl Sender<All> {
         log::debug!("{:?}", commit);
 
         let resp = Node::new(self.channel())
-            .find_tx_by_hash(commit.into_inner().tx_response.unwrap().txhash)
+            .find_tx(commit.into_inner().tx_response.unwrap().txhash)
             .await?;
 
         // if tx result != 0 then the tx failed, so we return an error
