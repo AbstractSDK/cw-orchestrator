@@ -326,19 +326,29 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
-        // We create the Reply trait, it's only there for signaling the reply function is being defined
-        pub trait DefaultSudo<T>{
-            fn get_sudo() -> Option<T> { 
+        // We need to create default reply, sudo and migrate getter functions because those functions may not be implemented by the contract
+        // These are fallback in case the functions are not defined at a later time
+        type ReplyFn<C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: ::cosmwasm_std::Reply) -> Result<::cosmwasm_std::Response<C>, E>;
+        type PermissionedFn<T, C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: T) -> Result<::cosmwasm_std::Response<C>, E>; // For SUDO
+
+        pub trait DefaultReply<C,  Q: ::cosmwasm_std::CustomQuery, E5A> {
+            fn get_reply() -> Option<ReplyFn<C, E5A , Q>> {
                 None
             }
         }
-        pub trait DefaultReply<T>{
-            fn get_reply() -> Option<T>{
+        pub trait DefaultSudo<C, Q: ::cosmwasm_std::CustomQuery, T4A, E4A> {
+            fn get_sudo() -> Option<PermissionedFn<T4A, C, E4A, Q>,> {
                 None
             }
         }
-        impl<Chain: ::cw_orch::CwEnv, T> DefaultSudo<T> for #name<Chain> {}
-        impl<Chain: ::cw_orch::CwEnv, T> DefaultReply<T> for #name<Chain> {}
+        pub trait DefaultMigrate<C, Q: ::cosmwasm_std::CustomQuery, E6A, T6A > {
+            fn get_migrate() -> Option<PermissionedFn<T6A, C, E6A, Q>> {
+                None
+            }
+        }
+        impl<Chain: ::cw_orch::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
+        impl<Chain: ::cw_orch::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
+        impl<Chain: ::cw_orch::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
 
         // We add the contract creation script
         impl<Chain: ::cw_orch::CwEnv> #name<Chain> {
@@ -353,23 +363,77 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         impl ::cw_orch::Uploadable<::cw_orch::Mock> for #name<::cw_orch::Mock>{
             fn source(&self) -> <::cw_orch::Mock as ::cw_orch::TxHandler>::ContractSource{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let mut contract = ::cw_orch::ContractWrapper::new(
-                    #name::<::cw_orch::Mock>::get_execute(),
-                    #name::<::cw_orch::Mock>::get_instantiate(),
-                    #name::<::cw_orch::Mock>::get_query()
-                );
 
-                // If we implement the reply trait --> Add reply
-                if let Some(reply) = #name::<::cw_orch::Mock>::get_reply(){
-                    contract = contract.with_reply(reply);
+                // Because of the different types used we need to use this nested complexity
+                // TODO : Simplify this, this is a mess, is there a way to do better ?
+
+                if let Some(migrate) = #name::<::cw_orch::Mock>::get_migrate() {
+                    if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
+                        if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
+                            Box::new(::cw_orch::ContractWrapper::new(
+                                #name::<::cw_orch::Mock>::get_execute(),
+                                #name::<::cw_orch::Mock>::get_instantiate(),
+                                #name::<::cw_orch::Mock>::get_query()
+                            )
+                            .with_migrate(migrate)
+                            .with_reply(reply)
+                            .with_sudo(sudo))
+                        }else{
+                            Box::new(::cw_orch::ContractWrapper::new(
+                                #name::<::cw_orch::Mock>::get_execute(),
+                                #name::<::cw_orch::Mock>::get_instantiate(),
+                                #name::<::cw_orch::Mock>::get_query()
+                            )
+                            .with_migrate(migrate)
+                            .with_reply(reply))
+                        }
+                    }else if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
+                        Box::new(::cw_orch::ContractWrapper::new(
+                            #name::<::cw_orch::Mock>::get_execute(),
+                            #name::<::cw_orch::Mock>::get_instantiate(),
+                            #name::<::cw_orch::Mock>::get_query()
+                        )
+                        .with_migrate(migrate)
+                        .with_sudo(sudo))
+                    }else{
+                        Box::new(::cw_orch::ContractWrapper::new(
+                            #name::<::cw_orch::Mock>::get_execute(),
+                            #name::<::cw_orch::Mock>::get_instantiate(),
+                            #name::<::cw_orch::Mock>::get_query()
+                        )
+                        .with_migrate(migrate))
+                    }
+                }else if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
+                    if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
+                        Box::new(::cw_orch::ContractWrapper::new(
+                            #name::<::cw_orch::Mock>::get_execute(),
+                            #name::<::cw_orch::Mock>::get_instantiate(),
+                            #name::<::cw_orch::Mock>::get_query()
+                        )
+                        .with_reply(reply)
+                        .with_sudo(sudo))
+                    }else{
+                        Box::new(::cw_orch::ContractWrapper::new(
+                            #name::<::cw_orch::Mock>::get_execute(),
+                            #name::<::cw_orch::Mock>::get_instantiate(),
+                            #name::<::cw_orch::Mock>::get_query()
+                        )
+                        .with_reply(reply))
+                    }
+                }else if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
+                    Box::new(::cw_orch::ContractWrapper::new(
+                            #name::<::cw_orch::Mock>::get_execute(),
+                            #name::<::cw_orch::Mock>::get_instantiate(),
+                            #name::<::cw_orch::Mock>::get_query()
+                        )
+                    .with_sudo(sudo))
+                }else{
+                    Box::new(::cw_orch::ContractWrapper::new(
+                        #name::<::cw_orch::Mock>::get_execute(),
+                        #name::<::cw_orch::Mock>::get_instantiate(),
+                        #name::<::cw_orch::Mock>::get_query()
+                    ))
                 }
-
-                // If we implement the sudo trait --> Add sudo
-                if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo(){
-                    contract = contract.with_sudo(sudo);
-                }
-
-                Box::new(contract)
             }
         }
     );
@@ -434,22 +498,22 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     };
 
     let func_part = match func_name.as_str(){
-        "instantiate" | "execute" | "query" | "migrate" => {
+        "instantiate" | "execute" | "query" => {
             quote!(
                 impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
                     fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
                     {
-                        return #func_ident;
+                        #func_ident
                     }
                 }
             )
         },
-        "sudo" | "reply" => {
+        "migrate" | "sudo" | "reply" => {
             quote!(
                 impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
                     fn #new_func_name() -> Option<#func_type> /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
                     {
-                        return Some(#func_ident);
+                        Some(#func_ident)
                     }
                 }
             )
