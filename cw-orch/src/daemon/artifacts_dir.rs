@@ -1,8 +1,6 @@
 use std::{env, fs, path::PathBuf};
 
-use crate::DaemonError;
-
-use super::wasm_path::WasmPath;
+use crate::{CwOrcError, DaemonError, WasmPath};
 
 /// Points to a directory containing wasm files
 pub struct ArtifactsDir(PathBuf);
@@ -50,6 +48,11 @@ impl ArtifactsDir {
                     name,
                 ))
             })?;
-        WasmPath::new(self.path().join(path_str))
+        WasmPath::new(self.path().join(path_str)).map_err(|e| {
+            match e {
+                CwOrcError::IOErr(io_err) => DaemonError::IOErr(io_err),
+                e => DaemonError::StdErr(format!("Could not find wasm file with name {} in artifacts dir: {}", name, e)),
+            }
+        })
     }
 }

@@ -387,7 +387,7 @@ mod test {
 
         asserting("address balance amount is correct")
             .that(&amount)
-            .is_equal_to(&balance.into());
+            .is_equal_to(&balance.u128());
 
         asserting("sender is correct")
             .that(sender)

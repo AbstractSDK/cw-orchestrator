@@ -30,7 +30,7 @@ fn general() {
     let init_msg = common::contract::get_init_msg(&sender);
 
     // instantiate contract on chain
-    let init_res = contract.instantiate(&init_msg, Some(&sender.clone()), None);
+    let init_res = contract.instantiate(&init_msg, Some(&sender), None);
     asserting!("instantiate is successful")
         .that(&init_res)
         .is_ok();
