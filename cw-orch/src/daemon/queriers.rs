@@ -7,7 +7,7 @@
 //! You will need to acquire a [gRPC channel](Channel) to a running CosmosSDK node to be able to use the queriers.  
 //! Here is an example of how to acquire one using the Daemon builder.
 //!
-//! ```rust
+//! ```no_run
 //! // include tokio runtime
 //! use tokio::runtime::Runtime;
 //!
@@ -31,7 +31,7 @@
 //!
 //! ### Node querier
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -51,7 +51,7 @@
 //!
 //! Fetch the bank balance of a given address If denom is None, returns all balances
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -71,7 +71,7 @@
 //!
 //! Fetch total supply in the bank module
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Bank, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -93,7 +93,7 @@
 //!
 //! Unspecified = 0, DepositPeriod = 1, VotingPeriod = 2, Passed = 3, Rejected = 4, Failed = 5,
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 //! # use cw_orch::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
@@ -116,7 +116,7 @@
 //!
 //! Fetch voter information for given proposal
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -135,7 +135,7 @@
 //!
 //! Fetch all votes information for given proposal
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 //! # use cw_orch::{queriers::Gov, Daemon, networks, queriers::DaemonQuerier};
@@ -159,7 +159,7 @@
 //! Fetch list of validators under a given status:
 //! BOND_STATUS_BONDED, BOND_STATUS_UNBONDING, BOND_STATUS_UNBONDED, BOND_STATUS_UNSPECIFIED
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -177,7 +177,7 @@
 //!
 //! Fetch staked balance for given delegator to given validator
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -197,7 +197,7 @@
 //!
 //! Fetch all unbonding delegations of a given delegator address.
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -217,7 +217,7 @@
 //!
 //! Fetch redelegations of given address.
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 //! # use cw_orch::{queriers::Staking, Daemon, networks, queriers::DaemonQuerier};
@@ -242,7 +242,7 @@
 //!
 //! Fetch fee granted to a grantee
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -262,7 +262,7 @@
 //!
 //! Fetch all grants to a grantee
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 //! # use cw_orch::{queriers::Feegrant, Daemon, networks, queriers::DaemonQuerier};
@@ -285,7 +285,7 @@
 //!
 //! Fetch contract information
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -304,7 +304,7 @@
 //!
 //! Fetch contract history
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 //! # use cw_orch::{queriers::CosmWasm, Daemon, networks, queriers::DaemonQuerier};
@@ -327,7 +327,7 @@
 //!
 //! Fetch known clients
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();
@@ -345,7 +345,7 @@
 //!
 //! Fetch the state of a specific IBC client
 //!
-//! ```rust
+//! ```no_run
 //! # use tokio::runtime::Runtime;
 //! # use cw_orch::{queriers::Ibc, Daemon, networks, queriers::DaemonQuerier};
 //! # let runtime = Runtime::new().unwrap();

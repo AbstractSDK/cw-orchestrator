@@ -7,9 +7,7 @@ struct DeployId(());
 
 type Id = IdT<DeployId>;
 
-use cw_orch::{
-    contract, networks::LOCAL_JUNO, Contract, ContractWrapper, Daemon, Mock, Uploadable, WasmPath,
-};
+use cw_orch::{networks::LOCAL_JUNO, Daemon};
 
 /// Get the test-daemon object (local juno)
 pub fn daemon(runtime: &Runtime) -> (cosmwasm_std::Addr, Daemon) {
