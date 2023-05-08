@@ -155,6 +155,7 @@ fn test_ica(
     // get the account information
     let remote_account = remote_accounts.accounts[0].clone();
     let remote_addr = remote_account.remote_addr.unwrap();
+    let channel = remote_account.channel_id;
 
     // send some funds to the remote account
     rt.block_on(
@@ -169,7 +170,7 @@ fn test_ica(
     // burn the juno remotely
     controller.execute(
         &controller_msgs::ExecuteMsg::SendMsgs {
-            channel_id: "channel-1".to_string(),
+            channel_id: channel,
             msgs: vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
                 amount: vec![cosmwasm_std::coin(100u128, "ujuno")],
             })],
