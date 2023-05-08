@@ -35,7 +35,6 @@ daemon = [
   "dep:hex",
   "dep:bitcoin",
   "dep:prost",
-  "dep:sha256",
   "cw-orch-contract-derive/propagate_daemon",
 ]
 
@@ -57,7 +56,7 @@ serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
 
 # Daemon deps
-sha256 = { version = "1.1.1", optional = true }
+sha256 = { version = "1.1.1" }
 prost = { version = "0.11", optional = true }
 bitcoin = { version = "0.30.0", optional = true }
 hex = { version = "0.4.3", optional = true }
@@ -93,6 +92,7 @@ uid = "0.1.7"
 env_logger = "0.10.0"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cosmwasm-schema = "1.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
