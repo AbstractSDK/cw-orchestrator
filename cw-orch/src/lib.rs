@@ -17,9 +17,9 @@ mod interface_traits;
 #[cfg(feature = "daemon")]
 mod keys;
 mod mock;
+mod paths;
 mod state;
 mod tx_handler;
-mod paths;
 
 pub use contract::Contract;
 pub use cw_orch_contract_derive::{contract, interface};
@@ -42,12 +42,11 @@ pub use state::{ChainState, StateInterface};
 pub use tx_handler::{ChainUpload, TxHandler, TxResponse};
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
-pub use cw_multi_test::{custom_app, BasicApp, ContractWrapper, Contract as MockContract};
-pub use paths::wasm_path::WasmPath;
+pub use cw_multi_test::{custom_app, BasicApp, Contract as MockContract, ContractWrapper};
+pub use paths::{artifacts_dir::ArtifactsDir, wasm_path::WasmPath};
 
 #[cfg(feature = "daemon")]
 pub use daemon::{
-    artifacts_dir::ArtifactsDir,
     builder::DaemonBuilder,
     channel::DaemonChannel,
     core::Daemon,

@@ -1,4 +1,3 @@
-pub mod artifacts_dir;
 pub mod builder;
 pub mod channel;
 pub mod core;
