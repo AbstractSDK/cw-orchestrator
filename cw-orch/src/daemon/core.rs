@@ -7,7 +7,11 @@ use super::{
     state::{ChainKind, DaemonState},
     tx_resp::CosmTxResponse,
 };
-use crate::{state::ChainState, tx_handler::{ChainUpload, TxHandler}, CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath};
+use crate::{
+    state::ChainState,
+    tx_handler::{ChainUpload, TxHandler},
+    CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath,
+};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,
