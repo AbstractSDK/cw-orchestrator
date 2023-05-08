@@ -2,23 +2,30 @@
 
 # cw-orchestrator
 
-Your go-to multi-environment [CosmWasm](https://cosmwasm.com/) smart-contract scripting library. The documentation within this crate will show you how to quickly get started. We provide tutorial-like documentation at [orchestrator.abstract.money](https://orchestrator.abstract.money).
+Cw-orchestrator is a Rust library for interacting with [CosmWasm](https://cosmwasm.com/) smart contracts. It provides a type-safe interface to CosmWasm contracts and allows you to easily interact with them. It does this by providing a set of macros that generate type-safe interfaces to your contracts. You can then combine your contract interfaces into a single object that can be shared with others to ease integration efforts and encourage collaboration.
 
-> cw-orchestrator is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
-
-cw-orchestrator makes it easier to quickly deploy and iterate on CosmWasm contracts. It provides support for multiple CosmWasm execution environment and makes interacting and integrating with smart-contracts much easier.
+The documentation here gives you a brief overview of the functionality that cw-orchestrator provides. We provide more documentation at [orchestrator.abstract.money](https://orchestrator.abstract.money).
 
 ## How it works
 
-Interacting with a [CosmWasm](https://cosmwasm.com/) contract is done by calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates type-checked interfaces for your contracts, allowing them to be type-checked at compile time.
+Interacting with a [CosmWasm](https://cosmwasm.com/) contract is done by calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
+
+## Maintained Interfaces
+
+We maintain a small set of interfaces ourselves that we use in our own projects. These interfaces are maintained by the Abstract team and are a good reference for how to use the library.
+
+| Codebase | Latest Version |
+|---|---|
+| [cw-plus](https://github.com/AbstractSDK/cw-plus) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/cw-plus"> |
+| [wyndex](https://github.com/AbstractSDK/integration-bundles) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/integration-bundles"> |
 
 ### Creating an Interface
 
-In order to generate a type-checked interface to your contract you can either pass the contract's message types into the `contract` macro or you can add the `interface` macro to your endpoint function exports!
+In order to generate a typed interface to your contract you can either pass the contract's message types into the `contract` macro or you can add the `interface` macro to your endpoint function exports!
 
 #### `contract` macro
 
-Provide your messages to a new struct that's named after your contract. In this case a CW20 message.
+Provide your messages to a new struct that's named after your contract.
 
 ```rust,no_run
 use cw_orch::contract;
@@ -27,9 +34,20 @@ use cw_orch::contract;
 pub struct Cw20;
 ```
 
+Then implement a constructor for it:
+
+```rust,no_run
+use cw_orch::{CwEnv,Contract};
+impl<Chain: CwEnv> Cw20 <Chain>{
+    pub fn new(name: &str, chain: Chain) -> Self {
+        Self(Contract::new(name, chain))
+    }
+}
+```
+
 #### `interface` macro
 
-You create a contract interface by adding the `interface` macro to your contract endpoints. The name of the interface will be the crate name is PascalCase.  
+You create a contract interface by adding the `interface` macro to your contract endpoints. The name of the generated interface will be the crate name in PascalCase.  
 
 ```rust,no_run
 #[cw_orch::interface]
@@ -39,13 +57,15 @@ fn instantiate(...)
 fn execute(...)
 ```
 
-#### Usage
+You now have a contract interface that you can use to interact with your contract.
 
-These macros implement a set of traits for the struct. These traits contain functions that can then be used to interact with the contract.
+#### Usage
 
 You can then use this interface to interact with the contract:
 
-```rust
+```rust,no_run
+// setup environment (see cw-orchestrator docs for more info)
+
 let cw20_base: Cw20<Chain> = Cw20::new("my_token", chain);
 // instantiate a CW20 token instance
 let cw20_init_msg = cw20_base::msg::InstantiateMsg {
@@ -65,8 +85,6 @@ cw20_base.instantiate(&cw20_init_msg, None, None)?;
 // There is also no need to provide a return type of the query.
 let balance = cw20_base.balance(sender.to_string())?;
 ```
-
-<!-- TODO: Examples You can find [the full cw20 implementation here](cw-orch/examples/cw20.rs). An example of how to interact with a contract in `cw-multi-test` can be found [here](cw-plus-orc/examples/cw-plus-mock.rs) while the same interaction on a real node can be found [here](cw-plus-orc/examples/cw-plus-daemon.rs). -->
 
 ## Features
 
@@ -123,7 +141,7 @@ We'd really appreciate your help! Please read our [contributing guidelines](docs
 The documentation is generated using [mdbook](https://rust-lang.github.io/mdBook/index.html). Edit the files in the `docs/src` folder and run
 
 ```shell
-cd docs && mdbook serve --open --port 5000
+cd docs && mdbook serve --open
 ```
 
 to view the changes.
@@ -142,3 +160,7 @@ Enjoy scripting your smart contracts with ease? Build your contracts with ease b
 # Disclaimer
 
 This software is provided as-is without any guarantees.
+
+# Credits
+
+cw-orchestrator is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
