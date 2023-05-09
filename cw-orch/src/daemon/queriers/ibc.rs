@@ -1,5 +1,5 @@
 use super::DaemonQuerier;
-use crate::{daemon::cosmos_modules, DaemonError};
+use crate::daemon::{cosmos_modules, error::DaemonError};
 use cosmos_modules::ibc_channel;
 use cosmrs::proto::ibc::{
     applications::transfer::v1::{DenomTrace, QueryDenomTraceResponse},

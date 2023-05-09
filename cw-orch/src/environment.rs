@@ -1,4 +1,8 @@
-use crate::{state::ChainState, prelude::{IndexResponse, Uploadable}, error::CwOrcError};
+use crate::{
+    error::CwOrcError,
+    prelude::{IndexResponse, Uploadable},
+    state::ChainState,
+};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;

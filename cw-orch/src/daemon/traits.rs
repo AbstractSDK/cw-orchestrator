@@ -1,7 +1,7 @@
+use crate::daemon::queriers::CosmWasm;
 use crate::environment::TxResponse;
 use crate::error::CwOrcError;
 use crate::prelude::*;
-use crate::daemon::queriers::CosmWasm;
 
 pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)

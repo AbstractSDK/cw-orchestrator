@@ -1,10 +1,10 @@
-//! This file re-exports parts of the API of the cw-orchestrator crate to make use of it easier. 
-//! 
-//! ```rust 
+//! This file re-exports parts of the API of the cw-orchestrator crate to make use of it easier.
+//!
+//! ```rust
 //! use cw_orch::prelude::*;
 //! ```
 
-// We don't want to re-export everything here! 
+// We don't want to re-export everything here!
 // 1. Macros
 // 2. Traits that need to be imported to preform actions on an interface
 // 3. Traits that need to be imported to implement an interface
@@ -17,20 +17,18 @@ pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 // Contract traits
 pub use crate::interface_traits::{
     CallAs, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery,
-    CwOrcUpload, ExecutableContract, InstantiableContract, MigratableContract,
-    QueryableContract, Uploadable,
+    CwOrcUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
+    Uploadable,
 };
 
 // Response trait
-pub use crate::index_response::{IndexResponse};
+pub use crate::index_response::IndexResponse;
 
 // Environment
 pub use crate::environment::{CwEnv, TxResponse};
 
 // Mock for testing
-pub use crate::mock::{
-    core::Mock,
-};
+pub use crate::mock::core::Mock;
 
 // error
 pub use crate::error::CwOrcError;

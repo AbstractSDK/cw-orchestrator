@@ -5,14 +5,13 @@ use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Exe
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    state::{ChainState, StateInterface},
     environment::{ChainUpload, TxHandler},
-    error::CwOrcError, prelude::*,
+    error::CwOrcError,
+    prelude::*,
+    state::{ChainState, StateInterface},
 };
 
 use super::state::MockState;
-
-
 
 // Generic mock-chain implementation
 // Allows for custom state storage

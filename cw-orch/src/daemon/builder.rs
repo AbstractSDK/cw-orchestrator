@@ -2,9 +2,9 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::{Daemon};
+use crate::prelude::Daemon;
 
-use super::{sender::Sender, state::DaemonState, error::DaemonError};
+use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 

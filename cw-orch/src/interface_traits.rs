@@ -1,4 +1,9 @@
-use crate::{contract::Contract, error::CwOrcError, environment::ChainUpload, prelude::{CwEnv, WasmPath}};
+use crate::{
+    contract::Contract,
+    environment::ChainUpload,
+    error::CwOrcError,
+    prelude::{CwEnv, WasmPath},
+};
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
 use serde::{de::DeserializeOwned, Serialize};
@@ -64,9 +69,7 @@ pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chai
 impl<T: ExecutableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute<Chain> for T {}
 
 /// Smart Contract instantiate endpoint
-pub trait CwOrcInstantiate<Chain: CwEnv>:
-    InstantiableContract + ContractInstance<Chain>
-{
+pub trait CwOrcInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstance<Chain> {
     fn instantiate(
         &self,
         instantiate_msg: &Self::InstantiateMsg,
