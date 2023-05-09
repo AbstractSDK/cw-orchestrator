@@ -346,9 +346,9 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                 None
             }
         }
-        impl<Chain: ::cw_orch::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
-        impl<Chain: ::cw_orch::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
-        impl<Chain: ::cw_orch::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
+        impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
+        impl<Chain: ::cw_orch::prelude::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
+        impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
 
         // We add the contract creation script
         impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain> {
@@ -360,21 +360,21 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         }
 
         // We implement the Contract trait directly for our structure
-        impl cw_multi_test::Contract<Empty, Empty> for #name<::cw_orch::Mock>{
+        impl cw_multi_test::Contract<Empty, Empty> for #name<::cw_orch::prelude::Mock>{
             fn execute(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
-                #name::<::cw_orch::Mock>::get_execute()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
+                #name::<::cw_orch::prelude::Mock>::get_execute()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
             }
             fn instantiate(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
-                #name::<::cw_orch::Mock>::get_instantiate()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
+                #name::<::cw_orch::prelude::Mock>::get_instantiate()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
             }
             fn query(&self, deps: ::cosmwasm_std::Deps, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Binary, anyhow::Error> {
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
-                #name::<::cw_orch::Mock>::get_query()(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
+                #name::<::cw_orch::prelude::Mock>::get_query()(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
             }
             fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
-                if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo() {
+                if let Some(sudo) = #name::<::cw_orch::prelude::Mock>::get_sudo() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
                     sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
                 }else{
@@ -382,14 +382,14 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                 }
             }
             fn reply(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, reply_msg: ::cosmwasm_std::Reply) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
-                if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
+                if let Some(reply) = #name::<::cw_orch::prelude::Mock>::get_reply() {
                     reply(deps, env, reply_msg).map_err(|err| anyhow::anyhow!(err))
                 }else{
                     panic!("No reply registered");
                 }
             }
             fn migrate(&self, deps: cosmwasm_std::DepsMut, env: cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
-                if let Some(migrate) = #name::<::cw_orch::Mock>::get_migrate() {
+                if let Some(migrate) = #name::<::cw_orch::prelude::Mock>::get_migrate() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
                     migrate(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
                 }else{
