@@ -16,6 +16,8 @@ pub enum CwOrcError {
     CosmWasmError(#[from] cosmwasm_std::StdError),
     #[error(transparent)]
     AnyError(#[from] ::anyhow::Error),
+    #[error(transparent)]
+    IOErr(#[from] ::std::io::Error),
     #[error("Contract address for {0} not found in store")]
     AddrNotInStore(String),
     #[error("Code id for {0} not found in store")]

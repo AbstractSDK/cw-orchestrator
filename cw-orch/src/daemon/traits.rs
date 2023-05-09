@@ -22,7 +22,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
                 .query::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
         )?;
-        let local_hash = self.source().checksum(&self.id())?;
+        let local_hash = self.wasm().checksum(&self.id())?;
 
         Ok(local_hash == on_chain_hash)
     }

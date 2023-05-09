@@ -399,20 +399,13 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         }
 
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
-        impl ::cw_orch::Uploadable<::cw_orch::Mock> for #name<::cw_orch::Mock>{
-            fn source(&self) -> <::cw_orch::Mock as ::cw_orch::TxHandler>::ContractSource{
+        impl <Chain: ::cw_orch::CwEnv> ::cw_orch::Uploadable for #name<Chain>{
+            fn wrapper(&self) -> Box<dyn ::cw_orch::ContractWrapper>{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
                 Box::new(self.clone())
             }
-        }
-    );
 
-    // if daemon is enabled on cw-orc it will implement Uploadable<Daemon>
-
-    #[cfg(feature = "propagate_daemon")]
-    let daemon_uploadable: TokenStream = quote!(
-            impl ::cw_orch::Uploadable<::cw_orch::Daemon> for #name<::cw_orch::Daemon>{
-            fn source(&self) -> <::cw_orch::Daemon as ::cw_orch::TxHandler>::ContractSource{
+            fn wasm(&self) -> ::cw_orch::WasmPath {
                 // For Daemon contract, we need to return a path for the artifacts to be uploaded
                 // Remember that this is a helper for easy definition of all the traits needed.
                 // We just need to get the local artifacts folder at the root of the workspace
@@ -425,6 +418,15 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                 let artifacts_dir = ::cw_orch::ArtifactsDir::new(workspace_dir);
                 artifacts_dir.find_wasm_path(#wasm_name).unwrap()
             }
+        }
+    );
+
+    // if daemon is enabled on cw-orc it will implement Uploadable<Daemon>
+
+    #[cfg(feature = "propagate_daemon")]
+    let daemon_uploadable: TokenStream = quote!(
+            impl ::cw_orch::Uploadable<::cw_orch::Daemon> for #name<::cw_orch::Daemon>{
+
         }
     )
     .into();
