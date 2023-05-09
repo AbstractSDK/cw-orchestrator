@@ -286,17 +286,6 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
-    let message_idx = match func_ident.to_string().as_ref() {
-        "instantiate" | "execute" => 3,
-        "query" | "migrate" => 2,
-        _ => panic!("Function name not supported for the macro"),
-    };
-
-    let message = match signature.inputs[message_idx].clone() {
-        FnArg::Typed(syn::PatType { ty, .. }) => *ty,
-        _ => panic!("Only typed arguments"),
-    };
-
     let wasm_name = get_wasm_name();
     let name = get_crate_to_struct();
 
@@ -337,6 +326,30 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
+        // We need to create default reply, sudo and migrate getter functions because those functions may not be implemented by the contract
+        // These are fallback in case the functions are not defined at a later time
+        type ReplyFn<C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: ::cosmwasm_std::Reply) -> Result<::cosmwasm_std::Response<C>, E>;
+        type PermissionedFn<T, C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: T) -> Result<::cosmwasm_std::Response<C>, E>; // For SUDO
+
+        pub trait DefaultReply<C,  Q: ::cosmwasm_std::CustomQuery, E5A> {
+            fn get_reply() -> Option<ReplyFn<C, E5A , Q>> {
+                None
+            }
+        }
+        pub trait DefaultSudo<C, Q: ::cosmwasm_std::CustomQuery, T4A, E4A> {
+            fn get_sudo() -> Option<PermissionedFn<T4A, C, E4A, Q>,> {
+                None
+            }
+        }
+        pub trait DefaultMigrate<C, Q: ::cosmwasm_std::CustomQuery, E6A, T6A > {
+            fn get_migrate() -> Option<PermissionedFn<T6A, C, E6A, Q>> {
+                None
+            }
+        }
+        impl<Chain: ::cw_orch::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
+        impl<Chain: ::cw_orch::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
+        impl<Chain: ::cw_orch::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
+
         // We add the contract creation script
         impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain> {
             pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
@@ -346,16 +359,50 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
+        // We implement the Contract trait directly for our structure
+        impl cw_multi_test::Contract<Empty, Empty> for #name<::cw_orch::Mock>{
+            fn execute(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::Mock>::get_execute()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
+            }
+            fn instantiate(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::Mock>::get_instantiate()(deps, env, info, msg).map_err(|err| anyhow::anyhow!(err))
+            }
+            fn query(&self, deps: ::cosmwasm_std::Deps, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Binary, anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::Mock>::get_query()(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
+            }
+            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
+                if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo() {
+                    let msg = ::cosmwasm_std::from_slice(&msg)?;
+                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
+                }else{
+                    panic!("No sudo registered");
+                }
+            }
+            fn reply(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, reply_msg: ::cosmwasm_std::Reply) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
+                    reply(deps, env, reply_msg).map_err(|err| anyhow::anyhow!(err))
+                }else{
+                    panic!("No reply registered");
+                }
+            }
+            fn migrate(&self, deps: cosmwasm_std::DepsMut, env: cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
+                if let Some(migrate) = #name::<::cw_orch::Mock>::get_migrate() {
+                    let msg = ::cosmwasm_std::from_slice(&msg)?;
+                    migrate(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
+                }else{
+                    panic!("No migrate registered");
+                }
+            }
+        }
+
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
         impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::Uploadable for #name<Chain>{
             fn wrapper(&self) -> Box<dyn ::cw_orch::prelude::ContractWrapper>{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let contract = ::cw_orch::prelude::ContractWrapper::new(
-                    #name::<::cw_orch::prelude::Mock>::get_execute(),
-                    #name::<::cw_orch::prelude::Mock>::get_instantiate(),
-                    #name::<::cw_orch::prelude::Mock>::get_query()
-                );
-                Box::new(contract)
+                Box::new(self.clone())
             }
 
             fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
@@ -390,26 +437,65 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let trait_name = format_ident!("{}ableContract", pascal_function_name);
     let message_name = format_ident!("{}Msg", pascal_function_name);
 
-    let func_part = quote!(
+    let func_name: String = func_ident.to_string();
 
-        impl<Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::#trait_name for #name<Chain> {
-            type #message_name = #message;
+    let message_part = match func_name.as_str() {
+        "instantiate" | "execute" | "query" | "migrate" => {
+            // If we have the instantiate / execute / query / migrate, we define user-messages
+            let message_idx = match func_name.as_str() {
+                "instantiate" | "execute" => 3,
+                "query" | "migrate" => 2,
+                _ => panic!("Unreachable"),
+            };
+            let message = match signature.inputs[message_idx].clone() {
+                FnArg::Typed(syn::PatType { ty, .. }) => *ty,
+                _ => panic!("Only typed arguments"),
+            };
+            quote!(
+                impl<Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::#trait_name for #name<Chain> {
+                    type #message_name = #message;
+                }
+            )
         }
-
-
-        impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain>{
-            fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
-            {
-                return #func_ident;
-            }
+        // in the next 2 cases case we implement the optional Sudo or Reply traits on the contract, to signal the function exists
+        "sudo" => {
+            quote!()
         }
-    );
+        "reply" => {
+            quote!()
+        }
+        _ => panic!("Macro not supported for this funciton name"),
+    };
+
+    let func_part = match func_name.as_str() {
+        "instantiate" | "execute" | "query" => {
+            quote!(
+                impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain>{
+                    fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
+                    {
+                        #func_ident
+                    }
+                }
+            )
+        }
+        "migrate" | "sudo" | "reply" => {
+            quote!(
+                impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain>{
+                    fn #new_func_name() -> Option<#func_type> /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
+                    {
+                        Some(#func_ident)
+                    }
+                }
+            )
+        }
+        _ => panic!("Unreachable"),
+    };
 
     let addition: TokenStream = if func_ident == "instantiate" {
         let mut interface_def: TokenStream = quote!(
-         #struct_def
-
-        #func_part
+            #struct_def
+            #message_part
+            #func_part
         )
         .into();
         // Add the Uploadable<Daemon> trait for the contract
@@ -418,7 +504,11 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
 
         interface_def
     } else {
-        func_part.into()
+        quote!(
+            #message_part
+            #func_part
+        )
+        .into()
     };
 
     input.extend(addition);
