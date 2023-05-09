@@ -126,7 +126,7 @@ impl<Chain: CwEnv> Cw1<Chain> {
 > We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `cw-orchestrator` by default.
 > The resulting derive would look like this: `#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]`
 
-For nested execute messages you can add an `impl_into` attribute. This expects the message to implement the `Into` trait for the provided type.
+For nested execute messages you can add an `impl_into` attribute. This expects the message to implement the `Into` trait for the provided type. This can be used with generic messages.
 
 ### QueryFns
 
