@@ -60,6 +60,8 @@ jobs:
         run: cargo doc --no-deps --all-features
         env:
           RUSTDOCFLAGS: --cfg docsrs
+      - name: install mdbook
+        run: cargo install mdbook
       - name: mdbook doc
         run: mdbook test docs
   hack:
