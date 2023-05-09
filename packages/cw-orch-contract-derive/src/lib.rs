@@ -376,14 +376,14 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
                 if let Some(sudo) = #name::<::cw_orch::Mock>::get_sudo() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
-                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err)) 
+                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
                 }else{
                     panic!("No sudo registered");
                 }
             }
             fn reply(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, reply_msg: ::cosmwasm_std::Reply) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
                 if let Some(reply) = #name::<::cw_orch::Mock>::get_reply() {
-                    reply(deps, env, reply_msg).map_err(|err| anyhow::anyhow!(err)) 
+                    reply(deps, env, reply_msg).map_err(|err| anyhow::anyhow!(err))
                 }else{
                     panic!("No reply registered");
                 }
@@ -391,7 +391,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             fn migrate(&self, deps: cosmwasm_std::DepsMut, env: cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<cosmwasm_std::Response<::cosmwasm_std::Empty>, anyhow::Error> {
                 if let Some(migrate) = #name::<::cw_orch::Mock>::get_migrate() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
-                    migrate(deps, env, msg).map_err(|err| anyhow::anyhow!(err)) 
+                    migrate(deps, env, msg).map_err(|err| anyhow::anyhow!(err))
                 }else{
                     panic!("No migrate registered");
                 }
@@ -438,14 +438,14 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let message_name = format_ident!("{}Msg", pascal_function_name);
 
     let func_name: String = func_ident.to_string();
-    
 
-    let message_part = match func_name.as_str(){
-        "instantiate" | "execute" | "query" | "migrate" => { // If we have the instantiate / execute / query / migrate, we define user-messages
+    let message_part = match func_name.as_str() {
+        "instantiate" | "execute" | "query" | "migrate" => {
+            // If we have the instantiate / execute / query / migrate, we define user-messages
             let message_idx = match func_name.as_str() {
                 "instantiate" | "execute" => 3,
                 "query" | "migrate" => 2,
-                _=> panic!("Unreachable")
+                _ => panic!("Unreachable"),
             };
             let message = match signature.inputs[message_idx].clone() {
                 FnArg::Typed(syn::PatType { ty, .. }) => *ty,
@@ -456,19 +456,18 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                     type #message_name = #message;
                 }
             )
-
-        },
+        }
         // in the next 2 cases case we implement the optional Sudo or Reply traits on the contract, to signal the function exists
-        "sudo" => { 
+        "sudo" => {
             quote!()
-        },
+        }
         "reply" => {
             quote!()
-        },
-        _ => panic!("Macro not supported for this funciton name")
+        }
+        _ => panic!("Macro not supported for this funciton name"),
     };
 
-    let func_part = match func_name.as_str(){
+    let func_part = match func_name.as_str() {
         "instantiate" | "execute" | "query" => {
             quote!(
                 impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
@@ -478,7 +477,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                     }
                 }
             )
-        },
+        }
         "migrate" | "sudo" | "reply" => {
             quote!(
                 impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
@@ -488,8 +487,8 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
                     }
                 }
             )
-        },
-        _ => panic!("Unreachable")
+        }
+        _ => panic!("Unreachable"),
     };
 
     let addition: TokenStream = if func_ident == "instantiate" {
@@ -508,7 +507,8 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
         quote!(
             #message_part
             #func_part
-        ).into()
+        )
+        .into()
     };
 
     input.extend(addition);
