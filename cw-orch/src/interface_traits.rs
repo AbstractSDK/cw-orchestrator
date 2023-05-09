@@ -37,7 +37,7 @@ pub trait ContractInstance<Chain: CwEnv> {
 }
 
 /// Tells cw-orchestrator what the contract's entrypoint messages are.
-pub trait ExecuteableContract {
+pub trait ExecutableContract {
     type ExecuteMsg: Serialize + Debug;
 }
 pub trait InstantiableContract {
@@ -51,7 +51,7 @@ pub trait MigrateableContract {
 }
 
 /// Smart Contract execute endpoint
-pub trait CwOrcExecute<Chain: CwEnv>: ExecuteableContract + ContractInstance<Chain> {
+pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chain> {
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
@@ -61,7 +61,7 @@ pub trait CwOrcExecute<Chain: CwEnv>: ExecuteableContract + ContractInstance<Cha
     }
 }
 
-impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute<Chain> for T {}
+impl<T: ExecutableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute<Chain> for T {}
 
 /// Smart Contract instantiate endpoint
 pub trait CwOrcInstantiate<Chain: CwEnv>:

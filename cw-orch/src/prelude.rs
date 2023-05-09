@@ -17,7 +17,7 @@ pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 // Contract traits
 pub use crate::interface_traits::{
     CallAs, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery,
-    CwOrcUpload, ExecuteableContract, InstantiableContract, MigrateableContract,
+    CwOrcUpload, ExecutableContract, InstantiableContract, MigrateableContract,
     QueryableContract, Uploadable,
 };
 

@@ -79,7 +79,7 @@ impl <Chain: ::cw_orch::CwEnv> Cw20<Chain> {
 impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiableContract for Cw20<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for Cw20<Chain> {
+impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecutableContract for Cw20<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
@@ -188,7 +188,7 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             type InstantiateMsg = #init;
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::ExecuteableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::ExecutableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type ExecuteMsg = #exec;
         }
 
@@ -240,7 +240,7 @@ impl <Chain: ::cw_orch::CwEnv> MyContract<Chain> {
 impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiableContract for MyContract<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for MyContract<Chain> {
+impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecutableContract for MyContract<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
