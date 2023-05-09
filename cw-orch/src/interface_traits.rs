@@ -40,7 +40,7 @@ pub trait ContractInstance<Chain: CwEnv> {
 pub trait ExecuteableContract {
     type ExecuteMsg: Serialize + Debug;
 }
-pub trait InstantiateableContract {
+pub trait InstantiableContract {
     type InstantiateMsg: Serialize + Debug;
 }
 pub trait QueryableContract {
@@ -65,7 +65,7 @@ impl<T: ExecuteableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecut
 
 /// Smart Contract instantiate endpoint
 pub trait CwOrcInstantiate<Chain: CwEnv>:
-    InstantiateableContract + ContractInstance<Chain>
+    InstantiableContract + ContractInstance<Chain>
 {
     fn instantiate(
         &self,
@@ -78,7 +78,7 @@ pub trait CwOrcInstantiate<Chain: CwEnv>:
     }
 }
 
-impl<T: InstantiateableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcInstantiate<Chain>
+impl<T: InstantiableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcInstantiate<Chain>
     for T
 {
 }

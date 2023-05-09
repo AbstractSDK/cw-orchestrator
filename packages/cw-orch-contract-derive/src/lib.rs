@@ -76,7 +76,7 @@ impl <Chain: ::cw_orch::CwEnv> Cw20<Chain> {
 }
 
 // Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiateableContract for Cw20<Chain> {
+impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiableContract for Cw20<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
 impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for Cw20<Chain> {
@@ -184,7 +184,7 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             }
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::InstantiateableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type InstantiateMsg = #init;
         }
 
@@ -237,7 +237,7 @@ impl <Chain: ::cw_orch::CwEnv> MyContract<Chain> {
 }
 
 // Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiateableContract for MyContract<Chain> {
+impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiableContract for MyContract<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
 impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for MyContract<Chain> {
