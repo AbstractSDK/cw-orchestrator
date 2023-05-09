@@ -5,11 +5,11 @@ use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use tonic::transport::{Channel, ClientTlsConfig};
 
-use crate::DaemonError;
+use super::error::DaemonError;
 
-pub struct DaemonChannel {}
+pub struct GrpcChannel {}
 
-impl DaemonChannel {
+impl GrpcChannel {
     pub async fn connect(grpc: &[Grpc], chain_id: &ChainId) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 

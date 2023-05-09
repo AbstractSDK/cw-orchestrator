@@ -9,7 +9,7 @@ use super::{
 };
 use crate::{
     state::ChainState,
-    tx_handler::{ChainUpload, TxHandler},
+    environment::{ChainUpload, TxHandler},
     CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath,
 };
 use cosmrs::{

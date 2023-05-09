@@ -1,4 +1,4 @@
-use crate::{contract::Contract, error::CwOrcError, tx_handler::ChainUpload, CwEnv, WasmPath};
+use crate::{contract::Contract, error::CwOrcError, environment::ChainUpload, prelude::{CwEnv, WasmPath}};
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
 use serde::{de::DeserializeOwned, Serialize};

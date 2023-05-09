@@ -1,4 +1,4 @@
-use cw_orch::{networks, DaemonChannel};
+use cw_orch::{networks, GrpcChannel};
 
 use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
@@ -15,7 +15,7 @@ pub async fn build_channel() -> tonic::transport::Channel {
 
     let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
 
-    let channel = DaemonChannel::connect(&grpcs, &chain).await;
+    let channel = GrpcChannel::connect(&grpcs, &chain).await;
 
     asserting!("channel connection is succesful")
         .that(&channel)

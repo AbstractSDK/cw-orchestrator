@@ -1,9 +1,15 @@
-use crate::{state::ChainState, CwOrcError, IndexResponse, Uploadable};
+use crate::{state::ChainState, prelude::{IndexResponse, Uploadable}, error::CwOrcError};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
-// Functions that are callable on the cosmwasm chain/mock
+
+/// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
+
+/// Signals a supported execution environment for CosmWasm contracts
+pub trait CwEnv: TxHandler + ChainUpload + Clone {}
+impl<T: TxHandler + ChainUpload + Clone> CwEnv for T {}
+
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {

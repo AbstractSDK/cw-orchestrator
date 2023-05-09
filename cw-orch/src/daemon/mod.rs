@@ -6,7 +6,7 @@ pub mod networks;
 pub mod queriers;
 mod sender;
 pub use sender::Wallet;
-pub mod json_file;
+pub(crate) mod json_file;
 pub mod state;
 /// Custom traits for Daemon contracts
 pub mod traits;

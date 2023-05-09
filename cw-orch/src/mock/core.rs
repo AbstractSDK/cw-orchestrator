@@ -6,34 +6,13 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     state::{ChainState, StateInterface},
-    tx_handler::{ChainUpload, TxHandler},
-    CallAs, ContractInstance, CwOrcError, CwOrcExecute, Uploadable,
+    environment::{ChainUpload, TxHandler},
+    error::CwOrcError, prelude::*,
 };
 
 use super::state::MockState;
 
-#[deprecated(
-    since = "0.11.0",
-    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::new`"
-)]
-pub fn instantiate_default_mock_env(
-    sender: &Addr,
-) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
-    let mock_chain = Mock::new(sender)?;
-    Ok((mock_chain.state(), mock_chain))
-}
 
-#[deprecated(
-    since = "0.11.0",
-    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::new_custom`"
-)]
-pub fn instantiate_custom_mock_env<S: StateInterface>(
-    sender: &Addr,
-    custom_state: S,
-) -> anyhow::Result<(Rc<RefCell<S>>, Mock<S>)> {
-    let mock_chain = Mock::new_custom(sender, custom_state)?;
-    Ok((mock_chain.state(), mock_chain))
-}
 
 // Generic mock-chain implementation
 // Allows for custom state storage
@@ -133,7 +112,7 @@ where
         &self,
         contract_id: &str,
         wrapper: Box<dyn Contract<ExecC, QueryC>>,
-    ) -> Result<AppResponse, crate::CwOrcError> {
+    ) -> Result<AppResponse, CwOrcError> {
         let code_id = self.app.borrow_mut().store_code(wrapper);
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
@@ -142,7 +121,7 @@ where
             events: vec![event],
             ..Default::default()
         };
-        let code_id = crate::IndexResponse::uploaded_code_id(&resp)?;
+        let code_id = IndexResponse::uploaded_code_id(&resp)?;
         self.state.borrow_mut().set_code_id(contract_id, code_id);
         Ok(resp)
     }
@@ -205,7 +184,7 @@ where
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, crate::CwOrcError> {
+    ) -> Result<Self::Response, CwOrcError> {
         self.app
             .borrow_mut()
             .execute_contract(
@@ -224,7 +203,7 @@ where
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
-    ) -> Result<Self::Response, crate::CwOrcError> {
+    ) -> Result<Self::Response, CwOrcError> {
         let addr = self.app.borrow_mut().instantiate_contract(
             code_id,
             self.sender.clone(),
@@ -247,7 +226,7 @@ where
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, crate::CwOrcError> {
+    ) -> Result<T, CwOrcError> {
         self.app
             .borrow()
             .wrap()
@@ -260,7 +239,7 @@ where
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, crate::CwOrcError> {
+    ) -> Result<Self::Response, CwOrcError> {
         self.app
             .borrow_mut()
             .migrate_contract(
@@ -299,7 +278,7 @@ where
 }
 
 impl ChainUpload for Mock {
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, crate::CwOrcError> {
+    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrcError> {
         let code_id = self.app.borrow_mut().store_code(contract.wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
