@@ -16,7 +16,7 @@ impl DaemonQuerier for Staking {
 }
 
 impl Staking {
-    /// Validator queries validator info for given validator address.
+    /// Queries validator info for given validator address
     pub async fn validator(
         &self,
         validator_addr: impl Into<String>,
@@ -32,7 +32,9 @@ impl Staking {
         Ok(validator.validator.unwrap())
     }
 
-    /// Validators queries all validators that match the given status.
+    /// Queries all validators that match the given status
+    ///
+    /// see [StakingBondStatus] for available statuses
     pub async fn validators(
         &self,
         status: StakingBondStatus,
@@ -49,10 +51,21 @@ impl Staking {
         Ok(validators.validators)
     }
 
-    /// ValidatorDelegations queries delegate info for given validator.
-    pub async fn validator_delegations(
+    /// Query all validator delegations info for given validator
+    pub async fn delegations(
         &self,
         validator_addr: impl Into<String>,
+    ) -> Result<Vec<cosmos_modules::staking::DelegationResponse>, DaemonError> {
+        self.delegations_with_pagination(validator_addr, None).await
+    }
+
+    /// Query validator delegations info for given validator with pagination
+    ///
+    /// see [PageRequest] for pagination
+    pub async fn delegations_with_pagination(
+        &self,
+        validator_addr: impl Into<String>,
+        pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::staking::DelegationResponse>, DaemonError> {
         let validator_delegations: cosmos_modules::staking::QueryValidatorDelegationsResponse = cosmos_query!(
             self,
@@ -60,14 +73,14 @@ impl Staking {
             validator_delegations,
             QueryValidatorDelegationsRequest {
                 validator_addr: validator_addr.into(),
-                pagination: None
+                pagination: pagination
             }
         );
         Ok(validator_delegations.delegation_responses)
     }
 
-    /// ValidatorUnbondingDelegations queries unbonding delegations of a validator.
-    pub async fn validator_unbonding_delegations(
+    /// Query validator unbonding delegations of a validator
+    pub async fn unbonding_delegations(
         &self,
         validator_addr: impl Into<String>,
     ) -> Result<Vec<cosmos_modules::staking::UnbondingDelegation>, DaemonError> {
@@ -83,7 +96,7 @@ impl Staking {
         Ok(validator_unbonding_delegations.unbonding_responses)
     }
 
-    /// Delegation queries delegate info for given validator delegator pair.
+    /// Query delegation info for given validator for a delegator
     pub async fn delegation(
         &self,
         validator_addr: impl Into<String>,
@@ -101,7 +114,7 @@ impl Staking {
         Ok(delegation.delegation_response.unwrap())
     }
 
-    /// UnbondingDelegation queries unbonding info for given validator delegator pair.
+    /// Query unbonding delegation info for given validator delegator
     pub async fn unbonding_delegation(
         &self,
         validator_addr: impl Into<String>,
@@ -119,8 +132,18 @@ impl Staking {
         Ok(unbonding_delegation.unbond.unwrap())
     }
 
-    /// DelegatorDelegations queries all delegations of a given delegator address.
+    /// Query all delegator delegations of a given delegator address
     pub async fn delegator_delegations(
+        &self,
+        delegator_addr: impl Into<String>,
+    ) -> Result<cosmos_modules::staking::QueryDelegatorDelegationsResponse, DaemonError> {
+        self.delegator_delegations_with_pagination(delegator_addr, None).await
+    }
+
+    /// Query all delegator delegations of a given delegator address with pagination
+    ///
+    /// see [PageRequest] for pagination
+    pub async fn delegator_delegations_with_pagination(
         &self,
         delegator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
@@ -138,6 +161,8 @@ impl Staking {
     }
 
     /// Queries all unbonding delegations of a given delegator address.
+    ///
+    /// see [PageRequest] for pagination
     pub async fn delegator_unbonding_delegations(
         &self,
         delegator_addr: impl Into<String>,
@@ -156,8 +181,26 @@ impl Staking {
         Ok(delegator_unbonding_delegations)
     }
 
-    /// Redelegations queries redelegations of given address.
+    /// Query all redelegations of a given address.
     pub async fn redelegations(
+        &self,
+        delegator_addr: impl Into<String>,
+        src_validator_addr: impl Into<String>,
+        dst_validator_addr: impl Into<String>,
+    ) -> Result<cosmos_modules::staking::QueryRedelegationsResponse, DaemonError> {
+        self.redelegations_with_pagination(
+            delegator_addr,
+            src_validator_addr,
+            dst_validator_addr,
+            None,
+        )
+        .await
+    }
+
+    /// Query redelegations of a given address with pagination
+    ///
+    /// see [PageRequest] for pagination
+    pub async fn redelegations_with_pagination(
         &self,
         delegator_addr: impl Into<String>,
         src_validator_addr: impl Into<String>,
@@ -178,7 +221,7 @@ impl Staking {
         Ok(redelegations)
     }
 
-    /// DelegatorValidators queries all validators info for given delegator address.
+    /// Query delegator validators info for given delegator address.
     pub async fn delegator_validator(
         &self,
         validator_addr: impl Into<String>,
@@ -196,8 +239,18 @@ impl Staking {
         Ok(delegator_validator)
     }
 
-    /// DelegatorValidators queries all validators info for given delegator address.
+    /// Query delegator validators info for given delegator address.
     pub async fn delegator_validators(
+        &self,
+        delegator_addr: impl Into<String>,
+    ) -> Result<cosmos_modules::staking::QueryDelegatorValidatorsResponse, DaemonError> {
+        self.delegator_validators_with_pagination(delegator_addr, None).await
+    }
+
+    /// Query delegator validators info for given delegator address with pagination
+    ///
+    /// see [PageRequest] for pagination
+    pub async fn delegator_validators_with_pagination(
         &self,
         delegator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
@@ -211,10 +264,11 @@ impl Staking {
                 pagination: pagination
             }
         );
+
         Ok(delegator_validators)
     }
 
-    /// HistoricalInfo queries the historical info for given height.
+    /// Query historical info info for given height
     pub async fn historical_info(
         &self,
         height: i64,
@@ -228,14 +282,14 @@ impl Staking {
         Ok(historical_info)
     }
 
-    /// Pool queries the pool info.
+    /// Query the pool info
     pub async fn pool(&self) -> Result<cosmos_modules::staking::QueryPoolResponse, DaemonError> {
         let pool: cosmos_modules::staking::QueryPoolResponse =
             cosmos_query!(self, staking, pool, QueryPoolRequest {});
         Ok(pool)
     }
 
-    /// Parameters queries the staking parameters.
+    /// Query staking parameters
     pub async fn params(
         &self,
     ) -> Result<cosmos_modules::staking::QueryParamsResponse, DaemonError> {
@@ -245,6 +299,7 @@ impl Staking {
     }
 }
 
+/// Staking bond statuses
 pub enum StakingBondStatus {
     /// UNSPECIFIED defines an invalid validator status.
     Unspecified = 0,
@@ -266,4 +321,3 @@ impl StakingBondStatus {
         }
     }
 }
-

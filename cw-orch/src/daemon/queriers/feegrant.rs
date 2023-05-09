@@ -43,6 +43,8 @@ impl Feegrant {
     }
 
     /// Query allowances for grantee address with a given pagination
+    ///
+    /// see [PageRequest] for pagination
     pub async fn allowances_with_pagination(
         &self,
         grantee: impl Into<String>,

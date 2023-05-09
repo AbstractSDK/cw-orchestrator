@@ -32,8 +32,21 @@ impl Gov {
         Ok(proposal.proposal.unwrap())
     }
 
-    /// Proposals queries all proposals based on given status.
+    /// Query all proposals based on given status
     pub async fn proposals(
+        &self,
+        proposal_status: GovProposalStatus,
+        voter: impl Into<String>,
+        depositor: impl Into<String>,
+    ) -> Result<cosmos_modules::gov::QueryProposalsResponse, DaemonError> {
+        self.proposals_with_pagination(proposal_status, voter, depositor, None)
+            .await
+    }
+
+    /// Query proposals based on given status with pagination
+    ///
+    /// see [PageRequest] for pagination
+    pub async fn proposals_with_pagination(
         &self,
         proposal_status: GovProposalStatus,
         voter: impl Into<String>,
@@ -54,7 +67,7 @@ impl Gov {
         Ok(proposals)
     }
 
-    /// Vote queries voted information based on proposal_id for voter address.
+    /// Query voted information based on proposal_id for voter address
     pub async fn vote(
         &self,
         proposal_id: u64,
@@ -72,15 +85,17 @@ impl Gov {
         Ok(vote.vote.unwrap())
     }
 
-    /// Query votes of a given proposal.
+    /// Query all votes of a given proposal
     pub async fn votes(
         &self,
-        proposal_id: impl Into<u64>
+        proposal_id: impl Into<u64>,
     ) -> Result<cosmos_modules::gov::QueryVotesResponse, DaemonError> {
         self.votes_with_pagination(proposal_id.into(), None).await
     }
 
     /// Query votes of a given proposal with pagination
+    ///
+    /// see [PageRequest] for pagination
     pub async fn votes_with_pagination(
         &self,
         proposal_id: impl Into<u64>,
@@ -98,7 +113,7 @@ impl Gov {
         Ok(votes)
     }
 
-    /// Params queries all parameters of the gov module.
+    /// Query all parameters of the gov module
     pub async fn params(
         &self,
         params_type: impl Into<String>,
@@ -114,7 +129,7 @@ impl Gov {
         Ok(params)
     }
 
-    /// Deposit queries single deposit information based proposalID, depositAddr.
+    /// Query deposit information using proposal_id and depositor address
     pub async fn deposit(
         &self,
         proposal_id: u64,
@@ -132,8 +147,18 @@ impl Gov {
         Ok(deposit.deposit.unwrap())
     }
 
-    /// Deposits queries all deposits of a single proposal.
+    /// Query all deposits of a proposal
     pub async fn deposits(
+        &self,
+        proposal_id: u64,
+    ) -> Result<cosmos_modules::gov::QueryDepositsResponse, DaemonError> {
+        self.deposits_with_pagination(proposal_id, None).await
+    }
+
+    /// Query deposits of a proposal with pagination
+    ///
+    /// see [PageRequest] for pagination
+    pub async fn deposits_with_pagination(
         &self,
         proposal_id: u64,
         pagination: Option<PageRequest>,

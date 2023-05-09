@@ -159,7 +159,11 @@ impl Node {
     }
 
     /// Find TX by hash with a given amount of retries
-    pub async fn find_tx_with_retries(&self, hash: String, retries: usize) -> Result<CosmTxResponse, DaemonError> {
+    pub async fn find_tx_with_retries(
+        &self,
+        hash: String,
+        retries: usize,
+    ) -> Result<CosmTxResponse, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
