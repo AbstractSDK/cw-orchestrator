@@ -96,7 +96,7 @@ mod tests {
     */
     use std::sync::Arc;
 
-    use crate::Daemon;
+    use crate::prelude::Daemon;
     use speculoos::prelude::*;
     use tokio::runtime::Runtime;
 
@@ -104,7 +104,7 @@ mod tests {
     fn no_connection() {
         let runtime = Arc::new(Runtime::new().unwrap());
 
-        let mut chain = cw_orch::networks::LOCAL_JUNO;
+        let mut chain = cw_orch::daemon::networks::LOCAL_JUNO;
         let grpcs = &vec!["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
@@ -125,7 +125,7 @@ mod tests {
     fn network_grpcs_list_is_empty() {
         let runtime = Arc::new(Runtime::new().unwrap());
 
-        let mut chain = cw_orch::networks::LOCAL_JUNO;
+        let mut chain = cw_orch::daemon::networks::LOCAL_JUNO;
         let grpcs: &Vec<&str> = &vec![];
         chain.grpc_urls = grpcs;
 

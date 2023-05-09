@@ -1,5 +1,4 @@
-use cw_orch::{networks, GrpcChannel};
-
+use cw_orch::{daemon::channel::GrpcChannel, prelude::networks};
 use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use speculoos::{asserting, result::ResultAssertions};

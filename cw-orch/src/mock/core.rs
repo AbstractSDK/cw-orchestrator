@@ -314,7 +314,7 @@ mod test {
     use serde::Serialize;
     use speculoos::prelude::*;
 
-    use crate::{mock::core::*, TxHandler};
+    use crate::mock::core::*;
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";

@@ -4,7 +4,7 @@
 mod common;
 use std::sync::Arc;
 
-use cw_orch::*;
+use cw_orch::prelude::*;
 use speculoos::prelude::*;
 
 use cw20_base::msg::*;
