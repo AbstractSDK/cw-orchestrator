@@ -196,7 +196,7 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             type QueryMsg = #query;
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::MigrateableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::MigratableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type MigrateMsg = #migrate;
         }
     );

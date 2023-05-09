@@ -46,7 +46,7 @@ pub trait InstantiableContract {
 pub trait QueryableContract {
     type QueryMsg: Serialize + Debug;
 }
-pub trait MigrateableContract {
+pub trait MigratableContract {
     type MigrateMsg: Serialize + Debug;
 }
 
@@ -96,7 +96,7 @@ pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcQuery<Chain> for T {}
 
 /// Smart Contract migrate endpoint
-pub trait CwOrcMigrate<Chain: CwEnv>: MigrateableContract + ContractInstance<Chain> {
+pub trait CwOrcMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {
     fn migrate(
         &self,
         migrate_msg: &Self::MigrateMsg,
@@ -106,7 +106,7 @@ pub trait CwOrcMigrate<Chain: CwEnv>: MigrateableContract + ContractInstance<Cha
     }
 }
 
-impl<T: MigrateableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcMigrate<Chain> for T {}
+impl<T: MigratableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcMigrate<Chain> for T {}
 
 /// Trait to implement on the contract to enable it to be uploaded
 /// Should return [`WasmPath`](crate::WasmPath) for `Chain = Daemon`
