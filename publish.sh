@@ -15,8 +15,7 @@ fi
 
 # these are imported by other packages
 BASE_PACKAGES="cw-orch-contract-derive cw-orch-fns-derive"
-UTILS_PACKAGES="cw-orch"
-ALL_PACKAGES="cw-plus-orc"
+CORE="cw-orch"
 
 for pack in $BASE_PACKAGES; do
   (
@@ -26,18 +25,10 @@ for pack in $BASE_PACKAGES; do
   )
 done
 
-for pack in $UTILS_PACKAGES; do
+for lib in $CORE; do
   (
-    cd "$pack"
-    echo "Publishing $pack"
-    cargo publish
-  )
-done
-
-for pack in $ALL_PACKAGES; do
-  (
-    cd "$pack"
-    echo "Publishing $pack"
+    cd "$lib"
+    echo "Publishing $lib"
     cargo publish
   )
 done
