@@ -7,7 +7,7 @@ use cw_orch::{
         error::DaemonError,
         queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
     },
-    prelude::*,
+    prelude::{*, queriers::StakingBondStatus},
 };
 
 use speculoos::prelude::*;
