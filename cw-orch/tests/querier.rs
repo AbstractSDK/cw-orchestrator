@@ -7,7 +7,7 @@ use cw_orch::{
         error::DaemonError,
         queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
     },
-    prelude::{*, queriers::StakingBondStatus},
+    prelude::{queriers::StakingBondStatus, *},
 };
 
 use speculoos::prelude::*;
@@ -80,8 +80,7 @@ fn general_bank() {
     let params = rt.block_on(bank.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let balances =
-        rt.block_on(bank.balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+    let balances = rt.block_on(bank.balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
     asserting!("balances is ok").that(&balances).is_ok();
 
     let spendable_balances =

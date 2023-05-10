@@ -1,5 +1,5 @@
 use crate::daemon::{cosmos_modules, error::DaemonError};
-use cosmrs::proto::cosmos::base::{v1beta1::Coin, query::v1beta1::PageRequest };
+use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -123,7 +123,9 @@ impl Bank {
             self,
             bank,
             denoms_metadata,
-            QueryDenomsMetadataRequest { pagination: pagination }
+            QueryDenomsMetadataRequest {
+                pagination: pagination
+            }
         );
         Ok(denoms_metadata.metadatas)
     }
