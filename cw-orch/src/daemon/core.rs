@@ -4,12 +4,15 @@ use super::{
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
     sender::Wallet,
-    state::{ChainKind, DaemonState},
+    state::DaemonState,
     tx_resp::CosmTxResponse,
 };
 use crate::{
     environment::{ChainUpload, TxHandler},
-    prelude::{CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath},
+    prelude::{
+        queriers::CosmWasm, CallAs, ContractInstance, CwOrcExecute, IndexResponse, Uploadable,
+        WasmPath,
+    },
     state::ChainState,
 };
 use cosmrs::{
@@ -59,14 +62,6 @@ impl Daemon {
     /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.sender.channel())
-    }
-
-    async fn wait(&self) {
-        match self.state.kind {
-            ChainKind::Local => tokio::time::sleep(Duration::from_secs(6)).await,
-            ChainKind::Testnet => tokio::time::sleep(Duration::from_secs(30)).await,
-            ChainKind::Mainnet => tokio::time::sleep(Duration::from_secs(60)).await,
-        }
     }
 
     /// Get the channel configured for this Daemon
@@ -251,8 +246,15 @@ impl ChainUpload for Daemon {
 
         log::info!("Uploaded: {:?}", result.txhash);
 
-        // Extra time-out to ensure contract code propagation
-        self.rt_handle.block_on(self.wait());
+        let code_id = result.uploaded_code_id().unwrap();
+
+        // wait for the node to return the contract information for this upload
+        let wasm = CosmWasm::new(self.channel());
+        while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
+            self.rt_handle
+                .block_on(tokio::time::sleep(Duration::from_secs(6)));
+        }
+
         Ok(result)
     }
 }

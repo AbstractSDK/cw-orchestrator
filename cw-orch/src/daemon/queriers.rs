@@ -12,7 +12,7 @@
 //! use tokio::runtime::Runtime;
 //!
 //! // require the querier you want to use, in this case Node
-//! use cw_orch::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
+//! use cw_orch::prelude::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
 //!
 //! // prepare a runtime
 //! let runtime = Runtime::new().unwrap();
