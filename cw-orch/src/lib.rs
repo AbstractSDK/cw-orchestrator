@@ -3,7 +3,6 @@
 #![doc(test(attr(
     warn(unused),
     deny(warnings),
-    // W/o this, we seem to get some bogus warning about `extern crate zbus`.
     allow(unused_extern_crates, unused),
 )))]
 pub mod prelude;
