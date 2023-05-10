@@ -8,6 +8,8 @@ use serde_json::{json, Value};
 use std::{collections::HashMap, env, fs::File, path::Path, rc::Rc, str::FromStr};
 use tonic::transport::Channel;
 
+/// State that represents the connection and deployment status of the protocol.
+/// Uses a simple JSON file to store the state locally.
 #[derive(Clone, Debug)]
 pub struct DaemonState {
     /// this is passed via env var STATE_FILE

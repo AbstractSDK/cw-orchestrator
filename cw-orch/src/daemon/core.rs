@@ -34,9 +34,23 @@ use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**
-    Represents a connection to a chain.
+    Represents a blockchain node.
     Is constructed with the [DaemonBuilder].
 
+    ## Usage
+
+    ```rust
+    use cw_orch::daemon::Daemon;
+    use cw_orch::networks::JUNO_1;
+    use tokio::runtime::Runtime;
+
+    let rt = Runtime::new().unwrap();
+    let daemon: Daemon = Daemon::builder()
+        .chain(JUNO_1)
+        .handle(rt.handle())
+        .build()
+        .unwrap();
+    ```
     ## Environment Execution
 
     The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
