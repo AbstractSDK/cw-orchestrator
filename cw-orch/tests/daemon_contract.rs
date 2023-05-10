@@ -2,7 +2,7 @@
     Daemon contract general tests
 */
 mod common;
-use cw_orch::*;
+use cw_orch::prelude::*;
 use std::sync::Arc;
 
 use cosmwasm_std::Addr;
@@ -30,7 +30,7 @@ fn general() {
 
     let init_msg = common::contract::get_init_msg(&sender);
 
-    let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&vec![]));
+    let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
 
     asserting!("address is present")
         .that(&contract.address())

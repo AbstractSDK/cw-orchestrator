@@ -20,7 +20,7 @@ In order to generate a type-checked interface to your contract you can either pa
 
 Provide your messages to a new struct that's named after your contract. In this case a CW20 message.
 
-```rust,no_run
+```rust,ignore
 use cw_orch::contract;
 // Provide the messages in the order Init, Exec, Query, Migrate.
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
@@ -31,7 +31,7 @@ pub struct Cw20;
 
 You create a contract interface by adding the `interface` macro to your contract endpoints. The name of the interface will be the crate name is PascalCase.  
 
-```rust,no_run
+```rust,ignore
 #[cw_orch::interface]
 fn instantiate(...)
 
@@ -45,7 +45,7 @@ These macros implement a set of traits for the struct. These traits contain func
 
 You can then use this interface to interact with the contract:
 
-```rust
+```rust,ignore
 let cw20_base: Cw20<Chain> = Cw20::new("my_token", chain);
 // instantiate a CW20 token instance
 let cw20_init_msg = cw20_base::msg::InstantiateMsg {
@@ -80,7 +80,7 @@ The macros should only be added to the structs when the "interface" trait is ena
 
 Example:
 
-```rust,no_run
+```rust,ignore
 #[cfg_attr(feature="interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg{
     /// Freeze will make a mutable contract immutable, must be called by an admin

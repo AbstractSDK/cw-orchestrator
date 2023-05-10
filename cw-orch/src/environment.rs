@@ -1,9 +1,19 @@
-use crate::{state::ChainState, CwOrcError, IndexResponse};
+use crate::{
+    error::CwOrcError,
+    prelude::{IndexResponse, Uploadable},
+    state::ChainState,
+};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
-// Functions that are callable on the cosmwasm chain/mock
+
+/// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
+
+/// Signals a supported execution environment for CosmWasm contracts
+pub trait CwEnv: TxHandler + ChainUpload + Clone {}
+impl<T: TxHandler + ChainUpload + Clone> CwEnv for T {}
+
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
@@ -44,9 +54,9 @@ pub trait TxHandler: ChainState + Clone {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
-    fn upload(
-        &self,
-        // Needs to be &mut to allow mock app to take ownership of contract box-reference.
-        contract_source: Self::ContractSource,
-    ) -> Result<Self::Response, Self::Error>;
+}
+
+// Required to be a different trait because it can not be implemented for the generic Mock<...>.
+pub trait ChainUpload: TxHandler {
+    fn upload(&self, contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error>;
 }

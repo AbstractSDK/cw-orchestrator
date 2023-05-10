@@ -7,7 +7,7 @@
 //! You will need to acquire a [gRPC channel](Channel) to a running CosmosSDK node to be able to use the queriers.
 //! Here is an example of how to acquire one using the Daemon builder.
 //!
-//! ```rust
+//! ```no_run
 //! // include tokio runtime
 //! use tokio::runtime::Runtime;
 //!
@@ -28,7 +28,6 @@
 //! let node = Node::new(daemon.channel());
 //! let node_info = node.info();
 //! ```
-//!
 
 #[macro_export]
 macro_rules! cosmos_query {

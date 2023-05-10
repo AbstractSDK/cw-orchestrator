@@ -1,11 +1,11 @@
 mod common;
 
-use cosmwasm_std::{coin, Uint128};
-use cw_orch::{networks::LOCAL_JUNO, *};
-use speculoos::{
-    result::{ContainingResultAssertions, ResultAssertions},
-    *,
+use cosmwasm_std::Uint128;
+use cw_orch::{
+    daemon::error::DaemonError,
+    prelude::{networks::LOCAL_JUNO, *},
 };
+use speculoos::{result::ResultAssertions, *};
 use tokio::runtime::Runtime;
 
 #[test]
@@ -43,7 +43,7 @@ fn cosmwasm_exec_fails() {
     // init msg for contract
     let init_msg = common::contract::get_init_msg(&sender);
     contract
-        .instantiate(&init_msg, Some(&sender.clone()), None)
+        .instantiate(&init_msg, Some(&sender), None)
         .unwrap();
 
     // burn more than we have amount

@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use crate::{
-    daemon::{cosmos_modules, tx_resp::CosmTxResponse},
-    DaemonError,
-};
+use crate::daemon::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
 use cosmrs::{
     proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
