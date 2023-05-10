@@ -59,7 +59,7 @@ fn cosmwasm_exec_fails() {
         .that(&res)
         .is_err()
         .matches(|e| match e {
-            CwOrcError::DaemonError(DaemonError::Status(_)) => true,
+            CwOrchError::DaemonError(DaemonError::Status(_)) => true,
             _ => false,
         });
 }

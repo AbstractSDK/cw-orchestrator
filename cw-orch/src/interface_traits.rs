@@ -1,7 +1,7 @@
 use crate::{
     contract::Contract,
     environment::ChainUpload,
-    error::CwOrcError,
+    error::CwOrchError,
     prelude::{CwEnv, WasmPath},
 };
 use cosmwasm_std::{Addr, Coin, Empty};
@@ -21,13 +21,13 @@ pub trait ContractInstance<Chain: CwEnv> {
         self.as_instance().id.clone()
     }
     // State interfaces
-    fn address(&self) -> Result<Addr, CwOrcError> {
+    fn address(&self) -> Result<Addr, CwOrchError> {
         Contract::address(self.as_instance())
     }
-    fn addr_str(&self) -> Result<String, CwOrcError> {
+    fn addr_str(&self) -> Result<String, CwOrchError> {
         Contract::address(self.as_instance()).map(|addr| addr.into_string())
     }
-    fn code_id(&self) -> Result<u64, CwOrcError> {
+    fn code_id(&self) -> Result<u64, CwOrchError> {
         Contract::code_id(self.as_instance())
     }
     fn set_address(&self, address: &Addr) {
@@ -61,7 +61,7 @@ pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chai
         &self,
         execute_msg: &Self::ExecuteMsg,
         coins: Option<&[Coin]>,
-    ) -> Result<Chain::Response, CwOrcError> {
+    ) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().execute(&execute_msg, coins)
     }
 }
@@ -75,7 +75,7 @@ pub trait CwOrcInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstanc
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
-    ) -> Result<Chain::Response, CwOrcError> {
+    ) -> Result<Chain::Response, CwOrchError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
     }
@@ -91,7 +91,7 @@ pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> 
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Self::QueryMsg,
-    ) -> Result<G, CwOrcError> {
+    ) -> Result<G, CwOrchError> {
         self.as_instance().query(query_msg)
     }
 }
@@ -104,7 +104,7 @@ pub trait CwOrcMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chai
         &self,
         migrate_msg: &Self::MigrateMsg,
         new_code_id: u64,
-    ) -> Result<Chain::Response, CwOrcError> {
+    ) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().migrate(migrate_msg, new_code_id)
     }
 }
@@ -128,7 +128,7 @@ pub trait Uploadable {
 pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
     ContractInstance<Chain> + Uploadable + Sized
 {
-    fn upload(&self) -> Result<Chain::Response, CwOrcError> {
+    fn upload(&self) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().upload(self)
     }
 }

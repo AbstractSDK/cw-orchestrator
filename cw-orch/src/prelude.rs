@@ -31,7 +31,7 @@ pub use crate::environment::{CwEnv, TxResponse};
 pub use crate::mock::core::Mock;
 
 // error
-pub use crate::error::CwOrcError;
+pub use crate::error::CwOrchError;
 
 // Paths for implementing `Uploadable`
 pub use crate::paths::{ArtifactsDir, WasmPath};
