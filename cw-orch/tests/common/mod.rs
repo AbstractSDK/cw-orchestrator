@@ -114,7 +114,7 @@ pub mod container {
 
     pub fn ensure_removal(name: &String) {
         if self::stop(name) {
-            self::remove(&name);
+            self::remove(name);
         }
     }
 }

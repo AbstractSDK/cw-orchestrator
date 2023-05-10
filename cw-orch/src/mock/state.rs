@@ -60,9 +60,11 @@ impl StateInterface for MockState {
 
 #[cfg(test)]
 mod test {
-    use crate::{CwOrcError, MockState, StateInterface};
+    use crate::{prelude::CwOrcError, state::StateInterface};
     use cosmwasm_std::Addr;
     use speculoos::prelude::*;
+
+    use super::MockState;
 
     const CONTRACT_ID: &str = "123";
     const CONTRACT_ADDR: &str = "cosmos123";

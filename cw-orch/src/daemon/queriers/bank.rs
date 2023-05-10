@@ -1,4 +1,4 @@
-use crate::{daemon::cosmos_modules, DaemonError};
+use crate::daemon::{cosmos_modules, error::DaemonError};
 use cosmrs::proto::cosmos::base::v1beta1::Coin;
 use tonic::transport::Channel;
 
@@ -29,7 +29,7 @@ impl Bank {
                 let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
                 let request = cosmos_modules::bank::QueryBalanceRequest {
                     address: address.into(),
-                    denom: denom.into(),
+                    denom,
                 };
                 let resp = client.balance(request).await?.into_inner();
                 let coin = resp.balance.unwrap();
