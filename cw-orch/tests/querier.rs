@@ -23,7 +23,7 @@ use cosmrs::{
     Querier - Ibc
 */
 #[test]
-fn general_ibc() {
+fn ibc() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
@@ -37,7 +37,7 @@ fn general_ibc() {
     Querier - Staking
 */
 #[test]
-fn general_staking() {
+fn staking() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
@@ -57,7 +57,7 @@ fn general_staking() {
     Querier - Gov
 */
 #[test]
-fn general_gov() {
+fn gov() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
@@ -71,7 +71,7 @@ fn general_gov() {
     Querier - Bank
 */
 #[test]
-fn general_bank() {
+fn bank() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
@@ -110,7 +110,7 @@ fn general_bank() {
     Querier - CosmWasm
 */
 #[test]
-fn general_cosmwasm() {
+fn cosmwasm() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
@@ -124,7 +124,7 @@ fn general_cosmwasm() {
     Querier - Node
 */
 #[test]
-fn general_node() {
+fn node() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
