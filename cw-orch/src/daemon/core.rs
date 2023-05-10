@@ -9,7 +9,10 @@ use super::{
 };
 use crate::{
     environment::{ChainUpload, TxHandler},
-    prelude::{CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath, queriers::CosmWasm, IndexResponse},
+    prelude::{
+        queriers::CosmWasm, CallAs, ContractInstance, CwOrcExecute, IndexResponse, Uploadable,
+        WasmPath,
+    },
     state::ChainState,
 };
 use cosmrs::{
@@ -248,9 +251,10 @@ impl ChainUpload for Daemon {
         // wait for the node to return the contract information for this upload
         let wasm = CosmWasm::new(self.channel());
         while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
-            self.rt_handle.block_on(tokio::time::sleep(Duration::from_secs(6)));
+            self.rt_handle
+                .block_on(tokio::time::sleep(Duration::from_secs(6)));
         }
-        
+
         Ok(result)
     }
 }
