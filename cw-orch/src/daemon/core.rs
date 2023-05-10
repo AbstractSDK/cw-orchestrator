@@ -4,7 +4,7 @@ use super::{
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
     sender::Wallet,
-    state::{ChainKind, DaemonState},
+    state::DaemonState,
     tx_resp::CosmTxResponse,
 };
 use crate::{
