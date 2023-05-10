@@ -28,7 +28,7 @@ In order to generate a typed interface to your contract you can either pass the 
 
 Provide your messages to a new struct that's named after your contract.
 
-```rust,no_run
+```rust,ignore
 use cw_orch::contract;
 // Provide the messages in the order Init, Exec, Query, Migrate.
 #[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
@@ -50,7 +50,7 @@ impl<Chain: CwEnv> Cw20 <Chain>{
 
 You create a contract interface by adding the `interface` macro to your contract endpoints. The name of the generated interface will be the crate name in PascalCase.  
 
-```rust,no_run
+```rust,ignore
 #[cw_orch::interface]
 fn instantiate(...)
 
@@ -64,8 +64,8 @@ You now have a contract interface that you can use to interact with your contrac
 
 You can then use this interface to interact with the contract:
 
-```rust,no_run
-// setup environment (see cw-orchestrator docs for more info)
+```rust,ignore
+// .. setup environment 
 
 let cw20_base: Cw20<Chain> = Cw20::new("my_token", chain);
 // instantiate a CW20 token instance
@@ -99,7 +99,7 @@ The macros should only be added to the structs when the "interface" trait is ena
 
 Example:
 
-```rust,no_run
+```rust,ignore
 #[cfg_attr(feature="interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg{
     /// Freeze will make a mutable contract immutable, must be called by an admin
@@ -148,6 +148,7 @@ cd docs && mdbook serve --open
 to view the changes.
 
 # Testing
+
 To test the full application you can run the following command:
 
 ```shell

@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use crate::{
-    daemon::{cosmos_modules, tx_resp::CosmTxResponse},
-    DaemonError,
-};
+use crate::daemon::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
 use cosmrs::{
     proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
@@ -154,13 +151,22 @@ impl Node {
     }
 
     /// Find TX by hash
-    pub async fn find_tx_by_hash(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
+    pub async fn find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
+        self.find_tx_with_retries(hash, MAX_TX_QUERY_RETRIES).await
+    }
+
+    /// Find TX by hash with a given amount of retries
+    pub async fn find_tx_with_retries(
+        &self,
+        hash: String,
+        retries: usize,
+    ) -> Result<CosmTxResponse, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
 
-        for _ in 0..MAX_TX_QUERY_RETRIES {
+        for _ in 0..retries {
             match client.get_tx(request.clone()).await {
                 Ok(tx) => {
                     let resp = tx.into_inner().tx_response.unwrap();
@@ -174,7 +180,8 @@ impl Node {
                 }
             }
         }
+
         // return error if tx not found by now
-        Err(DaemonError::TXNotFound(hash, MAX_TX_QUERY_RETRIES))
+        Err(DaemonError::TXNotFound(hash, retries))
     }
 }

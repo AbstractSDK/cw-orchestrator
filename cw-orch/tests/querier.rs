@@ -3,8 +3,11 @@ use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
 use cw_orch::{
-    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
-    ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
+    daemon::{
+        error::DaemonError,
+        queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
+    },
+    prelude::{queriers::StakingBondStatus, *},
 };
 
 use speculoos::prelude::*;
@@ -24,7 +27,7 @@ fn general_ibc() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
-    let ibc = Ibc::new(channel.clone());
+    let ibc = Ibc::new(channel);
 
     let clients = rt.block_on(ibc.clients());
     asserting!("clients is ok").that(&clients).is_ok();
@@ -38,16 +41,16 @@ fn general_staking() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
-    let staking = Staking::new(channel.clone());
+    let staking = Staking::new(channel);
 
     let params = rt.block_on(staking.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let validators = rt.block_on(staking.validators("BOND_STATUS_BONDED"));
+    let validators = rt.block_on(staking.validators(StakingBondStatus::Bonded));
     asserting!("validators is ok").that(&validators).is_ok();
     asserting!("validators is not empty")
         .that(&validators.unwrap().len())
-        .is_equal_to(&1);
+        .is_equal_to(1);
 }
 
 /*
@@ -58,7 +61,7 @@ fn general_gov() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
-    let gov = Gov::new(channel.clone());
+    let gov = Gov::new(channel);
 
     let params = rt.block_on(gov.params("voting"));
     asserting!("params is ok").that(&params).is_ok();
@@ -72,13 +75,12 @@ fn general_bank() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
-    let bank = Bank::new(channel.clone());
+    let bank = Bank::new(channel);
 
     let params = rt.block_on(bank.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let balances =
-        rt.block_on(bank.coin_balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+    let balances = rt.block_on(bank.balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
     asserting!("balances is ok").that(&balances).is_ok();
 
     let spendable_balances =
@@ -98,7 +100,7 @@ fn general_bank() {
         .that(&denom_metadata)
         .is_err();
 
-    let denoms_metadata = rt.block_on(bank.denoms_metadata());
+    let denoms_metadata = rt.block_on(bank.denoms_metadata(None));
     asserting!("denoms_metadata is ok, but empty")
         .that(&denoms_metadata)
         .is_ok();
@@ -112,7 +114,7 @@ fn general_cosmwasm() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
-    let cw = CosmWasm::new(channel.clone());
+    let cw = CosmWasm::new(channel);
 
     let params = rt.block_on(cw.params());
     asserting!("params is ok").that(&params).is_ok();
@@ -126,7 +128,7 @@ fn general_node() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
 
-    let node = Node::new(channel.clone());
+    let node = Node::new(channel);
 
     let block_height = rt.block_on(node.block_height());
     asserting!("block_height is ok").that(&block_height).is_ok();
@@ -144,7 +146,7 @@ fn simulate_tx() {
 
     let channel = rt.block_on(build_channel());
 
-    let node = Node::new(channel.clone());
+    let node = Node::new(channel);
 
     let exec_msg = cw20_base::msg::ExecuteMsg::Mint {
         recipient: "terra1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr".into(),
@@ -161,7 +163,7 @@ fn simulate_tx() {
         )
         .unwrap(),
         msg: serde_json::to_vec(&exec_msg).unwrap(),
-        funds: parse_cw_coins(&vec![]).unwrap(),
+        funds: parse_cw_coins(&[]).unwrap(),
     };
 
     let msgs = [exec_msg]
@@ -185,7 +187,7 @@ fn simulate_tx() {
 fn contract_info() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
-    let cosm_wasm = CosmWasm::new(channel.clone());
+    let cosm_wasm = CosmWasm::new(channel);
 
     let (sender, contract) = common::contract::start(&rt);
 
@@ -193,7 +195,7 @@ fn contract_info() {
 
     let init_msg = common::contract::get_init_msg(&sender);
 
-    let _ = contract.instantiate(&init_msg, Some(&sender.clone()), None);
+    let _ = contract.instantiate(&init_msg, Some(&sender), None);
 
     let contract_address = contract.address().unwrap();
 

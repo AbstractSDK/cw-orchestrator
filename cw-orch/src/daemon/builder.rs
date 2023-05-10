@@ -2,9 +2,9 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use crate::{Daemon, DaemonError};
+use crate::prelude::Daemon;
 
-use super::{sender::Sender, state::DaemonState};
+use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
@@ -26,7 +26,7 @@ pub struct DaemonBuilder {
     pub(crate) handle: Option<tokio::runtime::Handle>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
-    /// Optional wallet mnemonic
+    /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
 }
 

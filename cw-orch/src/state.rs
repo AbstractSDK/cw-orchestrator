@@ -1,4 +1,4 @@
-use crate::CwOrcError;
+use crate::error::CwOrcError;
 use cosmwasm_std::Addr;
 use std::collections::HashMap;
 

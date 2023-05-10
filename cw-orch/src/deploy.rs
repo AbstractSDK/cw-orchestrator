@@ -1,4 +1,4 @@
-use crate::{CwEnv, CwOrcError};
+use crate::prelude::{CwEnv, CwOrcError};
 
 /// Indicates the ability to deploy an application to a mock chain.
 ///

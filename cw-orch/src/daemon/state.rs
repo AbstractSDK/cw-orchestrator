@@ -1,5 +1,5 @@
 use super::error::DaemonError;
-use crate::{daemon::channel::DaemonChannel, error::CwOrcError, state::StateInterface};
+use crate::{daemon::channel::GrpcChannel, error::CwOrcError, state::StateInterface};
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
@@ -46,7 +46,7 @@ impl DaemonState {
 
         // find working grpc channel
         let grpc_channel =
-            DaemonChannel::connect(&chain_info.apis.grpc, &chain_info.chain_id).await?;
+            GrpcChannel::connect(&chain_info.apis.grpc, &chain_info.chain_id).await?;
 
         // check if STATE_FILE en var is configured, fail if not
         let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");

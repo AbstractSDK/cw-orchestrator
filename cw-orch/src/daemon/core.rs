@@ -6,9 +6,12 @@ use super::{
     sender::Wallet,
     state::{ChainKind, DaemonState},
     tx_resp::CosmTxResponse,
-    wasm_path::WasmPath,
 };
-use crate::{state::ChainState, tx_handler::TxHandler, CallAs, ContractInstance, CwOrcExecute};
+use crate::{
+    environment::{ChainUpload, TxHandler},
+    prelude::{CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath},
+    state::ChainState,
+};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     tendermint::Time,
@@ -45,6 +48,14 @@ use tonic::transport::Channel;
         .build()
         .unwrap();
     ```
+    ## Environment Execution
+
+    The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
+
+    ## Querying
+
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon::query<Querier>`] method with a specific querier.
+    See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct Daemon {
     pub sender: Wallet,
@@ -59,6 +70,7 @@ impl Daemon {
     }
 
     /// Perform a query with a given querier
+    /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.sender.channel())
     }
@@ -175,29 +187,6 @@ impl TxHandler for Daemon {
         Ok(result)
     }
 
-    fn upload(&self, contract_source: WasmPath) -> Result<Self::Response, DaemonError> {
-        let sender = &self.sender;
-        let wasm_path = contract_source.path();
-
-        log::debug!("Uploading file at {:?}", wasm_path);
-
-        let file_contents = std::fs::read(wasm_path)?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: sender.pub_addr()?,
-            wasm_byte_code: file_contents,
-            instantiate_permission: None,
-        };
-        let result = self
-            .rt_handle
-            .block_on(sender.commit_tx(vec![store_msg], None))?;
-
-        log::info!("Uploaded: {:?}", result.txhash);
-
-        // Extra time-out to ensure contract code propagation
-        self.rt_handle.block_on(self.wait());
-        Ok(result)
-    }
-
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let mut last_height = self
             .rt_handle
@@ -254,6 +243,31 @@ impl TxHandler for Daemon {
             time,
             chain_id: block.header.chain_id.to_string(),
         })
+    }
+}
+
+impl ChainUpload for Daemon {
+    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+        let sender = &self.sender;
+        let wasm_path = uploadable.wasm();
+
+        log::debug!("Uploading file at {:?}", wasm_path);
+
+        let file_contents = std::fs::read(wasm_path.path())?;
+        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+            sender: sender.pub_addr()?,
+            wasm_byte_code: file_contents,
+            instantiate_permission: None,
+        };
+        let result = self
+            .rt_handle
+            .block_on(sender.commit_tx(vec![store_msg], None))?;
+
+        log::info!("Uploaded: {:?}", result.txhash);
+
+        // Extra time-out to ensure contract code propagation
+        self.rt_handle.block_on(self.wait());
+        Ok(result)
     }
 }
 

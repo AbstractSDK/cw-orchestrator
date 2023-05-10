@@ -1,5 +1,5 @@
-use crate::{daemon::cosmos_modules, DaemonError};
-use cosmrs::proto::cosmos::base::v1beta1::Coin;
+use crate::daemon::{cosmos_modules, error::DaemonError};
+use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -18,7 +18,7 @@ impl DaemonQuerier for Bank {
 impl Bank {
     /// Query the bank balance of a given address
     /// If denom is None, returns all balances
-    pub async fn coin_balance(
+    pub async fn balance(
         &self,
         address: impl Into<String>,
         denom: Option<String>,
@@ -29,7 +29,7 @@ impl Bank {
                 let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
                 let request = cosmos_modules::bank::QueryBalanceRequest {
                     address: address.into(),
-                    denom: denom.into(),
+                    denom,
                 };
                 let resp = client.balance(request).await?.into_inner();
                 let coin = resp.balance.unwrap();
@@ -112,15 +112,20 @@ impl Bank {
         Ok(denom_metadata.metadata.unwrap())
     }
 
-    /// Query denoms metadata
+    /// Query denoms metadata with pagination
+    ///
+    /// see [PageRequest] for pagination
     pub async fn denoms_metadata(
         &self,
+        pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::bank::Metadata>, DaemonError> {
         let denoms_metadata: cosmos_modules::bank::QueryDenomsMetadataResponse = cosmos_query!(
             self,
             bank,
             denoms_metadata,
-            QueryDenomsMetadataRequest { pagination: None }
+            QueryDenomsMetadataRequest {
+                pagination: pagination
+            }
         );
         Ok(denoms_metadata.metadatas)
     }
