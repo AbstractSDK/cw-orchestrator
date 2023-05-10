@@ -1,0 +1,383 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Quick-start - cw-orchestrator documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start.html" class="active"><strong aria-hidden="true">2.</strong> Quick-start</a></li><li class="chapter-item expanded "><a href="tutorial/index.html"><strong aria-hidden="true">3.</strong> Tutorial</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tutorial/interfaces.html"><strong aria-hidden="true">3.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="tutorial/env-variable.html"><strong aria-hidden="true">3.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="tutorial/scripting.html"><strong aria-hidden="true">3.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="tutorial/integration-tests.html"><strong aria-hidden="true">3.4.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="tutorial/integration.html"><strong aria-hidden="true">3.5.</strong> Product Integrations</a></li></ol></li><li class="chapter-item expanded "><a href="advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="advanced/ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">cw-orchestrator documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="cw-orchestrator-quick-start"><a class="header" href="#cw-orchestrator-quick-start">Cw-orchestrator quick-start</a></h1>
+<p>Getting started with cw-orchestrator is very easy. The first step to using orchestrator is adding <code>cw-orch</code> to your contract's toml.</p>
+<h2 id="add-cw-orch"><a class="header" href="#add-cw-orch">Add <code>cw-orch</code></a></h2>
+<p>You can do this by running the following in the directory of your contract:</p>
+<pre><code class="language-shell">$ cargo add --optional cw-orch
+&gt; Adding cw-orch v0.10.0 to optional dependencies.
+</code></pre>
+<p>Or you can add it manually in your <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dependencies]
+cw-orch = {version = &quot;0.10.0&quot;, optional = true } # Latest version at time of writing
+</code></pre>
+<p>Now that we have added <code>cw-orch</code> as an optional dependency we will want to enable it with a feature. This ensures that the code added by <code>cw-orch</code> is not included in the wasm artifact of the contract. To do this add an <code>interface</code> feature to the <code>Cargo.toml</code> and enable <code>cw-orch</code> when it is enabled.</p>
+<p>To do this include the following in the <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[features]
+interface = [&quot;dep:cw-orch&quot;]
+</code></pre>
+<blockquote>
+<p>You can learn more about Rust features <a href="TODO">here</a></p>
+</blockquote>
+<h2 id="contract-interface"><a class="header" href="#contract-interface">Contract Interface</a></h2>
+<p>Now that we have the imports set up you can add the <code>interface</code> macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// In `contract.rs`
+#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface)] // &lt;--- Add this line
+pub fn instantiate(
+   deps: DepsMut,
+   env: Env,
+   info: MessageInfo,
+   msg: InstantiateMsg,
+ -&gt; StdResult&lt;Response&gt; {
+    // ...
+}
+
+#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface)] // &lt;--- Add this line
+pub fn execute(
+   deps: DepsMut,
+   env: Env,
+   info: MessageInfo,
+   msg: ExecuteMsg,
+ -&gt; StdResult&lt;Response&gt; {
+    // ...
+}
+// ... Do the same for the other entry points (query, migrate, reply, sudo)
+<span class="boring">}</span></code></pre></pre>
+<p>By adding these lines we generate code whenever the <code>interface</code> macro is enabled.
+The code will generate a contract interface. The contract interface will be the PascelCase of the crate's name.</p>
+<blockquote>
+<p>The name of the crate is defined in the <code>Cargo.toml</code> file of your contract.</p>
+</blockquote>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>Let's look at an example to solidify your understanding.
+We have a contract with a <code>Cargo.toml</code> file roughly be like the following:</p>
+<pre><code class="language-toml"># Cargo.toml
+[package]
+name = &quot;example-contract&quot;
+# ...
+
+[features]
+# Features that are enabled by default
+default = [&quot;export&quot;]
+# Exports the WASM entry points, similar to the `library` feature.
+export = []
+# Enables the contracts's interface
+interface = [&quot;dep:cw-orch&quot;]
+
+[dependencies]
+cw-orch = {version = &quot;0.10.0&quot;, optional = true }
+# ...
+</code></pre>
+<p>Then our contract looks something like:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// contract.rs
+#[cfg_attr(feature = &quot;export&quot;, entry_point)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+pub fn instantiate(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -&gt; Result&lt;Response, ContractError&gt; {
+    // Instantiate contract
+    Ok(Response::default())
+}
+
+#[cfg_attr(feature = &quot;export&quot;, entry_point)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -&gt; Result&lt;Response, ContractError&gt; {
+    match msg {
+        // match statements
+        _ =&gt; todo!()
+    }
+}
+
+#[cfg_attr(feature = &quot;export&quot;, entry_point)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -&gt; StdResult&lt;Binary&gt; {
+    match msg {
+        // match statements
+        _ =&gt; todo!()
+    }
+}
+
+#[cfg_attr(feature = &quot;export&quot;, entry_point)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -&gt; Result&lt;Response, ContractError&gt; {
+    // ...
+    Ok(Response::default())
+}
+<span class="boring">}</span></code></pre></pre>
+<p>This macro generates a <code>ExampleContract</code> struct that is now available in <code>contract.rs</code>.</p>
+<p>If we now create a test in <code>contract/tests</code> we can start interacting with it. </p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// contract/tests/example.rs
+
+#[test] 
+fn example_test() {
+    // init mock environment 
+    let sender = Addr::unchecked(&quot;sender&quot;);
+    // Init the mock environment (cw-multi-test App)
+    let mock = Mock::new(&amp;sender);
+    // `new()` function is available to construct the contract interface
+    let example_contract = example_contract::ExampleContract::new(&quot;example_contract&quot;, mock);
+    // Now we can start scripting! 
+
+    // Upload the contract to the mock
+    example_contract.upload()?;
+
+    // Instantiate the contract
+    example_contract.instantiate(&amp;InstantiateMsg { ... }, None, None)?;
+
+    // Execute the newly instantiated contract 
+    example_contract.execute(&amp;ExecuteMsg { ... }, None)?;
+
+    // Query 
+    let resp: QueryResponse = example_contract.query(&amp;QueryMsg { ... })?;
+
+    // Migrate 
+    example_contract.migrate(&amp;MigrateMsg { ... }, None)?;
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="interaction-helpers"><a class="header" href="#interaction-helpers">Interaction helpers</a></h2>
+<p>cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's ExecuteMsg and QueryMsg.</p>
+<p>Enabling this functionality is very straight-forward. Find your <code>ExecuteMsg</code> and <code>QueryMsg</code> definitions and add the <code>ExecuteFns</code> and <code>QueryFns</code> derive macros to them like below:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>
+<span class="boring">fn main() {
+</span>#[cfg_attr(feature = &quot;interface&quot;, derive(QueryFns))]
+pub enum QueryMsg {
+    ...
+}
+
+#[cfg_attr(feature = &quot;interface&quot;, derive(QueryFns))]
+pub enum QueryMsg {
+    ...
+}
+<span class="boring">}</span></code></pre></pre>
+<pre class="mermaid">flowchart TD
+    A[Christmas] --&gt;|Get money| B(Go shopping)
+    B --&gt; C{Let me think}
+    C --&gt;|One| D[Laptop]
+    C --&gt;|Two| E[iPhone]
+    C --&gt;|Three| F[fa:fa-car Car]
+</pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="tutorial/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="tutorial/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </body>
+</html>

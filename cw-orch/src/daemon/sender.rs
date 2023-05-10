@@ -23,6 +23,8 @@ const GAS_BUFFER: f64 = 1.2;
 
 pub type Wallet = Rc<Sender<All>>;
 
+/// Signer of the transactions and helper for address derivation
+/// This is the main interface for simulating and signing transactions
 pub struct Sender<C: Signing + Context> {
     pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
