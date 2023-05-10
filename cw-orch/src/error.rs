@@ -6,7 +6,7 @@ use thiserror::Error;
 use crate::daemon::error::DaemonError;
 
 #[derive(Error, Debug)]
-pub enum CwOrcError {
+pub enum CwOrchError {
     #[cfg(feature = "daemon")]
     #[error(transparent)]
     DaemonError(#[from] DaemonError),
@@ -28,10 +28,10 @@ pub enum CwOrcError {
     StdErr(String),
 }
 
-impl CwOrcError {
+impl CwOrchError {
     pub fn root(&self) -> &dyn std::error::Error {
         match self {
-            CwOrcError::AnyError(e) => e.root_cause(),
+            CwOrchError::AnyError(e) => e.root_cause(),
             _ => panic!("Unexpected error type"),
         }
     }

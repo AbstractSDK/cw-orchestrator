@@ -51,7 +51,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 let variant_attr = variant_fields.iter();
                 quote!(
                         #[allow(clippy::too_many_arguments)]
-                        fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::CwOrcError> {
+                        fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::CwOrchError> {
                             let msg = #name::#variant_name {
                                 #(#variant_idents,)*
                             };

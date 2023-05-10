@@ -62,7 +62,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 let variant_attr = variant_idents.iter();
                 Some(quote!(
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrcError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name {
                             #(#variant_ident_content_names,)*
                         };

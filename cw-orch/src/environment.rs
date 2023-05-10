@@ -1,5 +1,5 @@
 use crate::{
-    error::CwOrcError,
+    error::CwOrchError,
     prelude::{IndexResponse, Uploadable},
     state::ChainState,
 };
@@ -18,7 +18,7 @@ impl<T: TxHandler + ChainUpload + Clone> CwEnv for T {}
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
     type Response: IndexResponse + Debug;
-    type Error: Into<CwOrcError> + Debug;
+    type Error: Into<CwOrchError> + Debug;
     type ContractSource;
 
     // Gets current sender
