@@ -32,10 +32,12 @@ impl Gov {
         Ok(proposal.proposal.unwrap())
     }
 
-    /// Proposals queries all proposals based on given status.
+    /// Query proposals based on given status
+    ///
+    /// see [PageRequest] for pagination
     pub async fn proposals(
         &self,
-        proposal_status: i32,
+        proposal_status: GovProposalStatus,
         voter: impl Into<String>,
         depositor: impl Into<String>,
         pagination: Option<PageRequest>,
@@ -45,7 +47,7 @@ impl Gov {
             gov,
             proposals,
             QueryProposalsRequest {
-                proposal_status: proposal_status,
+                proposal_status: proposal_status as i32,
                 voter: voter.into(),
                 depositor: depositor.into(),
                 pagination: pagination
@@ -54,7 +56,7 @@ impl Gov {
         Ok(proposals)
     }
 
-    /// Vote queries voted information based on proposal_id for voter address.
+    /// Query voted information based on proposal_id for voter address
     pub async fn vote(
         &self,
         proposal_id: u64,
@@ -72,10 +74,12 @@ impl Gov {
         Ok(vote.vote.unwrap())
     }
 
-    /// Votes queries votes of a given proposal.
+    /// Query votes of a given proposal
+    ///
+    /// see [PageRequest] for pagination
     pub async fn votes(
         &self,
-        proposal_id: u64,
+        proposal_id: impl Into<u64>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::gov::QueryVotesResponse, DaemonError> {
         let votes: cosmos_modules::gov::QueryVotesResponse = cosmos_query!(
@@ -83,14 +87,14 @@ impl Gov {
             gov,
             votes,
             QueryVotesRequest {
-                proposal_id: proposal_id,
+                proposal_id: proposal_id.into(),
                 pagination: pagination
             }
         );
         Ok(votes)
     }
 
-    /// Params queries all parameters of the gov module.
+    /// Query all parameters of the gov module
     pub async fn params(
         &self,
         params_type: impl Into<String>,
@@ -106,7 +110,7 @@ impl Gov {
         Ok(params)
     }
 
-    /// Deposit queries single deposit information based proposalID, depositAddr.
+    /// Query deposit information using proposal_id and depositor address
     pub async fn deposit(
         &self,
         proposal_id: u64,
@@ -124,7 +128,9 @@ impl Gov {
         Ok(deposit.deposit.unwrap())
     }
 
-    /// Deposits queries all deposits of a single proposal.
+    /// Query deposits of a proposal
+    ///
+    /// see [PageRequest] for pagination
     pub async fn deposits(
         &self,
         proposal_id: u64,
@@ -157,4 +163,13 @@ impl Gov {
         );
         Ok(tally_result.tally.unwrap())
     }
+}
+
+pub enum GovProposalStatus {
+    Unspecified = 0,
+    DepositPeriod = 1,
+    VotingPeriod = 2,
+    Passed = 3,
+    Rejected = 4,
+    Failed = 5,
 }
