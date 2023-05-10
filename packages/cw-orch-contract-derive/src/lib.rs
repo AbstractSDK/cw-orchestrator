@@ -492,6 +492,7 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     };
 
     let addition: TokenStream = if func_ident == "instantiate" {
+        #[allow(unused_mut)]
         let mut interface_def: TokenStream = quote!(
             #struct_def
             #message_part
