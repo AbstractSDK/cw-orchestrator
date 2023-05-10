@@ -20,6 +20,9 @@ pub use crate::interface_traits::{
 // Response trait
 pub use crate::index_response::IndexResponse;
 
+// Contract for new function
+pub use crate::contract::Contract;
+
 // Environment
 pub use crate::environment::{CwEnv, TxResponse};
 
@@ -34,7 +37,7 @@ pub use crate::paths::{ArtifactsDir, WasmPath};
 
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
-pub use cw_multi_test::{custom_app, BasicApp, Contract as MockContract, ContractWrapper};
+pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
