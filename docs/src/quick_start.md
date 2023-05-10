@@ -139,7 +139,6 @@ If we now create a test in `contract/tests` we can start interacting with it.
 
 ```rust
 // contract/tests/example.rs
-
 #[test] 
 fn example_test() {
     // init mock environment 
@@ -175,8 +174,8 @@ Enabling this functionality is very straight-forward. Find your `ExecuteMsg` and
 
 ```rust
 
-#[cfg_attr(feature = "interface", derive(QueryFns))]
-pub enum QueryMsg {
+#[cfg_attr(feature = "interface", derive(ExecuteFns))]
+pub enum ExecuteMsg {
     ...
 }
 
@@ -186,11 +185,4 @@ pub enum QueryMsg {
 }
 ```
 
-```mermaid
-flowchart TD
-    A[Christmas] -->|Get money| B(Go shopping)
-    B --> C{Let me think}
-    C -->|One| D[Laptop]
-    C -->|Two| E[iPhone]
-    C -->|Three| F[fa:fa-car Car]
-```
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function generated on the interface. The function will have the same name as the variant and will take the same arguments as the variant.
