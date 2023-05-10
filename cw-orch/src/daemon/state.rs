@@ -1,5 +1,5 @@
 use super::error::DaemonError;
-use crate::{daemon::channel::GrpcChannel, error::CwOrcError, state::StateInterface};
+use crate::{daemon::channel::GrpcChannel, error::CwOrchError, state::StateInterface};
 use cosmrs::Denom;
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
@@ -147,11 +147,11 @@ impl DaemonState {
 
 impl StateInterface for Rc<DaemonState> {
     /// Read address for contract in deployment id from state file
-    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrcError> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrchError> {
         let value = self
             .get(&self.deployment_id)
             .get(contract_id)
-            .ok_or_else(|| CwOrcError::AddrNotInStore(contract_id.to_owned()))?
+            .ok_or_else(|| CwOrchError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(Addr::unchecked(value.as_str().unwrap()))
     }
@@ -162,11 +162,11 @@ impl StateInterface for Rc<DaemonState> {
     }
 
     /// Get the locally-saved version of the contract's version on this network
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrcError> {
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrchError> {
         let value = self
             .get("code_ids")
             .get(contract_id)
-            .ok_or_else(|| CwOrcError::CodeIdNotInStore(contract_id.to_owned()))?
+            .ok_or_else(|| CwOrchError::CodeIdNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(value.as_u64().unwrap())
     }
@@ -177,7 +177,7 @@ impl StateInterface for Rc<DaemonState> {
     }
 
     /// Get all addresses for deployment id from state file
-    fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwOrcError> {
+    fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwOrchError> {
         let mut store = HashMap::new();
         let addresses = self.get(&self.deployment_id);
         let value = addresses.as_object().unwrap();
@@ -187,7 +187,7 @@ impl StateInterface for Rc<DaemonState> {
         Ok(store)
     }
 
-    fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrcError> {
+    fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrchError> {
         let mut store = HashMap::new();
         let code_ids = self.get("code_ids");
         let value = code_ids.as_object().unwrap();
@@ -283,7 +283,7 @@ pub enum ChainKind {
 }
 
 impl ChainKind {
-    pub fn new() -> Result<Self, CwOrcError> {
+    pub fn new() -> Result<Self, CwOrchError> {
         let network_id = env::var("NETWORK").expect("NETWORK is not set");
         let network = match network_id.as_str() {
             "testnet" => ChainKind::Testnet,
