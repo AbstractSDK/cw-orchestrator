@@ -133,7 +133,7 @@ For nested execute messages you can add an `impl_into` attribute. This expects t
 
 The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryResponse)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
-# Contributing
+## Contributing
 
 We'd really appreciate your help! Please read our [contributing guidelines](docs/src/contributing.md) to get started.
 
@@ -147,7 +147,7 @@ cd docs && mdbook serve --open
 
 to view the changes.
 
-# Testing
+## Testing
 
 To test the full application you can run the following command:
 
@@ -155,14 +155,14 @@ To test the full application you can run the following command:
 cargo test --jobs 1 --all-features
 ```
 
-# References
+## References
 
 Enjoy scripting your smart contracts with ease? Build your contracts with ease by using [Abstract](https://abstract.money).
 
-# Disclaimer
+## Disclaimer
 
 This software is provided as-is without any guarantees.
 
-# Credits
+## Credits
 
 cw-orchestrator is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
