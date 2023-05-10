@@ -8,10 +8,7 @@ struct DeployId(());
 
 type Id = IdT<DeployId>;
 
-use cw_orch::{
-    contract, networks::LOCAL_JUNO, Contract, ContractWrapper, CwEnv, Daemon, Mock, Uploadable,
-    WasmPath,
-};
+use cw_orch::{contract::Contract, environment::TxHandler, prelude::*};
 
 // path to local cw20.wasm artifact
 const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
@@ -32,14 +29,14 @@ impl<Chain: CwEnv> Cw20<Chain> {
 }
 
 impl<Chain: CwEnv> Uploadable for Cw20<Chain> {
-    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         // create contract base configuration
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);
         log::info!("Using wasm path {}", wasm_path);
         WasmPath::new(wasm_path).unwrap()
     }
-    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+    fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -52,17 +49,15 @@ impl<Chain: CwEnv> Uploadable for Cw20<Chain> {
 }
 
 pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<Daemon>) {
-    let id = Id::new();
-
     let daemon = Daemon::builder()
-        .chain(LOCAL_JUNO)
+        .chain(networks::LOCAL_JUNO)
         .handle(runtime.handle())
         .build()
         .unwrap();
 
     let sender = daemon.sender.address().unwrap();
 
-    let contract = Cw20(Contract::new(format!("cw-plus:cw20_base:{}", id), daemon));
+    let contract = Cw20::new(daemon);
 
     (sender, contract)
 }

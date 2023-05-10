@@ -1,4 +1,4 @@
-use crate::{daemon::cosmos_modules, DaemonError};
+use crate::daemon::{cosmos_modules, error::DaemonError};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use tonic::transport::Channel;
 

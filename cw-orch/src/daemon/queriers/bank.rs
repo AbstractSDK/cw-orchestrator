@@ -1,4 +1,4 @@
-use crate::{daemon::cosmos_modules, DaemonError};
+use crate::daemon::{cosmos_modules, error::DaemonError};
 use cosmrs::proto::cosmos::base::v1beta1::Coin;
 use tonic::transport::Channel;
 

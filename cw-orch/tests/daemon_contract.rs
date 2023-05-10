@@ -2,7 +2,7 @@
     Daemon contract general tests
 */
 mod common;
-use cw_orch::*;
+use cw_orch::prelude::*;
 use std::sync::Arc;
 
 use cosmwasm_std::Addr;

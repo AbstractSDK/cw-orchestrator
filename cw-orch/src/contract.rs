@@ -1,8 +1,9 @@
-use crate::tx_handler::ChainUpload;
+use crate::environment::ChainUpload;
+use crate::prelude::{CwEnv, Uploadable};
 use crate::{
-    error::CwOrcError, index_response::IndexResponse, state::StateInterface, tx_handler::TxResponse,
+    environment::TxResponse, error::CwOrcError, index_response::IndexResponse,
+    state::StateInterface,
 };
-use crate::{CwEnv, Uploadable};
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;

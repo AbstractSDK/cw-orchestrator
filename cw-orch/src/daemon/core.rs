@@ -8,9 +8,9 @@ use super::{
     tx_resp::CosmTxResponse,
 };
 use crate::{
+    environment::{ChainUpload, TxHandler},
+    prelude::{CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath},
     state::ChainState,
-    tx_handler::{ChainUpload, TxHandler},
-    CallAs, ContractInstance, CwOrcExecute, Uploadable, WasmPath,
 };
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
