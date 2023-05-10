@@ -6,7 +6,7 @@ use crate::{
 };
 
 use cosmrs::{
-    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
+    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::{SimulateResponse, OrderBy}},
     tendermint::{Block, Time},
 };
 use tokio::time::sleep;
@@ -181,5 +181,40 @@ impl Node {
         }
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(hash, MAX_TX_QUERY_RETRIES))
+    }
+
+    /// Find TX by events
+    pub async fn find_tx_by_events(&self, events: Vec<String>, page: Option<PageRequest>, order_by: Option<OrderBy>) -> Result<Vec<CosmTxResponse>, DaemonError> {
+        let mut client =
+            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+
+        let request = cosmos_modules::tx::GetTxsEventRequest{ 
+            events: events.clone(),
+            pagination: page,
+            order_by: order_by.unwrap_or(OrderBy::Desc).into()
+        };
+
+        for _ in 0..MAX_TX_QUERY_RETRIES {
+            match client.get_txs_event(request.clone()).await {
+                Ok(tx) => {
+                    let resp = tx.into_inner().tx_responses;
+                    if resp.is_empty() {
+                        log::debug!("Not TX by events found");
+                        log::debug!("Waiting 10s");
+                        sleep(Duration::from_secs(10)).await;
+                    }else{
+                        log::debug!("TX found by events: {:?}", resp.iter().map(|t| t.txhash.clone()));
+                        return Ok(resp.iter().map(|r| r.clone().into()).collect());
+                    }
+                }
+                Err(err) => {
+                    log::debug!("TX not found with error: {:?}", err);
+                    log::debug!("Waiting 10s");
+                    sleep(Duration::from_secs(10)).await;
+                }
+            }
+        }
+        // return error if tx not found by now
+        Err(DaemonError::TXNotFound(format!("with events {:?}", events), MAX_TX_QUERY_RETRIES))
     }
 }
