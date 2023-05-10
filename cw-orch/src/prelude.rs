@@ -10,10 +10,6 @@
 // 3. Traits that need to be imported to implement an interface
 // 4. Objects that need to be available to implement required traits
 
-// macros
-pub use cw_orch_contract_derive::{contract, interface};
-pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
-
 // Contract traits
 pub use crate::interface_traits::{
     CallAs, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery,
