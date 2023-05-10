@@ -34,18 +34,10 @@ impl Feegrant {
         Ok(allowance.allowance.unwrap())
     }
 
-    /// Query all allowances for grantee address
-    pub async fn allowances(
-        &self,
-        grantee: impl Into<String>,
-    ) -> Result<Vec<cosmos_modules::feegrant::Grant>, DaemonError> {
-        self.allowances_with_pagination(grantee, None).await
-    }
-
     /// Query allowances for grantee address with a given pagination
     ///
     /// see [PageRequest] for pagination
-    pub async fn allowances_with_pagination(
+    pub async fn allowances(
         &self,
         grantee: impl Into<String>,
         pagination: Option<PageRequest>,

@@ -32,21 +32,10 @@ impl Gov {
         Ok(proposal.proposal.unwrap())
     }
 
-    /// Query all proposals based on given status
-    pub async fn proposals(
-        &self,
-        proposal_status: GovProposalStatus,
-        voter: impl Into<String>,
-        depositor: impl Into<String>,
-    ) -> Result<cosmos_modules::gov::QueryProposalsResponse, DaemonError> {
-        self.proposals_with_pagination(proposal_status, voter, depositor, None)
-            .await
-    }
-
-    /// Query proposals based on given status with pagination
+    /// Query proposals based on given status
     ///
     /// see [PageRequest] for pagination
-    pub async fn proposals_with_pagination(
+    pub async fn proposals(
         &self,
         proposal_status: GovProposalStatus,
         voter: impl Into<String>,
@@ -85,18 +74,10 @@ impl Gov {
         Ok(vote.vote.unwrap())
     }
 
-    /// Query all votes of a given proposal
-    pub async fn votes(
-        &self,
-        proposal_id: impl Into<u64>,
-    ) -> Result<cosmos_modules::gov::QueryVotesResponse, DaemonError> {
-        self.votes_with_pagination(proposal_id.into(), None).await
-    }
-
-    /// Query votes of a given proposal with pagination
+    /// Query votes of a given proposal
     ///
     /// see [PageRequest] for pagination
-    pub async fn votes_with_pagination(
+    pub async fn votes(
         &self,
         proposal_id: impl Into<u64>,
         pagination: Option<PageRequest>,
@@ -147,18 +128,10 @@ impl Gov {
         Ok(deposit.deposit.unwrap())
     }
 
-    /// Query all deposits of a proposal
-    pub async fn deposits(
-        &self,
-        proposal_id: u64,
-    ) -> Result<cosmos_modules::gov::QueryDepositsResponse, DaemonError> {
-        self.deposits_with_pagination(proposal_id, None).await
-    }
-
-    /// Query deposits of a proposal with pagination
+    /// Query deposits of a proposal
     ///
     /// see [PageRequest] for pagination
-    pub async fn deposits_with_pagination(
+    pub async fn deposits(
         &self,
         proposal_id: u64,
         pagination: Option<PageRequest>,

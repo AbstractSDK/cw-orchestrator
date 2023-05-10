@@ -51,18 +51,10 @@ impl Staking {
         Ok(validators.validators)
     }
 
-    /// Query all validator delegations info for given validator
-    pub async fn delegations(
-        &self,
-        validator_addr: impl Into<String>,
-    ) -> Result<Vec<cosmos_modules::staking::DelegationResponse>, DaemonError> {
-        self.delegations_with_pagination(validator_addr, None).await
-    }
-
-    /// Query validator delegations info for given validator with pagination
+    /// Query validator delegations info for given validator
     ///
     /// see [PageRequest] for pagination
-    pub async fn delegations_with_pagination(
+    pub async fn delegations(
         &self,
         validator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
@@ -133,17 +125,9 @@ impl Staking {
     }
 
     /// Query all delegator delegations of a given delegator address
-    pub async fn delegator_delegations(
-        &self,
-        delegator_addr: impl Into<String>,
-    ) -> Result<cosmos_modules::staking::QueryDelegatorDelegationsResponse, DaemonError> {
-        self.delegator_delegations_with_pagination(delegator_addr, None).await
-    }
-
-    /// Query all delegator delegations of a given delegator address with pagination
     ///
     /// see [PageRequest] for pagination
-    pub async fn delegator_delegations_with_pagination(
+    pub async fn delegator_delegations(
         &self,
         delegator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
@@ -181,26 +165,10 @@ impl Staking {
         Ok(delegator_unbonding_delegations)
     }
 
-    /// Query all redelegations of a given address.
-    pub async fn redelegations(
-        &self,
-        delegator_addr: impl Into<String>,
-        src_validator_addr: impl Into<String>,
-        dst_validator_addr: impl Into<String>,
-    ) -> Result<cosmos_modules::staking::QueryRedelegationsResponse, DaemonError> {
-        self.redelegations_with_pagination(
-            delegator_addr,
-            src_validator_addr,
-            dst_validator_addr,
-            None,
-        )
-        .await
-    }
-
-    /// Query redelegations of a given address with pagination
+    /// Query redelegations of a given address
     ///
     /// see [PageRequest] for pagination
-    pub async fn redelegations_with_pagination(
+    pub async fn redelegations(
         &self,
         delegator_addr: impl Into<String>,
         src_validator_addr: impl Into<String>,
@@ -239,18 +207,10 @@ impl Staking {
         Ok(delegator_validator)
     }
 
-    /// Query delegator validators info for given delegator address.
-    pub async fn delegator_validators(
-        &self,
-        delegator_addr: impl Into<String>,
-    ) -> Result<cosmos_modules::staking::QueryDelegatorValidatorsResponse, DaemonError> {
-        self.delegator_validators_with_pagination(delegator_addr, None).await
-    }
-
-    /// Query delegator validators info for given delegator address with pagination
+    /// Query delegator validators info for given delegator address
     ///
     /// see [PageRequest] for pagination
-    pub async fn delegator_validators_with_pagination(
+    pub async fn delegator_validators(
         &self,
         delegator_addr: impl Into<String>,
         pagination: Option<PageRequest>,

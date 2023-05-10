@@ -112,17 +112,10 @@ impl Bank {
         Ok(denom_metadata.metadata.unwrap())
     }
 
-    /// Query denoms metadata
-    pub async fn denoms_metadata(
-        &self,
-    ) -> Result<Vec<cosmos_modules::bank::Metadata>, DaemonError> {
-        self.denoms_metadata_with_pagination(None).await
-    }
-
     /// Query denoms metadata with pagination
     ///
     /// see [PageRequest] for pagination
-    pub async fn denoms_metadata_with_pagination(
+    pub async fn denoms_metadata(
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::bank::Metadata>, DaemonError> {

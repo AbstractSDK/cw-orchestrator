@@ -98,7 +98,7 @@ fn general_bank() {
         .that(&denom_metadata)
         .is_err();
 
-    let denoms_metadata = rt.block_on(bank.denoms_metadata());
+    let denoms_metadata = rt.block_on(bank.denoms_metadata(None));
     asserting!("denoms_metadata is ok, but empty")
         .that(&denoms_metadata)
         .is_ok();
