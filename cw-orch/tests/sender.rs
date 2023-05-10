@@ -1,7 +1,10 @@
 mod common;
 
 use cosmwasm_std::Uint128;
-use cw_orch::{networks::LOCAL_JUNO, *};
+use cw_orch::{
+    daemon::error::DaemonError,
+    prelude::{networks::LOCAL_JUNO, *},
+};
 use speculoos::{result::ResultAssertions, *};
 use tokio::runtime::Runtime;
 

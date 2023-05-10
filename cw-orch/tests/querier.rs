@@ -3,8 +3,11 @@ use std::{str::FromStr, sync::Arc};
 
 use common::channel::build_channel;
 use cw_orch::{
-    queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
-    ContractInstance, CwOrcInstantiate, CwOrcUpload, DaemonError,
+    daemon::{
+        error::DaemonError,
+        queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
+    },
+    prelude::*,
 };
 
 use speculoos::prelude::*;

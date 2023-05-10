@@ -1,7 +1,8 @@
+use crate::prelude::IndexResponse;
+
 use super::cosmos_modules::abci::{AbciMessageLog, Attribute, StringEvent, TxResponse};
 use super::cosmos_modules::tendermint_abci::Event;
 use super::error::DaemonError;
-use crate::IndexResponse;
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
 use serde::{Deserialize, Serialize};

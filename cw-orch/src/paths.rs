@@ -1,5 +1,8 @@
-pub mod wasm_path {
-    use crate::CwOrcError;
+pub use artifacts_dir::ArtifactsDir;
+pub use wasm_path::WasmPath;
+
+mod wasm_path {
+    use crate::error::CwOrcError;
     use cosmwasm_std::ensure_eq;
     use std::path::{Path, PathBuf};
 
@@ -37,10 +40,11 @@ pub mod wasm_path {
     }
 }
 
-pub mod artifacts_dir {
+mod artifacts_dir {
     use std::{env, fs, path::PathBuf};
 
-    use crate::{CwOrcError, WasmPath};
+    use crate::error::CwOrcError;
+    use crate::paths::wasm_path::WasmPath;
 
     /// Points to a directory containing wasm files
     pub struct ArtifactsDir(PathBuf);
