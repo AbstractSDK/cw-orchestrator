@@ -1,11 +1,11 @@
 use crate::daemon::queriers::CosmWasm;
 use crate::environment::TxResponse;
-use crate::error::CwOrcError;
+use crate::error::CwOrchError;
 use crate::prelude::*;
 
 pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrcError> {
+    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
             Ok(None)
         } else {
@@ -14,7 +14,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
     }
 
     /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
-    fn latest_is_uploaded(&self) -> Result<bool, CwOrcError> {
+    fn latest_is_uploaded(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
@@ -31,7 +31,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
     }
 
     /// Returns a bool whether the contract is running the latest uploaded code for it
-    fn is_running_latest(&self) -> Result<bool, CwOrcError> {
+    fn is_running_latest(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
@@ -50,7 +50,7 @@ pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     fn migrate_if_needed(
         &self,
         migrate_msg: &Self::MigrateMsg,
-    ) -> Result<Option<TxResponse<Daemon>>, CwOrcError> {
+    ) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.is_running_latest()? {
             log::info!("{} is already running the latest code", self.id());
             Ok(None)

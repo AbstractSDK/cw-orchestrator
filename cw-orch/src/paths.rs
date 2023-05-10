@@ -2,7 +2,7 @@ pub use artifacts_dir::ArtifactsDir;
 pub use wasm_path::WasmPath;
 
 mod wasm_path {
-    use crate::error::CwOrcError;
+    use crate::error::CwOrchError;
     use cosmwasm_std::ensure_eq;
     use std::path::{Path, PathBuf};
 
@@ -12,7 +12,7 @@ mod wasm_path {
     pub struct WasmPath(PathBuf);
 
     impl WasmPath {
-        pub fn new(path: impl Into<PathBuf>) -> Result<Self, CwOrcError> {
+        pub fn new(path: impl Into<PathBuf>) -> Result<Self, CwOrchError> {
             let path: PathBuf = path.into();
             assert!(
                 path.exists(),
@@ -22,7 +22,7 @@ mod wasm_path {
             ensure_eq!(
                 path.extension(),
                 Some("wasm".as_ref()),
-                CwOrcError::StdErr("File must be a wasm file".into())
+                CwOrchError::StdErr("File must be a wasm file".into())
             );
             Ok(Self(path))
         }
@@ -33,7 +33,7 @@ mod wasm_path {
         }
 
         /// Calculate the checksum of the wasm file to compare against previous uploads
-        pub fn checksum(&self, _id: &str) -> Result<String, CwOrcError> {
+        pub fn checksum(&self, _id: &str) -> Result<String, CwOrchError> {
             let checksum = sha256::try_digest(self.path())?;
             Ok(checksum)
         }
@@ -43,7 +43,7 @@ mod wasm_path {
 mod artifacts_dir {
     use std::{env, fs, path::PathBuf};
 
-    use crate::error::CwOrcError;
+    use crate::error::CwOrchError;
     use crate::paths::wasm_path::WasmPath;
 
     /// Points to a directory containing wasm files
@@ -72,7 +72,7 @@ mod artifacts_dir {
         }
 
         /// Find a wasm file in the artifacts directory with the given name
-        pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwOrcError> {
+        pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwOrchError> {
             let path_str = fs::read_dir(self.path())?
                 .find_map(|entry| {
                     let path = entry.ok()?.path();
@@ -87,7 +87,7 @@ mod artifacts_dir {
                     }
                 })
                 .ok_or_else(|| {
-                    CwOrcError::StdErr(format!(
+                    CwOrchError::StdErr(format!(
                         "Could not find wasm file with name {} in artifacts dir",
                         name,
                     ))
