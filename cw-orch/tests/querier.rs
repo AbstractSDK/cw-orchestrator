@@ -7,7 +7,7 @@ use cw_orch::{
         error::DaemonError,
         queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
     },
-    prelude::*,
+    prelude::{queriers::StakingBondStatus, *},
 };
 
 use speculoos::prelude::*;
@@ -46,7 +46,7 @@ fn general_staking() {
     let params = rt.block_on(staking.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let validators = rt.block_on(staking.validators("BOND_STATUS_BONDED"));
+    let validators = rt.block_on(staking.validators(StakingBondStatus::Bonded));
     asserting!("validators is ok").that(&validators).is_ok();
     asserting!("validators is not empty")
         .that(&validators.unwrap().len())
@@ -80,8 +80,7 @@ fn general_bank() {
     let params = rt.block_on(bank.params());
     asserting!("params is ok").that(&params).is_ok();
 
-    let balances =
-        rt.block_on(bank.coin_balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+    let balances = rt.block_on(bank.balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
     asserting!("balances is ok").that(&balances).is_ok();
 
     let spendable_balances =
@@ -101,7 +100,7 @@ fn general_bank() {
         .that(&denom_metadata)
         .is_err();
 
-    let denoms_metadata = rt.block_on(bank.denoms_metadata());
+    let denoms_metadata = rt.block_on(bank.denoms_metadata(None));
     asserting!("denoms_metadata is ok, but empty")
         .that(&denoms_metadata)
         .is_ok();

@@ -16,7 +16,7 @@ impl DaemonQuerier for Feegrant {
 }
 
 impl Feegrant {
-    /// Allowance returns fee granted to the grantee by the granter.
+    /// Query all allowances granted to the grantee address by a granter address
     pub async fn allowance(
         &self,
         granter: impl Into<String>,
@@ -34,7 +34,9 @@ impl Feegrant {
         Ok(allowance.allowance.unwrap())
     }
 
-    /// Allowances returns all the grants for address.
+    /// Query allowances for grantee address with a given pagination
+    ///
+    /// see [PageRequest] for pagination
     pub async fn allowances(
         &self,
         grantee: impl Into<String>,
