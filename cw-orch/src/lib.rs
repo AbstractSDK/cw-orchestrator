@@ -19,6 +19,7 @@ mod keys;
 mod mock;
 mod state;
 mod tx_handler;
+pub mod prelude;
 
 pub use contract::Contract;
 pub use cw_orch_contract_derive::{contract, interface};

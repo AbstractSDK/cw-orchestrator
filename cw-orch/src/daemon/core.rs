@@ -28,8 +28,23 @@ use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**
-    Represents a connection to a chain.
+    Represents a blockchain node.
     Is constructed with the [DaemonBuilder].
+
+    ## Usage
+
+    ```rust
+    use cw_orch::daemon::Daemon;
+    use cw_orch::networks::JUNO_1;
+    use tokio::runtime::Runtime;
+
+    let rt = Runtime::new().unwrap();
+    let daemon: Daemon = Daemon::builder()
+        .chain(JUNO_1)
+        .handle(rt.handle())
+        .build()
+        .unwrap();
+    ```
 */
 pub struct Daemon {
     pub sender: Wallet,
@@ -42,16 +57,6 @@ impl Daemon {
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
     }
-
-    /// set the deployment after daemon
-    // pub fn set_deployment(&mut self, deployment_id: impl Into<String>) -> Result<(), DaemonError> {
-    //     // This ensures that you don't change the deployment of any contract that has been used before.
-    //     // It reduces the probability of shooting yourself in the foot.
-    //     Rc::get_mut(&mut self.state)
-    //         .ok_or(DaemonError::SharedDaemonState)?
-    //         .set_deployment(deployment_id);
-    //     Ok(())
-    // }
 
     /// Perform a query with a given querier
     pub fn query<Querier: DaemonQuerier>(&self) -> Querier {

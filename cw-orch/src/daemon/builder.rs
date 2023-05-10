@@ -45,7 +45,6 @@ impl DaemonBuilder {
     }
 
     /// Set the tokio runtime handle to use for the daemon
-    /// Defaults to the current runtime
     ///
     /// ## Example
     /// ```no_run
