@@ -18,7 +18,7 @@ Or you can add it manually in your `Cargo.toml`:
 cw-orch = {version = "0.10.0", optional = true } # Latest version at time of writing
 ```
 
-Now that we have added `cw-orch` as an optional dependency we will want to enable it with a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
+Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
 
 To do this include the following in the `Cargo.toml`:
 
@@ -27,11 +27,11 @@ To do this include the following in the `Cargo.toml`:
 interface = ["dep:cw-orch"]
 ```
 
-> You can learn more about Rust features [here](TODO)
+> You can learn more about Rust features [here](https://doc.rust-lang.org/cargo/reference/features.html).
 
 ## Contract Interface
 
-Now that we have the imports set up you can add the `interface` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
+Now that we have the dependency set up you can add the `interface` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
 
 ```rust
 // In `contract.rs`
@@ -58,7 +58,7 @@ pub fn execute(
 ```
 
 By adding these lines we generate code whenever the `interface` macro is enabled.
-The code will generate a contract interface. The contract interface will be the PascelCase of the crate's name.
+The code will generate a contract interface. The contract interface will be the PascalCase of the crate's name.
 
 > The name of the crate is defined in the `Cargo.toml` file of your contract.
 
@@ -76,7 +76,7 @@ name = "example-contract"
 [features]
 # Features that are enabled by default
 default = ["export"]
-# Exports the WASM entry points, similar to the `library` feature.
+# Exports the WASM entry points, similar to the `library` feature
 export = []
 # Enables the contracts's interface
 interface = ["dep:cw-orch"]
@@ -135,10 +135,13 @@ pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, Con
 
 This macro generates a `ExampleContract` struct that is now available in `contract.rs`.
 
-If we now create a test in `contract/tests` we can start interacting with it. 
+If we now create a test in `contract/tests` we can start interacting with it!
 
 ```rust
 // contract/tests/example.rs
+
+// import the generated interface
+use example_contract::contract::ExampleContract;
 #[test] 
 fn example_test() {
     // init mock environment 
@@ -146,7 +149,7 @@ fn example_test() {
     // Init the mock environment (cw-multi-test App)
     let mock = Mock::new(&sender);
     // `new()` function is available to construct the contract interface
-    let example_contract = example_contract::ExampleContract::new("example_contract", mock);
+    let example_contract = ExampleContract::new("example_contract", mock);
     // Now we can start scripting! 
 
     // Upload the contract to the mock
@@ -156,10 +159,10 @@ fn example_test() {
     example_contract.instantiate(&InstantiateMsg { ... }, None, None)?;
 
     // Execute the newly instantiated contract 
-    example_contract.execute(&ExecuteMsg { ... }, None)?;
+    example_contract.execute(&ExecuteMsg::Increment { ... }, None)?;
 
     // Query 
-    let resp: QueryResponse = example_contract.query(&QueryMsg { ... })?;
+    let resp: QueryResponse = example_contract.query(&QueryMsg::Config { ... })?;
 
     // Migrate 
     example_contract.migrate(&MigrateMsg { ... }, None)?;
@@ -176,13 +179,46 @@ Enabling this functionality is very straight-forward. Find your `ExecuteMsg` and
 
 #[cfg_attr(feature = "interface", derive(ExecuteFns))]
 pub enum ExecuteMsg {
+    Increment {},
     ...
 }
 
 #[cfg_attr(feature = "interface", derive(QueryFns))]
 pub enum QueryMsg {
+    #[returns(ConfigResponse)]
+    Config {}
     ...
 }
 ```
 
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function generated on the interface. The function will have the same name as the variant and will take the same arguments as the variant.
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function generated on the interface through a trait. The function will have the same name as the variant and will take the same arguments as the variant.
+
+You can access these functions by importing the generated traits form the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`.
+
+```rust
+
+// Import the generated traits
+use example_contract::msg::{ExecuteMsgFns, QueryMsgFns};
+
+#[test]
+fn example_test() {
+    // init mock environment 
+    let sender = Addr::unchecked("sender");
+    // Init the mock environment (cw-multi-test App)
+    let mock = Mock::new(&sender);
+    // `new()` function is available to construct the contract interface
+    let example_contract = ExampleContract::new("example_contract", mock);
+
+    // ... upload and instantiate like before
+
+    // Execute the increment endpoint 
+    example_contract.increment()?;
+
+    // Query the config
+    // Return type optional! 
+    let resp: QueryResponse = example_contract.config()?;
+}
+
+```
+
+> The function arguments are ordered alphabetically to prevent breaking changes when struct fields are moved.
