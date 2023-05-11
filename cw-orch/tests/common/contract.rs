@@ -1,5 +1,6 @@
 use cosmwasm_std::{Addr, Uint128};
 use tokio::runtime::Runtime;
+use cw_orch::interface;
 
 use uid::Id as IdT;
 
@@ -19,7 +20,7 @@ const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
     cw20_base::msg::QueryMsg,
     cw20_base::msg::MigrateMsg
 )]
-pub struct Cw20;
+pub struct Cw20<Chain>;
 
 impl<Chain: CwEnv> Cw20<Chain> {
     pub fn new(chain: Chain) -> Self {
