@@ -35,6 +35,7 @@ pub use crate::paths::{ArtifactsDir, WasmPath};
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
 pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
+pub use crate::contract::Contract;
 
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
