@@ -8,7 +8,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -169,7 +169,7 @@ interface = [&quot;dep:cw-orch&quot;]
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// In `contract.rs`
-#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface)] // &lt;--- Add this line
+#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface_entry_point)] // &lt;--- Add this line
 pub fn instantiate(
    deps: DepsMut,
    env: Env,
@@ -179,7 +179,7 @@ pub fn instantiate(
     // ...
 }
 
-#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface)] // &lt;--- Add this line
+#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface_entry_point)] // &lt;--- Add this line
 pub fn execute(
    deps: DepsMut,
    env: Env,
@@ -220,7 +220,7 @@ cw-orch = {version = &quot;0.10.0&quot;, optional = true }
 </span><span class="boring">fn main() {
 </span>// contract.rs
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -232,7 +232,7 @@ pub fn instantiate(
 }
 
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -246,7 +246,7 @@ pub fn execute(
 }
 
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -&gt; StdResult&lt;Binary&gt; {
     match msg {
         // match statements
@@ -255,7 +255,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -&gt; StdResult&lt;Binary&gt; 
 }
 
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -&gt; Result&lt;Response, ContractError&gt; {
     // ...
     Ok(Response::default())
@@ -267,15 +267,15 @@ pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -&gt; Result&lt;Respons
 </span><span class="boring">fn main() {
 </span>// contract/tests/example.rs
 
-#[test] 
+#[test]
 fn example_test() {
-    // init mock environment 
+    // init mock environment
     let sender = Addr::unchecked(&quot;sender&quot;);
     // Init the mock environment (cw-multi-test App)
     let mock = Mock::new(&amp;sender);
     // `new()` function is available to construct the contract interface
     let example_contract = example_contract::ExampleContract::new(&quot;example_contract&quot;, mock);
-    // Now we can start scripting! 
+    // Now we can start scripting!
 
     // Upload the contract to the mock
     example_contract.upload()?;
@@ -283,13 +283,13 @@ fn example_test() {
     // Instantiate the contract
     example_contract.instantiate(&amp;InstantiateMsg { ... }, None, None)?;
 
-    // Execute the newly instantiated contract 
+    // Execute the newly instantiated contract
     example_contract.execute(&amp;ExecuteMsg { ... }, None)?;
 
-    // Query 
+    // Query
     let resp: QueryResponse = example_contract.query(&amp;QueryMsg { ... })?;
 
-    // Migrate 
+    // Migrate
     example_contract.migrate(&amp;MigrateMsg { ... }, None)?;
 }
 <span class="boring">}</span></code></pre></pre>
@@ -343,7 +343,7 @@ pub enum QueryMsg {
 │       ├── Cargo.toml
 │       └── src
 │            └── lib.rs
-│            └── my-contract.rs (interface)
+│            └── my-contract.rs (interface_entry_point)
 └── scripts
     ├── .env
     ├── Cargo.toml
@@ -401,7 +401,7 @@ echo 'pub mod my_contract;' &gt;&gt; src/lib.rs
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use cw_orch::*;
-// We use pub here to be able to import those messages directly 
+// We use pub here to be able to import those messages directly
 // from the interfaces crate in the next steps (scripting, intergation tests...)
 pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
@@ -575,7 +575,7 @@ impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
 
 <span class="boring">}</span></code></pre></pre>
 <p>In order to derive query functions, you NEED to serive the QueryResponses crate for your QueryMsgs struct. This is mandatory in order to ensure type-safety for all messages and responses.</p>
-<p>This time, add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file : 
+<p>This time, add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file :
 <code>rust  use my_project::my_contract::QueryMsgFns; </code></p>
 <h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
 <p>You can also refine your contract interface manually to add more complex interactions.</p>
@@ -799,39 +799,39 @@ pub fn execute_contract() -&gt; anyhow::Result&lt;()&gt; {
 <h2 id="test-setup"><a class="header" href="#test-setup">Test Setup</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>// contracts/my-contract/tests/integration_tests.rs  
+</span>// contracts/my-contract/tests/integration_tests.rs
 use interfaces::MyContract;
-use cw_orch::*;  
+use cw_orch::*;
 use semver::Version;
 use my_contract::contract;
 use my_contract::{ExecuteMsg};
-  
-fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {  
-    let sender = Addr::unchecked(&quot;sender&quot;); 
-    // note that we are instantiating the mock environment instead of the daemon_environment
-    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;  
 
-    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);  
+fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {
+    let sender = Addr::unchecked(&quot;sender&quot;);
+    // note that we are instantiating the mock environment instead of the daemon_environment
+    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;
+
+    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);
 
     // entrypoint endpoints for your contract
-    my_contract.as_instance_mut().set_mock(Box::new(  
+    my_contract.as_instance_mut().set_mock(Box::new(
         ContractWrapper::new_with_empty(
-            contract::execute,  
-            contract::instantiate,  
-            contract::query,  
+            contract::execute,
+            contract::instantiate,
+            contract::query,
         ),
     ));
 
     // &quot;upload&quot; the contract to the test environment
     // stores the code_id at the key &quot;testing:contract&quot;.
-    my_contract.upload(); 
-  
-    Ok(my_contract)  
-}  
-  
-#[test]  
-fn test_something() -&gt; anyhow::Result&lt;()&gt; {  
-  let my_contract = setup()?;  
+    my_contract.upload();
+
+    Ok(my_contract)
+}
+
+#[test]
+fn test_something() -&gt; anyhow::Result&lt;()&gt; {
+  let my_contract = setup()?;
 
   my_contract.instantiate(...)?;
 
@@ -894,7 +894,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
         Ok(abstrct)
     }
 
-    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, CwOrcError&gt; {        
+    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, CwOrcError&gt; {
         // ########### Upload ##############
         let abstrct = Self::store_on(chain)?;
 
@@ -912,7 +912,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
             None,
         )?;
 
-        // ... 
+        // ...
 
         Ok(abstrct)
     }
@@ -959,66 +959,66 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
 <p>cw-orchestrator does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="advanced/interfaces.html">interfaces</a> can be found below:</p>
 <pre><code class="language-yaml"># .github/workflows/deploy.yml
 ---
-name: Deploy Contracts  
-on:  
-  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
-  workflow_dispatch:  
-  push:  
-    branches: [ 'mainline' ]  
-    paths:  
-      - 'contracts/src/**/*.rs'  
-      - '.github/workflows/deploy.yml'  
-  
+name: Deploy Contracts
+on:
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
+  workflow_dispatch:
+  push:
+    branches: [ 'mainline' ]
+    paths:
+      - 'contracts/src/**/*.rs'
+      - '.github/workflows/deploy.yml'
+
 env:
-  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
-  STATE_FILE: &quot;./daemon_state.json&quot;  
-  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;  
-  SCHEMA_DIR: &quot;./schema&quot;  
-  
-jobs:  
-  deploy:  
-    runs-on: ubuntu-latest  
-    steps:  
-      - uses: actions/checkout@v3  
-      - uses: actions-rs/toolchain@v1  
-        with:  
-          toolchain: nightly  
-          target: wasm32-unknown-unknown  
-          override: true  
-      - name: Run cargo wasm  
-        uses: actions-rs/cargo@v1  
-        with:  
-          command: build  
-          args: --package counter-app --release --target wasm32-unknown-unknown  
-        env:  
-          RUSTFLAGS: '-C link-arg=-s'  
+  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu
+  STATE_FILE: &quot;./daemon_state.json&quot;
+  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;
+  SCHEMA_DIR: &quot;./schema&quot;
 
-      - name: Run deployment script  
-        uses: actions-rs/cargo@v1  
-        with:  
-          command: run  
-          args: --package scripts --bin deploy_app  
-        env:  
-          CHAIN: &quot;juno&quot;  
-          DEPLOYMENT: &quot;debugging&quot;  
-          NETWORK: &quot;local&quot;  
-          RUST_LOG: info  
-          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}  
-          STATE_FILE: ${{ env.STATE_FILE }}  
-  
-          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
-          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+          override: true
+      - name: Run cargo wasm
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --package counter-app --release --target wasm32-unknown-unknown
+        env:
+          RUSTFLAGS: '-C link-arg=-s'
 
-      - name: Upload deployment daemon state  
-        uses: actions/upload-artifact@v2  
-        with:  
-          name: deployment.json  
-          path: ${{ env.STATE_FILE }}  
-      - name: Upload WASM  
-        uses: actions/upload-artifact@v2  
-        with:  
-          # TODO: name env or from cargo  
-          name: counter_app.wasm  
+      - name: Run deployment script
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --package scripts --bin deploy_app
+        env:
+          CHAIN: &quot;juno&quot;
+          DEPLOYMENT: &quot;debugging&quot;
+          NETWORK: &quot;local&quot;
+          RUST_LOG: info
+          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}
+          STATE_FILE: ${{ env.STATE_FILE }}
+
+          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}
+          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}
+
+      - name: Upload deployment daemon state
+        uses: actions/upload-artifact@v2
+        with:
+          name: deployment.json
+          path: ${{ env.STATE_FILE }}
+      - name: Upload WASM
+        uses: actions/upload-artifact@v2
+        with:
+          # TODO: name env or from cargo
+          name: counter_app.wasm
           path: ${{ env.ARTIFACTS_DIR }}/counter_app.wasm
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing-to-cw-orchestrator"><a class="header" href="#contributing-to-cw-orchestrator">Contributing to cw-orchestrator</a></h1>

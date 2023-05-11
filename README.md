@@ -46,15 +46,15 @@ impl<Chain: CwEnv> Cw20 <Chain>{
 }
 ```
 
-#### `interface` macro
+#### `interface_entry_point` macro
 
-You create a contract interface by adding the `interface` macro to your contract endpoints. The name of the generated interface will be the crate name in PascalCase.  
+You create a contract interface by adding the `interface_entry_point` macro to your contract endpoints. The name of the generated interface will be the crate name in PascalCase.
 
 ```rust,ignore
-#[cw_orch::interface]
+#[cw_orch::interface_entry_point]
 fn instantiate(...)
 
-#[cw_orch::interface]
+#[cw_orch::interface_entry_point]
 fn execute(...)
 ```
 
@@ -65,7 +65,7 @@ You now have a contract interface that you can use to interact with your contrac
 You can then use this interface to interact with the contract:
 
 ```rust,ignore
-// .. setup environment 
+// .. setup environment
 
 let cw20_base: Cw20<Chain> = Cw20::new("my_token", chain);
 // instantiate a CW20 token instance

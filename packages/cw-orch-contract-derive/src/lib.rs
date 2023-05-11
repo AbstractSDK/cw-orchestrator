@@ -209,7 +209,7 @@ Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```text
 // In crate "my-contract"
-#[cfg_attr(feature="interface", interface)]
+#[cfg_attr(feature="interface", interface_entry_point)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
    deps: DepsMut,
@@ -273,7 +273,7 @@ pub fn my_script() {
 ```
 */
 #[proc_macro_attribute]
-pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
+pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
     let mut item = parse_macro_input!(cloned as syn::Item);
 
