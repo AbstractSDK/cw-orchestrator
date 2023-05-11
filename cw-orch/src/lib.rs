@@ -12,8 +12,6 @@ pub mod prelude;
 pub mod contract;
 #[cfg(feature = "daemon")]
 pub mod daemon;
-#[cfg(feature = "daemon")]
-pub use daemon::networks;
 
 pub mod deploy;
 pub mod environment;
