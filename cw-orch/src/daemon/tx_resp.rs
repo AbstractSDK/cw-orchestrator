@@ -11,7 +11,7 @@ const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
 const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
 const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CosmTxResponse {
     pub height: u64,
     pub txhash: String,
