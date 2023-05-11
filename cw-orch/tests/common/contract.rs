@@ -1,4 +1,5 @@
 use cosmwasm_std::{Addr, Uint128};
+use cw_orch::interface;
 use tokio::runtime::Runtime;
 
 use uid::Id as IdT;
@@ -8,18 +9,18 @@ struct DeployId(());
 
 type Id = IdT<DeployId>;
 
-use cw_orch::{contract::Contract, environment::TxHandler, prelude::*};
+use cw_orch::{contract, contract::Contract, environment::TxHandler, prelude::*};
 
 // path to local cw20.wasm artifact
 const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
 
-#[contract(
+#[interface(
     cw20_base::msg::InstantiateMsg,
     cw20_base::msg::ExecuteMsg,
     cw20_base::msg::QueryMsg,
     cw20_base::msg::MigrateMsg
 )]
-pub struct Cw20;
+pub struct Cw20<Chain>;
 
 impl<Chain: CwEnv> Cw20<Chain> {
     pub fn new(chain: Chain) -> Self {

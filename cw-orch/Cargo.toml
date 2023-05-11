@@ -1,13 +1,13 @@
 [package]
 name = "cw-orch"
-version = "0.10.0"
+version = "0.11.0-alpha.4"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
 keywords = ["cosmwasm", "blockchain"]
-categories = ["development-tools", "api-bindings"]
+categories = ["development-tools"]
 readme = "../README.md"
 
 exclude = [".env"]
@@ -40,11 +40,11 @@ daemon = [
 
 [dependencies]
 # Default deps
-# cw-orch-contract-derive = { version="0.10.0" }
-# cw-orch-fns-derive = { version="0.10.0" }
+# cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
+# cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
 
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
+cw-orch-contract-derive = "0.11.0-alpha.2"
+cw-orch-fns-derive = "0.11.0-alpha.3"
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }

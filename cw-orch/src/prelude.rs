@@ -10,16 +10,13 @@
 // 3. Traits that need to be imported to implement an interface
 // 4. Objects that need to be available to implement required traits
 
-// macros
-pub use cw_orch_contract_derive::{contract, interface};
-pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
-
 // Contract traits
 pub use crate::interface_traits::{
     CallAs, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery,
     CwOrcUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
+pub use crate::state::StateInterface;
 
 // Response trait
 pub use crate::index_response::IndexResponse;
@@ -38,7 +35,7 @@ pub use crate::paths::{ArtifactsDir, WasmPath};
 
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
-pub use cw_multi_test::{custom_app, BasicApp, Contract as MockContract, ContractWrapper};
+pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]

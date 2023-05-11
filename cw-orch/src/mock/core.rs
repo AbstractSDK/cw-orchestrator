@@ -13,8 +13,9 @@ use crate::{
 
 use super::state::MockState;
 
-// Generic mock-chain implementation
-// Allows for custom state storage
+/// Wrapper around a cw-multi-test app backend.
+/// Stores a local state with a mapping of contract_id -> code_id/address
+/// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
     pub sender: Addr,
