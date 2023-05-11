@@ -13,7 +13,7 @@ use cw_orch::{contract, contract::Contract, environment::TxHandler, prelude::*};
 // path to local cw20.wasm artifact
 const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";
 
-#[contract(
+#[interface(
     cw20_base::msg::InstantiateMsg,
     cw20_base::msg::ExecuteMsg,
     cw20_base::msg::QueryMsg,

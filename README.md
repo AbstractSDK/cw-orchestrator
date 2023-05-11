@@ -31,7 +31,7 @@ Provide your messages to a new struct that's named after your contract.
 ```rust,ignore
 use cw_orch::contract;
 // Provide the messages in the order Init, Exec, Query, Migrate.
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct Cw20;
 ```
 
@@ -112,7 +112,7 @@ pub enum ExecuteMsg{
     Deposit {}
 }
 
-#[contract(Empty,ExecuteMsg,Empty,Empty)]
+#[interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1
 
 impl<Chain: CwEnv> Cw1<Chain> {

@@ -39,11 +39,11 @@ In your new file, define a struct for your contract interface and provide the [`
 
 ```rust
 use cw_orch::*;
-// We use pub here to be able to import those messages directly 
+// We use pub here to be able to import those messages directly
 // from the interfaces crate in the next steps (scripting, intergation tests...)
 pub use my_project::my_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 ```
 
@@ -51,7 +51,7 @@ pub struct MyContract<Chain>;
 
 ## Constructor
 
-Next, you'll want to define the constructor for the interface we just defined. In order to do so, first include the contract interface (`instantiate`, `execute` and `query` functions) in your package : 
+Next, you'll want to define the constructor for the interface we just defined. In order to do so, first include the contract interface (`instantiate`, `execute` and `query` functions) in your package :
 
 ```bash
 cargo add --path ../../my-contract
@@ -164,7 +164,7 @@ pub enum ExecuteMsg{
 }
 
 // If we now define a orchestrateable contract with this execute message
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
@@ -178,15 +178,15 @@ impl<Chain: CwEnv + Clone> MyContract<Chain> {
 }
 ```
 
-In order for the above code to work, you will need to follow those simple steps : 
-1. Add the following line to your `packages/my-project.Cargo.toml`. This will allow to activate the interface feature for creating `ExecuteFns` outside of the crate 
+In order for the above code to work, you will need to follow those simple steps :
+1. Add the following line to your `packages/my-project.Cargo.toml`. This will allow to activate the interface feature for creating `ExecuteFns` outside of the crate
     ```cargo
     [features]
     interface=[]
     ```
 
-2. Add the following import in your `packages/interfaces/src/my-contract.rs` file : 
-    ```rust 
+2. Add the following import in your `packages/interfaces/src/my-contract.rs` file :
+    ```rust
     use my_project::my_contract::ExecuteMsgFns;
     ```
 
@@ -212,7 +212,7 @@ pub struct InfoResponse {
 }
 
 // If we now define a orchestrateable contract with this execute message
-#[contract(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MyContract<Chain>;
 
 // Then the message variants are available as functions on the struct through an "ExecuteFns" trait.
@@ -230,8 +230,8 @@ impl<Chain: CwEnv + Clone> MyContract<Chain> {
 
 In order to derive query functions, you NEED to serive the QueryResponses crate for your QueryMsgs struct. This is mandatory in order to ensure type-safety for all messages and responses.
 
-This time, add the following import in your `packages/interfaces/src/my-contract.rs` file : 
-    ```rust 
+This time, add the following import in your `packages/interfaces/src/my-contract.rs` file :
+    ```rust
     use my_project::my_contract::QueryMsgFns;
     ```
 

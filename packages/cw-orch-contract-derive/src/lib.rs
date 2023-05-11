@@ -51,7 +51,7 @@ Procedural macro to generate a cw-orchestrator interface
 ## Example
 
 ```ignore
-#[contract(
+#[interface(
     cw20_base::msg::InstantiateMsg,
     cw20_base::msg::ExecuteMsg,
     cw20_base::msg::QueryMsg,
@@ -115,7 +115,7 @@ impl Uploadable<Daemon> for Cw20<Daemon> {
 
 */
 #[proc_macro_attribute]
-pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
+pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
 
     // Try to parse the attributes to a
