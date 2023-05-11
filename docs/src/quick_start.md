@@ -35,7 +35,7 @@ Now that we have the dependency set up you can add the `interface` macro to your
 
 ```rust
 // In `contract.rs`
-#[cfg_attr(feature="interface", cw_orch::interface)] // <--- Add this line
+#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
 pub fn instantiate(
    deps: DepsMut,
    env: Env,
@@ -45,7 +45,7 @@ pub fn instantiate(
     // ...
 }
 
-#[cfg_attr(feature="interface", cw_orch::interface)] // <--- Add this line
+#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
 pub fn execute(
    deps: DepsMut,
    env: Env,
@@ -91,7 +91,7 @@ Then our contract looks something like:
 ```rust
 // contract.rs
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -103,7 +103,7 @@ pub fn instantiate(
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -117,7 +117,7 @@ pub fn execute(
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         // match statements
@@ -126,7 +126,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
     // ...
     Ok(Response::default())
@@ -142,15 +142,15 @@ If we now create a test in `contract/tests` we can start interacting with it!
 
 // import the generated interface
 use example_contract::contract::ExampleContract;
-#[test] 
+#[test]
 fn example_test() {
-    // init mock environment 
+    // init mock environment
     let sender = Addr::unchecked("sender");
     // Init the mock environment (cw-multi-test App)
     let mock = Mock::new(&sender);
     // `new()` function is available to construct the contract interface
     let example_contract = ExampleContract::new("example_contract", mock);
-    // Now we can start scripting! 
+    // Now we can start scripting!
 
     // Upload the contract to the mock
     example_contract.upload()?;
@@ -158,13 +158,13 @@ fn example_test() {
     // Instantiate the contract
     example_contract.instantiate(&InstantiateMsg { ... }, None, None)?;
 
-    // Execute the newly instantiated contract 
+    // Execute the newly instantiated contract
     example_contract.execute(&ExecuteMsg::Increment { ... }, None)?;
 
-    // Query 
+    // Query
     let resp: QueryResponse = example_contract.query(&QueryMsg::Config { ... })?;
 
-    // Migrate 
+    // Migrate
     example_contract.migrate(&MigrateMsg { ... }, None)?;
 }
 ```
@@ -173,7 +173,7 @@ fn example_test() {
 
 cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's ExecuteMsg and QueryMsg.
 
-Enabling this functionality is very straight-forward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:  
+Enabling this functionality is very straight-forward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
 ```rust
 
@@ -202,7 +202,7 @@ use example_contract::msg::{ExecuteMsgFns, QueryMsgFns};
 
 #[test]
 fn example_test() {
-    // init mock environment 
+    // init mock environment
     let sender = Addr::unchecked("sender");
     // Init the mock environment (cw-multi-test App)
     let mock = Mock::new(&sender);
@@ -211,11 +211,11 @@ fn example_test() {
 
     // ... upload and instantiate like before
 
-    // Execute the increment endpoint 
+    // Execute the increment endpoint
     example_contract.increment()?;
 
     // Query the config
-    // Return type optional! 
+    // Return type optional!
     let resp: QueryResponse = example_contract.config()?;
 }
 

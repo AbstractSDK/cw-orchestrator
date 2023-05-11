@@ -5,6 +5,7 @@ pub mod error;
 pub mod networks;
 pub mod queriers;
 mod sender;
+pub use self::core::Daemon;
 pub use sender::Wallet;
 pub(crate) mod json_file;
 pub mod state;

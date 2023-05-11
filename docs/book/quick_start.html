@@ -7,7 +7,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -165,7 +165,7 @@ interface = [&quot;dep:cw-orch&quot;]
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// In `contract.rs`
-#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface)] // &lt;--- Add this line
+#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface_entry_point)] // &lt;--- Add this line
 pub fn instantiate(
    deps: DepsMut,
    env: Env,
@@ -175,7 +175,7 @@ pub fn instantiate(
     // ...
 }
 
-#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface)] // &lt;--- Add this line
+#[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface_entry_point)] // &lt;--- Add this line
 pub fn execute(
    deps: DepsMut,
    env: Env,
@@ -216,7 +216,7 @@ cw-orch = {version = &quot;0.10.0&quot;, optional = true }
 </span><span class="boring">fn main() {
 </span>// contract.rs
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -228,7 +228,7 @@ pub fn instantiate(
 }
 
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -242,7 +242,7 @@ pub fn execute(
 }
 
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -&gt; StdResult&lt;Binary&gt; {
     match msg {
         // match statements
@@ -251,7 +251,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -&gt; StdResult&lt;Binary&gt; 
 }
 
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
-#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
 pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -&gt; Result&lt;Response, ContractError&gt; {
     // ...
     Ok(Response::default())
@@ -263,15 +263,15 @@ pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -&gt; Result&lt;Respons
 </span><span class="boring">fn main() {
 </span>// contract/tests/example.rs
 
-#[test] 
+#[test]
 fn example_test() {
-    // init mock environment 
+    // init mock environment
     let sender = Addr::unchecked(&quot;sender&quot;);
     // Init the mock environment (cw-multi-test App)
     let mock = Mock::new(&amp;sender);
     // `new()` function is available to construct the contract interface
     let example_contract = example_contract::ExampleContract::new(&quot;example_contract&quot;, mock);
-    // Now we can start scripting! 
+    // Now we can start scripting!
 
     // Upload the contract to the mock
     example_contract.upload()?;
@@ -279,13 +279,13 @@ fn example_test() {
     // Instantiate the contract
     example_contract.instantiate(&amp;InstantiateMsg { ... }, None, None)?;
 
-    // Execute the newly instantiated contract 
+    // Execute the newly instantiated contract
     example_contract.execute(&amp;ExecuteMsg { ... }, None)?;
 
-    // Query 
+    // Query
     let resp: QueryResponse = example_contract.query(&amp;QueryMsg { ... })?;
 
-    // Migrate 
+    // Migrate
     example_contract.migrate(&amp;MigrateMsg { ... }, None)?;
 }
 <span class="boring">}</span></code></pre></pre>
