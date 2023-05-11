@@ -13,7 +13,7 @@ use crate::{
 
 use super::state::MockState;
 
-/// Wrapper around a cw-multi-test app backend. 
+/// Wrapper around a cw-multi-test app backend.
 /// Stores a local state with a mapping of contract_id -> code_id/address
 /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
 #[derive(Clone)]
