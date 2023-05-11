@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Uint128};
-use tokio::runtime::Runtime;
 use cw_orch::interface;
+use tokio::runtime::Runtime;
 
 use uid::Id as IdT;
 
