@@ -11,6 +11,7 @@ use cw20_base::msg::*;
 use tokio::runtime::Runtime;
 
 #[test]
+#[cfg(feature = "node-tests")]
 fn general() {
     let runtime = Arc::new(Runtime::new().unwrap());
 
