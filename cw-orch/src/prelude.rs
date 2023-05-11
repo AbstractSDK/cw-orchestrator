@@ -20,9 +20,6 @@ pub use crate::interface_traits::{
 // Response trait
 pub use crate::index_response::IndexResponse;
 
-// Contract for new function
-pub use crate::contract::Contract;
-
 // Environment
 pub use crate::environment::{CwEnv, TxResponse};
 
