@@ -42,7 +42,12 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 pub use crate::daemon::{
     builder::DaemonBuilder,
     core::Daemon,
-    networks, queriers,
+    networks,
+    queriers,
+
+    // expose the sync variants
+    sync::{builder::SyncDaemonBuilder, core::SyncDaemon},
+    // sync helpers
     traits::{MigrateHelpers, UploadHelpers},
 };
 
