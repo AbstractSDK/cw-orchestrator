@@ -12,6 +12,7 @@ pub mod prelude;
 pub mod contract;
 #[cfg(feature = "daemon")]
 pub mod daemon;
+
 pub mod deploy;
 pub mod environment;
 mod error;

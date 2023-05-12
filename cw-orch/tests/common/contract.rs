@@ -9,7 +9,7 @@ struct DeployId(());
 
 type Id = IdT<DeployId>;
 
-use cw_orch::{contract, contract::Contract, environment::TxHandler, prelude::*};
+use cw_orch::{contract::Contract, environment::TxHandler, prelude::*};
 
 // path to local cw20.wasm artifact
 const CW20_CONTRACT_WASM: &str = "tests/common/artifacts/cw20_base.wasm";

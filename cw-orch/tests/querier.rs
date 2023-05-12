@@ -23,6 +23,7 @@ use cosmrs::{
     Querier - Ibc
 */
 #[test]
+#[cfg(feature = "node-tests")]
 fn ibc() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
@@ -37,6 +38,7 @@ fn ibc() {
     Querier - Staking
 */
 #[test]
+#[cfg(feature = "node-tests")]
 fn staking() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
@@ -57,6 +59,7 @@ fn staking() {
     Querier - Gov
 */
 #[test]
+#[cfg(feature = "node-tests")]
 fn gov() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
@@ -71,6 +74,7 @@ fn gov() {
     Querier - Bank
 */
 #[test]
+#[cfg(feature = "node-tests")]
 fn bank() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
@@ -110,6 +114,7 @@ fn bank() {
     Querier - CosmWasm
 */
 #[test]
+#[cfg(feature = "node-tests")]
 fn cosmwasm() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
@@ -124,6 +129,7 @@ fn cosmwasm() {
     Querier - Node
 */
 #[test]
+#[cfg(feature = "node-tests")]
 fn node() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());
@@ -141,6 +147,7 @@ fn node() {
 }
 
 #[test]
+#[cfg(feature = "node-tests")]
 fn simulate_tx() {
     let rt = Arc::new(Runtime::new().unwrap());
 
@@ -184,6 +191,7 @@ fn simulate_tx() {
 }
 
 #[test]
+#[cfg(feature = "node-tests")]
 fn contract_info() {
     let rt = Arc::new(Runtime::new().unwrap());
     let channel = rt.block_on(build_channel());

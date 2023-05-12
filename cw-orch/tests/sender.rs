@@ -9,6 +9,7 @@ use speculoos::{result::ResultAssertions, *};
 use tokio::runtime::Runtime;
 
 #[test]
+#[cfg(feature = "node-tests")]
 fn tx_not_found_after_x() {
     let rt = tokio::runtime::Runtime::new().unwrap();
     let mut bad_config = LOCAL_JUNO;
@@ -32,6 +33,7 @@ fn tx_not_found_after_x() {
 }
 
 #[test]
+#[cfg(feature = "node-tests")]
 fn cosmwasm_exec_fails() {
     let runtime = Runtime::new().unwrap();
     let (sender, contract) = common::contract::start(&runtime);
