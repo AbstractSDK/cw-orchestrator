@@ -4,7 +4,9 @@ pub mod daemon;
 
 use std::{env, fs, path::Path, thread::sleep, time::Duration};
 
+#[cfg(feature = "node-tests")]
 use ctor::{ctor, dtor};
+
 use duct::cmd;
 
 // Config
@@ -171,13 +173,13 @@ pub fn docker_container_stop() {
     state_file::remove(expected_state_file.to_str().unwrap());
 }
 
-#[ctor]
+#[cfg_attr(feature = "node-tests", ctor)]
 fn common_start() {
     env_logger::init();
     docker_container_start()
 }
 
-#[dtor]
+#[cfg_attr(feature = "node-tests", dtor)]
 fn common_stop() {
     docker_container_stop()
 }
