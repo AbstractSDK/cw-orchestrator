@@ -344,8 +344,7 @@ mod test {
             .get("timestamp")
             .unwrap()
             .as_str()
-            .unwrap()
-            .clone();
+            .unwrap();
         let timestamp = parse_timestamp(String::from(stamp)).unwrap();
 
         let tx_res = CosmTxResponse {
