@@ -1,13 +1,8 @@
-use std::rc::Rc;
-
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::{Daemon, DaemonBuilder};
+use crate::prelude::DaemonBuilder;
 
-use super::{
-    super::{error::DaemonError, sender::Sender, state::DaemonState},
-    core::SyncDaemon,
-};
+use super::{super::error::DaemonError, core::SyncDaemon};
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 

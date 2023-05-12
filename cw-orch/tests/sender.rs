@@ -14,7 +14,7 @@ fn tx_not_found_after_x() {
     let mut bad_config = LOCAL_JUNO;
     bad_config.gas_denom = "baddenom";
 
-    let daemon = Daemon::builder()
+    let daemon = SyncDaemon::builder()
         .chain(bad_config)
         .handle(rt.handle())
         .build()
