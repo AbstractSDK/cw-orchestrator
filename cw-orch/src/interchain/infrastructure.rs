@@ -111,7 +111,7 @@ impl InterchainInfrastructure {
     }
 
     /// Get the gRPC ports for the local daemons and set them in the `ChainData` objects.
-    async fn configure_networks(networks: &mut [ChainData]) -> IcResult<()> {
+    pub async fn configure_networks(networks: &mut [ChainData]) -> IcResult<()> {
         let docker_helper = DockerHelper::new().await?;
 
         // use chain data network name as to filter container ids
