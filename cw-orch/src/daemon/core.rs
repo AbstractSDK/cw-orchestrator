@@ -63,7 +63,6 @@ use tonic::transport::Channel;
 pub struct Daemon {
     pub sender: Wallet,
     pub state: Rc<DaemonState>,
-    pub rt_handle: Handle,
 }
 
 impl Daemon {
@@ -72,9 +71,9 @@ impl Daemon {
         DaemonBuilder::default()
     }
 
-    /// Perform a query with a given querier
+    /// Perform a query with a given query client
     /// See [Querier](crate::daemon::queriers) for examples.
-    pub fn query<Querier: DaemonQuerier>(&self) -> Querier {
+    pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.sender.channel())
     }
 
@@ -93,41 +92,35 @@ impl ChainState for Daemon {
 }
 
 // Execute on the real chain, returns tx response
-impl TxHandler for Daemon {
-    type Response = CosmTxResponse;
-    type Error = DaemonError;
-    type ContractSource = WasmPath;
-
-    fn sender(&self) -> Addr {
+impl Daemon {
+    pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
 
-    fn execute<E: Serialize>(
+    pub async fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, DaemonError> {
+    ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
         };
-        let result = self
-            .rt_handle
-            .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
         Ok(result)
     }
 
-    fn instantiate<I: Serialize + Debug>(
+    pub async fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
         init_msg: &I,
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[Coin],
-    ) -> Result<Self::Response, DaemonError> {
+    ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
 
         let init_msg = MsgInstantiateContract {
@@ -139,98 +132,78 @@ impl TxHandler for Daemon {
             funds: parse_cw_coins(coins)?,
         };
 
-        let result = self
-            .rt_handle
-            .block_on(sender.commit_tx(vec![init_msg], None))?;
-        // let address = &result.get_attribute_from_logs("instantiate", "_contract_address")[0].1;
+        let result = sender.commit_tx(vec![init_msg], None).await?;
 
         Ok(result)
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, DaemonError> {
         let sender = &self.sender;
         let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
-        let resp = self.rt_handle.block_on(client.smart_contract_state(
-            cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+        let resp = client
+            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),
                 query_data: serde_json::to_vec(&query_msg)?,
-            },
-        ))?;
+            })
+            .await?;
 
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
-    fn migrate<M: Serialize + Debug>(
+    pub async fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, DaemonError> {
+    ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
             sender: self.sender.pub_addr()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
         };
-        let result = self
-            .rt_handle
-            .block_on(self.sender.commit_tx(vec![exec_msg], None))?;
+        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
         Ok(result)
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query::<Node>().block_height())?;
+    pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
+        let mut last_height = self.query_client::<Node>().block_height().await?;
         let end_height = last_height + amount;
 
         while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+            tokio::time::sleep(Duration::from_secs(4)).await;
 
             // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query::<Node>().block_height())?;
+            last_height = self.query_client::<Node>().block_height().await?;
         }
         Ok(())
     }
 
-    fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        self.rt_handle
-            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
+    pub async fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
+        tokio::time::sleep(Duration::from_secs(secs)).await;
 
         Ok(())
     }
 
-    fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query::<Node>().block_height())?;
+    pub async fn next_block(&self) -> Result<(), DaemonError> {
+        let mut last_height = self.query_client::<Node>().block_height().await?;
         let end_height = last_height + 1;
 
         while last_height < end_height {
             // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
+            tokio::time::sleep(Duration::from_secs(4));
             // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query::<Node>().block_height())?;
+            last_height = self.query_client::<Node>().block_height().await?;
         }
         Ok(())
     }
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self
-            .rt_handle
-            .block_on(self.query::<Node>().latest_block())?;
+    pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
+        let block = self.query_client::<Node>().latest_block().await?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
         Ok(cosmwasm_std::BlockInfo {
@@ -239,10 +212,11 @@ impl TxHandler for Daemon {
             chain_id: block.header.chain_id.to_string(),
         })
     }
-}
 
-impl ChainUpload for Daemon {
-    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+    pub async fn upload(
+        &self,
+        uploadable: &impl Uploadable,
+    ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
         let wasm_path = uploadable.wasm();
 
@@ -254,9 +228,7 @@ impl ChainUpload for Daemon {
             wasm_byte_code: file_contents,
             instantiate_permission: None,
         };
-        let result = self
-            .rt_handle
-            .block_on(sender.commit_tx(vec![store_msg], None))?;
+        let result = sender.commit_tx(vec![store_msg], None).await?;
 
         log::info!("Uploaded: {:?}", result.txhash);
 
@@ -264,26 +236,16 @@ impl ChainUpload for Daemon {
 
         // wait for the node to return the contract information for this upload
         let wasm = CosmWasm::new(self.channel());
-        while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(6)));
+        while wasm.code(code_id).await.is_err() {
+            tokio::time::sleep(Duration::from_secs(6)).await;
         }
 
         Ok(result)
     }
-}
 
-impl<T: CwOrcExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
-    type Sender = Wallet;
-
-    fn set_sender(&mut self, sender: &Self::Sender) {
-        self.as_instance_mut().chain.sender = sender.clone();
-    }
-
-    fn call_as(&self, sender: &Self::Sender) -> Self {
-        let mut contract = self.clone();
-        contract.set_sender(sender);
-        contract
+    /// Set the sender to use with this Daemon to be the given wallet
+    pub fn set_sender(&mut self, sender: &Wallet) {
+        self.sender = sender.clone();
     }
 }
 
