@@ -56,6 +56,7 @@ pub use daemon::{
     traits::{MigrateHelpers, UploadHelpers},
     wasm_path::WasmPath,
     Wallet,
+    tx_resp::CosmTxResponse
 };
 
 #[cfg(feature = "daemon")]
