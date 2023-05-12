@@ -105,8 +105,8 @@ impl Uploadable<Mock> for Cw20<Mock> {
     }
 }
 
-impl Uploadable<SyncDaemon> for Cw20<SyncDaemon> {
-    fn source(&self) -> <SyncDaemon as cw_orch::TxHandler>::ContractSource {
+impl Uploadable<Daemon> for Cw20<Daemon> {
+    fn source(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
         WasmPath::new("path/to/cw20.wasm").unwrap()
     }
 }
@@ -396,7 +396,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             }
         }
 
-        // We need to implement the Uploadable trait for both Mock and SyncDaemon to be able to use the contract later
+        // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
         impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::Uploadable for #name<Chain>{
             fn wrapper(&self) -> Box<dyn ::cw_orch::prelude::ContractWrapper>{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
@@ -404,7 +404,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             }
 
             fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
-                // For SyncDaemon contract, we need to return a path for the artifacts to be uploaded
+                // For Daemon contract, we need to return a path for the artifacts to be uploaded
                 // Remember that this is a helper for easy definition of all the traits needed.
                 // We just need to get the local artifacts folder at the root of the workspace
                 // 1. We get the path to the local artifacts dir
@@ -419,11 +419,11 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
         }
     );
 
-    // if SyncDaemon is enabled on cw-orc it will implement Uploadable<SyncDaemon>
+    // if Daemon is enabled on cw-orc it will implement Uploadable<Daemon>
 
     #[cfg(feature = "propagate_daemon")]
     let daemon_uploadable: TokenStream = quote!(
-            impl ::cw_orch::prelude::Uploadable<::cw_orch::prelude::SyncDaemon> for #name<::cw_orch::prelude::SyncDaemon>{
+            impl ::cw_orch::prelude::Uploadable<::cw_orch::prelude::Daemon> for #name<::cw_orch::prelude::Daemon>{
 
         }
     )
@@ -497,7 +497,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             #func_part
         )
         .into();
-        // Add the Uploadable<SyncDaemon> trait for the contract
+        // Add the Uploadable<Daemon> trait for the contract
         #[cfg(feature = "propagate_daemon")]
         interface_def.extend(daemon_uploadable);
 

@@ -2,14 +2,14 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::{Daemon, SyncDaemonBuilder};
+use crate::prelude::{DaemonAsync, SyncDaemonBuilder};
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Default)]
-/// Create [`Daemon`] through [`DaemonBuilder`]
+/// Create [`DaemonAsync`] through [`DaemonBuilder`]
 /// ## Example
 /// ```no_run
 ///     use cw_orch::prelude::{DaemonBuilder, networks};
@@ -50,7 +50,7 @@ impl DaemonBuilder {
     }
 
     /// Build a daemon
-    pub async fn build(&self) -> Result<Daemon, DaemonError> {
+    pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
         let chain = self
             .chain
             .clone()
@@ -66,7 +66,7 @@ impl DaemonBuilder {
         } else {
             Sender::new(&state)?
         };
-        let daemon = Daemon {
+        let daemon = DaemonAsync {
             state,
             sender: Rc::new(sender),
         };

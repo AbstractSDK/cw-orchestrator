@@ -1,4 +1,4 @@
-use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, Daemon};
+use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
 use crate::{
     daemon::{error::DaemonError, state::DaemonState},
     environment::{ChainUpload, TxHandler},
@@ -25,12 +25,12 @@ use tonic::transport::Channel;
     ## Usage
 
     ```rust
-    use cw_orch::daemon::SyncDaemon;
+    use cw_orch::daemon::Daemon;
     use cw_orch::networks::JUNO_1;
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();
-    let daemon: SyncDaemon = SyncDaemon::builder()
+    let daemon: Daemon = Daemon::builder()
         .chain(JUNO_1)
         .handle(rt.handle())
         .build()
@@ -38,19 +38,19 @@ use tonic::transport::Channel;
     ```
     ## Environment Execution
 
-    The SyncDaemon implements [`TxHandler`] which allows you to perform transactions on the chain.
+    The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
 
     ## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`SyncDaemon::query<Querier>`] method with a specific querier.
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon::query<Querier>`] method with a specific querier.
     See [Querier](crate::daemon::queriers) for examples.
 */
-pub struct SyncDaemon {
-    pub(super) daemon: Daemon,
+pub struct Daemon {
+    pub(super) daemon: DaemonAsync,
     pub rt_handle: Handle,
 }
 
-impl SyncDaemon {
+impl Daemon {
     /// Get the daemon builder
     pub fn builder() -> SyncDaemonBuilder {
         SyncDaemonBuilder::default()
@@ -62,13 +62,13 @@ impl SyncDaemon {
         self.daemon.query_client()
     }
 
-    /// Get the channel configured for this SyncDaemon
+    /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
     }
 }
 
-impl ChainState for SyncDaemon {
+impl ChainState for Daemon {
     type Out = Rc<DaemonState>;
 
     fn state(&self) -> Self::Out {
@@ -77,7 +77,7 @@ impl ChainState for SyncDaemon {
 }
 
 // Execute on the real chain, returns tx response
-impl TxHandler for SyncDaemon {
+impl TxHandler for Daemon {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
@@ -190,7 +190,7 @@ impl TxHandler for SyncDaemon {
     }
 }
 
-impl ChainUpload for SyncDaemon {
+impl ChainUpload for Daemon {
     fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
         let sender = &self.daemon.sender;
         let wasm_path = uploadable.wasm();
@@ -222,7 +222,7 @@ impl ChainUpload for SyncDaemon {
     }
 }
 
-impl<T: CwOrcExecute<SyncDaemon> + ContractInstance<SyncDaemon> + Clone> CallAs<SyncDaemon> for T {
+impl<T: CwOrcExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
     type Sender = Wallet;
 
     fn set_sender(&mut self, sender: &Self::Sender) {

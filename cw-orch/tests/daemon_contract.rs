@@ -2,7 +2,7 @@ mod common;
 #[cfg(feature = "node-tests")]
 mod tests {
     /*
-        Daemon contract general tests
+        DaemonAsync contract general tests
     */
     use crate::common;
     use cw_orch::prelude::*;
@@ -103,7 +103,10 @@ mod tests {
         asserting!("query is successful").that(&query_res).is_ok();
 
         // validate migrations are successful
-        let migrate_res = contract.migrate(&cw20_base::msg::MigrateMsg {}, code_id.parse::<u64>().unwrap());
+        let migrate_res = contract.migrate(
+            &cw20_base::msg::MigrateMsg {},
+            code_id.parse::<u64>().unwrap(),
+        );
         asserting!("migrate is successful")
             .that(&migrate_res)
             .is_ok();

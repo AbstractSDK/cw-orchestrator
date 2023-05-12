@@ -3,11 +3,11 @@ use crate::environment::TxResponse;
 use crate::error::CwOrchError;
 use crate::prelude::*;
 
-use super::sync::core::SyncDaemon;
+use super::sync::core::Daemon;
 
-pub trait UploadHelpers: CwOrcUpload<SyncDaemon> {
+pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    fn upload_if_needed(&self) -> Result<Option<TxResponse<SyncDaemon>>, CwOrchError> {
+    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
             Ok(None)
         } else {
@@ -47,14 +47,14 @@ pub trait UploadHelpers: CwOrcUpload<SyncDaemon> {
     }
 }
 
-impl<T> UploadHelpers for T where T: CwOrcUpload<SyncDaemon> {}
+impl<T> UploadHelpers for T where T: CwOrcUpload<Daemon> {}
 
-pub trait MigrateHelpers: CwOrcMigrate<SyncDaemon> + UploadHelpers {
+pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
         migrate_msg: &Self::MigrateMsg,
-    ) -> Result<Option<TxResponse<SyncDaemon>>, CwOrchError> {
+    ) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.is_running_latest()? {
             log::info!("{} is already running the latest code", self.id());
             Ok(None)
@@ -64,4 +64,4 @@ pub trait MigrateHelpers: CwOrcMigrate<SyncDaemon> + UploadHelpers {
     }
 }
 
-impl<T> MigrateHelpers for T where T: CwOrcMigrate<SyncDaemon> + CwOrcUpload<SyncDaemon> {}
+impl<T> MigrateHelpers for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}
