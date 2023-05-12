@@ -8,11 +8,7 @@ use super::{
     tx_resp::CosmTxResponse,
 };
 use crate::{
-    environment::{ChainUpload, TxHandler},
-    prelude::{
-        queriers::CosmWasm, CallAs, ContractInstance, CwOrcExecute, IndexResponse, Uploadable,
-        WasmPath,
-    },
+    prelude::{queriers::CosmWasm, IndexResponse, Uploadable},
     state::ChainState,
 };
 use cosmrs::{
@@ -29,7 +25,7 @@ use std::{
     str::{from_utf8, FromStr},
     time::Duration,
 };
-use tokio::runtime::Handle;
+
 use tonic::transport::Channel;
 
 #[derive(Clone)]
@@ -195,7 +191,7 @@ impl Daemon {
 
         while last_height < end_height {
             // wait
-            tokio::time::sleep(Duration::from_secs(4));
+            tokio::time::sleep(Duration::from_secs(4)).await;
             // ping latest block
             last_height = self.query_client::<Node>().block_height().await?;
         }

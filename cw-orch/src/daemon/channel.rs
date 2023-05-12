@@ -94,11 +94,9 @@ mod tests {
     /*
         This test asserts breaking issues around the GRPC connection
     */
-    use std::sync::Arc;
 
     use crate::prelude::Daemon;
     use speculoos::prelude::*;
-    use tokio::runtime::Runtime;
 
     #[tokio::test]
     async fn no_connection() {
