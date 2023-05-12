@@ -36,12 +36,12 @@ use tonic::transport::Channel;
     ## Usage
 
     ```rust,no_run
-    use cw_orch::prelude::Daemon;
+    use cw_orch::prelude::DaemonAsync;
     use cw_orch::daemon::networks::JUNO_1;
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();
-    let daemon: Daemon = Daemon::builder()
+    let daemon: DaemonAsync = DaemonAsync::builder()
         .chain(JUNO_1)
         .handle(rt.handle())
         .build()
@@ -49,19 +49,19 @@ use tonic::transport::Channel;
     ```
     ## Environment Execution
 
-    The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
+    The DaemonAsync implements [`TxHandler`] which allows you to perform transactions on the chain.
 
     ## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon::query<Querier>`] method with a specific querier.
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query<Querier>`] method with a specific querier.
     See [Querier](crate::daemon::queriers) for examples.
 */
-pub struct Daemon {
+pub struct DaemonAsync {
     pub sender: Wallet,
     pub state: Rc<DaemonState>,
 }
 
-impl Daemon {
+impl DaemonAsync {
     /// Get the daemon builder
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
@@ -73,13 +73,13 @@ impl Daemon {
         Querier::new(self.sender.channel())
     }
 
-    /// Get the channel configured for this Daemon
+    /// Get the channel configured for this DaemonAsync
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
     }
 }
 
-impl ChainState for Daemon {
+impl ChainState for DaemonAsync {
     type Out = Rc<DaemonState>;
 
     fn state(&self) -> Self::Out {
@@ -88,7 +88,7 @@ impl ChainState for Daemon {
 }
 
 // Execute on the real chain, returns tx response
-impl Daemon {
+impl DaemonAsync {
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
@@ -239,7 +239,7 @@ impl Daemon {
         Ok(result)
     }
 
-    /// Set the sender to use with this Daemon to be the given wallet
+    /// Set the sender to use with this DaemonAsync to be the given wallet
     pub fn set_sender(&mut self, sender: &Wallet) {
         self.sender = sender.clone();
     }

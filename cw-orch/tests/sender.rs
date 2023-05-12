@@ -17,7 +17,7 @@ mod sender {
         let mut bad_config = LOCAL_JUNO;
         bad_config.gas_denom = "baddenom";
 
-        let daemon = SyncDaemon::builder()
+        let daemon = Daemon::builder()
             .chain(bad_config)
             .handle(rt.handle())
             .build()

@@ -95,7 +95,7 @@ mod tests {
         This test asserts breaking issues around the GRPC connection
     */
 
-    use crate::prelude::Daemon;
+    use crate::prelude::DaemonAsync;
     use speculoos::prelude::*;
 
     #[tokio::test]
@@ -104,7 +104,7 @@ mod tests {
         let grpcs = &vec!["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
-        let build_res = Daemon::builder()
+        let build_res = DaemonAsync::builder()
             .chain(chain)
             .deployment_id("v0.1.0")
             .build()
@@ -123,7 +123,7 @@ mod tests {
         let grpcs: &Vec<&str> = &vec![];
         chain.grpc_urls = grpcs;
 
-        let build_res = Daemon::builder()
+        let build_res = DaemonAsync::builder()
             .chain(chain)
             .deployment_id("v0.1.0")
             .build()

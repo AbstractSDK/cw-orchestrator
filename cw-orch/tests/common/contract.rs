@@ -30,7 +30,7 @@ impl<Chain: CwEnv> Cw20<Chain> {
 }
 
 impl<Chain: CwEnv> Uploadable for Cw20<Chain> {
-    fn wasm(&self) -> <SyncDaemon as TxHandler>::ContractSource {
+    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         // create contract base configuration
         let crate_path = env!("CARGO_MANIFEST_DIR");
         let wasm_path = format!("{}/{}", crate_path, CW20_CONTRACT_WASM);
@@ -49,8 +49,8 @@ impl<Chain: CwEnv> Uploadable for Cw20<Chain> {
     }
 }
 
-pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<SyncDaemon>) {
-    let daemon = SyncDaemon::builder()
+pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<Daemon>) {
+    let daemon = Daemon::builder()
         .chain(networks::LOCAL_JUNO)
         .handle(runtime.handle())
         .build()
