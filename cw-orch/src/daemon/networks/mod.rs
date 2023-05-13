@@ -1,3 +1,6 @@
+//! # Daemon network module
+//! Contains helpers for different blockchain networks information
+//!
 pub mod archway;
 pub mod injective;
 pub mod juno;
@@ -15,7 +18,8 @@ pub use neutron::BARYON_1;
 pub use osmosis::{LOCAL_OSMO, OSMO_4};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 
-/// Returns a [`NetworkInfo`] given its id
+/// Returns a [`NetworkInfo`] given its id (as str).
+/// ids can be: UNI_6, JUNO_1, LOCAL_JUNO, PISCO_1, PHOENIX_1, LOCAL_TERRA, INJECTIVE_888, CONSTANTINE_1, BARYON_1, INJECTIVE_1, HARPOON_4, OSMO_4, LOCAL_OSMO,
 pub fn parse_network(net_id: &str) -> ChainInfo {
     let networks = vec![
         UNI_6,

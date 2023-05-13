@@ -3,6 +3,7 @@ use crate::environment::TxResponse;
 use crate::error::CwOrchError;
 use crate::prelude::*;
 
+/// Contains helper logic related with the uploading of a contract
 pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
@@ -45,6 +46,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
 
 impl<T> UploadHelpers for T where T: CwOrcUpload<Daemon> {}
 
+/// Contains helper logic related with the migration of a contract
 pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
