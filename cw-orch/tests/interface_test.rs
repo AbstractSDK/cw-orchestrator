@@ -1,3 +1,5 @@
+mod common;
+
 use cw_orch::contract::Contract;
 use cw_orch::environment::CwEnv;
 use cw_orch::environment::TxHandler;
@@ -18,7 +20,6 @@ use cw_orch::prelude::{CwOrcInstantiate, Mock};
 
 use cosmwasm_std::Addr;
 use cw_orch::interface;
-
 const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
@@ -137,6 +138,7 @@ fn test_migrate() {
         .unwrap();
     assert_eq!(response.events.len(), 1);
 }
+
 
 #[test]
 #[cfg(feature = "node-tests")]

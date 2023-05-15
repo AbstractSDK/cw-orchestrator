@@ -1,9 +1,7 @@
 use mock_contract::{ExecuteMsgFns, QueryMsgFns};
-use mock_contract::{InstantiateMsg, MockContract, QueryMsg};
+use mock_contract::{InstantiateMsg, MockContract};
 
 use cosmwasm_std::Event;
-
-use cw_orch::prelude::CwOrcQuery;
 
 use cw_orch::prelude::CwOrcUpload;
 mod common;

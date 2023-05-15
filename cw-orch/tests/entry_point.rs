@@ -1,12 +1,10 @@
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, MockContract, QueryMsg};
 
 use cosmwasm_std::Event;
-use cw_orch::daemon::Daemon;
 use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::CwOrcExecute;
 use cw_orch::prelude::CwOrcMigrate;
 use cw_orch::prelude::CwOrcQuery;
-use tokio::runtime::Runtime;
 
 use cw_orch::prelude::CwOrcUpload;
 mod common;
@@ -105,6 +103,7 @@ fn test_migrate() {
 #[cfg(feature = "node-tests")]
 fn daemon_test() {
     use cw_orch::prelude::networks;
+    use cw_orch::daemon::Daemon;
 
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
