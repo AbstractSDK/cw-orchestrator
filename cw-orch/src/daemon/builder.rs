@@ -12,13 +12,12 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 /// Create [`Daemon`] through [`DaemonBuilder`]
 /// ## Example
 /// ```no_run
-///     use cw_orch::prelude::{DaemonBuilder, networks};
-///
-///     let daemon = DaemonBuilder::default()
-///         .chain(networks::LOCAL_JUNO)
-///         .deployment_id("v0.1.0")
-///         .build()
-///         .unwrap();
+/// use cw_orch::prelude::{DaemonBuilder, networks};
+/// let daemon = DaemonBuilder::default()
+///     .chain(networks::LOCAL_JUNO)
+///     .deployment_id("v0.1.0")
+///     .build()
+///     .unwrap();
 /// ```
 pub struct DaemonBuilder {
     // # Required
@@ -63,6 +62,7 @@ impl DaemonBuilder {
     }
 
     /// Set the mnemonic to use with this chain.
+    /// Defaults to env variable (depending on the scenario LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC)
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
         self

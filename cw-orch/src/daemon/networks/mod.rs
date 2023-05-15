@@ -1,5 +1,5 @@
 //! # Daemon network module
-//! Contains helpers for different blockchain networks information
+//! Contains information and helpers for different blockchain networks
 //!
 pub mod archway;
 pub mod injective;
