@@ -62,7 +62,7 @@ impl DaemonBuilder {
     }
 
     /// Set the mnemonic to use with this chain.
-    /// Defaults to env variable (depending on the scenario LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC)
+    /// Defaults to env variable (depending on the environment possibilities are: LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC)
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
         self

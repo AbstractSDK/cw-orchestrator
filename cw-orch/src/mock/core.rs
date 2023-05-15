@@ -14,10 +14,13 @@ use crate::{
 use super::state::MockState;
 
 /// Wrapper around a cw-multi-test app backend.
+///
 /// Stores a local state with a mapping of contract_id -> code_id/address
+///
 /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
+    /// address used for the operations
     pub sender: Addr,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
@@ -30,7 +33,7 @@ where
     ExecC: CustomMsg + DeserializeOwned + 'static,
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
-    /// set the Bank balance of an address
+    /// Set the bank balance of an address
     pub fn set_balance(
         &self,
         address: &Addr,
@@ -42,6 +45,7 @@ where
             .map_err(Into::into)
     }
 
+    /// Set multiple bank balances at once
     pub fn set_balances(
         &self,
         balances: &[(&Addr, &[cosmwasm_std::Coin])],
@@ -56,7 +60,7 @@ where
             })
     }
 
-    /// Query the balance of a native token for and address
+    /// Query the balance of a native token (bank) for and address
     /// Returns the amount of the native token
     pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwOrchError> {
         let amount = self
@@ -68,7 +72,7 @@ where
         Ok(amount)
     }
 
-    /// Query all balances of the address
+    /// Fetch the whole bank balance of an address
     /// Returns a vector of coins
     pub fn query_all_balances(
         &self,
@@ -105,9 +109,11 @@ where
             state,
             app,
         };
+
         Ok(instance)
     }
 
+    /// Upload a custom contract wrapper
     pub fn upload_custom(
         &self,
         contract_id: &str,
