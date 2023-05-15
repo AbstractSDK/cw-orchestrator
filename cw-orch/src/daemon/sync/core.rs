@@ -4,7 +4,7 @@ use crate::{
     environment::{ChainUpload, TxHandler},
     prelude::{
         queriers::{CosmWasm, DaemonQuerier},
-        CallAs, ContractInstance, CwOrcExecute, IndexResponse, SyncDaemonBuilder, Uploadable,
+        CallAs, ContractInstance, CwOrcExecute, IndexResponse, DaemonBuilder, Uploadable,
         WasmPath,
     },
     state::ChainState,
@@ -20,7 +20,7 @@ use tonic::transport::Channel;
 #[derive(Clone)]
 /**
     Represents a blockchain node.
-    Is constructed with the [SyncDaemonBuilder].
+    Is constructed with the [DaemonBuilder].
 
     ## Usage
 
@@ -52,8 +52,8 @@ pub struct Daemon {
 
 impl Daemon {
     /// Get the daemon builder
-    pub fn builder() -> SyncDaemonBuilder {
-        SyncDaemonBuilder::default()
+    pub fn builder() -> DaemonBuilder {
+        DaemonBuilder::default()
     }
 
     /// Perform a query with a given querier

@@ -7,18 +7,18 @@ use super::{super::error::DaemonError, core::Daemon};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Default)]
-/// Create [`Daemon`] through [`SyncDaemonBuilder`]
+/// Create [`Daemon`] through [`DaemonBuilder`]
 /// ## Example
 /// ```no_run
-///     use cw_orch::prelude::{SyncDaemonBuilder, networks};
+///     use cw_orch::prelude::{DaemonBuilder, networks};
 ///
-///     let Daemon = SyncDaemonBuilder::default()
+///     let Daemon = DaemonBuilder::default()
 ///         .chain(networks::LOCAL_JUNO)
 ///         .deployment_id("v0.1.0")
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct SyncDaemonBuilder {
+pub struct DaemonBuilder {
     // # Required
     pub(crate) chain: Option<ChainData>,
     pub(crate) handle: Option<tokio::runtime::Handle>,
@@ -28,7 +28,7 @@ pub struct SyncDaemonBuilder {
     pub(crate) mnemonic: Option<String>,
 }
 
-impl SyncDaemonBuilder {
+impl DaemonBuilder {
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainData>) -> &mut Self {
         self.chain = Some(chain.into());

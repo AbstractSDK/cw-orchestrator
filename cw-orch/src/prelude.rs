@@ -46,7 +46,7 @@ pub use crate::daemon::{
     queriers,
 
     // expose the sync variants
-    sync::{builder::SyncDaemonBuilder, core::Daemon},
+    sync::{builder::DaemonBuilder, core::Daemon},
     // sync helpers
     traits::{MigrateHelpers, UploadHelpers},
 };

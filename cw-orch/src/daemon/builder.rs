@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::{DaemonAsync, SyncDaemonBuilder};
+use crate::prelude::{DaemonAsync, DaemonBuilder};
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
@@ -74,8 +74,8 @@ impl DaemonAsyncBuilder {
     }
 }
 
-impl From<SyncDaemonBuilder> for DaemonAsyncBuilder {
-    fn from(value: SyncDaemonBuilder) -> Self {
+impl From<DaemonBuilder> for DaemonAsyncBuilder {
+    fn from(value: DaemonBuilder) -> Self {
         DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
