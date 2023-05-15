@@ -1,9 +1,9 @@
+use cw_orch::contract::Contract;
+use cw_orch::environment::CwEnv;
 use cw_orch::environment::TxHandler;
 use cw_orch::prelude::ContractWrapper;
-use cw_orch::contract::Contract;
 use cw_orch::prelude::Uploadable;
 use cw_orch::prelude::WasmPath;
-use cw_orch::environment::CwEnv;
 
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
@@ -16,19 +16,12 @@ use cw_orch::prelude::CwOrcQuery;
 use cw_orch::prelude::CwOrcUpload;
 use cw_orch::prelude::{CwOrcInstantiate, Mock};
 
-
-use cosmwasm_std::{Addr};
+use cosmwasm_std::Addr;
 use cw_orch::interface;
-
 
 const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
-#[interface(
-    InstantiateMsg,
-    ExecuteMsg,
-    QueryMsg,
-    MigrateMsg,
-)]
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockContract;
 
 impl<Chain: CwEnv> MockContract<Chain> {
@@ -56,7 +49,6 @@ impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
         )
     }
 }
-
 
 #[test]
 fn test_instantiate() {
@@ -113,9 +105,7 @@ fn test_query() {
     assert_eq!(response, "first query passed");
 
     contract
-        .query::<String>(&QueryMsg::SecondQuery {
-            t: "".to_string()
-        })
+        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
         .unwrap_err();
 }
 
@@ -188,9 +178,7 @@ fn daemon_test() {
     assert_eq!(response, "first query passed");
 
     contract
-        .query::<String>(&QueryMsg::SecondQuery {
-            t: "".to_string()
-    })
+        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
         .unwrap_err();
 
     contract

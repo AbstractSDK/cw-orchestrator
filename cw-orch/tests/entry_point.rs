@@ -68,9 +68,7 @@ fn test_query() {
     assert_eq!(response, "first query passed");
 
     contract
-        .query::<String>(&QueryMsg::SecondQuery {
-            t: "".to_string()
-        })
+        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
         .unwrap_err();
 }
 
@@ -143,9 +141,7 @@ fn daemon_test() {
     assert_eq!(response, "first query passed");
 
     contract
-        .query::<String>(&QueryMsg::SecondQuery {
-            t: "".to_string()
-    })
+        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
         .unwrap_err();
 
     contract

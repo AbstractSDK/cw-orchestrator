@@ -1,11 +1,9 @@
-use mock_contract::{QueryMsgFns, ExecuteMsgFns};
+use mock_contract::{ExecuteMsgFns, QueryMsgFns};
 use mock_contract::{InstantiateMsg, MockContract, QueryMsg};
 
 use cosmwasm_std::Event;
 
-
 use cw_orch::prelude::CwOrcQuery;
-
 
 use cw_orch::prelude::CwOrcUpload;
 mod common;
@@ -32,7 +30,7 @@ fn test_execute() {
             .add_attribute("action", "first message passed"),
     );
 
-    contract.second_message( "".to_string(), &[]).unwrap_err();
+    contract.second_message("".to_string(), &[]).unwrap_err();
 }
 
 #[test]
