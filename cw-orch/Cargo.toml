@@ -96,6 +96,7 @@ env_logger = "0.10.0"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cosmwasm-schema = "1.2"
+tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"

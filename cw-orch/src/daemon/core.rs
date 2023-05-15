@@ -36,16 +36,14 @@ use tonic::transport::Channel;
     ## Usage
 
     ```rust,no_run
+    # tokio_test::block_on(async {
     use cw_orch::prelude::DaemonAsync;
     use cw_orch::daemon::networks::JUNO_1;
-    use tokio::runtime::Runtime;
-
-    let rt = Runtime::new().unwrap();
     let daemon: DaemonAsync = DaemonAsync::builder()
         .chain(JUNO_1)
-        .handle(rt.handle())
         .build()
-        .unwrap();
+        .await.unwrap();
+    # })
     ```
     ## Environment Execution
 

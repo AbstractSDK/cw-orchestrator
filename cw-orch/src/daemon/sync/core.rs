@@ -23,9 +23,9 @@ use tonic::transport::Channel;
 
     ## Usage
 
-    ```rust
-    use cw_orch::daemon::Daemon;
-    use cw_orch::networks::JUNO_1;
+    ```rust,no_run
+    use cw_orch::prelude::Daemon;
+    use cw_orch::daemon::networks::JUNO_1;
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();

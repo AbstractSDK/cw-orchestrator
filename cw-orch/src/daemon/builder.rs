@@ -12,13 +12,14 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 /// Create [`DaemonAsync`] through [`DaemonAsyncBuilder`]
 /// ## Example
 /// ```no_run
-///     use cw_orch::prelude::{DaemonAsyncBuilder, networks};
-///
-///     let daemon = DaemonAsyncBuilder::default()
-///         .chain(networks::LOCAL_JUNO)
-///         .deployment_id("v0.1.0")
-///         .build()
-///         .unwrap();
+/// # tokio_test::block_on(async {
+/// use cw_orch::prelude::{DaemonAsyncBuilder, networks};
+/// let daemon = DaemonAsyncBuilder::default()
+///     .chain(networks::LOCAL_JUNO)
+///     .deployment_id("v0.1.0")
+///     .build()
+///     .await.unwrap();
+/// # })
 /// ```
 pub struct DaemonAsyncBuilder {
     // # Required
