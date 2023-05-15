@@ -17,37 +17,15 @@ exclude = [".env"]
 # run with `cargo test --jobs 1 --features node-tests`
 node-tests = ["daemon"]
 # enable the optional dependencies
-daemon = [
-  "dep:ibc-chain-registry",
-  "dep:ibc-relayer-types",
-  "dep:tokio",
-  "dep:tonic",
-  "dep:secp256k1",
-  "dep:reqwest",
-  "dep:base64",
-  "dep:hkd32",
-  "dep:rand_core",
-  "dep:ed25519-dalek",
-  "dep:cosmrs",
-  "dep:derive_builder",
-  "dep:eyre",
-  "dep:chrono",
-  "dep:base16",
-  "dep:ripemd",
-  "dep:ring",
-  "dep:hex",
-  "dep:bitcoin",
-  "dep:prost",
-  "cw-orch-contract-derive/propagate_daemon",
-]
+daemon = ["dep:ibc-chain-registry", "dep:ibc-relayer-types", "dep:tokio", "dep:tonic", "dep:secp256k1", "dep:reqwest", "dep:base64", "dep:hkd32", "dep:rand_core", "dep:ed25519-dalek", "dep:cosmrs", "dep:derive_builder", "dep:eyre", "dep:chrono", "dep:base16", "dep:ripemd", "dep:ring", "dep:hex", "dep:bitcoin", "dep:prost", "cw-orch-contract-derive/propagate_daemon"]
 
 [dependencies]
 # Default deps
-# cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
-# cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
 
-cw-orch-contract-derive = "0.11.0-alpha.3"
-cw-orch-fns-derive = "0.11.0-alpha.4"
+# cw-orch-contract-derive = "0.11.0-alpha.3"
+# cw-orch-fns-derive = "0.11.0-alpha.4"
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
