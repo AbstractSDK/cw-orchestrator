@@ -3,6 +3,7 @@ use bollard::service::ContainerSummary;
 use bollard::Docker;
 use futures_util::StreamExt;
 use tokio::runtime::Runtime;
+use crate::state::ChainState;
 
 use crate::{ContractInstance, Daemon};
 
@@ -69,6 +70,7 @@ impl Hermes {
         let port_a = contract_port(contract_a);
         let port_b = contract_port(contract_b);
 
+        let chain_id = &contract_a.get_chain().state().chain_id;
         let command = [
             "hermes",
             "create",
@@ -78,7 +80,7 @@ impl Hermes {
             "--a-connection",
             connection,
             "--a-chain",
-            &contract_a.get_chain().state.chain_id,
+            chain_id,
             // "--b-chain",
             // &contract_b.get_chain().state.id,
             "--a-port",

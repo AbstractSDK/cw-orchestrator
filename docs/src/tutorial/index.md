@@ -30,7 +30,7 @@ Following this example, the project's structure should eventually look like:
 │       ├── Cargo.toml
 │       └── src
 │            └── lib.rs
-│            └── my-contract.rs (interface)
+│            └── my-contract.rs (interface_entry_point)
 └── scripts
     ├── .env
     ├── Cargo.toml
@@ -48,4 +48,4 @@ Following this example, the project's structure should eventually look like:
 - **[Scripting](./scripting.md)**
   - Write runnable scripts with your interfaces.
 - **[Integration](./integration.md)**
-  - Export a deployment of your application for use in integration testing.  
+  - Export a deployment of your application for use in integration testing.

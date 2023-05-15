@@ -1,4 +1,3 @@
-pub mod artifacts_dir;
 pub mod builder;
 pub mod channel;
 pub mod core;
@@ -7,13 +6,14 @@ pub mod ibc_tracker;
 pub mod networks;
 pub mod queriers;
 mod sender;
-pub use sender::{Sender, Wallet};
-pub mod json_file;
+pub mod sync;
+pub use self::core::DaemonAsync;
+pub use sender::Wallet;
+pub(crate) mod json_file;
 pub mod state;
-/// Custom traits for Daemon contracts
+/// Custom traits for DaemonAsync contracts
 pub mod traits;
 pub mod tx_resp;
-pub mod wasm_path;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;

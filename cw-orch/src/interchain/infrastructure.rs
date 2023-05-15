@@ -20,6 +20,7 @@ use crate::{Daemon, DaemonError};
 use super::docker::DockerHelper;
 use super::hermes::Hermes;
 use super::IcResult;
+use crate::state::ChainState;
 
 pub type ContainerId = String;
 pub type Port = String;
@@ -71,7 +72,7 @@ impl InterchainInfrastructure {
 
         // add appender for each daemon
         for daemon in daemons.values() {
-            let chain_id = daemon.state.chain_id.clone();
+            let chain_id = daemon.state().chain_id.clone();
             let log_path = generate_log_file_path(&chain_id);
             let daemon_appender = FileAppender::builder()
                 .encoder(encoder.clone())
@@ -94,7 +95,7 @@ impl InterchainInfrastructure {
         log4rs::init_config(config).unwrap();
 
         for daemon in daemons.values() {
-            let log_target = &daemon.state.chain_id;
+            let log_target = &daemon.state().chain_id;
             // log startup to each daemon log
             log::info!(target: log_target, "Starting daemon {log_target}");
         }

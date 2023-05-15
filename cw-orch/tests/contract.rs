@@ -2,52 +2,58 @@
     Daemon tests
 */
 mod common;
-use std::sync::Arc;
 
-use cw_orch::*;
-use speculoos::prelude::*;
+#[cfg(feature = "node-tests")]
+mod tests {
 
-use cw20_base::msg::*;
-use tokio::runtime::Runtime;
+    use super::common;
+    use std::sync::Arc;
 
-#[test]
-fn general() {
-    let runtime = Arc::new(Runtime::new().unwrap());
+    use cw_orch::*;
+    use speculoos::prelude::*;
 
-    let (sender, contract) = common::contract::start(&runtime);
+    use cw20_base::msg::*;
+    use tokio::runtime::Runtime;
 
-    // upload contract
-    let upload_res = contract.upload();
-    asserting!("upload is succesful").that(&upload_res).is_ok();
+    #[test]
+    fn general() {
+        let runtime = Arc::new(Runtime::new().unwrap());
 
-    let code_id = upload_res.unwrap().logs[0].events[1].attributes[1]
-        .value
-        .clone();
+        let (sender, contract) = common::contract::start(&runtime);
 
-    log::info!("Using code_id {}", code_id);
+        // upload contract
+        let upload_res = contract.upload();
+        asserting!("upload is succesful").that(&upload_res).is_ok();
 
-    // init msg for contract
-    let init_msg = common::contract::get_init_msg(&sender);
+        let code_id = upload_res.unwrap().logs[0].events[1].attributes[1]
+            .value
+            .clone();
 
-    // instantiate contract on chain
-    let init_res = contract.instantiate(&init_msg, Some(&sender.clone()), None);
-    asserting!("instantiate is successful")
-        .that(&init_res)
-        .is_ok();
+        log::info!("Using code_id {}", code_id);
 
-    // do a query and validate its successful
-    let query_res = contract.query::<cw20::BalanceResponse>(&cw20_base::msg::QueryMsg::Balance {
-        address: sender.to_string(),
-    });
-    asserting!("query is successful").that(&query_res).is_ok();
+        // init msg for contract
+        let init_msg = common::contract::get_init_msg(&sender);
 
-    // validate migrations are successful
-    let migrate_res = contract.migrate(&MigrateMsg {}, code_id.parse::<u64>().unwrap());
-    asserting!("migrate is successful")
-        .that(&migrate_res)
-        .is_ok();
+        // instantiate contract on chain
+        let init_res = contract.instantiate(&init_msg, Some(&sender.clone()), None);
+        asserting!("instantiate is successful")
+            .that(&init_res)
+            .is_ok();
 
-    asserting!("that upload_if_needed returns None")
-        .that(&contract.upload_if_needed().unwrap())
-        .is_none();
+        // do a query and validate its successful
+        let query_res = contract.query::<cw20::BalanceResponse>(&cw20_base::msg::QueryMsg::Balance {
+            address: sender.to_string(),
+        });
+        asserting!("query is successful").that(&query_res).is_ok();
+
+        // validate migrations are successful
+        let migrate_res = contract.migrate(&MigrateMsg {}, code_id.parse::<u64>().unwrap());
+        asserting!("migrate is successful")
+            .that(&migrate_res)
+            .is_ok();
+
+        asserting!("that upload_if_needed returns None")
+            .that(&contract.upload_if_needed().unwrap())
+            .is_none();
+    }
 }
