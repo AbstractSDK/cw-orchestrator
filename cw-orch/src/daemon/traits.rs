@@ -1,8 +1,13 @@
-use crate::{queriers::CosmWasm, CwOrcError, CwOrcMigrate, CwOrcUpload, Daemon, TxResponse};
+use crate::daemon::queriers::CosmWasm;
+use crate::environment::TxResponse;
+use crate::error::CwOrchError;
+use crate::prelude::*;
+
+use super::sync::core::Daemon;
 
 pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
-    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrcError> {
+    fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
             Ok(None)
         } else {
@@ -11,7 +16,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
     }
 
     /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
-    fn latest_is_uploaded(&self) -> Result<bool, CwOrcError> {
+    fn latest_is_uploaded(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
@@ -19,7 +24,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
         let chain = self.get_chain();
         let on_chain_hash = chain.rt_handle.block_on(
             chain
-                .query::<CosmWasm>()
+                .query_client::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
         )?;
         let local_hash = self.wasm().checksum(&self.id())?;
@@ -28,14 +33,16 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
     }
 
     /// Returns a bool whether the contract is running the latest uploaded code for it
-    fn is_running_latest(&self) -> Result<bool, CwOrcError> {
+    fn is_running_latest(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
         let chain = self.get_chain();
-        let info = chain
-            .rt_handle
-            .block_on(chain.query::<CosmWasm>().contract_info(self.address()?))?;
+        let info = chain.rt_handle.block_on(
+            chain
+                .query_client::<CosmWasm>()
+                .contract_info(self.address()?),
+        )?;
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }
@@ -47,7 +54,7 @@ pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     fn migrate_if_needed(
         &self,
         migrate_msg: &Self::MigrateMsg,
-    ) -> Result<Option<TxResponse<Daemon>>, CwOrcError> {
+    ) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.is_running_latest()? {
             log::info!("{} is already running the latest code", self.id());
             Ok(None)

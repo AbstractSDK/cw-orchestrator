@@ -5,38 +5,17 @@ use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Exe
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
+    environment::{ChainUpload, TxHandler},
+    error::CwOrchError,
+    prelude::*,
     state::{ChainState, StateInterface},
-    tx_handler::{ChainUpload, TxHandler},
-    CallAs, ContractInstance, CwOrcError, CwOrcExecute, Uploadable,
 };
 
 use super::state::MockState;
 
-#[deprecated(
-    since = "0.11.0",
-    note = "Phasing out the use of `instantiate_default_mock_env` in favor of `Mock::new`"
-)]
-pub fn instantiate_default_mock_env(
-    sender: &Addr,
-) -> anyhow::Result<(Rc<RefCell<MockState>>, Mock<MockState>)> {
-    let mock_chain = Mock::new(sender)?;
-    Ok((mock_chain.state(), mock_chain))
-}
-
-#[deprecated(
-    since = "0.11.0",
-    note = "Phasing out the use of `instantiate_custom_mock_env` in favor of `Mock::new_custom`"
-)]
-pub fn instantiate_custom_mock_env<S: StateInterface>(
-    sender: &Addr,
-    custom_state: S,
-) -> anyhow::Result<(Rc<RefCell<S>>, Mock<S>)> {
-    let mock_chain = Mock::new_custom(sender, custom_state)?;
-    Ok((mock_chain.state(), mock_chain))
-}
-
-// Generic mock-chain implementation
-// Allows for custom state storage
+/// Wrapper around a cw-multi-test app backend.
+/// Stores a local state with a mapping of contract_id -> code_id/address
+/// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
     pub sender: Addr,
@@ -56,7 +35,7 @@ where
         &self,
         address: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwOrcError> {
+    ) -> Result<(), CwOrchError> {
         self.app
             .borrow_mut()
             .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
@@ -66,10 +45,10 @@ where
     pub fn set_balances(
         &self,
         balances: &[(&Addr, &[cosmwasm_std::Coin])],
-    ) -> Result<(), CwOrcError> {
+    ) -> Result<(), CwOrchError> {
         self.app
             .borrow_mut()
-            .init_modules(|router, _, storage| -> Result<(), CwOrcError> {
+            .init_modules(|router, _, storage| -> Result<(), CwOrchError> {
                 for (addr, coins) in balances {
                     router.bank.init_balance(storage, addr, coins.to_vec())?;
                 }
@@ -79,7 +58,7 @@ where
 
     /// Query the balance of a native token for and address
     /// Returns the amount of the native token
-    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwOrcError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwOrchError> {
         let amount = self
             .app
             .borrow()
@@ -94,7 +73,7 @@ where
     pub fn query_all_balances(
         &self,
         address: &Addr,
-    ) -> Result<Vec<cosmwasm_std::Coin>, CwOrcError> {
+    ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
         let amount = self.app.borrow().wrap().query_all_balances(address)?;
         Ok(amount)
     }
@@ -133,7 +112,7 @@ where
         &self,
         contract_id: &str,
         wrapper: Box<dyn Contract<ExecC, QueryC>>,
-    ) -> Result<AppResponse, crate::CwOrcError> {
+    ) -> Result<AppResponse, CwOrchError> {
         let code_id = self.app.borrow_mut().store_code(wrapper);
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
@@ -142,7 +121,7 @@ where
             events: vec![event],
             ..Default::default()
         };
-        let code_id = crate::IndexResponse::uploaded_code_id(&resp)?;
+        let code_id = IndexResponse::uploaded_code_id(&resp)?;
         self.state.borrow_mut().set_code_id(contract_id, code_id);
         Ok(resp)
     }
@@ -161,7 +140,7 @@ where
 }
 
 impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
-    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrcError> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrchError> {
         self.borrow().get_address(contract_id)
     }
 
@@ -169,7 +148,7 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow_mut().set_address(contract_id, address)
     }
 
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrcError> {
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrchError> {
         self.borrow().get_code_id(contract_id)
     }
 
@@ -177,11 +156,11 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow_mut().set_code_id(contract_id, code_id)
     }
 
-    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwOrcError> {
+    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwOrchError> {
         self.borrow().get_all_addresses()
     }
 
-    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwOrcError> {
+    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwOrchError> {
         self.borrow().get_all_code_ids()
     }
 }
@@ -193,7 +172,7 @@ where
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
     type Response = AppResponse;
-    type Error = CwOrcError;
+    type Error = CwOrchError;
     type ContractSource = Box<dyn Contract<ExecC, QueryC>>;
 
     fn sender(&self) -> Addr {
@@ -205,7 +184,7 @@ where
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, crate::CwOrcError> {
+    ) -> Result<Self::Response, CwOrchError> {
         self.app
             .borrow_mut()
             .execute_contract(
@@ -224,7 +203,7 @@ where
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
-    ) -> Result<Self::Response, crate::CwOrcError> {
+    ) -> Result<Self::Response, CwOrchError> {
         let addr = self.app.borrow_mut().instantiate_contract(
             code_id,
             self.sender.clone(),
@@ -247,7 +226,7 @@ where
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, crate::CwOrcError> {
+    ) -> Result<T, CwOrchError> {
         self.app
             .borrow()
             .wrap()
@@ -260,7 +239,7 @@ where
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, crate::CwOrcError> {
+    ) -> Result<Self::Response, CwOrchError> {
         self.app
             .borrow_mut()
             .migrate_contract(
@@ -272,7 +251,7 @@ where
             .map_err(From::from)
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrcError> {
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
         self.app.borrow_mut().update_block(|b| {
             b.height += amount;
             b.time = b.time.plus_seconds(5 * amount);
@@ -280,7 +259,7 @@ where
         Ok(())
     }
 
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrcError> {
+    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
         self.app.borrow_mut().update_block(|b| {
             b.time = b.time.plus_seconds(secs);
             b.height += secs / 5;
@@ -288,18 +267,18 @@ where
         Ok(())
     }
 
-    fn next_block(&self) -> Result<(), CwOrcError> {
+    fn next_block(&self) -> Result<(), CwOrchError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
     }
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrcError> {
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
         Ok(self.app.borrow().block_info())
     }
 }
 
 impl ChainUpload for Mock {
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, crate::CwOrcError> {
+    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
         let code_id = self.app.borrow_mut().store_code(contract.wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
@@ -336,7 +315,7 @@ mod test {
     use serde::Serialize;
     use speculoos::prelude::*;
 
-    use crate::{mock::core::*, TxHandler};
+    use crate::mock::core::*;
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
@@ -387,7 +366,7 @@ mod test {
 
         asserting("address balance amount is correct")
             .that(&amount)
-            .is_equal_to(&balance.into());
+            .is_equal_to(balance.u128());
 
         asserting("sender is correct")
             .that(sender)
@@ -469,7 +448,7 @@ mod test {
         let balances = chain.query_all_balances(recipient).unwrap();
         asserting("recipient balances length is 1")
             .that(&balances.len())
-            .is_equal_to(&1);
+            .is_equal_to(1);
     }
 
     #[test]
@@ -487,14 +466,14 @@ mod test {
         mock_state.set_code_id(contract_id, code_id);
         asserting!("that code_id has been set")
             .that(&code_id)
-            .is_equal_to(&mock_state.get_code_id(contract_id).unwrap());
+            .is_equal_to(mock_state.get_code_id(contract_id).unwrap());
 
         asserting!("that total code_ids is 1")
             .that(&mock_state.get_all_code_ids().unwrap().len())
-            .is_equal_to(&1);
+            .is_equal_to(1);
 
         asserting!("that total addresses is 1")
             .that(&mock_state.get_all_addresses().unwrap().len())
-            .is_equal_to(&1);
+            .is_equal_to(1);
     }
 }

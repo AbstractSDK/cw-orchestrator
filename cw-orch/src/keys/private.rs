@@ -52,6 +52,10 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
+        if words.split(' ').count() != 24 {
+            return Err(DaemonError::WrongLength);
+        }
+
         match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, account, index, coin_type, "")
@@ -137,6 +141,17 @@ mod tst {
         let coin_type: u32 = 330;
         PrivateKey::new(&s, coin_type).map(|_| ())
     }
+
+    #[test]
+    pub fn tst_words_len() {
+        let coin_type: u32 = 330;
+        let str_1 = "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew";
+        let seed_1 = "a2ae8846397b55d266af35acdbb18ba1d005f7ddbdd4ca7a804df83352eaf373f274ba0dc8ac1b2b25f19dfcb7fa8b30a240d2c6039d88963defc2f626003b2f";
+        let s = Secp256k1::new();
+        let res = PrivateKey::from_words(&s, str_1, 0, 0, coin_type);
+        assert!(res.is_err())
+    }
+
     #[test]
     pub fn tst_words() -> anyhow::Result<()> {
         let coin_type: u32 = 330;

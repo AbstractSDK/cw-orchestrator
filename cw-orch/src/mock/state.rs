@@ -1,4 +1,4 @@
-use crate::{error::CwOrcError, state::StateInterface};
+use crate::{error::CwOrchError, state::StateInterface};
 use cosmwasm_std::Addr;
 use std::collections::HashMap;
 
@@ -24,10 +24,10 @@ impl Default for MockState {
 }
 
 impl StateInterface for MockState {
-    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrcError> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrchError> {
         self.addresses
             .get(contract_id)
-            .ok_or_else(|| CwOrcError::AddrNotInStore(contract_id.to_owned()))
+            .ok_or_else(|| CwOrchError::AddrNotInStore(contract_id.to_owned()))
             .map(|val| val.to_owned())
     }
 
@@ -37,10 +37,10 @@ impl StateInterface for MockState {
     }
 
     /// Get the locally-saved version of the contract's version on this network
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrcError> {
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrchError> {
         self.code_ids
             .get(contract_id)
-            .ok_or_else(|| CwOrcError::CodeIdNotInStore(contract_id.to_owned()))
+            .ok_or_else(|| CwOrchError::CodeIdNotInStore(contract_id.to_owned()))
             .map(|val| val.to_owned())
     }
 
@@ -49,20 +49,22 @@ impl StateInterface for MockState {
         self.code_ids.insert(contract_id.to_string(), code_id);
     }
 
-    fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwOrcError> {
+    fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwOrchError> {
         Ok(self.addresses.clone())
     }
 
-    fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrcError> {
+    fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrchError> {
         Ok(self.code_ids.clone())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{CwOrcError, MockState, StateInterface};
+    use crate::{prelude::CwOrchError, state::StateInterface};
     use cosmwasm_std::Addr;
     use speculoos::prelude::*;
+
+    use super::MockState;
 
     const CONTRACT_ID: &str = "123";
     const CONTRACT_ADDR: &str = "cosmos123";
@@ -87,33 +89,33 @@ mod test {
         let fetched_id = mock.get_code_id(CONTRACT_ID).unwrap();
         asserting!(&"code_id is correct for contract_id")
             .that(&fetched_id)
-            .is_equal_to(&code_id);
+            .is_equal_to(code_id);
 
         // assert we get AddrNotInStore error
         let missing_id = &"456";
         let error = mock.get_address(missing_id).unwrap_err();
-        let error_msg = CwOrcError::AddrNotInStore(String::from(*missing_id)).to_string();
-        asserting!(&(format!("Asserting we get CwOrcError: {}", error_msg)))
+        let error_msg = CwOrchError::AddrNotInStore(String::from(*missing_id)).to_string();
+        asserting!(&(format!("Asserting we get CwOrchError: {}", error_msg)))
             .that(&error.to_string())
-            .is_equal_to(CwOrcError::AddrNotInStore(String::from(*missing_id)).to_string());
+            .is_equal_to(CwOrchError::AddrNotInStore(String::from(*missing_id)).to_string());
 
         // assert we get CodeIdNotInStore error
-        let error_msg = CwOrcError::CodeIdNotInStore(String::from(*missing_id)).to_string();
+        let error_msg = CwOrchError::CodeIdNotInStore(String::from(*missing_id)).to_string();
         let error = mock.get_code_id(missing_id).unwrap_err();
-        asserting!(&(format!("Asserting we get CwOrcError: {}", error_msg)))
+        asserting!(&(format!("Asserting we get CwOrchError: {}", error_msg)))
             .that(&error.to_string())
-            .is_equal_to(CwOrcError::CodeIdNotInStore(String::from(*missing_id)).to_string());
+            .is_equal_to(CwOrchError::CodeIdNotInStore(String::from(*missing_id)).to_string());
 
         // validate we can get all addresses
         let total = mock.get_all_addresses().unwrap().len();
         asserting!(&"total addresses is one")
             .that(&total)
-            .is_equal_to(&1);
+            .is_equal_to(1);
 
         // validate we can get all code_ids
         let total = mock.get_all_code_ids().unwrap().len();
         asserting!(&"total code_ids is one")
             .that(&total)
-            .is_equal_to(&1)
+            .is_equal_to(1)
     }
 }

@@ -51,7 +51,7 @@ Procedural macro to generate a cw-orchestrator interface
 ## Example
 
 ```ignore
-#[contract(
+#[interface(
     cw20_base::msg::InstantiateMsg,
     cw20_base::msg::ExecuteMsg,
     cw20_base::msg::QueryMsg,
@@ -64,22 +64,22 @@ This generated the following code:
 ```ignore
 
 // This struct represents the interface to the contract.
-pub struct Cw20<Chain: ::cw_orch::CwEnv>(::cw_orch::Contract<Chain>);
+pub struct Cw20<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
-impl <Chain: ::cw_orch::CwEnv> Cw20<Chain> {
+impl <Chain: ::cw_orch::prelude::CwEnv> Cw20<Chain> {
     /// Constructor for the contract interface
      pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
         Self(
-            ::cw_orch::Contract::new(contract_id, chain)
+            ::cw_orch::contract::Contract::new(contract_id, chain)
         )
     }
 }
 
 // Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiateableContract for Cw20<Chain> {
+impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::InstantiableContract for Cw20<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for Cw20<Chain> {
+impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ExecutableContract for Cw20<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
@@ -90,9 +90,7 @@ impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for Cw20<Chain> {
 The interface can be linked to its source code by implementing the `Uploadable` trait for the interface.
 
 ```ignore
-use cw_orch::{
-    Mock, Daemon, Uploadable, WasmPath, ContractWrapper,
-}
+use cw_orch::prelude::*;
 
 impl Uploadable<Mock> for Cw20<Mock> {
     fn source(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
@@ -115,7 +113,7 @@ impl Uploadable<Daemon> for Cw20<Daemon> {
 
 */
 #[proc_macro_attribute]
-pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
+pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
 
     // Try to parse the attributes to a
@@ -173,30 +171,30 @@ pub fn contract(attrs: TokenStream, input: TokenStream) -> TokenStream {
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::cw_orch::CwEnv, #all_generics>(::cw_orch::Contract<Chain>, #(#all_phantom_markers,)*);
+            pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
 
-            impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::ContractInstance<Chain> for #name<Chain, #all_generics> {
-                fn as_instance(&self) -> &::cw_orch::Contract<Chain> {
+            impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
+                fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
                 &self.0
             }
-            fn as_instance_mut(&mut self) -> &mut ::cw_orch::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orch::contract::Contract<Chain> {
                 &mut self.0
             }
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::InstantiateableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type InstantiateMsg = #init;
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::ExecuteableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ExecutableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type ExecuteMsg = #exec;
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type QueryMsg = #query;
         }
 
-        impl<Chain: ::cw_orch::CwEnv, #all_generics> ::cw_orch::MigrateableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::MigratableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type MigrateMsg = #migrate;
         }
     );
@@ -209,7 +207,7 @@ Add this macro to the entry point functions of your contract to use it.
 ## Example
 ```text
 // In crate "my-contract"
-#[cfg_attr(feature="interface", interface)]
+#[cfg_attr(feature="interface", interface_entry_point)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
    deps: DepsMut,
@@ -225,22 +223,22 @@ pub fn instantiate(
 
 ```ignore,ignore
 // This struct represents the interface to the contract.
-pub struct MyContract<Chain: ::cw_orch::CwEnv>(::cw_orch::Contract<Chain>);
+pub struct MyContract<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
-impl <Chain: ::cw_orch::CwEnv> MyContract<Chain> {
+impl <Chain: ::cw_orch::prelude::CwEnv> MyContract<Chain> {
     /// Constructor for the contract interface
      pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
         Self(
-            ::cw_orch::Contract::new(contract_id, chain)
+            ::cw_orch::contract::Contract::new(contract_id, chain)
         )
     }
 }
 
 // Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::InstantiateableContract for MyContract<Chain> {
+impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::InstantiableContract for MyContract<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain: ::cw_orch::CwEnv> ::cw_orch::ExecuteableContract for MyContract<Chain> {
+impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ExecutableContract for MyContract<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
@@ -273,7 +271,7 @@ pub fn my_script() {
 ```
 */
 #[proc_macro_attribute]
-pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
+pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let cloned = input.clone();
     let mut item = parse_macro_input!(cloned as syn::Item);
 
@@ -286,17 +284,6 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
-    let message_idx = match func_ident.to_string().as_ref() {
-        "instantiate" | "execute" => 3,
-        "query" | "migrate" => 2,
-        _ => panic!("Function name not supported for the macro"),
-    };
-
-    let message = match signature.inputs[message_idx].clone() {
-        FnArg::Typed(syn::PatType { ty, .. }) => *ty,
-        _ => panic!("Only typed arguments"),
-    };
-
     let wasm_name = get_wasm_name();
     let name = get_crate_to_struct();
 
@@ -304,13 +291,13 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             #[derive(
                 ::std::clone::Clone,
             )]
-            pub struct #name<Chain: ::cw_orch::CwEnv>(::cw_orch::Contract<Chain>);
+            pub struct #name<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
-            impl<Chain: ::cw_orch::CwEnv> ::cw_orch::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::cw_orch::Contract<Chain> {
+            impl<Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain> {
+                fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
             &self.0
         }
-            fn as_instance_mut(&mut self) -> &mut ::cw_orch::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orch::contract::Contract<Chain> {
                 &mut self.0
             }
         }
@@ -337,28 +324,85 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
             }
         }
 
+        // We need to create default reply, sudo and migrate getter functions because those functions may not be implemented by the contract
+        // These are fallback in case the functions are not defined at a later time
+        type ReplyFn<C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: ::cosmwasm_std::Reply) -> Result<::cosmwasm_std::Response<C>, E>;
+        type PermissionedFn<T, C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: T) -> Result<::cosmwasm_std::Response<C>, E>; // For SUDO
+
+        pub trait DefaultReply<C,  Q: ::cosmwasm_std::CustomQuery, E5A> {
+            fn get_reply() -> Option<ReplyFn<C, E5A , Q>> {
+                None
+            }
+        }
+        pub trait DefaultSudo<C, Q: ::cosmwasm_std::CustomQuery, T4A, E4A> {
+            fn get_sudo() -> Option<PermissionedFn<T4A, C, E4A, Q>,> {
+                None
+            }
+        }
+        pub trait DefaultMigrate<C, Q: ::cosmwasm_std::CustomQuery, E6A, T6A > {
+            fn get_migrate() -> Option<PermissionedFn<T6A, C, E6A, Q>> {
+                None
+            }
+        }
+        impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
+        impl<Chain: ::cw_orch::prelude::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
+        impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
+
         // We add the contract creation script
-        impl<Chain: ::cw_orch::CwEnv> #name<Chain> {
+        impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain> {
             pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
                 Self(
-                    ::cw_orch::Contract::new(contract_id, chain)
+                    ::cw_orch::contract::Contract::new(contract_id, chain)
                 )
+            }
+        }
+        // We implement the Contract trait directly for our structure
+        impl ::cw_orch::prelude::MockContract<::cosmwasm_std::Empty, ::cosmwasm_std::Empty> for #name<::cw_orch::prelude::Mock>{
+            fn execute(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::prelude::Mock>::get_execute()(deps, env, info, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
+            }
+            fn instantiate(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::prelude::Mock>::get_instantiate()(deps, env, info, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
+            }
+            fn query(&self, deps: ::cosmwasm_std::Deps, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Binary, ::cw_orch::anyhow::Error> {
+                let msg = ::cosmwasm_std::from_slice(&msg)?;
+                #name::<::cw_orch::prelude::Mock>::get_query()(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
+            }
+            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
+                if let Some(sudo) = #name::<::cw_orch::prelude::Mock>::get_sudo() {
+                    let msg = ::cosmwasm_std::from_slice(&msg)?;
+                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
+                }else{
+                    panic!("No sudo registered");
+                }
+            }
+            fn reply(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, reply_msg: ::cosmwasm_std::Reply) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
+                if let Some(reply) = #name::<::cw_orch::prelude::Mock>::get_reply() {
+                    reply(deps, env, reply_msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
+                }else{
+                    panic!("No reply registered");
+                }
+            }
+            fn migrate(&self, deps: cosmwasm_std::DepsMut, env: cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
+                if let Some(migrate) = #name::<::cw_orch::prelude::Mock>::get_migrate() {
+                    let msg = ::cosmwasm_std::from_slice(&msg)?;
+                    migrate(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
+                }else{
+                    panic!("No migrate registered");
+                }
             }
         }
 
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
-        impl <Chain: ::cw_orch::CwEnv> ::cw_orch::Uploadable for #name<Chain>{
-            fn wrapper(&self) -> Box<dyn ::cw_orch::ContractWrapper>{
+        impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::Uploadable for #name<Chain>{
+            fn wrapper(&self) -> Box<dyn ::cw_orch::prelude::ContractWrapper>{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                let contract = ::cw_orch::ContractWrapper::new(
-                    #name::<::cw_orch::Mock>::get_execute(),
-                    #name::<::cw_orch::Mock>::get_instantiate(),
-                    #name::<::cw_orch::Mock>::get_query()
-                );
-                Box::new(contract)
+                Box::new(self.clone())
             }
 
-            fn wasm(&self) -> ::cw_orch::WasmPath {
+            fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
                 // For Daemon contract, we need to return a path for the artifacts to be uploaded
                 // Remember that this is a helper for easy definition of all the traits needed.
                 // We just need to get the local artifacts folder at the root of the workspace
@@ -368,17 +412,17 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
 
                 // We build the artifacts from the artifacts folder (by default) of the package
                 workspace_dir.push("artifacts");
-                let artifacts_dir = ::cw_orch::ArtifactsDir::new(workspace_dir);
+                let artifacts_dir = ::cw_orch::prelude::ArtifactsDir::new(workspace_dir);
                 artifacts_dir.find_wasm_path(#wasm_name).unwrap()
             }
         }
     );
 
-    // if daemon is enabled on cw-orc it will implement Uploadable<Daemon>
+    // if Daemon is enabled on cw-orc it will implement Uploadable<Daemon>
 
     #[cfg(feature = "propagate_daemon")]
     let daemon_uploadable: TokenStream = quote!(
-            impl ::cw_orch::Uploadable<::cw_orch::Daemon> for #name<::cw_orch::Daemon>{
+            impl ::cw_orch::prelude::Uploadable<::cw_orch::prelude::Daemon> for #name<::cw_orch::prelude::Daemon>{
 
         }
     )
@@ -390,26 +434,66 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
     let trait_name = format_ident!("{}ableContract", pascal_function_name);
     let message_name = format_ident!("{}Msg", pascal_function_name);
 
-    let func_part = quote!(
+    let func_name: String = func_ident.to_string();
 
-        impl<Chain: ::cw_orch::CwEnv> ::cw_orch::#trait_name for #name<Chain> {
-            type #message_name = #message;
+    let message_part = match func_name.as_str() {
+        "instantiate" | "execute" | "query" | "migrate" => {
+            // If we have the instantiate / execute / query / migrate, we define user-messages
+            let message_idx = match func_name.as_str() {
+                "instantiate" | "execute" => 3,
+                "query" | "migrate" => 2,
+                _ => panic!("Unreachable"),
+            };
+            let message = match signature.inputs[message_idx].clone() {
+                FnArg::Typed(syn::PatType { ty, .. }) => *ty,
+                _ => panic!("Only typed arguments"),
+            };
+            quote!(
+                impl<Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::#trait_name for #name<Chain> {
+                    type #message_name = #message;
+                }
+            )
         }
-
-
-        impl<Chain: ::cw_orch::CwEnv> #name<Chain>{
-            fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
-            {
-                return #func_ident;
-            }
+        // in the next 2 cases case we implement the optional Sudo or Reply traits on the contract, to signal the function exists
+        "sudo" => {
+            quote!()
         }
-    );
+        "reply" => {
+            quote!()
+        }
+        _ => panic!("Macro not supported for this funciton name"),
+    };
+
+    let func_part = match func_name.as_str() {
+        "instantiate" | "execute" | "query" => {
+            quote!(
+                impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain>{
+                    fn #new_func_name() ->  #func_type /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
+                    {
+                        #func_ident
+                    }
+                }
+            )
+        }
+        "migrate" | "sudo" | "reply" => {
+            quote!(
+                impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain>{
+                    fn #new_func_name() -> Option<#func_type> /*(cw_orch_func.sig.inputs) -> cw_orch_func.sig.output*/
+                    {
+                        Some(#func_ident)
+                    }
+                }
+            )
+        }
+        _ => panic!("Unreachable"),
+    };
 
     let addition: TokenStream = if func_ident == "instantiate" {
+        #[allow(unused_mut)]
         let mut interface_def: TokenStream = quote!(
-         #struct_def
-
-        #func_part
+            #struct_def
+            #message_part
+            #func_part
         )
         .into();
         // Add the Uploadable<Daemon> trait for the contract
@@ -418,7 +502,11 @@ pub fn interface(_attrs: TokenStream, mut input: TokenStream) -> TokenStream {
 
         interface_def
     } else {
-        func_part.into()
+        quote!(
+            #message_part
+            #func_part
+        )
+        .into()
     };
 
     input.extend(addition);

@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
     network_id: "neutron",

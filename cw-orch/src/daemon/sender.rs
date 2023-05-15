@@ -1,4 +1,4 @@
-use super::channel::ChannelAccess;
+use crate::channel::ChannelAccess;
 use super::cosmos_modules::{self, auth::BaseAccount};
 use super::queriers::DaemonQuerier;
 use super::queriers::Node;
@@ -22,6 +22,8 @@ const GAS_BUFFER: f64 = 1.5;
 
 pub type Wallet = Rc<Sender<All>>;
 
+/// Signer of the transactions and helper for address derivation
+/// This is the main interface for simulating and signing transactions
 pub struct Sender<C: Signing + Context> {
     pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
@@ -239,7 +241,7 @@ impl Sender<All> {
         log::debug!("{:?}", commit);
 
         let resp = Node::new(self.channel())
-            .find_tx_by_hash(commit.into_inner().tx_response.unwrap().txhash)
+            .find_tx(commit.into_inner().tx_response.unwrap().txhash)
             .await?;
 
         // if tx result != 0 then the tx failed, so we return an error

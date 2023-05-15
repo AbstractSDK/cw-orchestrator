@@ -5,22 +5,11 @@ use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use tonic::transport::{Channel, ClientTlsConfig};
 
-use crate::DaemonError;
+use super::error::DaemonError;
 
-/// indicate that the object has access to a gRPC channel
-pub trait ChannelAccess {
-    fn channel(&self) -> Channel;
-}
+pub struct GrpcChannel {}
 
-impl ChannelAccess for Channel {
-    fn channel(&self) -> tonic::transport::Channel {
-        self.clone()
-    }
-}
-
-pub struct DaemonChannel {}
-
-impl DaemonChannel {
+impl GrpcChannel {
     pub async fn connect(grpc: &[Grpc], chain_id: &ChainId) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 
@@ -100,30 +89,38 @@ impl DaemonChannel {
     }
 }
 
+
+/// indicate that the object has access to a gRPC channel
+pub trait ChannelAccess {
+    fn channel(&self) -> Channel;
+}
+
+impl ChannelAccess for Channel {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.clone()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     /*
         This test asserts breaking issues around the GRPC connection
     */
-    use std::sync::Arc;
 
-    use crate::Daemon;
+    use crate::prelude::DaemonAsync;
     use speculoos::prelude::*;
-    use tokio::runtime::Runtime;
 
-    #[test]
-    fn no_connection() {
-        let runtime = Arc::new(Runtime::new().unwrap());
-
-        let mut chain = cw_orch::networks::LOCAL_JUNO;
+    #[tokio::test]
+    async fn no_connection() {
+        let mut chain = cw_orch::daemon::networks::LOCAL_JUNO;
         let grpcs = &vec!["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
-        let build_res = Daemon::builder()
-            .handle(runtime.handle())
+        let build_res = DaemonAsync::builder()
             .chain(chain)
             .deployment_id("v0.1.0")
-            .build();
+            .build()
+            .await;
 
         asserting!("there is no GRPC connection")
             .that(&build_res.err().unwrap().to_string())
@@ -132,19 +129,17 @@ mod tests {
             ))
     }
 
-    #[test]
-    fn network_grpcs_list_is_empty() {
-        let runtime = Arc::new(Runtime::new().unwrap());
-
-        let mut chain = cw_orch::networks::LOCAL_JUNO;
+    #[tokio::test]
+    async fn network_grpcs_list_is_empty() {
+        let mut chain = cw_orch::daemon::networks::LOCAL_JUNO;
         let grpcs: &Vec<&str> = &vec![];
         chain.grpc_urls = grpcs;
 
-        let build_res = Daemon::builder()
-            .handle(runtime.handle())
+        let build_res = DaemonAsync::builder()
             .chain(chain)
             .deployment_id("v0.1.0")
-            .build();
+            .build()
+            .await;
 
         asserting!("GRPC list is empty")
             .that(&build_res.err().unwrap().to_string())

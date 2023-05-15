@@ -1,10 +1,10 @@
-use crate::{CwEnv, CwOrcError};
+use crate::prelude::{CwEnv, CwOrchError};
 
 /// Indicates the ability to deploy an application to a mock chain.
 ///
 /// ## Example:
 /// ```ignore
-/// use cw_orch::{Deploy, CwOrcError, Empty, CwEnv, CwOrcUpload};
+/// use cw_orch::{Deploy, CwOrchError, Empty, CwEnv, CwOrcUpload};
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
@@ -13,15 +13,15 @@ use crate::{CwEnv, CwOrcError};
 /// }
 ///
 /// impl<Chain: CwEnv> Deploy<Chain> for MyApplication<Chain> {
-///     type Error = CwOrcError;
+///     type Error = CwOrchError;
 ///     type DeployData = Empty;
-///     fn store_on(chain: Chain) -> Result<Self, CwOrcError> {
+///     fn store_on(chain: Chain) -> Result<Self, CwOrchError> {
 ///         let mut token = Cw20Base::new("my-token", chain.clone());
 ///         token.upload()?;
 ///         Ok(Self { token })
 ///     }
 ///     // deploys the token to the chain
-///     fn deploy_on(chain: Chain, data: Empty) -> Result<Self, CwOrcError> {
+///     fn deploy_on(chain: Chain, data: Empty) -> Result<Self, CwOrchError> {
 ///         let my_app: MyApplication<Chain> = Self::store_on(chain)?;
 ///         let cw20_init_msg = cw20_base::msg::InstantiateMsg {
 ///             decimals: 6,
@@ -36,7 +36,7 @@ use crate::{CwEnv, CwOrcError};
 ///         Ok(my_app)
 ///    }
 ///    // loads the token from the chain
-///    fn load_from(chain: Chain) -> Result<Self, CwOrcError> {
+///    fn load_from(chain: Chain) -> Result<Self, CwOrchError> {
 ///        // loads the token and uses the "my-token" key to get its information
 ///         let token = Cw20Base::new("my-token", chain.clone());
 ///         Ok(Self { token })
@@ -47,7 +47,7 @@ use crate::{CwEnv, CwOrcError};
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: CwEnv>: Sized {
-    type Error: From<CwOrcError>;
+    type Error: From<CwOrchError>;
     /// Data required to deploy the application.
     type DeployData;
     /// Stores/uploads the application to the chain.

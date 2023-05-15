@@ -28,6 +28,8 @@ pub enum DaemonError {
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
     Bech32DecodeExpanded(String, usize, String, usize),
+    #[error("Mnemonic - Wrong length, it should be 24 words")]
+    WrongLength,
     #[error("Mnemonic - Bad Phrase")]
     Phrasing,
     #[error("Mnemonic - Missing Phrase")]

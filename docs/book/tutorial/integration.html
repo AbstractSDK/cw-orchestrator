@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Advanced - cw-orchestrator documentation</title>
+        <title>Product Integrations - cw-orchestrator documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick_start.html"><strong aria-hidden="true">2.</strong> Quick-start</a></li><li class="chapter-item expanded "><a href="../tutorial/index.html"><strong aria-hidden="true">3.</strong> Tutorial</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tutorial/interfaces.html"><strong aria-hidden="true">3.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="../tutorial/env-variable.html"><strong aria-hidden="true">3.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="../tutorial/scripting.html"><strong aria-hidden="true">3.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="../tutorial/integration-tests.html"><strong aria-hidden="true">3.4.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="../tutorial/integration.html"><strong aria-hidden="true">3.5.</strong> Product Integrations</a></li></ol></li><li class="chapter-item expanded "><a href="../advanced/index.html" class="active"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../advanced/ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="../contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="../references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick_start.html"><strong aria-hidden="true">2.</strong> Quick-start</a></li><li class="chapter-item expanded "><a href="../tutorial/index.html"><strong aria-hidden="true">3.</strong> Tutorial</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tutorial/interfaces.html"><strong aria-hidden="true">3.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="../tutorial/env-variable.html"><strong aria-hidden="true">3.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="../tutorial/scripting.html"><strong aria-hidden="true">3.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="../tutorial/integration-tests.html"><strong aria-hidden="true">3.4.</strong> Integration Tests</a></li><li class="chapter-item expanded "><a href="../tutorial/integration.html" class="active"><strong aria-hidden="true">3.5.</strong> Product Integrations</a></li></ol></li><li class="chapter-item expanded "><a href="../advanced/index.html"><strong aria-hidden="true">4.</strong> Advanced</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../advanced/ci-cd.html"><strong aria-hidden="true">4.1.</strong> CI/CD</a></li></ol></li><li class="chapter-item expanded "><a href="../contributing.html"><strong aria-hidden="true">5.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="../references.html"><strong aria-hidden="true">6.</strong> References</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -141,25 +141,120 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="advanced"><a class="header" href="#advanced">Advanced</a></h1>
-<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
-<ul>
-<li><strong><a href="ci-cd.html">CI/CD</a></strong>
-<ul>
-<li>Deploying your contracts in using continuous integration and deployment tools.</li>
-</ul>
-</li>
-</ul>
+                        <h1 id="integration"><a class="header" href="#integration">Integration</a></h1>
+<p>Now that you have your contract interfaces you can export a comprehensive deployment of your application that can easily be used by others.</p>
+<p>The idea is simple. If you can provide an easy way for others to deploy your contracts/application to their environments, then you're making it extremely easy for them to use and build on your application.</p>
+<p>As an example we will create a deployment for the <a href="https://abstract.money/">Abstract smart-contract framework</a>.</p>
+<h2 id="the-deployment"><a class="header" href="#the-deployment">The deployment</a></h2>
+<p>The deployment can be represented by a struct containing all the contracts that are uploaded and instantiated when the protocol is deployed.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Our Abstract deployment
+pub struct Abstract&lt;Chain: CwEnv&gt; {
+    pub ans_host: AnsHost&lt;Chain&gt;,
+    pub version_control: VersionControl&lt;Chain&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<h3 id="implementing-deploy"><a class="header" href="#implementing-deploy">Implementing <code>Deploy</code></a></h3>
+<p>Now we can implement the <code>cw_orch::Deploy</code> trait for the <code>Abstract</code> struct.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;Chain: CwEnv&gt; cw_orch::Deploy&lt;Chain&gt; for Abstract&lt;Chain&gt; {
+    // We don't have a custom error type
+    type Error = CwOrcError;
+    type DeployData = semver::Version;
+
+    fn store_on(chain: Chain) -&gt; Result&lt;Self, Self::Error&gt; {
+        // &quot;abstract&quot; is a reserved keyword in rust!
+        let mut abstrct = Self::new(chain);
+
+        // Only include mock when `integration` flag is set
+        if cfg!(feature = &quot;integration&quot;) {
+            abstrct.ans_host
+                .as_instance_mut()
+                .set_mock(Box::new(ContractWrapper::new_with_empty(
+                    ::ans_host::contract::execute,
+                    ::ans_host::contract::instantiate,
+                    ::ans_host::contract::query,
+                )));
+
+            abstrct.version_control.as_instance_mut().set_mock(Box::new(
+                cw_multi_test::ContractWrapper::new_with_empty(
+                    ::version_control::contract::execute,
+                    ::version_control::contract::instantiate,
+                    ::version_control::contract::query,
+                ),
+            ));
+        }
+
+        // Upload the contracts to the chain
+        abstrct.ans_host.upload()?;
+        abstrct.version_control.upload()?;
+
+        Ok(abstrct)
+    }
+
+    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, CwOrcError&gt; {        
+        // ########### Upload ##############
+        let abstrct = Self::store_on(chain)?;
+
+        // ########### Instantiate ##############
+
+        abstrct.ans_host.instantiate(
+            &amp;abstract_os::ans_host::InstantiateMsg {},
+            Some(sender),
+            None,
+        )?;
+
+        abstrct.version_control.instantiate(
+            &amp;abstract_os::version_control::InstantiateMsg {},
+            Some(sender),
+            None,
+        )?;
+
+        // ... 
+
+        Ok(abstrct)
+    }
+
+    fn load_from(chain: Chain) -&gt; Result&lt;Self, Self::Error&gt; {
+        let abstrct = Self::new(chain);
+        Ok(abstrct)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Now <code>Abstract</code> is an application that can be deployed to a mock and real environment with <strong>one</strong> line of code.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn setup_test(mock: Mock) -&gt; Result&lt;(), CwOrcError&gt; {
+    let version = &quot;1.0.0&quot;.parse().unwrap();
+    // Deploy abstract
+    let abstract_ = Abstract::deploy_on(mock.clone(), version)?;
+}
+<span class="boring">}</span></code></pre></pre>
+<p>And then when setting up your own deployment you can load these applications to access their contracts (for accessing configuration, addresses, ...)</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;Chain: CwEnv&gt; cw_orch::Deploy&lt;Chain&gt; for MyApplication&lt;Chain&gt; {
+    /// ...
+    fn deploy_on(chain: Chain, _data: Empty) -&gt; Result&lt;Self, CwOrcError&gt; {
+
+        let abstract_: Abstract = Abstract::load_from(chain)?;
+
+        /// ... do stuff with Abstract
+    }
+}
+<span class="boring">}</span></code></pre></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../tutorial/integration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../tutorial/integration-tests.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../advanced/ci-cd.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../advanced/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -169,11 +264,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../tutorial/integration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../tutorial/integration-tests.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../advanced/ci-cd.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../advanced/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
