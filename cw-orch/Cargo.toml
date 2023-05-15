@@ -77,3 +77,4 @@ cosmwasm-schema = "1.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
+mock-contract = { path = "../contracts/mock_contract", features=["cw-orch"] }

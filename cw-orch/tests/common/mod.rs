@@ -1,8 +1,6 @@
 pub mod channel;
 pub mod contract;
 pub mod daemon;
-pub mod mock_contract;
-
 
 use std::{env, fs, path::Path, thread::sleep, time::Duration};
 

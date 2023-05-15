@@ -7,8 +7,7 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::Response;
 use cosmwasm_std::StdResult;
 use cosmwasm_std::DepsMut;
-use cosmwasm_std::Env;
-use cw_orch::interface_entry_point;
+use cosmwasm_std::{Env, entry_point};
 
 #[cw_serde]
 pub struct InstantiateMsg{
@@ -30,11 +29,12 @@ pub enum QueryMsg{
 }
 
 #[cw_serde]
-pub struct MigrateMsg{
+pub struct MigrateMsg{	
 	pub t: String
 }
 
-#[interface_entry_point]
+#[cfg_attr(feature="export", entry_point)]
+#[cfg_attr(feature="cw-orch", cw_orch::interface_entry_point)]
 pub fn instantiate(
     _deps: DepsMut,
     _env: Env,
@@ -45,7 +45,8 @@ pub fn instantiate(
 }
 
 
-#[interface_entry_point]
+#[entry_point]
+#[cfg_attr(feature="cw-orch", cw_orch::interface_entry_point)]
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
@@ -58,7 +59,8 @@ pub fn execute(
 	}
 }
 
-#[interface_entry_point]
+#[entry_point]
+#[cfg_attr(feature="cw-orch", cw_orch::interface_entry_point)]
 pub fn query(
     _deps: Deps,
     _env: Env,
@@ -72,7 +74,8 @@ pub fn query(
 
 }
 
-#[interface_entry_point]
+#[entry_point]
+#[cfg_attr(feature="cw-orch", cw_orch::interface_entry_point)]
 pub fn migrate(
     _deps: DepsMut,
     _env: Env,
