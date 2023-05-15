@@ -1,6 +1,6 @@
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::DaemonBuilder;
+use crate::prelude::DaemonAsyncBuilder;
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -73,7 +73,7 @@ impl SyncDaemonBuilder {
             .clone()
             .ok_or(DaemonError::BuilderMissing("runtime handle".into()))?;
         // build the underlying daemon
-        let daemon = rt_handle.block_on(DaemonBuilder::from(self.clone()).build())?;
+        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
 
         Ok(Daemon { rt_handle, daemon })
     }

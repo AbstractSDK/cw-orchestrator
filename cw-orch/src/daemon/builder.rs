@@ -9,18 +9,18 @@ use super::{error::DaemonError, sender::Sender, state::DaemonState};
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Default)]
-/// Create [`DaemonAsync`] through [`DaemonBuilder`]
+/// Create [`DaemonAsync`] through [`DaemonAsyncBuilder`]
 /// ## Example
 /// ```no_run
-///     use cw_orch::prelude::{DaemonBuilder, networks};
+///     use cw_orch::prelude::{DaemonAsyncBuilder, networks};
 ///
-///     let daemon = DaemonBuilder::default()
+///     let daemon = DaemonAsyncBuilder::default()
 ///         .chain(networks::LOCAL_JUNO)
 ///         .deployment_id("v0.1.0")
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct DaemonBuilder {
+pub struct DaemonAsyncBuilder {
     // # Required
     pub(crate) chain: Option<ChainData>,
     // # Optional
@@ -29,7 +29,7 @@ pub struct DaemonBuilder {
     pub(crate) mnemonic: Option<String>,
 }
 
-impl DaemonBuilder {
+impl DaemonAsyncBuilder {
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainData>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -74,9 +74,9 @@ impl DaemonBuilder {
     }
 }
 
-impl From<SyncDaemonBuilder> for DaemonBuilder {
+impl From<SyncDaemonBuilder> for DaemonAsyncBuilder {
     fn from(value: SyncDaemonBuilder) -> Self {
-        DaemonBuilder {
+        DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,

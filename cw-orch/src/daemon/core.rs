@@ -1,5 +1,5 @@
 use super::{
-    builder::DaemonBuilder,
+    builder::DaemonAsyncBuilder,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
@@ -31,7 +31,7 @@ use tonic::transport::Channel;
 #[derive(Clone)]
 /**
     Represents a blockchain node.
-    Is constructed with the [DaemonBuilder].
+    Is constructed with the [DaemonAsyncBuilder].
 
     ## Usage
 
@@ -63,8 +63,8 @@ pub struct DaemonAsync {
 
 impl DaemonAsync {
     /// Get the daemon builder
-    pub fn builder() -> DaemonBuilder {
-        DaemonBuilder::default()
+    pub fn builder() -> DaemonAsyncBuilder {
+        DaemonAsyncBuilder::default()
     }
 
     /// Perform a query with a given query client
