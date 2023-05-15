@@ -6,7 +6,6 @@ use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::CwOrcExecute;
 use cw_orch::prelude::CwOrcMigrate;
 use cw_orch::prelude::CwOrcQuery;
-use std::sync::Arc;
 use tokio::runtime::Runtime;
 
 use cw_orch::prelude::CwOrcUpload;
@@ -69,7 +68,9 @@ fn test_query() {
     assert_eq!(response, "first query passed");
 
     contract
-        .query::<String>(&QueryMsg::SecondQuery {})
+        .query::<String>(&QueryMsg::SecondQuery {
+            t: "".to_string()
+        })
         .unwrap_err();
 }
 
@@ -107,7 +108,7 @@ fn test_migrate() {
 fn daemon_test() {
     use cw_orch::prelude::networks;
 
-    let runtime = Arc::new(Runtime::new().unwrap());
+    let runtime = tokio::runtime::Runtime::new().unwrap();
 
     let daemon = Daemon::builder()
         .chain(networks::LOCAL_JUNO)
@@ -142,7 +143,9 @@ fn daemon_test() {
     assert_eq!(response, "first query passed");
 
     contract
-        .query::<String>(&QueryMsg::SecondQuery {})
+        .query::<String>(&QueryMsg::SecondQuery {
+            t: "".to_string()
+    })
         .unwrap_err();
 
     contract

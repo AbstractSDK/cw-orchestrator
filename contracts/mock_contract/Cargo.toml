@@ -1,8 +1,9 @@
 [package]
 name = "mock-contract"
 version = "0.11.0-alpha.5"
-description = "Mock constract for interface_entry_point macro testing"
+description = "Mock constract for cw-orch macro testing"
 keywords = ["cosmwasm", "blockchain"]
+edition = { workspace = true }
 
 exclude = [".env"]
 
@@ -26,15 +27,3 @@ cosmwasm-schema = "1.2"
 
 cw-orch = {path = "../../cw-orch", features=["daemon"], optional=true}
 anyhow.workspace = true
-
-[profile.release]
-rpath = false
-lto = true
-overflow-checks = true
-opt-level = 3
-debug = false
-debug-assertions = false
-codegen-units = 1
-panic = 'abort'
-incremental = false
-

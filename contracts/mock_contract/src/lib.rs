@@ -15,17 +15,25 @@ pub struct InstantiateMsg{
 }
 
 #[cw_serde]
+#[cfg_attr(feature="cw-orch", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg{
+
 	FirstMessage{},
+	#[cfg_attr(feature="cw-orch", payable)]
 	SecondMessage{
 		t: String
 	}
 }
 
 #[cw_serde]
+#[cfg_attr(feature="cw-orch", derive(cw_orch::QueryFns))]
 pub enum QueryMsg{
+	#[cfg_attr(feature="cw-orch", returns(String))]
 	FirstQuery{},
-	SecondQuery{}
+	#[cfg_attr(feature="cw-orch", returns(String))]
+	SecondQuery{
+		t: String
+	}
 }
 
 #[cw_serde]
@@ -69,7 +77,7 @@ pub fn query(
 
 	match msg{
 		QueryMsg::FirstQuery {  } => to_binary("first query passed"),
-		QueryMsg::SecondQuery {  } => Err(StdError::generic_err("Query not available"))
+		QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available"))
 	}
 
 }
