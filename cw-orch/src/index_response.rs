@@ -58,7 +58,7 @@ mod index_response {
     fn test_events(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
         asserting!("events length is 1")
             .that(&idxres.events().len())
-            .is_equal_to(&2);
+            .is_equal_to(2);
 
         Ok(())
     }
@@ -72,7 +72,7 @@ mod index_response {
     fn test_uploaded_code_id(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
         asserting!("uploaded code_id is 1")
             .that(&idxres.uploaded_code_id()?)
-            .is_equal_to(&1u64);
+            .is_equal_to(1u64);
 
         Ok(())
     }
