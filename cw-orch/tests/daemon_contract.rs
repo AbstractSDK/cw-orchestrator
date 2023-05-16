@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     #[serial_test::serial]
-    fn cw_orch_x() {
+    fn cw_orch_interface_traits() {
         let runtime = Runtime::new().unwrap();
 
         let (sender, contract) = common::contract::start(&runtime);
