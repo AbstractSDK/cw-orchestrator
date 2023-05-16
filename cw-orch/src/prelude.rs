@@ -48,7 +48,7 @@ pub use crate::daemon::{
     // expose the sync variants
     sync::{builder::DaemonBuilder, core::Daemon},
     // sync helpers
-    traits::{MigrateHelpers, UploadHelpers},
+    traits::{ConditionalMigrate, ConditionalUpload},
 };
 
 /// Re-export trait and data required to fetch daemon data from chain-registry
