@@ -27,12 +27,12 @@ mod wasm_path {
             Ok(Self(path))
         }
 
-        /// Get the path to the wasm file
+        /// Get the path to the WASM file
         pub fn path(&self) -> &Path {
             self.0.as_path()
         }
 
-        /// Calculate the checksum of the wasm file to compare against previous uploads
+        /// Calculate the checksum of the WASM file.
         pub fn checksum(&self, _id: &str) -> Result<String, CwOrchError> {
             let checksum = sha256::try_digest(self.path())?;
             Ok(checksum)
@@ -46,11 +46,11 @@ mod artifacts_dir {
     use crate::error::CwOrchError;
     use crate::paths::wasm_path::WasmPath;
 
-    /// Points to a directory containing wasm files
+    /// Points to a directory containing WASM files
     pub struct ArtifactsDir(PathBuf);
 
     impl ArtifactsDir {
-        /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`
+        /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
         pub fn env() -> Self {
             let dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR env variable not set");
             Self::new(dir)
@@ -71,7 +71,7 @@ mod artifacts_dir {
             &self.0
         }
 
-        /// Find a wasm file in the artifacts directory with the given name
+        /// Find a WASM file in the artifacts directory that contains the given name.
         pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwOrchError> {
             let path_str = fs::read_dir(self.path())?
                 .find_map(|entry| {

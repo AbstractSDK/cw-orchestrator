@@ -16,6 +16,7 @@ pub use crate::interface_traits::{
     CwOrcUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
+
 pub use crate::state::StateInterface;
 
 // Response trait

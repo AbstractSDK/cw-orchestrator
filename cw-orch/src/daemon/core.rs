@@ -31,27 +31,26 @@ use tonic::transport::Channel;
 #[derive(Clone)]
 /**
     Represents a blockchain node.
-    Is constructed with the [DaemonAsyncBuilder].
+    It's constructed using [`DaemonAsyncBuilder`].
 
     ## Usage
-
     ```rust,no_run
     # tokio_test::block_on(async {
-    use cw_orch::prelude::DaemonAsync;
-    use cw_orch::daemon::networks::JUNO_1;
+    use cw_orch::prelude::{DaemonAsync, networks};
+
     let daemon: DaemonAsync = DaemonAsync::builder()
-        .chain(JUNO_1)
+        .chain(networks::JUNO_1)
         .build()
         .await.unwrap();
     # })
     ```
     ## Environment Execution
 
-    The DaemonAsync implements [`TxHandler`] which allows you to perform transactions on the chain.
+    The DaemonAsync implements [`TxHandler`](crate::prelude::TxHandler) which allows you to perform transactions on the chain.
 
     ## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query<Querier>`] method with a specific querier.
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
     See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct DaemonAsync {
@@ -65,13 +64,13 @@ impl DaemonAsync {
         DaemonAsyncBuilder::default()
     }
 
-    /// Perform a query with a given query client
+    /// Perform a query with a given query client.
     /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.sender.channel())
     }
 
-    /// Get the channel configured for this DaemonAsync
+    /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
     }
@@ -85,7 +84,7 @@ impl ChainState for DaemonAsync {
     }
 }
 
-// Execute on the real chain, returns tx response
+// Execute on the real chain, returns tx response.
 impl DaemonAsync {
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
