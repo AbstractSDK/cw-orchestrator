@@ -287,6 +287,8 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     let wasm_name = get_wasm_name();
     let name = get_crate_to_struct();
 
+    let contract_trait_ident = format_ident!("{}ContractImpl", name);
+
     let struct_def = quote!(
             #[derive(
                 ::std::clone::Clone,
@@ -357,8 +359,10 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             }
         }
 
+        pub struct #contract_trait_ident{}
+
         // We implement the Contract trait directly for our structure
-        impl ::cw_orch::prelude::MockContract<::cosmwasm_std::Empty, ::cosmwasm_std::Empty> for #name<::cw_orch::prelude::Mock>{
+        impl ::cw_orch::prelude::MockContract<::cosmwasm_std::Empty, ::cosmwasm_std::Empty> for #contract_trait_ident{
             fn execute(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
                 #name::<::cw_orch::prelude::Mock>::get_execute()(deps, env, info, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
@@ -397,24 +401,10 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
         }
 
         // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
-        impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::Uploadable for #name<Chain>{
-            fn wrapper(&self) -> Box<dyn ::cw_orch::prelude::ContractWrapper>{
+        impl ::cw_orch::prelude::Uploadable for #name<::cw_orch::prelude::Mock>{
+            fn wrapper(&self) -> Box<dyn ::cw_orch::prelude::MockContract<::cosmwasm_std::Empty, ::cosmwasm_std::Empty>>{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
-                Box::new(self.clone())
-            }
-
-            fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
-                // For Daemon contract, we need to return a path for the artifacts to be uploaded
-                // Remember that this is a helper for easy definition of all the traits needed.
-                // We just need to get the local artifacts folder at the root of the workspace
-                // 1. We get the path to the local artifacts dir
-                // We get the workspace dir
-                let mut workspace_dir = find_workspace_dir();
-
-                // We build the artifacts from the artifacts folder (by default) of the package
-                workspace_dir.push("artifacts");
-                let artifacts_dir = ::cw_orch::prelude::ArtifactsDir::new(workspace_dir);
-                artifacts_dir.find_wasm_path(#wasm_name).unwrap()
+                Box::new(#contract_trait_ident{})
             }
         }
     );
@@ -423,19 +413,38 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
 
     #[cfg(feature = "propagate_daemon")]
     let daemon_uploadable: TokenStream = quote!(
-            impl ::cw_orch::prelude::Uploadable<::cw_orch::prelude::Daemon> for #name<::cw_orch::prelude::Daemon>{
+            impl ::cw_orch::prelude::Uploadable for #name<::cw_orch::prelude::Daemon>{
 
+                fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
+                    // For Daemon contract, we need to return a path for the artifacts to be uploaded
+                    // Remember that this is a helper for easy definition of all the traits needed.
+                    // We just need to get the local artifacts folder at the root of the workspace
+                    // 1. We get the path to the local artifacts dir
+                    // We get the workspace dir
+                    let mut workspace_dir = find_workspace_dir();
+
+                    // We build the artifacts from the artifacts folder (by default) of the package
+                    workspace_dir.push("artifacts");
+                    let artifacts_dir = ::cw_orch::prelude::ArtifactsDir::new(workspace_dir);
+                    artifacts_dir.find_wasm_path(#wasm_name).unwrap()
+                }
         }
     )
     .into();
 
     let new_func_name = format_ident!("get_{}", func_ident);
 
-    let pascal_function_name = func_ident.to_string().to_case(Case::Pascal);
-    let trait_name = format_ident!("{}ableContract", pascal_function_name);
-    let message_name = format_ident!("{}Msg", pascal_function_name);
-
     let func_name: String = func_ident.to_string();
+    let pascal_function_name = func_ident.to_string().to_case(Case::Pascal);
+    let trait_name = match func_name.as_str() {
+        "instantiate" => format_ident!("InstantiableContract"),
+        "execute" => format_ident!("ExecutableContract"),
+        "query" => format_ident!("QueryableContract"),
+        "migrate" => format_ident!("MigratableContract"),
+        _ => format_ident!("{}ableContract", pascal_function_name),
+    };
+
+    let message_name = format_ident!("{}Msg", pascal_function_name);
 
     let message_part = match func_name.as_str() {
         "instantiate" | "execute" | "query" | "migrate" => {
