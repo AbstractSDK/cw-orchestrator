@@ -14,6 +14,7 @@ mod tests {
     use tokio::runtime::Runtime;
 
     #[test]
+    #[serial_test::serial]
     fn helper_traits() {
         let runtime = Arc::new(Runtime::new().unwrap());
 
@@ -71,8 +72,9 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn cw_orch_x() {
-        let runtime = Arc::new(Runtime::new().unwrap());
+        let runtime = Runtime::new().unwrap();
 
         let (sender, contract) = common::contract::start(&runtime);
 
