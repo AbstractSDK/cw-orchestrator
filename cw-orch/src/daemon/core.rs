@@ -168,7 +168,10 @@ impl DaemonAsync {
         let mut last_height = self.query_client::<Node>().block_height().await?;
         let end_height = last_height + amount;
 
-        let average_block_speed = self.query_client::<Node>().average_block_speed(Some(0.9)).await?;
+        let average_block_speed = self
+            .query_client::<Node>()
+            .average_block_speed(Some(0.9))
+            .await?;
 
         let wait_time = average_block_speed * amount;
 
@@ -178,8 +181,7 @@ impl DaemonAsync {
         while last_height < end_height {
             // wait
 
-                tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
-
+            tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
             last_height = self.query_client::<Node>().block_height().await?;
@@ -193,7 +195,7 @@ impl DaemonAsync {
         Ok(())
     }
 
-        pub async fn next_block(&self) -> Result<(), DaemonError> {
+    pub async fn next_block(&self) -> Result<(), DaemonError> {
         self.wait_blocks(1).await
     }
 
