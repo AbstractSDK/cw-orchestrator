@@ -2,12 +2,13 @@ mod common;
 
 #[cfg(feature = "node-tests")]
 mod queriers {
-    use crate::common;
-    use cw_orch::{daemon::channel::GrpcChannel, prelude::networks};
+
+    use cw_orch::{daemon::channel::GrpcChannel, environment::TxHandler, prelude::networks};
     use ibc_chain_registry::chain::Grpc;
     use ibc_relayer_types::core::ics24_host::identifier::ChainId;
+    use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
-    use std::{str::FromStr, sync::Arc};
+    use std::str::FromStr;
 
     use cw_orch::{
         daemon::{
@@ -48,7 +49,7 @@ mod queriers {
     */
     #[test]
     fn ibc() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let ibc = Ibc::new(channel);
@@ -62,7 +63,7 @@ mod queriers {
     */
     #[test]
     fn staking() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let staking = Staking::new(channel);
@@ -82,7 +83,7 @@ mod queriers {
     */
     #[test]
     fn gov() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let gov = Gov::new(channel);
@@ -96,7 +97,7 @@ mod queriers {
     */
     #[test]
     fn bank() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let bank = Bank::new(channel);
@@ -136,7 +137,7 @@ mod queriers {
     */
     #[test]
     fn cosmwasm() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let cw = CosmWasm::new(channel);
@@ -150,7 +151,7 @@ mod queriers {
     */
     #[test]
     fn node() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let node = Node::new(channel);
@@ -167,7 +168,7 @@ mod queriers {
 
     #[test]
     fn simulate_tx() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
 
         let channel = rt.block_on(build_channel());
 
@@ -210,17 +211,25 @@ mod queriers {
 
     #[test]
     fn contract_info() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
         let cosm_wasm = CosmWasm::new(channel);
 
-        let (sender, contract) = common::contract::start(&rt);
+        use cw_orch::prelude::networks;
 
-        let _ = contract.upload();
+        let runtime = tokio::runtime::Runtime::new().unwrap();
 
-        let init_msg = common::contract::get_init_msg(&sender);
+        let daemon = Daemon::builder()
+            .chain(networks::LOCAL_JUNO)
+            .handle(runtime.handle())
+            .build()
+            .unwrap();
 
-        let _ = contract.instantiate(&init_msg, Some(&sender), None);
+        let sender = daemon.sender();
+
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
+
+        let _ = contract.instantiate(&InstantiateMsg {}, Some(&sender), None);
 
         let contract_address = contract.address().unwrap();
 
