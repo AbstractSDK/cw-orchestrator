@@ -10,7 +10,7 @@ use cw_orch::prelude::WasmPath;
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
-use cw_orch::daemon::Daemon;
+use cw_orch::prelude::Daemon;
 use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::CwOrcExecute;
 use cw_orch::prelude::CwOrcMigrate;
@@ -158,7 +158,7 @@ fn daemon_test() {
     contract
         .instantiate(
             &InstantiateMsg {},
-            Some(&daemon.sender.address().unwrap()),
+            Some(&daemon.sender()),
             None,
         )
         .unwrap();
