@@ -139,7 +139,6 @@ fn test_migrate() {
     assert_eq!(response.events.len(), 1);
 }
 
-
 #[test]
 #[cfg(feature = "node-tests")]
 fn daemon_test() {

@@ -102,8 +102,8 @@ fn test_migrate() {
 #[test]
 #[cfg(feature = "node-tests")]
 fn daemon_test() {
-    use cw_orch::prelude::networks;
     use cw_orch::daemon::Daemon;
+    use cw_orch::prelude::networks;
 
     let runtime = tokio::runtime::Runtime::new().unwrap();
 

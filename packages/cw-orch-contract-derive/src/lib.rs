@@ -436,16 +436,15 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
 
     let func_name: String = func_ident.to_string();
     let pascal_function_name = func_ident.to_string().to_case(Case::Pascal);
-    let trait_name = match func_name.as_str(){
+    let trait_name = match func_name.as_str() {
         "instantiate" => format_ident!("InstantiableContract"),
         "execute" => format_ident!("ExecutableContract"),
         "query" => format_ident!("QueryableContract"),
         "migrate" => format_ident!("MigratableContract"),
-        _ =>   format_ident!("{}ableContract", pascal_function_name),
+        _ => format_ident!("{}ableContract", pascal_function_name),
     };
 
     let message_name = format_ident!("{}Msg", pascal_function_name);
-
 
     let message_part = match func_name.as_str() {
         "instantiate" | "execute" | "query" | "migrate" => {
