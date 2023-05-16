@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     #[serial_test::serial]
-    fn cw_orch_x() {
+    fn cw_orch_interface_traits() {
         use cw_orch::prelude::networks;
 
         let runtime = tokio::runtime::Runtime::new().unwrap();

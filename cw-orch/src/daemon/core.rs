@@ -168,8 +168,20 @@ impl DaemonAsync {
         let mut last_height = self.query_client::<Node>().block_height().await?;
         let end_height = last_height + amount;
 
+        let average_block_speed = self
+            .query_client::<Node>()
+            .average_block_speed(Some(0.9))
+            .await?;
+
+        let wait_time = average_block_speed * amount;
+
+        // now wait for that amount of time
+        tokio::time::sleep(Duration::from_secs(wait_time)).await;
+        // now check every block until we hit the target
         while last_height < end_height {
-            tokio::time::sleep(Duration::from_secs(4)).await;
+            // wait
+
+            tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
             last_height = self.query_client::<Node>().block_height().await?;
@@ -184,16 +196,7 @@ impl DaemonAsync {
     }
 
     pub async fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self.query_client::<Node>().block_height().await?;
-        let end_height = last_height + 1;
-
-        while last_height < end_height {
-            // wait
-            tokio::time::sleep(Duration::from_secs(4)).await;
-            // ping latest block
-            last_height = self.query_client::<Node>().block_height().await?;
-        }
-        Ok(())
+        self.wait_blocks(1).await
     }
 
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
@@ -231,9 +234,8 @@ impl DaemonAsync {
         // wait for the node to return the contract information for this upload
         let wasm = CosmWasm::new(self.channel());
         while wasm.code(code_id).await.is_err() {
-            tokio::time::sleep(Duration::from_secs(6)).await;
+            self.next_block().await?;
         }
-
         Ok(result)
     }
 
