@@ -1,7 +1,3 @@
-pub mod channel;
-pub mod contract;
-pub mod daemon;
-
 use std::{env, fs, path::Path, thread::sleep, time::Duration};
 
 #[cfg(feature = "node-tests")]
@@ -15,6 +11,14 @@ const JUNO_IMAGE: &str = "ghcr.io/cosmoscontracts/juno:v12.0.0";
 // Defaults for env vars
 const CONTAINER_NAME: &str = "juno_node_1";
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
+
+use uid::Id as IdT;
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct DeployId(());
+
+#[allow(unused)]
+pub type Id = IdT<DeployId>;
 
 pub mod state_file {
     use super::{fs, Path};

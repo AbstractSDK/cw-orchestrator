@@ -89,7 +89,7 @@ mod test {
         let fetched_id = mock.get_code_id(CONTRACT_ID).unwrap();
         asserting!(&"code_id is correct for contract_id")
             .that(&fetched_id)
-            .is_equal_to(&code_id);
+            .is_equal_to(code_id);
 
         // assert we get AddrNotInStore error
         let missing_id = &"456";
@@ -110,12 +110,12 @@ mod test {
         let total = mock.get_all_addresses().unwrap().len();
         asserting!(&"total addresses is one")
             .that(&total)
-            .is_equal_to(&1);
+            .is_equal_to(1);
 
         // validate we can get all code_ids
         let total = mock.get_all_code_ids().unwrap().len();
         asserting!(&"total code_ids is one")
             .that(&total)
-            .is_equal_to(&1)
+            .is_equal_to(1)
     }
 }

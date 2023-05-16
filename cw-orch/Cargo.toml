@@ -43,11 +43,12 @@ daemon = [
 
 [dependencies]
 # Default deps
-# cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
-# cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
 
-cw-orch-contract-derive = "0.11.0-alpha.3"
-cw-orch-fns-derive = "0.11.0-alpha.4"
+# cw-orch-contract-derive = "0.11.0-alpha.3"
+# cw-orch-fns-derive = "0.11.0-alpha.4"
+
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
@@ -96,6 +97,9 @@ env_logger = "0.10.0"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cosmwasm-schema = "1.2"
+tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
+mock-contract = { path = "../contracts/mock_contract", features = ["cw-orch"] }
+serial_test = "2.0.0"

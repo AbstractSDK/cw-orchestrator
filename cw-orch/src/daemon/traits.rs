@@ -3,6 +3,8 @@ use crate::environment::TxResponse;
 use crate::error::CwOrchError;
 use crate::prelude::*;
 
+use super::sync::core::Daemon;
+
 /// This trait contains helper methods for the upload of a contract
 pub trait UploadHelpers: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
@@ -23,7 +25,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
         let chain = self.get_chain();
         let on_chain_hash = chain.rt_handle.block_on(
             chain
-                .query::<CosmWasm>()
+                .query_client::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
         )?;
         let local_hash = self.wasm().checksum(&self.id())?;
@@ -37,9 +39,11 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
             return Ok(false);
         };
         let chain = self.get_chain();
-        let info = chain
-            .rt_handle
-            .block_on(chain.query::<CosmWasm>().contract_info(self.address()?))?;
+        let info = chain.rt_handle.block_on(
+            chain
+                .query_client::<CosmWasm>()
+                .contract_info(self.address()?),
+        )?;
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }
