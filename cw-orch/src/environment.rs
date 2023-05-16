@@ -2,7 +2,7 @@
 use crate::{
     error::CwOrchError,
     prelude::{IndexResponse, Uploadable},
-    state::ChainState,
+    state::ChainState, Wallet,
 };
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
@@ -24,6 +24,8 @@ pub trait TxHandler: ChainState + Clone {
 
     // Gets current sender
     fn sender(&self) -> Addr;
+    // Gets current sender wallet
+    fn wallet(&self) -> Option<Wallet>;
     // Skip x amount of blocks
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
     fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error>;

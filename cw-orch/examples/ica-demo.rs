@@ -38,11 +38,14 @@ use cw_orch::{
     networks::{osmosis::OSMO_2, JUNO_1},
     queriers::Bank,
     *,
+    prelude::WasmPath
 };
 
 use simple_ica_controller::msg::{self as controller_msgs};
 use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
+
+use cw_orch::queriers::DaemonQuerier;
 
 use tokio::runtime::Handle;
 
@@ -69,10 +72,9 @@ pub fn script() -> anyhow::Result<()> {
 
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
-    interchain
+    rt.block_on(interchain
         .hermes
-        .create_channel(&rt, "connection-0", "simple-ica-v2", &controller, &host);
-
+        .create_channel("connection-0", "simple-ica-v2", &controller, &host));
     // wait for channel creation to complete
     std::thread::sleep(std::time::Duration::from_secs(30));
 
@@ -159,12 +161,12 @@ fn test_ica(
 
     // send some funds to the remote account
     rt.block_on(
-        juno.sender
+        juno.wallet().unwrap()
             .bank_send(&remote_addr, vec![cosmwasm_std::coin(100u128, "ujuno")]),
     )?;
 
     // assert that the remote account got funds
-    let balance = rt.block_on(juno.query::<Bank>().coin_balance(&remote_addr, "ujuno"))?;
+    let balance = rt.block_on(juno.query_client::<Bank>().balance(&remote_addr, "ujuno"))?;
     assert_that!(&balance.amount).is_equal_to(100u128.to_string());
 
     // burn the juno remotely
@@ -182,14 +184,14 @@ fn test_ica(
     // wait a bit
     std::thread::sleep(std::time::Duration::from_secs(30));
     // check that the balance became 0
-    let balance = rt.block_on(juno.query::<Bank>().coin_balance(&remote_addr, "ujuno"))?;
+    let balance = rt.block_on(juno.query_client::<Bank>().balance(&remote_addr, "ujuno"))?;
     assert_that!(&balance.amount).is_equal_to(0u128.to_string());
     Ok(())
 }
 
 // Contract interface definitions
 
-#[contract(
+#[interface(
     controller_msgs::InstantiateMsg,
     controller_msgs::ExecuteMsg,
     controller_msgs::QueryMsg,
@@ -213,7 +215,7 @@ impl Uploadable for Controller<Daemon> {
     }
 }
 
-#[contract(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
+#[interface(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
 struct Host;
 impl<Chain: CwEnv> Host<Chain> {
     pub fn new(name: &str, chain: Chain) -> Self {
@@ -229,7 +231,7 @@ impl Uploadable for Host<Daemon> {
 }
 
 // just for uploading
-#[contract(Empty, Empty, Empty, Empty)]
+#[interface(Empty, Empty, Empty, Empty)]
 struct Cw1;
 impl<Chain: CwEnv> Cw1<Chain> {
     pub fn new(name: &str, chain: Chain) -> Self {
