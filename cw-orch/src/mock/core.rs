@@ -1,3 +1,4 @@
+use crate::Wallet;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
@@ -177,6 +178,10 @@ where
 
     fn sender(&self) -> Addr {
         self.sender.clone()
+    }
+
+    fn wallet(&self) -> Option<Wallet> {
+        None
     }
 
     fn execute<E: Serialize + Debug>(

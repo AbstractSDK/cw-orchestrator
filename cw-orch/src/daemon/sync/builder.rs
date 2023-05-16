@@ -1,8 +1,8 @@
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::DaemonBuilder;
+use crate::prelude::{Daemon, DaemonBuilder};
 
-use super::{super::error::DaemonError, core::Daemon};
+use super::{super::error::DaemonError};
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 

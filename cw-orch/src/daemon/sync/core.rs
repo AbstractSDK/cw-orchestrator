@@ -1,3 +1,4 @@
+
 use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
 use crate::{
     daemon::{error::DaemonError, state::DaemonState},
@@ -84,6 +85,10 @@ impl TxHandler for Daemon {
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
+    }
+
+    fn wallet(&self) -> Option<Wallet> {
+        Some(self.daemon.sender.clone())
     }
 
     fn execute<E: Serialize>(

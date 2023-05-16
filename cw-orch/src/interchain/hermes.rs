@@ -2,7 +2,6 @@ use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::service::ContainerSummary;
 use bollard::Docker;
 use futures_util::StreamExt;
-use tokio::runtime::Runtime;
 use crate::state::ChainState;
 
 use crate::{ContractInstance, Daemon};
@@ -23,7 +22,7 @@ impl Hermes {
     }
 
     /// Execute a command in the hermes container
-    pub fn exec_command(&self, runtime: &Runtime, command: Vec<&str>) {
+    pub async fn exec_command(&self, command: Vec<&str>) {
         let docker = Docker::connect_with_local_defaults().unwrap();
 
         let create_exec_options = CreateExecOptions {
@@ -33,7 +32,7 @@ impl Hermes {
             ..Default::default()
         };
 
-        runtime.block_on(async {
+        {
             let create_exec_response = docker
                 .create_exec(self.container.id.as_ref().unwrap(), create_exec_options)
                 .await
@@ -54,14 +53,13 @@ impl Hermes {
                     panic!("expected attached exec, got detached");
                 };
             }
-        })
+        }
     }
 
     // hermes create channel --channel-version simple-ica-v2 --a-chain juno-1 --b-chain osmosis-2 --a-port wasm.juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d --b-port wasm.osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 --new-client-connection
     /// Create an IBC channel between two contracts with an existing client.
-    pub fn create_channel(
+    pub async fn create_channel(
         &self,
-        runtime: &Runtime,
         connection: &str,
         channel_version: &str,
         contract_a: &dyn ContractInstance<Daemon>,
@@ -91,14 +89,14 @@ impl Hermes {
         ]
         .to_vec();
 
-        self.exec_command(runtime, command)
+        self.exec_command(command).await
     }
 
     /// Create an IBC channel between two contracts with an existing client.
-    pub fn start(&self, runtime: &Runtime) {
+    pub async fn start(&self) {
         let command = ["hermes", "start", "--full-scan"].to_vec();
 
-        self.exec_command(runtime, command)
+        self.exec_command(command).await
     }
 }
 
