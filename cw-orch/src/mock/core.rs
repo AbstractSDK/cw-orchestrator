@@ -60,7 +60,7 @@ where
             })
     }
 
-    /// Query the balance of a native token (bank) for and address
+    /// Query the (bank) balance of a native token for and address
     /// Returns the amount of the native token
     pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwOrchError> {
         let amount = self
@@ -99,7 +99,7 @@ where
     ExecC: CustomMsg + DeserializeOwned + 'static,
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
-    /// Create a mock environment with a custom mock store.
+    /// Create a mock environment with a custom mock state.
     pub fn new_custom(sender: &Addr, custom_state: S) -> anyhow::Result<Self> {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));

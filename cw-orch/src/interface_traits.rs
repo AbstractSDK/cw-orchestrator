@@ -76,7 +76,7 @@ pub trait MigratableContract {
     type MigrateMsg: Serialize + Debug;
 }
 
-/// Smart Contract execute endpoint
+/// Smart contract execute entry point
 pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chain> {
     /// send a ExecuteMsg to the contract
     fn execute(
@@ -90,7 +90,7 @@ pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chai
 
 impl<T: ExecutableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute<Chain> for T {}
 
-/// Smart Contract instantiate endpoint
+/// Smart contract instantiate entry point
 pub trait CwOrcInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstance<Chain> {
     /// send the InstantiateMsg to the contract
     fn instantiate(
@@ -109,7 +109,7 @@ impl<T: InstantiableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcInsta
 {
 }
 
-/// Smart Contract query endpoint
+/// Smart contract query entry point
 pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> {
     /// send a QueryMsg to the contract
     fn query<G: Serialize + DeserializeOwned + Debug>(
@@ -122,7 +122,7 @@ pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> 
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcQuery<Chain> for T {}
 
-/// Smart Contract migrate endpoint
+/// Smart contract migrate entry point
 pub trait CwOrcMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {
     /// send a MigrateMsg to the contract
     fn migrate(
@@ -140,7 +140,7 @@ impl<T: MigratableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcMigrate
 /// Should return [`WasmPath`](crate::prelude::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
-    /// Return an object that can be used to upload the contract to the environment.
+    /// Return an object that can be used to upload the contract to the configured environment.
     fn wasm(&self) -> WasmPath {
         unimplemented!("no wasm file provided for this contract")
     }
@@ -151,7 +151,7 @@ pub trait Uploadable {
     }
 }
 
-/// Smart Contract upload endpoint
+/// Smart contract uploading helper trait
 pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
     ContractInstance<Chain> + Uploadable + Sized
 {
@@ -164,7 +164,8 @@ pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
 impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrcUpload<Chain> for T {}
 
-/// Call a contract with a different sender
+/// Call a contract with a different sender.
+///
 /// Clones the contract interface to prevent mutation of the original
 pub trait CallAs<Chain: CwEnv>: CwOrcExecute<Chain> + ContractInstance<Chain> + Clone {
     type Sender: Clone;
@@ -173,6 +174,6 @@ pub trait CallAs<Chain: CwEnv>: CwOrcExecute<Chain> + ContractInstance<Chain> + 
     fn set_sender(&mut self, sender: &Self::Sender);
 
     /// Call a contract as a different sender.
-    /// Creates a new copy of the contract with a different sender
+    /// Clones the contract interface with a different sender
     fn call_as(&self, sender: &Self::Sender) -> Self;
 }
