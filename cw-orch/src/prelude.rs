@@ -22,7 +22,7 @@ pub use crate::state::StateInterface;
 pub use crate::index_response::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, TxResponse};
+pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
 pub use crate::mock::core::Mock;
@@ -44,7 +44,6 @@ pub use crate::daemon::{
     core::DaemonAsync,
     networks,
     queriers,
-
     // expose the sync variants
     sync::{builder::DaemonBuilder, core::Daemon},
     // sync helpers
