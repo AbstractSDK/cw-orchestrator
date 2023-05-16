@@ -1,4 +1,4 @@
-use std::{time::Duration, cmp::min};
+use std::{cmp::min, time::Duration};
 
 use crate::daemon::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -96,11 +96,13 @@ impl Node {
             latest_block_height = latest_block.header.height.value();
         }
 
-        // let avg period 
+        // let avg period
         let avg_period = min(latest_block_height - 1, 50);
 
         // get block time for block avg_period blocks ago
-        let block_avg_period_ago = self.block_by_height(latest_block_height - avg_period).await?;
+        let block_avg_period_ago = self
+            .block_by_height(latest_block_height - avg_period)
+            .await?;
         let block_avg_period_ago_time = block_avg_period_ago.header.time;
 
         // calculate average block time

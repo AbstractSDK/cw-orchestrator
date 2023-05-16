@@ -188,21 +188,20 @@ impl TxHandler for Daemon {
             .block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + amount;
 
-        let average_block_speed = self.rt_handle.block_on(
-                self.query::<Node>().average_block_speed(Some(0.9))
-        )?;
+        let average_block_speed = self
+            .rt_handle
+            .block_on(self.query::<Node>().average_block_speed(Some(0.9)))?;
 
         let wait_time = average_block_speed * amount;
 
         // now wait for that amount of time
-        self.rt_handle.block_on(tokio::time::sleep(Duration::from_secs(wait_time)));
+        self.rt_handle
+            .block_on(tokio::time::sleep(Duration::from_secs(wait_time)));
         // now check every block until we hit the target
         while last_height < end_height {
             // wait
             self.rt_handle.block_on(async {
-                tokio::time::sleep(Duration::from_secs(
-                    average_block_speed
-                )).await
+                tokio::time::sleep(Duration::from_secs(average_block_speed)).await
             });
 
             // ping latest block
