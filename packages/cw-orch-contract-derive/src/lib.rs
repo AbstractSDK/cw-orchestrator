@@ -409,7 +409,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
         }
     );
 
-    // if daemon is enabled on cw-orc it will implement Uploadable<Daemon>
+    // if `daemon` feature is enabled on cw-orc it will implement Uploadable<Daemon>
 
     #[cfg(feature = "propagate_daemon")]
     let daemon_uploadable: TokenStream = quote!(

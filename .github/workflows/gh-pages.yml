@@ -34,11 +34,15 @@ jobs:
         with:
           rust-version: stable
 
+      - name: Setup | Just
+        id: just
+        uses: extractions/setup-just@v1
+
       - name: Install dependencies 🔧
-        run: make install
+        run: just install-docs
 
       - name: Build 🏗️
-        run: make build
+        run: just build-docs
 
       - name: Upload artifact
         if: ${{ github.event_name != 'pull_request' }}

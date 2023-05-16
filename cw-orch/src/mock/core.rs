@@ -366,7 +366,7 @@ mod test {
 
         asserting("address balance amount is correct")
             .that(&amount)
-            .is_equal_to(&balance.u128());
+            .is_equal_to(balance.u128());
 
         asserting("sender is correct")
             .that(sender)
@@ -448,7 +448,7 @@ mod test {
         let balances = chain.query_all_balances(recipient).unwrap();
         asserting("recipient balances length is 1")
             .that(&balances.len())
-            .is_equal_to(&1);
+            .is_equal_to(1);
     }
 
     #[test]
@@ -466,14 +466,14 @@ mod test {
         mock_state.set_code_id(contract_id, code_id);
         asserting!("that code_id has been set")
             .that(&code_id)
-            .is_equal_to(&mock_state.get_code_id(contract_id).unwrap());
+            .is_equal_to(mock_state.get_code_id(contract_id).unwrap());
 
         asserting!("that total code_ids is 1")
             .that(&mock_state.get_all_code_ids().unwrap().len())
-            .is_equal_to(&1);
+            .is_equal_to(1);
 
         asserting!("that total addresses is 1")
             .that(&mock_state.get_all_addresses().unwrap().len())
-            .is_equal_to(&1);
+            .is_equal_to(1);
     }
 }

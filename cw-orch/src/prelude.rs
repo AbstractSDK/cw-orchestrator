@@ -40,9 +40,14 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    builder::DaemonBuilder,
-    core::Daemon,
-    networks, queriers,
+    builder::DaemonAsyncBuilder,
+    core::DaemonAsync,
+    networks,
+    queriers,
+
+    // expose the sync variants
+    sync::{builder::DaemonBuilder, core::Daemon},
+    // sync helpers
     traits::{MigrateHelpers, UploadHelpers},
 };
 
