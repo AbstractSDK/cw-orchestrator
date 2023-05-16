@@ -56,7 +56,7 @@ pub fn start(runtime: &Runtime) -> (cosmwasm_std::Addr, Cw20<Daemon>) {
         .build()
         .unwrap();
 
-    let sender = daemon.sender.address().unwrap();
+    let sender = daemon.sender();
 
     let contract = Cw20::new(daemon);
 

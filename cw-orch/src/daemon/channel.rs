@@ -94,25 +94,21 @@ mod tests {
     /*
         This test asserts breaking issues around the GRPC connection
     */
-    use std::sync::Arc;
 
-    use crate::prelude::Daemon;
+    use crate::prelude::DaemonAsync;
     use speculoos::prelude::*;
-    use tokio::runtime::Runtime;
 
-    #[test]
-    fn no_connection() {
-        let runtime = Arc::new(Runtime::new().unwrap());
-
+    #[tokio::test]
+    async fn no_connection() {
         let mut chain = cw_orch::daemon::networks::LOCAL_JUNO;
         let grpcs = &vec!["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
-        let build_res = Daemon::builder()
-            .handle(runtime.handle())
+        let build_res = DaemonAsync::builder()
             .chain(chain)
             .deployment_id("v0.1.0")
-            .build();
+            .build()
+            .await;
 
         asserting!("there is no GRPC connection")
             .that(&build_res.err().unwrap().to_string())
@@ -121,19 +117,17 @@ mod tests {
             ))
     }
 
-    #[test]
-    fn network_grpcs_list_is_empty() {
-        let runtime = Arc::new(Runtime::new().unwrap());
-
+    #[tokio::test]
+    async fn network_grpcs_list_is_empty() {
         let mut chain = cw_orch::daemon::networks::LOCAL_JUNO;
         let grpcs: &Vec<&str> = &vec![];
         chain.grpc_urls = grpcs;
 
-        let build_res = Daemon::builder()
-            .handle(runtime.handle())
+        let build_res = DaemonAsync::builder()
             .chain(chain)
             .deployment_id("v0.1.0")
-            .build();
+            .build()
+            .await;
 
         asserting!("GRPC list is empty")
             .that(&build_res.err().unwrap().to_string())

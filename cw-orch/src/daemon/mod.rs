@@ -5,11 +5,12 @@ pub mod error;
 pub mod networks;
 pub mod queriers;
 mod sender;
-pub use self::core::Daemon;
+pub mod sync;
+pub use self::core::DaemonAsync;
 pub use sender::Wallet;
 pub(crate) mod json_file;
 pub mod state;
-/// Custom traits for Daemon contracts
+/// Custom traits for DaemonAsync contracts
 pub mod traits;
 pub mod tx_resp;
 
