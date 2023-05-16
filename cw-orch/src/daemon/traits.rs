@@ -6,7 +6,7 @@ use crate::prelude::*;
 use super::sync::core::Daemon;
 
 /// Helper methods for conditional uploading of a contract.
-pub trait UploadHelpers: CwOrcUpload<Daemon> {
+pub trait ConditionalUpload: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
@@ -48,10 +48,10 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
     }
 }
 
-impl<T> UploadHelpers for T where T: CwOrcUpload<Daemon> {}
+impl<T> ConditionalUpload for T where T: CwOrcUpload<Daemon> {}
 
 /// Helper methods for conditional migration of a contract.
-pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
+pub trait ConditionalMigrate: CwOrcMigrate<Daemon> + ConditionalUpload {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
@@ -66,4 +66,4 @@ pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     }
 }
 
-impl<T> MigrateHelpers for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}
+impl<T> ConditionalMigrate for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}
