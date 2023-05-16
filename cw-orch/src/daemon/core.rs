@@ -188,10 +188,22 @@ impl TxHandler for Daemon {
             .block_on(self.query::<Node>().block_height())?;
         let end_height = last_height + amount;
 
+        let average_block_speed = self.rt_handle.block_on(
+                self.query::<Node>().average_block_speed(Some(0.9))
+        )?;
+
+        let wait_time = average_block_speed * amount;
+
+        // now wait for that amount of time
+        self.rt_handle.block_on(tokio::time::sleep(Duration::from_secs(wait_time)));
+        // now check every block until we hit the target
         while last_height < end_height {
             // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+            self.rt_handle.block_on(async {
+                tokio::time::sleep(Duration::from_secs(
+                    average_block_speed
+                )).await
+            });
 
             // ping latest block
             last_height = self
@@ -209,22 +221,7 @@ impl TxHandler for Daemon {
     }
 
     fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query::<Node>().block_height())?;
-        let end_height = last_height + 1;
-
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query::<Node>().block_height())?;
-        }
-        Ok(())
+        self.wait_blocks(1)
     }
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
@@ -265,8 +262,7 @@ impl ChainUpload for Daemon {
         // wait for the node to return the contract information for this upload
         let wasm = CosmWasm::new(self.channel());
         while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(6)));
+            self.next_block()?;
         }
 
         Ok(result)
