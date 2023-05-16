@@ -35,13 +35,11 @@ use tonic::transport::Channel;
 #[derive(Clone)]
 /**
     Represents a blockchain node.
-    Is constructed with the [DaemonBuilder].
+    It's constructed using [DaemonBuilder].
 
     ## Usage
-
     ```rust,no_run
-    use cw_orch::prelude::Daemon;
-    use cw_orch::daemon::networks::JUNO_1;
+    use cw_orch::{prelude::Daemon, daemon::networks::JUNO_1};
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();
@@ -67,7 +65,7 @@ pub struct Daemon {
 }
 
 impl Daemon {
-    /// Get the daemon builder
+    /// Start building the Daemon environment
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
     }

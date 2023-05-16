@@ -14,7 +14,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
         }
     }
 
-    /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
+    /// Returns boolean for whether the checksum of the WASM file matches the checksum of the previously uploaded code
     fn latest_is_uploaded(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
@@ -31,7 +31,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
         Ok(local_hash == on_chain_hash)
     }
 
-    /// Returns a bool whether the contract is running the latest uploaded code for it
+    /// Returns boolean for whether the contract is running the latest uploaded code for it
     fn is_running_latest(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);

@@ -24,16 +24,20 @@ pub trait TxHandler: ChainState + Clone {
     /// gets the address of the current wallet used to sign transactions
     fn sender(&self) -> Addr;
 
-    /// wait for an specified amount of blocks
+    /// wait for an amount of blocks
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
 
+    /// wait for an amount of seconds
     fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error>;
 
+    /// wait for next block
     fn next_block(&self) -> Result<(), Self::Error>;
 
+    /// return current block info see [BlockInfo]
     fn block_info(&self) -> Result<BlockInfo, Self::Error>;
 
     // Actions
+    /// send a ExecMsg to the contract
     fn execute<E: Serialize + Debug>(
         &self,
         exec_msg: &E,
@@ -41,6 +45,7 @@ pub trait TxHandler: ChainState + Clone {
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
 
+    /// send a InstantiateMsg to the contract
     fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
@@ -50,12 +55,14 @@ pub trait TxHandler: ChainState + Clone {
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, Self::Error>;
 
+    /// send a QueryMsg to the contract
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, Self::Error>;
 
+    /// send a MigrateMsg to the contract
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,

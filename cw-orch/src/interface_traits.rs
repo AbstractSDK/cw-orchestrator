@@ -78,6 +78,7 @@ pub trait MigratableContract {
 
 /// Smart Contract execute endpoint
 pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chain> {
+    /// send a ExecuteMsg to the contract
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
@@ -91,6 +92,7 @@ impl<T: ExecutableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute
 
 /// Smart Contract instantiate endpoint
 pub trait CwOrcInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstance<Chain> {
+    /// send the InstantiateMsg to the contract
     fn instantiate(
         &self,
         instantiate_msg: &Self::InstantiateMsg,
@@ -109,6 +111,7 @@ impl<T: InstantiableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcInsta
 
 /// Smart Contract query endpoint
 pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> {
+    /// send a QueryMsg to the contract
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Self::QueryMsg,
@@ -121,6 +124,7 @@ impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcQuery<Ch
 
 /// Smart Contract migrate endpoint
 pub trait CwOrcMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {
+    /// send a MigrateMsg to the contract
     fn migrate(
         &self,
         migrate_msg: &Self::MigrateMsg,
@@ -151,6 +155,7 @@ pub trait Uploadable {
 pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
     ContractInstance<Chain> + Uploadable + Sized
 {
+    /// upload the contract to the configured environment
     fn upload(&self) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().upload(self)
     }
@@ -164,7 +169,7 @@ impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrcU
 pub trait CallAs<Chain: CwEnv>: CwOrcExecute<Chain> + ContractInstance<Chain> + Clone {
     type Sender: Clone;
 
-    /// Set the sender for the contract
+    /// Set the sender for interactions with the contract
     fn set_sender(&mut self, sender: &Self::Sender);
 
     /// Call a contract as a different sender.
