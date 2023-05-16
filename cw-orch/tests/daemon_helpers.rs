@@ -12,6 +12,8 @@ mod tests {
 
     use speculoos::prelude::*;
 
+    use crate::common::Id;
+
     #[test]
     #[serial_test::serial]
     fn helper_traits() {
@@ -27,7 +29,10 @@ mod tests {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
+        let contract = mock_contract::MockContract::new(
+            format!("test:mock_contract:{}", Id::new()),
+            daemon.clone(),
+        );
 
         asserting!("address is not present")
             .that(&contract.address())
@@ -53,7 +58,7 @@ mod tests {
             .that(
                 &contract
                     .migrate_if_needed(&MigrateMsg {
-                        t: "migrate".to_string(),
+                        t: "success".to_string(),
                     })
                     .unwrap(),
             )
@@ -73,7 +78,7 @@ mod tests {
             .that(
                 &contract
                     .migrate_if_needed(&MigrateMsg {
-                        t: "migrate".to_string(),
+                        t: "success".to_string(),
                     })
                     .unwrap(),
             )
@@ -99,7 +104,10 @@ mod tests {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
+        let contract = mock_contract::MockContract::new(
+            format!("test:mock_contract:{}", Id::new()),
+            daemon.clone(),
+        );
 
         // upload contract
         let upload_res = contract.upload();
@@ -124,7 +132,7 @@ mod tests {
         // validate migrations are successful
         let migrate_res = contract.migrate(
             &MigrateMsg {
-                t: "migrate".to_string(),
+                t: "success".to_string(),
             },
             code_id.parse::<u64>().unwrap(),
         );

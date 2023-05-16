@@ -1,15 +1,55 @@
-use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, MockContract, QueryMsg};
+mod common;
+
+use cw_orch::contract::Contract;
+use cw_orch::environment::CwEnv;
+use cw_orch::environment::TxHandler;
+use cw_orch::prelude::ContractWrapper;
+use cw_orch::prelude::Uploadable;
+use cw_orch::prelude::WasmPath;
+
+use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
 use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::CwOrcExecute;
 use cw_orch::prelude::CwOrcMigrate;
 use cw_orch::prelude::CwOrcQuery;
-
 use cw_orch::prelude::CwOrcUpload;
-mod common;
-use cosmwasm_std::Addr;
+use cw_orch::prelude::Daemon;
 use cw_orch::prelude::{CwOrcInstantiate, Mock};
+
+use cosmwasm_std::Addr;
+use cw_orch::interface;
+const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
+
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MockContract;
+
+impl<Chain: CwEnv> MockContract<Chain> {
+    pub fn new(id: &str, chain: Chain) -> Self {
+        Self(Contract::new(id, chain))
+    }
+}
+
+impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
+    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
+        // create contract base configuration
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let wasm_path = format!("{}/{}", crate_path, MOCK_CONTRACT_WASM);
+        log::info!("Using wasm path {}", wasm_path);
+        WasmPath::new(wasm_path).unwrap()
+    }
+    fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+        Box::new(
+            ContractWrapper::new_with_empty(
+                mock_contract::execute,
+                mock_contract::instantiate,
+                mock_contract::query,
+            )
+            .with_migrate(mock_contract::migrate),
+        )
+    }
+}
 
 #[test]
 fn test_instantiate() {
@@ -101,10 +141,11 @@ fn test_migrate() {
 
 #[test]
 #[cfg(feature = "node-tests")]
+#[serial_test::serial]
 fn daemon_test() {
-    use cw_orch::environment::TxHandler;
     use cw_orch::prelude::networks;
-    use cw_orch::prelude::Daemon;
+
+    use crate::common::Id;
 
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -114,7 +155,10 @@ fn daemon_test() {
         .build()
         .unwrap();
 
-    let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
+    let contract = mock_contract::MockContract::new(
+        format!("test:mock_contract:{}", Id::new()),
+        daemon.clone(),
+    );
     contract.upload().unwrap();
 
     contract

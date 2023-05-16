@@ -15,9 +15,10 @@ const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foa
 use uid::Id as IdT;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
-struct DeployId(());
+pub struct DeployId(());
 
-type Id = IdT<DeployId>;
+#[allow(unused)]
+pub type Id = IdT<DeployId>;
 
 pub mod state_file {
     use super::{fs, Path};
