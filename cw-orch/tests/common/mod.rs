@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-pub mod channel;
 pub mod contract;
 pub mod daemon;
 
