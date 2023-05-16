@@ -232,6 +232,8 @@ mod queriers {
             daemon.clone(),
         );
 
+        contract.upload().unwrap();
+
         contract
             .instantiate(&InstantiateMsg {}, Some(&sender), None)
             .unwrap();
