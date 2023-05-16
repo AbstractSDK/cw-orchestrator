@@ -46,11 +46,11 @@ use tonic::transport::Channel;
     ```
     ## Environment Execution
 
-    The DaemonAsync implements [`TxHandler`] which allows you to perform transactions on the chain.
+    The DaemonAsync implements [`TxHandler`](crate::prelude::TxHandler) which allows you to perform transactions on the chain.
 
     ## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query<Querier>`] method with a specific querier.
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
     See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct DaemonAsync {
@@ -64,13 +64,13 @@ impl DaemonAsync {
         DaemonAsyncBuilder::default()
     }
 
-    /// Perform a query with a given query client
+    /// Perform a query with a given query client.
     /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.sender.channel())
     }
 
-    /// Get the channel configured for this DaemonAsync
+    /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
     }
@@ -84,7 +84,7 @@ impl ChainState for DaemonAsync {
     }
 }
 
-// Execute on the real chain, returns tx response
+// Execute on the real chain, returns tx response.
 impl DaemonAsync {
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()

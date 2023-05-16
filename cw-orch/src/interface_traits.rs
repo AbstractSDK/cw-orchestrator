@@ -10,75 +10,75 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
-/// This trait helps wrapping a contract instance, used in macros
+/// This trait helps wrapping a contract instance, used in macros.
 pub trait ContractInstance<Chain: CwEnv> {
-    /// Return a reference to the underlying contract instance
+    /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
-    /// Return a mutable reference to the underlying contract instance
+    /// Return a mutable reference to the underlying contract instance.
     fn as_instance_mut(&mut self) -> &mut Contract<Chain>;
 
-    /// Returns the contract id
+    /// Returns the contract id.
     fn id(&self) -> String {
         self.as_instance().id.clone()
     }
 
-    /// Returns contract address for this instance
+    /// Returns the contract address for this instance.
     fn address(&self) -> Result<Addr, CwOrchError> {
         Contract::address(self.as_instance())
     }
 
-    /// Returns contract address as string
+    /// Returns the contract address as a [`String`].
     fn addr_str(&self) -> Result<String, CwOrchError> {
         Contract::address(self.as_instance()).map(|addr| addr.into_string())
     }
 
-    /// Returns contract code_id
+    /// Returns contract code_id.
     fn code_id(&self) -> Result<u64, CwOrchError> {
         Contract::code_id(self.as_instance())
     }
 
-    /// Set working contract address, useful if contract is already initialized
-    /// and its not registered in our configured state file
+    /// Sets the address for the contract. Useful when the contract is already initialized
+    /// and not registered in the configured state file.
     fn set_address(&self, address: &Addr) {
         Contract::set_address(self.as_instance(), address)
     }
 
-    /// Set working contract code_id, useful if the contract has been already uploaded
-    /// and its not registered in our configured state file
+    /// Sets the code_id for the contract. Useful when the contract is already initialized
+    /// and not registered in the configured state file.
     fn set_code_id(&self, code_id: u64) {
         Contract::set_code_id(self.as_instance(), code_id)
     }
 
-    /// Returns the current chain configured to this contract instance
+    /// Returns the chain that this contract is deployed on.
     fn get_chain(&self) -> &Chain {
         Contract::get_chain(self.as_instance())
     }
 }
 
-/// Defines in cw-orchestrator where the contract's instantiate entry point message is.
+/// Trait that indicates that the contract can be instantiated with the associated message.
 pub trait InstantiableContract {
     type InstantiateMsg: Serialize + Debug;
 }
 
-/// Defines in cw-orchestrator where the contract's executable entry point messages are.
+/// Trait that indicates that the contract can be executed with the associated message.
 pub trait ExecutableContract {
     type ExecuteMsg: Serialize + Debug;
 }
 
-/// Defines in cw-orchestrator where the contract's queryable entry point messages are.
+/// Trait that indicates that the contract can be queried with the associated message.
 pub trait QueryableContract {
     type QueryMsg: Serialize + Debug;
 }
 
-/// Defines in cw-orchestrator where the contract's migration entry point message is.
+/// Trait that indicates that the contract can be migrated with the associated message.
 pub trait MigratableContract {
     type MigrateMsg: Serialize + Debug;
 }
 
-/// Smart contract execute entry point
+/// Smart contract execute entry point.
 pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chain> {
-    /// send a ExecuteMsg to the contract
+    /// Send a ExecuteMsg to the contract.
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
@@ -90,9 +90,9 @@ pub trait CwOrcExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chai
 
 impl<T: ExecutableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcExecute<Chain> for T {}
 
-/// Smart contract instantiate entry point
+/// Smart contract instantiate entry point.
 pub trait CwOrcInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstance<Chain> {
-    /// send the InstantiateMsg to the contract
+    /// Instantiates the contract.
     fn instantiate(
         &self,
         instantiate_msg: &Self::InstantiateMsg,
@@ -109,9 +109,9 @@ impl<T: InstantiableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcInsta
 {
 }
 
-/// Smart contract query entry point
+/// Smart contract query entry point.
 pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> {
-    /// send a QueryMsg to the contract
+    /// Query the contract.
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Self::QueryMsg,
@@ -122,9 +122,9 @@ pub trait CwOrcQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> 
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcQuery<Chain> for T {}
 
-/// Smart contract migrate entry point
+/// Smart contract migrate entry point.
 pub trait CwOrcMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {
-    /// send a MigrateMsg to the contract
+    /// Migrate the contract.
     fn migrate(
         &self,
         migrate_msg: &Self::MigrateMsg,
@@ -140,7 +140,7 @@ impl<T: MigratableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrcMigrate
 /// Should return [`WasmPath`](crate::prelude::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
-    /// Return an object that can be used to upload the contract to the configured environment.
+    /// Return an object that can be used to upload the contract to a WASM-supported environment.
     fn wasm(&self) -> WasmPath {
         unimplemented!("no wasm file provided for this contract")
     }
@@ -151,11 +151,11 @@ pub trait Uploadable {
     }
 }
 
-/// Smart contract uploading helper trait
+/// Trait that indicates that the contract can be uploaded.
 pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
     ContractInstance<Chain> + Uploadable + Sized
 {
-    /// upload the contract to the configured environment
+    /// upload the contract to the configured environment.
     fn upload(&self) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().upload(self)
     }
@@ -164,16 +164,16 @@ pub trait CwOrcUpload<Chain: CwEnv + ChainUpload>:
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
 impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrcUpload<Chain> for T {}
 
-/// Call a contract with a different sender.
+/// Enables calling a contract with a different sender.
 ///
-/// Clones the contract interface to prevent mutation of the original
+/// Clones the contract interface to prevent mutation of the original.
 pub trait CallAs<Chain: CwEnv>: CwOrcExecute<Chain> + ContractInstance<Chain> + Clone {
     type Sender: Clone;
 
-    /// Set the sender for interactions with the contract
+    /// Set the sender for interactions with the contract.
     fn set_sender(&mut self, sender: &Self::Sender);
 
     /// Call a contract as a different sender.
-    /// Clones the contract interface with a different sender
+    /// Clones the contract interface with a different sender.
     fn call_as(&self, sender: &Self::Sender) -> Self;
 }
