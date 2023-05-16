@@ -103,8 +103,8 @@ fn test_migrate() {
 #[cfg(feature = "node-tests")]
 fn daemon_test() {
     use cw_orch::environment::TxHandler;
-    use cw_orch::prelude::Daemon;
     use cw_orch::prelude::networks;
+    use cw_orch::prelude::Daemon;
 
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -118,11 +118,7 @@ fn daemon_test() {
     contract.upload().unwrap();
 
     contract
-        .instantiate(
-            &InstantiateMsg {},
-            Some(&daemon.sender()),
-            None,
-        )
+        .instantiate(&InstantiateMsg {}, Some(&daemon.sender()), None)
         .unwrap();
 
     let response = contract

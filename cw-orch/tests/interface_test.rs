@@ -10,12 +10,12 @@ use cw_orch::prelude::WasmPath;
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
-use cw_orch::prelude::Daemon;
 use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::CwOrcExecute;
 use cw_orch::prelude::CwOrcMigrate;
 use cw_orch::prelude::CwOrcQuery;
 use cw_orch::prelude::CwOrcUpload;
+use cw_orch::prelude::Daemon;
 use cw_orch::prelude::{CwOrcInstantiate, Mock};
 
 use cosmwasm_std::Addr;
@@ -156,11 +156,7 @@ fn daemon_test() {
     contract.upload().unwrap();
 
     contract
-        .instantiate(
-            &InstantiateMsg {},
-            Some(&daemon.sender()),
-            None,
-        )
+        .instantiate(&InstantiateMsg {}, Some(&daemon.sender()), None)
         .unwrap();
 
     let response = contract
