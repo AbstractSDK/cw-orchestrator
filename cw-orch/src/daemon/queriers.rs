@@ -1,32 +1,25 @@
 //! # DaemonQuerier
 //!
-//! Daemon queriers are gRPC query clients for the CosmosSDK modules. They can be used to query the different modules (Bank, Ibc, Authz, ...).
+//! DaemonAsync queriers are gRPC query clients for the CosmosSDK modules. They can be used to query the different modules (Bank, Ibc, Authz, ...).
 //!
 //! ## Usage
 //!
 //! You will need to acquire a [gRPC channel](Channel) to a running CosmosSDK node to be able to use the queriers.
-//! Here is an example of how to acquire one using the Daemon builder.
+//! Here is an example of how to acquire one using the DaemonAsync builder.
 //!
 //! ```no_run
-//! // include tokio runtime
-//! use tokio::runtime::Runtime;
-//!
 //! // require the querier you want to use, in this case Node
-//! use cw_orch::prelude::{queriers::Node, Daemon, networks, queriers::DaemonQuerier};
-//!
-//! // prepare a runtime
-//! let runtime = Runtime::new().unwrap();
-//!
+//! use cw_orch::prelude::{queriers::Node, DaemonAsync, networks, queriers::DaemonQuerier};
+//! # tokio_test::block_on(async {
 //! // call the builder and configure it as you need
-//! let daemon = Daemon::builder()
+//! let daemon = DaemonAsync::builder()
 //!     .chain(networks::LOCAL_JUNO)
-//!     .handle(runtime.handle())
 //!     .build()
-//!     .unwrap();
-//!
+//!     .await.unwrap();
 //! // now you can use the Node querier:
 //! let node = Node::new(daemon.channel());
 //! let node_info = node.info();
+//! # })
 //! ```
 
 #[macro_export]
