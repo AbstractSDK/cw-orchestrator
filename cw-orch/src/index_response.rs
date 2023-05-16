@@ -3,17 +3,22 @@ use cw_multi_test::AppResponse;
 
 /// Index data returned by transactions which are applicable to both AppResponse (mock env) and TxResponse (live env)
 pub trait IndexResponse {
+    /// Get all events in the response.
     fn events(&self) -> Vec<Event>;
 
+    /// Search for an event with given attribute key.
     fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String>;
 
+    /// Get the data field of the response.
     fn data(&self) -> Option<Binary>;
 
+    /// Helper to get the contract address of a instantiate response.
     fn instantiated_contract_address(&self) -> StdResult<Addr> {
         self.event_attr_value("instantiate", "_contract_address")
             .map(Addr::unchecked)
     }
 
+    /// Shortcut to get the code id of a contract of an upload response.
     fn uploaded_code_id(&self) -> StdResult<u64> {
         self.event_attr_value("store_code", "code_id")
             .map(|s| s.parse().unwrap())
