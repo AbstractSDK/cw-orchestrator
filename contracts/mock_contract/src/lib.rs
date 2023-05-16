@@ -1,3 +1,4 @@
+use cosmwasm_schema::QueryResponses;
 use cosmwasm_std::to_binary;
 use cosmwasm_std::Deps;
 use cosmwasm_schema::cw_serde;
@@ -27,10 +28,11 @@ pub enum ExecuteMsg{
 
 #[cw_serde]
 #[cfg_attr(feature="cw-orch", derive(cw_orch::QueryFns))]
+#[derive(QueryResponses)]
 pub enum QueryMsg{
-	#[cfg_attr(feature="cw-orch", returns(String))]
+	#[returns(String)]
 	FirstQuery{},
-	#[cfg_attr(feature="cw-orch", returns(String))]
+	#[returns(String)]
 	SecondQuery{
 		t: String
 	}
