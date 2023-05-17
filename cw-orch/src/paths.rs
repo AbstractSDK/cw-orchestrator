@@ -7,7 +7,19 @@ mod wasm_path {
     use std::path::{Path, PathBuf};
 
     /// Direct path to a `.wasm` file
-    /// Stored as `PathBuf` to avoid lifetimes
+    /// Stored as `PathBuf` to avoid lifetimes.
+    /// Can be constructed from [`ArtifactsDir`](super::ArtifactsDir).
+    ///
+    /// # Example
+    /// ```no_run
+    /// use cw_orch::prelude::WasmPath;
+    ///
+    /// // Create a new WasmPath from a path to a WASM file.
+    /// let wasm_path: WasmPath = WasmPath::new("path/to/contract.wasm").unwrap();
+    ///
+    /// // Calculate the checksum of the WASM file.
+    /// let checksum: String = wasm_path.checksum().unwrap();
+    /// ```
     #[derive(Debug, Clone)]
     pub struct WasmPath(PathBuf);
 
@@ -33,7 +45,7 @@ mod wasm_path {
         }
 
         /// Calculate the checksum of the WASM file.
-        pub fn checksum(&self, _id: &str) -> Result<String, CwOrchError> {
+        pub fn checksum(&self) -> Result<String, CwOrchError> {
             let checksum = sha256::try_digest(self.path())?;
             Ok(checksum)
         }
@@ -47,6 +59,19 @@ mod artifacts_dir {
     use crate::paths::wasm_path::WasmPath;
 
     /// Points to a directory containing WASM files
+    ///
+    /// # Example
+    /// ```no_run
+    /// use cw_orch::prelude::{ArtifactsDir, WasmPath};
+    /// // Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
+    /// let artifact_dir = ArtifactsDir::env();
+    ///
+    /// // Or create a new one.
+    /// let artifact_dir = ArtifactsDir::new("path/to/artifacts");
+    ///
+    /// // Get a path to a WASM file that contains the string "my_contract".
+    /// let wasm_path: WasmPath = artifact_dir.find_wasm_path("my_contract").unwrap();
+    /// ```
     pub struct ArtifactsDir(PathBuf);
 
     impl ArtifactsDir {

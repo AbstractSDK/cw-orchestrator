@@ -28,7 +28,7 @@ pub trait ConditionalUpload: CwOrcUpload<Daemon> {
                 .query_client::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
         )?;
-        let local_hash = self.wasm().checksum(&self.id())?;
+        let local_hash = self.wasm().checksum()?;
 
         Ok(local_hash == on_chain_hash)
     }
