@@ -22,8 +22,8 @@ pub struct DaemonState {
     pub deployment_id: String,
     /// gRPC channel
     pub grpc_channel: Channel,
-    /// Underlying chain details
-    pub chain: ChainInfoOwned,
+    /// Underlying network details
+    pub network: NetworkInfoOwned,
     /// Max gas and denom info
     pub gas_denom: Denom,
     /// gas price
@@ -85,8 +85,8 @@ impl DaemonState {
             kind: ChainKind::from(chain_info.network_type),
             deployment_id,
             grpc_channel,
-            chain: ChainInfoOwned {
-                network_id: chain_info.chain_name.to_string(),
+            network: NetworkInfoOwned {
+                id: chain_info.chain_name.to_string(),
                 pub_address_prefix: chain_info.bech32_prefix,
                 coin_type: chain_info.slip44,
             },
@@ -106,7 +106,7 @@ impl DaemonState {
         crate::daemon::json_file::write(
             &state.json_file_path,
             &state.chain_id,
-            &state.chain.network_id,
+            &state.network.id,
             &state.deployment_id,
         );
 
@@ -119,7 +119,7 @@ impl DaemonState {
         crate::daemon::json_file::write(
             &self.json_file_path,
             &self.chain_id,
-            &self.chain.network_id,
+            &self.network.id,
             &self.deployment_id,
         );
     }
@@ -132,14 +132,14 @@ impl DaemonState {
     /// Retrieve a stateful value using the chainId and networkId
     fn get(&self, key: &str) -> Value {
         let json = self.read_state();
-        json[&self.chain.network_id][&self.chain_id.to_string()][key].clone()
+        json[&self.network.id][&self.chain_id.to_string()][key].clone()
     }
 
     /// Set a stateful value using the chainId and networkId
     fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
         let mut json = self.read_state();
 
-        json[&self.chain.network_id][&self.chain_id.to_string()][key][contract_id] = json!(value);
+        json[&self.network.id][&self.chain_id.to_string()][key][contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
@@ -202,9 +202,9 @@ impl StateInterface for Rc<DaemonState> {
 impl Into<RegistryChainInfo> for ChainInfo<'_> {
     fn into(self) -> RegistryChainInfo {
         RegistryChainInfo {
-            chain_name: self.chain_info.network_id.to_string(),
+            chain_name: self.network_info.id.to_string(),
             chain_id: self.chain_id.to_string().into(),
-            bech32_prefix: self.chain_info.pub_address_prefix.into(),
+            bech32_prefix: self.network_info.pub_address_prefix.into(),
             fees: FeeTokens {
                 fee_tokens: vec![FeeToken {
                     fixed_min_gas_price: self.gas_price,
@@ -224,7 +224,7 @@ impl Into<RegistryChainInfo> for ChainInfo<'_> {
                     .collect(),
                 ..Default::default()
             },
-            slip44: self.chain_info.coin_type,
+            slip44: self.network_info.coin_type,
             ..Default::default()
         }
     }
@@ -243,13 +243,13 @@ pub struct ChainInfo<'a> {
     /// Optional urls for custom functionality
     pub lcd_url: Option<&'a str>,
     pub fcd_url: Option<&'a str>,
-    pub chain_info: NetworkInfo<'a>,
+    pub network_info: NetworkInfo<'a>,
     pub kind: ChainKind,
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct NetworkInfo<'a> {
-    pub network_id: &'a str,
+    pub id: &'a str,
     /// address prefix
     pub pub_address_prefix: &'a str,
     /// coin type for key derivation
@@ -257,18 +257,18 @@ pub struct NetworkInfo<'a> {
 }
 
 #[derive(Clone, Debug, Serialize, Default)]
-pub struct ChainInfoOwned {
-    pub network_id: String,
+pub struct NetworkInfoOwned {
+    pub id: String,
     /// address prefix
     pub pub_address_prefix: String,
     /// coin type for key derivation
     pub coin_type: u32,
 }
 
-impl From<NetworkInfo<'_>> for ChainInfoOwned {
+impl From<NetworkInfo<'_>> for NetworkInfoOwned {
     fn from(info: NetworkInfo<'_>) -> Self {
         Self {
-            network_id: info.network_id.to_owned(),
+            id: info.id.to_owned(),
             pub_address_prefix: info.pub_address_prefix.to_owned(),
             coin_type: info.coin_type,
         }
