@@ -10,7 +10,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
-/// This trait helps wrapping a contract instance, used in macros.
+/// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
 pub trait ContractInstance<Chain: CwEnv> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
