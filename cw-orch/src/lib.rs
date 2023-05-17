@@ -20,6 +20,6 @@ mod index_response;
 mod interface_traits;
 #[cfg(feature = "daemon")]
 mod keys;
-mod mock;
+pub mod mock;
 mod paths;
 mod state;
