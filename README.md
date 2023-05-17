@@ -2,7 +2,7 @@
 
 <!-- add bg image -->
 <div align="center">
-  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/orchestrator_bg.png" width="650px" />
+  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/orchestrator_bg.png" width="800px" />
 
 <a href="https://docs.rs/cw-orch/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/cw-orch"></a> <a href="https://crates.io/crates/cw-orch" ><img alt="Crates.io" src="https://img.shields.io/crates/d/cw-orch"></a> <a href="https://app.codecov.io/gh/AbstractSDK/cw-orchestrator" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/AbstractSDK/cw-orchestrator?token=CZZH6DJMRY"></a>
 
