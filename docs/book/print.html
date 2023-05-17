@@ -8,7 +8,7 @@
 
 
         <!-- Custom HTML head -->
-
+        
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -145,30 +145,30 @@
                         <h1 id="cw-orchestrator"><a class="header" href="#cw-orchestrator">cw-orchestrator</a></h1>
 <p>cw-orchestrator is a testing and deployment tool for CosmWasm smart-contracts. It features execute and query endpoint function generation, network-agnostic transaction execution and a mock environment wrapper for complex multi-contract testing scenarios.</p>
 <p>These docs contain a quick-start and a longer from tutorial-style walkthrough.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="cw-orchestrator-quick-start"><a class="header" href="#cw-orchestrator-quick-start">Cw-orchestrator quick-start</a></h1>
-<p>Getting started with cw-orchestrator is very easy. The first step to using orchestrator is adding <code>cw-orch</code> to your contract's toml.</p>
-<h2 id="add-cw-orch"><a class="header" href="#add-cw-orch">Add <code>cw-orch</code></a></h2>
-<p>You can do this by running the following in the directory of your contract:</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="cw-orchestrator-quick-start-guide"><a class="header" href="#cw-orchestrator-quick-start-guide">Cw-Orchestrator Quick-Start Guide</a></h1>
+<p>This guide will show you how to use the <code>cw-orchestrator</code> with your smart contract. Follow the steps below to add <code>cw-orch</code> to your contract's TOML file, enable the interface feature, add the interface macro to your contract's endpoints, and use interaction helpers to simplify contract calls and queries.</p>
+<h2 id="adding-cw-orch-to-your-contracts-toml-file"><a class="header" href="#adding-cw-orch-to-your-contracts-toml-file">Adding <code>cw-orch</code> to Your Contract's TOML File</a></h2>
+<p>To use the <code>cw-orchestrator</code>, you need to add <code>cw-orch</code> to your contract's TOML file. Run the command below in your contract's directory:</p>
 <pre><code class="language-shell">$ cargo add --optional cw-orch
 &gt; Adding cw-orch v0.10.0 to optional dependencies.
 </code></pre>
-<p>Or you can add it manually in your <code>Cargo.toml</code>:</p>
+<p>Alternatively, you can add it manually in your <code>Cargo.toml</code> file as shown below:</p>
 <pre><code class="language-toml">[dependencies]
 cw-orch = {version = &quot;0.10.0&quot;, optional = true } # Latest version at time of writing
 </code></pre>
-<p>Now that we have added <code>cw-orch</code> as an optional dependency we will want to enable it with a feature. This ensures that the code added by <code>cw-orch</code> is not included in the wasm artifact of the contract. To do this add an <code>interface</code> feature to the <code>Cargo.toml</code> and enable <code>cw-orch</code> when it is enabled.</p>
-<p>To do this include the following in the <code>Cargo.toml</code>:</p>
+<p>After adding <code>cw-orch</code> as an optional dependency, you should enable it through a feature. Doing so ensures that the code added by <code>cw-orch</code> is not included in the wasm artifact of the contract. You can do this by adding an <code>interface</code> feature to the <code>Cargo.toml</code> and enabling <code>cw-orch</code> when it is activated:</p>
 <pre><code class="language-toml">[features]
 interface = [&quot;dep:cw-orch&quot;]
 </code></pre>
-<blockquote>
-<p>You can learn more about Rust features <a href="TODO">here</a></p>
-</blockquote>
-<h2 id="contract-interface"><a class="header" href="#contract-interface">Contract Interface</a></h2>
-<p>Now that we have the imports set up you can add the <code>interface</code> macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<h2 id="adding-the-interface-macro-to-your-contracts-endpoints"><a class="header" href="#adding-the-interface-macro-to-your-contracts-endpoints">Adding the Interface Macro to Your Contract's Endpoints</a></h2>
+<p>With the dependency set up, you can now add the <code>interface</code> macro to your contract's endpoints. This macro will generate an interface to your contract that you can use to interact with it. You can get started by adding the feature-flagged interface macro to the contract's endpoints as shown in the code snippet below:</p>
+<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>// In `contract.rs`
+</span><span class="boring">use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
+</span><span class="boring">struct InstantiateMsg;
+</span><span class="boring">struct ExecuteMsg;
+</span>
+// In `contract.rs`
 #[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface_entry_point)] // &lt;--- Add this line
 pub fn instantiate(
    deps: DepsMut,
@@ -177,6 +177,7 @@ pub fn instantiate(
    msg: InstantiateMsg,
  -&gt; StdResult&lt;Response&gt; {
     // ...
+    Ok(Response::new())
 }
 
 #[cfg_attr(feature=&quot;interface&quot;, cw_orch::interface_entry_point)] // &lt;--- Add this line
@@ -187,17 +188,13 @@ pub fn execute(
    msg: ExecuteMsg,
  -&gt; StdResult&lt;Response&gt; {
     // ...
+    Ok(Response::new())
 }
 // ... Do the same for the other entry points (query, migrate, reply, sudo)
 <span class="boring">}</span></code></pre></pre>
-<p>By adding these lines we generate code whenever the <code>interface</code> macro is enabled.
-The code will generate a contract interface. The contract interface will be the PascelCase of the crate's name.</p>
-<blockquote>
-<p>The name of the crate is defined in the <code>Cargo.toml</code> file of your contract.</p>
-</blockquote>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
-<p>Let's look at an example to solidify your understanding.
-We have a contract with a <code>Cargo.toml</code> file roughly be like the following:</p>
+<p>By adding these lines, we generate code whenever the <code>interface</code> macro is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.</p>
+<h2 id="example-of-using-cw-orchestrator"><a class="header" href="#example-of-using-cw-orchestrator">Example of Using Cw-Orchestrator</a></h2>
+<p>The following example provides a clear understanding of how to use <code>cw-orchestrator</code> with a smart contract. Here, we have a contract with a <code>Cargo.toml</code> file like the following:</p>
 <pre><code class="language-toml"># Cargo.toml
 [package]
 name = &quot;example-contract&quot;
@@ -206,7 +203,7 @@ name = &quot;example-contract&quot;
 [features]
 # Features that are enabled by default
 default = [&quot;export&quot;]
-# Exports the WASM entry points, similar to the `library` feature.
+# Exports the WASM entry points, similar to the `library` feature
 export = []
 # Enables the contracts's interface
 interface = [&quot;dep:cw-orch&quot;]
@@ -218,6 +215,12 @@ cw-orch = {version = &quot;0.10.0&quot;, optional = true }
 <p>Then our contract looks something like:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
+</span><span class="boring">use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
+</span><span class="boring">use cosmwasm_schema::{entry_point};
+</span><span class="boring">struct InstantiateMsg;
+</span><span class="boring">struct ExecuteMsg;
+</span><span class="boring">struct QueryMsg;
+</span><span class="boring">struct MigrateMsg;
 </span>// contract.rs
 #[cfg_attr(feature = &quot;export&quot;, entry_point)]
 #[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
@@ -261,12 +264,34 @@ pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -&gt; Result&lt;Respons
     Ok(Response::default())
 }
 <span class="boring">}</span></code></pre></pre>
-<p>This macro generates a <code>ExampleContract</code> struct that is now available in <code>contract.rs</code>.</p>
-<p>If we now create a test in <code>contract/tests</code> we can start interacting with it. </p>
+<p>The macros generate an <code>ExampleContract</code> struct that is now available in <code>contract.rs</code>.<br />
+You can now create a test in <code>contract/tests</code> and start interacting with the contract as shown below:</p>
+<!-- ```rust
+use cosmwasm_schema::QueryResponses;
+use cosmwasm_std::to_binary;
+use cosmwasm_std::Binary;
+use cosmwasm_std::Deps;
+use cosmwasm_std::DepsMut;
+use cosmwasm_std::MessageInfo;
+use cosmwasm_std::Response;
+use cosmwasm_std::StdError;
+use cosmwasm_std::StdResult;
+``` -->
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
+</span><span class="boring">struct InstantiateMsg {};
+</span><span class="boring">enum ExecuteMsg {
+</span><span class="boring">      Increment {}
+</span><span class="boring">};
+</span><span class="boring">enum QueryMsg {
+</span><span class="boring">      Config {}
+</span><span class="boring">};
+</span><span class="boring">struct MigrateMsg {};
 </span>// contract/tests/example.rs
-
+<span class="boring">use cosmwasm_std::{Addr};
+</span>use cw_orch::prelude::*;
+// import the generated interface
+use example_contract::contract::ExampleContract;
 #[test]
 fn example_test() {
     // init mock environment
@@ -274,48 +299,79 @@ fn example_test() {
     // Init the mock environment (cw-multi-test App)
     let mock = Mock::new(&amp;sender);
     // `new()` function is available to construct the contract interface
-    let example_contract = example_contract::ExampleContract::new(&quot;example_contract&quot;, mock);
+    let example_contract = ExampleContract::new(&quot;example_contract&quot;, mock);
     // Now we can start scripting!
 
     // Upload the contract to the mock
     example_contract.upload()?;
 
     // Instantiate the contract
-    example_contract.instantiate(&amp;InstantiateMsg { ... }, None, None)?;
+    example_contract.instantiate(&amp;InstantiateMsg { }, None, None)?;
 
     // Execute the newly instantiated contract
-    example_contract.execute(&amp;ExecuteMsg { ... }, None)?;
+    example_contract.execute(&amp;ExecuteMsg::Increment { }, None)?;
 
     // Query
-    let resp: QueryResponse = example_contract.query(&amp;QueryMsg { ... })?;
+    let resp: String = example_contract.query(&amp;QueryMsg::Config { })?;
 
     // Migrate
-    example_contract.migrate(&amp;MigrateMsg { ... }, None)?;
+    example_contract.migrate(&amp;MigrateMsg { }, None)?;
 }
 <span class="boring">}</span></code></pre></pre>
 <h2 id="interaction-helpers"><a class="header" href="#interaction-helpers">Interaction helpers</a></h2>
 <p>cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's ExecuteMsg and QueryMsg.</p>
 <p>Enabling this functionality is very straight-forward. Find your <code>ExecuteMsg</code> and <code>QueryMsg</code> definitions and add the <code>ExecuteFns</code> and <code>QueryFns</code> derive macros to them like below:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span>
-<span class="boring">fn main() {
-</span>#[cfg_attr(feature = &quot;interface&quot;, derive(QueryFns))]
-pub enum QueryMsg {
-    ...
+<pre><pre class="playground"><code class="language-rust no_run"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use cosmwasm_schema::QueryResponses;
+use cw_orch::{ExecuteFns, QueryFns};
+
+#[cfg_attr(feature = &quot;interface&quot;, derive(ExecuteFns))]
+pub enum ExecuteMsg {
+    Increment {},
+    // ...
 }
 
 #[cfg_attr(feature = &quot;interface&quot;, derive(QueryFns))]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
-    ...
+    #[returns(String)]
+    Config {}
+    // ...
 }
 <span class="boring">}</span></code></pre></pre>
-<pre class="mermaid">flowchart TD
-    A[Christmas] --&gt;|Get money| B(Go shopping)
-    B --&gt; C{Let me think}
-    C --&gt;|One| D[Laptop]
-    C --&gt;|Two| E[iPhone]
-    C --&gt;|Three| F[fa:fa-car Car]
-</pre>
+<p>Any variant of the <code>ExecuteMsg</code> and <code>QueryMsg</code> that has a <code>#[derive(ExecuteFns)]</code> or <code>#[derive(QueryFns)]</code> will have a function generated on the interface through a trait. The function will have the same name as the variant and will take the same arguments as the variant.</p>
+<p>You can access these functions by importing the generated traits form the message file. The generated traits are named <code>ExecuteMsgFns</code> and <code>QueryMsgFns</code>.</p>
+<pre><code class="language-rust ignore">// Import the generated traits
+<span class="boring">use cosmwasm_std::{Addr};
+</span>use example_contract::msg::{ExecuteMsgFns, QueryMsgFns};
+use cw_orch::prelude::*;
+
+fn example_test() {
+    // init mock environment
+    let sender = Addr::unchecked(&quot;sender&quot;);
+    // Init the mock environment (cw-multi-test App)
+    let mock = Mock::new(&amp;sender);
+    // `new()` function is available to construct the contract interface
+    let example_contract = ExampleContract::new(&quot;example_contract&quot;, mock);
+
+    // Upload the contract to the mock
+    example_contract.upload()?;
+
+    // Instantiate the contract
+    example_contract.instantiate(&amp;InstantiateMsg { }, None, None)?;
+
+    // Execute the increment endpoint
+    example_contract.increment()?;
+
+    // Query the config
+    // Return type optional!
+    let resp: QueryResponse = example_contract.config()?;
+}
+<span class="boring">example_test();</span></code></pre>
+<blockquote>
+<p>The function arguments are ordered alphabetically to prevent breaking changes when struct fields are moved.</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
 <p>In order to use cw-orchestrator you need access to the entry point message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,...) of the contracts you want to interact with.</p>
 <p>If you want to perform on-chain transaction you also need access to the gRPC endpoint of a node. These are most-often available on port 9090.</p>
@@ -412,7 +468,7 @@ pub struct MyContract&lt;Chain&gt;;
 <p><em>If your entry point messages have any generic arguments, pull them out into new types before passing them into the macro.</em></p>
 </blockquote>
 <h2 id="constructor"><a class="header" href="#constructor">Constructor</a></h2>
-<p>Next, you'll want to define the constructor for the interface we just defined. In order to do so, first include the contract interface (<code>instantiate</code>, <code>execute</code> and <code>query</code> functions) in your package : </p>
+<p>Next, you'll want to define the constructor for the interface we just defined. In order to do so, first include the contract interface (<code>instantiate</code>, <code>execute</code> and <code>query</code> functions) in your package :</p>
 <pre><code class="language-bash">cargo add --path ../../my-contract
 </code></pre>
 <p>The generic <code>&lt;Chain&gt;</code> argument allows you to write functions for your interface that will be executable in different environments.</p>
@@ -516,7 +572,7 @@ pub struct MyContract&lt;Chain&gt;;
 
 // Then the message variants are available as functions on the struct through an &quot;ExecuteFns&quot; trait.
 impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
-    pub fn test_macro(&amp;self) -&gt; Result&lt;(),CwOrcError&gt; {
+    pub fn test_macro(&amp;self) -&gt; Result&lt;(),CwOrchError&gt; {
         self.freeze()?;
         self.update_admins(vec![])?;
         self.deposit(&amp;[Coin::new(13,&quot;juno&quot;)])?;
@@ -524,16 +580,16 @@ impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
     }
 }
 <span class="boring">}</span></code></pre></pre>
-<p>In order for the above code to work, you will need to follow those simple steps : </p>
+<p>In order for the above code to work, you will need to follow those simple steps :</p>
 <ol>
 <li>
-<p>Add the following line to your <code>packages/my-project.Cargo.toml</code>. This will allow to activate the interface feature for creating <code>ExecuteFns</code> outside of the crate </p>
+<p>Add the following line to your <code>packages/my-project.Cargo.toml</code>. This will allow to activate the interface feature for creating <code>ExecuteFns</code> outside of the crate</p>
 <pre><code class="language-cargo">[features]
 interface=[]
 </code></pre>
 </li>
 <li>
-<p>Add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file : </p>
+<p>Add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file :</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use my_project::my_contract::ExecuteMsgFns;
@@ -564,7 +620,7 @@ pub struct MyContract&lt;Chain&gt;;
 
 // Then the message variants are available as functions on the struct through an &quot;ExecuteFns&quot; trait.
 impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
-    pub fn test_macro(&amp;self) -&gt; Result&lt;(),CwOrcError&gt; {
+    pub fn test_macro(&amp;self) -&gt; Result&lt;(),CwOrchError&gt; {
         // No need to specify returned type!
         // info of type `InfoResponse` is returned
         let info = self.info()?;
@@ -576,7 +632,7 @@ impl&lt;Chain: CwEnv + Clone&gt; MyContract&lt;Chain&gt; {
 <span class="boring">}</span></code></pre></pre>
 <p>In order to derive query functions, you NEED to serive the QueryResponses crate for your QueryMsgs struct. This is mandatory in order to ensure type-safety for all messages and responses.</p>
 <p>This time, add the following import in your <code>packages/interfaces/src/my-contract.rs</code> file :
-<code>rust  use my_project::my_contract::QueryMsgFns; </code></p>
+<code>rust use my_project::my_contract::QueryMsgFns; </code></p>
 <h4 id="refinement"><a class="header" href="#refinement">Refinement</a></h4>
 <p>You can also refine your contract interface manually to add more complex interactions.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -799,39 +855,39 @@ pub fn execute_contract() -&gt; anyhow::Result&lt;()&gt; {
 <h2 id="test-setup"><a class="header" href="#test-setup">Test Setup</a></h2>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>// contracts/my-contract/tests/integration_tests.rs
+</span>// contracts/my-contract/tests/integration_tests.rs  
 use interfaces::MyContract;
-use cw_orch::*;
+use cw_orch::*;  
 use semver::Version;
 use my_contract::contract;
 use my_contract::{ExecuteMsg};
-
-fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {
-    let sender = Addr::unchecked(&quot;sender&quot;);
+  
+fn setup() -&gt; anyhow::Result&lt;MyContract&lt;Mock&gt;&gt; {  
+    let sender = Addr::unchecked(&quot;sender&quot;); 
     // note that we are instantiating the mock environment instead of the daemon_environment
-    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;
+    let (_, mock_chain) = instantiate_default_mock_env(&amp;sender)?;  
 
-    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);
+    let mut my_contract = MyContract::new(&quot;testing:contract&quot;, &amp;mock_chain);  
 
     // entrypoint endpoints for your contract
-    my_contract.as_instance_mut().set_mock(Box::new(
+    my_contract.as_instance_mut().set_mock(Box::new(  
         ContractWrapper::new_with_empty(
-            contract::execute,
-            contract::instantiate,
-            contract::query,
+            contract::execute,  
+            contract::instantiate,  
+            contract::query,  
         ),
     ));
 
     // &quot;upload&quot; the contract to the test environment
     // stores the code_id at the key &quot;testing:contract&quot;.
-    my_contract.upload();
-
-    Ok(my_contract)
-}
-
-#[test]
-fn test_something() -&gt; anyhow::Result&lt;()&gt; {
-  let my_contract = setup()?;
+    my_contract.upload(); 
+  
+    Ok(my_contract)  
+}  
+  
+#[test]  
+fn test_something() -&gt; anyhow::Result&lt;()&gt; {  
+  let my_contract = setup()?;  
 
   my_contract.instantiate(...)?;
 
@@ -861,7 +917,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
 </span><span class="boring">fn main() {
 </span>impl&lt;Chain: CwEnv&gt; cw_orch::Deploy&lt;Chain&gt; for Abstract&lt;Chain&gt; {
     // We don't have a custom error type
-    type Error = CwOrcError;
+    type Error = CwOrchError;
     type DeployData = semver::Version;
 
     fn store_on(chain: Chain) -&gt; Result&lt;Self, Self::Error&gt; {
@@ -894,7 +950,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
         Ok(abstrct)
     }
 
-    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, CwOrcError&gt; {
+    fn deploy_on(chain: Chain, version: semver::Version) -&gt; Result&lt;Self, CwOrchError&gt; {        
         // ########### Upload ##############
         let abstrct = Self::store_on(chain)?;
 
@@ -912,7 +968,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
             None,
         )?;
 
-        // ...
+        // ... 
 
         Ok(abstrct)
     }
@@ -926,7 +982,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
 <p>Now <code>Abstract</code> is an application that can be deployed to a mock and real environment with <strong>one</strong> line of code.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>fn setup_test(mock: Mock) -&gt; Result&lt;(), CwOrcError&gt; {
+</span>fn setup_test(mock: Mock) -&gt; Result&lt;(), CwOrchError&gt; {
     let version = &quot;1.0.0&quot;.parse().unwrap();
     // Deploy abstract
     let abstract_ = Abstract::deploy_on(mock.clone(), version)?;
@@ -937,7 +993,7 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
 </span><span class="boring">fn main() {
 </span>impl&lt;Chain: CwEnv&gt; cw_orch::Deploy&lt;Chain&gt; for MyApplication&lt;Chain&gt; {
     /// ...
-    fn deploy_on(chain: Chain, _data: Empty) -&gt; Result&lt;Self, CwOrcError&gt; {
+    fn deploy_on(chain: Chain, _data: Empty) -&gt; Result&lt;Self, CwOrchError&gt; {
 
         let abstract_: Abstract = Abstract::load_from(chain)?;
 
@@ -959,66 +1015,66 @@ pub struct Abstract&lt;Chain: CwEnv&gt; {
 <p>cw-orchestrator does not <em>currently</em> add additional support for actions, but an example using the directory structure specified in <a href="advanced/interfaces.html">interfaces</a> can be found below:</p>
 <pre><code class="language-yaml"># .github/workflows/deploy.yml
 ---
-name: Deploy Contracts
-on:
-  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
-  workflow_dispatch:
-  push:
-    branches: [ 'mainline' ]
-    paths:
-      - 'contracts/src/**/*.rs'
-      - '.github/workflows/deploy.yml'
-
+name: Deploy Contracts  
+on:  
+  # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch  
+  workflow_dispatch:  
+  push:  
+    branches: [ 'mainline' ]  
+    paths:  
+      - 'contracts/src/**/*.rs'  
+      - '.github/workflows/deploy.yml'  
+  
 env:
-  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu
-  STATE_FILE: &quot;./daemon_state.json&quot;
-  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;
-  SCHEMA_DIR: &quot;./schema&quot;
+  VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
+  STATE_FILE: &quot;./daemon_state.json&quot;  
+  ARTIFACTS_DIR: &quot;./target/wasm32-unknown-unknown/release&quot;  
+  SCHEMA_DIR: &quot;./schema&quot;  
+  
+jobs:  
+  deploy:  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v3  
+      - uses: actions-rs/toolchain@v1  
+        with:  
+          toolchain: nightly  
+          target: wasm32-unknown-unknown  
+          override: true  
+      - name: Run cargo wasm  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: build  
+          args: --package counter-app --release --target wasm32-unknown-unknown  
+        env:  
+          RUSTFLAGS: '-C link-arg=-s'  
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          target: wasm32-unknown-unknown
-          override: true
-      - name: Run cargo wasm
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --package counter-app --release --target wasm32-unknown-unknown
-        env:
-          RUSTFLAGS: '-C link-arg=-s'
+      - name: Run deployment script  
+        uses: actions-rs/cargo@v1  
+        with:  
+          command: run  
+          args: --package scripts --bin deploy_app  
+        env:  
+          CHAIN: &quot;juno&quot;  
+          DEPLOYMENT: &quot;debugging&quot;  
+          NETWORK: &quot;local&quot;  
+          RUST_LOG: info  
+          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}  
+          STATE_FILE: ${{ env.STATE_FILE }}  
+  
+          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}  
+          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}  
 
-      - name: Run deployment script
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: --package scripts --bin deploy_app
-        env:
-          CHAIN: &quot;juno&quot;
-          DEPLOYMENT: &quot;debugging&quot;
-          NETWORK: &quot;local&quot;
-          RUST_LOG: info
-          ARTIFACTS_DIR: ${{ env.ARTIFACTS_DIR }}
-          STATE_FILE: ${{ env.STATE_FILE }}
-
-          VERSION_CONTROL_ADDRESS: ${{ env.VERSION_CONTROL_ADDRESS }}
-          TEST_MNEMONIC: ${{ secrets.TEST_MNEMONIC }}
-
-      - name: Upload deployment daemon state
-        uses: actions/upload-artifact@v2
-        with:
-          name: deployment.json
-          path: ${{ env.STATE_FILE }}
-      - name: Upload WASM
-        uses: actions/upload-artifact@v2
-        with:
-          # TODO: name env or from cargo
-          name: counter_app.wasm
+      - name: Upload deployment daemon state  
+        uses: actions/upload-artifact@v2  
+        with:  
+          name: deployment.json  
+          path: ${{ env.STATE_FILE }}  
+      - name: Upload WASM  
+        uses: actions/upload-artifact@v2  
+        with:  
+          # TODO: name env or from cargo  
+          name: counter_app.wasm  
           path: ${{ env.ARTIFACTS_DIR }}/counter_app.wasm
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing-to-cw-orchestrator"><a class="header" href="#contributing-to-cw-orchestrator">Contributing to cw-orchestrator</a></h1>
@@ -1141,8 +1197,6 @@ Get started <a href="https://docs.abstract.money/building-on-abstract/writing-mo
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="mermaid.min.js"></script>
-        <script src="mermaid-init.js"></script>
 
         <script>
         window.addEventListener('load', function() {
