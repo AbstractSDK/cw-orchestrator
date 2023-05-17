@@ -1,224 +1,155 @@
-// Dependencies
+#[cfg(not(feature = "library"))]
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use std::{env, path::Path};
-use tokio::runtime::Runtime;
 
-// cw-orchestrator Dependencies
-use cw_orch::{
-    networks, Addr, CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload, Daemon, Mock,
-    TxHandler,
-};
+use cw_orch::prelude::*;
 
-use super::error::ContractError;
-use super::msgs::{CurrentCount, QueryMsg, InstantiateMsg, ExecuteMsg, MigrateMsg};
-use super::state::{Count, COUNT};
+use crate::counter_contract::{error::*, msg::*, state::*};
 
-// Contract version and name
-pub const CONTRACT_NAME: &str = "mydev:CounterContract";
+// version info for migration info
+const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-// Most of our contract will look the same to the average CosmWasm contract
-// the main difference is the amount of code that we need to get started.
-
-// In this example we are going to use Junos local testnet.
-
-// We are going to need the following system environment variables set up for this example to work
-
-// this first two are essential to any integration we do using cw-orchestrator
-// STATE_FILE="./my-contract-state.json"
-// LOCAL_MNEMONIC="clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose"
-
-// this two are used only within this example
-// CHAIN="testing"
-// DEPLOYMENT_ID="my-contract-counter"
-
-// After that is configured we can continue to our next step which is start coding!
-
-// Using the Rust macro cw_orch::interface_entry_point provided by cw-orchestrator we can define our contract entry points.
-// This also generates a struct using our contract cargo name using PascalCase.
-// In this example the name is CounterContract.
-// This macro helps us with basic logic, keeps our contracts DRY and more important, it helps us speed our development process up
 #[cw_orch::interface_entry_point]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
-    msg:InstantiateMsg,
+    info: MessageInfo,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+    let state = State {
+        count: msg.count,
+        owner: info.sender.clone(),
+    };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    STATE.save(deps.storage, &state)?;
 
-    COUNT.save(deps.storage, &Count(msg.initial_value))?;
-
-    Ok(Response::default().add_attribute("initial_value", msg.initial_value.to_string()))
-}
-
-#[cw_orch::interface_entry_point]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::GetCount => Ok(to_binary(&CurrentCount(COUNT.load(deps.storage)?.0))?),
-    }
+    Ok(Response::new()
+        .add_attribute("method", "instantiate")
+        .add_attribute("owner", info.sender)
+        .add_attribute("count", msg.count.to_string()))
 }
 
 #[cw_orch::interface_entry_point]
 pub fn execute(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    let response = match msg {
-        ExecuteMsg::Increase => {
-            let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_add(1u128.into())?;
-            COUNT.save(deps.storage, &Count(value))?;
-            Response::default().add_attribute("action", "increase")
-        }
-        ExecuteMsg::Decrase => {
-            let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_sub(1u128.into())?;
-            COUNT.save(deps.storage, &Count(value))?;
-            Response::default().add_attribute("action", "decrease")
-        }
-        ExecuteMsg::IncreaseBy(amount) => {
-            let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_add(amount)?;
-            COUNT.save(deps.storage, &Count(value))?;
-            Response::default().add_attribute("action", "increase_by")
-        }
-    };
+    match msg {
+        ExecuteMsg::Increment {} => execute::increment(deps),
+        ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
+    }
+}
 
-    Ok(response)
+pub mod execute {
+    use super::*;
+
+    pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
+        STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+            state.count += 1;
+            Ok(state)
+        })?;
+
+        Ok(Response::new().add_attribute("action", "increment"))
+    }
+
+    pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
+        STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
+            if info.sender != state.owner {
+                return Err(ContractError::Unauthorized {});
+            }
+            state.count = count;
+            Ok(state)
+        })?;
+        Ok(Response::new().add_attribute("action", "reset"))
+    }
 }
 
 #[cw_orch::interface_entry_point]
-pub fn migrate(
-    deps: DepsMut,
-    _env: Env,
-    msg: MigrateMsg,
-) -> Result<Response, ContractError> {
-    set_contract_version(deps.storage, CONTRACT_NAME, msg.version)?;
-    COUNT.save(deps.storage, &Count(msg.conf.initial_value))?;
-    Ok(Response::default().add_attribute("action", "migrate"))
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetCount {} => to_binary(&query::count(deps)?),
+    }
 }
 
-// Now that we have setup for our contract entry points, We can continue to the next step.
-// This is where more of the magic of cw-orchestrator occurs
-// In this case we will prepare a trait for our two scenarios Mock and Daemon
-// Daemon is our production scenario, deploying to a real blockchain, be it a local testnet, a tesnet our a mainnet
-// and Mock is our development scenario, used for unit testing and fine tuning our contract with speed
+pub mod query {
+    use super::*;
 
-// our strategy for mock testing of the contract
-fn dev(contract_id: String) {
-    let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
-    // let chain = networks::parse_network(&env::var("CHAIN").unwrap());
-
-    let mock = Mock::new(&sender).unwrap();
-
-    let contract_counter = CounterContract::<Mock>::new(contract_id, mock);
-
-    let upload_res = contract_counter.upload().unwrap();
-    println!("upload_res: {:#?}", upload_res);
-
-    let init_res = contract_counter
-        .instantiate(
-            &msgs::InstantiateMsg {
-                initial_value: 0u128.into(),
-            },
-            Some(&sender),
-            None,
-        )
-        .unwrap();
-    println!("init_res: {:#?}", init_res);
-
-    let exec_res = contract_counter
-        .execute(&msgs::ExecuteMsg::Increase, None)
-        .unwrap();
-    println!("exec_res: {:#?}", exec_res);
-
-    let query_res = contract_counter
-        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
-        .unwrap();
-    println!("query_res: {:#?}", query_res);
+    pub fn count(deps: Deps) -> StdResult<GetCountResponse> {
+        let state = STATE.load(deps.storage)?;
+        Ok(GetCountResponse { count: state.count })
+    }
 }
 
-// this is our strategy for local deployment
-fn local(contract_id: String) {
-    let runtime = Runtime::new().unwrap();
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{coins, from_binary};
 
-    // To generate a daemon we use Daemon::builder
-    // which provides an easy to use interface
-    // where step by step we can configure our daemon to our needs
-    let res = Daemon::builder()
-        // using the networks module we can provide a network
-        // in this case we are using the helper parse_network that converts a string to a variant
-        // but we can use networks::LOCAL_JUNO or networks::JUNO_1 for example
-        .chain(networks::parse_network(&env::var("CHAIN").unwrap()))
-        // here we provide the runtime to be used
-        // if none is provided it will try to get one if its inside one
-        .handle(runtime.handle())
-        // we configure the mnemonic
-        // if we dont provide an mnemonic here it will try to read it
-        // from LOCAL_MNEMONIC environment variable
-        // this is the one we are using in this scenario
-        // but you can also use TEST_MNEMONIC and MAIN_MNEMONIC
-        // depending to where you are deploying
-        .mnemonic(env::var("LOCAL_MNEMONIC").unwrap())
-        // and we build our daemon
-        .build();
+    #[test]
+    fn proper_initialization() {
+        let mut deps = mock_dependencies();
 
-    let Some(daemon) = res.as_ref().ok() else {
-        panic!("Error: {}", res.err().unwrap());
-    };
+        let msg = InstantiateMsg { count: 17 };
+        let info = mock_info("creator", &coins(1000, "earth"));
 
-    let contract_counter = CounterContract::<Daemon>::new(contract_id, daemon.clone());
+        // we can just call .unwrap() to assert this was a success
+        let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+        assert_eq!(0, res.messages.len());
 
-    let upload_res = contract_counter.upload().unwrap();
-    println!("upload_res: {:#?}", upload_res);
+        // it worked, let's query the state
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+        let value: GetCountResponse = from_binary(&res).unwrap();
+        assert_eq!(17, value.count);
+    }
 
-    let init_res = contract_counter
-        .instantiate(
-            &msgs::InstantiateMsg {
-                initial_value: 0u128.into(),
-            },
-            Some(&contract_counter.0.get_chain().sender()),
-            None,
-        )
-        .unwrap();
-    println!("init_res: {:#?}", init_res);
+    #[test]
+    fn increment() {
+        let mut deps = mock_dependencies();
 
-    let exec_res = contract_counter
-        .execute(&msgs::ExecuteMsg::Increase, None)
-        .unwrap();
-    println!("exec_res: {:#?}", exec_res);
+        let msg = InstantiateMsg { count: 17 };
+        let info = mock_info("creator", &coins(2, "token"));
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    let query_res = contract_counter
-        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
-        .unwrap();
-    println!("query_res: {:#?}", query_res);
-}
+        // beneficiary can release it
+        let info = mock_info("anyone", &coins(2, "token"));
+        let msg = ExecuteMsg::Increment {};
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-fn main() {
-    pretty_env_logger::init();
+        // should increase counter by 1
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+        let value: GetCountResponse = from_binary(&res).unwrap();
+        assert_eq!(18, value.count);
+    }
 
-    let _ = dotenvy::from_path(Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
+    #[test]
+    fn reset() {
+        let mut deps = mock_dependencies();
 
-    let args = std::env::args();
+        let msg = InstantiateMsg { count: 17 };
+        let info = mock_info("creator", &coins(2, "token"));
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    let contract_id = env::var("DEPLOYMENT_ID").unwrap();
+        // beneficiary can release it
+        let unauth_info = mock_info("anyone", &coins(2, "token"));
+        let msg = ExecuteMsg::Reset { count: 5 };
+        let res = execute(deps.as_mut(), mock_env(), unauth_info, msg);
+        match res {
+            Err(ContractError::Unauthorized {}) => {}
+            _ => panic!("Must return unauthorized error"),
+        }
 
-    match args.last().unwrap().as_str() {
-        "local" => local(contract_id),
-        "dev" => dev(contract_id),
-        _ => dev(contract_id),
-    };
-}
+        // only the original creator can reset the counter
+        let auth_info = mock_info("creator", &coins(2, "token"));
+        let msg = ExecuteMsg::Reset { count: 5 };
+        let _res = execute(deps.as_mut(), mock_env(), auth_info, msg).unwrap();
 
-#[test]
-fn test_contract() {
-    let _ = dotenvy::from_path(Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
-    let contract_id = env::var("DEPLOYMENT_ID").unwrap();
-    let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
-    let mock = Mock::new(&sender).unwrap();
-    let contract_counter = CounterContract::<Mock>::new(contract_id, mock);
+        // should now be 5
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
+        let value: GetCountResponse = from_binary(&res).unwrap();
+        assert_eq!(5, value.count);
+    }
 }
