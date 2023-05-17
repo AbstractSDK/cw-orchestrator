@@ -1,6 +1,6 @@
 [package]
 name = "mock-contract"
-version = "0.11.0-alpha.5"
+version = "0.1.0"
 description = "Mock constract for cw-orch macro testing"
 keywords = ["cosmwasm", "blockchain"]
 edition = { workspace = true }
