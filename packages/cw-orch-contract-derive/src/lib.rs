@@ -286,7 +286,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
 
     #[cfg(feature = "propagate_daemon")]
     let wasm_name = get_wasm_name();
-    
+
     let name = get_crate_to_struct();
 
     let contract_trait_ident = format_ident!("{}ContractImpl", name);
