@@ -8,7 +8,7 @@
 
 </div>
 
-Cw-orchestrator is a Rust library for interacting with [CosmWasm](https://cosmwasm.com/) smart contracts. It provides a type-safe interface to CosmWasm contracts and allows you to easily interact with them. It does this by providing a set of macros that generate type-safe interfaces to your contracts. You can then combine your contract interfaces into a single object that can be shared with others to ease integration efforts and encourage collaboration.
+A Rust tool for interacting with [CosmWasm](https://cosmwasm.com/) smart contracts. It provides a type-safe interface to CosmWasm contracts and allows you to easily interact with them. It does this by providing a set of macros that generate type-safe interfaces to your contracts. You can then combine your contract interfaces into a single object that can be shared with others to ease integration efforts and encourage collaboration.
 
 The documentation here gives you a brief overview of the functionality that cw-orchestrator provides. We provide more documentation at [orchestrator.abstract.money](https://orchestrator.abstract.money).
 
