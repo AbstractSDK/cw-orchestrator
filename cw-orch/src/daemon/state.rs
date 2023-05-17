@@ -230,6 +230,8 @@ impl Into<RegistryChainInfo> for ChainInfo<'_> {
     }
 }
 
+/// Information related to a blockchain network. 
+/// Available in [`networks`](crate::prelude::networks) or through the [`parse_network`](crate::prelude::networks::parse_network) function.
 #[derive(Clone, Debug)]
 pub struct ChainInfo<'a> {
     /// Identifier for the network ex. columbus-2
