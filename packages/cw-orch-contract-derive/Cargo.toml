@@ -17,5 +17,5 @@ propagate_daemon = []
 convert_case = "0.6.0"
 log = "0.4.17"
 quote = "1"
-schemars = "0.8.12"
+# schemars = "0.8.12"
 syn = { version = "1", features = ["full", "extra-traits"] }
