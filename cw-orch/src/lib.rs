@@ -22,4 +22,4 @@ mod interface_traits;
 mod keys;
 mod mock;
 mod paths;
-mod state;
+pub mod state;
