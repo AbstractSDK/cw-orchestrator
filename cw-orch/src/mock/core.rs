@@ -18,6 +18,22 @@ use super::state::MockState;
 /// Stores a local state with a mapping of contract_id -> code_id/address
 ///
 /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
+/// 
+/// ## Use
+/// ```
+/// # use cosmwasm_std::{Addr, coin, Uint128};
+/// use cw_orch::prelude::Mock;
+/// 
+/// let sender = Addr::unchecked("sender");
+/// let mock: Mock = Mock::new(&sender).unwrap();
+/// 
+/// // set a balance
+/// mock.set_balance(&sender, vec![coin(100u128, "token")]).unwrap();
+/// 
+/// // query the balance
+/// let balance: Uint128 = mock.query_balance(&sender, "token").unwrap();
+/// assert_eq!(balance.u128(), 100u128);
+/// ```
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
     /// Address used for the operations.

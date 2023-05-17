@@ -22,8 +22,8 @@ pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 ///
 /// ## Example
 /// ```rust,no_run
-/// use cw_orch::prelude::networks::parse_network
-/// let juno_mainnet: ChainInfo = parse_network("juno-1")
+/// use cw_orch::prelude::networks::{parse_network, ChainInfo};
+/// let juno_mainnet: ChainInfo = parse_network("juno-1");
 /// ```
 /// ---
 /// supported chains are: UNI_6, JUNO_1, LOCAL_JUNO, PISCO_1, PHOENIX_1, LOCAL_TERRA, INJECTIVE_888, CONSTANTINE_1, BARYON_1, INJECTIVE_1, HARPOON_4, OSMO_4, LOCAL_OSMO
