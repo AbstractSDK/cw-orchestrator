@@ -151,6 +151,16 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
             )
         })
         .collect();
+
+    let all_phantom_marker_values: Vec<TokenStream2> = all_generics
+        .iter()
+        .map(|_| {
+            quote!(
+                ::std::marker::PhantomData::default()
+            )
+        })
+        .collect();
+
     // We create necessary Debug + Serialize traits
     let all_debug_serialize: Vec<TokenStream2> = all_generics
         .iter()
@@ -172,6 +182,14 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
                 ::std::clone::Clone,
             )]
             pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
+
+            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+                pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+                    Self(
+                        ::cw_orch::contract::Contract::new(contract_id, chain)
+                    , #(#all_phantom_marker_values,)*)
+                }
+            }
 
             impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
                 fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
