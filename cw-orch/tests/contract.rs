@@ -41,9 +41,10 @@ mod tests {
             .is_ok();
 
         // do a query and validate its successful
-        let query_res = contract.query::<cw20::BalanceResponse>(&cw20_base::msg::QueryMsg::Balance {
-            address: sender.to_string(),
-        });
+        let query_res =
+            contract.query::<cw20::BalanceResponse>(&cw20_base::msg::QueryMsg::Balance {
+                address: sender.to_string(),
+            });
         asserting!("query is successful").that(&query_res).is_ok();
 
         // validate migrations are successful

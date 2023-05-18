@@ -1,4 +1,3 @@
-use crate::channel::ChannelAccess;
 use super::{
     builder::DaemonBuilder,
     cosmos_modules,
@@ -8,6 +7,7 @@ use super::{
     state::DaemonState,
     tx_resp::CosmTxResponse,
 };
+use crate::channel::ChannelAccess;
 use crate::{
     prelude::{queriers::CosmWasm, IndexResponse, Uploadable},
     state::ChainState,
