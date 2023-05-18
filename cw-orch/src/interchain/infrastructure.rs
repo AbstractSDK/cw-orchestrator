@@ -169,6 +169,7 @@ impl InterchainInfrastructure {
         Ok(daemons)
     }
 
+    // This function is a wrapper around `self.hermes.create_channel` that helps track the channel creation and all surrounding IBC messages
     pub async fn create_hermes_channel(
         &self,
         connection: &str,
