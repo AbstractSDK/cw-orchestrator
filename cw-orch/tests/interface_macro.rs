@@ -25,12 +25,6 @@ const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockContract;
 
-impl<Chain: CwEnv> MockContract<Chain> {
-    pub fn new(id: &str, chain: Chain) -> Self {
-        Self(Contract::new(id, chain))
-    }
-}
-
 impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         // create contract base configuration
