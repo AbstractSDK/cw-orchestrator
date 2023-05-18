@@ -204,9 +204,13 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
 /**
 Procedural macro to generate a cw-orchestrator interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
+**This macro can only be used in `contract.rs`**  
+
 ## Example
-```text
-// In crate "my-contract"
+
+```rust,ignore
+// In crate "my-contract::contract.rs"
+
 #[cfg_attr(feature="interface", interface_entry_point)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
@@ -219,9 +223,10 @@ pub fn instantiate(
 }
 // ... other entry points (execute, query, migrate)
 ```
+
 ### Generated code
 
-```ignore,ignore
+```rust,ignore
 // This struct represents the interface to the contract.
 pub struct MyContract<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
