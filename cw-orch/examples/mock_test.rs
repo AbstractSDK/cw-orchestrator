@@ -1,4 +1,36 @@
+use cosmwasm_std::Addr;
+
+use contract_counter::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
+use cw_orch::prelude::{CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload, Mock};
+
 extern crate cw_orch;
 mod counter_contract;
 
-pub fn main() {}
+pub fn main() {
+    let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
+    // let chain = networks::parse_network(&env::var("CHAIN").unwrap());
+
+    let mock = Mock::new(&sender).unwrap();
+
+    let contract_counter =
+        contract_counter::contract::ContractCounter::new("mock:contract_counter", mock);
+
+    let upload_res = contract_counter.upload().unwrap();
+    println!("upload_res: {:#?}", upload_res);
+
+    let init_res = contract_counter
+        .instantiate(&InstantiateMsg { count: 0 }, Some(&sender), None)
+        .unwrap();
+    println!("init_res: {:#?}", init_res);
+
+    let exec_res = contract_counter
+        .execute(&ExecuteMsg::Increment {}, None)
+        .unwrap();
+    println!("exec_res: {:#?}", exec_res);
+
+    let query_res = contract_counter
+        .query::<GetCountResponse>(&QueryMsg::GetCount {})
+        .unwrap();
+
+    println!("query_res: {:#?}", query_res);
+}
