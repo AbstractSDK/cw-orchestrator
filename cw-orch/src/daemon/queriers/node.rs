@@ -199,7 +199,7 @@ impl Node {
             events: events.clone(),
             page: page.unwrap_or(0), 
             limit: 100,
-            pagination: None,
+            pagination: None, // This is not used, so good. 
             order_by: order_by.unwrap_or(OrderBy::Desc).into()
         };
 

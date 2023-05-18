@@ -69,7 +69,7 @@ pub mod channel {
 }
 
 #[cfg(feature = "interchain")]
-pub use interchain::{hermes::Hermes, infrastructure::InterchainInfrastructure};
+pub use interchain::{hermes::Hermes, infrastructure::InterchainInfrastructure, follow_ibc_execution};
 
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as RegistryChainData, fetchable::Fetchable};
