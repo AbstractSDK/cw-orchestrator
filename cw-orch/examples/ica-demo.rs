@@ -38,14 +38,12 @@ use cw_orch::{
     networks::{osmosis::OSMO_2, JUNO_1},
     queriers::Bank,
     *,
-    prelude::WasmPath
+    prelude::WasmPath, follow_ibc_execution::follow_trail
 };
 
 use simple_ica_controller::msg::{self as controller_msgs};
 use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
-
-use cw_orch::queriers::DaemonQuerier;
 
 use tokio::runtime::Handle;
 
@@ -73,10 +71,7 @@ pub fn script() -> anyhow::Result<()> {
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
     rt.block_on(interchain
-        .hermes
-        .create_channel("connection-0", "simple-ica-v2", &controller, &host));
-    // wait for channel creation to complete
-    std::thread::sleep(std::time::Duration::from_secs(30));
+        .create_hermes_channel("connection-0", "simple-ica-v2", &controller, &host, Some(true)))?;
 
     // Track IBC on JUNO
     let juno_channel = juno.channel();
@@ -170,7 +165,7 @@ fn test_ica(
     assert_that!(&balance.amount).is_equal_to(100u128.to_string());
 
     // burn the juno remotely
-    controller.execute(
+    let burn_response = controller.execute(
         &controller_msgs::ExecuteMsg::SendMsgs {
             channel_id: channel,
             msgs: vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
@@ -181,8 +176,16 @@ fn test_ica(
         None,
     )?;
 
-    // wait a bit
-    std::thread::sleep(std::time::Duration::from_secs(30));
+    let local_chain_id = controller.get_chain().state().chain_id.clone();
+    let local_channel_id = controller.get_chain().channel();
+    // Folow the transaction execution
+    rt.block_on(follow_trail(
+        local_chain_id,
+        local_channel_id, 
+        burn_response.txhash,
+        Some(true))
+    )?;
+
     // check that the balance became 0
     let balance = rt.block_on(juno.query_client::<Bank>().balance(&remote_addr, "ujuno"))?;
     assert_that!(&balance.amount).is_equal_to(0u128.to_string());
