@@ -192,11 +192,18 @@ impl Node {
 
     /// Find TX by events
     pub async fn find_tx_by_events(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        self.find_tx_by_events_with_retries(events, page, order_by, MAX_TX_QUERY_RETRIES).await
+        self.find_tx_by_events_with_retries(events, page, order_by, false, MAX_TX_QUERY_RETRIES).await
     }
 
-    /// Find TX by events with a given amount of retries
-    pub async fn find_tx_by_events_with_retries(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>, retries: usize) -> Result<Vec<CosmTxResponse>, DaemonError> {
+    /// Find Tx by events and waits for until there is a non-empty response
+    pub async fn find_some_tx_by_events(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>) -> Result<Vec<CosmTxResponse>, DaemonError> {
+        self.find_tx_by_events_with_retries(events, page, order_by, true, MAX_TX_QUERY_RETRIES).await
+    }
+
+    /// Find TX by events with  : 
+    /// 1. Specify if an empty tx object is a valid response
+    /// 2. Specify a given amount of retries
+    pub async fn find_tx_by_events_with_retries(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>, retry_on_empty: bool, retries: usize) -> Result<Vec<CosmTxResponse>, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
@@ -212,14 +219,14 @@ impl Node {
             match client.get_txs_event(request.clone()).await {
                 Ok(tx) => {
                     let resp = tx.into_inner().tx_responses;
-                    if resp.is_empty() {
+                    if retry_on_empty && resp.is_empty(){
                         log::debug!("Not TX by events found");
                         log::debug!("Waiting 10s");
                         sleep(Duration::from_secs(10)).await;
                     }else{
                         log::debug!("TX found by events: {:?}", resp.iter().map(|t| t.txhash.clone()));
                         return Ok(resp.iter().map(|r| r.clone().into()).collect());
-                    }
+                    }   
                 }
                 Err(err) => {
                     log::debug!("TX not found with error: {:?}", err);

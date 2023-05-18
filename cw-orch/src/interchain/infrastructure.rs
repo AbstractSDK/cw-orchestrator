@@ -1,5 +1,7 @@
 //! Interactions with docker using bollard
 
+use tokio::time::Duration;
+use tokio::time::sleep;
 use ibc_chain_registry::chain::{ChainData, Grpc};
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
@@ -7,6 +9,7 @@ use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 
 use log4rs::Config;
+use tonic::transport::Channel;
 
 use std::collections::HashMap;
 use std::default::Default;
@@ -15,6 +18,7 @@ use tokio::runtime::Handle;
 
 use super::error::InterchainError;
 
+use crate::CosmTxResponse;
 use crate::{Daemon, DaemonError, ContractInstance};
 
 use super::docker::DockerHelper;
@@ -173,73 +177,79 @@ impl InterchainInfrastructure {
         contract_b: &dyn ContractInstance<Daemon>,
         configure_local_network: Option<bool>
     ) -> Result<(), DaemonError>{
-        // First we send the message to create the channel
+
+        let channel_creation_events_a = vec![
+            format!(
+                "channel_open_ack.port_id='wasm.{}'",
+                contract_a.address().unwrap()
+            ), // client is on chain1
+            format!(
+                "channel_open_ack.counterparty_port_id='wasm.{}'",
+                contract_b.address().unwrap()
+            ), // host is on chain2
+            format!("channel_open_ack.connection_id='{}'", connection),
+        ];
+
+        let channel_creation_events_b =  vec![
+            format!(
+                "channel_open_confirm.port_id='wasm.{}'",
+                contract_b.address().unwrap()
+            ),
+            format!(
+                "channel_open_confirm.counterparty_port_id='wasm.{}'",
+                contract_a.address().unwrap()
+            ),
+            format!("channel_open_confirm.connection_id='{}'", connection),
+        ];
+        let channel_a = contract_a.get_chain().channel();
+        let channel_b = contract_b.get_chain().channel();
+
+        // First we get the last transactions for channel creation on the port, to make sure the tx we will intercept later is a new one
+        let current_channel_creation_hash_a = &Node::new(channel_a.clone()).find_tx_by_events(
+            channel_creation_events_a.clone(),
+            None,
+            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+        ).await?.get(0).map(|tx| tx.txhash.clone());
+
+        let current_channel_creation_hash_b = &Node::new(channel_b.clone()).find_tx_by_events(
+            channel_creation_events_b.clone(),
+            None,
+            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+        ).await?.get(0).map(|tx| tx.txhash.clone());
+
+        // Then we can safely create the channel
         self
             .hermes
             .create_channel(connection, channel_version, contract_a, contract_b).await;
+
+        log::info!("Channel creation message sent to hermes, awaiting for channel creation end");
+
         // Then we make sure the channel is indeed created between the two chains
+        // We get the channel open on chain 1
+        let channel_creation_tx_a = find_new_tx_with_events(&channel_a, &channel_creation_events_a, current_channel_creation_hash_a).await?;
+        let channel_creation_tx_b = find_new_tx_with_events(&channel_b, &channel_creation_events_b, current_channel_creation_hash_b).await?;
 
-        // wait for channel creation to complete (this is unavaoidable with the current design for now)
-        // TODO, we may be able to check for the channel creation timestamp to be able to query new channels.
-        // Or query the channels before and after creation for a diff
-        std::thread::sleep(std::time::Duration::from_secs(30));
-
-
-        // Then we query the LAST transactions that register the channel creation between those two ports and see if something matches
-        // On chain 1
-        let channel_creation_tx1 = &Node::new(contract_a.get_chain().channel()).find_tx_by_events(
-            vec![
-                format!(
-                    "channel_open_ack.port_id='wasm.{}'",
-                    contract_a.address().unwrap()
-                ), // client is on chain1
-                format!(
-                    "channel_open_ack.counterparty_port_id='wasm.{}'",
-                    contract_b.address().unwrap()
-                ), // host is on chain2
-                format!("channel_open_ack.connection_id='{}'", connection),
-            ],
-            None,
-            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
-        ).await?[0];
-
-        // On chain 2
-        let channel_creation_tx2 = &Node::new(contract_b.get_chain().channel()).find_tx_by_events(
-            vec![
-                format!(
-                    "channel_open_confirm.port_id='wasm.{}'",
-                    contract_b.address().unwrap()
-                ),
-                format!(
-                    "channel_open_confirm.counterparty_port_id='wasm.{}'",
-                    contract_a.address().unwrap()
-                ),
-                format!("channel_open_confirm.connection_id='{}'", connection),
-            ],
-            None,
-            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
-        ).await?[0];
 
         log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}' (txhash : {})", 
             contract_a.address().unwrap(),
             contract_b.address().unwrap(),
             connection,
             contract_a.get_chain().state().chain_id,
-            channel_creation_tx1.get_events("channel_open_ack")[0].get_first_attribute_value("channel_id").unwrap(),
-            channel_creation_tx1.txhash,
+            channel_creation_tx_a.get_events("channel_open_ack")[0].get_first_attribute_value("channel_id").unwrap(),
+            channel_creation_tx_a.txhash,
             contract_b.get_chain().state().chain_id,
-            channel_creation_tx2.get_events("channel_open_confirm")[0].get_first_attribute_value("channel_id").unwrap(),
-            channel_creation_tx2.txhash,
+            channel_creation_tx_b.get_events("channel_open_confirm")[0].get_first_attribute_value("channel_id").unwrap(),
+            channel_creation_tx_b.txhash,
         );
 
         // Finally, we make sure additional packets are resolved before returning
         let grpc_channel_a = contract_a.get_chain().channel();
         let chain_id_a = contract_a.get_chain().state().chain_id.clone();
-        let tx_hash_a =  channel_creation_tx1.txhash.clone();
+        let tx_hash_a =  channel_creation_tx_a.txhash.clone();
 
         let grpc_channel_b = contract_b.get_chain().channel();
         let chain_id_b = contract_b.get_chain().state().chain_id.clone();
-        let tx_hash_b =  channel_creation_tx2.txhash.clone();
+        let tx_hash_b =  channel_creation_tx_b.txhash.clone();
 
         follow_trail(
             chain_id_a,
@@ -256,6 +266,31 @@ impl InterchainInfrastructure {
         ).await.unwrap();
         Ok(())
     }
+}
+
+const MAX_TX_QUERY_RETRIES: usize = 5;
+async fn find_new_tx_with_events(channel: &Channel, events: &Vec<String>, last_hash: &Option<String>) -> Result<CosmTxResponse, DaemonError>{
+    for _ in 0..MAX_TX_QUERY_RETRIES {
+            match  &Node::new(channel.clone()).find_tx_by_events(
+            events.clone(),
+            None,
+            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+        ).await {
+                Ok(txs) => {
+                    if let Some(tx) = txs.get(0){
+                        if tx.txhash != last_hash.clone().unwrap_or("".to_string()){
+                            return Ok(tx.clone());
+                        }
+                    }
+                    log::debug!("No new TX by events found");
+                    log::debug!("Waiting 10s");
+                    sleep(Duration::from_secs(10)).await;
+                },
+                Err(_) => break,
+            }
+        };
+
+    Err(DaemonError::AnyError(anyhow::Error::msg(format!("No newer TX than {:?} found with events {:?}", last_hash, events))))
 }
 
 /// Get the file path for the log target

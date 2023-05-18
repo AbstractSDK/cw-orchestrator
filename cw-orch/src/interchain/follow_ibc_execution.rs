@@ -121,7 +121,7 @@ pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String, co
 
     // 1. Getting IBC related events for the current tx
     let tx = Node::new(channel1.clone())
-        .find_tx_with_retries(tx_hash.clone(), 3).await?;
+        .find_tx(tx_hash.clone()).await?;
 
 
     let send_packet_events = tx.get_events("send_packet");
@@ -190,7 +190,7 @@ pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String, co
 
 
             let txs = Node::new(this_counter_part_channel)
-                .find_tx_by_events(event_query, None, None)
+                .find_some_tx_by_events(event_query, None, None)
                 .await
                 .unwrap();
 
@@ -277,7 +277,7 @@ pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String, co
                 format!("acknowledge_packet.packet_sequence='{}'", this_sequence),
             ];
             let txs = Node::new(channel1)
-                .find_tx_by_events(ack_events_string, None, None)
+                .find_some_tx_by_events(ack_events_string, None, None)
                 .await
                 .unwrap();
 
