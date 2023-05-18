@@ -55,24 +55,6 @@ pub struct ChainInfo<'a> {
     pub kind: ChainKind,
 }
 
-#[derive(Clone, Debug)]
-pub struct ChainInfoOwned {
-    /// Identifier for the network ex. columbus-2
-    pub chain_id: String,
-    /// Max gas and denom info
-    // #[serde(with = "cosm_denom_format")]
-    pub gas_denom: String,
-    /// gas price
-    pub gas_price: f64,
-    pub grpc_urls: Vec<String>,
-    /// Optional urls for custom functionality
-    pub lcd_url: Option<String>,
-    pub fcd_url: Option<String>,
-    /// Underlying network details (coin type, address prefix, etc)
-    pub network_info: NetworkInfoOwned,
-    pub kind: ChainKind,
-}
-
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct NetworkInfo<'a> {
     pub id: &'a str,
@@ -80,25 +62,6 @@ pub struct NetworkInfo<'a> {
     pub pub_address_prefix: &'a str,
     /// coin type for key derivation
     pub coin_type: u32,
-}
-
-#[derive(Clone, Debug, Serialize, Default)]
-pub struct NetworkInfoOwned {
-    pub id: String,
-    /// address prefix
-    pub pub_address_prefix: String,
-    /// coin type for key derivation
-    pub coin_type: u32,
-}
-
-impl From<NetworkInfo<'_>> for NetworkInfoOwned {
-    fn from(info: NetworkInfo<'_>) -> Self {
-        Self {
-            id: info.id.to_owned(),
-            pub_address_prefix: info.pub_address_prefix.to_owned(),
-            coin_type: info.coin_type,
-        }
-    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
