@@ -22,9 +22,34 @@ required-features = ["interchain"]
 # run with `cargo test --jobs 1 --features node-tests`
 node-tests = ["daemon"]
 # enable the optional dependencies
-daemon = ["dep:ibc-chain-registry", "dep:ibc-relayer-types", "dep:tokio", "dep:tonic", "dep:secp256k1", "dep:reqwest", "dep:base64", "dep:hkd32", "dep:rand_core", "dep:ed25519-dalek", "dep:cosmrs", "dep:derive_builder", "dep:eyre", "dep:chrono", "dep:base16", "dep:ripemd", "dep:ring", "dep:hex", "dep:bitcoin", "dep:prost", "dep:sha256", "dep:log4rs", "dep:diff-struct", "dep:futures-util", "cw-orch-contract-derive/propagate_daemon"]
+daemon = [
+  "dep:ibc-chain-registry",
+  "dep:ibc-relayer-types",
+  "dep:tokio",
+  "dep:tonic",
+  "dep:secp256k1",
+  "dep:reqwest",
+  "dep:base64",
+  "dep:hkd32",
+  "dep:rand_core",
+  "dep:ed25519-dalek",
+  "dep:cosmrs",
+  "dep:derive_builder",
+  "dep:eyre",
+  "dep:chrono",
+  "dep:base16",
+  "dep:ripemd",
+  "dep:ring",
+  "dep:hex",
+  "dep:bitcoin",
+  "dep:prost",
+  "dep:log4rs",
+  "dep:diff-struct",
+  "dep:futures-util",
+  "cw-orch-contract-derive/propagate_daemon",
+]
 # Interact with interchaintest's docker nodes
-interchain = ["daemon", "dep:bollard"]
+interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
 
 [dependencies]
 dotenv = "0.15.0"
@@ -43,7 +68,7 @@ serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
 
 # Daemon deps
-sha256 = { version = "1.1.1", optional=true }
+sha256 = { version = "1.1.1" }
 prost = { version = "0.11", optional = true }
 bitcoin = { version = "0.30.0", optional = true }
 hex = { version = "0.4.3", optional = true }
@@ -79,15 +104,15 @@ bollard = { version = "0.14.0", optional = true }
 futures-util = { version = "0.3.28", optional = true }
 log4rs = { version = "1", optional = true }
 cosmwasm-schema = "1.2.5"
-async-recursion = "1.0.4"
+async-recursion = { version = "1.0.4", optional = true }
 futures = "0.3.28"
 cosmos-sdk-proto = "0.19.0"
 
 [dev-dependencies]
 dotenv = { version = "0.15.0" }
 env_logger = { version = "0.10.0" }
-simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git" }
-simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git" }
+simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
+simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 cw-orch = { features = ["daemon"], path = "." }
 uid = "0.1.7"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }

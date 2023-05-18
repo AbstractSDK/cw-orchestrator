@@ -51,7 +51,7 @@ pub enum AckResponse {
 
 /// Follow all IBC packets included in a transaction (recursively).
 /// ## Example
-/// ```no_run,ignore
+/// ```no_run 
 ///  use cw_orch::prelude::{DaemonAsync};
 ///
 ///  let grpc_channel = DaemonAsync::builder()
