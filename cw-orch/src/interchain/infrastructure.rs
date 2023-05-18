@@ -15,12 +15,15 @@ use tokio::runtime::Handle;
 
 use super::error::InterchainError;
 
-use crate::{Daemon, DaemonError};
+use crate::{Daemon, DaemonError, ContractInstance};
 
 use super::docker::DockerHelper;
 use super::hermes::Hermes;
 use super::IcResult;
 use crate::state::ChainState;
+use crate::queriers::Node;
+use crate::daemon::queriers::DaemonQuerier;
+use crate::follow_ibc_execution::follow_trail;
 
 pub type ContainerId = String;
 pub type Port = String;
@@ -160,6 +163,98 @@ impl InterchainInfrastructure {
             daemons.insert(chain.chain_id.to_string(), daemon);
         }
         Ok(daemons)
+    }
+
+    pub async fn create_hermes_channel(
+        &self,
+        connection: &str,
+        channel_version: &str,
+        contract_a: &dyn ContractInstance<Daemon>,
+        contract_b: &dyn ContractInstance<Daemon>,
+        configure_local_network: Option<bool>
+    ) -> Result<(), DaemonError>{
+        // First we send the message to create the channel
+        self
+            .hermes
+            .create_channel(connection, channel_version, contract_a, contract_b).await;
+        // Then we make sure the channel is indeed created between the two chains
+
+        // wait for channel creation to complete (this is unavaoidable with the current design for now)
+        // TODO, we may be able to check for the channel creation timestamp to be able to query new channels.
+        // Or query the channels before and after creation for a diff
+        std::thread::sleep(std::time::Duration::from_secs(30));
+
+
+        // Then we query the LAST transactions that register the channel creation between those two ports and see if something matches
+        // On chain 1
+        let channel_creation_tx1 = &Node::new(contract_a.get_chain().channel()).find_tx_by_events(
+            vec![
+                format!(
+                    "channel_open_ack.port_id='wasm.{}'",
+                    contract_a.address().unwrap()
+                ), // client is on chain1
+                format!(
+                    "channel_open_ack.counterparty_port_id='wasm.{}'",
+                    contract_b.address().unwrap()
+                ), // host is on chain2
+                format!("channel_open_ack.connection_id='{}'", connection),
+            ],
+            None,
+            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+        ).await?[0];
+
+        // On chain 2
+        let channel_creation_tx2 = &Node::new(contract_b.get_chain().channel()).find_tx_by_events(
+            vec![
+                format!(
+                    "channel_open_confirm.port_id='wasm.{}'",
+                    contract_b.address().unwrap()
+                ),
+                format!(
+                    "channel_open_confirm.counterparty_port_id='wasm.{}'",
+                    contract_a.address().unwrap()
+                ),
+                format!("channel_open_confirm.connection_id='{}'", connection),
+            ],
+            None,
+            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+        ).await?[0];
+
+        log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}(txhash : {})'", 
+            contract_a.address().unwrap(),
+            contract_b.address().unwrap(),
+            connection,
+            contract_a.get_chain().state().chain_id,
+            channel_creation_tx1.get_events("channel_open_ack")[0].get_first_attribute_value("channel_id").unwrap(),
+            channel_creation_tx1.txhash,
+            contract_b.get_chain().state().chain_id,
+            channel_creation_tx2.get_events("channel_open_confirm")[0].get_first_attribute_value("channel_id").unwrap(),
+            channel_creation_tx2.txhash,
+        );
+
+        // Finally, we make sure additional packets are resolved before returning
+        let grpc_channel_a = contract_a.get_chain().channel();
+        let chain_id_a = contract_a.get_chain().state().chain_id.clone();
+        let tx_hash_a =  channel_creation_tx1.txhash.clone();
+
+        let grpc_channel_b = contract_b.get_chain().channel();
+        let chain_id_b = contract_b.get_chain().state().chain_id.clone();
+        let tx_hash_b =  channel_creation_tx2.txhash.clone();
+
+        follow_trail(
+            chain_id_a,
+            grpc_channel_a,
+            tx_hash_a,
+            configure_local_network
+        ).await.unwrap();
+
+        follow_trail(
+            chain_id_b,
+            grpc_channel_b,
+            tx_hash_b,
+            configure_local_network
+        ).await.unwrap();
+        Ok(())
     }
 }
 

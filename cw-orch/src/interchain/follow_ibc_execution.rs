@@ -1,5 +1,5 @@
 use futures::future::{try_join_all, join_all};
-use futures::Future;
+
 use tonic::transport::Channel;
 use base64::{engine::general_purpose, Engine as _};
 use anyhow::{bail, Result};
@@ -10,15 +10,16 @@ use ibc_chain_registry::chain::{ChainData};
 
 use crate::{
     CosmTxResponse, DaemonError, InterchainInfrastructure,
-    daemon::
-        DaemonAsync,
+    daemon::{
+        channel::GrpcChannel
+    },
     queriers::{
         DaemonQuerier, Ibc, Node
     },
     networks::parse_network,
 };
 
-use super::IcResult;
+
 
 pub async fn get_channel(chain_id: String, configure_local_network: Option<bool>) -> Result<Channel>{
 
@@ -27,10 +28,8 @@ pub async fn get_channel(chain_id: String, configure_local_network: Option<bool>
         InterchainInfrastructure::configure_networks(&mut chains).await?;
     }
 
-    Ok(DaemonAsync::builder()
-        .chain(chains[0].clone())
-        .build().await?.channel()
-    )
+    Ok(GrpcChannel::connect(&chains[0].apis.grpc, &chains[0].chain_id).await?)
+
 }
 
 // type is from cosmos_sdk_proto::ibc::core::channel::v1::acknowledgement::Response
@@ -119,7 +118,6 @@ pub enum AckResponse {
 #[async_recursion::async_recursion]
 pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String, configure_local_network: Option<bool>) -> Result<()> 
 {
-
 
     // 1. Getting IBC related events for the current tx
     let tx = Node::new(channel1.clone())
