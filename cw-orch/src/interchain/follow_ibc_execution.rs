@@ -1,4 +1,5 @@
 use futures::future::{try_join_all, join_all};
+use futures::Future;
 use tonic::transport::Channel;
 use base64::{engine::general_purpose, Engine as _};
 use anyhow::{bail, Result};
@@ -17,10 +18,14 @@ use crate::{
     networks::parse_network,
 };
 
-pub async fn get_channel(chain_id: String) -> Result<Channel>{
+use super::IcResult;
+
+pub async fn get_channel(chain_id: String, configure_local_network: Option<bool>) -> Result<Channel>{
 
     let mut chains: Vec<ChainData> = vec![parse_network(&chain_id).into()];
-    InterchainInfrastructure::configure_networks(&mut chains).await?;
+    if configure_local_network.unwrap_or(false) {
+        InterchainInfrastructure::configure_networks(&mut chains).await?;
+    }
 
     Ok(DaemonAsync::builder()
         .chain(chains[0].clone())
@@ -28,7 +33,6 @@ pub async fn get_channel(chain_id: String) -> Result<Channel>{
         .build().await?.channel()
     )
 }
-
 
 // This was coded thanks to this wonderful guide : https://github.com/CosmWasm/cosmwasm/blob/main/IBC.md
 
@@ -56,7 +60,8 @@ pub enum AckResponse {
     // 3. Then we look for the acknowledgment packet that should always be traced back during this transaction for all packets
 
 #[async_recursion::async_recursion]
-pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String) -> Result<()>{
+pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String, configure_local_network: Option<bool>) -> Result<()> 
+    {
 
 
     // 1. Getting IBC related events for the current tx
@@ -118,7 +123,7 @@ pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String) ->
 
     let counter_party_grpc_channels: Vec<Channel> = 
         join_all(chain_ids.iter().map(|chain| async{
-            get_channel(chain.clone()).await.unwrap()
+            get_channel(chain.clone(), configure_local_network).await.unwrap()
         })
     ).await;
 
@@ -256,7 +261,7 @@ pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String) ->
             let counter_party_grpc = counter_party_grpc_channels[i].clone();
             let chain_id = chain_ids[i].clone();
             let hash = tx.txhash.clone();
-            tokio::spawn(follow_trail(chain_id, counter_party_grpc, hash))
+            tokio::spawn(follow_trail(chain_id, counter_party_grpc, hash, None))
         })
         .collect::<Vec<_>>()
     ).await?.into_iter().collect::<Result<Vec<_>>>()?; // tokio::spawn yields a result, so we need to transform the resulting vec of result to a result of vec
@@ -265,7 +270,7 @@ pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String) ->
         let channel1 = channel1.clone();
         let chain1 = chain1.clone();
         let hash = tx.txhash.clone();
-        tokio::spawn(follow_trail(chain1, channel1, hash))
+        tokio::spawn(follow_trail(chain1, channel1, hash, None))
     
     }).collect::<Vec<_>>()
     ).await?.into_iter().collect::<Result<Vec<_>>>()?;
