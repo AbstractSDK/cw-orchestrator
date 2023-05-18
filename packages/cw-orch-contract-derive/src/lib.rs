@@ -377,7 +377,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
                 #name::<::cw_orch::prelude::Mock>::get_query()(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
             }
-            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
+            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
                 if let Some(sudo) = #name::<::cw_orch::prelude::Mock>::get_sudo() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
                     sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
