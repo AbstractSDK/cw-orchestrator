@@ -15,11 +15,14 @@ pub struct InstantiateMsg {}
 
 #[cw_serde]
 #[cfg_attr(feature = "cw-orch", derive(cw_orch::ExecuteFns))]
-pub enum ExecuteMsg {
+pub enum ExecuteMsg<T = String> {
     FirstMessage {},
     #[cfg_attr(feature = "cw-orch", payable)]
     SecondMessage {
-        t: String,
+        t: T,
+    },
+    ThirdMessage {
+        t: T,
     },
 }
 
@@ -62,6 +65,7 @@ pub fn execute(
             Ok(Response::new().add_attribute("action", "first message passed"))
         }
         ExecuteMsg::SecondMessage { t: _ } => Err(StdError::generic_err("Second Message Failed")),
+        ExecuteMsg::ThirdMessage { .. } => Ok(Response::new().add_attribute("action", "third message passed"))
     }
 }
 
