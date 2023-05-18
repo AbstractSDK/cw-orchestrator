@@ -1,4 +1,5 @@
 pub mod builder;
+pub mod chain_info;
 pub mod channel;
 pub mod core;
 pub mod error;
