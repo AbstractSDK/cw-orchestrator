@@ -3,10 +3,10 @@ mod common;
 #[cfg(feature = "node-tests")]
 mod queriers {
 
+    use contract_counter::msg::InstantiateMsg;
     use cw_orch::{daemon::channel::GrpcChannel, environment::TxHandler, prelude::networks};
     use ibc_chain_registry::chain::Grpc;
     use ibc_relayer_types::core::ics24_host::identifier::ChainId;
-    use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
     use std::str::FromStr;
 
@@ -227,15 +227,15 @@ mod queriers {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
+        let contract = contract_counter::contract::ContractCounter::new(
+            format!("test:contract_counter:{}", Id::new()),
             daemon.clone(),
         );
 
         contract.upload().unwrap();
 
         contract
-            .instantiate(&InstantiateMsg {}, Some(&sender), None)
+            .instantiate(&InstantiateMsg { count: 0 }, Some(&sender), None)
             .unwrap();
 
         let contract_address = contract.address().unwrap();

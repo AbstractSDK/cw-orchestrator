@@ -1,22 +1,10 @@
 // Dependencies
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-use cw2::set_contract_version;
-use std::{env, path::Path};
+use std::env;
 use tokio::runtime::Runtime;
 
 // cw-orchestrator Dependencies
-use cw_orch::{
-    networks, Addr, CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload, Daemon, Mock,
-    TxHandler,
-};
-
-use super::error::ContractError;
-use super::msgs::{CurrentCount, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use super::state::{Count, COUNT};
-
-// Contract version and name
-pub const CONTRACT_NAME: &str = "mydev:CounterContract";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+use contract_counter::msg::*;
+use cw_orch::prelude::*;
 
 // Most of our contract will look the same to the average CosmWasm contract
 // the main difference is the amount of code that we need to get started.
@@ -39,64 +27,64 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 // This also generates a struct using our contract cargo name using PascalCase.
 // In this example the name is CounterContract.
 // This macro helps us with basic logic, keeps our contracts DRY and more important, it helps us speed our development process up
-#[cw_orch::interface_entry_point]
-pub fn instantiate(
-    deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
-    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+// #[cw_orch::interface_entry_point]
+// pub fn instantiate(
+//     deps: DepsMut,
+//     _env: Env,
+//     _info: MessageInfo,
+//     msg: InstantiateMsg,
+// ) -> Result<Response, ContractError> {
+//     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    COUNT.save(deps.storage, &Count(msg.initial_value))?;
+//     state::STATE.save(deps.storage, &Count(msg.initial_value))?;
 
-    Ok(Response::default().add_attribute("initial_value", msg.initial_value.to_string()))
-}
+//     Ok(Response::default().add_attribute("initial_value", msg.initial_value.to_string()))
+// }
 
-#[cw_orch::interface_entry_point]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::GetCount => Ok(to_binary(&CurrentCount(COUNT.load(deps.storage)?.0))?),
-    }
-}
+// #[cw_orch::interface_entry_point]
+// pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+//     match msg {
+//         GetCount => Ok(to_binary(&CurrentCount(COUNT.load(deps.storage)?.0))?),
+//     }
+// }
 
-#[cw_orch::interface_entry_point]
-pub fn execute(
-    deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
-    let response = match msg {
-        ExecuteMsg::Increase => {
-            let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_add(1u128.into())?;
-            COUNT.save(deps.storage, &Count(value))?;
-            Response::default().add_attribute("action", "increase")
-        }
-        ExecuteMsg::Decrase => {
-            let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_sub(1u128.into())?;
-            COUNT.save(deps.storage, &Count(value))?;
-            Response::default().add_attribute("action", "decrease")
-        }
-        ExecuteMsg::IncreaseBy(amount) => {
-            let mut value = COUNT.load(deps.storage)?.0;
-            value = value.checked_add(amount)?;
-            COUNT.save(deps.storage, &Count(value))?;
-            Response::default().add_attribute("action", "increase_by")
-        }
-    };
+// #[cw_orch::interface_entry_point]
+// pub fn execute(
+//     deps: DepsMut,
+//     _env: Env,
+//     _info: MessageInfo,
+//     msg: ExecuteMsg,
+// ) -> Result<Response, ContractError> {
+//     let response = match msg {
+//         ExecuteMsg::Increase => {
+//             let mut value = COUNT.load(deps.storage)?.0;
+//             value = value.checked_add(1u128.into())?;
+//             COUNT.save(deps.storage, &Count(value))?;
+//             Response::default().add_attribute("action", "increase")
+//         }
+//         ExecuteMsg::Decrase => {
+//             let mut value = COUNT.load(deps.storage)?.0;
+//             value = value.checked_sub(1u128.into())?;
+//             COUNT.save(deps.storage, &Count(value))?;
+//             Response::default().add_attribute("action", "decrease")
+//         }
+//         ExecuteMsg::IncreaseBy(amount) => {
+//             let mut value = COUNT.load(deps.storage)?.0;
+//             value = value.checked_add(amount)?;
+//             COUNT.save(deps.storage, &Count(value))?;
+//             Response::default().add_attribute("action", "increase_by")
+//         }
+//     };
 
-    Ok(response)
-}
+//     Ok(response)
+// }
 
-#[cw_orch::interface_entry_point]
-pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-    set_contract_version(deps.storage, CONTRACT_NAME, msg.version)?;
-    COUNT.save(deps.storage, &Count(msg.conf.initial_value))?;
-    Ok(Response::default().add_attribute("action", "migrate"))
-}
+// #[cw_orch::interface_entry_point]
+// pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+//     set_contract_version(deps.storage, CONTRACT_NAME, msg.version)?;
+//     COUNT.save(deps.storage, &Count(msg.initial_value))?;
+//     Ok(Response::default().add_attribute("action", "migrate"))
+// }
 
 // Now that we have setup for our contract entry points, We can continue to the next step.
 // This is where more of the magic of cw-orchestrator occurs
@@ -111,30 +99,25 @@ fn dev(contract_id: String) {
 
     let mock = Mock::new(&sender).unwrap();
 
-    let contract_counter = CounterContract::<Mock>::new(contract_id, mock);
+    let contract_counter = contract_counter::contract::ContractCounter::new(contract_id, mock);
 
     let upload_res = contract_counter.upload().unwrap();
     println!("upload_res: {:#?}", upload_res);
 
     let init_res = contract_counter
-        .instantiate(
-            &msgs::InstantiateMsg {
-                initial_value: 0u128.into(),
-            },
-            Some(&sender),
-            None,
-        )
+        .instantiate(&InstantiateMsg { count: 0 }, Some(&sender), None)
         .unwrap();
     println!("init_res: {:#?}", init_res);
 
     let exec_res = contract_counter
-        .execute(&msgs::ExecuteMsg::Increase, None)
+        .execute(&ExecuteMsg::Increment {}, None)
         .unwrap();
     println!("exec_res: {:#?}", exec_res);
 
     let query_res = contract_counter
-        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
+        .query::<GetCountResponse>(&QueryMsg::GetCount {})
         .unwrap();
+
     println!("query_res: {:#?}", query_res);
 }
 
@@ -167,37 +150,36 @@ fn local(contract_id: String) {
         panic!("Error: {}", res.err().unwrap());
     };
 
-    let contract_counter = CounterContract::<Daemon>::new(contract_id, daemon.clone());
+    let contract_counter =
+        contract_counter::contract::ContractCounter::new(contract_id, daemon.clone());
 
     let upload_res = contract_counter.upload().unwrap();
     println!("upload_res: {:#?}", upload_res);
 
     let init_res = contract_counter
         .instantiate(
-            &msgs::InstantiateMsg {
-                initial_value: 0u128.into(),
-            },
-            Some(&contract_counter.0.get_chain().sender()),
+            &InstantiateMsg { count: 0 },
+            Some(&contract_counter.get_chain().sender()),
             None,
         )
         .unwrap();
     println!("init_res: {:#?}", init_res);
 
     let exec_res = contract_counter
-        .execute(&msgs::ExecuteMsg::Increase, None)
+        .execute(&ExecuteMsg::Increment {}, None)
         .unwrap();
     println!("exec_res: {:#?}", exec_res);
 
     let query_res = contract_counter
-        .query::<msgs::CurrentCount>(&msgs::QueryMsg::GetCount)
+        .query::<GetCountResponse>(&QueryMsg::GetCount {})
         .unwrap();
     println!("query_res: {:#?}", query_res);
 }
 
 fn main() {
-    pretty_env_logger::init();
+    // pretty_env_logger::init();
 
-    let _ = dotenvy::from_path(Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
+    // let _ = dotenvy::from_path(Path::new(&format!("{}/.env", env!("CARGO_MANIFEST_DIR"))));
 
     let args = std::env::args();
 

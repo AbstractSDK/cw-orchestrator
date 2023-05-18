@@ -7,7 +7,7 @@ use cw_orch::prelude::ContractWrapper;
 use cw_orch::prelude::Uploadable;
 use cw_orch::prelude::WasmPath;
 
-use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use contract_counter::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
 use cw_orch::prelude::ContractInstance;
@@ -23,15 +23,15 @@ use cw_orch::interface;
 const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct MockContract;
+pub struct ContractCounter;
 
-impl<Chain: CwEnv> MockContract<Chain> {
+impl<Chain: CwEnv> ContractCounter<Chain> {
     pub fn new(id: &str, chain: Chain) -> Self {
         Self(Contract::new(id, chain))
     }
 }
 
-impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
+impl<Chain: CwEnv> Uploadable for ContractCounter<Chain> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         // create contract base configuration
         let crate_path = env!("CARGO_MANIFEST_DIR");
@@ -42,43 +42,41 @@ impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
-                mock_contract::execute,
-                mock_contract::instantiate,
-                mock_contract::query,
+                contract_counter::contract::execute,
+                contract_counter::contract::instantiate,
+                contract_counter::contract::query,
             )
-            .with_migrate(mock_contract::migrate),
+            .with_migrate(contract_counter::contract::migrate),
         )
     }
 }
 
 #[test]
 fn test_instantiate() {
-    let contract = MockContract::new(
+    let contract = ContractCounter::new(
         "test:mock_contract",
         Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
     );
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, None, None)
+        .instantiate(&InstantiateMsg { count: 0 }, None, None)
         .unwrap();
 }
 
 #[test]
 fn test_execute() {
-    let contract = MockContract::new(
+    let contract = ContractCounter::new(
         "test:mock_contract",
         Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
     );
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, None, None)
+        .instantiate(&InstantiateMsg { count: 0 }, None, None)
         .unwrap();
 
-    let response = contract
-        .execute(&ExecuteMsg::FirstMessage {}, None)
-        .unwrap();
+    let response = contract.execute(&ExecuteMsg::Increment {}, None).unwrap();
     response.has_event(
         &Event::new("wasm")
             .add_attribute("_contract_addr", "contract0")
@@ -86,38 +84,34 @@ fn test_execute() {
     );
 
     contract
-        .execute(&ExecuteMsg::SecondMessage { t: "".to_string() }, None)
+        .execute(&ExecuteMsg::Reset { count: 0 }, None)
         .unwrap_err();
 }
 
 #[test]
 fn test_query() {
-    let contract = MockContract::new(
+    let contract = ContractCounter::new(
         "test:mock_contract",
         Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
     );
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, None, None)
+        .instantiate(&InstantiateMsg { count: 0 }, None, None)
         .unwrap();
 
-    let response: String = contract.query(&QueryMsg::FirstQuery {}).unwrap();
+    let response: String = contract.query(&QueryMsg::GetCount {}).unwrap();
     assert_eq!(response, "first query passed");
-
-    contract
-        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
-        .unwrap_err();
 }
 
 #[test]
 fn test_migrate() {
     let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::new("test:mock_contract", Mock::new(&admin).unwrap());
+    let contract = ContractCounter::new("test:mock_contract", Mock::new(&admin).unwrap());
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&admin), None)
+        .instantiate(&InstantiateMsg { count: 0 }, Some(&admin), None)
         .unwrap();
 
     contract
@@ -155,34 +149,28 @@ fn daemon_test() {
         .build()
         .unwrap();
 
-    let contract = mock_contract::MockContract::new(
+    let contract = contract_counter::contract::ContractCounter::new(
         format!("test:mock_contract:{}", Id::new()),
         daemon.clone(),
     );
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&daemon.sender()), None)
+        .instantiate(&InstantiateMsg { count: 0 }, Some(&daemon.sender()), None)
         .unwrap();
 
-    let response = contract
-        .execute(&ExecuteMsg::FirstMessage {}, None)
-        .unwrap();
+    let response = contract.execute(&ExecuteMsg::Increment {}, None).unwrap();
     assert_eq!(
         response.get_events("wasm")[0].get_first_attribute_value("action"),
         Some("first message passed".to_string())
     );
 
     contract
-        .execute(&ExecuteMsg::SecondMessage { t: "".to_string() }, None)
+        .execute(&ExecuteMsg::Reset { count: 0 }, None)
         .unwrap_err();
 
-    let response: String = contract.query(&QueryMsg::FirstQuery {}).unwrap();
+    let response: String = contract.query(&QueryMsg::GetCount {}).unwrap();
     assert_eq!(response, "first query passed");
-
-    contract
-        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
-        .unwrap_err();
 
     contract
         .migrate(
