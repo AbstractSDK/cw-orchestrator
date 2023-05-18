@@ -42,9 +42,9 @@ impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
-                mock_contract::execute,
-                mock_contract::instantiate,
-                mock_contract::query,
+                mock_contract_u64::execute,
+                mock_contract_u64::instantiate,
+                mock_contract_u64::query,
             )
             .with_migrate(mock_contract::migrate),
         )
@@ -86,16 +86,14 @@ fn test_execute() {
             .add_attribute("action", "first message passed"),
     );
 
-
-    // The two following calls should error because the contract only accepts Strings as ExecuteMsg generic parameter (default value)
-    // But they compile and that's the intended behavior
-    // TODO create a second contract with u64 as parameter
     contract
         .execute(&ExecuteMsg::SecondMessage { t: 46u64 }, None)
         .unwrap_err();
+
+    // This call should not error, the types are good now
     contract
         .execute(&ExecuteMsg::ThirdMessage {t: 67u64}, None)
-        .unwrap_err();
+        .unwrap();
 }
 
 #[test]

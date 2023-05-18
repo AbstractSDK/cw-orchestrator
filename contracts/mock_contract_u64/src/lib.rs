@@ -1,5 +1,5 @@
-use cosmwasm_schema::cw_serde;
-use cosmwasm_schema::QueryResponses;
+use mock_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+
 use cosmwasm_std::to_binary;
 use cosmwasm_std::Binary;
 use cosmwasm_std::Deps;
@@ -10,36 +10,6 @@ use cosmwasm_std::StdError;
 use cosmwasm_std::StdResult;
 use cosmwasm_std::{entry_point, Env};
 
-#[cw_serde]
-pub struct InstantiateMsg {}
-
-#[cw_serde]
-#[cfg_attr(feature = "cw-orch", derive(cw_orch::ExecuteFns))]
-pub enum ExecuteMsg<T = String> {
-    FirstMessage {},
-    #[cfg_attr(feature = "cw-orch", payable)]
-    SecondMessage {
-        t: T,
-    },
-    ThirdMessage {
-        t: T,
-    },
-}
-
-#[cw_serde]
-#[cfg_attr(feature = "cw-orch", derive(cw_orch::QueryFns))]
-#[derive(QueryResponses)]
-pub enum QueryMsg {
-    #[returns(String)]
-    FirstQuery {},
-    #[returns(String)]
-    SecondQuery { t: String },
-}
-
-#[cw_serde]
-pub struct MigrateMsg {
-    pub t: String,
-}
 
 #[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
@@ -52,13 +22,13 @@ pub fn instantiate(
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
-#[cfg_attr(feature = "export", entry_point)]
+#[entry_point]
 #[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    msg: ExecuteMsg,
+    msg: ExecuteMsg<u64>,
 ) -> StdResult<Response> {
     match msg {
         ExecuteMsg::FirstMessage {} => {
@@ -69,7 +39,7 @@ pub fn execute(
     }
 }
 
-#[cfg_attr(feature = "export", entry_point)]
+#[entry_point]
 #[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
 pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -78,7 +48,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-#[cfg_attr(feature = "export", entry_point)]
+#[entry_point]
 #[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     if msg.t.eq("success") {
