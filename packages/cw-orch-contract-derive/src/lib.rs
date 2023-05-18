@@ -154,11 +154,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
 
     let all_phantom_marker_values: Vec<TokenStream2> = all_generics
         .iter()
-        .map(|_| {
-            quote!(
-                ::std::marker::PhantomData::default()
-            )
-        })
+        .map(|_| quote!(::std::marker::PhantomData::default()))
         .collect();
 
     // We create necessary Debug + Serialize traits
