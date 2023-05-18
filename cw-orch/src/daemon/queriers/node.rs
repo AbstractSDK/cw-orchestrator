@@ -191,7 +191,7 @@ impl Node {
     }
 
     /// Find TX by events
-    pub async fn find_tx_by_events(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>) -> Result<Vec<CosmTxResponse>, DaemonError> {
+    pub async fn find_tx_by_events(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>, retries: usize) -> Result<Vec<CosmTxResponse>, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
@@ -203,7 +203,7 @@ impl Node {
             order_by: order_by.unwrap_or(OrderBy::Desc).into()
         };
 
-        for _ in 0..MAX_TX_QUERY_RETRIES {
+        for _ in 0..retries {
             match client.get_txs_event(request.clone()).await {
                 Ok(tx) => {
                     let resp = tx.into_inner().tx_responses;
