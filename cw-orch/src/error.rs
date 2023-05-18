@@ -6,7 +6,6 @@ use thiserror::Error;
 use crate::daemon::error::DaemonError;
 
 /// cw-orchestrator error wrapper using thiserror.
-/// Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
 #[derive(Error, Debug)]
 pub enum CwOrchError {
     #[cfg(feature = "daemon")]
