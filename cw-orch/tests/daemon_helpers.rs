@@ -5,8 +5,8 @@ mod tests {
         DaemonAsync contract general tests
     */
 
+    use contract_counter::msg::{InstantiateMsg, MigrateMsg, QueryMsg};
     use cw_orch::{environment::TxHandler, prelude::*};
-    use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
 
     use cosmwasm_std::Addr;
 
@@ -29,8 +29,8 @@ mod tests {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
+        let contract = contract_counter::contract::ContractCounter::new(
+            format!("test:contract_counter:{}", Id::new()),
             daemon.clone(),
         );
 
@@ -46,7 +46,7 @@ mod tests {
             .that(&contract.latest_is_uploaded().unwrap())
             .is_true();
 
-        let init_msg = &InstantiateMsg {};
+        let init_msg = &InstantiateMsg { count: 0 };
 
         let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
 
@@ -104,8 +104,8 @@ mod tests {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
+        let contract = contract_counter::contract::ContractCounter::new(
+            format!("test:contract_counter:{}", Id::new()),
             daemon.clone(),
         );
 
@@ -120,13 +120,13 @@ mod tests {
         log::info!("Using code_id {}", code_id);
 
         // instantiate contract on chain
-        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), None);
+        let init_res = contract.instantiate(&InstantiateMsg { count: 0 }, Some(&sender), None);
         asserting!("instantiate is successful")
             .that(&init_res)
             .is_ok();
 
         // do a query and validate its successful
-        let query_res = contract.query::<String>(&QueryMsg::FirstQuery {});
+        let query_res = contract.query::<String>(&QueryMsg::GetCount {});
         asserting!("query is successful").that(&query_res).is_ok();
 
         // validate migrations are successful

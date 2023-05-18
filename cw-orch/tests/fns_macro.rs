@@ -1,8 +1,6 @@
-use mock_contract::{ExecuteMsgFns, QueryMsgFns};
-use mock_contract::{InstantiateMsg, MockContract};
-
-use cosmwasm_std::Event;
-
+use contract_counter::contract::ContractCounter;
+use contract_counter::msg::InstantiateMsg;
+use contract_counter::msg::{ExecuteMsgFns, QueryMsgFns};
 use cw_orch::prelude::CwOrcUpload;
 mod common;
 use cosmwasm_std::Addr;
@@ -10,41 +8,32 @@ use cw_orch::prelude::{CwOrcInstantiate, Mock};
 
 #[test]
 fn test_execute() {
-    let contract = MockContract::new(
-        "test:mock_contract",
+    let contract = ContractCounter::new(
+        "test:contract_counter",
         Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
     );
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, None, None)
+        .instantiate(&InstantiateMsg { count: 0 }, None, None)
         .unwrap();
 
-    let response = contract.first_message().unwrap();
-
-    response.has_event(
-        &Event::new("wasm")
-            .add_attribute("_contract_addr", "contract0")
-            .add_attribute("action", "first message passed"),
-    );
-
-    contract.second_message("".to_string(), &[]).unwrap_err();
+    let response = contract.increment().unwrap();
+    assert_eq!(response.events.len(), 2)
 }
 
 #[test]
 fn test_query() {
-    let contract = MockContract::new(
-        "test:mock_contract",
+    let contract = ContractCounter::new(
+        "test:contract_counter",
         Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
     );
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, None, None)
+        .instantiate(&InstantiateMsg { count: 0 }, None, None)
         .unwrap();
 
-    let response = contract.first_query().unwrap();
-    assert_eq!(response, "first query passed");
-
-    contract.second_query("".to_string()).unwrap_err();
+    let response = contract.get_count().unwrap().count;
+    assert_eq!(response, 0);
 }
