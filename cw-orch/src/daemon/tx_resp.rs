@@ -341,11 +341,7 @@ mod test {
             })
             .collect::<Vec<Event>>();
 
-        let stamp = tx_response
-            .get("timestamp")
-            .unwrap()
-            .as_str()
-            .unwrap();
+        let stamp = tx_response.get("timestamp").unwrap().as_str().unwrap();
         let timestamp = parse_timestamp(String::from(stamp)).unwrap();
 
         let tx_res = CosmTxResponse {

@@ -34,7 +34,9 @@ mod tests {
 
         let init_msg = common::contract::get_init_msg(&sender);
 
-        contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&[])).unwrap();
+        contract
+            .instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&[]))
+            .unwrap();
 
         asserting!("address is present")
             .that(&contract.address())

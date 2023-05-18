@@ -89,7 +89,6 @@ impl GrpcChannel {
     }
 }
 
-
 /// indicate that the object has access to a gRPC channel
 pub trait ChannelAccess {
     fn channel(&self) -> Channel;

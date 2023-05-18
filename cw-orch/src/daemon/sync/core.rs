@@ -1,4 +1,3 @@
-
 use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
 use crate::{
     daemon::{error::DaemonError, state::DaemonState},

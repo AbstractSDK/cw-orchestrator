@@ -1,12 +1,12 @@
 //! Interactions with docker using bollard
 
-use tokio::time::Duration;
-use tokio::time::sleep;
 use ibc_chain_registry::chain::{ChainData, Grpc};
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
+use tokio::time::sleep;
+use tokio::time::Duration;
 
 use log4rs::Config;
 use tonic::transport::Channel;
@@ -19,15 +19,15 @@ use tokio::runtime::Handle;
 use super::error::InterchainError;
 
 use crate::CosmTxResponse;
-use crate::{Daemon, DaemonError, ContractInstance};
+use crate::{ContractInstance, Daemon, DaemonError};
 
 use super::docker::DockerHelper;
 use super::hermes::Hermes;
 use super::IcResult;
-use crate::state::ChainState;
-use crate::queriers::Node;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::follow_ibc_execution::follow_trail;
+use crate::queriers::Node;
+use crate::state::ChainState;
 
 pub type ContainerId = String;
 pub type Port = String;
@@ -176,9 +176,8 @@ impl InterchainInfrastructure {
         channel_version: &str,
         contract_a: &dyn ContractInstance<Daemon>,
         contract_b: &dyn ContractInstance<Daemon>,
-        configure_local_network: Option<bool>
-    ) -> Result<(), DaemonError>{
-
+        configure_local_network: Option<bool>,
+    ) -> Result<(), DaemonError> {
         let channel_creation_events_a = vec![
             format!(
                 "channel_open_ack.port_id='wasm.{}'",
@@ -191,7 +190,7 @@ impl InterchainInfrastructure {
             format!("channel_open_ack.connection_id='{}'", connection),
         ];
 
-        let channel_creation_events_b =  vec![
+        let channel_creation_events_b = vec![
             format!(
                 "channel_open_confirm.port_id='wasm.{}'",
                 contract_b.address().unwrap()
@@ -206,30 +205,47 @@ impl InterchainInfrastructure {
         let channel_b = contract_b.get_chain().channel();
 
         // First we get the last transactions for channel creation on the port, to make sure the tx we will intercept later is a new one
-        let current_channel_creation_hash_a = &Node::new(channel_a.clone()).find_tx_by_events(
-            channel_creation_events_a.clone(),
-            None,
-            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
-        ).await?.get(0).map(|tx| tx.txhash.clone());
+        let current_channel_creation_hash_a = &Node::new(channel_a.clone())
+            .find_tx_by_events(
+                channel_creation_events_a.clone(),
+                None,
+                Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+            )
+            .await?
+            .get(0)
+            .map(|tx| tx.txhash.clone());
 
-        let current_channel_creation_hash_b = &Node::new(channel_b.clone()).find_tx_by_events(
-            channel_creation_events_b.clone(),
-            None,
-            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
-        ).await?.get(0).map(|tx| tx.txhash.clone());
+        let current_channel_creation_hash_b = &Node::new(channel_b.clone())
+            .find_tx_by_events(
+                channel_creation_events_b.clone(),
+                None,
+                Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+            )
+            .await?
+            .get(0)
+            .map(|tx| tx.txhash.clone());
 
         // Then we can safely create the channel
-        self
-            .hermes
-            .create_channel(connection, channel_version, contract_a, contract_b).await;
+        self.hermes
+            .create_channel(connection, channel_version, contract_a, contract_b)
+            .await;
 
         log::info!("Channel creation message sent to hermes, awaiting for channel creation end");
 
         // Then we make sure the channel is indeed created between the two chains
         // We get the channel open on chain 1
-        let channel_creation_tx_a = find_new_tx_with_events(&channel_a, &channel_creation_events_a, current_channel_creation_hash_a).await?;
-        let channel_creation_tx_b = find_new_tx_with_events(&channel_b, &channel_creation_events_b, current_channel_creation_hash_b).await?;
-
+        let channel_creation_tx_a = find_new_tx_with_events(
+            &channel_a,
+            &channel_creation_events_a,
+            current_channel_creation_hash_a,
+        )
+        .await?;
+        let channel_creation_tx_b = find_new_tx_with_events(
+            &channel_b,
+            &channel_creation_events_b,
+            current_channel_creation_hash_b,
+        )
+        .await?;
 
         log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}' (txhash : {})", 
             contract_a.address().unwrap(),
@@ -246,52 +262,66 @@ impl InterchainInfrastructure {
         // Finally, we make sure additional packets are resolved before returning
         let grpc_channel_a = contract_a.get_chain().channel();
         let chain_id_a = contract_a.get_chain().state().chain_id.clone();
-        let tx_hash_a =  channel_creation_tx_a.txhash.clone();
+        let tx_hash_a = channel_creation_tx_a.txhash.clone();
 
         let grpc_channel_b = contract_b.get_chain().channel();
         let chain_id_b = contract_b.get_chain().state().chain_id.clone();
-        let tx_hash_b =  channel_creation_tx_b.txhash.clone();
+        let tx_hash_b = channel_creation_tx_b.txhash.clone();
 
         follow_trail(
             chain_id_a,
             grpc_channel_a,
             tx_hash_a,
-            configure_local_network
-        ).await.unwrap();
+            configure_local_network,
+        )
+        .await
+        .unwrap();
 
         follow_trail(
             chain_id_b,
             grpc_channel_b,
             tx_hash_b,
-            configure_local_network
-        ).await.unwrap();
+            configure_local_network,
+        )
+        .await
+        .unwrap();
         Ok(())
     }
 }
 
 const MAX_TX_QUERY_RETRIES: usize = 5;
-async fn find_new_tx_with_events(channel: &Channel, events: &Vec<String>, last_hash: &Option<String>) -> Result<CosmTxResponse, DaemonError>{
+async fn find_new_tx_with_events(
+    channel: &Channel,
+    events: &Vec<String>,
+    last_hash: &Option<String>,
+) -> Result<CosmTxResponse, DaemonError> {
     for _ in 0..MAX_TX_QUERY_RETRIES {
-            match  &Node::new(channel.clone()).find_tx_by_events(
-            events.clone(),
-            None,
-            Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
-        ).await {
-                Ok(txs) => {
-                    if let Some(tx) = txs.get(0){
-                        if tx.txhash != last_hash.clone().unwrap_or("".to_string()){
-                            return Ok(tx.clone());
-                        }
+        match &Node::new(channel.clone())
+            .find_tx_by_events(
+                events.clone(),
+                None,
+                Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
+            )
+            .await
+        {
+            Ok(txs) => {
+                if let Some(tx) = txs.get(0) {
+                    if tx.txhash != last_hash.clone().unwrap_or("".to_string()) {
+                        return Ok(tx.clone());
                     }
-                    log::debug!("No new TX by events found");
-                    log::debug!("Waiting 10s");
-                    sleep(Duration::from_secs(10)).await;
-                },
-                Err(_) => break,
+                }
+                log::debug!("No new TX by events found");
+                log::debug!("Waiting 10s");
+                sleep(Duration::from_secs(10)).await;
             }
-        };
+            Err(_) => break,
+        }
+    }
 
-    Err(DaemonError::AnyError(anyhow::Error::msg(format!("No newer TX than {:?} found with events {:?}", last_hash, events))))
+    Err(DaemonError::AnyError(anyhow::Error::msg(format!(
+        "No newer TX than {:?} found with events {:?}",
+        last_hash, events
+    ))))
 }
 
 /// Get the file path for the log target

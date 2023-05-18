@@ -1,8 +1,8 @@
+use crate::state::ChainState;
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::service::ContainerSummary;
 use bollard::Docker;
 use futures_util::StreamExt;
-use crate::state::ChainState;
 
 use crate::{ContractInstance, Daemon};
 

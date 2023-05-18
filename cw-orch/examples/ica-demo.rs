@@ -34,11 +34,12 @@
 
 use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::{
+    follow_ibc_execution::follow_trail,
     ibc_tracker::{CwIbcContractState, IbcTracker, IbcTrackerConfigBuilder},
     networks::{osmosis::OSMO_2, JUNO_1},
+    prelude::WasmPath,
     queriers::Bank,
     *,
-    prelude::WasmPath, follow_ibc_execution::follow_trail
 };
 
 use simple_ica_controller::msg::{self as controller_msgs};
@@ -70,8 +71,13 @@ pub fn script() -> anyhow::Result<()> {
 
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
-    rt.block_on(interchain
-        .create_hermes_channel("connection-0", "simple-ica-v2", &controller, &host, Some(true)))?;
+    rt.block_on(interchain.create_hermes_channel(
+        "connection-0",
+        "simple-ica-v2",
+        &controller,
+        &host,
+        Some(true),
+    ))?;
 
     // Track IBC on JUNO
     let juno_channel = juno.channel();
@@ -156,7 +162,8 @@ fn test_ica(
 
     // send some funds to the remote account
     rt.block_on(
-        juno.wallet().unwrap()
+        juno.wallet()
+            .unwrap()
             .bank_send(&remote_addr, vec![cosmwasm_std::coin(100u128, "ujuno")]),
     )?;
 
@@ -181,10 +188,10 @@ fn test_ica(
     // Folow the transaction execution
     rt.block_on(follow_trail(
         local_chain_id,
-        local_channel_id, 
+        local_channel_id,
         burn_response.txhash,
-        Some(true))
-    )?;
+        Some(true),
+    ))?;
 
     // check that the balance became 0
     let balance = rt.block_on(juno.query_client::<Bank>().balance(&remote_addr, "ujuno"))?;

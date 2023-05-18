@@ -1,8 +1,8 @@
-use crate::channel::ChannelAccess;
 use super::cosmos_modules::{self, auth::BaseAccount};
 use super::queriers::DaemonQuerier;
 use super::queriers::Node;
 use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
+use crate::channel::ChannelAccess;
 use crate::daemon::core::parse_cw_coins;
 use crate::keys::private::PrivateKey;
 use cosmrs::{
