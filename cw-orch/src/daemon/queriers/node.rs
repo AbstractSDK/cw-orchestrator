@@ -191,7 +191,12 @@ impl Node {
     }
 
     /// Find TX by events
-    pub async fn find_tx_by_events(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>, retries: usize) -> Result<Vec<CosmTxResponse>, DaemonError> {
+    pub async fn find_tx_by_events(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>) -> Result<Vec<CosmTxResponse>, DaemonError> {
+        self.find_tx_by_events_with_retries(events, page, order_by, MAX_TX_QUERY_RETRIES).await
+    }
+
+    /// Find TX by events with a given amount of retries
+    pub async fn find_tx_by_events_with_retries(&self, events: Vec<String>, page: Option<u64>, order_by: Option<OrderBy>, retries: usize) -> Result<Vec<CosmTxResponse>, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
