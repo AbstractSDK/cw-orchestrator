@@ -220,7 +220,7 @@ impl InterchainInfrastructure {
             Some(cosmos_sdk_proto::cosmos::tx::v1beta1::OrderBy::Desc),
         ).await?[0];
 
-        log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}(txhash : {})'", 
+        log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}' (txhash : {})", 
             contract_a.address().unwrap(),
             contract_b.address().unwrap(),
             connection,
