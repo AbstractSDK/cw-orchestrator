@@ -204,7 +204,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
 /**
 Procedural macro to generate a cw-orchestrator interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
-**This macro can only be used in `contract.rs`**  
+**This macro can only be used in `contract.rs`**
 
 ## Example
 
