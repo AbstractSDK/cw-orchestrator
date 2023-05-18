@@ -1,0 +1,33 @@
+[package]
+name = "contract-counter"
+version = "0.11.0-alpha.5"
+description = "counter constract"
+keywords = ["cosmwasm", "blockchain"]
+edition = { workspace = true }
+
+exclude = [".env"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["export"]
+export = []
+cw-orch = ["dep:cw-orch"]
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cw-storage-plus = "1.0"
+cw2 = "1.0"
+cosmwasm-schema = "1.2"
+schemars = "0.8.10"
+thiserror = { version = "1.0.21" }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = "1.0.79"
+log = "0.4.14"
+
+cw-orch = { path = "../../cw-orch", features = ["daemon"], optional = true }
+
+[dev-dependencies]
+cw-multi-test = { workspace = true }
