@@ -1,4 +1,4 @@
-use mock_contract::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::to_binary;
 use cosmwasm_std::Binary;
@@ -9,7 +9,6 @@ use cosmwasm_std::Response;
 use cosmwasm_std::StdError;
 use cosmwasm_std::StdResult;
 use cosmwasm_std::{entry_point, Env};
-
 
 #[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
@@ -35,7 +34,9 @@ pub fn execute(
             Ok(Response::new().add_attribute("action", "first message passed"))
         }
         ExecuteMsg::SecondMessage { t: _ } => Err(StdError::generic_err("Second Message Failed")),
-        ExecuteMsg::ThirdMessage { .. } => Ok(Response::new().add_attribute("action", "third message passed"))
+        ExecuteMsg::ThirdMessage { .. } => {
+            Ok(Response::new().add_attribute("action", "third message passed"))
+        }
     }
 }
 

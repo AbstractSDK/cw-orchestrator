@@ -65,7 +65,9 @@ pub fn execute(
             Ok(Response::new().add_attribute("action", "first message passed"))
         }
         ExecuteMsg::SecondMessage { t: _ } => Err(StdError::generic_err("Second Message Failed")),
-        ExecuteMsg::ThirdMessage { .. } => Ok(Response::new().add_attribute("action", "third message passed"))
+        ExecuteMsg::ThirdMessage { .. } => {
+            Ok(Response::new().add_attribute("action", "third message passed"))
+        }
     }
 }
 

@@ -1,11 +1,11 @@
-use cw_orch::daemon::sync::core::Daemon;
-use cw_orch::prelude::TxHandler;
-use cw_orch::prelude::WasmPath;
-use cw_orch::prelude::ContractWrapper;
-use cw_orch::environment::CwEnv;
 use cw_orch::contract::Contract;
-use cw_orch::prelude::Uploadable;
+use cw_orch::daemon::sync::core::Daemon;
+use cw_orch::environment::CwEnv;
 use cw_orch::interface;
+use cw_orch::prelude::ContractWrapper;
+use cw_orch::prelude::TxHandler;
+use cw_orch::prelude::Uploadable;
+use cw_orch::prelude::WasmPath;
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
@@ -24,10 +24,12 @@ const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 #[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg)]
 pub struct MockContract;
 
-
 impl<Chain: CwEnv, T> MockContract<Chain, T> {
     pub fn new(id: &str, chain: Chain) -> Self {
-        Self(Contract::new(id, chain), std::marker::PhantomData::default())
+        Self(
+            Contract::new(id, chain),
+            std::marker::PhantomData::default(),
+        )
     }
 }
 
@@ -92,7 +94,7 @@ fn test_execute() {
 
     // This call should not error, the types are good now
     contract
-        .execute(&ExecuteMsg::ThirdMessage {t: 67u64}, None)
+        .execute(&ExecuteMsg::ThirdMessage { t: 67u64 }, None)
         .unwrap();
 }
 
