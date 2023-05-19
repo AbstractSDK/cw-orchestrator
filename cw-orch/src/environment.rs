@@ -1,5 +1,4 @@
 use crate::{
-    daemon::Wallet,
     error::CwOrchError,
     prelude::{IndexResponse, Uploadable},
     state::ChainState,
@@ -24,9 +23,6 @@ pub trait TxHandler: ChainState + Clone {
 
     /// Gets the address of the current wallet used to sign transactions.
     fn sender(&self) -> Addr;
-
-    // Gets current sender wallet
-    fn wallet(&self) -> Option<Wallet>;
 
     /// Wait for an amount of blocks.
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;

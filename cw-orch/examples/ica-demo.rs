@@ -199,7 +199,7 @@ fn test_ica(
     )?;
 
     // Folow the transaction execution
-    rt.block_on(interchain.follow_trail(
+    rt.block_on(interchain.await_ibc_execution(
         controller.get_chain().state().chain_id.clone(),
         burn_response.txhash,
     ))?;

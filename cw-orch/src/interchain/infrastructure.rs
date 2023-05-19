@@ -25,6 +25,7 @@ use crate::state::ChainState;
 
 pub type ContainerId = String;
 pub type Port = String;
+pub type ChannelId = String;
 pub type NetworkId = String;
 pub type Mnemonic = String;
 
@@ -158,7 +159,7 @@ impl InterchainInfrastructure {
         Ok(daemons)
     }
 
-    pub async fn follow_trail(&self, chain_id: NetworkId, tx_hash: String) -> Result<(), DaemonError>{
+    pub async fn await_ibc_execution(&self, chain_id: NetworkId, packet_send_tx_hash: String) -> Result<(), DaemonError>{
         // We crate an interchain env
         let mut interchain_env = InterchainEnv::default();
 
@@ -167,7 +168,7 @@ impl InterchainInfrastructure {
         }
 
         // We follow the trail
-        interchain_env.follow_trail(chain_id ,tx_hash).await?;
+        interchain_env.await_ibc_execution(chain_id ,packet_send_tx_hash).await?;
             
         Ok(())
     }

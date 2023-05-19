@@ -1,3 +1,5 @@
+use crate::interchain::infrastructure::Port;
+use crate::interchain::infrastructure::NetworkId;
 use crate::interchain::interchain_env::InterchainEnv;
 use crate::daemon::error::DaemonError;
 use crate::daemon::sync::core::Daemon;
@@ -19,8 +21,8 @@ use super::interchain_channel::IbcPort;
 
 #[derive(Default)]
 struct ChainChannelBuilder {
-    pub chain_id: Option<String>,
-    pub port: Option<String>,
+    pub chain_id: Option<NetworkId>,
+    pub port: Option<Port>,
     pub grpc_channel: Option<Channel>,
 }
 
@@ -37,12 +39,12 @@ impl InterchainChannelBuilder {
         docker_helper.get_hermes()
     }
 
-    pub fn chain_a(&mut self, chain_id: impl Into<String>) -> &mut Self {
+    pub fn chain_a(&mut self, chain_id: impl Into<NetworkId>) -> &mut Self {
         self.chain_a.chain_id = Some(chain_id.into());
         self
     }
 
-    pub fn chain_b(&mut self, chain_id: impl Into<String>) -> &mut Self {
+    pub fn chain_b(&mut self, chain_id: impl Into<NetworkId>) -> &mut Self {
         self.chain_b.chain_id = Some(chain_id.into());
         self
     }
@@ -57,12 +59,12 @@ impl InterchainChannelBuilder {
         self
     }
 
-    pub fn port_a(&mut self, port: impl Into<String>) -> &mut Self {
+    pub fn port_a(&mut self, port: impl Into<Port>) -> &mut Self {
         self.chain_a.port = Some(port.into());
         self
     }
 
-    pub fn port_b(&mut self, port: impl Into<String>) -> &mut Self {
+    pub fn port_b(&mut self, port: impl Into<Port>) -> &mut Self {
         self.chain_b.port = Some(port.into());
         self
     }
@@ -214,17 +216,16 @@ impl InterchainChannelBuilder {
             .add_custom_chain(self.chain_b.chain_id.clone().unwrap(), grpc_channel_b)?
             .clone();
 
-        interchain_env.follow_trail(
+        interchain_env.await_ibc_execution(
             self.chain_a.chain_id.clone().unwrap(),
             channel_creation_tx_a.txhash.clone()
         ).await?;
 
 
-        interchain_env.follow_trail(
+        interchain_env.await_ibc_execution(
             self.chain_b.chain_id.clone().unwrap(),
             channel_creation_tx_b.txhash.clone()
         ).await?;
-
 
         Ok(interchain)
     }

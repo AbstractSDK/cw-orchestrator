@@ -56,6 +56,10 @@ impl Daemon {
         DaemonBuilder::default()
     }
 
+    pub fn wallet(&self) -> Option<Wallet> {
+        Some(self.daemon.sender.clone())
+    }
+
     /// Perform a query with a given querier
     /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
@@ -90,10 +94,6 @@ impl TxHandler for Daemon {
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
-    }
-
-    fn wallet(&self) -> Option<Wallet> {
-        Some(self.daemon.sender.clone())
     }
 
     fn execute<E: Serialize>(

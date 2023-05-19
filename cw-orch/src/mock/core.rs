@@ -5,7 +5,6 @@ use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Exe
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    daemon::Wallet,
     environment::{ChainUpload, TxHandler},
     error::CwOrchError,
     prelude::*,
@@ -201,10 +200,6 @@ where
 
     fn sender(&self) -> Addr {
         self.sender.clone()
-    }
-
-    fn wallet(&self) -> Option<Wallet> {
-        None
     }
 
     fn execute<E: Serialize + Debug>(

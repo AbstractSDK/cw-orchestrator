@@ -11,6 +11,8 @@ use tonic::transport::Channel;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Node;
 
+use super::infrastructure::{Port, ChannelId, NetworkId};
+
 // type is from cosmos_sdk_proto::ibc::core::channel::v1::acknowledgement::Response
 // We copy it here to implement serialization for this enum (which is not provided by the proto in the above crate)
 #[cosmwasm_schema::cw_serde]
@@ -22,7 +24,7 @@ pub enum AckResponse {
 
 #[derive(Debug, Clone)]
 pub struct TxId {
-    pub chain_id: String,
+    pub chain_id: NetworkId,
     pub channel: Channel,
     pub tx_hash: String,
 }
@@ -30,9 +32,9 @@ pub struct TxId {
 #[derive(Debug, Clone)]
 pub struct IbcPort {
     pub chain: Channel,
-    pub chain_id: String,
-    pub port: String,
-    pub channel: Option<String>,
+    pub chain_id: NetworkId,
+    pub port: Port,
+    pub channel: Option<ChannelId>,
 }
 
 #[derive(Debug)]
@@ -56,7 +58,7 @@ impl InterchainChannel {
         self.connection_id.clone()
     }
 
-    pub fn get_chain(&self, chain_id: String) -> Result<IbcPort, DaemonError> {
+    pub fn get_chain(&self, chain_id: NetworkId) -> Result<IbcPort, DaemonError> {
         if chain_id == self.port_a.chain_id {
             Ok(self.port_a.clone())
         } else if chain_id == self.port_b.chain_id {
@@ -71,7 +73,7 @@ impl InterchainChannel {
 
     fn get_ordered_ports_from(
         &self,
-        from: String,
+        from: NetworkId,
     ) -> Result<(IbcPort, IbcPort), DaemonError> {
         if from == self.port_a.chain_id {
             Ok((self.port_a.clone(), self.port_b.clone()))
@@ -101,7 +103,7 @@ impl InterchainChannel {
     // From is the channel from which the send packet has been sent
     pub async fn get_packet_send_tx(
         &self,
-        from: String,
+        from: NetworkId,
         packet_sequence: String,
     ) -> Result<CosmTxResponse, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from)?;
@@ -127,7 +129,7 @@ impl InterchainChannel {
     // on is the chain on which the packet will be received
     pub async fn get_packet_receive_tx(
         &self,
-        from: String,
+        from: NetworkId,
         packet_sequence: String,
     ) -> Result<CosmTxResponse, DaemonError> {
         let (_src_port, dst_port) = self.get_ordered_ports_from(from)?;
@@ -153,7 +155,7 @@ impl InterchainChannel {
     // From is the channel from which the original send packet has been sent
     pub async fn get_packet_ack_receive_tx(
         &self,
-        from: String,
+        from: NetworkId,
         packet_sequence: String,
     ) -> Result<CosmTxResponse, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from)?;
@@ -178,7 +180,7 @@ impl InterchainChannel {
 
     pub async fn get_channel_creation_ack(
         &self,
-        from: String,
+        from: NetworkId,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from)?;
 
@@ -199,7 +201,7 @@ impl InterchainChannel {
 
     pub async fn get_channel_creation_confirm(
         &self,
-        from: String,
+        from: NetworkId,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from)?;
 
@@ -226,7 +228,7 @@ impl InterchainChannel {
     // We get the last transactions that is related to creating a channel from chain from to the counterparty chain defined in the structure
     pub async fn get_last_channel_creation(
         &self,
-        from: String,
+        from: NetworkId,
     ) -> Result<(Option<CosmTxResponse>, Option<CosmTxResponse>), DaemonError> {
         let current_channel_creation_a = self
             .get_channel_creation_ack(from.clone())
@@ -246,7 +248,7 @@ impl InterchainChannel {
     // We get the last transactions that is related to creating a channel from chain from to the counterparty chain defined in the structure
     pub async fn get_last_channel_creation_hash(
         &self,
-        from: String,
+        from: NetworkId,
     ) -> Result<(Option<String>, Option<String>), DaemonError> {
         let (current_channel_creation_a, current_channel_creation_b) =
             self.get_last_channel_creation(from).await?;
@@ -258,7 +260,7 @@ impl InterchainChannel {
 
     pub async fn find_new_channel_creation_tx(
         &self,
-        from: String,
+        from: NetworkId,
         last_chain_creation_hashes: &(Option<String>, Option<String>),
     ) -> Result<(CosmTxResponse, CosmTxResponse), DaemonError> {
         for _ in 0..5 {
@@ -298,14 +300,31 @@ impl InterchainChannel {
 	    ))))
     }
 
+
+    /// This functions follows an IBC packet on the distant chain and back on its origin chain. It returns all encountered tx hashes 
+    /// 1. Receive packet. We use the identification of the packet to find the tx in which the packet was received
+    ///     We make sure that only one transaction tracks receiving this packet.
+    ///         If not, we sent out an error (this error actually comes from the code not identifying an IBC packet properly)
+    ///         If such an error happens, it means this function is not implemented properly
+    ///         We verify this transaction is not errored (it should never error)
+    ///     
+    /// 2. Acknowledgment. The last part of the packet lifetime is the acknowledgement the distant chain sents back.
+    ///         In the same transaction as the one in which the packet is received, an packet acknowledgement should be sent back to the origin chain
+    ///         We get this acknowledgment and deserialize it according to https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/ibc/core/channel/v1/channel.proto#L134-L147
+    ///         If the acknowledgement doesn't follow the standard, we don't mind and continue
+    /// 3. Identify the acknowledgement receive packet on the origin chain
+    ///         Finally, we get the transaction hash of the transaction in which the acknowledgement is received on the origin chain.
+    ///         This is also logged for debugging purposes
+    ///
+    /// We return the tx hash of the received packet on the distant chain as well as the ack packet transaction on the origin chain
     pub async fn follow_packet(
         &self,
-        from: String,
+        from: NetworkId,
         sequence: String,
     ) -> Result<Vec<TxId>, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from.clone())?;
 
-        // 2. Query the tx hash on the distant chains related to the packet the origin chain sent
+        // 1. Query the tx hash on the distant chains related to the packet the origin chain sent
         let counterparty_grpc_channel = dst_port.chain;
 
         let received_tx = self.get_packet_receive_tx(from, sequence.clone()).await?;
@@ -321,7 +340,7 @@ impl InterchainChannel {
             });
         }
 
-        // 3. We get the events related to the acknowledgements sent back on the distant chain
+        // 2. We get the events related to the acknowledgements sent back on the distant chain
         let recv_packet_sequence = received_tx.get_events("write_acknowledgement")[0] // There is only one acknowledgement per transaction possible
             .get_first_attribute_value("packet_sequence")
             .unwrap();
@@ -364,7 +383,7 @@ impl InterchainChannel {
             decoded_ack
         );
 
-        // 4. We look for the acknowledgement packet on the origin chain
+        // 3. We look for the acknowledgement packet on the origin chain
         let ack_tx = self
             .get_packet_ack_receive_tx(src_port.chain_id.clone(), sequence.clone())
             .await?;
