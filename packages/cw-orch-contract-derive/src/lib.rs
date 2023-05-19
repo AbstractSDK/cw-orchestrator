@@ -151,6 +151,12 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
             )
         })
         .collect();
+
+    let all_phantom_marker_values: Vec<TokenStream2> = all_generics
+        .iter()
+        .map(|_| quote!(::std::marker::PhantomData::default()))
+        .collect();
+
     // We create necessary Debug + Serialize traits
     let all_debug_serialize: Vec<TokenStream2> = all_generics
         .iter()
@@ -172,6 +178,14 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
                 ::std::clone::Clone,
             )]
             pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
+
+            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+                pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+                    Self(
+                        ::cw_orch::contract::Contract::new(contract_id, chain)
+                    , #(#all_phantom_marker_values,)*)
+                }
+            }
 
             impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
                 fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
@@ -204,9 +218,13 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
 /**
 Procedural macro to generate a cw-orchestrator interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
+**This macro can only be used in `contract.rs`**
+
 ## Example
-```text
-// In crate "my-contract"
+
+```rust,ignore
+// In crate "my-contract::contract.rs"
+
 #[cfg_attr(feature="interface", interface_entry_point)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
@@ -219,9 +237,10 @@ pub fn instantiate(
 }
 // ... other entry points (execute, query, migrate)
 ```
+
 ### Generated code
 
-```ignore,ignore
+```rust,ignore
 // This struct represents the interface to the contract.
 pub struct MyContract<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
@@ -377,10 +396,10 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
                 #name::<::cw_orch::prelude::Mock>::get_query()(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
             }
-            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
+            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
                 if let Some(sudo) = #name::<::cw_orch::prelude::Mock>::get_sudo() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
-                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
+                    sudo(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
                 }else{
                     panic!("No sudo registered");
                 }
