@@ -176,6 +176,7 @@ impl InterchainInfrastructure {
         channel_version: &str,
         contract_a: &dyn ContractInstance<Daemon>,
         contract_b: &dyn ContractInstance<Daemon>,
+        track_creation: bool,
         configure_local_network: Option<bool>,
     ) -> Result<(), DaemonError> {
         let channel_creation_events_a = vec![
@@ -272,7 +273,6 @@ impl InterchainInfrastructure {
             chain_id_a,
             grpc_channel_a,
             tx_hash_a,
-            configure_local_network,
         )
         .await
         .unwrap();
@@ -281,7 +281,6 @@ impl InterchainInfrastructure {
             chain_id_b,
             grpc_channel_b,
             tx_hash_b,
-            configure_local_network,
         )
         .await
         .unwrap();

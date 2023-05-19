@@ -39,7 +39,7 @@ use cw_orch::{
     networks::{osmosis::OSMO_2, JUNO_1},
     prelude::WasmPath,
     queriers::Bank,
-    *,
+    *, interchain_channel_builder::InterchainChannelBuilder,
 };
 
 use simple_ica_controller::msg::{self as controller_msgs};
@@ -71,13 +71,15 @@ pub fn script() -> anyhow::Result<()> {
 
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
-    rt.block_on(interchain.create_hermes_channel(
-        "connection-0",
-        "simple-ica-v2",
-        &controller,
-        &host,
-        Some(true),
-    ))?;
+
+    rt.block_on(InterchainChannelBuilder::default()
+        .connection("connection-0")
+        .chain_a(osmosis.state().chain_id.clone())
+        .port_a(format!("wasm.{}", controller.address()?))
+        .chain_b(juno.state().chain_id.clone())
+        .port_b(format!("wasm.{}", host.address()?))
+        .create_channel("simple-ica-v2")
+    )?;
 
     // Track IBC on JUNO
     let juno_channel = juno.channel();
@@ -190,7 +192,6 @@ fn test_ica(
         local_chain_id,
         local_channel_id,
         burn_response.txhash,
-        Some(true),
     ))?;
 
     // check that the balance became 0

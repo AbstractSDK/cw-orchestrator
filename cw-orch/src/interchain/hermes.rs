@@ -60,7 +60,7 @@ impl Hermes {
     /// Create an IBC channel between two contracts with an existing client.
     pub async fn create_channel(
         &self,
-        connection: &str,
+        connection_a: &str,
         channel_version: &str,
         contract_a: &dyn ContractInstance<Daemon>,
         contract_b: &dyn ContractInstance<Daemon>,
@@ -69,6 +69,18 @@ impl Hermes {
         let port_b = contract_port(contract_b);
 
         let chain_id = &contract_a.get_chain().state().chain_id;
+        self.create_channel_raw(connection_a, channel_version, chain_id, port_a, port_b).await
+    }
+
+    pub async fn create_channel_raw(
+        &self,
+        connection_a: &str,
+        channel_version: &str,
+        chain_id_a: &str,
+        port_a: String,
+        port_b: String,
+    ) {
+        
         let command = [
             "hermes",
             "create",
@@ -76,9 +88,9 @@ impl Hermes {
             "--channel-version",
             channel_version,
             "--a-connection",
-            connection,
+            connection_a,
             "--a-chain",
-            chain_id,
+            chain_id_a,
             // "--b-chain",
             // &contract_b.get_chain().state.id,
             "--a-port",
