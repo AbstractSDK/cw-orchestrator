@@ -18,7 +18,7 @@ Or you can add it manually in your `Cargo.toml`:
 cw-orch = {version = "0.10.0", optional = true } # Latest version at time of writing
 ```
 
-Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
+Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface_entry_point` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
 
 To do this include the following in the `Cargo.toml`:
 
@@ -31,33 +31,15 @@ interface = ["dep:cw-orch"]
 
 ## Contract Interface
 
-Now that we have the dependency set up you can add the `interface` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
+Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
 
-```rust
-// In `contract.rs`
-#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
-pub fn instantiate(
-   deps: DepsMut,
-   env: Env,
-   info: MessageInfo,
-   msg: InstantiateMsg,
- -> StdResult<Response> {
-    // ...
-}
+```rust,no_run,noplayground
+{{#include ../../contracts/counter/src/contract.rs:interface_entry}}
 
-#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
-pub fn execute(
-   deps: DepsMut,
-   env: Env,
-   info: MessageInfo,
-   msg: ExecuteMsg,
- -> StdResult<Response> {
-    // ...
-}
 // ... Do the same for the other entry points (query, migrate, reply, sudo)
 ```
 
-By adding these lines we generate code whenever the `interface` macro is enabled.
+By adding these lines we generate code whenever the `interface_entry_point` macro is enabled.
 The code will generate a contract interface. The contract interface will be the PascalCase of the crate's name.
 
 > The name of the crate is defined in the `Cargo.toml` file of your contract.
