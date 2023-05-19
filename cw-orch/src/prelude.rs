@@ -16,13 +16,14 @@ pub use crate::interface_traits::{
     CwOrcUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
+
 pub use crate::state::StateInterface;
 
 // Response trait
 pub use crate::index_response::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, TxResponse};
+pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
 pub use crate::mock::core::Mock;
@@ -40,17 +41,22 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    builder::DaemonBuilder,
+    builder::DaemonAsyncBuilder,
     core::DaemonAsync,
     networks,
     queriers,
-
     // expose the sync variants
-    sync::{builder::SyncDaemonBuilder, core::Daemon},
+    sync::{builder::DaemonBuilder, core::Daemon},
     // sync helpers
-    traits::{MigrateHelpers, UploadHelpers},
+    traits::{ConditionalMigrate, ConditionalUpload},
 };
 
 /// Re-export trait and data required to fetch daemon data from chain-registry
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
+
+
+#[cfg(feature = "interchain")]
+pub use interchain::{
+    follow_ibc_execution, hermes::Hermes, infrastructure::InterchainInfrastructure, interchain_channel_builder
+};

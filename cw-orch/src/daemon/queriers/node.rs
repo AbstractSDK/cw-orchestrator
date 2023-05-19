@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{cmp::min, time::Duration};
 
 use crate::daemon::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -9,7 +9,6 @@ use cosmrs::{
     },
     tendermint::{Block, Time},
 };
-use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -36,7 +35,6 @@ impl Node {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
-        #[allow(deprecated)]
         let resp = client
             .get_node_info(cosmos_modules::tendermint::GetNodeInfoRequest {})
             .await?
@@ -50,7 +48,6 @@ impl Node {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
-        #[allow(deprecated)]
         let resp = client
             .get_syncing(cosmos_modules::tendermint::GetSyncingRequest {})
             .await?
@@ -64,13 +61,64 @@ impl Node {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
-        #[allow(deprecated)]
         let resp = client
             .get_latest_block(cosmos_modules::tendermint::GetLatestBlockRequest {})
             .await?
             .into_inner();
 
         Ok(Block::try_from(resp.block.unwrap())?)
+    }
+
+    /// Returns block information fetched by height
+    pub async fn block_by_height(&self, height: u64) -> Result<Block, DaemonError> {
+        let mut client =
+            cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
+
+        let resp = client
+            .get_block_by_height(cosmos_modules::tendermint::GetBlockByHeightRequest {
+                height: height as i64,
+            })
+            .await?
+            .into_inner();
+
+        Ok(Block::try_from(resp.block.unwrap())?)
+    }
+
+    /// Return the average block time for the last 50 blocks or since inception
+    /// This is used to estimate the time when a tx will be included in a block
+    pub async fn average_block_speed(&self, multiplier: Option<f32>) -> Result<u64, DaemonError> {
+        // get latest block time and height
+        let mut latest_block = self.latest_block().await?;
+        let latest_block_time = latest_block.header.time;
+        let mut latest_block_height = latest_block.header.height.value();
+
+        while latest_block_height <= 1 {
+            // wait to get some blocks
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            latest_block = self.latest_block().await?;
+            latest_block_height = latest_block.header.height.value();
+        }
+
+        // let avg period
+        let avg_period = min(latest_block_height - 1, 50);
+
+        // get block time for block avg_period blocks ago
+        let block_avg_period_ago = self
+            .block_by_height(latest_block_height - avg_period)
+            .await?;
+        let block_avg_period_ago_time = block_avg_period_ago.header.time;
+
+        // calculate average block time
+        let average_block_time = latest_block_time.duration_since(block_avg_period_ago_time)?;
+        let average_block_time = average_block_time.as_secs() / avg_period;
+
+        // multiply by multiplier if provided
+        let average_block_time = match multiplier {
+            Some(multiplier) => (average_block_time as f32 * multiplier) as u64,
+            None => average_block_time,
+        };
+
+        Ok(average_block_time)
     }
 
     /// Returns latests validator set
@@ -81,7 +129,6 @@ impl Node {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
-        #[allow(deprecated)]
         let resp = client
             .get_latest_validator_set(cosmos_modules::tendermint::GetLatestValidatorSetRequest {
                 pagination,
@@ -101,7 +148,6 @@ impl Node {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
-        #[allow(deprecated)]
         let resp = client
             .get_validator_set_by_height(
                 cosmos_modules::tendermint::GetValidatorSetByHeightRequest { height, pagination },
@@ -173,6 +219,7 @@ impl Node {
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
+        let block_speed = self.average_block_speed(Some(0.7)).await?;
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -183,8 +230,8 @@ impl Node {
                 }
                 Err(err) => {
                     log::debug!("TX not found with error: {:?}", err);
-                    log::debug!("Waiting 10s");
-                    sleep(Duration::from_secs(10)).await;
+                    log::debug!("Waiting {block_speed} seconds");
+                    tokio::time::sleep(Duration::from_secs(block_speed)).await;
                 }
             }
         }

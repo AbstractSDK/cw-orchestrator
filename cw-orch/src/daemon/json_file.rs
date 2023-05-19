@@ -1,7 +1,7 @@
 use serde_json::{from_reader, json, Value};
 use std::fs::{File, OpenOptions};
 
-pub fn write(filename: &String, network_id: &String, chain_id: &String, deploy_id: &String) {
+pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_id: &String) {
     // open file pointer set read/write permissions to true
     // create it if it does not exists
     // dont truncate it
@@ -21,14 +21,14 @@ pub fn write(filename: &String, network_id: &String, chain_id: &String, deploy_i
         from_reader(file).unwrap()
     };
 
-    // check and add chain_id path if it's missing
-    if json.get(chain_id).is_none() {
-        json[chain_id] = json!({});
+    // check and add network_id path if it's missing
+    if json.get(network_id).is_none() {
+        json[network_id] = json!({});
     }
 
     // add deployment_id to chain_id path
-    if json[chain_id].get(network_id).is_none() {
-        json[chain_id][network_id] = json!({
+    if json[network_id].get(chain_id).is_none() {
+        json[network_id][chain_id] = json!({
             deploy_id: {},
             "code_ids": {}
         });

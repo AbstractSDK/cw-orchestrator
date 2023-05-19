@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.11.0-alpha.5"
+version = "0.11.2"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -53,11 +53,9 @@ daemon = [
 interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
 
 [dependencies]
-dotenv = "0.15.0"
-env_logger = "0.10.0"
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive" }
-
+# Default deps
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.11" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.11" }
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
@@ -109,9 +107,10 @@ async-recursion = { version = "1.0.4", optional = true }
 futures = "0.3.28"
 cosmos-sdk-proto = "0.19.0"
 
-[dev-dependencies]
 dotenv = { version = "0.15.0" }
 env_logger = { version = "0.10.0" }
+
+[dev-dependencies]
 simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 cw-orch = { features = ["daemon"], path = "." }
@@ -119,7 +118,9 @@ uid = "0.1.7"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cosmwasm-schema = "1.2"
+tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
 serial_test = "2.0.0"
+mock-contract = { path = "../contracts/mock_contract", features = ["cw-orch"] }

@@ -5,7 +5,8 @@ use crate::prelude::*;
 
 use super::sync::core::Daemon;
 
-pub trait UploadHelpers: CwOrcUpload<Daemon> {
+/// Helper methods for conditional uploading of a contract.
+pub trait ConditionalUpload: CwOrcUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
@@ -15,7 +16,7 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
         }
     }
 
-    /// Returns a bool whether the checksum of the wasm file matches the checksum of the previously uploaded code
+    /// Returns whether the checksum of the WASM file matches the checksum of the latest uploaded code for this contract.
     fn latest_is_uploaded(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
@@ -27,12 +28,12 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
                 .query_client::<CosmWasm>()
                 .code_id_hash(latest_uploaded_code_id),
         )?;
-        let local_hash = self.wasm().checksum(&self.id())?;
+        let local_hash = self.wasm().checksum()?;
 
         Ok(local_hash == on_chain_hash)
     }
 
-    /// Returns a bool whether the contract is running the latest uploaded code for it
+    /// Returns whether the contract is running the latest uploaded code for it
     fn is_running_latest(&self) -> Result<bool, CwOrchError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
@@ -47,9 +48,10 @@ pub trait UploadHelpers: CwOrcUpload<Daemon> {
     }
 }
 
-impl<T> UploadHelpers for T where T: CwOrcUpload<Daemon> {}
+impl<T> ConditionalUpload for T where T: CwOrcUpload<Daemon> {}
 
-pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
+/// Helper methods for conditional migration of a contract.
+pub trait ConditionalMigrate: CwOrcMigrate<Daemon> + ConditionalUpload {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
@@ -64,4 +66,4 @@ pub trait MigrateHelpers: CwOrcMigrate<Daemon> + UploadHelpers {
     }
 }
 
-impl<T> MigrateHelpers for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}
+impl<T> ConditionalMigrate for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}

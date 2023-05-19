@@ -50,7 +50,7 @@ impl Sender<All> {
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey =
-            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain.coin_type)?;
+            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.network.coin_type)?;
 
         let cosmos_private_key = SigningKey::from_slice(&p_key.raw_key()).unwrap();
         let sender = Sender {
@@ -70,14 +70,14 @@ impl Sender<All> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?)
+            .account_id(&self.daemon_state.network.pub_address_prefix)?)
     }
 
     pub fn address(&self) -> Result<Addr, DaemonError> {
         Ok(Addr::unchecked(
             self.private_key
                 .public_key()
-                .account_id(&self.daemon_state.chain.pub_address_prefix)?
+                .account_id(&self.daemon_state.network.pub_address_prefix)?
                 .to_string(),
         ))
     }
@@ -86,7 +86,7 @@ impl Sender<All> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?
+            .account_id(&self.daemon_state.network.pub_address_prefix)?
             .to_string())
     }
 

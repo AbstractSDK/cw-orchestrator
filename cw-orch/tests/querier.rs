@@ -2,10 +2,14 @@ mod common;
 
 #[cfg(feature = "node-tests")]
 mod queriers {
-    use crate::common;
-    use std::{str::FromStr, sync::Arc};
 
-    use common::channel::build_channel;
+    use cw_orch::{daemon::channel::GrpcChannel, environment::TxHandler, prelude::networks};
+    use ibc_chain_registry::chain::Grpc;
+    use ibc_relayer_types::core::ics24_host::identifier::ChainId;
+    use mock_contract::InstantiateMsg;
+    use speculoos::{asserting, result::ResultAssertions};
+    use std::str::FromStr;
+
     use cw_orch::{
         daemon::{
             error::DaemonError,
@@ -13,8 +17,6 @@ mod queriers {
         },
         prelude::{queriers::StakingBondStatus, *},
     };
-
-    use speculoos::prelude::*;
     use tokio::runtime::Runtime;
 
     use cosmrs::{
@@ -23,12 +25,31 @@ mod queriers {
         AccountId, Denom,
     };
 
+    pub async fn build_channel() -> tonic::transport::Channel {
+        let network = networks::LOCAL_JUNO;
+
+        let grpcs: Vec<Grpc> = vec![Grpc {
+            address: network.grpc_urls[0].into(),
+            provider: None,
+        }];
+
+        let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
+
+        let channel = GrpcChannel::connect(&grpcs, &chain).await;
+
+        asserting!("channel connection is succesful")
+            .that(&channel)
+            .is_ok();
+
+        channel.unwrap()
+    }
+
     /*
         Querier - Ibc
     */
     #[test]
     fn ibc() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let ibc = Ibc::new(channel);
@@ -42,7 +63,7 @@ mod queriers {
     */
     #[test]
     fn staking() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let staking = Staking::new(channel);
@@ -62,7 +83,7 @@ mod queriers {
     */
     #[test]
     fn gov() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let gov = Gov::new(channel);
@@ -76,7 +97,7 @@ mod queriers {
     */
     #[test]
     fn bank() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let bank = Bank::new(channel);
@@ -85,7 +106,7 @@ mod queriers {
         asserting!("params is ok").that(&params).is_ok();
 
         let balances =
-            rt.block_on(bank.coin_balances("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"));
+            rt.block_on(bank.balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
         asserting!("balances is ok").that(&balances).is_ok();
 
         let spendable_balances =
@@ -116,7 +137,7 @@ mod queriers {
     */
     #[test]
     fn cosmwasm() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let cw = CosmWasm::new(channel);
@@ -130,7 +151,7 @@ mod queriers {
     */
     #[test]
     fn node() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
         let node = Node::new(channel);
@@ -146,8 +167,9 @@ mod queriers {
     }
 
     #[test]
+    #[serial_test::serial]
     fn simulate_tx() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        let rt = Runtime::new().unwrap();
 
         let channel = rt.block_on(build_channel());
 
@@ -189,18 +211,32 @@ mod queriers {
     }
 
     #[test]
+    #[serial_test::serial]
     fn contract_info() {
-        let rt = Arc::new(Runtime::new().unwrap());
+        use crate::common::Id;
+        use cw_orch::prelude::networks;
+
+        let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
         let cosm_wasm = CosmWasm::new(channel);
+        let daemon = Daemon::builder()
+            .chain(networks::LOCAL_JUNO)
+            .handle(rt.handle())
+            .build()
+            .unwrap();
 
-        let (sender, contract) = common::contract::start(&rt);
+        let sender = daemon.sender();
 
-        let _ = contract.upload();
+        let contract = mock_contract::MockContract::new(
+            format!("test:mock_contract:{}", Id::new()),
+            daemon.clone(),
+        );
 
-        let init_msg = common::contract::get_init_msg(&sender);
+        contract.upload().unwrap();
 
-        let _ = contract.instantiate(&init_msg, Some(&sender), None);
+        contract
+            .instantiate(&InstantiateMsg {}, Some(&sender), None)
+            .unwrap();
 
         let contract_address = contract.address().unwrap();
 

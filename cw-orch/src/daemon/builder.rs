@@ -2,25 +2,26 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::{DaemonAsync, SyncDaemonBuilder};
+use crate::prelude::{DaemonAsync, DaemonBuilder};
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Default)]
-/// Create [`DaemonAsync`] through [`DaemonBuilder`]
+/// Create [`DaemonAsync`] through [`DaemonAsyncBuilder`]
 /// ## Example
-/// ```no_run,ignore
-///     use cw_orch::prelude::{DaemonBuilder, networks};
-///
-///     let daemon = DaemonBuilder::default()
-///         .chain(networks::LOCAL_JUNO)
-///         .deployment_id("v0.1.0")
-///         .build()
-///         .unwrap();
+/// ```no_run
+/// # tokio_test::block_on(async {
+/// use cw_orch::prelude::{DaemonAsyncBuilder, networks};
+/// let daemon = DaemonAsyncBuilder::default()
+///     .chain(networks::LOCAL_JUNO)
+///     .deployment_id("v0.1.0")
+///     .build()
+///     .await.unwrap();
+/// # })
 /// ```
-pub struct DaemonBuilder {
+pub struct DaemonAsyncBuilder {
     // # Required
     pub(crate) chain: Option<ChainData>,
     // # Optional
@@ -29,7 +30,7 @@ pub struct DaemonBuilder {
     pub(crate) mnemonic: Option<String>,
 }
 
-impl DaemonBuilder {
+impl DaemonAsyncBuilder {
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainData>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -44,6 +45,9 @@ impl DaemonBuilder {
     }
 
     /// Set the mnemonic to use with this chain.
+    /// Defaults to env variable depending on the environment.  
+    ///
+    /// Variables: LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
         self
@@ -74,9 +78,9 @@ impl DaemonBuilder {
     }
 }
 
-impl From<SyncDaemonBuilder> for DaemonBuilder {
-    fn from(value: SyncDaemonBuilder) -> Self {
-        DaemonBuilder {
+impl From<DaemonBuilder> for DaemonAsyncBuilder {
+    fn from(value: DaemonBuilder) -> Self {
+        DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,
