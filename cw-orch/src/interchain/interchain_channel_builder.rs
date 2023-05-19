@@ -45,7 +45,6 @@ impl ChainChannelBuilder{
 	    let mut chains: Vec<ChainData> = vec![parse_network(&self.chain_id.clone().unwrap()).into()];
 	    if self.is_local_chain.unwrap_or(false){
 
-		
 			// TODO
 		    // This is only for tests, we may change that later ?
 		    InterchainInfrastructure::configure_networks(&mut chains).await?;
@@ -203,7 +202,6 @@ impl InterchainChannelBuilder{
 				chain_id: self.chain_b.chain_id.clone().unwrap(),
 				port:  self.chain_b.port.clone().unwrap(),
 				channel: None,
-
 			},
 		);
 
@@ -225,7 +223,6 @@ impl InterchainChannelBuilder{
         log::info!("Channel creation message sent to hermes, awaiting for channel creation end");
 
         // Then we make sure the channel is indeed created between the two chains
-        // We get the channel open on chain 1
         let (channel_creation_tx_a, channel_creation_tx_b) = interchain.find_new_channel_creation_tx(origin_chain_id, &channel_creation_hashes).await?;
 
         let src_channel_id = channel_creation_tx_a.get_events("channel_open_ack")[0].get_first_attribute_value("channel_id").unwrap();

@@ -36,10 +36,11 @@ use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::{
     follow_ibc_execution::follow_trail,
     ibc_tracker::{CwIbcContractState, IbcTracker, IbcTrackerConfigBuilder},
+    interchain_channel_builder::InterchainChannelBuilder,
     networks::{osmosis::OSMO_2, JUNO_1},
     prelude::WasmPath,
     queriers::Bank,
-    *, interchain_channel_builder::InterchainChannelBuilder,
+    *,
 };
 
 use simple_ica_controller::msg::{self as controller_msgs};
@@ -72,9 +73,10 @@ pub fn script() -> anyhow::Result<()> {
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
 
-    let interchain_channel = rt.block_on(InterchainChannelBuilder::default()
-        .from_contracts(&controller, &host)
-        .create_channel("simple-ica-v2")
+    let interchain_channel = rt.block_on(
+        InterchainChannelBuilder::default()
+            .from_contracts(&controller, &host)
+            .create_channel("simple-ica-v2"),
     )?;
 
     // Track IBC on JUNO
