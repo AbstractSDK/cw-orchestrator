@@ -271,6 +271,7 @@ impl InterchainChannel{
 	    };
 
 	    log::info!(
+	    	target: &dst_port.chain_id,
 	        "IBC packet n°{} : {}, received on {} on tx {}, with acknowledgment sent back: {}",
 	        recv_packet_sequence,
 	        recv_packet_data,
@@ -293,6 +294,7 @@ impl InterchainChannel{
 	        })
 	    }
 	    log::info!(
+	    	target: &src_port.chain_id,
 	        "IBC packet n°{} acknowledgment received on {} on tx {}",
 	        sequence,
 	        src_port.chain_id.clone(),
@@ -308,7 +310,7 @@ impl InterchainChannel{
 		        TxId{
 		        	chain_id: src_port.chain_id.clone(),
 		        	channel: src_port.chain,
-		        	tx_hash: ack_tx.txhash.clone()
+		        	tx_hash: ack_tx.txhash
 		        },
 	        ]
 	    )

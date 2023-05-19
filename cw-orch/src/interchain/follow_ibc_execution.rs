@@ -118,7 +118,7 @@ pub async fn follow_trail(
         return Ok(());
     }
 
-    log::info!("Investigating sent packet events on tx {}", tx_hash);
+    log::info!(target: &chain1, "Investigating sent packet events on tx {}", tx_hash);
     let connections = get_events(&send_packet_events, "packet_connection");
     let src_ports = get_events(&send_packet_events, "packet_src_port");
     let src_channels = get_events(&send_packet_events, "packet_src_channel");
@@ -140,6 +140,7 @@ pub async fn follow_trail(
     // We log the packets we follow.
     for i in 0..src_ports.len(){
          log::info!(
+            target: &chain1,
             "IBC packet n° {}, sent on {} on tx {}, with data: {}",
             sequences[i],
             chain1,
