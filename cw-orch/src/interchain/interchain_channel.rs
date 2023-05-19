@@ -43,6 +43,10 @@ impl InterchainChannel{
 			port_b
 		}
 	}
+
+	pub fn get_connection(&self)-> String{
+		self.connection_id.clone()
+	}
 	
 	pub fn get_chain(&self, chain_id: String) -> Result<InterchainPort, DaemonError>{
 		if chain_id == self.port_a.chain_id{

@@ -182,9 +182,16 @@ impl InterchainChannelBuilder{
 		let grpc_channel_a = self.chain_a.create_grpc_channel().await?;
 		let grpc_channel_b = self.chain_b.create_grpc_channel().await?;
 
+		// If the connection is not specified, we query it
+		let connection = if let Some(connection) = &self.connection_a{
+			connection.clone()
+		}else{
+			Ibc::new(grpc_channel_a.clone()).open_connections(self.chain_b.chain_id.clone().unwrap()).await?[0].id.clone()
+		};
+
         // Then we construct the InterchainChannel object
         let interchain = InterchainChannel::new(
-			self.connection_a.clone().unwrap(),
+			connection.clone(),
 			InterchainPort{
 			    chain: grpc_channel_a.clone(),
 			    chain_id: self.chain_a.chain_id.clone().unwrap(),
@@ -206,7 +213,7 @@ impl InterchainChannelBuilder{
 		// Then we actually create a channel between the 2 ports
         Self::get_hermes().await?
             .create_channel_raw(
-            	&self.connection_a.clone().unwrap(), 
+            	&connection, 
             	channel_version, 
             	&origin_chain_id,
             	self.chain_a.port.clone().unwrap(),
@@ -227,7 +234,7 @@ impl InterchainChannelBuilder{
         log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}' (txhash : {})", 
             self.chain_a.port.clone().unwrap(), 
             self.chain_b.port.clone().unwrap(),
-            self.connection_a.clone().unwrap(),
+            connection,
             self.chain_a.chain_id.clone().unwrap(),
             src_channel_id,
             channel_creation_tx_a.txhash,

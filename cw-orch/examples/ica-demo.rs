@@ -72,9 +72,8 @@ pub fn script() -> anyhow::Result<()> {
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
 
-    rt.block_on(InterchainChannelBuilder::default()
+    let interchain_channel = rt.block_on(InterchainChannelBuilder::default()
         .from_contracts(&controller, &host)
-        .connection("connection-0")
         .create_channel("simple-ica-v2")
     )?;
 
@@ -82,7 +81,7 @@ pub fn script() -> anyhow::Result<()> {
     let juno_channel = juno.channel();
     let tracker = IbcTrackerConfigBuilder::default()
         .ibc_state(CwIbcContractState::new(
-            "connection-0",
+            interchain_channel.get_connection(),
             format!("wasm.{}", host.addr_str()?),
         ))
         .build()?;
@@ -95,7 +94,7 @@ pub fn script() -> anyhow::Result<()> {
     let osmosis_channel = osmosis.channel();
     let tracker = IbcTrackerConfigBuilder::default()
         .ibc_state(CwIbcContractState::new(
-            "connection-0",
+            interchain_channel.get_connection(),
             format!("wasm.{}", controller.addr_str()?),
         ))
         .build()?;
