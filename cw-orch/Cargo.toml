@@ -107,5 +107,8 @@ duct = "0.13"
 counter-contract = { path = "../contracts/counter", features = ["interface"] }
 mock-contract = { path = "../contracts/mock_contract", features = [
   "interface",
+]}
+mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
+  "cw-orch",
 ] }
 serial_test = "2.0.0"

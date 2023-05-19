@@ -1,4 +1,4 @@
-use crate::daemon::state::{ChainInfo, ChainKind, NetworkInfo};
+use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
     id: "terra",
