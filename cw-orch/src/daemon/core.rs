@@ -1,11 +1,12 @@
 use super::{
     builder::DaemonAsyncBuilder,
+    channel::ChannelAccess,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
     sender::Wallet,
     state::DaemonState,
-    tx_resp::CosmTxResponse, channel::ChannelAccess,
+    tx_resp::CosmTxResponse,
 };
 use crate::{
     prelude::{queriers::CosmWasm, IndexResponse, Uploadable},
