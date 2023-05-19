@@ -28,4 +28,4 @@ cosmwasm-schema = "1.2"
 cw-orch = { path = "../../cw-orch", features = ["daemon"], optional = true }
 anyhow.workspace = true
 
-mock-contract = {path="../mock_contract", default-features = false}
+mock-contract = { path = "../mock_contract", default-features = false }
