@@ -1,37 +1,18 @@
-use cw_orch::contract::Contract;
 use cw_orch::daemon::sync::core::Daemon;
 use cw_orch::environment::CwEnv;
 use cw_orch::interface;
-use cw_orch::prelude::ContractWrapper;
-use cw_orch::prelude::TxHandler;
-use cw_orch::prelude::Uploadable;
-use cw_orch::prelude::WasmPath;
+use cw_orch::prelude::*;
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
-use cw_orch::prelude::ContractInstance;
-use cw_orch::prelude::CwOrcExecute;
-use cw_orch::prelude::CwOrcMigrate;
-use cw_orch::prelude::CwOrcQuery;
-
-use cw_orch::prelude::CwOrcUpload;
 mod common;
 use cosmwasm_std::Addr;
-use cw_orch::prelude::{CwOrcInstantiate, Mock};
+use cw_orch::prelude::Mock;
 
 const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg)]
 pub struct MockContract;
-
-impl<Chain: CwEnv, T> MockContract<Chain, T> {
-    pub fn new(id: &str, chain: Chain) -> Self {
-        Self(
-            Contract::new(id, chain),
-            std::marker::PhantomData::default(),
-        )
-    }
-}
 
 impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
