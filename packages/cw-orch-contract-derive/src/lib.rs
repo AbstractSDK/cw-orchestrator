@@ -303,7 +303,6 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
-    #[cfg(feature = "propagate_daemon")]
     let wasm_name = get_wasm_name();
 
     let name = get_crate_to_struct();

@@ -45,7 +45,6 @@ daemon = [
   "dep:hex",
   "dep:bitcoin",
   "dep:prost",
-  "cw-orch-contract-derive/propagate_daemon",
 ]
 
 [dependencies]
