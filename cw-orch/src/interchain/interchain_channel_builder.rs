@@ -252,7 +252,7 @@ impl InterchainChannelBuilder {
             .unwrap();
 
         log::info!("Successfully created a channel between {} and {} on connection '{}' and channels {}:'{}'(txhash : {}) and {}:'{}' (txhash : {})", 
-            self.chain_a.port.clone().unwrap(), 
+            self.chain_a.port.clone().unwrap(),
             self.chain_b.port.clone().unwrap(),
             connection,
             self.chain_a.chain_id.clone().unwrap(),
