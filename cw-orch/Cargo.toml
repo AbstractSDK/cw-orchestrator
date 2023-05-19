@@ -12,6 +12,13 @@ readme = "../README.md"
 
 exclude = [".env"]
 
+[[example]]
+name = "mock_test"
+
+[[example]]
+name = "daemon_test"
+required-features = ["daemon"]
+
 [features]
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
