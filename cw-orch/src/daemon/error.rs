@@ -2,6 +2,8 @@
 
 use thiserror::Error;
 
+use crate::interchain::error::InterchainError;
+
 #[derive(Error, Debug)]
 pub enum DaemonError {
     #[error("Reqwest HTTP(s) Error")]
@@ -107,6 +109,13 @@ pub enum DaemonError {
 impl DaemonError {
     pub fn ibc_err(msg: impl ToString) -> Self {
         Self::IbcError(msg.to_string())
+    }
+}
+
+impl From<InterchainError> for DaemonError{
+
+    fn from(e: InterchainError) -> Self{
+        Self::ibc_err(e.to_string())
     }
 }
 

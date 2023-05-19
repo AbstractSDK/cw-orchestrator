@@ -63,7 +63,7 @@ pub mod channel {
 
 #[cfg(feature = "interchain")]
 pub use interchain::{
-    follow_ibc_execution, hermes::Hermes, infrastructure::InterchainInfrastructure,
+    follow_ibc_execution, hermes::Hermes, infrastructure::InterchainInfrastructure, interchain_channel_builder
 };
 
 #[cfg(feature = "daemon")]
