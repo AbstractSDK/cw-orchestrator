@@ -5,7 +5,7 @@ use super::{
     queriers::{DaemonQuerier, Node},
     sender::Wallet,
     state::DaemonState,
-    tx_resp::CosmTxResponse,
+    tx_resp::CosmTxResponse, channel::ChannelAccess,
 };
 use crate::{
     prelude::{queriers::CosmWasm, IndexResponse, Uploadable},
@@ -25,8 +25,6 @@ use std::{
     str::{from_utf8, FromStr},
     time::Duration,
 };
-
-use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**
@@ -57,14 +55,6 @@ pub struct DaemonAsync {
     pub sender: Wallet,
     pub state: Rc<DaemonState>,
 }
-/*
-//TODO
-impl ChannelAccess for DaemonAsync {
-    fn channel(&self) -> tonic::transport::Channel {
-        self.sender.channel()
-    }
-}
-*/
 
 impl DaemonAsync {
     /// Get the daemon builder
@@ -77,11 +67,6 @@ impl DaemonAsync {
     pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.channel())
     }
-
-    /// Get the channel configured for this DaemonAsync.
-    pub fn channel(&self) -> Channel {
-        self.state().grpc_channel.clone()
-    }
 }
 
 impl ChainState for DaemonAsync {
@@ -89,6 +74,12 @@ impl ChainState for DaemonAsync {
 
     fn state(&self) -> Self::Out {
         self.state.clone()
+    }
+}
+
+impl ChannelAccess for DaemonAsync {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.sender.channel()
     }
 }
 
