@@ -8,7 +8,7 @@ use cw_orch::prelude::TxHandler;
 use cw_orch::prelude::Uploadable;
 use cw_orch::prelude::WasmPath;
 
-use contract_counter::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use contract_mock::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
 use cw_orch::prelude::ContractInstance;
