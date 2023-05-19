@@ -1,58 +1,30 @@
 #[cfg(test)]
 mod tests {
-    use crate::{helpers::CwTemplateContract, msg::InstantiateMsg};
+    // Use prelude to get all the necessary imports
+    use crate::{msg::InstantiateMsg, ContractCounter};
+    use cw_orch::prelude::*;
 
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
-    use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
-    pub fn contract_template() -> Box<dyn Contract<Empty>> {
-        let contract = ContractWrapper::new(
-            crate::contract::execute,
-            crate::contract::instantiate,
-            crate::contract::query,
-        );
-        Box::new(contract)
-    }
-
-    const USER: &str = "USER";
-    const ADMIN: &str = "ADMIN";
+    // consts for testing
+    const USER: &str = "user";
+    const ADMIN: &str = "admin";
     const NATIVE_DENOM: &str = "denom";
 
-    fn mock_app() -> App {
-        AppBuilder::new().build(|router, _, storage| {
-            router
-                .bank
-                .init_balance(
-                    storage,
-                    &Addr::unchecked(USER),
-                    vec![Coin {
-                        denom: NATIVE_DENOM.to_string(),
-                        amount: Uint128::new(1),
-                    }],
-                )
-                .unwrap();
-        })
-    }
+    /// Instantiate the contract in any CosmWasm environment
+    fn proper_instantiate<Chain: CwEnv>(chain: Chain) -> ContractCounter<Chain> {
+        // Construct the counter interface
+        let contract = ContractCounter::new(CONTRACT_NAME, chain.clone());
 
-    fn proper_instantiate() -> (App, CwTemplateContract) {
-        let mut app = mock_app();
-        let cw_template_id = app.store_code(contract_template());
+        // Upload the contract
+        contract.upload().unwrap();
 
+        // Instantiate the contract
         let msg = InstantiateMsg { count: 1i32 };
-        let cw_template_contract_addr = app
-            .instantiate_contract(
-                cw_template_id,
-                Addr::unchecked(ADMIN),
-                &msg,
-                &[],
-                "test",
-                None,
-            )
-            .unwrap();
+        let contract_addr = contract.instantiate(&msg, ADMIN, None).unwrap();
 
-        let cw_template_contract = CwTemplateContract(cw_template_contract_addr);
-
-        (app, cw_template_contract)
+        // Return the contract
+        contract
     }
 
     mod count {
@@ -61,11 +33,16 @@ mod tests {
 
         #[test]
         fn count() {
-            let (mut app, cw_template_contract) = proper_instantiate();
+            // Create a sender
+            let sender = Addr::unchecked(ADMIN);
+            // Create the mock
+            let mock = Mock::new(&sender);
 
-            let msg = ExecuteMsg::Increment {};
-            let cosmos_msg = cw_template_contract.call(msg).unwrap();
-            app.execute(Addr::unchecked(USER), cosmos_msg).unwrap();
+            // Set up the contract
+            let contract = proper_instantiate(mock.clone());
+
+            // increment the count
+            contract.call_as(Addr::unchecked(USER)).increment().unwrap();
         }
     }
 }
