@@ -17,7 +17,6 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-
     let state = State {
         count: msg.count,
         owner: info.sender.clone(),
