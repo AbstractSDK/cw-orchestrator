@@ -120,13 +120,11 @@ where
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
 
-        let instance = Self {
+        Self {
             sender: sender.clone(),
             state,
             app,
-        };
-
-        Ok(instance)
+        }
     }
 
     /// Upload a custom contract wrapper.
