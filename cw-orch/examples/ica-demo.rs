@@ -73,11 +73,8 @@ pub fn script() -> anyhow::Result<()> {
     deploy_contracts(&cw1, &host, &controller)?;
 
     rt.block_on(InterchainChannelBuilder::default()
+        .from_contracts(&controller, &host)
         .connection("connection-0")
-        .chain_a(osmosis.state().chain_id.clone())
-        .port_a(format!("wasm.{}", controller.address()?))
-        .chain_b(juno.state().chain_id.clone())
-        .port_b(format!("wasm.{}", host.address()?))
         .create_channel("simple-ica-v2")
     )?;
 
