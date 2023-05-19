@@ -504,7 +504,7 @@ mod tst {
 
         match encode("cosmosvalconspub", foo_v8.to_base32(),Variant::Bech32) {
             Ok(cosmospub) => assert_eq!("cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk", cosmospub),
-            Err(_) => assert!(false, "bad encoding"),
+            Err(_) => panic!("bad encoding"),
         };
         //   assert_eq!(
         //       "cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk",
@@ -515,11 +515,11 @@ mod tst {
             Ok(tendermint) => {
                 let ed_key = PublicKey::from_tendermint_key(&tendermint)?;
                 //let ed_key_pubkey = ed_key.tendermint_pubkey()?;
-                let foo = &ed_key.raw_pub_key.unwrap();
+                let raw_pub_key = &ed_key.raw_pub_key.unwrap();
 
-                assert_eq!(public_key, hex::encode_upper(&foo[5..]));
+                assert_eq!(public_key, hex::encode_upper(&raw_pub_key[5..]));
             }
-            Err(_) => assert!(false, "bad encoding"),
+            Err(_) => panic!("bad encoding"),
         };
         Ok(())
     }

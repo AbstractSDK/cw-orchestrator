@@ -106,7 +106,7 @@ mod queriers {
         asserting!("params is ok").that(&params).is_ok();
 
         let balances =
-            rt.block_on(bank.balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+            rt.block_on(bank.coin_balances("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"));
         asserting!("balances is ok").that(&balances).is_ok();
 
         let spendable_balances =
