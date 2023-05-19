@@ -1,8 +1,8 @@
 use crate::{
+    daemon::Wallet,
     error::CwOrchError,
     prelude::{IndexResponse, Uploadable},
     state::ChainState,
-    daemon::Wallet
 };
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};

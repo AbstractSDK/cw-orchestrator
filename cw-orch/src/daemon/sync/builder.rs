@@ -75,7 +75,7 @@ impl DaemonBuilder {
         // build the underlying daemon
 
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
-        
+
         Ok(Daemon { rt_handle, daemon })
     }
 }

@@ -55,8 +55,8 @@ pub use crate::daemon::{
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
 
-
 #[cfg(feature = "interchain")]
 pub use super::interchain::{
-    follow_ibc_execution, hermes::Hermes, infrastructure::InterchainInfrastructure, interchain_channel_builder
+    follow_ibc_execution, hermes::Hermes, infrastructure::InterchainInfrastructure,
+    interchain_channel_builder,
 };

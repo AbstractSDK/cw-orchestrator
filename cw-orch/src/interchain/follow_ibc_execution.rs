@@ -1,25 +1,23 @@
-use futures::future::{try_join_all};
+use futures::future::try_join_all;
 
-use anyhow::{Result};
+use anyhow::Result;
 
 use tonic::transport::Channel;
-
 
 use ibc_chain_registry::chain::ChainData;
 
 use crate::{
-    daemon::{channel::GrpcChannel, tx_resp::TxResultBlockEvent},
     daemon::networks::parse_network,
-    daemon::queriers::{DaemonQuerier, Ibc, Node}, prelude::InterchainInfrastructure, interchain::interchain_channel_builder::InterchainChannelBuilder,
+    daemon::queriers::{DaemonQuerier, Ibc, Node},
+    daemon::{channel::GrpcChannel, tx_resp::TxResultBlockEvent},
+    interchain::interchain_channel_builder::InterchainChannelBuilder,
+    prelude::InterchainInfrastructure,
 };
 
-pub async fn get_channel(
-    chain_id: String
-) -> Result<Channel> {
+pub async fn get_channel(chain_id: String) -> Result<Channel> {
     let mut chains: Vec<ChainData> = vec![parse_network(&chain_id).into()];
 
     InterchainInfrastructure::configure_networks(&mut chains).await?;
-    
 
     Ok(GrpcChannel::connect(&chains[0].apis.grpc, &chains[0].chain_id).await?)
 }
@@ -49,7 +47,7 @@ pub enum AckResponse {
 
 /// Follow all IBC packets included in a transaction (recursively).
 /// ## Example
-/// ```no_run 
+/// ```no_run
 ///  use cw_orch::prelude::{DaemonAsync};
 ///
 ///  let grpc_channel = DaemonAsync::builder()
@@ -105,11 +103,7 @@ pub enum AckResponse {
 ///         - The receive Acknowledgement transaction identified in 3.b. on the origin chain
 
 #[async_recursion::async_recursion]
-pub async fn follow_trail(
-    chain1: String,
-    channel1: Channel,
-    tx_hash: String,
-) -> Result<()> {
+pub async fn follow_trail(chain1: String, channel1: Channel, tx_hash: String) -> Result<()> {
     // 1. Getting IBC related events for the current tx
     let tx = Node::new(channel1.clone()).find_tx(tx_hash.clone()).await?;
 
@@ -118,28 +112,34 @@ pub async fn follow_trail(
         return Ok(());
     }
 
-    log::info!(target: &chain1, "Investigating sent packet events on tx {}", tx_hash);
+    log::info!(
+        target: &chain1,
+        "Investigating sent packet events on tx {}",
+        tx_hash
+    );
     let connections = get_events(&send_packet_events, "packet_connection");
     let src_ports = get_events(&send_packet_events, "packet_src_port");
     let src_channels = get_events(&send_packet_events, "packet_src_channel");
     let sequences = get_events(&send_packet_events, "packet_sequence");
     let packet_datas = get_events(&send_packet_events, "packet_data");
     let chain_ids = try_join_all(
-        connections.iter().map(|c| async {
-            Ok::<_, anyhow::Error>(
-                Ibc::new(channel1.clone())
-                    .connection_client(c.clone())
-                    .await?
-                    .chain_id,
-            )
-        })
-        .collect::<Vec<_>>(),
+        connections
+            .iter()
+            .map(|c| async {
+                Ok::<_, anyhow::Error>(
+                    Ibc::new(channel1.clone())
+                        .connection_client(c.clone())
+                        .await?
+                        .chain_id,
+                )
+            })
+            .collect::<Vec<_>>(),
     )
     .await?;
 
     // We log the packets we follow.
-    for i in 0..src_ports.len(){
-         log::info!(
+    for i in 0..src_ports.len() {
+        log::info!(
             target: &chain1,
             "IBC packet n° {}, sent on {} on tx {}, with data: {}",
             sequences[i],
@@ -151,31 +151,38 @@ pub async fn follow_trail(
 
     // We follow the IBC trail for all packets found inside the transaction
     let txs_to_follow = try_join_all(
-        src_ports.iter().enumerate().map(|(i,_)| {
-            let chain_a = chain1.clone();
-            let port_a = src_ports[i].clone();
-            let channel_a = src_channels[i].clone();
+        src_ports
+            .iter()
+            .enumerate()
+            .map(|(i, _)| {
+                let chain_a = chain1.clone();
+                let port_a = src_ports[i].clone();
+                let channel_a = src_channels[i].clone();
 
-            let chain_b = chain_ids[i].clone();
+                let chain_b = chain_ids[i].clone();
 
-            let sequence = sequences[i].clone();
+                let sequence = sequences[i].clone();
 
-            async move {
+                async move {
+                    // That's all we need to generate an InterchainChannel object.
+                    let interchain_channel = InterchainChannelBuilder::default()
+                        .chain_a(chain_a.clone())
+                        .port_a(port_a)
+                        .is_local_chain_a()
+                        .chain_b(chain_b)
+                        .is_local_chain_b()
+                        .channel_from(channel_a)
+                        .await?;
 
-            // That's all we need to generate an InterchainChannel object.
-            let interchain_channel = InterchainChannelBuilder::default()
-                .chain_a(chain_a.clone())
-                .port_a(port_a)
-                .is_local_chain_a()
-
-                .chain_b(chain_b)
-                .is_local_chain_b()
-                
-                .channel_from(channel_a).await?;
-
-            interchain_channel.follow_packet(chain_a, sequence).await
-        }}).collect::<Vec<_>>()
-    ).await?.into_iter().flatten().collect::<Vec<_>>();
+                    interchain_channel.follow_packet(chain_a, sequence).await
+                }
+            })
+            .collect::<Vec<_>>(),
+    )
+    .await?
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
 
     // We analyze all the tx hashes for outgoing IBC transactions
     try_join_all(
@@ -196,8 +203,7 @@ pub async fn follow_trail(
     Ok(())
 }
 
-
-fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String>{
+fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
     events
         .iter()
         .map(|e| e.get_first_attribute_value(attr_name).unwrap())

@@ -1,8 +1,8 @@
 //! Interactions with docker using bollard
 
-use crate::interchain::docker::DockerHelper;
 use crate::daemon::error::DaemonError;
 use crate::daemon::sync::core::Daemon;
+use crate::interchain::docker::DockerHelper;
 use crate::interchain::hermes::Hermes;
 use crate::interchain::IcResult;
 use ibc_chain_registry::chain::{ChainData, Grpc};
@@ -162,7 +162,6 @@ impl InterchainInfrastructure {
         Ok(daemons)
     }
 }
-
 
 /// Get the file path for the log target
 fn generate_log_file_path(file: &str) -> PathBuf {

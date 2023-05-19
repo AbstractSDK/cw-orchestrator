@@ -1,11 +1,10 @@
-use crate::interface_traits::ContractInstance;
 use crate::daemon::sync::core::Daemon;
+use crate::interface_traits::ContractInstance;
 use crate::state::ChainState;
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::service::ContainerSummary;
 use bollard::Docker;
 use futures_util::StreamExt;
-
 
 pub const HERMES_ID: &str = "hermes";
 
@@ -70,7 +69,8 @@ impl Hermes {
         let port_b = contract_port(contract_b);
 
         let chain_id = &contract_a.get_chain().state().chain_id;
-        self.create_channel_raw(connection_a, channel_version, chain_id, port_a, port_b).await
+        self.create_channel_raw(connection_a, channel_version, chain_id, port_a, port_b)
+            .await
     }
 
     pub async fn create_channel_raw(
@@ -81,7 +81,6 @@ impl Hermes {
         port_a: String,
         port_b: String,
     ) {
-        
         let command = [
             "hermes",
             "create",
