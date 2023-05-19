@@ -1,35 +1,48 @@
 #[cfg(test)]
 mod tests {
     // Use prelude to get all the necessary imports
-    use crate::{contract::CONTRACT_NAME, msg::InstantiateMsg, ContractCounter};
+    use crate::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
     use cw_orch::prelude::*;
 
-    use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+    use cosmwasm_std::Addr;
 
     // consts for testing
     const USER: &str = "user";
     const ADMIN: &str = "admin";
-    const NATIVE_DENOM: &str = "denom";
 
     /// Instantiate the contract in any CosmWasm environment
-    fn proper_instantiate<Chain: CwEnv>(chain: Chain) -> ContractCounter<Chain> {
+    fn proper_instantiate<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
         // Construct the counter interface
-        let contract = ContractCounter::new(CONTRACT_NAME, chain.clone());
+        let contract = CounterContract::new(CONTRACT_NAME, chain.clone());
+        let admin = Addr::unchecked(ADMIN);
 
         // Upload the contract
-        contract.upload().unwrap();
+        let upload_resp = contract.upload().unwrap();
+
+        // Get the code-id from the response.
+        let code_id = upload_resp.uploaded_code_id().unwrap();
+        // or get it from the interface.
+        assert_eq!(code_id, contract.code_id().unwrap());
 
         // Instantiate the contract
         let msg = InstantiateMsg { count: 1i32 };
-        let contract_addr = contract.instantiate(&msg, ADMIN, None).unwrap();
+        let init_resp = contract.instantiate(&msg, Some(&admin), None).unwrap();
 
-        // Return the contract
+        // Get the address from the response
+        let contract_addr = init_resp.instantiated_contract_address().unwrap();
+        // or get it from the interface.
+        assert_eq!(contract_addr, contract.address().unwrap());
+
+        // Return the interface
         contract
     }
 
     mod count {
         use super::*;
-        use crate::msg::ExecuteMsg;
+        use crate::{
+            msg::{GetCountResponse, QueryMsg},
+            CounterExecuteMsgFns, CounterQueryMsgFns,
+        };
 
         #[test]
         fn count() {
@@ -41,8 +54,21 @@ mod tests {
             // Set up the contract
             let contract = proper_instantiate(mock.clone());
 
-            // increment the count
-            contract.call_as(Addr::unchecked(USER)).increment().unwrap();
+            // Increment the count (auto-generated function)
+            contract
+                .call_as(&Addr::unchecked(USER))
+                .increment()
+                .unwrap();
+
+            // Get the count (auto-generated function)
+            let count1 = contract.get_count().unwrap();
+            // or query it manually
+            let count2: GetCountResponse = contract.query(&QueryMsg::GetCount {}).unwrap();
+
+            assert_eq!(count1, count2);
+
+            // Check the count
+            assert_eq!(count1.count, 2);
         }
     }
 }

@@ -7,7 +7,7 @@ mod integration_tests;
 
 pub use crate::error::ContractError;
 
-#[cfg(features = "interface")]
-pub use crate::contract::ContractCounter;
-#[cfg(features = "interface")]
+#[cfg(feature = "interface")]
+pub use crate::contract::CounterContract;
+#[cfg(feature = "interface")]
 pub use crate::msg::{ExecuteMsgFns as CounterExecuteMsgFns, QueryMsgFns as CounterQueryMsgFns};
