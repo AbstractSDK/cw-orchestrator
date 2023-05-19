@@ -104,7 +104,7 @@ where
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
     /// Create a mock environment with the default mock state.
-    pub fn new(sender: &Addr) -> anyhow::Result<Self> {
+    pub fn new(sender: &Addr) -> Self {
         Mock::new_custom(sender, MockState::new())
     }
 }
@@ -116,7 +116,7 @@ where
 {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> anyhow::Result<Self> {
+    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
 
