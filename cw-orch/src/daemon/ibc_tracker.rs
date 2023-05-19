@@ -1,3 +1,4 @@
+use crate::daemon::queriers::{DaemonQuerier, Node, Ibc};
 use cosmrs::proto::ibc::core::channel::v1::State;
 use diff::Diff;
 use futures_util::future::join_all;
@@ -8,8 +9,6 @@ use std::collections::HashSet;
 use std::error::Error;
 use std::{fmt::Display, time::Duration};
 use tonic::{async_trait, transport::Channel};
-
-use crate::queriers::{DaemonQuerier, Ibc, Node};
 
 use self::logged_state::LoggedState;
 

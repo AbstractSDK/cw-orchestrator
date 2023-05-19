@@ -49,7 +49,7 @@ impl IndexResponse for AppResponse {
 }
 
 #[cfg(test)]
-mod index_response {
+mod index_response_test {
     use cosmwasm_std::{Addr, Event};
     use cw_multi_test::AppResponse;
 

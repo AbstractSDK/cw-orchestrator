@@ -2,7 +2,6 @@
 
 use thiserror::Error;
 
-use crate::interchain::error::InterchainError;
 
 #[derive(Error, Debug)]
 pub enum DaemonError {
@@ -112,6 +111,11 @@ impl DaemonError {
     }
 }
 
+
+#[cfg(feature = "interchain")]
+use crate::interchain::error::InterchainError;
+
+#[cfg(feature = "interchain")]
 impl From<InterchainError> for DaemonError{
 
     fn from(e: InterchainError) -> Self{

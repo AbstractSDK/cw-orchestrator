@@ -1,4 +1,3 @@
-use crate::Wallet;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
@@ -10,6 +9,7 @@ use crate::{
     error::CwOrchError,
     prelude::*,
     state::{ChainState, StateInterface},
+    daemon::Wallet
 };
 
 use super::state::MockState;

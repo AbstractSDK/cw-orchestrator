@@ -7,7 +7,6 @@ use super::{
     state::DaemonState,
     tx_resp::CosmTxResponse,
 };
-use crate::channel::ChannelAccess;
 use crate::{
     prelude::{queriers::CosmWasm, IndexResponse, Uploadable},
     state::ChainState,
@@ -35,44 +34,23 @@ use tonic::transport::Channel;
     It's constructed using [`DaemonAsyncBuilder`].
 
     ## Usage
-<<<<<<< HEAD
-
-    ```rust,no_run,ignore
-    use cw_orch::prelude::DaemonAsync;
-    use cw_orch::daemon::networks::JUNO_1;
-    use tokio::runtime::Runtime;
-
-    let rt = Runtime::new().unwrap();
-    let daemon: DaemonAsync = DaemonAsync::builder()
-        .chain(JUNO_1)
-        .handle(rt.handle())
-=======
     ```rust,no_run
     # tokio_test::block_on(async {
     use cw_orch::prelude::{DaemonAsync, networks};
 
     let daemon: DaemonAsync = DaemonAsync::builder()
         .chain(networks::JUNO_1)
->>>>>>> main
         .build()
         .await.unwrap();
     # })
     ```
     ## Environment Execution
 
-<<<<<<< HEAD
-    The DaemonAsync implements [`TxHandler`] which allows you to perform transactions on the chain.
-
-    ## Querying
-
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query<Querier>`] method with a specific querier.
-=======
     The DaemonAsync implements [`TxHandler`](crate::prelude::TxHandler) which allows you to perform transactions on the chain.
 
     ## Querying
 
     Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
->>>>>>> main
     See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct DaemonAsync {
@@ -97,7 +75,7 @@ impl DaemonAsync {
     /// Perform a query with a given query client.
     /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
-        Querier::new(self.sender.channel())
+        Querier::new(self.channel())
     }
 
     /// Get the channel configured for this DaemonAsync.
@@ -165,8 +143,7 @@ impl DaemonAsync {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, DaemonError> {
-        let sender = &self.sender;
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
         let resp = client
             .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),

@@ -276,6 +276,7 @@ impl Node {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
+        #[allow(deprecated)]
         let request = cosmos_modules::tx::GetTxsEventRequest {
             events: events.clone(),
             page: page.unwrap_or(0),
@@ -291,7 +292,7 @@ impl Node {
                     if retry_on_empty && resp.is_empty() {
                         log::debug!("Not TX by events found");
                         log::debug!("Waiting 10s");
-                        sleep(Duration::from_secs(10)).await;
+                        tokio::time::sleep(Duration::from_secs(10)).await;
                     } else {
                         log::debug!(
                             "TX found by events: {:?}",
@@ -303,7 +304,7 @@ impl Node {
                 Err(err) => {
                     log::debug!("TX not found with error: {:?}", err);
                     log::debug!("Waiting 10s");
-                    sleep(Duration::from_secs(10)).await;
+                    tokio::time::sleep(Duration::from_secs(10)).await;
                 }
             }
         }

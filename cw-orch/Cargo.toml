@@ -20,7 +20,6 @@ required-features = ["interchain"]
 [features]
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
-default = ["interchain"]
 node-tests = ["daemon"]
 # enable the optional dependencies
 daemon = [
