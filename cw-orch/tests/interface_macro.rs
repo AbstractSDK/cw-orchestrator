@@ -20,7 +20,7 @@ use cw_orch::prelude::{CwOrcInstantiate, Mock};
 
 use cosmwasm_std::Addr;
 use cw_orch::interface;
-const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
+const MOCK_CONTRACT_WASM: &str = "../artifacts/contract_counter.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct ContractCounter;

@@ -21,7 +21,7 @@ mod common;
 use cosmwasm_std::Addr;
 use cw_orch::prelude::{CwOrcInstantiate, Mock};
 
-const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
+const MOCK_CONTRACT_WASM: &str = "../artifacts/contract_mock.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg)]
 pub struct ContractCounter;
