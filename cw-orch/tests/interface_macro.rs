@@ -1,6 +1,5 @@
 mod common;
 
-use cw_orch::contract::Contract;
 use cw_orch::environment::CwEnv;
 use cw_orch::environment::TxHandler;
 use cw_orch::prelude::ContractWrapper;
