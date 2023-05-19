@@ -15,7 +15,7 @@ use cw_orch::prelude::{CwOrcInstantiate, Mock};
 fn test_instantiate() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -28,7 +28,7 @@ fn test_instantiate() {
 fn test_execute() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -54,7 +54,7 @@ fn test_execute() {
 fn test_query() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -73,7 +73,7 @@ fn test_query() {
 #[test]
 fn test_migrate() {
     let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::new("test:mock_contract", Mock::new(&admin).unwrap());
+    let contract = MockContract::new("test:mock_contract", Mock::new(&admin));
     contract.upload().unwrap();
 
     contract

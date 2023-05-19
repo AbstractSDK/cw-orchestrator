@@ -25,7 +25,7 @@ use super::state::MockState;
 /// use cw_orch::prelude::Mock;
 ///
 /// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new(&sender).unwrap();
+/// let mock: Mock = Mock::new(&sender);
 ///
 /// // set a balance
 /// mock.set_balance(&sender, vec![coin(100u128, "token")]).unwrap();
@@ -378,7 +378,7 @@ mod test {
         let amount = 1000000u128;
         let denom = "uosmo";
 
-        let chain = Mock::new(sender).unwrap();
+        let chain = Mock::new(sender);
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -460,7 +460,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state).unwrap();
+        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
