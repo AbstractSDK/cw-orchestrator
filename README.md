@@ -43,7 +43,7 @@ pub struct Cw20;
 
 Then implement a constructor for it:
 
-```rust,no_run
+```rust
 use cw_orch::{CwEnv,Contract};
 impl<Chain: CwEnv> Cw20 <Chain>{
     pub fn new(name: &str, chain: Chain) -> Self {

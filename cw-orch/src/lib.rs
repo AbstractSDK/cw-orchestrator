@@ -1,5 +1,6 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/AbstractSDK/assets/mainline/logo.svg")]
-#![doc = include_str ! ("../README.md")]
+// don't include readme while doctesting because the examples are not valid rust.
+#![cfg_attr(not(doctest),doc = include_str ! ("../README.md"))]
 
 // macros
 pub use cw_orch_contract_derive::{interface, interface_entry_point};
