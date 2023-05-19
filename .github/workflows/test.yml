@@ -45,7 +45,7 @@ jobs:
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
       - name: cargo test --doc
-        run: cargo test --doc --locked --all-features --all-targets
+        run: cargo test --doc --locked --all-features
       - name: install mdbook
         run: cargo install mdbook
       - name: mdbook doc
