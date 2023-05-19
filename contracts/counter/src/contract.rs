@@ -5,7 +5,7 @@ use cw2::set_contract_version;
 use crate::{error::*, msg::*, state::*};
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:counter";
+pub const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[entry_point]

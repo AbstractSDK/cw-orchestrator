@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     // Use prelude to get all the necessary imports
-    use crate::{msg::InstantiateMsg, ContractCounter};
+    use crate::{contract::CONTRACT_NAME, msg::InstantiateMsg, ContractCounter};
     use cw_orch::prelude::*;
 
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};

@@ -13,7 +13,7 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = ["export"]
 export = []
-cw-orch = ["dep:cw-orch"]
+interface = ["dep:cw-orch"]
 
 [dependencies]
 cosmwasm-std = { workspace = true }

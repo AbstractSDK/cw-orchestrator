@@ -1,18 +1,17 @@
 use cosmwasm_std::Addr;
 
-use contract_counter::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
+use counter_contract::{
+    contract::CounterContract,
+    msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
+};
 use cw_orch::prelude::{CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload, Mock};
-
-extern crate cw_orch;
-mod counter_contract;
 
 pub fn main() {
     let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
 
-    let mock = Mock::new(&sender).unwrap();
+    let mock = Mock::new(&sender);
 
-    let contract_counter =
-        contract_counter::contract::ContractCounter::new("mock:contract_counter", mock);
+    let contract_counter = CounterContract::new("mock:contract_counter", mock);
 
     let upload_res = contract_counter.upload();
     assert!(upload_res.is_ok());
