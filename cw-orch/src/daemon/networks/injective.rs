@@ -1,7 +1,7 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {
-    network_id: "injective",
+    id: "injective",
     pub_address_prefix: "inj",
     coin_type: 60u32,
 };
@@ -12,7 +12,7 @@ pub const INJECTIVE_1: ChainInfo = ChainInfo {
     gas_denom: "inj",
     gas_price: 0.025,
     grpc_urls: &["https://k8s.global.mainnet.chain.grpc.injective.network:443"],
-    chain_info: INJECTIVE_NETWORK,
+    network_info: INJECTIVE_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
@@ -25,7 +25,7 @@ pub const INJECTIVE_888: ChainInfo = ChainInfo {
     gas_denom: "inj",
     gas_price: 0.025,
     grpc_urls: &["https://testnet.grpc.injective.network:443"],
-    chain_info: INJECTIVE_NETWORK,
+    network_info: INJECTIVE_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };

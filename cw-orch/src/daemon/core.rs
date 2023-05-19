@@ -1,5 +1,5 @@
 use super::{
-    builder::DaemonBuilder,
+    builder::DaemonAsyncBuilder,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
@@ -32,9 +32,10 @@ use tonic::transport::Channel;
 #[derive(Clone)]
 /**
     Represents a blockchain node.
-    Is constructed with the [DaemonBuilder].
+    It's constructed using [`DaemonAsyncBuilder`].
 
     ## Usage
+<<<<<<< HEAD
 
     ```rust,no_run,ignore
     use cw_orch::prelude::DaemonAsync;
@@ -45,42 +46,61 @@ use tonic::transport::Channel;
     let daemon: DaemonAsync = DaemonAsync::builder()
         .chain(JUNO_1)
         .handle(rt.handle())
+=======
+    ```rust,no_run
+    # tokio_test::block_on(async {
+    use cw_orch::prelude::{DaemonAsync, networks};
+
+    let daemon: DaemonAsync = DaemonAsync::builder()
+        .chain(networks::JUNO_1)
+>>>>>>> main
         .build()
-        .unwrap();
+        .await.unwrap();
+    # })
     ```
     ## Environment Execution
 
+<<<<<<< HEAD
     The DaemonAsync implements [`TxHandler`] which allows you to perform transactions on the chain.
 
     ## Querying
 
     Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query<Querier>`] method with a specific querier.
+=======
+    The DaemonAsync implements [`TxHandler`](crate::prelude::TxHandler) which allows you to perform transactions on the chain.
+
+    ## Querying
+
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
+>>>>>>> main
     See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct DaemonAsync {
     pub sender: Wallet,
     pub state: Rc<DaemonState>,
 }
-
+/*
+//TODO
 impl ChannelAccess for DaemonAsync {
     fn channel(&self) -> tonic::transport::Channel {
         self.sender.channel()
     }
 }
+*/
 
 impl DaemonAsync {
     /// Get the daemon builder
-    pub fn builder() -> DaemonBuilder {
-        DaemonBuilder::default()
+    pub fn builder() -> DaemonAsyncBuilder {
+        DaemonAsyncBuilder::default()
     }
 
-    /// Perform a query with a given query client
+    /// Perform a query with a given query client.
     /// See [Querier](crate::daemon::queriers) for examples.
     pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
         Querier::new(self.sender.channel())
     }
 
-    /// Get the channel configured for this DaemonAsync
+    /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
     }
@@ -94,7 +114,7 @@ impl ChainState for DaemonAsync {
     }
 }
 
-// Execute on the real chain, returns tx response
+// Execute on the real chain, returns tx response.
 impl DaemonAsync {
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -177,8 +197,20 @@ impl DaemonAsync {
         let mut last_height = self.query_client::<Node>().block_height().await?;
         let end_height = last_height + amount;
 
+        let average_block_speed = self
+            .query_client::<Node>()
+            .average_block_speed(Some(0.9))
+            .await?;
+
+        let wait_time = average_block_speed * amount;
+
+        // now wait for that amount of time
+        tokio::time::sleep(Duration::from_secs(wait_time)).await;
+        // now check every block until we hit the target
         while last_height < end_height {
-            tokio::time::sleep(Duration::from_secs(4)).await;
+            // wait
+
+            tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
             last_height = self.query_client::<Node>().block_height().await?;
@@ -193,16 +225,7 @@ impl DaemonAsync {
     }
 
     pub async fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self.query_client::<Node>().block_height().await?;
-        let end_height = last_height + 1;
-
-        while last_height < end_height {
-            // wait
-            tokio::time::sleep(Duration::from_secs(4)).await;
-            // ping latest block
-            last_height = self.query_client::<Node>().block_height().await?;
-        }
-        Ok(())
+        self.wait_blocks(1).await
     }
 
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
@@ -240,9 +263,8 @@ impl DaemonAsync {
         // wait for the node to return the contract information for this upload
         let wasm = CosmWasm::new(self.channel());
         while wasm.code(code_id).await.is_err() {
-            tokio::time::sleep(Duration::from_secs(6)).await;
+            self.next_block().await?;
         }
-
         Ok(result)
     }
 

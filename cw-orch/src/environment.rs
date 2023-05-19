@@ -22,22 +22,34 @@ pub trait TxHandler: ChainState + Clone {
     type Error: Into<CwOrchError> + Debug;
     type ContractSource;
 
-    // Gets current sender
+    /// Gets the address of the current wallet used to sign transactions.
     fn sender(&self) -> Addr;
+
     // Gets current sender wallet
     fn wallet(&self) -> Option<Wallet>;
-    // Skip x amount of blocks
+
+    /// Wait for an amount of blocks.
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
+
+    /// Wait for an amount of seconds.
     fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error>;
+
+    /// Wait for next block.
     fn next_block(&self) -> Result<(), Self::Error>;
+
+    /// Return current block info see [`BlockInfo`].
     fn block_info(&self) -> Result<BlockInfo, Self::Error>;
-    // Actions //
+
+    // Actions
+    /// Send a ExecMsg to a contract.
     fn execute<E: Serialize + Debug>(
         &self,
         exec_msg: &E,
         coins: &[Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
+
+    /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
@@ -46,11 +58,15 @@ pub trait TxHandler: ChainState + Clone {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, Self::Error>;
+
+    /// Send a QueryMsg to a contract.
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, Self::Error>;
+
+    /// Send a MigrateMsg to a contract.
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,

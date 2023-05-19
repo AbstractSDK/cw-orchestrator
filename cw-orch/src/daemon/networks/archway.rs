@@ -1,7 +1,7 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
-    network_id: "archway",
+    id: "archway",
     pub_address_prefix: "archway",
     coin_type: 118u32,
 };
@@ -13,7 +13,7 @@ pub const CONSTANTINE_1: ChainInfo = ChainInfo {
     gas_denom: "uconst",
     gas_price: 0.025,
     grpc_urls: &["https://grpc.constantine-1.archway.tech:443"],
-    chain_info: ARCHWAY_NETWORK,
+    network_info: ARCHWAY_NETWORK,
     lcd_url: Some("https://api.constantine-1.archway.tech"),
     fcd_url: None,
 };
