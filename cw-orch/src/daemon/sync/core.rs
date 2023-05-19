@@ -19,15 +19,6 @@ use tonic::transport::Channel;
 #[derive(Clone)]
 /**
     Represents a blockchain node.
-<<<<<<< HEAD
-    Is constructed with the [SyncDaemonBuilder].
-
-    ## Usage
-
-    ```rust,ignore
-    use cw_orch::daemon::sync::Daemon;
-    use cw_orch::networks::JUNO_1;
-=======
     Is constructed with the [DaemonBuilder].
 
     ## Usage
@@ -35,7 +26,6 @@ use tonic::transport::Channel;
     ```rust,no_run
     use cw_orch::prelude::Daemon;
     use cw_orch::daemon::networks::JUNO_1;
->>>>>>> main
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();
@@ -61,13 +51,9 @@ pub struct Daemon {
 
 impl Daemon {
     /// Get the daemon builder
-<<<<<<< HEAD
-    pub fn builder() -> SyncDaemonBuilder {
-        SyncDaemonBuilder::default()
-=======
+
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
->>>>>>> main
     }
 
     /// Perform a query with a given querier

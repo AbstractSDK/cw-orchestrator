@@ -1,15 +1,17 @@
 //! Interactions with docker using bollard
 
+use crate::interchain::docker::DockerHelper;
+use crate::daemon::error::DaemonError;
+use crate::daemon::sync::core::Daemon;
+use crate::interchain::hermes::Hermes;
+use crate::interchain::IcResult;
 use ibc_chain_registry::chain::{ChainData, Grpc};
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use tokio::time::sleep;
-use tokio::time::Duration;
 
 use log4rs::Config;
-use tonic::transport::Channel;
 
 use std::collections::HashMap;
 use std::default::Default;
@@ -18,15 +20,6 @@ use tokio::runtime::Handle;
 
 use super::error::InterchainError;
 
-use crate::CosmTxResponse;
-use crate::{ContractInstance, Daemon, DaemonError};
-
-use super::docker::DockerHelper;
-use super::hermes::Hermes;
-use super::IcResult;
-use crate::daemon::queriers::DaemonQuerier;
-use crate::follow_ibc_execution::follow_trail;
-use crate::queriers::Node;
 use crate::state::ChainState;
 
 pub type ContainerId = String;

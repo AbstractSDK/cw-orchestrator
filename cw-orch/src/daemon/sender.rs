@@ -1,8 +1,9 @@
+use tonic::transport::Channel;
 use super::cosmos_modules::{self, auth::BaseAccount};
 use super::queriers::DaemonQuerier;
 use super::queriers::Node;
 use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
-use crate::channel::ChannelAccess;
+
 use crate::daemon::core::parse_cw_coins;
 use crate::keys::private::PrivateKey;
 use cosmrs::{
@@ -64,6 +65,10 @@ impl Sender<All> {
             sender.pub_addr_str()?
         );
         Ok(sender)
+    }
+
+    pub fn channel(&self) -> Channel {
+        self.daemon_state.grpc_channel.clone()
     }
 
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
@@ -254,11 +259,5 @@ impl Sender<All> {
                 reason: resp.raw_log,
             })
         }
-    }
-}
-
-impl ChannelAccess for Sender<All> {
-    fn channel(&self) -> tonic::transport::Channel {
-        self.daemon_state.grpc_channel.clone()
     }
 }

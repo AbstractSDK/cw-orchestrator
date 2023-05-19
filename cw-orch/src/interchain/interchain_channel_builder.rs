@@ -1,11 +1,15 @@
 
-use crate::ChainState;
-use crate::ContractInstance;
-use crate::Daemon;
+use crate::daemon::error::DaemonError;
+use crate::interchain::hermes::Hermes;
+use crate::state::ChainState;
+use crate::interface_traits::ContractInstance;
+use crate::daemon::sync::core::Daemon;
+
+
 use ibc_chain_registry::chain::ChainData;
-use crate::networks::parse_network;
-use crate::InterchainInfrastructure;
-use crate::follow_ibc_execution::follow_trail;
+use crate::daemon::networks::parse_network;
+use crate::prelude::InterchainInfrastructure;
+use crate::interchain::follow_ibc_execution::follow_trail;
 use crate::daemon::queriers::DaemonQuerier;
 use ibc_chain_registry::chain::Grpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
@@ -14,8 +18,7 @@ use crate::daemon::channel::GrpcChannel;
 use crate::interchain::IcResult;
 use crate::interchain::docker::DockerHelper;
 use crate::interchain::interchain_channel::InterchainChannel;
-use crate::queriers::Ibc;
-use crate::{DaemonError, Hermes};
+use crate::daemon::queriers::Ibc;
 
 use super::interchain_channel::InterchainPort;
 

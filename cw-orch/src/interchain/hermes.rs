@@ -1,10 +1,11 @@
+use crate::interface_traits::ContractInstance;
+use crate::daemon::sync::core::Daemon;
 use crate::state::ChainState;
 use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::service::ContainerSummary;
 use bollard::Docker;
 use futures_util::StreamExt;
 
-use crate::{ContractInstance, Daemon};
 
 pub const HERMES_ID: &str = "hermes";
 

@@ -9,8 +9,8 @@ use ibc_chain_registry::chain::ChainData;
 
 use crate::{
     daemon::{channel::GrpcChannel, tx_resp::TxResultBlockEvent},
-    networks::parse_network,
-    queriers::{DaemonQuerier, Ibc, Node}, InterchainInfrastructure, interchain::interchain_channel_builder::InterchainChannelBuilder,
+    daemon::networks::parse_network,
+    daemon::queriers::{DaemonQuerier, Ibc, Node}, prelude::InterchainInfrastructure, interchain::interchain_channel_builder::InterchainChannelBuilder,
 };
 
 pub async fn get_channel(

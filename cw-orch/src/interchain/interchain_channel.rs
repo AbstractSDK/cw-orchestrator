@@ -1,15 +1,16 @@
 // This struct is used to create and/or track the state of a channel between two chains. 
 // This is very modular to be able to follow transactions, channel creation...
 
+use crate::daemon::tx_resp::CosmTxResponse;
+use crate::interchain::follow_ibc_execution::AckResponse;
+use crate::daemon::error::DaemonError;
 use base64::Engine;
-use crate::follow_ibc_execution::AckResponse;
 use base64::engine::general_purpose;
 use tokio::time::{sleep, Duration};
 use tonic::transport::Channel;
 
-use crate::{CosmTxResponse, DaemonError};
 use crate::daemon::queriers::DaemonQuerier;
-use crate::queriers::Node;
+use crate::daemon::queriers::Node;
 
 #[derive(Debug, Clone)]
 pub struct TxId {

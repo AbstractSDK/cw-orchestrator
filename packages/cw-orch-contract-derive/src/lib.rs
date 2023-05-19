@@ -360,12 +360,8 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
                     )
                 }
             }
-    <<<<<<< HEAD
-    =======
-
             pub struct #contract_trait_ident{}
 
-    >>>>>>> main
             // We implement the Contract trait directly for our structure
             impl ::cw_orch::prelude::MockContract<::cosmwasm_std::Empty, ::cosmwasm_std::Empty> for #contract_trait_ident{
                 fn execute(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, info: ::cosmwasm_std::MessageInfo, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
