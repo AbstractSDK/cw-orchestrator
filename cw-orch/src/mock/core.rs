@@ -5,11 +5,11 @@ use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Exe
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
+    daemon::Wallet,
     environment::{ChainUpload, TxHandler},
     error::CwOrchError,
     prelude::*,
     state::{ChainState, StateInterface},
-    daemon::Wallet
 };
 
 use super::state::MockState;

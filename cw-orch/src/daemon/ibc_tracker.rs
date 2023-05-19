@@ -1,4 +1,4 @@
-use crate::daemon::queriers::{DaemonQuerier, Node, Ibc};
+use crate::daemon::queriers::{DaemonQuerier, Ibc, Node};
 use cosmrs::proto::ibc::core::channel::v1::State;
 use diff::Diff;
 use futures_util::future::join_all;
