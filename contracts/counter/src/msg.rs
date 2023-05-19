@@ -7,9 +7,9 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 #[cfg_attr(feature = "cw-orch", derive(cw_orch::ExecuteFns))]
-pub enum ExecuteMsg {
+pub enum ExecuteMsg<T = i32> {
     Increment {},
-    Reset { count: i32 },
+    Reset { count: T },
 }
 
 #[cw_serde]
