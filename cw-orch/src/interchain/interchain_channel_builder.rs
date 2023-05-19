@@ -1,63 +1,27 @@
+use crate::interchain::interchain_env::InterchainEnv;
 use crate::daemon::error::DaemonError;
 use crate::daemon::sync::core::Daemon;
 use crate::interchain::hermes::Hermes;
 use crate::interface_traits::ContractInstance;
 use crate::state::ChainState;
 
-use crate::daemon::channel::GrpcChannel;
-use crate::daemon::networks::parse_network;
+
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Ibc;
 use crate::interchain::docker::DockerHelper;
-use crate::interchain::follow_ibc_execution::follow_trail;
 use crate::interchain::interchain_channel::InterchainChannel;
 use crate::interchain::IcResult;
-use crate::prelude::InterchainInfrastructure;
-use ibc_chain_registry::chain::ChainData;
-use ibc_chain_registry::chain::Grpc;
-use ibc_relayer_types::core::ics24_host::identifier::ChainId;
+
+
 use tonic::transport::Channel;
 
-use super::interchain_channel::InterchainPort;
+use super::interchain_channel::IbcPort;
 
 #[derive(Default)]
 struct ChainChannelBuilder {
     pub chain_id: Option<String>,
     pub port: Option<String>,
     pub grpc_channel: Option<Channel>,
-    pub grpc: Option<Grpc>,
-    pub is_local_chain: Option<bool>,
-}
-
-impl ChainChannelBuilder {
-    async fn create_grpc_channel(&self) -> Result<Channel, DaemonError> {
-        if let Some(channel) = &self.grpc_channel {
-            return Ok(channel.clone());
-        }
-
-        if let Some(grpc) = &self.grpc {
-            return GrpcChannel::connect(
-                &[grpc.clone()],
-                &ChainId::from_string(&self.chain_id.clone().unwrap()),
-            )
-            .await;
-        }
-
-        // If the GRPC is not registered, we need a default way to query a grpc from a the local config
-        let mut chains: Vec<ChainData> =
-            vec![parse_network(&self.chain_id.clone().unwrap()).into()];
-        if self.is_local_chain.unwrap_or(false) {
-            // TODO
-            // This is only for tests, we may change that later ?
-            InterchainInfrastructure::configure_networks(&mut chains).await?;
-        }
-
-        GrpcChannel::connect(
-            &chains[0].apis.grpc,
-            &ChainId::from_string(&self.chain_id.clone().unwrap()),
-        )
-        .await
-    }
 }
 
 #[derive(Default)]
@@ -83,32 +47,12 @@ impl InterchainChannelBuilder {
         self
     }
 
-    pub fn add_grpc_a(&mut self, grpc: Grpc) -> &mut Self {
-        self.chain_a.grpc = Some(grpc);
-        self
-    }
-
-    pub fn add_grpc_b(&mut self, grpc: Grpc) -> &mut Self {
-        self.chain_b.grpc = Some(grpc);
-        self
-    }
-
-    pub fn is_local_chain_a(&mut self) -> &mut Self {
-        self.chain_a.is_local_chain = Some(true);
-        self
-    }
-
-    pub fn is_local_chain_b(&mut self) -> &mut Self {
-        self.chain_b.is_local_chain = Some(true);
-        self
-    }
-
-    pub fn add_grpc_channel_a(&mut self, channel: Channel) -> &mut Self {
+    pub fn grpc_channel_a(&mut self, channel: Channel) -> &mut Self {
         self.chain_a.grpc_channel = Some(channel);
         self
     }
 
-    pub fn add_grpc_channel_b(&mut self, channel: Channel) -> &mut Self {
+    pub fn grpc_channel_b(&mut self, channel: Channel) -> &mut Self {
         self.chain_b.grpc_channel = Some(channel);
         self
     }
@@ -135,11 +79,11 @@ impl InterchainChannelBuilder {
     ) -> &mut Self {
         self.chain_a(contract_a.get_chain().state().chain_id.clone());
         self.port_a(format!("wasm.{}", contract_a.address().unwrap()));
-        self.add_grpc_channel_a(contract_a.get_chain().channel());
+        self.grpc_channel_a(contract_a.get_chain().channel());
 
         self.chain_b(contract_b.get_chain().state().chain_id.clone());
         self.port_b(format!("wasm.{}", contract_b.address().unwrap()));
-        self.add_grpc_channel_b(contract_b.get_chain().channel())
+        self.grpc_channel_b(contract_b.get_chain().channel())
     }
 
     // The channel id id supposed to be the one created on the a side (you can interchange a and b at will to allow for that)
@@ -150,25 +94,25 @@ impl InterchainChannelBuilder {
         channel_id_a: String,
     ) -> Result<InterchainChannel, DaemonError> {
         // First we need to construct the channels for chain a and chain b
-        let channel_a = self.chain_a.create_grpc_channel().await?;
-        let channel_b = self.chain_b.create_grpc_channel().await?;
+        let grpc_channel_a = self.chain_a.grpc_channel.clone().unwrap();
+        let grpc_channel_b = self.chain_b.grpc_channel.clone().unwrap();
 
         // Then we check that the channel indeed exists
-        let registered_channel = Ibc::new(channel_a.clone())
+        let registered_channel = Ibc::new(grpc_channel_a.clone())
             .channel(self.chain_a.port.clone().unwrap(), channel_id_a.clone())
             .await?;
         let counterparty = registered_channel.counterparty.unwrap();
 
         let channel = InterchainChannel::new(
             registered_channel.connection_hops[0].clone(), // We suppose there is only one connection for this channel
-            InterchainPort {
-                chain: channel_a,
+            IbcPort {
+                chain: grpc_channel_a,
                 chain_id: self.chain_a.chain_id.clone().unwrap(),
                 port: self.chain_a.port.clone().unwrap(),
                 channel: Some(channel_id_a),
             },
-            InterchainPort {
-                chain: channel_b,
+            IbcPort {
+                chain: grpc_channel_b,
                 chain_id: self.chain_b.chain_id.clone().unwrap(),
                 port: counterparty.port_id,
                 channel: Some(counterparty.channel_id),
@@ -188,8 +132,8 @@ impl InterchainChannelBuilder {
         let origin_chain_id = self.chain_a.chain_id.clone().unwrap();
 
         // We need to construct the channels for chain a and chain b
-        let grpc_channel_a = self.chain_a.create_grpc_channel().await?;
-        let grpc_channel_b = self.chain_b.create_grpc_channel().await?;
+        let grpc_channel_a = self.chain_a.grpc_channel.clone().unwrap();
+        let grpc_channel_b = self.chain_b.grpc_channel.clone().unwrap();
 
         // If the connection is not specified, we query it
         let connection = if let Some(connection) = &self.connection_a {
@@ -205,13 +149,13 @@ impl InterchainChannelBuilder {
         // Then we construct the InterchainChannel object
         let interchain = InterchainChannel::new(
             connection.clone(),
-            InterchainPort {
+            IbcPort {
                 chain: grpc_channel_a.clone(),
                 chain_id: self.chain_a.chain_id.clone().unwrap(),
                 port: self.chain_a.port.clone().unwrap(),
                 channel: None,
             },
-            InterchainPort {
+            IbcPort {
                 chain: grpc_channel_b.clone(),
                 chain_id: self.chain_b.chain_id.clone().unwrap(),
                 port: self.chain_b.port.clone().unwrap(),
@@ -263,20 +207,24 @@ impl InterchainChannelBuilder {
             channel_creation_tx_b.txhash,
         );
 
-        // Finally, we make sure additional packets are resolved before returning
-        let chain_id_a = self.chain_a.chain_id.clone().unwrap();
-        let tx_hash_a = channel_creation_tx_a.txhash.clone();
 
-        let chain_id_b = self.chain_b.chain_id.clone().unwrap();
-        let tx_hash_b = channel_creation_tx_b.txhash.clone();
+        // We create and interchain analysis environment and register our daemons in it
+        let interchain_env = InterchainEnv::default()
+            .add_custom_chain(self.chain_a.chain_id.clone().unwrap(), grpc_channel_a)?
+            .add_custom_chain(self.chain_b.chain_id.clone().unwrap(), grpc_channel_b)?
+            .clone();
 
-        follow_trail(chain_id_a, grpc_channel_a, tx_hash_a)
-            .await
-            .unwrap();
+        interchain_env.follow_trail(
+            self.chain_a.chain_id.clone().unwrap(),
+            channel_creation_tx_a.txhash.clone()
+        ).await?;
 
-        follow_trail(chain_id_b, grpc_channel_b, tx_hash_b)
-            .await
-            .unwrap();
+
+        interchain_env.follow_trail(
+            self.chain_b.chain_id.clone().unwrap(),
+            channel_creation_tx_b.txhash.clone()
+        ).await?;
+
 
         Ok(interchain)
     }

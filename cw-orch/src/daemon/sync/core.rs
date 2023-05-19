@@ -1,6 +1,6 @@
 use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
 use crate::{
-    daemon::{error::DaemonError, state::DaemonState},
+    daemon::{error::DaemonError, state::DaemonState, channel::ChannelAccess},
     environment::{ChainUpload, TxHandler},
     prelude::{
         queriers::{CosmWasm, DaemonQuerier},
@@ -65,6 +65,12 @@ impl Daemon {
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
+    }
+}
+
+impl ChannelAccess for Daemon {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.daemon.channel()
     }
 }
 

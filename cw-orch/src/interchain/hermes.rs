@@ -48,7 +48,7 @@ impl Hermes {
         panic!("expected attached exec, got detached");
     };
             while let Some(a) = output.next().await {
-                if let Ok(_) = a {
+                if a.is_ok() {
                 } else {
                     panic!("expected attached exec, got detached");
                 };

@@ -3,8 +3,9 @@
 use crate::daemon::error::DaemonError;
 use crate::daemon::sync::core::Daemon;
 use crate::interchain::docker::DockerHelper;
-use crate::interchain::hermes::Hermes;
+
 use crate::interchain::IcResult;
+use crate::prelude::InterchainEnv;
 use ibc_chain_registry::chain::{ChainData, Grpc};
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
@@ -31,7 +32,6 @@ pub type Mnemonic = String;
 pub struct InterchainInfrastructure {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
     daemons: HashMap<NetworkId, Daemon>,
-    pub hermes: Hermes,
 }
 
 impl InterchainInfrastructure {
@@ -52,10 +52,13 @@ impl InterchainInfrastructure {
             // combine the chain with its mnemonic
             &chains.into_iter().zip(mnemonics).collect::<Vec<_>>(),
         )?;
-        let hermes = runtime.block_on(Self::get_hermes())?;
 
-        // set up logging for the chains
+        InterchainInfrastructure::setup_interchain_log(&daemons);
+        
+        Ok(Self { daemons })
+    }
 
+    pub fn setup_interchain_log(daemons: &HashMap<NetworkId, Daemon>){
         let encoder = Box::new(PatternEncoder::new(
             "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
         ));
@@ -99,8 +102,6 @@ impl InterchainInfrastructure {
             // log startup to each daemon log
             log::info!(target: log_target, "Starting daemon {log_target}");
         }
-
-        Ok(Self { daemons, hermes })
     }
 
     /// Get the daemon for a network-id in the interchain.
@@ -137,11 +138,6 @@ impl InterchainInfrastructure {
         Ok(())
     }
 
-    async fn get_hermes() -> IcResult<Hermes> {
-        let docker_helper = DockerHelper::new().await?;
-        docker_helper.get_hermes()
-    }
-
     /// Build the daemons from the shared runtime and chain data
     fn build_daemons(
         runtime_handle: &Handle,
@@ -160,6 +156,20 @@ impl InterchainInfrastructure {
             daemons.insert(chain.chain_id.to_string(), daemon);
         }
         Ok(daemons)
+    }
+
+    pub async fn follow_trail(&self, chain_id: NetworkId, tx_hash: String) -> Result<(), DaemonError>{
+        // We crate an interchain env
+        let mut interchain_env = InterchainEnv::default();
+
+         for daemon in self.daemons.values() {
+            interchain_env = interchain_env.add_custom_chain(daemon.state().chain_id.clone(), daemon.clone())?.clone();
+        }
+
+        // We follow the trail
+        interchain_env.follow_trail(chain_id ,tx_hash).await?;
+            
+        Ok(())
     }
 }
 

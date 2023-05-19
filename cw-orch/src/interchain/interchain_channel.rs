@@ -3,7 +3,6 @@
 
 use crate::daemon::error::DaemonError;
 use crate::daemon::tx_resp::CosmTxResponse;
-use crate::interchain::follow_ibc_execution::AckResponse;
 use base64::engine::general_purpose;
 use base64::Engine;
 use tokio::time::{sleep, Duration};
@@ -11,6 +10,15 @@ use tonic::transport::Channel;
 
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Node;
+
+// type is from cosmos_sdk_proto::ibc::core::channel::v1::acknowledgement::Response
+// We copy it here to implement serialization for this enum (which is not provided by the proto in the above crate)
+#[cosmwasm_schema::cw_serde]
+pub enum AckResponse {
+    Result(String), // This is a base64 string
+    Error(String),
+}
+
 
 #[derive(Debug, Clone)]
 pub struct TxId {
@@ -20,7 +28,7 @@ pub struct TxId {
 }
 
 #[derive(Debug, Clone)]
-pub struct InterchainPort {
+pub struct IbcPort {
     pub chain: Channel,
     pub chain_id: String,
     pub port: String,
@@ -30,13 +38,13 @@ pub struct InterchainPort {
 #[derive(Debug)]
 pub struct InterchainChannel {
     connection_id: String,
-    port_a: InterchainPort,
-    port_b: InterchainPort,
+    port_a: IbcPort,
+    port_b: IbcPort,
 }
 
 // TODO some of those queries may be implemented (or are already implemented) in the IBC querier file ?
 impl InterchainChannel {
-    pub fn new(connection_id: String, port_a: InterchainPort, port_b: InterchainPort) -> Self {
+    pub fn new(connection_id: String, port_a: IbcPort, port_b: IbcPort) -> Self {
         Self {
             connection_id,
             port_a,
@@ -48,7 +56,7 @@ impl InterchainChannel {
         self.connection_id.clone()
     }
 
-    pub fn get_chain(&self, chain_id: String) -> Result<InterchainPort, DaemonError> {
+    pub fn get_chain(&self, chain_id: String) -> Result<IbcPort, DaemonError> {
         if chain_id == self.port_a.chain_id {
             Ok(self.port_a.clone())
         } else if chain_id == self.port_b.chain_id {
@@ -64,7 +72,7 @@ impl InterchainChannel {
     fn get_ordered_ports_from(
         &self,
         from: String,
-    ) -> Result<(InterchainPort, InterchainPort), DaemonError> {
+    ) -> Result<(IbcPort, IbcPort), DaemonError> {
         if from == self.port_a.chain_id {
             Ok((self.port_a.clone(), self.port_b.clone()))
         } else if from == self.port_b.chain_id {
