@@ -1,4 +1,7 @@
 
+use crate::ChainState;
+use crate::ContractInstance;
+use crate::Daemon;
 use ibc_chain_registry::chain::ChainData;
 use crate::networks::parse_network;
 use crate::InterchainInfrastructure;
@@ -21,6 +24,7 @@ use super::interchain_channel::InterchainPort;
 struct ChainChannelBuilder{
 	pub chain_id: Option<String>,
 	pub port: Option<String>,
+	pub grpc_channel: Option<Channel>,
 	pub grpc: Option<Grpc>,
 	pub is_local_chain: Option<bool>
 }
@@ -28,20 +32,26 @@ struct ChainChannelBuilder{
 
 impl ChainChannelBuilder{
 	async fn create_grpc_channel(&self) -> Result<Channel, DaemonError>{
-		let grpcs = if let Some(grpc) = &self.grpc{
-			vec![grpc.clone()]
-		}else{
-			// If the GRPC is not registered, we try querying the chain from the local configuration ?
-			// TODO
-		    let mut chains: Vec<ChainData> = vec![parse_network(&self.chain_id.clone().unwrap()).into()];
-		    if self.is_local_chain.unwrap_or(false){
-			    // This is only for tests, we may change that later ?
-			    InterchainInfrastructure::configure_networks(&mut chains).await?;
-			}
 
-		    chains[0].apis.grpc.clone()
-		};
-		GrpcChannel::connect(&grpcs, &ChainId::from_string(&self.chain_id.clone().unwrap())).await
+		if let Some(channel) = &self.grpc_channel{
+			return Ok(channel.clone());
+		}
+
+		if let Some(grpc) = &self.grpc{
+			return GrpcChannel::connect(&[grpc.clone()], &ChainId::from_string(&self.chain_id.clone().unwrap())).await;
+		}
+
+		// If the GRPC is not registered, we need a default way to query a grpc from a the local config
+	    let mut chains: Vec<ChainData> = vec![parse_network(&self.chain_id.clone().unwrap()).into()];
+	    if self.is_local_chain.unwrap_or(false){
+
+		
+			// TODO
+		    // This is only for tests, we may change that later ?
+		    InterchainInfrastructure::configure_networks(&mut chains).await?;
+		}
+
+		GrpcChannel::connect(&chains[0].apis.grpc, &ChainId::from_string(&self.chain_id.clone().unwrap())).await
 	}
 }
 
@@ -90,6 +100,16 @@ impl InterchainChannelBuilder{
 		self
 	}
 
+	pub fn add_grpc_channel_a(&mut self, channel: Channel) -> &mut Self{
+		self.chain_a.grpc_channel = Some(channel);
+		self
+	}
+
+	pub fn add_grpc_channel_b(&mut self, channel: Channel) -> &mut Self{
+		self.chain_b.grpc_channel = Some(channel);
+		self
+	}
+
 	pub fn port_a(&mut self, port: impl Into<String>) -> &mut Self{
 		self.chain_a.port = Some(port.into());
 		self
@@ -103,6 +123,19 @@ impl InterchainChannelBuilder{
 	pub fn connection(&mut self, connection: impl Into<String>) -> &mut Self{
 		self.connection_a = Some(connection.into());
 		self
+	}
+
+	pub fn from_contracts(&mut self,
+        contract_a: &dyn ContractInstance<Daemon>,
+        contract_b: &dyn ContractInstance<Daemon>,
+     ) -> &mut Self{
+		self.chain_a(contract_a.get_chain().state().chain_id.clone());
+		self.port_a(format!("wasm.{}", contract_a.address().unwrap()));
+		self.add_grpc_channel_a(contract_a.get_chain().channel());
+
+		self.chain_b(contract_b.get_chain().state().chain_id.clone());
+		self.port_b(format!("wasm.{}", contract_b.address().unwrap()));
+		self.add_grpc_channel_b(contract_b.get_chain().channel())
 	}
 
 	// The channel id id supposed to be the one created on the a side (you can interchange a and b at will to allow for that)
@@ -228,6 +261,4 @@ impl InterchainChannelBuilder{
         
         Ok(interchain)
 	}
-
-
 }

@@ -218,7 +218,6 @@ impl InterchainChannel{
 
 		let (src_port, dst_port) = self.get_ordered_ports_from(from.clone())?;
 
-
 	    // 2. Query the tx hash on the distant chains related to the packet the origin chain sent
 	    let counterparty_grpc_channel = dst_port.chain;
 
