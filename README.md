@@ -37,6 +37,7 @@ Provide your messages to a new struct that's named after your contract.
 ```rust
 use cw_orch::interface;
 use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+
 // Provide the messages in the order Init, Exec, Query, Migrate.
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct Cw20;
@@ -62,7 +63,7 @@ You now have a contract interface that you can use to interact with your contrac
 
 ### Usage
 
-You can then use this interface to interact with the contract:
+You can use this interface to interact with the contract:
 
 ```rust
 use cw_orch::interface;
@@ -70,10 +71,10 @@ use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
 use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
-// Provide the messages in the order Init, Exec, Query, Migrate.
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct Cw20;
 
+// Implement the Uploadable trait so it can be uploaded to the mock. 
 impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
     fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
         Box::new(
@@ -88,6 +89,7 @@ impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
 }
 
 // ## Environment setup ##
+
 let sender = Addr::unchecked("sender");
 // Create a new mock chain (backed by cw-multi-test)
 let chain = Mock::new(&sender);
@@ -104,7 +106,7 @@ let cw20_init_msg = InstantiateMsg {
     name: "Test Token".to_string(),
     initial_balances: vec![Cw20Coin {
         address: sender.to_string(),
-        amount: 1000000u128.into(),
+        amount: 10u128.into(),
     }],
     marketing: None,
     mint: None,
@@ -112,8 +114,10 @@ let cw20_init_msg = InstantiateMsg {
 };
 cw20_base.instantiate(&cw20_init_msg, None, None).unwrap();
 
-// Query balance
+// Query the balance
 let balance: BalanceResponse = cw20_base.query(&QueryMsg::Balance { address: sender.to_string() }).unwrap();
+
+assert_eq!(balance.balance.u128(), 10u128);
 ```
 
 ## Features
