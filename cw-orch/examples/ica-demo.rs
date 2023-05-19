@@ -32,14 +32,28 @@
 //! [Hermes](https://hermes.informal.systems/)
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
+use cw_orch::prelude::CwOrcInstantiate;
+use cw_orch::prelude::CwOrcQuery;
+
+use cw_orch::prelude::TxHandler;
+use cw_orch::prelude::CwOrcExecute;
+use cw_orch::state::ChainState;
+use cw_orch::prelude::CwOrcUpload;
+use cw_orch::prelude::ContractInstance;
+use cw_orch::daemon::ibc_tracker::IbcTracker;
+use crate::prelude::Uploadable;
+use crate::environment::CwEnv;
+use crate::contract::Contract;
+use crate::prelude::queriers::Bank;
+use crate::daemon::sync::core::Daemon;
+use crate::prelude::interchain_channel_builder::InterchainChannelBuilder;
+use crate::daemon::ibc_tracker::IbcTrackerConfigBuilder;
+use crate::daemon::ibc_tracker::CwIbcContractState;
+use crate::prelude::InterchainInfrastructure;
+use crate::daemon::networks::*;
 use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::{
-    follow_ibc_execution::follow_trail,
-    ibc_tracker::{CwIbcContractState, IbcTracker, IbcTrackerConfigBuilder},
-    interchain_channel_builder::InterchainChannelBuilder,
-    networks::{osmosis::OSMO_2, JUNO_1},
     prelude::WasmPath,
-    queriers::Bank,
     *,
 };
 
@@ -106,7 +120,7 @@ pub fn script() -> anyhow::Result<()> {
     });
 
     // test the ica implementation
-    test_ica(rt.handle().clone(), &controller, &juno)?;
+    test_ica(rt.handle().clone(), &interchain, &controller, &juno)?;
 
     Ok(())
 }
@@ -146,6 +160,7 @@ fn deploy_contracts(
 /// Test the cw-ica contract
 fn test_ica(
     rt: Handle,
+    interchain: &InterchainInfrastructure,
     // controller on osmosis
     controller: &Controller<Daemon>,
     juno: &Daemon,
@@ -183,12 +198,9 @@ fn test_ica(
         None,
     )?;
 
-    let local_chain_id = controller.get_chain().state().chain_id.clone();
-    let local_channel_id = controller.get_chain().channel();
     // Folow the transaction execution
-    rt.block_on(follow_trail(
-        local_chain_id,
-        local_channel_id,
+    rt.block_on(interchain.follow_trail(
+        controller.get_chain().state().chain_id.clone(),
         burn_response.txhash,
     ))?;
 
