@@ -8,7 +8,8 @@ use crate::{error::*, msg::*, state::*};
 pub const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[entry_point]
+// ANCHOR: interface_entry
+#[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -16,6 +17,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+
     let state = State {
         count: msg.count,
         owner: info.sender.clone(),
@@ -29,7 +31,7 @@ pub fn instantiate(
         .add_attribute("count", msg.count.to_string()))
 }
 
-#[entry_point]
+#[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn execute(
     deps: DepsMut,
@@ -42,6 +44,7 @@ pub fn execute(
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
     }
 }
+// ANCHOR_END: interface_entry
 
 pub mod execute {
     use super::*;
@@ -67,7 +70,7 @@ pub mod execute {
     }
 }
 
-#[entry_point]
+#[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -84,7 +87,7 @@ pub mod query {
     }
 }
 
-#[entry_point]
+#[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     // TODO: Migrate state
