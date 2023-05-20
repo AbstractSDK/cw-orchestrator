@@ -1,4 +1,6 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/AbstractSDK/assets/mainline/logo.svg")]
+#![doc = include_str ! ("../README.md")]
+
 // macros
 pub use cw_orch_contract_derive::{interface, interface_entry_point};
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
@@ -22,4 +24,4 @@ mod interface_traits;
 mod keys;
 pub mod mock;
 mod paths;
-mod state;
+pub mod state;

@@ -2,6 +2,8 @@
 
 This guide will show you how to use the `cw-orchestrator` with your smart contract. Follow the steps below to add `cw-orch` to your contract's TOML file, enable the interface feature, add the interface macro to your contract's endpoints, and use interaction helpers to simplify contract calls and queries.
 
+The snippets in this document are backed by an actual contact which you can check out [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+
 ## Adding `cw-orch` to Your Contract's TOML File
 
 To use the `cw-orchestrator`, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
@@ -18,7 +20,9 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 cw-orch = {version = "0.10.0", optional = true } # Latest version at time of writing
 ```
 
-After adding `cw-orch` as an optional dependency, you should enable it through a feature. Doing so ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. You can do this by adding an `interface` feature to the `Cargo.toml` and enabling `cw-orch` when it is activated:
+Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
+
+To do this include the following in the `Cargo.toml`:
 
 ```toml
 [features]
@@ -143,6 +147,28 @@ You can now create a test in `contract/tests` and start interacting with the con
 <!-- ```rust
 {{#include ../../contracts/mock_contract/src/lib.rs:2:10}}
 ``` -->
+Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
+
+```rust,no_run,noplayground
+// in contract.rs
+{{#include ../../contracts/counter/src/contract.rs:interface_entry}}
+
+// ... Do the same for the other entry points (query, migrate, reply, sudo)
+```
+
+By adding these lines we generate code whenever the `interface_entry_point` macro is enabled.
+The code will generate a contract interface. The contract interface will be the PascalCase of the crate's name.
+
+It's a good idea to re-expose the interface in the crate's root so that it is easy to import:
+
+```rust,no_run,noplayground
+// in lib.rs
+{{#include ../../contracts/counter/src/lib.rs:interface_reexport}}
+```
+
+> The name of the crate is defined in the `Cargo.toml` file of your contract.
+
+If we now create a test in `contract/tests` we can start interacting with it!
 
 ```rust
 # struct InstantiateMsg {};

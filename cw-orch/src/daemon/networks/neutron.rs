@@ -1,7 +1,7 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
-    network_id: "neutron",
+    id: "neutron",
     pub_address_prefix: "neutron",
     coin_type: 118u32,
 };
@@ -13,7 +13,7 @@ pub const BARYON_1: ChainInfo = ChainInfo {
     gas_denom: "untrn",
     gas_price: 0.001,
     grpc_urls: &["http://grpc.baryon.ntrn.info:80"],
-    chain_info: NEUTRON_NETWORK,
+    network_info: NEUTRON_NETWORK,
     lcd_url: Some("https://rest.baryon.ntrn.info"),
     fcd_url: None,
 };

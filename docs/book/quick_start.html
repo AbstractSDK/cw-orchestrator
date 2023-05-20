@@ -143,6 +143,7 @@
                     <main>
                         <h1 id="cw-orchestrator-quick-start-guide"><a class="header" href="#cw-orchestrator-quick-start-guide">Cw-Orchestrator Quick-Start Guide</a></h1>
 <p>This guide will show you how to use the <code>cw-orchestrator</code> with your smart contract. Follow the steps below to add <code>cw-orch</code> to your contract's TOML file, enable the interface feature, add the interface macro to your contract's endpoints, and use interaction helpers to simplify contract calls and queries.</p>
+<p>The snippets in this document are backed by an actual contact which you can check out <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter">here</a>.</p>
 <h2 id="adding-cw-orch-to-your-contracts-toml-file"><a class="header" href="#adding-cw-orch-to-your-contracts-toml-file">Adding <code>cw-orch</code> to Your Contract's TOML File</a></h2>
 <p>To use the <code>cw-orchestrator</code>, you need to add <code>cw-orch</code> to your contract's TOML file. Run the command below in your contract's directory:</p>
 <pre><code class="language-shell">$ cargo add --optional cw-orch
@@ -152,7 +153,8 @@
 <pre><code class="language-toml">[dependencies]
 cw-orch = {version = &quot;0.10.0&quot;, optional = true } # Latest version at time of writing
 </code></pre>
-<p>After adding <code>cw-orch</code> as an optional dependency, you should enable it through a feature. Doing so ensures that the code added by <code>cw-orch</code> is not included in the wasm artifact of the contract. You can do this by adding an <code>interface</code> feature to the <code>Cargo.toml</code> and enabling <code>cw-orch</code> when it is activated:</p>
+<p>Now that we have added <code>cw-orch</code> as an optional dependency we will want to enable it through a feature. This ensures that the code added by <code>cw-orch</code> is not included in the wasm artifact of the contract. To do this add an <code>interface</code> feature to the <code>Cargo.toml</code> and enable <code>cw-orch</code> when it is enabled.</p>
+<p>To do this include the following in the <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml">[features]
 interface = [&quot;dep:cw-orch&quot;]
 </code></pre>
@@ -273,6 +275,54 @@ use cosmwasm_std::Response;
 use cosmwasm_std::StdError;
 use cosmwasm_std::StdResult;
 ``` -->
+<p>Now that we have the dependency set up you can add the <code>interface_entry_point</code> macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:</p>
+<pre><code class="language-rust no_run noplayground">// in contract.rs
+#[cfg_attr(feature = &quot;export&quot;, entry_point)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
+pub fn instantiate(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -&gt; Result&lt;Response, ContractError&gt; {
+    let state = State {
+        count: msg.count,
+        owner: info.sender.clone(),
+    };
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    STATE.save(deps.storage, &amp;state)?;
+
+    Ok(Response::new()
+        .add_attribute(&quot;method&quot;, &quot;instantiate&quot;)
+        .add_attribute(&quot;owner&quot;, info.sender)
+        .add_attribute(&quot;count&quot;, msg.count.to_string()))
+}
+
+#[cfg_attr(feature = &quot;export&quot;, entry_point)]
+#[cfg_attr(feature = &quot;interface&quot;, cw_orch::interface_entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -&gt; Result&lt;Response, ContractError&gt; {
+    match msg {
+        ExecuteMsg::Increment {} =&gt; execute::increment(deps),
+        ExecuteMsg::Reset { count } =&gt; execute::reset(deps, info, count),
+    }
+}
+
+// ... Do the same for the other entry points (query, migrate, reply, sudo)</code></pre>
+<p>By adding these lines we generate code whenever the <code>interface_entry_point</code> macro is enabled.
+The code will generate a contract interface. The contract interface will be the PascalCase of the crate's name.</p>
+<p>It's a good idea to re-expose the interface in the crate's root so that it is easy to import:</p>
+<pre><code class="language-rust no_run noplayground">// in lib.rs
+#[cfg(feature = &quot;interface&quot;)]
+pub use crate::contract::CounterContract;</code></pre>
+<blockquote>
+<p>The name of the crate is defined in the <code>Cargo.toml</code> file of your contract.</p>
+</blockquote>
+<p>If we now create a test in <code>contract/tests</code> we can start interacting with it!</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">struct InstantiateMsg {};

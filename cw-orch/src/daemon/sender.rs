@@ -1,3 +1,4 @@
+use super::chain_info::ChainKind;
 use super::cosmos_modules::{self, auth::BaseAccount};
 use super::queriers::DaemonQuerier;
 use super::queriers::Node;
@@ -33,11 +34,12 @@ pub struct Sender<C: Signing + Context> {
 
 impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+        let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
-        let mnemonic = env::var(daemon_state.kind.mnemonic_name()).unwrap_or_else(|_| {
+        let mnemonic = env::var(kind.mnemonic_name()).unwrap_or_else(|_| {
             panic!(
                 "Wallet mnemonic environment variable {} not set.",
-                daemon_state.kind.mnemonic_name()
+                kind.mnemonic_name()
             )
         });
 
@@ -51,7 +53,7 @@ impl Sender<All> {
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey =
-            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain.coin_type)?;
+            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
 
         let cosmos_private_key = SigningKey::from_slice(&p_key.raw_key()).unwrap();
         let sender = Sender {
@@ -61,7 +63,7 @@ impl Sender<All> {
         };
         log::info!(
             "Interacting with {} using address: {}",
-            daemon_state.chain_id,
+            daemon_state.chain_data.chain_id,
             sender.pub_addr_str()?
         );
         Ok(sender)
@@ -75,14 +77,14 @@ impl Sender<All> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?)
+            .account_id(&self.daemon_state.chain_data.bech32_prefix)?)
     }
 
     pub fn address(&self) -> Result<Addr, DaemonError> {
         Ok(Addr::unchecked(
             self.private_key
                 .public_key()
-                .account_id(&self.daemon_state.chain.pub_address_prefix)?
+                .account_id(&self.daemon_state.chain_data.bech32_prefix)?
                 .to_string(),
         ))
     }
@@ -91,7 +93,7 @@ impl Sender<All> {
         Ok(self
             .private_key
             .public_key()
-            .account_id(&self.daemon_state.chain.pub_address_prefix)?
+            .account_id(&self.daemon_state.chain_data.bech32_prefix)?
             .to_string())
     }
 
@@ -125,14 +127,13 @@ impl Sender<All> {
     }
 
     pub(crate) fn build_fee(&self, amount: impl Into<u128>, gas_limit: Option<u64>) -> Fee {
-        let amount = Coin {
-            amount: amount.into(),
-            denom: self.daemon_state.gas_denom.to_owned(),
-        };
-
+        let fee = Coin::new(
+            amount.into(),
+            &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
+        )
+        .unwrap();
         let gas = gas_limit.unwrap_or(GAS_LIMIT);
-
-        Fee::from_amount_and_gas(amount, gas)
+        Fee::from_amount_and_gas(fee, gas)
     }
 
     pub async fn calculate_gas(
@@ -149,7 +150,7 @@ impl Sender<All> {
         let sign_doc = SignDoc::new(
             tx_body,
             &auth_info,
-            &Id::try_from(self.daemon_state.chain_id.clone())?,
+            &Id::try_from(self.daemon_state.chain_data.chain_id.to_string())?,
             account_number,
         )?;
 
@@ -182,7 +183,8 @@ impl Sender<All> {
         log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
         let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
-        let amount_to_pay = gas_expected * (self.daemon_state.gas_price + 0.00001);
+        let amount_to_pay = gas_expected
+            * (self.daemon_state.chain_data.fees.fee_tokens[0].fixed_min_gas_price + 0.00001);
 
         log::debug!("Calculated gas needed: {:?}", amount_to_pay);
 
@@ -194,7 +196,7 @@ impl Sender<All> {
         let sign_doc = SignDoc::new(
             &tx_body,
             &auth_info,
-            &Id::try_from(self.daemon_state.chain_id.clone())?,
+            &Id::try_from(self.daemon_state.chain_data.chain_id.to_string())?,
             account_number,
         )?;
 

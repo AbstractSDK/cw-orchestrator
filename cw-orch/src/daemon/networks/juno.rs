@@ -1,7 +1,7 @@
-use crate::daemon::state::{ChainInfo, ChainKind, NetworkInfo};
+use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const JUNO_NETWORK: NetworkInfo = NetworkInfo {
-    network_id: "juno",
+    id: "juno",
     pub_address_prefix: "juno",
     coin_type: 118u32,
 };
@@ -16,7 +16,7 @@ pub const UNI_5: ChainInfo = ChainInfo {
     gas_denom: "ujunox",
     gas_price: 0.025,
     grpc_urls: &["https://juno-testnet-grpc.polkachu.com:12690"],
-    chain_info: JUNO_NETWORK,
+    network_info: JUNO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
@@ -27,7 +27,7 @@ pub const UNI_6: ChainInfo = ChainInfo {
     gas_denom: "ujunox",
     gas_price: 0.025,
     grpc_urls: &["http://juno-testnet-grpc.polkachu.com:12690"],
-    chain_info: JUNO_NETWORK,
+    network_info: JUNO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
@@ -38,7 +38,7 @@ pub const JUNO_1: ChainInfo = ChainInfo {
     gas_denom: "ujuno",
     gas_price: 0.0025,
     grpc_urls: &["http://juno-grpc.polkachu.com:12690"],
-    chain_info: JUNO_NETWORK,
+    network_info: JUNO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
@@ -49,7 +49,7 @@ pub const LOCAL_JUNO: ChainInfo = ChainInfo {
     gas_denom: "ujunox",
     gas_price: 0.0,
     grpc_urls: &["http://localhost:9090"],
-    chain_info: JUNO_NETWORK,
+    network_info: JUNO_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
