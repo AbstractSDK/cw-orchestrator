@@ -1,9 +1,10 @@
 # Cw-orchestrator quick-start
 
-Getting started with cw-orchestrator is very easy. The first step to using orchestrator is adding `cw-orch` to your contract's toml.
+Getting started with cw-orchestrator is very easy. The snippets in this document are backed by an actual contact which you can check out [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
 
-## Add `cw-orch`
+## Add `cw-orch` as an optional dependency
 
+To start using orchestrator, add `cw-orch` to your contract's toml.
 You can do this by running the following in the directory of your contract:
 
 ```shell
@@ -34,6 +35,7 @@ interface = ["dep:cw-orch"]
 Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
 
 ```rust,no_run,noplayground
+// in contract.rs
 {{#include ../../contracts/counter/src/contract.rs:interface_entry}}
 
 // ... Do the same for the other entry points (query, migrate, reply, sudo)
@@ -42,80 +44,14 @@ Now that we have the dependency set up you can add the `interface_entry_point` m
 By adding these lines we generate code whenever the `interface_entry_point` macro is enabled.
 The code will generate a contract interface. The contract interface will be the PascalCase of the crate's name.
 
+It's a good idea to re-expose the interface in the crate's root so that it is easy to import:
+
+```rust,no_run,noplayground
+// in lib.rs
+{{#include ../../contracts/counter/src/lib.rs:interface_reexport}}
+```
+
 > The name of the crate is defined in the `Cargo.toml` file of your contract.
-
-## Example
-
-Let's look at an example to solidify your understanding.
-We have a contract with a `Cargo.toml` file roughly be like the following:
-
-```toml
-# Cargo.toml
-[package]
-name = "example-contract"
-# ...
-
-[features]
-# Features that are enabled by default
-default = ["export"]
-# Exports the WASM entry points, similar to the `library` feature
-export = []
-# Enables the contracts's interface
-interface = ["dep:cw-orch"]
-
-[dependencies]
-cw-orch = {version = "0.10.0", optional = true }
-# ...
-```
-
-Then our contract looks something like:
-
-```rust
-// contract.rs
-#[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-pub fn instantiate(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
-    // Instantiate contract
-    Ok(Response::default())
-}
-
-#[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-pub fn execute(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
-    match msg {
-        // match statements
-        _ => todo!()
-    }
-}
-
-#[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        // match statements
-        _ => todo!()
-    }
-}
-
-#[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-    // ...
-    Ok(Response::default())
-}
-```
-
-This macro generates a `ExampleContract` struct that is now available in `contract.rs`.
 
 If we now create a test in `contract/tests` we can start interacting with it!
 
