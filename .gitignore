@@ -21,3 +21,5 @@ gen_cov_test
 
 **/bin/
 **/logs/
+
+docs/book/
