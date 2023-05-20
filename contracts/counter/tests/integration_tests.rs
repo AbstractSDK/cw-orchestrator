@@ -1,10 +1,10 @@
 // Use prelude to get all the necessary imports
 use counter_contract::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
-use cw_orch::prelude::*;
 use counter_contract::{
     msg::{GetCountResponse, QueryMsg},
     CounterExecuteMsgFns, CounterQueryMsgFns,
 };
+use cw_orch::prelude::*;
 
 use cosmwasm_std::Addr;
 
