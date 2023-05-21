@@ -1,4 +1,4 @@
-# Cw-Orchestrator Quick-Start Guide
+# Quick-Start Guide
 
 This guide will show you how to use the `cw-orchestrator` with your smart contract. Follow the steps below to add `cw-orch` to your contract's TOML file, enable the interface feature, add the interface macro to your contract's endpoints, and use interaction helpers to simplify contract calls and queries.
 
@@ -15,7 +15,7 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.10.0", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.11.0", optional = true } # Latest version at time of writing
 ```
 
 Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
@@ -24,12 +24,12 @@ To do this include the following in the `Cargo.toml`:
 
 ```toml
 [features]
-interface = ["dep:cw-orch"]
+interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
 ```
 
-## Adding the Interface Macro to Your Contract's Endpoints
+## Creating an Interface
 
-Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
+Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's entry points. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's entry points:
 
 ```rust,no_run,noplayground
 # use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
@@ -63,7 +63,9 @@ pub fn execute(
 // ... Do the same for the other entry points (query, migrate, reply, sudo)
 ```
 
-By adding these lines, we generate code whenever the `interface` macro is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.
+By adding these lines, we generate code whenever the `interface` feature is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.
+
+When uploading to a blockchain the marco will search for an `artifacts` directory in the project's root. If this is not what you want you can specify the paths yourself using the `interface` macro covered in [interfaces](./tutorial/interfaces.md#defining-contract-interfaces).
 
 > The name of the crate is defined in the `Cargo.toml` file of your contract.
 
@@ -105,9 +107,15 @@ pub enum QueryMsg {
 # fn main() {}
 ```
 
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface through a trait. The function will have the snake_case name of the variant and will take the same arguments as the variant. The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature.
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface through a trait. The function will have the snake_case name of the variant and will take the same arguments as the variant. The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
 
-You can access these functions by importing the generated traits form the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`.
+You can access these functions by importing the generated traits form the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. Again it's helpful to re-export these traits in the crate's root so that they are easy to import:
+
+```rust,ignore
+// in lib.rs
+#[cfg(feature = "interface")]
+pub use crate::msg::{ExecuteMsgFns as MyContractExecuteFns, QueryMsgFns as MyContractQueryFns};
+```
 
 ## Example Counter Contract
 
