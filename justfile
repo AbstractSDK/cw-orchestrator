@@ -9,3 +9,7 @@ serve-docs:
 
 build-docs:
   (cd docs && mdbook build)
+
+doc-test:
+  cargo test --doc
+  mdbook test docs

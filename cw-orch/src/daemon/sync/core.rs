@@ -41,7 +41,7 @@ use tonic::transport::Channel;
 
     ## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon::query<Querier>`] method with a specific querier.
+    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
     See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct Daemon {

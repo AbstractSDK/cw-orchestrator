@@ -1,25 +1,26 @@
-# Cw-orchestrator quick-start
+# Cw-Orchestrator Quick-Start Guide
 
-Getting started with cw-orchestrator is very easy. The snippets in this document are backed by an actual contact which you can check out [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+This guide will show you how to use the `cw-orchestrator` with your smart contract. Follow the steps below to add `cw-orch` to your contract's TOML file, enable the interface feature, add the interface macro to your contract's endpoints, and use interaction helpers to simplify contract calls and queries.
 
-## Add `cw-orch` as an optional dependency
+The snippets in this document are backed by an actual contact which you can check out [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
 
-To start using orchestrator, add `cw-orch` to your contract's toml.
-You can do this by running the following in the directory of your contract:
+## Adding `cw-orch` to Your Contract's TOML File
+
+To use the `cw-orchestrator`, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
 
 ```shell
 $ cargo add --optional cw-orch
 > Adding cw-orch v0.10.0 to optional dependencies.
 ```
 
-Or you can add it manually in your `Cargo.toml`:
+Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
 cw-orch = {version = "0.10.0", optional = true } # Latest version at time of writing
 ```
 
-Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface_entry_point` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
+Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
 
 To do this include the following in the `Cargo.toml`:
 
@@ -28,10 +29,124 @@ To do this include the following in the `Cargo.toml`:
 interface = ["dep:cw-orch"]
 ```
 
-> You can learn more about Rust features [here](https://doc.rust-lang.org/cargo/reference/features.html).
+## Adding the Interface Macro to Your Contract's Endpoints
 
-## Contract Interface
+With the dependency set up, you can now add the `interface` macro to your contract's endpoints. This macro will generate an interface to your contract that you can use to interact with it. You can get started by adding the feature-flagged interface macro to the contract's endpoints as shown in the code snippet below:
 
+```rust,no_run
+# use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
+# struct InstantiateMsg;
+# struct ExecuteMsg;
+
+// In `contract.rs`
+#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
+pub fn instantiate(
+   deps: DepsMut,
+   env: Env,
+   info: MessageInfo,
+   msg: InstantiateMsg,
+ -> StdResult<Response> {
+    // ...
+    Ok(Response::new())
+}
+
+#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
+pub fn execute(
+   deps: DepsMut,
+   env: Env,
+   info: MessageInfo,
+   msg: ExecuteMsg,
+ -> StdResult<Response> {
+    // ...
+    Ok(Response::new())
+}
+// ... Do the same for the other entry points (query, migrate, reply, sudo)
+```
+
+By adding these lines, we generate code whenever the `interface` macro is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.
+
+## Example of Using Cw-Orchestrator
+
+The following example provides a clear understanding of how to use `cw-orchestrator` with a smart contract. Here, we have a contract with a `Cargo.toml` file like the following:
+
+```toml
+# Cargo.toml
+[package]
+name = "example-contract"
+# ...
+
+[features]
+# Features that are enabled by default
+default = ["export"]
+# Exports the WASM entry points, similar to the `library` feature
+export = []
+# Enables the contracts's interface
+interface = ["dep:cw-orch"]
+
+[dependencies]
+cw-orch = {version = "0.10.0", optional = true }
+# ...
+```
+
+Then our contract looks something like:
+
+```rust
+# use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
+# use cosmwasm_schema::{entry_point};
+# struct InstantiateMsg;
+# struct ExecuteMsg;
+# struct QueryMsg;
+# struct MigrateMsg;
+// contract.rs
+#[cfg_attr(feature = "export", entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+pub fn instantiate(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response, ContractError> {
+    // Instantiate contract
+    Ok(Response::default())
+}
+
+#[cfg_attr(feature = "export", entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
+    match msg {
+        // match statements
+        _ => todo!()
+    }
+}
+
+#[cfg_attr(feature = "export", entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        // match statements
+        _ => todo!()
+    }
+}
+
+#[cfg_attr(feature = "export", entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    // ...
+    Ok(Response::default())
+}
+```
+
+The macros generate an `ExampleContract` struct that is now available in `contract.rs`.  
+You can now create a test in `contract/tests` and start interacting with the contract as shown below:
+
+<!-- ```rust
+{{#include ../../contracts/mock_contract/src/lib.rs:2:10}}
+``` -->
 Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's endpoints. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's endpoints:
 
 ```rust,no_run,noplayground
@@ -56,8 +171,17 @@ It's a good idea to re-expose the interface in the crate's root so that it is ea
 If we now create a test in `contract/tests` we can start interacting with it!
 
 ```rust
+# struct InstantiateMsg {};
+# enum ExecuteMsg {
+    #   Increment {}
+# };
+# enum QueryMsg {
+    #   Config {}
+# };
+# struct MigrateMsg {};
 // contract/tests/example.rs
-
+# use cosmwasm_std::{Addr};
+use cw_orch::prelude::*;
 // import the generated interface
 use example_contract::contract::ExampleContract;
 #[test]
@@ -74,16 +198,16 @@ fn example_test() {
     example_contract.upload()?;
 
     // Instantiate the contract
-    example_contract.instantiate(&InstantiateMsg { ... }, None, None)?;
+    example_contract.instantiate(&InstantiateMsg { }, None, None)?;
 
     // Execute the newly instantiated contract
-    example_contract.execute(&ExecuteMsg::Increment { ... }, None)?;
+    example_contract.execute(&ExecuteMsg::Increment { }, None)?;
 
     // Query
-    let resp: QueryResponse = example_contract.query(&QueryMsg::Config { ... })?;
+    let resp: String = example_contract.query(&QueryMsg::Config { })?;
 
     // Migrate
-    example_contract.migrate(&MigrateMsg { ... }, None)?;
+    example_contract.migrate(&MigrateMsg { }, None)?;
 }
 ```
 
@@ -93,19 +217,22 @@ cw-orchestrator provides an additional macro to simplify contract calls and quer
 
 Enabling this functionality is very straight-forward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
-```rust
+```rust,no_run
+use cosmwasm_schema::QueryResponses;
+use cw_orch::{ExecuteFns, QueryFns};
 
 #[cfg_attr(feature = "interface", derive(ExecuteFns))]
 pub enum ExecuteMsg {
     Increment {},
-    ...
+    // ...
 }
 
 #[cfg_attr(feature = "interface", derive(QueryFns))]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(ConfigResponse)]
+    #[returns(String)]
     Config {}
-    ...
+    // ...
 }
 ```
 
@@ -113,12 +240,12 @@ Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]
 
 You can access these functions by importing the generated traits form the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`.
 
-```rust
-
+```rust,ignore
 // Import the generated traits
+# use cosmwasm_std::{Addr};
 use example_contract::msg::{ExecuteMsgFns, QueryMsgFns};
+use cw_orch::prelude::*;
 
-#[test]
 fn example_test() {
     // init mock environment
     let sender = Addr::unchecked("sender");
@@ -127,7 +254,11 @@ fn example_test() {
     // `new()` function is available to construct the contract interface
     let example_contract = ExampleContract::new("example_contract", mock);
 
-    // ... upload and instantiate like before
+    // Upload the contract to the mock
+    example_contract.upload()?;
+
+    // Instantiate the contract
+    example_contract.instantiate(&InstantiateMsg { }, None, None)?;
 
     // Execute the increment endpoint
     example_contract.increment()?;
@@ -136,7 +267,7 @@ fn example_test() {
     // Return type optional!
     let resp: QueryResponse = example_contract.config()?;
 }
-
+# example_test();
 ```
 
 > The function arguments are ordered alphabetically to prevent breaking changes when struct fields are moved.

@@ -10,7 +10,7 @@ As an example we will create a deployment for the [Abstract smart-contract frame
 
 The deployment can be represented by a struct containing all the contracts that are uploaded and instantiated when the protocol is deployed.
 
-```rust
+```rust,ignore
 // Our Abstract deployment
 pub struct Abstract<Chain: CwEnv> {
     pub ans_host: AnsHost<Chain>,
@@ -22,7 +22,16 @@ pub struct Abstract<Chain: CwEnv> {
 
 Now we can implement the `cw_orch::Deploy` trait for the `Abstract` struct.
 
-```rust
+```rust,ignore
+# use cw_orch::prelude::*;
+# use cw_orch::error::CwOrchError;
+# use cw_multi_test::ContractWrapper;
+# use abstract_interface::{AnsHost, VersionControl};
+# pub struct Abstract<Chain: CwEnv> {
+#   pub ans_host: AnsHost<Chain>,
+#   pub version_control: VersionControl<Chain>,
+# }
+
 impl<Chain: CwEnv> cw_orch::Deploy<Chain> for Abstract<Chain> {
     // We don't have a custom error type
     type Error = CwOrchError;
@@ -30,26 +39,7 @@ impl<Chain: CwEnv> cw_orch::Deploy<Chain> for Abstract<Chain> {
 
     fn store_on(chain: Chain) -> Result<Self, Self::Error> {
         // "abstract" is a reserved keyword in rust!
-        let mut abstrct = Self::new(chain);
-
-        // Only include mock when `integration` flag is set
-        if cfg!(feature = "integration") {
-            abstrct.ans_host
-                .as_instance_mut()
-                .set_mock(Box::new(ContractWrapper::new_with_empty(
-                    ::ans_host::contract::execute,
-                    ::ans_host::contract::instantiate,
-                    ::ans_host::contract::query,
-                )));
-
-            abstrct.version_control.as_instance_mut().set_mock(Box::new(
-                cw_multi_test::ContractWrapper::new_with_empty(
-                    ::version_control::contract::execute,
-                    ::version_control::contract::instantiate,
-                    ::version_control::contract::query,
-                ),
-            ));
-        }
+        let mut abstrct = Abstract::new(chain);
 
         // Upload the contracts to the chain
         abstrct.ans_host.upload()?;
@@ -63,15 +53,14 @@ impl<Chain: CwEnv> cw_orch::Deploy<Chain> for Abstract<Chain> {
         let abstrct = Self::store_on(chain)?;
 
         // ########### Instantiate ##############
-
         abstrct.ans_host.instantiate(
-            &abstract_os::ans_host::InstantiateMsg {},
+            &abstract_core::ans_host::InstantiateMsg {},
             Some(sender),
             None,
         )?;
 
         abstrct.version_control.instantiate(
-            &abstract_os::version_control::InstantiateMsg {},
+            &abstract_core::version_control::InstantiateMsg {},
             Some(sender),
             None,
         )?;
