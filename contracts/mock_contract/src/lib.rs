@@ -14,10 +14,10 @@ use cosmwasm_std::{entry_point, Env};
 pub struct InstantiateMsg {}
 
 #[cw_serde]
-#[cfg_attr(feature = "cw-orch", derive(cw_orch::ExecuteFns))]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg<T = String> {
     FirstMessage {},
-    #[cfg_attr(feature = "cw-orch", payable)]
+    #[cfg_attr(feature = "interface", payable)]
     SecondMessage {
         t: T,
     },
@@ -27,7 +27,7 @@ pub enum ExecuteMsg<T = String> {
 }
 
 #[cw_serde]
-#[cfg_attr(feature = "cw-orch", derive(cw_orch::QueryFns))]
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(String)]
@@ -42,7 +42,7 @@ pub struct MigrateMsg {
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn instantiate(
     _deps: DepsMut,
     _env: Env,
@@ -52,8 +52,8 @@ pub fn instantiate(
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
@@ -71,8 +71,8 @@ pub fn execute(
     }
 }
 
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
 pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
@@ -80,8 +80,8 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     if msg.t.eq("success") {
         Ok(Response::new())

@@ -17,15 +17,15 @@ use super::state::MockState;
 ///
 /// Stores a local state with a mapping of contract_id -> code_id/address
 ///
-/// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
+/// The state is customizable by implementing the [`StateInterface`] trait on a custom struct and providing it on the custom constructor.
 ///
-/// ## Use
+/// ## Example
 /// ```
 /// # use cosmwasm_std::{Addr, coin, Uint128};
 /// use cw_orch::prelude::Mock;
 ///
 /// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new(&sender).unwrap();
+/// let mock: Mock = Mock::new(&sender);
 ///
 /// // set a balance
 /// mock.set_balance(&sender, vec![coin(100u128, "token")]).unwrap();
@@ -33,6 +33,17 @@ use super::state::MockState;
 /// // query the balance
 /// let balance: Uint128 = mock.query_balance(&sender, "token").unwrap();
 /// assert_eq!(balance.u128(), 100u128);
+/// ```
+///
+/// ## Example with custom state
+/// ```
+/// # use cosmwasm_std::{Addr, coin, Uint128};
+/// use cw_orch::prelude::{Mock, StateInterface};
+/// // We just use the MockState as an example here, but you can implement your own state struct.
+/// use cw_orch::mock::state::MockState as CustomState;
+///
+/// let sender = Addr::unchecked("sender");
+/// let mock: Mock = Mock::new_custom(&sender, CustomState::new()).unwrap();
 /// ```
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
@@ -104,7 +115,7 @@ where
     QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
 {
     /// Create a mock environment with the default mock state.
-    pub fn new(sender: &Addr) -> anyhow::Result<Self> {
+    pub fn new(sender: &Addr) -> Self {
         Mock::new_custom(sender, MockState::new())
     }
 }
@@ -116,17 +127,15 @@ where
 {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> anyhow::Result<Self> {
+    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
 
-        let instance = Self {
+        Self {
             sender: sender.clone(),
             state,
             app,
-        };
-
-        Ok(instance)
+        }
     }
 
     /// Upload a custom contract wrapper.
@@ -380,7 +389,7 @@ mod test {
         let amount = 1000000u128;
         let denom = "uosmo";
 
-        let chain = Mock::new(sender).unwrap();
+        let chain = Mock::new(sender);
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -462,7 +471,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state).unwrap();
+        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])

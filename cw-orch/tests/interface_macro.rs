@@ -1,6 +1,5 @@
 mod common;
 
-use cw_orch::contract::Contract;
 use cw_orch::environment::CwEnv;
 use cw_orch::environment::TxHandler;
 use cw_orch::prelude::ContractWrapper;
@@ -49,7 +48,7 @@ impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
 fn test_instantiate() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -62,7 +61,7 @@ fn test_instantiate() {
 fn test_execute() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -88,7 +87,7 @@ fn test_execute() {
 fn test_query() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -107,7 +106,7 @@ fn test_query() {
 #[test]
 fn test_migrate() {
     let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::new("test:mock_contract", Mock::new(&admin).unwrap());
+    let contract = MockContract::new("test:mock_contract", Mock::new(&admin));
     contract.upload().unwrap();
 
     contract

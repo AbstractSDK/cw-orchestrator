@@ -26,6 +26,33 @@ jobs:
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test --locked
         run: cargo test --locked --all-features --all-targets
+
+  docs:
+    runs-on: ubuntu-latest
+    name: doc-tests / stable
+    strategy:
+      matrix:
+        toolchain: [stable, beta]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      - name: cargo test --doc
+        run: cargo test --doc --locked --all-features
+      - name: install mdbook
+        run: cargo install mdbook
+      - name: install mdbook-keeper
+        run: cargo install mdbook-keeper
+      - name: mdbook build
+        run: mdbook build docs
+        
   coverage:
     runs-on: ubuntu-latest
     name: ubuntu / stable / coverage
