@@ -12,6 +12,13 @@ readme = "../README.md"
 
 exclude = [".env"]
 
+[[example]]
+name = "mock_test"
+
+[[example]]
+name = "daemon_test"
+required-features = ["daemon"]
+
 [features]
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
@@ -38,7 +45,6 @@ daemon = [
   "dep:hex",
   "dep:bitcoin",
   "dep:prost",
-  "cw-orch-contract-derive/propagate_daemon",
 ]
 
 [dependencies]
@@ -97,7 +103,10 @@ tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
-mock-contract = { path = "../contracts/mock_contract", features = ["cw-orch"] }
+counter-contract = { path = "../contracts/counter", features = ["interface"] }
+mock-contract = { path = "../contracts/mock_contract", features = [
+  "interface",
+] }
 mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
   "cw-orch",
 ] }
