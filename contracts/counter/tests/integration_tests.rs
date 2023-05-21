@@ -1,9 +1,9 @@
-// Use prelude to get all the necessary imports
 use counter_contract::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
 use counter_contract::{
     msg::{GetCountResponse, QueryMsg},
     CounterExecuteMsgFns, CounterQueryMsgFns,
 };
+// Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
 
 use cosmwasm_std::Addr;
@@ -11,7 +11,7 @@ use cosmwasm_std::Addr;
 // consts for testing
 const USER: &str = "user";
 const ADMIN: &str = "admin";
-
+// ANCHOR: integration_test
 /// Instantiate the contract in any CosmWasm environment
 fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
     // Construct the counter interface
@@ -39,33 +39,32 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
     contract
 }
 
-mod count {
-    use super::*;
+#[test]
+fn count() {
+    // Create a sender
+    let sender = Addr::unchecked(ADMIN);
+    // Create the mock
+    let mock = Mock::new(&sender);
 
-    #[test]
-    fn count() {
-        // Create a sender
-        let sender = Addr::unchecked(ADMIN);
-        // Create the mock
-        let mock = Mock::new(&sender);
+    // Set up the contract
+    let contract = setup(mock.clone());
 
-        // Set up the contract
-        let contract = setup(mock.clone());
+    // Increment the count of the contract 
+    contract
+        // Set the caller to user
+        .call_as(&Addr::unchecked(USER))
+        // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
+        .increment()
+        .unwrap();
 
-        // Increment the count (auto-generated function)
-        contract
-            .call_as(&Addr::unchecked(USER))
-            .increment()
-            .unwrap();
+    // Get the count (auto-generated function provided by CounterQueryMsgFns)
+    let count1 = contract.get_count().unwrap();
+    // or query it manually
+    let count2: GetCountResponse = contract.query(&QueryMsg::GetCount {}).unwrap();
 
-        // Get the count (auto-generated function)
-        let count1 = contract.get_count().unwrap();
-        // or query it manually
-        let count2: GetCountResponse = contract.query(&QueryMsg::GetCount {}).unwrap();
+    assert_eq!(count1, count2);
 
-        assert_eq!(count1, count2);
-
-        // Check the count
-        assert_eq!(count1.count, 2);
-    }
+    // Check the count
+    assert_eq!(count1.count, 2);
 }
+// ANCHOR_END: integration_test
