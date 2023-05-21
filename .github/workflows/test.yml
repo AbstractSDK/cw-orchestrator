@@ -48,8 +48,10 @@ jobs:
         run: cargo test --doc --locked --all-features
       - name: install mdbook
         run: cargo install mdbook
-      - name: mdbook doc
-        run: mdbook test docs
+      - name: install mdbook-keeper
+        run: cargo install mdbook-keeper
+      - name: mdbook build
+        run: mdbook build docs
         
   coverage:
     runs-on: ubuntu-latest
