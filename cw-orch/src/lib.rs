@@ -8,6 +8,10 @@ pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 // Re-export anyhow for the macro
 pub extern crate anyhow;
 
+// Re-export tokio if the daemon feature is enabled
+#[cfg(feature = "daemon")]
+pub extern crate tokio;
+
 // prelude
 pub mod prelude;
 
