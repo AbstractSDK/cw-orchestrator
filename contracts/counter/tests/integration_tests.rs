@@ -49,7 +49,7 @@ fn count() {
     // Set up the contract
     let contract = setup(mock.clone());
 
-    // Increment the count of the contract 
+    // Increment the count of the contract
     contract
         // Set the caller to user
         .call_as(&Addr::unchecked(USER))
