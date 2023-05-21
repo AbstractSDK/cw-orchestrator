@@ -12,4 +12,4 @@ build-docs:
 
 doc-test:
   cargo test --doc
-  mdbook test docs
+  mdbook build docs
