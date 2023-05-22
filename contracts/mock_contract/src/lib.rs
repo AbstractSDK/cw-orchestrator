@@ -4,11 +4,11 @@ use cosmwasm_std::to_binary;
 use cosmwasm_std::Binary;
 use cosmwasm_std::Deps;
 use cosmwasm_std::DepsMut;
+use cosmwasm_std::Env;
 use cosmwasm_std::MessageInfo;
 use cosmwasm_std::Response;
 use cosmwasm_std::StdError;
 use cosmwasm_std::StdResult;
-use cosmwasm_std::Env;
 
 #[cw_serde]
 pub struct InstantiateMsg {}

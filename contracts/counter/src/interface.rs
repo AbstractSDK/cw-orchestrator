@@ -1,9 +1,9 @@
 #![allow(unused)]
 // ANCHOR: custom_interface
+use cw_orch::anyhow::Result;
 use cw_orch::interface;
 use cw_orch::prelude::queriers::Node;
 use cw_orch::prelude::*;
-use cw_orch::anyhow::Result;
 
 use crate::contract::CONTRACT_NAME;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};

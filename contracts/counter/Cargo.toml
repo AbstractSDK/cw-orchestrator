@@ -9,10 +9,6 @@ exclude = [".env"]
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[[example]]
-name = "deploy"
-path = "bin/deploy.rs"
-
 [features]
 default = ["export"]
 export = []
