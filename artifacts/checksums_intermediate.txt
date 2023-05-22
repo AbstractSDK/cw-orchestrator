@@ -1,0 +1,2 @@
+134375964fb7d7478bae4950de3dd481db4346835fd11d64b5cb42aa8148cd49  target/wasm32-unknown-unknown/release/mock_contract.wasm
+59ff6cae85e36552b33296ef9a5934c1f504ecf64d1c1e0a2e919cd11d891d4c  target/wasm32-unknown-unknown/release/mock_contract_u64.wasm

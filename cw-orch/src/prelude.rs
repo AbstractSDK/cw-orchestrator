@@ -57,7 +57,6 @@ pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::F
 
 #[cfg(feature = "interchain")]
 pub use super::interchain::{
-    hermes::Hermes, infrastructure::InterchainInfrastructure,
-    interchain_channel_builder,
-    interchain_env::InterchainEnv
+    hermes::Hermes, infrastructure::InterchainInfrastructure, interchain_channel_builder,
+    interchain_env::InterchainEnv,
 };

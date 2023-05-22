@@ -1,0 +1,2 @@
+bf962e11fdb38c2825c24046ae96577f23db422954165562c5ad80e499cfeabe  mock_contract.wasm
+ab53bcea2fb6ef40a4df1c24640c8daa910b294b1ff185126b00b13b7fc700ee  mock_contract_u64.wasm
