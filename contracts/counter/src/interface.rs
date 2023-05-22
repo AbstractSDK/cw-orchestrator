@@ -31,9 +31,9 @@ impl<Chain: CwEnv> Uploadable for Counter<Chain> {
         )
     }
 }
-// ANCHOR: custom_interface
+// ANCHOR_END: custom_interface
 
-// ANCHOR: daemon_impl
+// ANCHOR: daemon
 impl Counter<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> anyhow::Result<()> {
@@ -47,6 +47,7 @@ impl Counter<Daemon> {
                 let mut latest_block = node.latest_block().await.unwrap() ;
                 
                 while latest_block.header.height.value() < 100 {
+                    // wait for the next block
                     daemon.next_block().unwrap();
                     latest_block = node.latest_block().await.unwrap() ;
                 }
@@ -65,4 +66,4 @@ impl Counter<Daemon> {
         Ok(())
     }
 }
-// ANCHOR_END: daemon_impl
+// ANCHOR_END: daemon

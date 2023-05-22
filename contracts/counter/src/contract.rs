@@ -11,10 +11,10 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 // ANCHOR: interface_entry
 // ANCHOR: entry_point_line
 #[cfg_attr(feature = "export", entry_point)]
-// ANCHOR: entry_point_line
+// ANCHOR_END: entry_point_line
 // ANCHOR: interface_line
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-// ANCHOR: interface_line
+// ANCHOR_END: interface_line
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -59,7 +59,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
-    // TODO: Migrate state
     Ok(Response::default().add_attribute("action", "migrate"))
 }
 // ANCHOR_END: interface_entry

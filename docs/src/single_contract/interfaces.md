@@ -46,21 +46,21 @@ As mentioned this macro is the easiest to use. It will generate an interface for
 In `counter/src/contract.rs`:
 
 ```rust,ignore
-{{#include ../../contracts/counter/src/contract.rs:interface_entry}}
+{{#include ../../../contracts/counter/src/contract.rs:interface_entry}}
 ```
 
 Most of this should look familiar but if you're wondering about the two lines that contain `#[...]` here's what they do:
 
-1. ```rust,ignore
-    {{#include ../../contracts/counter/src/contract.rs:entry_point_line}}
-   ```
-
+1.
+    ```rust,ignore
+    {{#include ../../../contracts/counter/src/contract.rs:entry_point_line}}
+    ```
    This is a CosmWasm macro. It enables the Wasm runtime to call into the function. You can read more about the macro in the [CosmWasm book](https://book.cosmwasm.com/basics/entry-points.html). We only enable this macro when the `export` feature is enabled. This prevents conflicts with other entry points when the contract is a dependency of another contract.
 
-2. ```rust,ignore
-    {{#include ../../contracts/counter/src/contract.rs:interface_line}}
-   ```
-
+2.
+    ```rust,ignore
+    {{#include ../../../contracts/counter/src/contract.rs:interface_line}}
+    ```
     This is the cw-orch provided macro. It will generate an interface for your contract by analyzing the messages passed to the entry points. This is possible because the entry point function definitions have strict parameter requirements. With this information the macro can generate a type safe interface for your contract. We only enable this macro when the `interface` feature is enabled.
 
 ### Customizable Interface Macro
@@ -70,23 +70,23 @@ The second method to create an interface is the `interface` macro. To use it, fi
 In `counter/src/lib.rs`:
 
 ```rust,ignore
-{{#include ../../contracts/counter/src/lib.rs:custom_interface}}
+{{#include ../../../contracts/counter/src/lib.rs:custom_interface}}
 ```
 
 Then in `counter/src/interface.rs`:
 
 ```rust,ignore
-{{#include ../../contracts/counter/src/interface.rs:custom_interface}}
+{{#include ../../../contracts/counter/src/interface.rs:custom_interface}}
 ```
 
-This use of the `interface` macro even allows you to have generic arguments in the message types. The generics will be added to the interface as well.
+This use of the `interface` macro even allows you to have generic arguments in the message types. Any generics will be added to the interface under a `PhantomData` attribute.
 
 ## Constructor
 
 Both macros implement a `new` function on the interface:
 
-```rust
-{{#include ../../contracts/counter/tests/integration_tests.rs:constructor}}
+```rust,ignore
+{{#include ../../../contracts/counter/tests/integration_tests.rs:constructor}}
 ```
 
 The constructor takes two arguments:
@@ -107,14 +107,14 @@ The environments that are currently supported are:
 
 Generic functions can be executed over any environment. Setup functions are a good example of this.
 
-```rust
-{{#include ../../contracts/counter/tests/integration_tests.rs:setup}}
+```rust,ignore
+{{#include ../../../contracts/counter/tests/integration_tests.rs:setup}}
 ```
 
 ### Daemon-only functions
 
-```rust
-{{#include ../../contracts/counter/tests/integration_tests.rs:daemon_impl}}
+```rust,ignore
+{{#include ../../../contracts/counter/src/interface.rs:daemon}}
 ```
 
 ## Entry Point Function Generation
@@ -123,10 +123,10 @@ Contract execution and querying is so common that we felt the need to improve th
 
 ### Execution
 
-To get started, find the `ExecuteMsg` definition for your contract. In our case it's located in `counter/src/msg.rs`. Then add the following line to your `ExecuteMsg` enum:
+To get started, find the `ExecuteMsg` definition for your contract. In our case it's located in `contracts/counter/src/msg.rs`. Then add the following line to your `ExecuteMsg` enum:
 
-```rust
-{{#include ../../contracts/counter/src/msg.rs:exec_msg}}
+```rust,ignore
+{{#include ../../../contracts/counter/src/msg.rs:exec_msg}}
 ```
 
 Again we feature flag the function generation to prevent cw-orchestrator entering as a dependency when building your contract.
@@ -135,32 +135,32 @@ The functions are implemented as a trait named `ExecuteMsgFns` which is implemen
 
 Using the trait then becomes as simple as:
 
-```rust
+```rust,ignore
 // in integration_tests.rs
-{{#include ../../contracts/counter/tests/integration_tests.rs:reset}}
+{{#include ../../../contracts/counter/tests/integration_tests.rs:reset}}
 ```
 
 ### Query
 
 Generating query functions is a similar process but has the added advantage of using the `cosmwasm-schema` return tags to detect the query's return type. This allows for type-safe query functions!
 
-```rust
-{{#include ../../contracts/counter/src/msg.rs:query_msg}}
+```rust,ignore
+{{#include ../../../contracts/counter/src/msg.rs:query_msg}}
 ```
 
 Using it is just as simple as the execution functions:
 
-```rust
+```rust,ignore
 // in integration_tests.rs
-{{#include ../../contracts/counter/tests/integration_tests.rs:query}}
+{{#include ../../../contracts/counter/tests/integration_tests.rs:query}}
 ```
 
 Just like the interface it can be beneficial to re-export the trait in your `lib.rs` or `interface.rs` file.
 
 In the counter contract we re-export in `lib.rs`;
 
-```rust
-{{#include ../../contracts/counter/src/lib.rs:fn_re_export}}
+```rust,ignore
+{{#include ../../../contracts/counter/src/lib.rs:fn_re_export}}
 ```
 
 ## Learn more

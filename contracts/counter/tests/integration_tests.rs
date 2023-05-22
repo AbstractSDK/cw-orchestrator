@@ -1,7 +1,7 @@
+// ANCHOR: all
 use counter_contract::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
 use counter_contract::{
     msg::{GetCountResponse, QueryMsg},
-    CounterQueryMsgFns,
 };
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
@@ -43,6 +43,7 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
 }
 // ANCHOR_END: setup
 
+// ANCHOR: count_test
 #[test]
 fn count() {
     // Create a sender
@@ -78,6 +79,11 @@ fn count() {
     // Reset
     use counter_contract::CounterExecuteMsgFns;
     contract.reset(0).unwrap();
+
+    let count = contract.get_count().unwrap();
+    assert_eq!(count.count, 0);
     // ANCHOR_END: reset
 }
+// ANCHOR_END: count_test
 // ANCHOR_END: integration_test
+// ANCHOR_END: all
