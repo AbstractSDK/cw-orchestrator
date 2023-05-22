@@ -3,7 +3,7 @@ use crate::environment::TxResponse;
 use crate::error::CwOrchError;
 use crate::prelude::*;
 
-use super::sync::core::Daemon;
+use super::sync::Daemon;
 
 /// Helper methods for conditional uploading of a contract.
 pub trait ConditionalUpload: CwOrcUpload<Daemon> {

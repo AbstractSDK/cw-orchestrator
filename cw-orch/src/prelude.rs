@@ -26,7 +26,7 @@ pub use crate::index_response::IndexResponse;
 pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
-pub use crate::mock::core::Mock;
+pub use crate::mock::Mock;
 
 // error
 pub use crate::error::CwOrchError;
@@ -41,14 +41,14 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    builder::DaemonAsyncBuilder,
-    core::DaemonAsync,
+    DaemonAsyncBuilder,
+    DaemonAsync,
     networks,
     queriers,
     // expose the sync variants
-    sync::{builder::DaemonBuilder, core::Daemon},
+    DaemonBuilder, Daemon,
     // sync helpers
-    traits::{ConditionalMigrate, ConditionalUpload},
+    ConditionalMigrate, ConditionalUpload,
 };
 
 /// Re-export trait and data required to fetch daemon data from chain-registry

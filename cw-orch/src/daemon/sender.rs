@@ -22,6 +22,7 @@ use tonic::transport::Channel;
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
 
+/// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Rc<Sender<All>>;
 
 /// Signer of the transactions and helper for address derivation

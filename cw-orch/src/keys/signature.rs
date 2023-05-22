@@ -1,4 +1,4 @@
-use crate::daemon::error::DaemonError;
+use crate::daemon::DaemonError;
 use base64::engine::{general_purpose::STANDARD, Engine};
 use ring::digest::SHA256;
 use secp256k1::Message;

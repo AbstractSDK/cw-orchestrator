@@ -7,9 +7,11 @@ use tonic::transport::{Channel, ClientTlsConfig};
 
 use super::error::DaemonError;
 
+/// A wrapper around tonic::transport::Channel
 pub struct GrpcChannel {}
 
 impl GrpcChannel {
+    /// Connect to a gRPC endpoint
     pub async fn connect(grpc: &[Grpc], chain_id: &ChainId) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 

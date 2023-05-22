@@ -1,5 +1,5 @@
 use super::public::PublicKey;
-use crate::daemon::error::DaemonError;
+use crate::daemon::DaemonError;
 use bitcoin::bip32::{ExtendedPrivKey, IntoDerivationPath};
 use bitcoin::Network;
 use hkd32::mnemonic::{Phrase, Seed};

@@ -58,21 +58,25 @@ pub trait ContractInstance<Chain: CwEnv> {
 
 /// Trait that indicates that the contract can be instantiated with the associated message.
 pub trait InstantiableContract {
+    /// Instantiate message for the contract.
     type InstantiateMsg: Serialize + Debug;
 }
 
 /// Trait that indicates that the contract can be executed with the associated message.
 pub trait ExecutableContract {
+    /// Execute message for the contract.
     type ExecuteMsg: Serialize + Debug;
 }
 
 /// Trait that indicates that the contract can be queried with the associated message.
 pub trait QueryableContract {
+    /// Query message for the contract.
     type QueryMsg: Serialize + Debug;
 }
 
 /// Trait that indicates that the contract can be migrated with the associated message.
 pub trait MigratableContract {
+    /// Migrate message for the contract.
     type MigrateMsg: Serialize + Debug;
 }
 
@@ -168,6 +172,7 @@ impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrcU
 ///
 /// Clones the contract interface to prevent mutation of the original.
 pub trait CallAs<Chain: CwEnv>: CwOrcExecute<Chain> + ContractInstance<Chain> + Clone {
+    /// The sender type for environment
     type Sender: Clone;
 
     /// Set the sender for interactions with the contract.

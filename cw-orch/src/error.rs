@@ -3,7 +3,7 @@
 use thiserror::Error;
 
 #[cfg(feature = "daemon")]
-use crate::daemon::error::DaemonError;
+use crate::daemon::DaemonError;
 
 /// cw-orchestrator error wrapper using thiserror.
 #[derive(Error, Debug)]

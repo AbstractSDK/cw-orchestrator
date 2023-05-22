@@ -165,6 +165,8 @@ impl Gov {
     }
 }
 
+/// Proposal status
+#[allow(missing_docs)]
 pub enum GovProposalStatus {
     Unspecified = 0,
     DepositPeriod = 1,

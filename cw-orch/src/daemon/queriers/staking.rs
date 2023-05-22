@@ -44,7 +44,7 @@ impl Staking {
             staking,
             validators,
             QueryValidatorsRequest {
-                status: status.as_str().to_string(),
+                status: status.to_string(),
                 pagination: None,
             }
         );
@@ -271,13 +271,14 @@ pub enum StakingBondStatus {
     Bonded = 3,
 }
 
-impl StakingBondStatus {
-    pub fn as_str(&self) -> &'static str {
+impl ToString for StakingBondStatus {
+    /// Convert to string
+    fn to_string(&self) -> String {
         match self {
-            StakingBondStatus::Unspecified => "BOND_STATUS_UNSPECIFIED",
-            StakingBondStatus::Unbonded => "BOND_STATUS_UNBONDED",
-            StakingBondStatus::Unbonding => "BOND_STATUS_UNBONDING",
-            StakingBondStatus::Bonded => "BOND_STATUS_BONDED",
+            StakingBondStatus::Unspecified => "BOND_STATUS_UNSPECIFIED".to_string(),
+            StakingBondStatus::Unbonded => "BOND_STATUS_UNBONDED".to_string(),
+            StakingBondStatus::Unbonding => "BOND_STATUS_UNBONDING".to_string(),
+            StakingBondStatus::Bonded => "BOND_STATUS_BONDED".to_string(),
         }
     }
 }

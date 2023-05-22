@@ -1,3 +1,7 @@
+//! # Deploy
+//! 
+//! The `Deploy` trait allows developers to define how their application is deployed to a chain. 
+
 use crate::prelude::{CwEnv, CwOrchError};
 
 /// Indicates the ability to deploy an application to a mock chain.
@@ -47,6 +51,7 @@ use crate::prelude::{CwEnv, CwOrchError};
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: CwEnv>: Sized {
+    /// Error type returned by the deploy functions.
     type Error: From<CwOrchError>;
     /// Data required to deploy the application.
     type DeployData;

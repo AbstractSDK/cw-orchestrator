@@ -24,6 +24,7 @@ mod wasm_path {
     pub struct WasmPath(PathBuf);
 
     impl WasmPath {
+        /// Create a new WasmPath from a path to a WASM file.
         pub fn new(path: impl Into<PathBuf>) -> Result<Self, CwOrchError> {
             let path: PathBuf = path.into();
             assert!(
@@ -81,6 +82,7 @@ mod artifacts_dir {
             Self::new(dir)
         }
 
+        /// Create a new ArtifactsDir from a path to a directory containing WASM files.
         pub fn new(path: impl Into<PathBuf>) -> Self {
             let path: PathBuf = path.into();
             assert!(

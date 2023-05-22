@@ -1,19 +1,35 @@
-pub mod builder;
-pub mod chain_info;
-pub mod channel;
-pub mod core;
-pub mod error;
+//! # Daemon
+//! 
+//! This module contains the `Daemon` and `DaemonAsync` types. 
+//! 
+//! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
+
+mod builder;
+mod chain_info;
+mod channel;
+mod core;
+mod error;
+mod sender;
+mod sync;
+pub(crate) mod json_file;
+mod state;
+/// Custom traits for DaemonAsync contracts
+mod traits;
+mod tx_resp;
+
+// expose these as mods as they can grow
 pub mod networks;
 pub mod queriers;
-mod sender;
-pub mod sync;
-pub use self::core::DaemonAsync;
+
+pub use self::builder::*;
+pub use self::chain_info::*;
+pub use self::error::*;
+pub use self::sync::*;
+pub use self::traits::*;
+pub use self::core::*;
+pub use self::tx_resp::*;
+pub use self::state::*;
 pub use sender::Wallet;
-pub(crate) mod json_file;
-pub mod state;
-/// Custom traits for DaemonAsync contracts
-pub mod traits;
-pub mod tx_resp;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::cosmos::auth::v1beta1 as auth;
