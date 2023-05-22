@@ -1,19 +1,17 @@
-use crate::interchain::infrastructure::Port;
-use crate::interchain::infrastructure::NetworkId;
-use crate::interchain::interchain_env::InterchainEnv;
 use crate::daemon::error::DaemonError;
 use crate::daemon::sync::core::Daemon;
 use crate::interchain::hermes::Hermes;
+use crate::interchain::infrastructure::NetworkId;
+use crate::interchain::infrastructure::Port;
+use crate::interchain::interchain_env::InterchainEnv;
 use crate::interface_traits::ContractInstance;
 use crate::state::ChainState;
-
 
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Ibc;
 use crate::interchain::docker::DockerHelper;
 use crate::interchain::interchain_channel::InterchainChannel;
 use crate::interchain::IcResult;
-
 
 use tonic::transport::Channel;
 
@@ -209,23 +207,25 @@ impl InterchainChannelBuilder {
             channel_creation_tx_b.txhash,
         );
 
-
         // We create and interchain analysis environment and register our daemons in it
         let interchain_env = InterchainEnv::default()
             .add_custom_chain(self.chain_a.chain_id.clone().unwrap(), grpc_channel_a)?
             .add_custom_chain(self.chain_b.chain_id.clone().unwrap(), grpc_channel_b)?
             .clone();
 
-        interchain_env.await_ibc_execution(
-            self.chain_a.chain_id.clone().unwrap(),
-            channel_creation_tx_a.txhash.clone()
-        ).await?;
+        interchain_env
+            .await_ibc_execution(
+                self.chain_a.chain_id.clone().unwrap(),
+                channel_creation_tx_a.txhash.clone(),
+            )
+            .await?;
 
-
-        interchain_env.await_ibc_execution(
-            self.chain_b.chain_id.clone().unwrap(),
-            channel_creation_tx_b.txhash.clone()
-        ).await?;
+        interchain_env
+            .await_ibc_execution(
+                self.chain_b.chain_id.clone().unwrap(),
+                channel_creation_tx_b.txhash.clone(),
+            )
+            .await?;
 
         Ok(interchain)
     }

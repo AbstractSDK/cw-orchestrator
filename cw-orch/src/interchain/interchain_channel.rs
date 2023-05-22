@@ -11,7 +11,7 @@ use tonic::transport::Channel;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Node;
 
-use super::infrastructure::{Port, ChannelId, NetworkId};
+use super::infrastructure::{ChannelId, NetworkId, Port};
 
 // type is from cosmos_sdk_proto::ibc::core::channel::v1::acknowledgement::Response
 // We copy it here to implement serialization for this enum (which is not provided by the proto in the above crate)
@@ -20,7 +20,6 @@ pub enum AckResponse {
     Result(String), // This is a base64 string
     Error(String),
 }
-
 
 #[derive(Debug, Clone)]
 pub struct TxId {
@@ -71,10 +70,7 @@ impl InterchainChannel {
         }
     }
 
-    fn get_ordered_ports_from(
-        &self,
-        from: NetworkId,
-    ) -> Result<(IbcPort, IbcPort), DaemonError> {
+    fn get_ordered_ports_from(&self, from: NetworkId) -> Result<(IbcPort, IbcPort), DaemonError> {
         if from == self.port_a.chain_id {
             Ok((self.port_a.clone(), self.port_b.clone()))
         } else if from == self.port_b.chain_id {
@@ -300,8 +296,7 @@ impl InterchainChannel {
 	    ))))
     }
 
-
-    /// This functions follows an IBC packet on the distant chain and back on its origin chain. It returns all encountered tx hashes 
+    /// This functions follows an IBC packet on the distant chain and back on its origin chain. It returns all encountered tx hashes
     /// 1. Receive packet. We use the identification of the packet to find the tx in which the packet was received
     ///     We make sure that only one transaction tracks receiving this packet.
     ///         If not, we sent out an error (this error actually comes from the code not identifying an IBC packet properly)

@@ -55,11 +55,11 @@ impl InterchainInfrastructure {
         )?;
 
         InterchainInfrastructure::setup_interchain_log(&daemons);
-        
+
         Ok(Self { daemons })
     }
 
-    pub fn setup_interchain_log(daemons: &HashMap<NetworkId, Daemon>){
+    pub fn setup_interchain_log(daemons: &HashMap<NetworkId, Daemon>) {
         let encoder = Box::new(PatternEncoder::new(
             "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
         ));
@@ -159,17 +159,25 @@ impl InterchainInfrastructure {
         Ok(daemons)
     }
 
-    pub async fn await_ibc_execution(&self, chain_id: NetworkId, packet_send_tx_hash: String) -> Result<(), DaemonError>{
+    pub async fn await_ibc_execution(
+        &self,
+        chain_id: NetworkId,
+        packet_send_tx_hash: String,
+    ) -> Result<(), DaemonError> {
         // We crate an interchain env
         let mut interchain_env = InterchainEnv::default();
 
-         for daemon in self.daemons.values() {
-            interchain_env = interchain_env.add_custom_chain(daemon.state().chain_id.clone(), daemon.clone())?.clone();
+        for daemon in self.daemons.values() {
+            interchain_env = interchain_env
+                .add_custom_chain(daemon.state().chain_id.clone(), daemon.clone())?
+                .clone();
         }
 
         // We follow the trail
-        interchain_env.await_ibc_execution(chain_id ,packet_send_tx_hash).await?;
-            
+        interchain_env
+            .await_ibc_execution(chain_id, packet_send_tx_hash)
+            .await?;
+
         Ok(())
     }
 }

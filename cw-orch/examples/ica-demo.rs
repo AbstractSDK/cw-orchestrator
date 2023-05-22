@@ -35,27 +35,24 @@
 use cw_orch::prelude::CwOrcInstantiate;
 use cw_orch::prelude::CwOrcQuery;
 
-use cw_orch::prelude::TxHandler;
-use cw_orch::prelude::CwOrcExecute;
-use cw_orch::state::ChainState;
-use cw_orch::prelude::CwOrcUpload;
-use cw_orch::prelude::ContractInstance;
-use cw_orch::daemon::ibc_tracker::IbcTracker;
-use crate::prelude::Uploadable;
-use crate::environment::CwEnv;
 use crate::contract::Contract;
-use crate::prelude::queriers::Bank;
-use crate::daemon::sync::core::Daemon;
-use crate::prelude::interchain_channel_builder::InterchainChannelBuilder;
-use crate::daemon::ibc_tracker::IbcTrackerConfigBuilder;
 use crate::daemon::ibc_tracker::CwIbcContractState;
-use crate::prelude::InterchainInfrastructure;
+use crate::daemon::ibc_tracker::IbcTrackerConfigBuilder;
 use crate::daemon::networks::*;
+use crate::daemon::sync::core::Daemon;
+use crate::environment::CwEnv;
+use crate::prelude::interchain_channel_builder::InterchainChannelBuilder;
+use crate::prelude::queriers::Bank;
+use crate::prelude::InterchainInfrastructure;
+use crate::prelude::Uploadable;
 use cosmwasm_std::{CosmosMsg, Empty};
-use cw_orch::{
-    prelude::WasmPath,
-    *,
-};
+use cw_orch::daemon::ibc_tracker::IbcTracker;
+use cw_orch::prelude::ContractInstance;
+use cw_orch::prelude::CwOrcExecute;
+use cw_orch::prelude::CwOrcUpload;
+use cw_orch::prelude::TxHandler;
+use cw_orch::state::ChainState;
+use cw_orch::{prelude::WasmPath, *};
 
 use simple_ica_controller::msg::{self as controller_msgs};
 use simple_ica_host::msg::{self as host_msgs};

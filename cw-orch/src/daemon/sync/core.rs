@@ -1,6 +1,6 @@
 use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
 use crate::{
-    daemon::{error::DaemonError, state::DaemonState, channel::ChannelAccess},
+    daemon::{channel::ChannelAccess, error::DaemonError, state::DaemonState},
     environment::{ChainUpload, TxHandler},
     prelude::{
         queriers::{CosmWasm, DaemonQuerier},
