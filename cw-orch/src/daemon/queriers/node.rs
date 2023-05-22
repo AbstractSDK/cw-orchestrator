@@ -10,7 +10,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-const MAX_TX_QUERY_RETRIES: usize = 5;
+const MAX_TX_QUERY_RETRIES: usize = 10;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
