@@ -19,5 +19,4 @@ Cargo.lock
 **/profraw_data/
 gen_cov_test
 
-**/bin/
 **/logs/
