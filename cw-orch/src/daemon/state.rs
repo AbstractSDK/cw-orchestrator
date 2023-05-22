@@ -41,8 +41,8 @@ impl DaemonState {
         let grpc_channel =
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
-        // check if STATE_FILE en var is configured, fail if not
-        let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
+        // check if STATE_FILE en var is configured, default to state.json
+        let mut json_file_path = env::var("STATE_FILE").unwrap_or("state.json".to_string());
 
         // if the network we are connecting is a local kind, add it to the fn
         if chain_data.network_type == ChainKind::Local.to_string() {
