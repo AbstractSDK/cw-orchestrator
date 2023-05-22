@@ -40,7 +40,7 @@ use super::state::MockState;
 /// # use cosmwasm_std::{Addr, coin, Uint128};
 /// use cw_orch::prelude::{Mock, StateInterface};
 /// // We just use the MockState as an example here, but you can implement your own state struct.
-/// use cw_orch::mock::state::MockState as CustomState;
+/// use cw_orch::mock::MockState as CustomState;
 ///
 /// let sender = Addr::unchecked("sender");
 /// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
