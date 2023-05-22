@@ -1,7 +1,7 @@
 use counter_contract::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
 use counter_contract::{
     msg::{GetCountResponse, QueryMsg},
-    CounterExecuteMsgFns, CounterQueryMsgFns,
+    CounterQueryMsgFns,
 };
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
@@ -12,10 +12,13 @@ use cosmwasm_std::Addr;
 const USER: &str = "user";
 const ADMIN: &str = "admin";
 // ANCHOR: integration_test
+// ANCHOR: setup
 /// Instantiate the contract in any CosmWasm environment
 fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
+    // ANCHOR: constructor
     // Construct the counter interface
     let contract = CounterContract::new(CONTRACT_NAME, chain.clone());
+    // ANCHOR_END: constructor
     let admin = Addr::unchecked(ADMIN);
 
     // Upload the contract
@@ -38,6 +41,7 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
     // Return the interface
     contract
 }
+// ANCHOR_END: setup
 
 #[test]
 fn count() {
@@ -56,9 +60,13 @@ fn count() {
         // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
         .increment()
         .unwrap();
-
-    // Get the count (auto-generated function provided by CounterQueryMsgFns)
+    
+    // ANCHOR: query
+    // Get the count.
+    use counter_contract::CounterQueryMsgFns;
     let count1 = contract.get_count().unwrap();
+    // ANCHOR_END: query
+
     // or query it manually
     let count2: GetCountResponse = contract.query(&QueryMsg::GetCount {}).unwrap();
 
@@ -66,5 +74,10 @@ fn count() {
 
     // Check the count
     assert_eq!(count1.count, 2);
+    // ANCHOR: reset
+    // Reset
+    use counter_contract::CounterExecuteMsgFns;
+    contract.reset(0).unwrap();
+    // ANCHOR_END: reset
 }
 // ANCHOR_END: integration_test

@@ -9,8 +9,12 @@ pub const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // ANCHOR: interface_entry
+// ANCHOR: entry_point_line
 #[cfg_attr(feature = "export", entry_point)]
+// ANCHOR: entry_point_line
+// ANCHOR: interface_line
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+// ANCHOR: interface_line
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,

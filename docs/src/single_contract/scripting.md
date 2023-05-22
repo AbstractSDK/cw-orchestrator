@@ -1,66 +1,53 @@
 # Writing and Executing Scripts
 
-Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it.
+Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it on a real blockchain. We'll do this by adding a `bin` folder in our contract and add our deploy script there.
 
 ## Setup
 
-Like before, we're going to setup a new folder for our scripts. This time, we'll call it `scripts` and initialize it as a binary crate:
+Before we get going we need to add the `bin` folder and tell cargo that it contains scripts. We can do this by creating a folder named bin in `counter` and creating a file in it called `deploy.rs`
 
 ```bash
-cargo init --bin scripts
+mkdir counter/bin
+touch counter/bin/deploy.rs
 ```
 
-> If your cargo project is a workspace, be sure to add `scripts` to the [workspace].members array at the workspace root.
+Then we want to add a new feature to our crate. We will call the feature `deploy` and it will enable interface feature as well as setting the `daemon` feature on `cw-orch`.
 
-Your scripts will have basically the same dependencies as your contract interfaces, but with a few additions:
+```toml
+[features]
+# ...
+deploy = ["interface", "cw-orch/daemon", "dotenv", "env_logger"]
 
-```bash
-cargo add --path ../packages/interfaces
+
+[dependencies]
+# ...
+# Deps for deployment
+dotenv = { version = "0.15.0", optional = true } # Enables loading of .env files
+env_logger = { version = "0.10.0", optional = true } # Enables logging to stdout
 ```
 
-and also add the `dotenv` crate:
+Finally, we need to add the bin to our `Cargo.toml` file. Add put a feature requirement on it:
 
-```bash
-cargo add anyhow dotenv log
+```toml
+[[bin]]
+name = "deploy"
+path = "bin/deploy.rs"
+required-features = ["deploy"]
 ```
 
-and, we must enable the `daemon` feature on `cw_orch`
-
-```bash
-cargo add cw_orch --features daemon
-```
+Now we're ready to start writing our script.
 
 ## Main Function
 
-Now that we have our dependencies setup, we can start writing our script. Either create a new file in the `src` directory of the `scripts/src` package, or use the `main.rs` file that was created by default.
+With the setup done, we can start writing our script. Our initial plan is to deploy the counter contract to the chain. We'll start by writing a main function that will call our deploy function.
 
-This function is mostly just boilerplate, so you can copy and paste it into your new script file. It will just call your function and give you nicer error traces:
-
-```rust
-fn main() {
-    dotenv().ok();
-    env_logger::init();
-
-    use dotenv::dotenv;
-
-    if let Err(ref err) = deploy_contract() {
-        log::error!("{}", err);
-        err.chain()
-            .skip(1)
-            .for_each(|cause| log::error!("because: {}", cause));
-
-        // The backtrace is not always generated. Try to run this example
-        // with `$env:RUST_BACKTRACE=1`.
-        // log::debug!("backtrace: {:?}", err.backtrace());
-
-        ::std::process::exit(1);
-    }
-}
+```rust,ignore
+{{#include ../../contracts/counter/bin/deploy.rs}}
 ```
 
 ## Deployment Function
 
-First, we'll define a function that will deploy our contract to the chain. This function will setup the environment (connecting to the chain), deploy the contract, and return a `Result` with the contract address.
+Our `main` function will deploy our contract to Juno testnet. This function will setup the environment (connecting to the chain), deploy the contract, and return a `Result` with the contract address.
 
 ```rust
 // scripts/src/my_contract.rs

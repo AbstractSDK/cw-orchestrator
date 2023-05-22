@@ -2,12 +2,12 @@
 
 - [Introduction](intro.md)
 - [Quick-start](./quick_start.md)
-<!-- - [Tutorial](./tutorial/index.md)
-  - [Interfaces](./tutorial/interfaces.md)
-  - [Environment Vars](./tutorial/env-variable.md)
-  - [Scripting](./tutorial/scripting.md)
-  - [Integration Tests](./tutorial/integration-tests.md)
-  - [Product Integrations](./tutorial/integration.md) -->
+- [Tutorial: Contract](./single_contract/index.md)
+  - [Interfaces](./single_contract/interfaces.md)
+  - [Environment Vars](./single_contract/env-variable.md)
+  - [Scripting](./single_contract/scripting.md)
+  - [Integration Tests](./single_contract/integration-tests.md)
+  - [Product Integrations](./single_contract/integration.md)
 - [Advanced](./advanced/index.md)
   - [CI/CD](./advanced/ci-cd.md)
 - [Contributing](./contributing.md)
