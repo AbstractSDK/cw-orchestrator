@@ -1,4 +1,4 @@
-//! This file re-exports parts of the API of the cw-orchestrator crate to make use of it easier.
+//! Glob (*) import me to get all the types you need to get started with cw-orch.
 //!
 //! ```rust
 //! use cw_orch::prelude::*;
