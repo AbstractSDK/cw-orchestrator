@@ -6,10 +6,10 @@
 pub use cw_orch_contract_derive::{interface, interface_entry_point};
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 
-// Re-export anyhow for the macro
+/// Re-export anyhow for use in the macros
 pub extern crate anyhow;
 
-// Re-export tokio if the daemon feature is enabled
+/// Re-export tokio, the async runtime when using daemons.
 #[cfg(feature = "daemon")]
 pub extern crate tokio;
 
