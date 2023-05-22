@@ -1,6 +1,4 @@
-//! # Daemon
-//!
-//! This module contains the `Daemon` and `DaemonAsync` types.
+//! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
 
@@ -23,6 +21,7 @@ pub mod queriers;
 
 pub use self::builder::*;
 pub use self::chain_info::*;
+pub use self::channel::*;
 pub use self::core::*;
 pub use self::error::*;
 pub use self::state::*;

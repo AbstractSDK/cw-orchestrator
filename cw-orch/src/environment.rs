@@ -1,6 +1,4 @@
-//! # Environment
-//!
-//! These traits should be implemented for each supported execution environment.
+//! Transactional traits for execution environments.
 
 use crate::{
     error::CwOrchError,

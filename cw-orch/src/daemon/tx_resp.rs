@@ -253,7 +253,7 @@ impl From<Attribute> for TxResultBlockAttribute {
     }
 }
 
-/// Parse a string timestamp into a DateTime<Utc>
+/// Parse a string timestamp into a `DateTime<Utc>`
 pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, DaemonError> {
     let len = s.len();
 

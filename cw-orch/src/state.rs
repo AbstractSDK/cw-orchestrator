@@ -1,6 +1,4 @@
-//! # Environment State
-//!
-//! This module contains the state interface for the supported environments.
+//! State interfaces for execution environments.
 
 use crate::error::CwOrchError;
 use cosmwasm_std::Addr;

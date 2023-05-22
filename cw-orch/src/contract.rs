@@ -1,6 +1,4 @@
-//! # Contract
-//!
-//! The `Contract` struct is the main entry point for interacting with a contract. It's used as the base for generating contract interfaces.
+//! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use crate::environment::ChainUpload;
 use crate::prelude::{CwEnv, Uploadable};
 use crate::{
