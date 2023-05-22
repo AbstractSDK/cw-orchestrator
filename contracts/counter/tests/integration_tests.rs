@@ -1,8 +1,6 @@
 // ANCHOR: all
+use counter_contract::msg::{GetCountResponse, QueryMsg};
 use counter_contract::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
-use counter_contract::{
-    msg::{GetCountResponse, QueryMsg},
-};
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
 
@@ -61,7 +59,7 @@ fn count() {
         // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
         .increment()
         .unwrap();
-    
+
     // ANCHOR: query
     // Get the count.
     use counter_contract::CounterQueryMsgFns;

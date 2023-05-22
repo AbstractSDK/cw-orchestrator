@@ -1,12 +1,12 @@
 #![allow(unused)]
 // ANCHOR: custom_interface
 use cw_orch::interface;
-use cw_orch::prelude::*;
 use cw_orch::prelude::queriers::Node;
+use cw_orch::prelude::*;
 
-use crate::CounterContract;
 use crate::contract::CONTRACT_NAME;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::CounterContract;
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct Counter;
@@ -40,29 +40,27 @@ impl Counter<Daemon> {
         let daemon = self.get_chain();
         let rt = daemon.rt_handle.clone();
 
-        rt.block_on(
-            async {
-                // Get the node query client, there are a lot of other clients available.
-                let node = daemon.query_client::<Node>();
-                let mut latest_block = node.latest_block().await.unwrap() ;
-                
-                while latest_block.header.height.value() < 100 {
-                    // wait for the next block
-                    daemon.next_block().unwrap();
-                    latest_block = node.latest_block().await.unwrap() ;
-                }
+        rt.block_on(async {
+            // Get the node query client, there are a lot of other clients available.
+            let node = daemon.query_client::<Node>();
+            let mut latest_block = node.latest_block().await.unwrap();
+
+            while latest_block.header.height.value() < 100 {
+                // wait for the next block
+                daemon.next_block().unwrap();
+                latest_block = node.latest_block().await.unwrap();
             }
-        );
+        });
 
         let contract = CounterContract::new(CONTRACT_NAME, daemon.clone());
 
-         // Upload the contract
+        // Upload the contract
         contract.upload().unwrap();
 
         // Instantiate the contract
         let msg = InstantiateMsg { count: 1i32 };
         contract.instantiate(&msg, None, None).unwrap();
-        
+
         Ok(())
     }
 }
