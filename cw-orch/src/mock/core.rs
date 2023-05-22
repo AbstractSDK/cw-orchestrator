@@ -43,7 +43,7 @@ use super::state::MockState;
 /// use cw_orch::mock::state::MockState as CustomState;
 ///
 /// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new_custom(&sender, CustomState::new()).unwrap();
+/// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
 /// ```
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
