@@ -1,6 +1,6 @@
 # Interfaces
 
-Interfaces are virtual wrappers around your contract. They allow you to interact with your contract in a type-safe way, and provide a convenient way to reason about contract interactions.
+Interfaces are virtual wrappers around CosmWasm contracts. They allow you to interact with your contracts in a type-safe way, and provide a convenient way to reason about contract interactions. Interfaces are the core reason why we built cw-orchestrator and we hope that you'll find them as useful as we do.
 
 ## Setup
 
@@ -8,7 +8,7 @@ Before we can create an interface we need to add cw-orch to the contract's `Carg
 
 ```shell
 $ cargo add --optional cw-orch
-> Adding cw-orch v0.10.0 to optional dependencies.
+> Adding cw-orch v0.11.0 to optional dependencies.
 ```
 
 or add it manually to the `counter/Cargo.toml` file:
@@ -18,7 +18,7 @@ or add it manually to the `counter/Cargo.toml` file:
 cw-orch = {version = "0.11.0", optional = true } # Latest version at time of writing
 ```
 
-We add the dependency as an optional dependency to ensure that it is not included in the wasm artifact of the contract. This way there are no trust assumptions made about the code added by `cw-orch`, making it safe to use for production contracts.
+We add `cw-orch` as an optional dependency to ensure that it is not included in the wasm artifact of the contract. This way there are no trust assumptions made about the code added by `cw-orch`, making it safe to use for production contracts.
 
 However, we will need a way to enable the dependency when we want to use it. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
 
