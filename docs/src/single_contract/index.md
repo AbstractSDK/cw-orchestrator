@@ -46,5 +46,5 @@ Following this example, the directory structure should eventually look like:
   - Configure your mnemonics and log settings.
 - **[Scripting](./scripting.md)**
   - Write runnable scripts with your interfaces.
-- **[Integration](./integration.md)**
-  - Export a deployment of your application for use in integration testing.
+- **[Integration Tests](./integration-tests.md)**
+  - Write an integration test for your contract.

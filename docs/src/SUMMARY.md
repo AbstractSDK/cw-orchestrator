@@ -7,7 +7,7 @@
   - [Environment Vars](./single_contract/env-variable.md)
   - [Scripting](./single_contract/scripting.md)
   - [Integration Tests](./single_contract/integration-tests.md)
-  - [Product Integrations](./single_contract/integration.md)
+- [Tutorial: Workspace](./workspace/index.md)
 - [Advanced](./advanced/index.md)
   - [CI/CD](./advanced/ci-cd.md)
 - [Contributing](./contributing.md)

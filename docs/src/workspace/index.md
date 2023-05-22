@@ -1,4 +1,6 @@
-# Project Tutorial
+# Workspace Tutorial
+
+**WIP**
 
 Following this example, the project's structure should look like:
 
