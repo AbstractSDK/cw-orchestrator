@@ -1,6 +1,6 @@
-//! # Deploy
-//!
-//! The `Deploy` trait allows developers to define how their application is deployed to a chain.
+//! Define how an application is deployed to a chain.
+//! 
+//! Allows for sharing application interfaces and test setups.
 
 use crate::prelude::{CwEnv, CwOrchError};
 
