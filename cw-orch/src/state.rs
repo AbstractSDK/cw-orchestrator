@@ -1,5 +1,5 @@
 //! # Environment State
-//! 
+//!
 //! This module contains the state interface for the supported environments.
 
 use crate::error::CwOrchError;

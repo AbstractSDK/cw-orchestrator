@@ -41,14 +41,16 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    DaemonAsyncBuilder,
-    DaemonAsync,
     networks,
     queriers,
-    // expose the sync variants
-    DaemonBuilder, Daemon,
     // sync helpers
-    ConditionalMigrate, ConditionalUpload,
+    ConditionalMigrate,
+    ConditionalUpload,
+    Daemon,
+    DaemonAsync,
+    DaemonAsyncBuilder,
+    // expose the sync variants
+    DaemonBuilder,
 };
 
 /// Re-export trait and data required to fetch daemon data from chain-registry

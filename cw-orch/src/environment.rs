@@ -1,5 +1,5 @@
 //! # Environment
-//! 
+//!
 //! These traits should be implemented for each supported execution environment.
 
 use crate::{

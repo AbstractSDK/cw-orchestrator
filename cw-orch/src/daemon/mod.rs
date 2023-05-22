@@ -1,7 +1,7 @@
 //! # Daemon
-//! 
-//! This module contains the `Daemon` and `DaemonAsync` types. 
-//! 
+//!
+//! This module contains the `Daemon` and `DaemonAsync` types.
+//!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
 
 mod builder;
@@ -9,10 +9,10 @@ mod chain_info;
 mod channel;
 mod core;
 mod error;
-mod sender;
-mod sync;
 pub(crate) mod json_file;
+mod sender;
 mod state;
+mod sync;
 /// Custom traits for DaemonAsync contracts
 mod traits;
 mod tx_resp;
@@ -23,12 +23,12 @@ pub mod queriers;
 
 pub use self::builder::*;
 pub use self::chain_info::*;
+pub use self::core::*;
 pub use self::error::*;
+pub use self::state::*;
 pub use self::sync::*;
 pub use self::traits::*;
-pub use self::core::*;
 pub use self::tx_resp::*;
-pub use self::state::*;
 pub use sender::Wallet;
 
 pub(crate) mod cosmos_modules {
