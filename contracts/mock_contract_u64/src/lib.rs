@@ -1,14 +1,8 @@
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-use cosmwasm_std::to_binary;
-use cosmwasm_std::Binary;
-use cosmwasm_std::Deps;
-use cosmwasm_std::DepsMut;
-use cosmwasm_std::MessageInfo;
-use cosmwasm_std::Response;
-use cosmwasm_std::StdError;
-use cosmwasm_std::StdResult;
-use cosmwasm_std::{entry_point, Env};
+use cosmwasm_std::{
+    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+};
 
 #[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]

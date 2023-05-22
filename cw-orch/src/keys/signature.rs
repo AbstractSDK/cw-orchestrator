@@ -1,8 +1,7 @@
 use crate::daemon::DaemonError;
 use base64::engine::{general_purpose::STANDARD, Engine};
 use ring::digest::SHA256;
-use secp256k1::Message;
-use secp256k1::Secp256k1;
+use secp256k1::{Message, Secp256k1};
 pub struct Signature {}
 impl Signature {
     pub fn verify<C: secp256k1::Verification + secp256k1::Context>(

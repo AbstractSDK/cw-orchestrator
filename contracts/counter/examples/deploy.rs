@@ -1,8 +1,5 @@
-use counter_contract::msg::InstantiateMsg;
-use counter_contract::CounterContract;
-use cw_orch::anyhow;
-use cw_orch::prelude::*;
-use cw_orch::tokio;
+use counter_contract::{msg::InstantiateMsg, CounterContract};
+use cw_orch::{anyhow, prelude::*, tokio};
 use tokio::runtime::Runtime;
 
 /// Script that registers the first Account in abstract (our Account)

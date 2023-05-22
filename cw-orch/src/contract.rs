@@ -1,8 +1,9 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
-use crate::environment::ChainUpload;
-use crate::prelude::{CwEnv, Uploadable};
 use crate::{
-    environment::TxResponse, error::CwOrchError, index_response::IndexResponse,
+    environment::{ChainUpload, TxResponse},
+    error::CwOrchError,
+    index_response::IndexResponse,
+    prelude::{CwEnv, Uploadable},
     state::StateInterface,
 };
 use cosmwasm_std::{Addr, Coin};

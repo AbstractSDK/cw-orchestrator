@@ -18,8 +18,7 @@ impl DaemonQuerier for CosmWasm {
 impl CosmWasm {
     /// Query code_id by hash
     pub async fn code_id_hash(&self, code_id: u64) -> Result<String, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryCodeRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodeRequest { code_id };
         let resp = client.code(request).await?.into_inner();
@@ -33,8 +32,7 @@ impl CosmWasm {
         &self,
         address: impl Into<String>,
     ) -> Result<cosmos_modules::cosmwasm::ContractInfo, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryContractInfoRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryContractInfoRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryContractInfoRequest {
             address: address.into(),
@@ -50,8 +48,7 @@ impl CosmWasm {
         address: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::cosmwasm::QueryContractHistoryResponse, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryContractHistoryRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryContractHistoryRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryContractHistoryRequest {
             address: address.into(),
@@ -66,8 +63,7 @@ impl CosmWasm {
         address: impl Into<String>,
         query_data: Vec<u8>,
     ) -> Result<Vec<u8>, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QuerySmartContractStateRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QuerySmartContractStateRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QuerySmartContractStateRequest {
             address: address.into(),
@@ -86,8 +82,7 @@ impl CosmWasm {
         address: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::cosmwasm::Model>, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryAllContractStateRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryAllContractStateRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryAllContractStateRequest {
             address: address.into(),
@@ -105,8 +100,7 @@ impl CosmWasm {
         &self,
         code_id: u64,
     ) -> Result<cosmos_modules::cosmwasm::CodeInfoResponse, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryCodeRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodeRequest { code_id };
         Ok(client.code(request).await?.into_inner().code_info.unwrap())
@@ -117,8 +111,7 @@ impl CosmWasm {
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::cosmwasm::CodeInfoResponse>, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryCodesRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodesRequest { pagination };
         Ok(client.codes(request).await?.into_inner().code_infos)
@@ -128,8 +121,7 @@ impl CosmWasm {
     pub async fn pinned_codes(
         &self,
     ) -> Result<cosmos_modules::cosmwasm::QueryPinnedCodesResponse, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryPinnedCodesRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryPinnedCodesRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryPinnedCodesRequest { pagination: None };
         Ok(client.pinned_codes(request).await?.into_inner())
@@ -140,8 +132,7 @@ impl CosmWasm {
         &self,
         code_id: u64,
     ) -> Result<cosmos_modules::cosmwasm::QueryContractsByCodeResponse, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryContractsByCodeRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryContractsByCodeRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryContractsByCodeRequest {
             code_id,
@@ -156,8 +147,7 @@ impl CosmWasm {
         address: impl Into<String>,
         query_data: Vec<u8>,
     ) -> Result<cosmos_modules::cosmwasm::QueryRawContractStateResponse, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryRawContractStateRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryRawContractStateRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryRawContractStateRequest {
             address: address.into(),
@@ -170,8 +160,7 @@ impl CosmWasm {
     pub async fn params(
         &self,
     ) -> Result<cosmos_modules::cosmwasm::QueryParamsResponse, DaemonError> {
-        use cosmos_modules::cosmwasm::query_client::*;
-        use cosmos_modules::cosmwasm::QueryParamsRequest;
+        use cosmos_modules::cosmwasm::{query_client::*, QueryParamsRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         Ok(client.params(QueryParamsRequest {}).await?.into_inner())
     }

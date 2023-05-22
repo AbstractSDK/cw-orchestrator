@@ -1,13 +1,16 @@
 #![allow(unused)]
 // ANCHOR: custom_interface
-use cw_orch::anyhow::Result;
-use cw_orch::interface;
-use cw_orch::prelude::queriers::Node;
-use cw_orch::prelude::*;
+use cw_orch::{
+    anyhow::Result,
+    interface,
+    prelude::{queriers::Node, *},
+};
 
-use crate::contract::CONTRACT_NAME;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::CounterContract;
+use crate::{
+    contract::CONTRACT_NAME,
+    msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
+    CounterContract,
+};
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct Counter;

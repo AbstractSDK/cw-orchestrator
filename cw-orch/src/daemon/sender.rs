@@ -1,10 +1,12 @@
-use super::chain_info::ChainKind;
-use super::cosmos_modules::{self, auth::BaseAccount};
-use super::queriers::DaemonQuerier;
-use super::queriers::Node;
-use super::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
-use crate::daemon::core::parse_cw_coins;
-use crate::keys::private::PrivateKey;
+use super::{
+    chain_info::ChainKind,
+    cosmos_modules::{self, auth::BaseAccount},
+    error::DaemonError,
+    queriers::{DaemonQuerier, Node},
+    state::DaemonState,
+    tx_resp::CosmTxResponse,
+};
+use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,

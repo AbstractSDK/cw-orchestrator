@@ -1,6 +1,9 @@
 // ANCHOR: all
-use counter_contract::msg::{GetCountResponse, QueryMsg};
-use counter_contract::{contract::CONTRACT_NAME, msg::InstantiateMsg, CounterContract};
+use counter_contract::{
+    contract::CONTRACT_NAME,
+    msg::{GetCountResponse, InstantiateMsg, QueryMsg},
+    CounterContract,
+};
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
 

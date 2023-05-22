@@ -56,8 +56,7 @@ mod wasm_path {
 mod artifacts_dir {
     use std::{env, fs, path::PathBuf};
 
-    use crate::error::CwOrchError;
-    use crate::paths::wasm_path::WasmPath;
+    use crate::{error::CwOrchError, paths::wasm_path::WasmPath};
 
     /// Points to a directory containing WASM files
     ///

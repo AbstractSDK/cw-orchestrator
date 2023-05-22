@@ -1,5 +1,4 @@
-use mock_contract::{ExecuteMsgFns, QueryMsgFns};
-use mock_contract::{InstantiateMsg, MockContract};
+use mock_contract::{ExecuteMsgFns, InstantiateMsg, MockContract, QueryMsgFns};
 
 use cosmwasm_std::Event;
 
