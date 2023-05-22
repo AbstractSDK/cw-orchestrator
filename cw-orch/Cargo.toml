@@ -12,6 +12,10 @@ readme = "../README.md"
 
 exclude = [".env"]
 
+[package.metadata.docs.rs]
+# passes all-features to cargo when building the docs.
+all-features = true
+
 [[example]]
 name = "mock_test"
 
