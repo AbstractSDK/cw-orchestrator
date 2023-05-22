@@ -11,7 +11,7 @@ use cosmwasm_std::StdResult;
 use cosmwasm_std::{entry_point, Env};
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn instantiate(
     _deps: DepsMut,
     _env: Env,
@@ -22,7 +22,7 @@ pub fn instantiate(
 }
 
 #[entry_point]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
@@ -41,7 +41,7 @@ pub fn execute(
 }
 
 #[entry_point]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
@@ -50,7 +50,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[entry_point]
-#[cfg_attr(feature = "cw-orch", cw_orch::interface_entry_point)]
+#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     if msg.t.eq("success") {
         Ok(Response::new())

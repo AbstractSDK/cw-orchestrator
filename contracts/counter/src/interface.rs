@@ -3,6 +3,7 @@
 use cw_orch::interface;
 use cw_orch::prelude::queriers::Node;
 use cw_orch::prelude::*;
+use cw_orch::anyhow::Result;
 
 use crate::contract::CONTRACT_NAME;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
@@ -36,7 +37,7 @@ impl<Chain: CwEnv> Uploadable for Counter<Chain> {
 // ANCHOR: daemon
 impl Counter<Daemon> {
     /// Deploys the counter contract at a specific block height
-    pub fn await_launch(&self) -> anyhow::Result<()> {
+    pub fn await_launch(&self) -> Result<()> {
         let daemon = self.get_chain();
         let rt = daemon.rt_handle.clone();
 

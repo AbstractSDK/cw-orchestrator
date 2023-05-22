@@ -4,22 +4,19 @@ version = "0.11.0"
 description = "counter constract"
 keywords = ["cosmwasm", "blockchain"]
 edition = { workspace = true }
-resolver = "2"
 exclude = [".env"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[[bin]]
+[[example]]
 name = "deploy"
 path = "bin/deploy.rs"
-required-features = ["deploy"]
 
 [features]
 default = ["export"]
 export = []
-interface = ["cw-orch"]
-deploy = ["interface", "cw-orch/daemon", "dotenv", "env_logger"]
+interface = ["dep:cw-orch"]
 
 [dependencies]
 cosmwasm-std = { workspace = true }
@@ -28,16 +25,15 @@ cw2 = "1.0"
 cosmwasm-schema = "1.2"
 schemars = "0.8.10"
 thiserror = { version = "1.0.21" }
-anyhow = { workspace = true }
 serde = { workspace = true }
 serde_json = "1.0.79"
-log = "0.4.14"
 cw-orch = { path = "../../cw-orch", optional = true }
-
-# Deps for deployment
-dotenv = { version = "0.15.0", optional = true }
-env_logger = { version = "0.10.0", optional = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
 counter-contract = { path = ".", features = ["interface"] }
+# Deps for deployment
+dotenv = { version = "0.15.0" }
+env_logger = { version = "0.10.0" }
+cw-orch = { path = "../../cw-orch", features = ["daemon"] }
+
