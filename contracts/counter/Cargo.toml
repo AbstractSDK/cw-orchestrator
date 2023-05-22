@@ -32,4 +32,3 @@ counter-contract = { path = ".", features = ["interface"] }
 dotenv = { version = "0.15.0" }
 env_logger = { version = "0.10.0" }
 cw-orch = { path = "../../cw-orch", features = ["daemon"] }
-
