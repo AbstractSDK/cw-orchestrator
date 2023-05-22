@@ -112,6 +112,6 @@ mock-contract = { path = "../contracts/mock_contract", features = [
   "interface",
 ] }
 mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
-  "cw-orch",
+  "interface",
 ] }
 serial_test = "2.0.0"
