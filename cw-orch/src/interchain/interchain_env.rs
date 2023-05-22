@@ -41,7 +41,7 @@ impl InterchainEnv{
 	pub fn add_custom_chain(&mut self, chain_id: NetworkId, channel: impl ChannelAccess) -> Result<&mut Self>{
 		// We check the chain is not registered yet in the object
 		if self.registered_chains.contains_key(&chain_id){
-			bail!("You can't register a chain twice in interchain env");
+			bail!("You can't register a chain twice in an interchain env struct");
 		}
 		self.registered_chains.insert(chain_id, channel.channel());
 		Ok(self)
