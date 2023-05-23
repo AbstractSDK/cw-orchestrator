@@ -15,7 +15,7 @@ pub use archway::CONSTANTINE_1;
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
 pub use kujira::HARPOON_4;
-pub use neutron::BARYON_1;
+pub use neutron::{NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_4};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 
@@ -38,7 +38,8 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         LOCAL_TERRA,
         INJECTIVE_888,
         CONSTANTINE_1,
-        BARYON_1,
+        PION_1,
+        NEUTRON_1,
         INJECTIVE_1,
         HARPOON_4,
         OSMO_4,
