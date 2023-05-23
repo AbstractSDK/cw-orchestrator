@@ -3,6 +3,7 @@ test:
 
 install-docs:
   cargo install mdbook
+  cargo install mdbook-keeper
 
 serve-docs:
   (cd docs && mdbook serve --open) 
