@@ -1,8 +1,5 @@
-use std::env;
-
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::CwOrchError;
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 
 #[allow(clippy::from_over_into)]
@@ -37,6 +34,8 @@ impl Into<RegistryChainInfo> for ChainInfo<'_> {
     }
 }
 
+/// Information about a chain.
+/// This is used to connect to a chain and to generate transactions.
 #[derive(Clone, Debug)]
 pub struct ChainInfo<'a> {
     /// Identifier for the network ex. columbus-2
@@ -46,17 +45,22 @@ pub struct ChainInfo<'a> {
     pub gas_denom: &'a str,
     /// gas price
     pub gas_price: f64,
+    /// gRPC urls, used to attempt connection
     pub grpc_urls: &'a [&'a str],
     /// Optional urls for custom functionality
     pub lcd_url: Option<&'a str>,
+    /// Optional urls for custom functionality
     pub fcd_url: Option<&'a str>,
     /// Underlying network details (coin type, address prefix, etc)
     pub network_info: NetworkInfo<'a>,
+    /// Chain kind, (local, testnet, mainnet)
     pub kind: ChainKind,
 }
 
+/// Information about the underlying network, used for key derivation
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct NetworkInfo<'a> {
+    /// network identifier (ex. juno, terra, osmosis, etc)
     pub id: &'a str,
     /// address prefix
     pub pub_address_prefix: &'a str,
@@ -64,37 +68,24 @@ pub struct NetworkInfo<'a> {
     pub coin_type: u32,
 }
 
+/// Kind of chain (local, testnet, mainnet)
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ChainKind {
+    /// A local chain, used for development
     Local,
+    /// A mainnet chain
     Mainnet,
+    /// A testnet chain
     Testnet,
 }
 
 impl ChainKind {
-    pub fn new() -> Result<Self, CwOrchError> {
-        let network_id = env::var("NETWORK").expect("NETWORK is not set");
-        let network = match network_id.as_str() {
-            "testnet" => ChainKind::Testnet,
-            "mainnet" => ChainKind::Mainnet,
-            _ => ChainKind::Local,
-        };
-        Ok(network)
-    }
-
+    /// Get the mnemonic name for the chain kind
     pub fn mnemonic_name(&self) -> &str {
         match *self {
             ChainKind::Local => "LOCAL_MNEMONIC",
             ChainKind::Testnet => "TEST_MNEMONIC",
             ChainKind::Mainnet => "MAIN_MNEMONIC",
-        }
-    }
-
-    pub fn multisig_name(&self) -> &str {
-        match *self {
-            ChainKind::Local => "LOCAL_MULTISIG",
-            ChainKind::Testnet => "TEST_MULTISIG",
-            ChainKind::Mainnet => "MAIN_MULTISIG",
         }
     }
 }

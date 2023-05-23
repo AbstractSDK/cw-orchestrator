@@ -1,7 +1,4 @@
-use cw_orch::daemon::sync::core::Daemon;
-use cw_orch::environment::CwEnv;
-use cw_orch::interface;
-use cw_orch::prelude::*;
+use cw_orch::{daemon::Daemon, environment::CwEnv, interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;

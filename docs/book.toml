@@ -10,3 +10,11 @@ command = "mdbook-keeper"
 manifest_dir = "../cw-orch/"
 # target_dir = "../target/"
 externs = ["cw_orch", "cosmwasm_schema", "cosmwasm_std", "counter_contract"]
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+curly-quotes = true
+git-repository-url = "https://github.com/AbstractSDK/cw-orchestrator"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/docs/{path}"

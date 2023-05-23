@@ -1,16 +1,21 @@
-use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use cw2::set_contract_version;
 
-use crate::{error::*, msg::*, state::*};
+use crate::{error::*, execute, msg::*, query, state::*};
 
 // version info for migration info
 pub const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // ANCHOR: interface_entry
+// ANCHOR: entry_point_line
 #[cfg_attr(feature = "export", entry_point)]
+// ANCHOR_END: entry_point_line
+// ANCHOR: interface_line
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+// ANCHOR_END: interface_line
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -43,31 +48,6 @@ pub fn execute(
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
     }
 }
-// ANCHOR_END: interface_entry
-
-pub mod execute {
-    use super::*;
-
-    pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
-        STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-            state.count += 1;
-            Ok(state)
-        })?;
-
-        Ok(Response::new().add_attribute("action", "increment"))
-    }
-
-    pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
-        STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-            if info.sender != state.owner {
-                return Err(ContractError::Unauthorized {});
-            }
-            state.count = count;
-            Ok(state)
-        })?;
-        Ok(Response::new().add_attribute("action", "reset"))
-    }
-}
 
 #[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
@@ -77,27 +57,20 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-pub mod query {
-    use super::*;
-
-    pub fn count(deps: Deps) -> StdResult<GetCountResponse> {
-        let state = STATE.load(deps.storage)?;
-        Ok(GetCountResponse { count: state.count })
-    }
-}
-
 #[cfg_attr(feature = "export", entry_point)]
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
-    // TODO: Migrate state
     Ok(Response::default().add_attribute("action", "migrate"))
 }
+// ANCHOR_END: interface_entry
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary};
+    use cosmwasm_std::{
+        coins, from_binary,
+        testing::{mock_dependencies, mock_env, mock_info},
+    };
 
     #[test]
     fn proper_initialization() {

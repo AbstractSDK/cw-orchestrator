@@ -1,6 +1,7 @@
 [workspace]
 members = ["cw-orch", "packages/*", "contracts/*"]
 version = "0.11.4"
+resolver = "2"
 
 [workspace.package]
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]

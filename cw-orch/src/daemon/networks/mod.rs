@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! # Cosmos blockchain networks
 //! Contains information and helpers for different blockchain networks
 //! See [parse_network] to easily retrieve this static network information

@@ -1,3 +1,5 @@
+//! State interfaces for execution environments.
+
 use crate::error::CwOrchError;
 use cosmwasm_std::Addr;
 use std::collections::HashMap;
@@ -5,7 +7,9 @@ use std::collections::HashMap;
 /// State accessor trait.
 /// Indicates that the type has access to an underlying state.
 pub trait ChainState {
+    /// The type of the underlying state.
     type Out: StateInterface;
+    /// Get the underlying state.
     fn state(&self) -> Self::Out;
 }
 

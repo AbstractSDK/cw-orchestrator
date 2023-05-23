@@ -4,8 +4,6 @@ use crate::prelude::DaemonAsyncBuilder;
 
 use super::{super::error::DaemonError, core::Daemon};
 
-pub const DEFAULT_DEPLOYMENT: &str = "default";
-
 #[derive(Clone, Default)]
 /// Create [`Daemon`] through [`DaemonBuilder`]
 /// ## Example

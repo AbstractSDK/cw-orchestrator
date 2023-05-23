@@ -5,16 +5,14 @@ mod cw_orch_contract;
 use crate::cw_orch_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
 
 use convert_case::{Case, Casing};
-use syn::__private::TokenStream2;
-use syn::{parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
+use syn::{__private::TokenStream2, parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
 
 use quote::{format_ident, quote};
 
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
+use syn::{punctuated::Punctuated, token::Comma};
 
 use syn::parse::{Parse, ParseStream};
 

@@ -3,12 +3,16 @@ use cosmwasm_std::Addr;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
+/// Mock state for testing, stores addresses and code-ids.
 pub struct MockState {
+    /// Deployed contract code ids
     pub code_ids: HashMap<String, u64>,
+    /// Deployed contract addresses
     pub addresses: HashMap<String, Addr>,
 }
 
 impl MockState {
+    /// Creates a new empty mock state
     pub fn new() -> Self {
         Self {
             addresses: HashMap::new(),

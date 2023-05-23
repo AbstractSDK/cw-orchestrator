@@ -1,9 +1,6 @@
-use crate::daemon::queriers::CosmWasm;
-use crate::environment::TxResponse;
-use crate::error::CwOrchError;
-use crate::prelude::*;
+use crate::{daemon::queriers::CosmWasm, environment::TxResponse, error::CwOrchError, prelude::*};
 
-use super::sync::core::Daemon;
+use super::sync::Daemon;
 
 /// Helper methods for conditional uploading of a contract.
 pub trait ConditionalUpload: CwOrcUpload<Daemon> {
