@@ -6,6 +6,7 @@ use crate::prelude::{DaemonAsync, DaemonBuilder};
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
+/// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
 #[derive(Clone, Default)]

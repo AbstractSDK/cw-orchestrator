@@ -46,6 +46,7 @@ use tonic::transport::Channel;
 */
 pub struct Daemon {
     pub(super) daemon: DaemonAsync,
+    /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
 }
 

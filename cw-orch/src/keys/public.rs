@@ -1,4 +1,4 @@
-use crate::daemon::error::DaemonError;
+use crate::daemon::DaemonError;
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
 pub use ed25519_dalek::PublicKey as Ed25519;
 use ring::digest::{Context, SHA256};

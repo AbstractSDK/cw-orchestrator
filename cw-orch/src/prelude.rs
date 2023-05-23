@@ -1,4 +1,4 @@
-//! This file re-exports parts of the API of the cw-orchestrator crate to make use of it easier.
+//! Glob (*) import me to get all the types you need to get started with cw-orch.
 //!
 //! ```rust
 //! use cw_orch::prelude::*;
@@ -26,7 +26,7 @@ pub use crate::index_response::IndexResponse;
 pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
-pub use crate::mock::core::Mock;
+pub use crate::mock::Mock;
 
 // error
 pub use crate::error::CwOrchError;
@@ -41,14 +41,16 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    builder::DaemonAsyncBuilder,
-    core::DaemonAsync,
     networks,
     queriers,
-    // expose the sync variants
-    sync::{builder::DaemonBuilder, core::Daemon},
     // sync helpers
-    traits::{ConditionalMigrate, ConditionalUpload},
+    ConditionalMigrate,
+    ConditionalUpload,
+    Daemon,
+    DaemonAsync,
+    DaemonAsyncBuilder,
+    // expose the sync variants
+    DaemonBuilder,
 };
 
 /// Re-export trait and data required to fetch daemon data from chain-registry

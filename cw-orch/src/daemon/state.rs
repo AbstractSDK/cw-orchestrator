@@ -27,6 +27,8 @@ pub struct DaemonState {
 }
 
 impl DaemonState {
+    /// Creates a new state from the given chain data and deployment id.
+    /// Attempts to connect to any of the provided gRPC endpoints.
     pub async fn new(
         mut chain_data: ChainData,
         deployment_id: String,
@@ -41,8 +43,8 @@ impl DaemonState {
         let grpc_channel =
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
-        // check if STATE_FILE en var is configured, fail if not
-        let mut json_file_path = env::var("STATE_FILE").expect("STATE_FILE is not set");
+        // check if STATE_FILE en var is configured, default to state.json
+        let mut json_file_path = env::var("STATE_FILE").unwrap_or("state.json".to_string());
 
         // if the network we are connecting is a local kind, add it to the fn
         if chain_data.network_type == ChainKind::Local.to_string() {
@@ -97,16 +99,6 @@ impl DaemonState {
 
         // finish
         Ok(state)
-    }
-
-    pub fn set_deployment(&mut self, deployment_id: impl Into<String>) {
-        self.deployment_id = deployment_id.into();
-        crate::daemon::json_file::write(
-            &self.json_file_path,
-            &self.chain_data.chain_id.to_string(),
-            &self.chain_data.chain_name,
-            &self.deployment_id,
-        );
     }
 
     /// Get the state filepath and read it as json

@@ -1,7 +1,9 @@
-use crate::environment::ChainUpload;
-use crate::prelude::{CwEnv, Uploadable};
+//! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use crate::{
-    environment::TxResponse, error::CwOrchError, index_response::IndexResponse,
+    environment::{ChainUpload, TxResponse},
+    error::CwOrchError,
+    index_response::IndexResponse,
+    prelude::{CwEnv, Uploadable},
     state::StateInterface,
 };
 use cosmwasm_std::{Addr, Coin};
@@ -20,6 +22,7 @@ pub struct Contract<Chain: CwEnv> {
 
 /// Expose chain and state function to call them on the contract
 impl<Chain: CwEnv + Clone> Contract<Chain> {
+    /// Creates a new contract instance
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),
@@ -85,6 +88,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
+    /// Query the contract
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
@@ -133,6 +137,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 }
 
 impl<Chain: CwEnv + Clone + ChainUpload> Contract<Chain> {
+    /// Upload a contract given its source
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrchError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;

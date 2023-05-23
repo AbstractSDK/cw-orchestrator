@@ -1,11 +1,19 @@
 # Integration Tests
 
-To get started writing integration tests with cw-orchestrator, first add `cw-orchestrator` to your dependencies.
+Integration tests are very easy to write with cw-orch. Start by creating a `tests` folder in your contract's dir.
 
 ```bash
-cargo add --dev cw-orch
+mkdir counter/tests
 ```
 
-The following assumes that you have written your interfaces as described in [Interfaces](./quick_start/interfaces.md).
+Then create a file called `integration_tests.rs` in the `tests` folder.
 
-TODO: put mock example code here.
+```bash
+touch counter/tests/integration_tests.rs
+```
+
+Now we can write our tests. Here's an example of a test that deploys the contract, increments the counter and then resets it.
+
+```rust,ignore
+{{#include ../../../contracts/counter/tests/integration_tests.rs:all}}
+```

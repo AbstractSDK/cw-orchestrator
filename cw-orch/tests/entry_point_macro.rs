@@ -1,10 +1,7 @@
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, MockContract, QueryMsg};
 
 use cosmwasm_std::Event;
-use cw_orch::prelude::ContractInstance;
-use cw_orch::prelude::CwOrcExecute;
-use cw_orch::prelude::CwOrcMigrate;
-use cw_orch::prelude::CwOrcQuery;
+use cw_orch::prelude::{ContractInstance, CwOrcExecute, CwOrcMigrate, CwOrcQuery};
 
 use cw_orch::prelude::CwOrcUpload;
 mod common;
@@ -104,9 +101,10 @@ fn test_migrate() {
 #[serial_test::serial]
 fn daemon_test() {
     use crate::common::Id;
-    use cw_orch::environment::TxHandler;
-    use cw_orch::prelude::networks;
-    use cw_orch::prelude::Daemon;
+    use cw_orch::{
+        environment::TxHandler,
+        prelude::{networks, Daemon},
+    };
 
     let runtime = tokio::runtime::Runtime::new().unwrap();
 

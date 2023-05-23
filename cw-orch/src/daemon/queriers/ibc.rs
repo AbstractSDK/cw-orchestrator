@@ -27,6 +27,7 @@ impl DaemonQuerier for Ibc {
 impl Ibc {
     // ### Transfer queries ### //
 
+    /// Get the trace of a specific denom
     pub async fn denom_trace(&self, hash: String) -> Result<DenomTrace, DaemonError> {
         let denom_trace: QueryDenomTraceResponse = cosmos_query!(
             self,
@@ -151,6 +152,7 @@ impl Ibc {
         Ok(filtered_connections)
     }
 
+    /// Get all the connections for this client
     pub async fn client_connections(
         &self,
         client_id: impl Into<String>,
@@ -229,6 +231,7 @@ impl Ibc {
         )))
     }
 
+    /// Get all the channels for a specific connection
     pub async fn connection_channels(
         &self,
         connection_id: impl Into<String>,
@@ -249,6 +252,7 @@ impl Ibc {
         Ok(ibc_connection_channels.channels)
     }
 
+    /// Get the client state for a specific channel and port
     pub async fn channel_client_state(
         &self,
         port_id: impl Into<String>,
@@ -280,6 +284,7 @@ impl Ibc {
 
     // Commitment
 
+    /// Get all the packet commitments for a specific channel and port
     pub async fn packet_commitments(
         &self,
         port_id: impl Into<String>,
@@ -303,6 +308,7 @@ impl Ibc {
         Ok(ibc_packet_commitments.commitments)
     }
 
+    /// Get the packet commitment for a specific channel, port and sequence
     pub async fn packet_commitment(
         &self,
         port_id: impl Into<String>,
@@ -352,6 +358,7 @@ impl Ibc {
 
     // Acknowledgement
 
+    /// Get all the packet acknowledgements for a specific channel, port and commitment sequences
     pub async fn packet_acknowledgements(
         &self,
         port_id: impl Into<String>,
@@ -377,6 +384,7 @@ impl Ibc {
         Ok(ibc_packet_acknowledgements.acknowledgements)
     }
 
+    /// Get the packet acknowledgement for a specific channel, port and sequence
     pub async fn packet_acknowledgement(
         &self,
         port_id: impl Into<String>,

@@ -1,13 +1,9 @@
-use proc_macro2::Ident;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::cmp::Ordering;
-use syn::parse_quote;
-use syn::GenericParam;
-use syn::Generics;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, GenericArgument, Lit,
-    Meta, NestedMeta, PathArguments, Type,
+    parse_quote, punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed,
+    GenericArgument, GenericParam, Generics, Lit, Meta, NestedMeta, PathArguments, Type,
 };
 
 pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
