@@ -17,4 +17,4 @@ preferred-dark-theme = "navy"
 curly-quotes = true
 git-repository-url = "https://github.com/AbstractSDK/cw-orchestrator"
 git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/{path}"
+edit-url-template = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/docs/{path}"
