@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="quick_start.html"><strong aria-hidden="true">2.</strong> Quick-start</a></li><li class="chapter-item expanded "><a href="single_contract/index.html"><strong aria-hidden="true">3.</strong> Tutorial: Contract</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="single_contract/interfaces.html"><strong aria-hidden="true">3.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="single_contract/env-variable.html"><strong aria-hidden="true">3.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="single_contract/scripting.html"><strong aria-hidden="true">3.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="single_contract/integration-tests.html"><strong aria-hidden="true">3.4.</strong> Integration Tests</a></li></ol></li><li class="chapter-item expanded "><a href="workspace/index.html"><strong aria-hidden="true">4.</strong> Tutorial: Workspace</a></li><li class="chapter-item expanded "><a href="ci-cd.html"><strong aria-hidden="true">5.</strong> CI/CD</a></li><li class="chapter-item expanded "><a href="contributing.html" class="active"><strong aria-hidden="true">6.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="references.html"><strong aria-hidden="true">7.</strong> References</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="intro.html">Introduction</a></li><li class="chapter-item expanded "><a href="quick_start.html"><strong aria-hidden="true">1.</strong> Quick-start</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="single_contract/index.html"><strong aria-hidden="true">2.</strong> Contract</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="single_contract/interfaces.html"><strong aria-hidden="true">2.1.</strong> Interfaces</a></li><li class="chapter-item expanded "><a href="single_contract/env-variable.html"><strong aria-hidden="true">2.2.</strong> Environment Vars</a></li><li class="chapter-item expanded "><a href="single_contract/scripting.html"><strong aria-hidden="true">2.3.</strong> Scripting</a></li><li class="chapter-item expanded "><a href="single_contract/integration-tests.html"><strong aria-hidden="true">2.4.</strong> Integration Tests</a></li></ol></li><li class="chapter-item expanded "><a href="workspace/index.html"><strong aria-hidden="true">3.</strong> Workspace</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">3.1.</strong> Structure</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.2.</strong> Project Wrapper</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.</strong> Colloboration</div></li></ol></li><li class="chapter-item expanded "><li class="part-title">Extras</li><li class="chapter-item expanded "><a href="ci-cd.html"><strong aria-hidden="true">4.</strong> CI/CD</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="contributing.html" class="active">Contributing</a></li><li class="chapter-item expanded affix "><a href="references.html">References</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -237,6 +237,22 @@ for public functions and methods.</li>
 
         </div>
 
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
 
 
 

@@ -40,11 +40,11 @@ Following this example, the project's structure should look like:
         └── test_project.rs
 ```
 
-## Sections
+<!-- ## Sections
 
 - **[Interfaces](./interfaces.md)**
   - Define interfaces for your contracts.
 - **[Scripting](./scripting.md)**
   - Write runnable scripts with your interfaces.
 - **[Integration](./integration.md)**
-  - Export a deployment of your application for use in integration testing.
+  - Export a deployment of your application for use in integration testing. -->
