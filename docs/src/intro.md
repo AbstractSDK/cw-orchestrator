@@ -1,5 +1,12 @@
 # Cw-Orchestrator
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/orchestrator_bg2.png", width = "230px"/>  
+  
+<a href="https://docs.rs/cw-orch/latest" ><img alt="docs.rs" src="https://img.shields.io/docsrs/cw-orch"></a> <a href="https://crates.io/crates/cw-orch" ><img alt="Crates.io" src="https://img.shields.io/crates/d/cw-orch"></a> <a href="https://app.codecov.io/gh/AbstractSDK/cw-orchestrator" ><img alt="Codecov" src="https://img.shields.io/codecov/c/github/AbstractSDK/cw-orchestrator?token=CZZH6DJMRY"></a>
+
+</div>
+
 cw-orchestrator is an advanced testing and deployment tool for CosmWasm smart-contracts. It's designed to make it easy to test and deploy contracts in a variety of environments including cw-multi-test, local, testnet, and mainnet. It does this by providing the ability to write environment-generic code that interacts with CosmWasm contracts and by doing so removing the need to keep maintain deployment code for multiple environments. In short, cw-orchestrator should be your go-to tool for testing and deploying CosmWasm contracts.
 
 ## Features
