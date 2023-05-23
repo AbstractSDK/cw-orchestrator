@@ -219,6 +219,9 @@ just serve-docs
 
 to view the changes.
 
+[Release Docs](https://orchestrator.abstract.money)
+[Dev Docs](https://dev-orchestrator.abstract.money)
+
 ## Testing
 
 To test the full application you can run the following command:
