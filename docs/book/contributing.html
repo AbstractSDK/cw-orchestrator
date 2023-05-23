@@ -115,6 +115,12 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/AbstractSDK/cw-orchestrator" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/AbstractSDK/cw-orchestrator/edit/main/src/contributing.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -164,7 +170,7 @@
 <h2 id="code-of-conduct"><a class="header" href="#code-of-conduct">Code of Conduct</a></h2>
 <p>By participating in this project, you are expected to uphold our <a href="CODE_OF_CONDUCT.html">Code of Conduct</a>. Please read the Code of Conduct to ensure that you follow the community guidelines and contribute positively to the project.</p>
 <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
-<p>To get started with contributing to the cw-orchestrator project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's <a href="https://github.com/AbstractSDK/cw-orchestrator/">README</a> to understand the purpose, features, and usage of the cw-orchestrator library as well as its <a href="https://orchestrator.abstract.money">documentation</a>.</p>
+<p>To get started with contributing to the cw-orchestrator project, you should first familiarize yourself with the repository structure and the codebase. Please read the project’s <a href="https://github.com/AbstractSDK/cw-orchestrator/">README</a> to understand the purpose, features, and usage of the cw-orchestrator library as well as its <a href="https://orchestrator.abstract.money">documentation</a>.</p>
 <h2 id="how-to-contribute"><a class="header" href="#how-to-contribute">How to Contribute</a></h2>
 <p>There are multiple ways to contribute to the cw-orchestrator project, including reporting bugs, suggesting enhancements, and submitting code contributions.</p>
 <h2 id="reporting-bugs"><a class="header" href="#reporting-bugs">Reporting Bugs</a></h2>
@@ -237,22 +243,6 @@ for public functions and methods.</li>
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
 

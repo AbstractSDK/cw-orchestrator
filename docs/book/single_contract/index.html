@@ -115,6 +115,12 @@
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/AbstractSDK/cw-orchestrator" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/AbstractSDK/cw-orchestrator/edit/main/src/single_contract/index.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -148,20 +154,20 @@
 <li>Write integration tests for your contract.</li>
 <li>Write executables for interacting with your contract.</li>
 </ul>
-<p>In order to ensure that the code snippets shown here are correct we'll be using the counter contract provided in the repository as the source for our code-snippets. You can find the contract <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter">here</a>.</p>
+<p>In order to ensure that the code snippets shown here are correct we’ll be using the counter contract provided in the repository as the source for our code-snippets. You can find the contract <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter">here</a>.</p>
 <blockquote>
-<p>If you're working within a cargo workspace environment you can follow along and read the <a href="../workspace/index.html">Workspace</a> docs after this tutorial.</p>
+<p>If you’re working within a cargo workspace environment you can follow along and read the <a href="../workspace/index.html">Workspace</a> docs after this tutorial.</p>
 </blockquote>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
 <ul>
 <li>
-<p>Contract Entry Point Messages: In order to use cw-orchestrator you need access to the entry point message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,...) of the contracts you want to interact with. Having them locally will enable you to generate helper functions for interacting with the contracts.</p>
+<p>Contract Entry Point Messages: In order to use cw-orchestrator you need access to the entry point message types (<code>InstantiateMsg</code>,<code>ExecuteMsg</code>,…) of the contracts you want to interact with. Having them locally will enable you to generate helper functions for interacting with the contracts.</p>
 </li>
 <li>
-<p>A gRPC endpoint (optional): If you want to perform on-chain transaction you will need access to the gRPC endpoint of a node. These are most-often available on port 9090. Look in the documentation of the chain you want to connect to if our defaults aren't sufficient, or use the <a href="https://cosmos.directory">Cosmos Directory</a> implementation to query one.</p>
+<p>A gRPC endpoint (optional): If you want to perform on-chain transaction you will need access to the gRPC endpoint of a node. These are most-often available on port 9090. Look in the documentation of the chain you want to connect to if our defaults aren’t sufficient, or use the <a href="https://cosmos.directory">Cosmos Directory</a> implementation to query one.</p>
 </li>
 <li>
-<p>A desire to learn: This tutorial will cover the basics of using cw-orchestrator but it won't cover everything. If you want to learn more about the features of cw-orchestrator you can check out the <a href="https://docs.rs/cw-orch/latest/cw_orch/">API Documentation</a>.</p>
+<p>A desire to learn: This tutorial will cover the basics of using cw-orchestrator but it won’t cover everything. If you want to learn more about the features of cw-orchestrator you can check out the <a href="https://docs.rs/cw-orch/latest/cw_orch/">API Documentation</a>.</p>
 </li>
 </ul>
 <p>The following sections detail setting up a contract, tests for the contract, and scripts for interacting with the contract on a blockchain network.</p>
@@ -233,22 +239,6 @@
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
 

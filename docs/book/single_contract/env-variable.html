@@ -115,6 +115,12 @@
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/AbstractSDK/cw-orchestrator" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/AbstractSDK/cw-orchestrator/edit/main/src/single_contract/env-variable.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -163,7 +169,7 @@ TEST_MNEMONIC=&quot;&quot;
 MAIN_MNEMONIC=&quot;&quot;
 </code></pre>
 <h2 id="mnemonics"><a class="header" href="#mnemonics">Mnemonics</a></h2>
-<p><strong>Only 24-word mnemonics are supported at this time.</strong> If you're experienced with keychain and private key management we'd really appreciate your help in adding support for other formats. Please reach out to us on <a href="https://discord.gg/uch3Tq3aym">Discord</a> if you're interested in helping out.</p>
+<p><strong>Only 24-word mnemonics are supported at this time.</strong> If you’re experienced with keychain and private key management we’d really appreciate your help in adding support for other formats. Please reach out to us on <a href="https://discord.gg/uch3Tq3aym">Discord</a> if you’re interested in helping out.</p>
 
                     </main>
 
@@ -194,22 +200,6 @@ MAIN_MNEMONIC=&quot;&quot;
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
 
