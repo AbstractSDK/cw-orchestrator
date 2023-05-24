@@ -40,10 +40,10 @@ pub trait TxHandler: ChainState + Clone {
 
     /// Return current block info see [`BlockInfo`].
     fn block_info(&self) -> Result<BlockInfo, Self::Error>;
-    
-    /// Add a custom state file that will fill empty values in the state if specified 
+
+    /// Add a custom state file that will fill empty values in the state if specified
     fn custom_state_file(&mut self, custom_state_file: String);
-    
+
     // Actions
     /// Send a ExecMsg to a contract.
     fn execute<E: Serialize + Debug>(

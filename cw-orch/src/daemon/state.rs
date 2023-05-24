@@ -107,25 +107,25 @@ impl DaemonState {
     /// Get the state filepath and read it as json
     fn read_state(&self) -> serde_json::Value {
         // Here we start by loading an optional custom state file
-        // This here allows one to interact with custom contract bundles without having to query the information externally 
-        let mut state = if let Some(custom_state_file) = &self.custom_state_file{
+        // This here allows one to interact with custom contract bundles without having to query the information externally
+        let mut state = if let Some(custom_state_file) = &self.custom_state_file {
             log::debug!("Using custom state");
             crate::daemon::json_file::read(custom_state_file)
-        }else{
+        } else {
             serde_json::Value::Null
-        };   
+        };
 
-        log::debug!("Custom state used : {}", state);     
+        log::debug!("Custom state used : {}", state);
 
         let local_state = crate::daemon::json_file::read(&self.json_file_path);
 
         json_patch::merge(&mut state, &local_state);
 
-        state    
+        state
     }
 
-    /// Add a custom state file that will fill empty values in the state if specified 
-    pub fn add_custom_state_file(&mut self, file_path: Option<String>){
+    /// Add a custom state file that will fill empty values in the state if specified
+    pub fn add_custom_state_file(&mut self, file_path: Option<String>) {
         self.custom_state_file = file_path;
     }
 

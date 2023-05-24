@@ -86,8 +86,10 @@ impl TxHandler for Daemon {
         self.daemon.sender.address().unwrap()
     }
 
-    fn custom_state_file(&mut self, custom_state_file: String){
-        self.daemon.state.add_custom_state_file(Some(custom_state_file));
+    fn custom_state_file(&mut self, custom_state_file: String) {
+        self.daemon
+            .state
+            .add_custom_state_file(Some(custom_state_file));
     }
 
     fn execute<E: Serialize>(

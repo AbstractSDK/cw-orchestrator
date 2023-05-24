@@ -65,9 +65,9 @@ impl DaemonBuilder {
         self.mnemonic = Some(mnemonic.to_string());
         self
     }
-    
-    /// Add a custom state file that will fill empty values in the state if specified 
-    pub fn custom_state(&mut self, file_path: String) -> &mut Self{
+
+    /// Add a custom state file that will fill empty values in the state if specified
+    pub fn custom_state(&mut self, file_path: String) -> &mut Self {
         log::info!("Setting custome state");
         self.custom_state_file = Some(file_path);
         self

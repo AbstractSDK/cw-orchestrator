@@ -1,6 +1,6 @@
+pub use artifacts_dir::from_workspace;
 pub use artifacts_dir::ArtifactsDir;
 pub use wasm_path::WasmPath;
-pub use artifacts_dir::from_workspace;
 
 mod wasm_path {
     use crate::error::CwOrchError;
@@ -59,8 +59,7 @@ mod artifacts_dir {
 
     use crate::{error::CwOrchError, paths::wasm_path::WasmPath};
 
-
-    pub fn find_workspace_dir(start_path: Option<String>) -> ::std::path::PathBuf{
+    pub fn find_workspace_dir(start_path: Option<String>) -> ::std::path::PathBuf {
         let crate_path = start_path.unwrap_or(env!("CARGO_MANIFEST_DIR").to_string());
         let mut current_dir = ::std::path::PathBuf::from(crate_path);
         match find_workspace_dir_worker(&mut current_dir) {
@@ -69,7 +68,7 @@ mod artifacts_dir {
         }
     }
 
-    fn find_workspace_dir_worker(dir: &mut::std::path::PathBuf) -> Option<::std::path::PathBuf> {
+    fn find_workspace_dir_worker(dir: &mut ::std::path::PathBuf) -> Option<::std::path::PathBuf> {
         loop {
             // First we pop the dir
             if !dir.pop() {
@@ -83,15 +82,14 @@ mod artifacts_dir {
     }
 
     #[macro_export]
-    /// Creates an artifacts dir from the current workspace. 
+    /// Creates an artifacts dir from the current workspace.
     /// This allows to easily refer to wasm files without the hassle of vaing to look for the correct directory everytime
-    macro_rules ! from_workspace{
+    macro_rules! from_workspace {
         () => {
             ArtifactsDir::auto(Some(env!("CARGO_MANIFEST_DIR").to_string()))
-        }
+        };
     }
-    pub use from_workspace; 
-
+    pub use from_workspace;
 
     /// Points to a directory containing WASM files
     ///

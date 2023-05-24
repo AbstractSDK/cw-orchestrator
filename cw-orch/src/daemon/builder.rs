@@ -89,7 +89,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,
-            custom_state_file: value.custom_state_file
+            custom_state_file: value.custom_state_file,
         }
     }
 }
