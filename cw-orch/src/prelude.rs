@@ -56,3 +56,5 @@ pub use crate::daemon::{
 /// Re-export trait and data required to fetch daemon data from chain-registry
 #[cfg(feature = "daemon")]
 pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
+
+pub use crate::paths::from_workspace as artifacts_dir_from_workspace;

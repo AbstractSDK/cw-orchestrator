@@ -32,11 +32,11 @@ pub type Wallet = Rc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: SigningKey,
     pub secp: Secp256k1<C>,
-    daemon_state: Rc<DaemonState>,
+    daemon_state: DaemonState,
 }
 
 impl Sender<All> {
-    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+    pub fn new(daemon_state: &DaemonState) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
         let mnemonic = env::var(kind.mnemonic_name()).unwrap_or_else(|_| {
@@ -51,7 +51,7 @@ impl Sender<All> {
 
     /// Construct a new Sender from a mnemonic
     pub fn from_mnemonic(
-        daemon_state: &Rc<DaemonState>,
+        daemon_state: &DaemonState,
         mnemonic: &str,
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();

@@ -54,6 +54,11 @@ pub trait ContractInstance<Chain: CwEnv> {
     fn get_chain(&self) -> &Chain {
         Contract::get_chain(self.as_instance())
     }
+
+    /// Returns the chain that this contract is deployed on.
+    fn get_chain_mut(&mut self) -> &mut Chain {
+        Contract::get_chain_mut(self.as_instance_mut())
+    }
 }
 
 /// Trait that indicates that the contract can be instantiated with the associated message.

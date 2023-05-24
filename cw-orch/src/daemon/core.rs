@@ -21,7 +21,6 @@ use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
-    rc::Rc,
     str::{from_utf8, FromStr},
     time::Duration,
 };
@@ -57,7 +56,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Rc<DaemonState>,
+    pub state: DaemonState,
 }
 
 impl DaemonAsync {
@@ -79,7 +78,7 @@ impl DaemonAsync {
 }
 
 impl ChainState for DaemonAsync {
-    type Out = Rc<DaemonState>;
+    type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
         self.state.clone()

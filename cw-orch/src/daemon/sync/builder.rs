@@ -24,6 +24,8 @@ pub struct DaemonBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
+    /// Custom state that will fill the current state if empty
+    pub(crate) custom_state_file: Option<String>,
 }
 
 impl DaemonBuilder {
@@ -61,6 +63,13 @@ impl DaemonBuilder {
     /// Set the mnemonic to use with this chain.
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
+        self
+    }
+    
+    /// Add a custom state file that will fill empty values in the state if specified 
+    pub fn custom_state(&mut self, file_path: String) -> &mut Self{
+        log::info!("Setting custome state");
+        self.custom_state_file = Some(file_path);
         self
     }
 

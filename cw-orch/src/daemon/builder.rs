@@ -29,6 +29,8 @@ pub struct DaemonAsyncBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
+    /// Custom state that will fill the current state if empty
+    pub(crate) custom_state_file: Option<String>,
 }
 
 impl DaemonAsyncBuilder {
@@ -64,7 +66,9 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let state = Rc::new(DaemonState::new(chain, deployment_id).await?);
+        let mut state = DaemonState::new(chain, deployment_id).await?;
+        state.add_custom_state_file(self.custom_state_file.clone());
+
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender = if let Some(mnemonic) = &self.mnemonic {
             Sender::from_mnemonic(&state, mnemonic)?
@@ -85,6 +89,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,
+            custom_state_file: value.custom_state_file
         }
     }
 }

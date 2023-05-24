@@ -64,5 +64,5 @@ pub trait Deploy<Chain: CwEnv>: Sized {
         Self::store_on(chain)
     }
     /// Load the application from the chain, assuming it has already been deployed.
-    fn load_from(chain: Chain) -> Result<Self, Self::Error>;
+    fn load_from(chain: &mut Chain) -> Result<Self, Self::Error>;
 }

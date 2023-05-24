@@ -12,7 +12,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 
-use std::{fmt::Debug, rc::Rc, time::Duration};
+use std::{fmt::Debug, time::Duration};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -64,12 +64,12 @@ impl Daemon {
 
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.state().grpc_channel.clone()
+        self.state().grpc_channel
     }
 }
 
 impl ChainState for Daemon {
-    type Out = Rc<DaemonState>;
+    type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
@@ -84,6 +84,10 @@ impl TxHandler for Daemon {
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
+    }
+
+    fn custom_state_file(&mut self, custom_state_file: String){
+        self.daemon.state.add_custom_state_file(Some(custom_state_file));
     }
 
     fn execute<E: Serialize>(

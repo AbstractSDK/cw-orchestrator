@@ -35,6 +35,11 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self.chain
     }
 
+    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
+    pub fn get_chain_mut(&mut self) -> &mut Chain {
+        &mut self.chain
+    }
+
     /// Sets the address of the contract in the local state
     pub fn with_address(self, address: Option<&Addr>) -> Self {
         if let Some(address) = address {

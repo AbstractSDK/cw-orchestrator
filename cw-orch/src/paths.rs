@@ -1,5 +1,6 @@
 pub use artifacts_dir::ArtifactsDir;
 pub use wasm_path::WasmPath;
+pub use artifacts_dir::from_workspace;
 
 mod wasm_path {
     use crate::error::CwOrchError;
@@ -58,6 +59,40 @@ mod artifacts_dir {
 
     use crate::{error::CwOrchError, paths::wasm_path::WasmPath};
 
+
+    pub fn find_workspace_dir(start_path: Option<String>) -> ::std::path::PathBuf{
+        let crate_path = start_path.unwrap_or(env!("CARGO_MANIFEST_DIR").to_string());
+        let mut current_dir = ::std::path::PathBuf::from(crate_path);
+        match find_workspace_dir_worker(&mut current_dir) {
+            Some(path) => path,
+            None => current_dir,
+        }
+    }
+
+    fn find_workspace_dir_worker(dir: &mut::std::path::PathBuf) -> Option<::std::path::PathBuf> {
+        loop {
+            // First we pop the dir
+            if !dir.pop() {
+                return None;
+            }
+            let artifacts_dir = dir.join("artifacts");
+            if ::std::fs::metadata(&artifacts_dir).is_ok() {
+                return Some(dir.clone());
+            }
+        }
+    }
+
+    #[macro_export]
+    /// Creates an artifacts dir from the current workspace. 
+    /// This allows to easily refer to wasm files without the hassle of vaing to look for the correct directory everytime
+    macro_rules ! from_workspace{
+        () => {
+            ArtifactsDir::auto(Some(env!("CARGO_MANIFEST_DIR").to_string()))
+        }
+    }
+    pub use from_workspace; 
+
+
     /// Points to a directory containing WASM files
     ///
     /// # Example
@@ -79,6 +114,14 @@ mod artifacts_dir {
         pub fn env() -> Self {
             let dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR env variable not set");
             Self::new(dir)
+        }
+
+        /// Creates an artifacts dir by searching for an artifacts directory by going up the file tree from start_path or the current directory
+        pub fn auto(start_path: Option<String>) -> Self {
+            // We find the artifacts dir automatically from the place that this function was invoked
+            let workspace_dir = find_workspace_dir(start_path).join("artifacts");
+            log::debug!("Found artifacts dir at {:?}", workspace_dir);
+            Self::new(workspace_dir)
         }
 
         /// Create a new ArtifactsDir from a path to a directory containing WASM files.

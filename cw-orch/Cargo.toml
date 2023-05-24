@@ -28,28 +28,7 @@ required-features = ["daemon"]
 # run with `cargo test --jobs 1 --features node-tests`
 node-tests = ["daemon"]
 # enable the optional dependencies
-daemon = [
-  "dep:ibc-chain-registry",
-  "dep:ibc-relayer-types",
-  "dep:tokio",
-  "dep:tonic",
-  "dep:secp256k1",
-  "dep:reqwest",
-  "dep:base64",
-  "dep:hkd32",
-  "dep:rand_core",
-  "dep:ed25519-dalek",
-  "dep:cosmrs",
-  "dep:derive_builder",
-  "dep:eyre",
-  "dep:chrono",
-  "dep:base16",
-  "dep:ripemd",
-  "dep:ring",
-  "dep:hex",
-  "dep:bitcoin",
-  "dep:prost",
-]
+daemon = ["dep:ibc-chain-registry", "dep:ibc-relayer-types", "dep:tokio", "dep:tonic", "dep:secp256k1", "dep:reqwest", "dep:base64", "dep:hkd32", "dep:rand_core", "dep:ed25519-dalek", "dep:cosmrs", "dep:derive_builder", "dep:eyre", "dep:chrono", "dep:base16", "dep:ripemd", "dep:ring", "dep:hex", "dep:bitcoin", "dep:prost"]
 
 [dependencies]
 # Default deps
@@ -95,6 +74,7 @@ chrono = { version = "0.4", optional = true }
 base16 = { version = "0.2.1", optional = true }
 derive_builder = { version = "0.12.0", optional = true }
 ring = { version = "0.16.20", optional = true }
+json-patch = "1.0.0"
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }

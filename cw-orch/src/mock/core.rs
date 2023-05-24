@@ -211,6 +211,10 @@ where
         self.sender.clone()
     }
 
+    fn custom_state_file(&mut self, _custom_state_file: String){
+        
+    }
+
     fn execute<E: Serialize + Debug>(
         &self,
         exec_msg: &E,
