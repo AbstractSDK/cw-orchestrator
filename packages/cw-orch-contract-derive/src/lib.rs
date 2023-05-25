@@ -62,7 +62,7 @@ This generated the following code:
 ```ignore
 
 // This struct represents the interface to the contract.
-pub struct Cw20<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
+pub struct Cw20<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::prelude::Contract<Chain>);
 
 impl <Chain: ::cw_orch::prelude::CwEnv> Cw20<Chain> {
     /// Constructor for the contract interface
@@ -90,8 +90,8 @@ The interface can be linked to its source code by implementing the `Uploadable` 
 ```ignore
 use cw_orch::prelude::*;
 
-impl Uploadable<Mock> for Cw20<Mock> {
-    fn source(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -101,14 +101,11 @@ impl Uploadable<Mock> for Cw20<Mock> {
             .with_migrate(cw20_base::contract::migrate),
         )
     }
-}
 
-impl Uploadable<Daemon> for Cw20<Daemon> {
-    fn source(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
         WasmPath::new("path/to/cw20.wasm").unwrap()
     }
 }
-
 */
 #[proc_macro_attribute]
 pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
@@ -220,7 +217,7 @@ Add this macro to the entry point functions of your contract to use it.
 
 ## Example
 
-```rust,ignore
+```ignore
 // In crate "my-contract::contract.rs"
 
 #[cfg_attr(feature="interface", interface_entry_point)]
@@ -238,7 +235,7 @@ pub fn instantiate(
 
 ### Generated code
 
-```rust,ignore
+```ignore
 // This struct represents the interface to the contract.
 pub struct MyContract<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
@@ -259,31 +256,24 @@ impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ExecutableContract f
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
-```
 
-### Interface usage
+// Implementation for Uploadable
+impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+        Box::new(
+            ContractWrapper::new_with_empty(
+                my_contract::contract::execute,
+                my_contract::contract::instantiate,
+                my_contract::contract::query,
+            )
+            .with_migrate(my_contract::contract::migrate),
+        )
+    }
 
-Now you can use the generated interface to call the contract's entry points in your tests/scripts.
-
-```ignore,ignore
-use my_contract::contract::MyContract;
-
-pub fn my_script() {
-    let sender = "my_address";
-    let mock_chain = Mock::new(sender);
-    // create a new interface for the contract
-    let my_contract = MyContract::new("my_contract", mock_chain.clone());
-    // upload it
-    my_contract.upload().unwrap();
-
-    // Instantiate the contract
-    let instantiate_msg = InstantiateMsg {
-        // ...
-    };
-    my_contract.instantiate(instantiate_msg, None, &[]).unwrap();
-
-    // Execute, Query, Migrate, etc.
-    //...
+    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+        // Wasm path to the artifacts directory of the contract
+        // generated with CARGO_MANIFEST_DIR env variable
+    }
 }
 ```
 */
