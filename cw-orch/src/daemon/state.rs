@@ -2,7 +2,7 @@ use super::error::DaemonError;
 use crate::{
     daemon::{chain_info::ChainKind, channel::GrpcChannel},
     error::CwOrchError,
-    state::StateInterface,
+    state::{DeployDetails, StateInterface},
 };
 
 use cosmwasm_std::Addr;
@@ -173,5 +173,13 @@ impl StateInterface for Rc<DaemonState> {
             store.insert(id.clone(), code_id.as_u64().unwrap());
         }
         Ok(store)
+    }
+
+    fn deploy_details(&self) -> DeployDetails {
+        DeployDetails {
+            chain_id: self.chain_data.chain_id.to_string(),
+            chain_name: self.chain_data.chain_name.clone(),
+            deployment_id: self.deployment_id.clone(),
+        }
     }
 }

@@ -373,8 +373,8 @@ mod test {
             .unwrap()
             .as_str()
             .unwrap()
-            .clone();
-        let timestamp = parse_timestamp(String::from(stamp)).unwrap();
+            .to_string();
+        let timestamp = parse_timestamp(stamp).unwrap();
 
         let tx_res = CosmTxResponse {
             height,

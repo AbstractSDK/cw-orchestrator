@@ -14,3 +14,9 @@ build-docs:
 doc-test:
   cargo test --doc
   mdbook build docs
+
+format:
+  cargo fmt --all
+  find . -type f -iname "*.toml" -print0 | xargs -0 taplo format
+
+

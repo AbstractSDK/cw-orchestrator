@@ -44,10 +44,22 @@ pub trait ContractInstance<Chain: CwEnv> {
         Contract::set_address(self.as_instance(), address)
     }
 
+    /// Sets a default address for the contract. If the contract already has an address registered in the state, this won't be used.
+    /// This is mostly used to ship address with a cw-orch package.
+    fn set_default_address(&mut self, address: &Addr) {
+        Contract::set_default_address(self.as_instance_mut(), address)
+    }
+
     /// Sets the code_id for the contract. Useful when the contract is already initialized
     /// and not registered in the configured state file.
     fn set_code_id(&self, code_id: u64) {
         Contract::set_code_id(self.as_instance(), code_id)
+    }
+
+    /// Sets a default address for the contract. If the contract already has an address registered in the state, this won't be used.
+    /// This is mostly used to ship address with a cw-orch package.
+    fn set_default_code_id(&mut self, code_id: u64) {
+        Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
 
     /// Returns the chain that this contract is deployed on.

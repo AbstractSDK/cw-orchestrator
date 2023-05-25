@@ -8,7 +8,7 @@ use crate::{
     environment::{ChainUpload, TxHandler},
     error::CwOrchError,
     prelude::*,
-    state::{ChainState, StateInterface},
+    state::{ChainState, DeployDetails, StateInterface},
 };
 
 use super::state::MockState;
@@ -194,6 +194,10 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 
     fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwOrchError> {
         self.borrow().get_all_code_ids()
+    }
+
+    fn deploy_details(&self) -> DeployDetails {
+        self.borrow().deploy_details()
     }
 }
 
