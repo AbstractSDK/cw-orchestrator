@@ -65,7 +65,6 @@ impl DaemonAsyncBuilder {
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
         let state = Rc::new(DaemonState::new(chain, deployment_id).await?);
-
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender = if let Some(mnemonic) = &self.mnemonic {
             Sender::from_mnemonic(&state, mnemonic)?
