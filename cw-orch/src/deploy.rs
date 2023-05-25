@@ -67,17 +67,17 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     }
 
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
-    fn set_contracts_state(&mut self){
+    fn set_contracts_state(&mut self) {
         let state_file = self.get_deployed_state_file();
         let all_contracts = self.get_contracts();
-        if let Some(state_file) = state_file{
-            if let Ok(module_state_json) = read_json(&state_file){
-                for contract in all_contracts{
+        if let Some(state_file) = state_file {
+            if let Ok(module_state_json) = read_json(&state_file) {
+                for contract in all_contracts {
                     // We set the code_id and/or address of the contract in question if they are not present already
                     let deploy_details = contract.get_chain().state().deploy_details();
                     // We load the file
                     // We try to get the code_id for the contract
-                    if contract.code_id().is_err(){
+                    if contract.code_id().is_err() {
                         let code_id = module_state_json
                             .get(deploy_details.chain_name.clone())
                             .unwrap_or(&Value::Null)
@@ -87,14 +87,14 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                             .unwrap_or(&Value::Null)
                             .get(contract.id());
 
-                        if let Some(code_id) = code_id{
-                            if code_id.is_u64(){
+                        if let Some(code_id) = code_id {
+                            if code_id.is_u64() {
                                 contract.set_default_code_id(code_id.as_u64().unwrap())
                             }
                         }
                     }
                     // We try to get the address for the contract
-                    if contract.address().is_err(){
+                    if contract.address().is_err() {
                         // Try and get the code id from file
                         let address = module_state_json
                             .get(deploy_details.chain_name.clone())
@@ -105,9 +105,11 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                             .unwrap_or(&Value::Null)
                             .get(contract.id());
 
-                        if let Some(address) = address{
-                            if address.is_string(){
-                                contract.set_default_address(&Addr::unchecked(address.as_str().unwrap()))
+                        if let Some(address) = address {
+                            if address.is_string() {
+                                contract.set_default_address(&Addr::unchecked(
+                                    address.as_str().unwrap(),
+                                ))
                             }
                         }
                     }
@@ -115,7 +117,6 @@ pub trait Deploy<Chain: CwEnv>: Sized {
             }
         }
     }
-
 
     /// Sets the custom stat file path for exporting the state (used when exporting a crate)
     /// TODO, we might want to enforce the projects to redefine this funciton ?
