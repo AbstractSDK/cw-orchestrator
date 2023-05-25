@@ -118,8 +118,9 @@ pub trait Deploy<Chain: CwEnv>: Sized {
         }
     }
 
-    /// Sets the custom stat file path for exporting the state (used when exporting a crate)
-    /// TODO, we might want to enforce the projects to redefine this funciton ?
+
+    /// Sets the custom state file path for exporting the state with the package.
+    // TODO, we might want to enforce the projects to redefine this function ?
     fn get_deployed_state_file(&self) -> Option<String> {
         // No file by default
         None
