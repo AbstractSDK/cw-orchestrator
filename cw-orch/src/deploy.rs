@@ -51,7 +51,6 @@ use std::fs::File;
 ///
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
-
 pub trait Deploy<Chain: CwEnv>: Sized {
     /// Error type returned by the deploy functions.  
     type Error: From<CwOrchError>;
@@ -68,8 +67,8 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
     fn set_contracts_state(&mut self) {
-        let state_file = self.get_deployed_state_file();
-        let all_contracts = self.get_contracts();
+        let state_file = self.deployed_state_file_path();
+        let all_contracts = self.get_contracts_mut();
         if let Some(state_file) = state_file {
             if let Ok(module_state_json) = read_json(&state_file) {
                 for contract in all_contracts {
@@ -118,16 +117,16 @@ pub trait Deploy<Chain: CwEnv>: Sized {
         }
     }
 
-
     /// Sets the custom state file path for exporting the state with the package.
     // TODO, we might want to enforce the projects to redefine this function ?
-    fn get_deployed_state_file(&self) -> Option<String> {
+    fn deployed_state_file_path(&self) -> Option<String> {
         // No file by default
         None
     }
 
     /// Returns all the contracts in this deployment instance
-    fn get_contracts(&mut self) -> Vec<Box<&mut dyn ContractInstance<Chain>>>;
+    /// Used to set the contract state (addr and code_id) when importing the package.
+    fn get_contracts_mut(&mut self) -> Vec<Box<&mut dyn ContractInstance<Chain>>>;
     /// Load the application from the chain, assuming it has already been deployed.
     fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
