@@ -1,5 +1,8 @@
-use crate::{error::CwOrchError, state::{StateInterface, DeployDetails}};
-use cosmwasm_std::{Addr, testing::mock_env};
+use crate::{
+    error::CwOrchError,
+    state::{DeployDetails, StateInterface},
+};
+use cosmwasm_std::{testing::mock_env, Addr};
 
 use std::collections::HashMap;
 
@@ -65,7 +68,11 @@ impl StateInterface for MockState {
     fn deploy_details(&self) -> DeployDetails {
         let chain_id: String = mock_env().block.chain_id;
         let chain_name: String = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-        DeployDetails { chain_id: chain_id.into() , chain_name,  deployment_id: "default".to_string()}
+        DeployDetails {
+            chain_id: chain_id.into(),
+            chain_name,
+            deployment_id: "default".to_string(),
+        }
     }
 }
 

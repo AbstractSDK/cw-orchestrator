@@ -8,7 +8,7 @@ use crate::{
     environment::{ChainUpload, TxHandler},
     error::CwOrchError,
     prelude::*,
-    state::{ChainState, StateInterface, DeployDetails},
+    state::{ChainState, DeployDetails, StateInterface},
 };
 
 use super::state::MockState;
@@ -214,7 +214,7 @@ where
     fn sender(&self) -> Addr {
         self.sender.clone()
     }
-    
+
     fn execute<E: Serialize + Debug>(
         &self,
         exec_msg: &E,

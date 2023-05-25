@@ -21,7 +21,7 @@ pub struct Contract<Chain: CwEnv> {
     /// Optional code id used in case none is registered in the state
     pub default_code_id: Option<u64>,
     /// Optional address used in case none is registered in the state
-    pub default_address: Option<Addr>
+    pub default_address: Option<Addr>,
 }
 
 /// Expose chain and state function to call them on the contract
@@ -125,7 +125,10 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn address(&self) -> Result<Addr, CwOrchError> {
         let state_address = self.chain.state().get_address(&self.id);
         // If the state address is not present, we default to the default address or an error
-        state_address.or(self.default_address.clone().ok_or(CwOrchError::AddrNotInStore(self.id.clone())))
+        state_address.or(self
+            .default_address
+            .clone()
+            .ok_or(CwOrchError::AddrNotInStore(self.id.clone())))
     }
 
     /// Sets state address for contract
@@ -142,7 +145,9 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn code_id(&self) -> Result<u64, CwOrchError> {
         let state_code_id = self.chain.state().get_code_id(&self.id);
         // If the code_ids is not present, we default to the default code_id or an error
-        state_code_id.or(self.default_code_id.ok_or(CwOrchError::CodeIdNotInStore(self.id.clone())))
+        state_code_id.or(self
+            .default_code_id
+            .ok_or(CwOrchError::CodeIdNotInStore(self.id.clone())))
     }
 
     /// Sets state code_id for contract

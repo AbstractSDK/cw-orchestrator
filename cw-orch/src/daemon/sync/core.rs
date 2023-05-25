@@ -12,7 +12,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 
-use std::{fmt::Debug, time::Duration, rc::Rc};
+use std::{fmt::Debug, rc::Rc, time::Duration};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 

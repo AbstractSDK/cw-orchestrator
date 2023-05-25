@@ -35,15 +35,14 @@ pub trait StateInterface: Clone {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrchError>;
 
     /// Get some details used for deployment on the current chain
-    /// This is used for 
+    /// This is used for
     fn deploy_details(&self) -> DeployDetails;
-
 }
 
 /// Details about the chain and env you are deploying on
-pub struct DeployDetails{
+pub struct DeployDetails {
     /// E.g. juno-2
-    pub chain_id: ChainId, 
+    pub chain_id: ChainId,
     /// E.g. juno
     pub chain_name: String,
     /// E.g. default
