@@ -2,7 +2,6 @@
 
 use crate::error::CwOrchError;
 use cosmwasm_std::Addr;
-use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use std::collections::HashMap;
 
 /// State accessor trait.
@@ -42,7 +41,7 @@ pub trait StateInterface: Clone {
 /// Details about the chain and env you are deploying on
 pub struct DeployDetails {
     /// E.g. juno-2
-    pub chain_id: ChainId,
+    pub chain_id: String,
     /// E.g. juno
     pub chain_name: String,
     /// E.g. default

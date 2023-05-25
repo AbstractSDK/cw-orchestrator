@@ -177,7 +177,7 @@ impl StateInterface for Rc<DaemonState> {
 
     fn deploy_details(&self) -> DeployDetails {
         DeployDetails {
-            chain_id: self.chain_data.chain_id.clone(),
+            chain_id: self.chain_data.chain_id.to_string(),
             chain_name: self.chain_data.chain_name.clone(),
             deployment_id: self.deployment_id.clone(),
         }
