@@ -2,14 +2,14 @@ use super::error::DaemonError;
 use crate::{
     daemon::{chain_info::ChainKind, channel::GrpcChannel},
     error::CwOrchError,
-    state::StateInterface,
+    state::{DeployDetails, StateInterface},
 };
 
 use cosmwasm_std::Addr;
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs::File, path::Path, str::FromStr};
+use std::{collections::HashMap, env, fs::File, path::Path, rc::Rc};
 use tonic::transport::Channel;
 
 /// Stores the chain information and deployment state.
@@ -18,8 +18,6 @@ use tonic::transport::Channel;
 pub struct DaemonState {
     /// this is passed via env var STATE_FILE
     pub json_file_path: String,
-    /// this is a custom state file that allows one to override the env state. This is mostly used for creating cw-orch packages
-    pub custom_state_file: Option<String>,
     /// Deployment identifier
     pub deployment_id: String,
     /// gRPC channel
@@ -81,7 +79,6 @@ impl DaemonState {
         // build daemon state
         let state = DaemonState {
             json_file_path,
-            custom_state_file: None,
             deployment_id,
             grpc_channel,
             chain_data,
@@ -106,27 +103,7 @@ impl DaemonState {
 
     /// Get the state filepath and read it as json
     fn read_state(&self) -> serde_json::Value {
-        // Here we start by loading an optional custom state file
-        // This here allows one to interact with custom contract bundles without having to query the information externally
-        let mut state = if let Some(custom_state_file) = &self.custom_state_file {
-            log::debug!("Using custom state");
-            crate::daemon::json_file::read(custom_state_file)
-        } else {
-            serde_json::Value::Null
-        };
-
-        log::debug!("Custom state used : {}", state);
-
-        let local_state = crate::daemon::json_file::read(&self.json_file_path);
-
-        json_patch::merge(&mut state, &local_state);
-
-        state
-    }
-
-    /// Add a custom state file that will fill empty values in the state if specified
-    pub fn add_custom_state_file(&mut self, file_path: Option<String>) {
-        self.custom_state_file = file_path;
+       crate::daemon::json_file::read(&self.json_file_path)
     }
 
     /// Retrieve a stateful value using the chainId and networkId
@@ -146,7 +123,7 @@ impl DaemonState {
     }
 }
 
-impl StateInterface for DaemonState {
+impl StateInterface for Rc<DaemonState> {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrchError> {
         let value = self
@@ -196,5 +173,9 @@ impl StateInterface for DaemonState {
             store.insert(id.clone(), code_id.as_u64().unwrap());
         }
         Ok(store)
+    }
+
+    fn deploy_details(&self) -> DeployDetails {
+        DeployDetails { chain_id: self.chain_data.chain_id.clone(), chain_name: self.chain_data.chain_name.clone(),  deployment_id: self.deployment_id.clone()}
     }
 }

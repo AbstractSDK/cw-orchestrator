@@ -2,6 +2,7 @@
 
 use crate::error::CwOrchError;
 use cosmwasm_std::Addr;
+use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use std::collections::HashMap;
 
 /// State accessor trait.
@@ -32,4 +33,19 @@ pub trait StateInterface: Clone {
 
     /// Get all codes related to this deployment.
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrchError>;
+
+    /// Get some details used for deployment on the current chain
+    /// This is used for 
+    fn deploy_details(&self) -> DeployDetails;
+
+}
+
+/// Details about the chain and env you are deploying on
+pub struct DeployDetails{
+    /// E.g. juno-2
+    pub chain_id: ChainId, 
+    /// E.g. juno
+    pub chain_name: String,
+    /// E.g. default
+    pub deployment_id: String,
 }

@@ -18,6 +18,10 @@ pub struct Contract<Chain: CwEnv> {
     pub id: String,
     /// Chain object that handles tx execution and queries.
     pub(crate) chain: Chain,
+    /// Optional code id used in case none is registered in the state
+    pub default_code_id: Option<u64>,
+    /// Optional address used in case none is registered in the state
+    pub default_address: Option<Addr>
 }
 
 /// Expose chain and state function to call them on the contract
@@ -27,17 +31,14 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Contract {
             id: id.to_string(),
             chain,
+            default_code_id: None,
+            default_address: None,
         }
     }
 
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
     pub fn get_chain(&self) -> &Chain {
         &self.chain
-    }
-
-    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
-    pub fn get_chain_mut(&mut self) -> &mut Chain {
-        &mut self.chain
     }
 
     /// Sets the address of the contract in the local state
@@ -122,7 +123,9 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     // State interfaces
     /// Returns state address for contract
     pub fn address(&self) -> Result<Addr, CwOrchError> {
-        self.chain.state().get_address(&self.id)
+        let state_address = self.chain.state().get_address(&self.id);
+        // If the state address is not present, we default to the default address or an error
+        state_address.or(self.default_address.clone().ok_or(CwOrchError::AddrNotInStore(self.id.clone())))
     }
 
     /// Sets state address for contract
@@ -130,14 +133,26 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self.chain.state().set_address(&self.id, address)
     }
 
+    /// Sets default address for contract (used only if not present in state)
+    pub fn set_default_address(&mut self, address: &Addr) {
+        self.default_address = Some(address.clone());
+    }
+
     /// Returns state code_id for contract
     pub fn code_id(&self) -> Result<u64, CwOrchError> {
-        self.chain.state().get_code_id(&self.id)
+        let state_code_id = self.chain.state().get_code_id(&self.id);
+        // If the code_ids is not present, we default to the default code_id or an error
+        state_code_id.or(self.default_code_id.ok_or(CwOrchError::CodeIdNotInStore(self.id.clone())))
     }
 
     /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
+    }
+
+    /// Sets default code_id for contract (used only if not present in state)
+    pub fn set_default_code_id(&mut self, code_id: u64) {
+        self.default_code_id = Some(code_id);
     }
 }
 
