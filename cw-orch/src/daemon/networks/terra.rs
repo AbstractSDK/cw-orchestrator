@@ -1,7 +1,7 @@
 use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
 pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
-    id: "terra",
+    id: "terra2",
     pub_address_prefix: "terra",
     coin_type: 330u32,
 };
