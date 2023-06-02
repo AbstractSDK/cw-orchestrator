@@ -163,6 +163,47 @@ In the counter contract we re-export in `lib.rs`;
 {{#include ../../../contracts/counter/src/lib.rs:fn_re_export}}
 ```
 
+### `impl_into` Attribute
+
+For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
+
+```rust
+use cw_orch::interface;
+use cw_orch::prelude::*;
+
+// An execute message that is generic.
+#[cosmwasm_schema::cw_serde]
+pub enum GenericExecuteMsg<T> {
+    Generic(T),
+}
+
+// Now the following is possible:
+type ExecuteMsg = GenericExecuteMsg<Foo>;
+
+#[cosmwasm_schema::cw_serde]
+#[derive(cw_orch::ExecuteFns)]
+#[impl_into(ExecuteMsg)]
+pub enum Foo {
+    Bar { a: String },
+}
+
+impl From<Foo> for ExecuteMsg {
+    fn from(msg: Foo) -> Self {
+        ExecuteMsg::Generic(msg)
+    }
+}
+
+#[interface(Empty, ExecuteMsg, Empty, Empty)]
+struct Example<Chain>;
+
+impl<Chain: CwEnv> Example<Chain> {
+    pub fn test_macro(&self) {
+        // function `bar` is available because of the `impl_into` attribute!
+        self.bar("hello".to_string()).unwrap();
+    }
+}
+```
+
 ## Learn more
 
 Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#cw-orchestrator` channel.

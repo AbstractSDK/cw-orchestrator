@@ -164,9 +164,9 @@ impl<Chain: CwEnv> Cw1<Chain> {
 
 The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryResponse)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
-### impl_into Attribute
+### `impl_into` Attribute
 
-For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremly useful when working with generic messages:
+For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
 
 ```rust
 use cw_orch::interface;
