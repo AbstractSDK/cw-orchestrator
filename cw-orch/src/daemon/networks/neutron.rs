@@ -29,3 +29,14 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
     lcd_url: Some("https://rest-kralum.neutron-1.neutron.org"),
     fcd_url: None,
 };
+
+pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
+    kind: ChainKind::Mainnet,
+    chain_id: "test-1",
+    gas_denom: "untrn",
+    gas_price: 0.0025,
+    grpc_urls: &["http://localhost:8090"],
+    network_info: NEUTRON_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
