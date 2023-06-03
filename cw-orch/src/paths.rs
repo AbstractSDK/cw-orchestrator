@@ -70,13 +70,13 @@ mod artifacts_dir {
 
     fn find_workspace_dir_worker(dir: &mut ::std::path::PathBuf) -> Option<::std::path::PathBuf> {
         loop {
-            // First we pop the dir
-            if !dir.pop() {
-                return None;
-            }
             let artifacts_dir = dir.join("artifacts");
             if ::std::fs::metadata(&artifacts_dir).is_ok() {
                 return Some(dir.clone());
+            }
+            // First we pop the dir
+            if !dir.pop() {
+                return None;
             }
         }
     }
