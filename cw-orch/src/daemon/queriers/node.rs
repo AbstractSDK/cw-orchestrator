@@ -213,6 +213,8 @@ impl Node {
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let block_speed = self.average_block_speed(Some(0.7)).await?;
 
+        block_speed = 
+
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
                 Ok(tx) => {
