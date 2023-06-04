@@ -62,15 +62,18 @@ mod artifacts_dir {
     pub fn find_workspace_dir(start_path: Option<String>) -> ::std::path::PathBuf {
         let crate_path = start_path.unwrap_or(env!("CARGO_MANIFEST_DIR").to_string());
         let mut current_dir = ::std::path::PathBuf::from(crate_path);
-        match find_workspace_dir_worker(&mut current_dir) {
+        let dir = match find_workspace_dir_worker(&mut current_dir) {
             Some(path) => path,
             None => current_dir,
         }
+        eprintln!("Found workspace dir: {}", dir.display());
+        dir
     }
 
     fn find_workspace_dir_worker(dir: &mut ::std::path::PathBuf) -> Option<::std::path::PathBuf> {
         loop {
             let artifacts_dir = dir.join("artifacts");
+            eprintln!("Checking for artifacts dir: {}", artifacts_dir.display());
             if ::std::fs::metadata(&artifacts_dir).is_ok() {
                 return Some(dir.clone());
             }
