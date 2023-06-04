@@ -65,7 +65,7 @@ mod artifacts_dir {
         let dir = match find_workspace_dir_worker(&mut current_dir) {
             Some(path) => path,
             None => current_dir,
-        }
+        };
         eprintln!("Found workspace dir: {}", dir.display());
         dir
     }
