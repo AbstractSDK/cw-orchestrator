@@ -17,7 +17,6 @@ use self::logged_state::LoggedState;
 
 use super::channel::ChannelAccess;
 
-
 /// Configuration object for tracking an IBC port
 #[derive(derive_builder::Builder)]
 pub struct IbcTrackerConfig<S: LoggedState> {
@@ -119,7 +118,6 @@ pub struct CwIbcContractState {
     /// map of the received packets on a channel
     pub committed_packets: HashMap<String, HashSet<u64>>,
 }
-
 
 impl CwIbcContractState {
     /// Creates an IBC contract tracking state with the ids of the port that needs to be tracked

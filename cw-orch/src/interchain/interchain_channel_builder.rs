@@ -1,7 +1,7 @@
 //! Builder for the IntechainChannel object
 
-use crate::daemon::DaemonError;
 use crate::daemon::Daemon;
+use crate::daemon::DaemonError;
 use crate::interchain::hermes::Hermes;
 use crate::interchain::infrastructure::NetworkId;
 use crate::interchain::infrastructure::Port;
@@ -27,9 +27,9 @@ struct ChainChannelBuilder {
 }
 
 /// Builder for a `InterchainChannel` Object
-/// 2 actions can be executed with this builder : 
+/// 2 actions can be executed with this builder :
 /// 1. Create a tracking `InterchainChannel` object from an existing channel between two ibc-linked blockchains
-/// 2. 
+/// 2.
 ///     a. Create a channel between 2 chains using a local Hermes instance (this is mostly used for testing) and THEN
 ///     b. Create a tracking `InterchainChannel` object for this specific channel
 #[derive(Default)]
@@ -100,27 +100,33 @@ impl InterchainChannelBuilder {
 
     /// Sets up the builder object from a contract on chainn A
     /// This simplifies the construction of the builder object when the port on chain A is associated with a contract
-    pub fn from_contract_a(
-        &mut self,
-        contract_a: &dyn ContractInstance<Daemon>,
-    ) -> &mut Self {
-        self.chain_a(contract_a.get_chain().state().chain_data.chain_id.to_string());
+    pub fn from_contract_a(&mut self, contract_a: &dyn ContractInstance<Daemon>) -> &mut Self {
+        self.chain_a(
+            contract_a
+                .get_chain()
+                .state()
+                .chain_data
+                .chain_id
+                .to_string(),
+        );
         self.port_a(format!("wasm.{}", contract_a.address().unwrap()));
         self.grpc_channel_a(contract_a.get_chain().channel())
     }
 
     /// Sets up the builder object from a contract on chain B
     /// This simplifies the construction of the builder object when the port on chain B is associated with a contract
-    pub fn from_contract_b(
-        &mut self,
-        contract_b: &dyn ContractInstance<Daemon>,
-    ) -> &mut Self {
-        
-        self.chain_b(contract_b.get_chain().state().chain_data.chain_id.to_string());
+    pub fn from_contract_b(&mut self, contract_b: &dyn ContractInstance<Daemon>) -> &mut Self {
+        self.chain_b(
+            contract_b
+                .get_chain()
+                .state()
+                .chain_data
+                .chain_id
+                .to_string(),
+        );
         self.port_b(format!("wasm.{}", contract_b.address().unwrap()));
         self.grpc_channel_b(contract_b.get_chain().channel())
     }
-
 
     /// Creates an InterchainChannel object from an existing channel between 2 ports.
     /// This function requires the following struct members to be defined. Otherwise, it will panic
@@ -164,7 +170,7 @@ impl InterchainChannelBuilder {
         Ok(channel)
     }
 
-    /// Creates a channel AND creates an InterchainChannel object 
+    /// Creates a channel AND creates an InterchainChannel object
     /// This function requires the following struct members to be defined. Otherwise, it will panic :
     /// - chain_id_a
     /// - chain_id_b
@@ -172,10 +178,10 @@ impl InterchainChannelBuilder {
     /// - grpc_channel_b
     /// - port_id_a
     /// - port_id_b
-    /// You can optionnaly specify the connection between the 2 chains. 
+    /// You can optionnaly specify the connection between the 2 chains.
     /// If it's not provided, it will take the first connection the gRPC on chain A finds with a chain named `chain_id_b`
-    /// Think function might block a long time because it waits until : 
-    /// 1. The channel is properly created 
+    /// Think function might block a long time because it waits until :
+    /// 1. The channel is properly created
     /// 2. ALl IBC packets sent out during the channel creation procedure have been resolved (See `InterchainEnv::await_ibc_execution` for more details)
     pub async fn create_channel(
         &self,

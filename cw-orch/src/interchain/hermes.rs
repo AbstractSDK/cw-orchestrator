@@ -8,10 +8,10 @@ use futures_util::StreamExt;
 
 pub const HERMES_ID: &str = "hermes";
 
-/// Structure to interact with a local hermes docker container and simulate 
-/// This is specifically designed to interact with the following repo : 
+/// Structure to interact with a local hermes docker container and simulate
+/// This is specifically designed to interact with the following repo :
 /// https://github.com/AbstractSDK/interchaintest/
-/// Usually, for testing, one would setup a test infrastructure using : 
+/// Usually, for testing, one would setup a test infrastructure using :
 /// ```bash
 ///     go test examples/ibc/cw_ibc_test.go
 /// ```
@@ -23,9 +23,7 @@ pub struct Hermes {
 impl Hermes {
     /// Creates an hermes instance from a docker container information
     pub fn new(container: ContainerSummary) -> Self {
-        Self {
-            container,
-        }
+        Self { container }
     }
 
     /// Execute a command in the hermes container
@@ -75,7 +73,12 @@ impl Hermes {
         let port_a = contract_port(contract_a);
         let port_b = contract_port(contract_b);
 
-        let chain_id = &contract_a.get_chain().state().chain_data.chain_id.to_string();
+        let chain_id = &contract_a
+            .get_chain()
+            .state()
+            .chain_data
+            .chain_id
+            .to_string();
         self.create_channel_raw(connection_a, channel_version, chain_id, port_a, port_b)
             .await
     }

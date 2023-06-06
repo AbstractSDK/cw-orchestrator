@@ -59,8 +59,8 @@ impl InterchainInfrastructure {
         Ok(Self { daemons })
     }
 
-    /// Initiates an interchain log setup 
-    /// This will log the different chain interactions and updates on separate files for each chain. 
+    /// Initiates an interchain log setup
+    /// This will log the different chain interactions and updates on separate files for each chain.
     /// This is useful for tracking operations happenning on IBC chains
     pub fn setup_interchain_log(daemons: &HashMap<NetworkId, Daemon>) {
         let encoder = Box::new(PatternEncoder::new(
@@ -176,7 +176,10 @@ impl InterchainInfrastructure {
 
         for daemon in self.daemons.values() {
             interchain_env = interchain_env
-                .add_custom_chain(daemon.state().chain_data.chain_id.clone().to_string(), daemon.clone())?
+                .add_custom_chain(
+                    daemon.state().chain_data.chain_id.clone().to_string(),
+                    daemon.clone(),
+                )?
                 .clone();
         }
 

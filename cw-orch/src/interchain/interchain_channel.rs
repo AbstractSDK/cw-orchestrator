@@ -1,8 +1,8 @@
 // This struct is used to create and/or track the state of a channel between two chains.
 // This is very modular to be able to follow transactions, channel creation...
 
-use crate::daemon::DaemonError;
 use crate::daemon::CosmTxResponse;
+use crate::daemon::DaemonError;
 use base64::engine::general_purpose;
 use base64::Engine;
 use tokio::time::{sleep, Duration};

@@ -1,6 +1,6 @@
-use crate::daemon::GrpcChannel;
-use crate::daemon::DaemonError;
 use crate::daemon::queriers::{DaemonQuerier, Ibc, Node};
+use crate::daemon::DaemonError;
+use crate::daemon::GrpcChannel;
 use crate::daemon::TxResultBlockEvent;
 use crate::interchain::interchain_channel::TxId;
 use crate::interchain::interchain_channel_builder::InterchainChannelBuilder;
@@ -15,7 +15,7 @@ use crate::daemon::ChannelAccess;
 use crate::interchain::infrastructure::NetworkId;
 use std::collections::HashMap;
 
-/// Environement used to track IBC execution and updates on multiple chains. 
+/// Environement used to track IBC execution and updates on multiple chains.
 /// This can be used to track specific IBC packets or get general information update on channels between multiple chains
 #[derive(Default, Clone)]
 pub struct InterchainEnv {
@@ -38,7 +38,7 @@ pub struct InterchainEnv {
 impl InterchainEnv {
     /// Adds a custom chain to the environment
     /// While following IBC packet execution, this struct will need to get specific chain information from the `chain_id` only
-    /// More precisely, it will need to get a gRPC channel from a `chain_id`. 
+    /// More precisely, it will need to get a gRPC channel from a `chain_id`.
     /// This struct will use the `crate::prelude::networks::parse_network` function by default to do so.
     /// To override this behavior for specific chains (for example for local testing), you can specify a channel for a specific chain_id
     pub fn add_custom_chain(

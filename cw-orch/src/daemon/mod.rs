@@ -1,4 +1,3 @@
-
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
@@ -15,7 +14,7 @@ mod sync;
 /// Custom traits for DaemonAsync contracts
 mod traits;
 mod tx_resp;
-// Tracking IBC state 
+// Tracking IBC state
 mod ibc_tracker;
 
 // expose these as mods as they can grow
@@ -23,8 +22,8 @@ pub mod networks;
 pub mod queriers;
 
 pub use self::{
-    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
-    tx_resp::*, ibc_tracker::*
+    builder::*, chain_info::*, channel::*, core::*, error::*, ibc_tracker::*, state::*, sync::*,
+    traits::*, tx_resp::*,
 };
 pub use sender::Wallet;
 
