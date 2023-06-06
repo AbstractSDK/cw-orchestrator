@@ -1,8 +1,12 @@
 use crate::prelude::IndexResponse;
 
-use super::cosmos_modules::abci::{AbciMessageLog, Attribute, StringEvent, TxResponse};
-use super::cosmos_modules::tendermint_abci::Event;
-use super::error::DaemonError;
+use super::{
+    cosmos_modules::{
+        abci::{AbciMessageLog, Attribute, StringEvent, TxResponse},
+        tendermint_abci::Event,
+    },
+    error::DaemonError,
+};
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
 use serde::{Deserialize, Serialize};
@@ -12,19 +16,32 @@ const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
 const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
 const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
 
+/// The response from a transaction performed on a blockchain.
 #[derive(Debug, Default, Clone)]
 pub struct CosmTxResponse {
+    /// Height of the block in which the transaction was included.
     pub height: u64,
+    /// Transaction hash.
     pub txhash: String,
+    /// Transaction index within the block.
     pub codespace: String,
+    /// Transaction result code
     pub code: usize,
+    /// Arbitrary data that can be included in a transaction.
     pub data: String,
+    /// Raw log message.
     pub raw_log: String,
+    /// Logs of the transaction.
     pub logs: Vec<TxResultBlockMsg>,
+    /// Transaction info.
     pub info: String,
+    /// Gas limit.
     pub gas_wanted: u64,
+    /// Gas used.
     pub gas_used: u64,
+    /// Timestamp of the block in which the transaction was included.
     pub timestamp: DateTime<Utc>,
+    /// Transaction events.
     pub events: Vec<Event>,
 }
 
@@ -159,9 +176,12 @@ impl IndexResponse for CosmTxResponse {
     }
 }
 
+/// The events from a single message in a transaction.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct TxResultBlockMsg {
+    /// index of the message in the transaction
     pub msg_index: Option<usize>,
+    /// Events from this message
     pub events: Vec<TxResultBlockEvent>,
 }
 
@@ -178,10 +198,13 @@ impl From<AbciMessageLog> for TxResultBlockMsg {
     }
 }
 
+/// A single event from a transaction and its attributes.
 #[derive(Deserialize, Clone, Serialize, Debug)]
 pub struct TxResultBlockEvent {
     #[serde(rename = "type")]
+    /// Type of the event
     pub s_type: String,
+    /// Attributes of the event
     pub attributes: Vec<TxResultBlockAttribute>,
 }
 
@@ -216,9 +239,12 @@ impl TxResultBlockEvent {
     }
 }
 
+/// A single attribute of an event.
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct TxResultBlockAttribute {
+    /// Key of the attribute
     pub key: String,
+    /// Value of the attribute
     pub value: String,
 }
 
@@ -231,6 +257,7 @@ impl From<Attribute> for TxResultBlockAttribute {
     }
 }
 
+/// Parse a string timestamp into a `DateTime<Utc>`
 pub fn parse_timestamp(s: String) -> Result<DateTime<Utc>, DaemonError> {
     let len = s.len();
 
@@ -341,8 +368,13 @@ mod test {
             })
             .collect::<Vec<Event>>();
 
-        let stamp = tx_response.get("timestamp").unwrap().as_str().unwrap();
-        let timestamp = parse_timestamp(String::from(stamp)).unwrap();
+        let stamp = tx_response
+            .get("timestamp")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string();
+        let timestamp = parse_timestamp(stamp).unwrap();
 
         let tx_res = CosmTxResponse {
             height,

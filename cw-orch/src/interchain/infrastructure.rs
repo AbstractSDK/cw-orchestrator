@@ -1,7 +1,7 @@
 //! Interactions with docker using bollard
 
-use crate::daemon::error::DaemonError;
-use crate::daemon::sync::core::Daemon;
+use crate::daemon::Daemon;
+use crate::daemon::DaemonError;
 use crate::interchain::docker::DockerHelper;
 
 use crate::interchain::IcResult;
@@ -59,6 +59,9 @@ impl InterchainInfrastructure {
         Ok(Self { daemons })
     }
 
+    /// Initiates an interchain log setup 
+    /// This will log the different chain interactions and updates on separate files for each chain. 
+    /// This is useful for tracking operations happenning on IBC chains
     pub fn setup_interchain_log(daemons: &HashMap<NetworkId, Daemon>) {
         let encoder = Box::new(PatternEncoder::new(
             "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
@@ -76,7 +79,7 @@ impl InterchainInfrastructure {
 
         // add appender for each daemon
         for daemon in daemons.values() {
-            let chain_id = daemon.state().chain_id.clone();
+            let chain_id = daemon.state().chain_data.chain_id.to_string();
             let log_path = generate_log_file_path(&chain_id);
             let daemon_appender = FileAppender::builder()
                 .encoder(encoder.clone())
@@ -99,7 +102,7 @@ impl InterchainInfrastructure {
         log4rs::init_config(config).unwrap();
 
         for daemon in daemons.values() {
-            let log_target = &daemon.state().chain_id;
+            let log_target = &daemon.state().chain_data.chain_id.to_string();
             // log startup to each daemon log
             log::info!(target: log_target, "Starting daemon {log_target}");
         }
@@ -159,6 +162,10 @@ impl InterchainInfrastructure {
         Ok(daemons)
     }
 
+    /// Blocks until all the IBC packets sent during the transaction on chain `chain_id` with transaction hash `packet_send_tx_hash` have completed their cycle
+    /// (Packet Sent, Packet Received, Packet Acknowledgment)
+    /// This also follows additional packets sent out in the resulting transactions
+    /// See the documentation for `InterchainEnv::await_ibc_execution` for more details about the awaiting procedure
     pub async fn await_ibc_execution(
         &self,
         chain_id: NetworkId,
@@ -169,7 +176,7 @@ impl InterchainInfrastructure {
 
         for daemon in self.daemons.values() {
             interchain_env = interchain_env
-                .add_custom_chain(daemon.state().chain_id.clone(), daemon.clone())?
+                .add_custom_chain(daemon.state().chain_data.chain_id.clone().to_string(), daemon.clone())?
                 .clone();
         }
 

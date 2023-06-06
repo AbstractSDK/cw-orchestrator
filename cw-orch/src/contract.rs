@@ -1,7 +1,9 @@
-use crate::environment::ChainUpload;
-use crate::prelude::{CwEnv, Uploadable};
+//! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use crate::{
-    environment::TxResponse, error::CwOrchError, index_response::IndexResponse,
+    environment::{ChainUpload, TxResponse},
+    error::CwOrchError,
+    index_response::IndexResponse,
+    prelude::{CwEnv, Uploadable},
     state::StateInterface,
 };
 use cosmwasm_std::{Addr, Coin};
@@ -16,14 +18,21 @@ pub struct Contract<Chain: CwEnv> {
     pub id: String,
     /// Chain object that handles tx execution and queries.
     pub(crate) chain: Chain,
+    /// Optional code id used in case none is registered in the state
+    pub default_code_id: Option<u64>,
+    /// Optional address used in case none is registered in the state
+    pub default_address: Option<Addr>,
 }
 
 /// Expose chain and state function to call them on the contract
 impl<Chain: CwEnv + Clone> Contract<Chain> {
+    /// Creates a new contract instance
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
             id: id.to_string(),
             chain,
+            default_code_id: None,
+            default_address: None,
         }
     }
 
@@ -85,6 +94,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         Ok(resp)
     }
 
+    /// Query the contract
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
@@ -113,7 +123,12 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     // State interfaces
     /// Returns state address for contract
     pub fn address(&self) -> Result<Addr, CwOrchError> {
-        self.chain.state().get_address(&self.id)
+        let state_address = self.chain.state().get_address(&self.id);
+        // If the state address is not present, we default to the default address or an error
+        state_address.or(self
+            .default_address
+            .clone()
+            .ok_or(CwOrchError::AddrNotInStore(self.id.clone())))
     }
 
     /// Sets state address for contract
@@ -121,18 +136,33 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self.chain.state().set_address(&self.id, address)
     }
 
+    /// Sets default address for contract (used only if not present in state)
+    pub fn set_default_address(&mut self, address: &Addr) {
+        self.default_address = Some(address.clone());
+    }
+
     /// Returns state code_id for contract
     pub fn code_id(&self) -> Result<u64, CwOrchError> {
-        self.chain.state().get_code_id(&self.id)
+        let state_code_id = self.chain.state().get_code_id(&self.id);
+        // If the code_ids is not present, we default to the default code_id or an error
+        state_code_id.or(self
+            .default_code_id
+            .ok_or(CwOrchError::CodeIdNotInStore(self.id.clone())))
     }
 
     /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
     }
+
+    /// Sets default code_id for contract (used only if not present in state)
+    pub fn set_default_code_id(&mut self, code_id: u64) {
+        self.default_code_id = Some(code_id);
+    }
 }
 
 impl<Chain: CwEnv + Clone + ChainUpload> Contract<Chain> {
+    /// Upload a contract given its source
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrchError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;

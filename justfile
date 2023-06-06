@@ -3,6 +3,7 @@ test:
 
 install-docs:
   cargo install mdbook
+  cargo install mdbook-keeper
 
 serve-docs:
   (cd docs && mdbook serve --open) 
@@ -10,5 +11,12 @@ serve-docs:
 build-docs:
   (cd docs && mdbook build)
 
-fmt:
-  (cargo fmt && find . -type f -iname "*.toml" -print0 | xargs -0 taplo format)
+doc-test:
+  cargo test --doc
+  mdbook build docs
+
+format:
+  cargo fmt --all
+  find . -type f -iname "*.toml" -print0 | xargs -0 taplo format
+
+

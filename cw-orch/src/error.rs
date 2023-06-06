@@ -3,10 +3,9 @@
 use thiserror::Error;
 
 #[cfg(feature = "daemon")]
-use crate::daemon::error::DaemonError;
+use crate::daemon::DaemonError;
 
 /// cw-orchestrator error wrapper using thiserror.
-/// Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
 #[derive(Error, Debug)]
 pub enum CwOrchError {
     #[cfg(feature = "daemon")]

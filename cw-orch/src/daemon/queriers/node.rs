@@ -13,7 +13,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-const MAX_TX_QUERY_RETRIES: usize = 5;
+const MAX_TX_QUERY_RETRIES: usize = 10;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -199,6 +199,7 @@ impl Node {
         })
     }
 
+    /// Returns the chain id by querying it from the latest block
     pub async fn chain_id(&self) -> Result<String, DaemonError> {
         let block = self.latest_block().await?;
         Ok(block.header.chain_id.to_string())

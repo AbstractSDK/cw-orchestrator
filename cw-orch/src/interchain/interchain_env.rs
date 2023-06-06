@@ -1,7 +1,7 @@
-use crate::daemon::channel::GrpcChannel;
-use crate::daemon::error::DaemonError;
+use crate::daemon::GrpcChannel;
+use crate::daemon::DaemonError;
 use crate::daemon::queriers::{DaemonQuerier, Ibc, Node};
-use crate::daemon::tx_resp::TxResultBlockEvent;
+use crate::daemon::TxResultBlockEvent;
 use crate::interchain::interchain_channel::TxId;
 use crate::interchain::interchain_channel_builder::InterchainChannelBuilder;
 use crate::prelude::networks::parse_network;
@@ -11,10 +11,12 @@ use ibc_chain_registry::chain::ChainData;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use tonic::transport::Channel;
 
-use crate::daemon::channel::ChannelAccess;
+use crate::daemon::ChannelAccess;
 use crate::interchain::infrastructure::NetworkId;
 use std::collections::HashMap;
 
+/// Environement used to track IBC execution and updates on multiple chains. 
+/// This can be used to track specific IBC packets or get general information update on channels between multiple chains
 #[derive(Default, Clone)]
 pub struct InterchainEnv {
     registered_chains: HashMap<NetworkId, Channel>,
@@ -33,8 +35,12 @@ pub struct InterchainEnv {
 ///         ).await.unwrap();
 /// # })
 /// ```
-
 impl InterchainEnv {
+    /// Adds a custom chain to the environment
+    /// While following IBC packet execution, this struct will need to get specific chain information from the `chain_id` only
+    /// More precisely, it will need to get a gRPC channel from a `chain_id`. 
+    /// This struct will use the `crate::prelude::networks::parse_network` function by default to do so.
+    /// To override this behavior for specific chains (for example for local testing), you can specify a channel for a specific chain_id
     pub fn add_custom_chain(
         &mut self,
         chain_id: NetworkId,
@@ -164,21 +170,25 @@ impl InterchainEnv {
         Ok(())
     }
 
-    async fn get_grpc_channel(&self, chain: &NetworkId) -> Channel {
-        let grpc_channel = self.registered_chains.get(chain);
+    /// Gets the grpc channel associed with a specific `chain_id`
+    /// If it's not registered in this struct (using the `add_custom_chain` member), it will query the grpc from the chain regisry (`networks::parse_network` function)
+    async fn get_grpc_channel(&self, chain_id: &NetworkId) -> Channel {
+        let grpc_channel = self.registered_chains.get(chain_id);
 
         if let Some(dst_grpc_channel) = grpc_channel {
             dst_grpc_channel.clone()
         } else {
             // If no custom channel was registered, we try to get it from the registry
-            let chain_data: ChainData = parse_network(chain).into();
-            GrpcChannel::connect(&chain_data.apis.grpc, &ChainId::from_string(chain))
+            let chain_data: ChainData = parse_network(chain_id).into();
+            GrpcChannel::connect(&chain_data.apis.grpc, &ChainId::from_string(chain_id))
                 .await
                 .unwrap()
         }
     }
 
-    // This is a wrapper to follow a packet directly in a single future
+    /// This is a wrapper to follow a packet directly in a single future
+    /// Only used internally.
+    /// Use `await_ibc_execution` for following IBC packets related to a transaction
     async fn follow_packet(
         self,
         src_chain: NetworkId,

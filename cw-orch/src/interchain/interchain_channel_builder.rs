@@ -1,5 +1,7 @@
-use crate::daemon::error::DaemonError;
-use crate::daemon::sync::core::Daemon;
+//! Builder for the IntechainChannel object
+
+use crate::daemon::DaemonError;
+use crate::daemon::Daemon;
 use crate::interchain::hermes::Hermes;
 use crate::interchain::infrastructure::NetworkId;
 use crate::interchain::infrastructure::Port;
@@ -24,6 +26,12 @@ struct ChainChannelBuilder {
     pub grpc_channel: Option<Channel>,
 }
 
+/// Builder for a `InterchainChannel` Object
+/// 2 actions can be executed with this builder : 
+/// 1. Create a tracking `InterchainChannel` object from an existing channel between two ibc-linked blockchains
+/// 2. 
+///     a. Create a channel between 2 chains using a local Hermes instance (this is mostly used for testing) and THEN
+///     b. Create a tracking `InterchainChannel` object for this specific channel
 #[derive(Default)]
 pub struct InterchainChannelBuilder {
     chain_a: ChainChannelBuilder,
@@ -37,58 +45,92 @@ impl InterchainChannelBuilder {
         docker_helper.get_hermes()
     }
 
+    /// Sets the chain_id for the chain A
     pub fn chain_a(&mut self, chain_id: impl Into<NetworkId>) -> &mut Self {
         self.chain_a.chain_id = Some(chain_id.into());
         self
     }
 
+    /// Sets the chain_id for the chain B
     pub fn chain_b(&mut self, chain_id: impl Into<NetworkId>) -> &mut Self {
         self.chain_b.chain_id = Some(chain_id.into());
         self
     }
 
+    /// Sets the grpc channel_for the chain A
     pub fn grpc_channel_a(&mut self, channel: Channel) -> &mut Self {
         self.chain_a.grpc_channel = Some(channel);
         self
     }
 
+    /// Sets the grpc channel_for the chain A
     pub fn grpc_channel_b(&mut self, channel: Channel) -> &mut Self {
         self.chain_b.grpc_channel = Some(channel);
         self
     }
 
+    /// Sets the port that should be followed on chain a
     pub fn port_a(&mut self, port: impl Into<Port>) -> &mut Self {
         self.chain_a.port = Some(port.into());
         self
     }
 
+    /// Sets the port that should be followed on chain b
     pub fn port_b(&mut self, port: impl Into<Port>) -> &mut Self {
         self.chain_b.port = Some(port.into());
         self
     }
 
+    /// Sets the connection that should be monitored (this is the connection_id on chain A)
     pub fn connection(&mut self, connection: impl Into<String>) -> &mut Self {
         self.connection_a = Some(connection.into());
         self
     }
 
+    /// Sets up the builder object from 2 contracts
+    /// This simplifies the construction of the builder object when following a channel between 2 contracts
     pub fn from_contracts(
         &mut self,
         contract_a: &dyn ContractInstance<Daemon>,
         contract_b: &dyn ContractInstance<Daemon>,
     ) -> &mut Self {
-        self.chain_a(contract_a.get_chain().state().chain_id.clone());
-        self.port_a(format!("wasm.{}", contract_a.address().unwrap()));
-        self.grpc_channel_a(contract_a.get_chain().channel());
+        self.from_contract_a(contract_a);
+        self.from_contract_a(contract_b)
+    }
 
-        self.chain_b(contract_b.get_chain().state().chain_id.clone());
+    /// Sets up the builder object from a contract on chainn A
+    /// This simplifies the construction of the builder object when the port on chain A is associated with a contract
+    pub fn from_contract_a(
+        &mut self,
+        contract_a: &dyn ContractInstance<Daemon>,
+    ) -> &mut Self {
+        self.chain_a(contract_a.get_chain().state().chain_data.chain_id.to_string());
+        self.port_a(format!("wasm.{}", contract_a.address().unwrap()));
+        self.grpc_channel_a(contract_a.get_chain().channel())
+    }
+
+    /// Sets up the builder object from a contract on chain B
+    /// This simplifies the construction of the builder object when the port on chain B is associated with a contract
+    pub fn from_contract_b(
+        &mut self,
+        contract_b: &dyn ContractInstance<Daemon>,
+    ) -> &mut Self {
+        
+        self.chain_b(contract_b.get_chain().state().chain_data.chain_id.to_string());
         self.port_b(format!("wasm.{}", contract_b.address().unwrap()));
         self.grpc_channel_b(contract_b.get_chain().channel())
     }
 
-    // The channel id id supposed to be the one created on the a side (you can interchange a and b at will to allow for that)
-    // The connection between the 2 chains, The two chains_ids, and the port of chain a should be defined when building a channel object with this method
-    // TODO enforce that with errors ?
+
+    /// Creates an InterchainChannel object from an existing channel between 2 ports.
+    /// This function requires the following struct members to be defined. Otherwise, it will panic
+    /// - chain_id_a
+    /// - chain_id_b
+    /// - grpc_channel_a
+    /// - grpc_channel_b
+    /// - port_id_a
+    /// A and B are symmetric in the InterchainChannel object
+    /// So don't hesitate to interchange a and b when constructing the object if you only know the port and channel on one chain
     pub async fn channel_from(
         &self,
         channel_id_a: String,
@@ -122,9 +164,19 @@ impl InterchainChannelBuilder {
         Ok(channel)
     }
 
-    // Create a channel on-chain and relay for it (using the Hermes relayer)
-    // The connection, the two chain_ids and the two ports should be defined when creating this channel
-    // TODO enforce that with errors ?
+    /// Creates a channel AND creates an InterchainChannel object 
+    /// This function requires the following struct members to be defined. Otherwise, it will panic :
+    /// - chain_id_a
+    /// - chain_id_b
+    /// - grpc_channel_a
+    /// - grpc_channel_b
+    /// - port_id_a
+    /// - port_id_b
+    /// You can optionnaly specify the connection between the 2 chains. 
+    /// If it's not provided, it will take the first connection the gRPC on chain A finds with a chain named `chain_id_b`
+    /// Think function might block a long time because it waits until : 
+    /// 1. The channel is properly created 
+    /// 2. ALl IBC packets sent out during the channel creation procedure have been resolved (See `InterchainEnv::await_ibc_execution` for more details)
     pub async fn create_channel(
         &self,
         channel_version: &str,

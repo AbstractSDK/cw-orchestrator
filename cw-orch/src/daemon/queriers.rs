@@ -23,6 +23,7 @@
 //! # })
 //! ```
 
+/// macro for constructing and performing a query on a CosmosSDK module.
 #[macro_export]
 macro_rules! cosmos_query {
     ($self:ident, $module:ident, $func_name:ident, $request_type:ident { $($field:ident : $value:expr),* $(,)?  }) => {

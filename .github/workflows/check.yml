@@ -60,10 +60,6 @@ jobs:
         run: cargo doc --no-deps --all-features
         env:
           RUSTDOCFLAGS: --cfg docsrs
-      - name: install mdbook
-        run: cargo install mdbook
-      - name: mdbook doc
-        run: mdbook test docs
   hack:
     runs-on: ubuntu-latest
     name: ubuntu / stable / features
@@ -95,3 +91,24 @@ jobs:
           toolchain: ${{ matrix.msrv }}
       - name: cargo +${{ matrix.msrv }} check
         run: cargo check
+
+  build-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install latest stable
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Generate Cargo.lock
+        run: |
+          cargo fetch --verbose
+      - name: Build Artifacts
+        run: |
+          docker run --rm -v "$(pwd)":/code \
+          --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+          --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+          cosmwasm/workspace-optimizer:0.12.13
+          tar -zcvf cosmwasm-artifacts.tar.gz artifacts

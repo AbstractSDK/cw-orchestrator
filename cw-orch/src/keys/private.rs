@@ -1,7 +1,9 @@
 use super::public::PublicKey;
-use crate::daemon::error::DaemonError;
-use bitcoin::bip32::{ExtendedPrivKey, IntoDerivationPath};
-use bitcoin::Network;
+use crate::daemon::DaemonError;
+use bitcoin::{
+    bip32::{ExtendedPrivKey, IntoDerivationPath},
+    Network,
+};
 use hkd32::mnemonic::{Phrase, Seed};
 use rand_core::OsRng;
 use secp256k1::Secp256k1;

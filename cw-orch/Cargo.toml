@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.11.2"
+version = "0.12.1"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -12,11 +12,23 @@ readme = "../README.md"
 
 exclude = [".env"]
 
+
+[package.metadata.docs.rs]
+# passes all-features to cargo when building the docs.
+all-features = true
+
+[[example]]
+name = "mock_test"
+
+[[example]]
+name = "daemon_test"
+required-features = ["daemon"]
+
+# Interact with local/remote daemons over gRPC
 [[example]]
 name = "ica-demo"
 required-features = ["interchain"]
 
-# Interact with local/remote daemons over gRPC
 [features]
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
@@ -47,15 +59,14 @@ daemon = [
   "dep:log4rs",
   "dep:diff-struct",
   "dep:futures-util",
-  "cw-orch-contract-derive/propagate_daemon",
 ]
 # Interact with interchaintest's docker nodes
 interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
 
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.11" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.11" }
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.12" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.12" }
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
@@ -122,5 +133,13 @@ tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
+
+counter-contract = { path = "../contracts/counter", features = ["interface"] }
+mock-contract = { path = "../contracts/mock_contract", features = [
+  "interface",
+] }
+mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
+  "interface",
+] }
+
 serial_test = "2.0.0"
-mock-contract = { path = "../contracts/mock_contract", features = ["cw-orch"] }

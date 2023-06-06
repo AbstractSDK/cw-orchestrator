@@ -1,22 +1,17 @@
 mod common;
 
-use cw_orch::contract::Contract;
-use cw_orch::environment::CwEnv;
-use cw_orch::environment::TxHandler;
-use cw_orch::prelude::ContractWrapper;
-use cw_orch::prelude::Uploadable;
-use cw_orch::prelude::WasmPath;
+use cw_orch::{
+    environment::{CwEnv, TxHandler},
+    prelude::{ContractWrapper, Uploadable, WasmPath},
+};
 
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
-use cw_orch::prelude::ContractInstance;
-use cw_orch::prelude::CwOrcExecute;
-use cw_orch::prelude::CwOrcMigrate;
-use cw_orch::prelude::CwOrcQuery;
-use cw_orch::prelude::CwOrcUpload;
-use cw_orch::prelude::Daemon;
-use cw_orch::prelude::{CwOrcInstantiate, Mock};
+use cw_orch::prelude::{
+    ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery, CwOrcUpload,
+    Daemon, Mock,
+};
 
 use cosmwasm_std::Addr;
 use cw_orch::interface;
@@ -24,12 +19,6 @@ const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockContract;
-
-impl<Chain: CwEnv> MockContract<Chain> {
-    pub fn new(id: &str, chain: Chain) -> Self {
-        Self(Contract::new(id, chain))
-    }
-}
 
 impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
@@ -55,7 +44,7 @@ impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
 fn test_instantiate() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -68,7 +57,7 @@ fn test_instantiate() {
 fn test_execute() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -94,7 +83,7 @@ fn test_execute() {
 fn test_query() {
     let contract = MockContract::new(
         "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")).unwrap(),
+        Mock::new(&Addr::unchecked("Ghazshag")),
     );
     contract.upload().unwrap();
 
@@ -113,7 +102,7 @@ fn test_query() {
 #[test]
 fn test_migrate() {
     let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::new("test:mock_contract", Mock::new(&admin).unwrap());
+    let contract = MockContract::new("test:mock_contract", Mock::new(&admin));
     contract.upload().unwrap();
 
     contract

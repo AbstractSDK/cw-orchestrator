@@ -1,14 +1,22 @@
-use crate::{error::CwOrchError, state::StateInterface};
-use cosmwasm_std::Addr;
+use crate::{
+    error::CwOrchError,
+    state::{DeployDetails, StateInterface},
+};
+use cosmwasm_std::{testing::mock_env, Addr};
+
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
+/// Mock state for testing, stores addresses and code-ids.
 pub struct MockState {
+    /// Deployed contract code ids
     pub code_ids: HashMap<String, u64>,
+    /// Deployed contract addresses
     pub addresses: HashMap<String, Addr>,
 }
 
 impl MockState {
+    /// Creates a new empty mock state
     pub fn new() -> Self {
         Self {
             addresses: HashMap::new(),
@@ -55,6 +63,16 @@ impl StateInterface for MockState {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwOrchError> {
         Ok(self.code_ids.clone())
+    }
+
+    fn deploy_details(&self) -> DeployDetails {
+        let chain_id: String = mock_env().block.chain_id;
+        let chain_name: String = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
+        DeployDetails {
+            chain_id,
+            chain_name,
+            deployment_id: "default".to_string(),
+        }
     }
 }
 

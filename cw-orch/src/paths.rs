@@ -1,3 +1,4 @@
+pub use artifacts_dir::from_workspace;
 pub use artifacts_dir::ArtifactsDir;
 pub use wasm_path::WasmPath;
 
@@ -24,6 +25,7 @@ mod wasm_path {
     pub struct WasmPath(PathBuf);
 
     impl WasmPath {
+        /// Create a new WasmPath from a path to a WASM file.
         pub fn new(path: impl Into<PathBuf>) -> Result<Self, CwOrchError> {
             let path: PathBuf = path.into();
             assert!(
@@ -55,8 +57,39 @@ mod wasm_path {
 mod artifacts_dir {
     use std::{env, fs, path::PathBuf};
 
-    use crate::error::CwOrchError;
-    use crate::paths::wasm_path::WasmPath;
+    use crate::{error::CwOrchError, paths::wasm_path::WasmPath};
+
+    pub fn find_workspace_dir(start_path: Option<String>) -> ::std::path::PathBuf {
+        let crate_path = start_path.unwrap_or(env!("CARGO_MANIFEST_DIR").to_string());
+        let mut current_dir = ::std::path::PathBuf::from(crate_path);
+        match find_workspace_dir_worker(&mut current_dir) {
+            Some(path) => path,
+            None => current_dir,
+        }
+    }
+
+    fn find_workspace_dir_worker(dir: &mut ::std::path::PathBuf) -> Option<::std::path::PathBuf> {
+        loop {
+            let artifacts_dir = dir.join("artifacts");
+            if ::std::fs::metadata(&artifacts_dir).is_ok() {
+                return Some(dir.clone());
+            }
+            // First we pop the dir
+            if !dir.pop() {
+                return None;
+            }
+        }
+    }
+
+    #[macro_export]
+    /// Creates an [`ArtifactsDir`] from the current workspace by searching the file tree for a directory named `artifacts`.
+    /// It does this by reading the CARGO_MANIFEST_DIR environment variable and going up the file tree until it finds the `artifacts` directory.
+    macro_rules! from_workspace {
+        () => {
+            ArtifactsDir::auto(Some(env!("CARGO_MANIFEST_DIR").to_string()))
+        };
+    }
+    pub use from_workspace;
 
     /// Points to a directory containing WASM files
     ///
@@ -81,6 +114,15 @@ mod artifacts_dir {
             Self::new(dir)
         }
 
+        /// Creates an artifacts dir by searching for an artifacts directory by going up the file tree from start_path or the current directory
+        pub fn auto(start_path: Option<String>) -> Self {
+            // We find the artifacts dir automatically from the place that this function was invoked
+            let workspace_dir = find_workspace_dir(start_path).join("artifacts");
+            log::debug!("Found artifacts dir at {:?}", workspace_dir);
+            Self::new(workspace_dir)
+        }
+
+        /// Create a new ArtifactsDir from a path to a directory containing WASM files.
         pub fn new(path: impl Into<PathBuf>) -> Self {
             let path: PathBuf = path.into();
             assert!(

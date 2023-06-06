@@ -53,7 +53,9 @@ use std::{
     See [Querier](crate::daemon::queriers) for examples.
 */
 pub struct DaemonAsync {
+    /// Sender to send transactions to the chain
     pub sender: Wallet,
+    /// State of the daemon
     pub state: Rc<DaemonState>,
 }
 
@@ -86,10 +88,12 @@ impl ChannelAccess for DaemonAsync {
 
 // Execute on the real chain, returns tx response.
 impl DaemonAsync {
+    /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
 
+    /// Execute a message on a contract.
     pub async fn execute<E: Serialize>(
         &self,
         exec_msg: &E,
@@ -106,6 +110,7 @@ impl DaemonAsync {
         Ok(result)
     }
 
+    /// Instantiate a contract.
     pub async fn instantiate<I: Serialize + Debug>(
         &self,
         code_id: u64,
@@ -130,6 +135,7 @@ impl DaemonAsync {
         Ok(result)
     }
 
+    /// Query a contract.
     pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
@@ -146,6 +152,7 @@ impl DaemonAsync {
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
+    /// Migration a contract.
     pub async fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -162,6 +169,7 @@ impl DaemonAsync {
         Ok(result)
     }
 
+    /// Wait for a given amount of blocks.
     pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let mut last_height = self.query_client::<Node>().block_height().await?;
         let end_height = last_height + amount;
@@ -187,16 +195,19 @@ impl DaemonAsync {
         Ok(())
     }
 
+    /// Wait for a given amount of seconds.
     pub async fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
         tokio::time::sleep(Duration::from_secs(secs)).await;
 
         Ok(())
     }
 
+    /// Wait for the next block.
     pub async fn next_block(&self) -> Result<(), DaemonError> {
         self.wait_blocks(1).await
     }
 
+    /// Get the current block info.
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
         let block = self.query_client::<Node>().latest_block().await?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
@@ -208,6 +219,7 @@ impl DaemonAsync {
         })
     }
 
+    /// Upload a contract to the chain.
     pub async fn upload(
         &self,
         uploadable: &impl Uploadable,
