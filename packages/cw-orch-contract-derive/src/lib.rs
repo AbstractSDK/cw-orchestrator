@@ -5,16 +5,14 @@ mod cw_orch_contract;
 use crate::cw_orch_contract::{get_crate_to_struct, get_func_type, get_wasm_name};
 
 use convert_case::{Case, Casing};
-use syn::__private::TokenStream2;
-use syn::{parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
+use syn::{__private::TokenStream2, parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
 
 use quote::{format_ident, quote};
 
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
+use syn::{punctuated::Punctuated, token::Comma};
 
 use syn::parse::{Parse, ParseStream};
 
@@ -64,7 +62,7 @@ This generated the following code:
 ```ignore
 
 // This struct represents the interface to the contract.
-pub struct Cw20<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
+pub struct Cw20<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::prelude::Contract<Chain>);
 
 impl <Chain: ::cw_orch::prelude::CwEnv> Cw20<Chain> {
     /// Constructor for the contract interface
@@ -92,8 +90,8 @@ The interface can be linked to its source code by implementing the `Uploadable` 
 ```ignore
 use cw_orch::prelude::*;
 
-impl Uploadable<Mock> for Cw20<Mock> {
-    fn source(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -103,14 +101,11 @@ impl Uploadable<Mock> for Cw20<Mock> {
             .with_migrate(cw20_base::contract::migrate),
         )
     }
-}
 
-impl Uploadable<Daemon> for Cw20<Daemon> {
-    fn source(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
         WasmPath::new("path/to/cw20.wasm").unwrap()
     }
 }
-
 */
 #[proc_macro_attribute]
 pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
@@ -151,6 +146,12 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
             )
         })
         .collect();
+
+    let all_phantom_marker_values: Vec<TokenStream2> = all_generics
+        .iter()
+        .map(|_| quote!(::std::marker::PhantomData::default()))
+        .collect();
+
     // We create necessary Debug + Serialize traits
     let all_debug_serialize: Vec<TokenStream2> = all_generics
         .iter()
@@ -172,6 +173,14 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
                 ::std::clone::Clone,
             )]
             pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
+
+            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+                pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+                    Self(
+                        ::cw_orch::contract::Contract::new(contract_id, chain)
+                    , #(#all_phantom_marker_values,)*)
+                }
+            }
 
             impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
                 fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
@@ -204,9 +213,13 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
 /**
 Procedural macro to generate a cw-orchestrator interface with the kebab-case name of the crate.
 Add this macro to the entry point functions of your contract to use it.
+**This macro can only be used in `contract.rs`**
+
 ## Example
-```text
-// In crate "my-contract"
+
+```ignore
+// In crate "my-contract::contract.rs"
+
 #[cfg_attr(feature="interface", interface_entry_point)]
 #[cfg_attr(feature="export", entry_point)]
 pub fn instantiate(
@@ -219,9 +232,10 @@ pub fn instantiate(
 }
 // ... other entry points (execute, query, migrate)
 ```
+
 ### Generated code
 
-```ignore,ignore
+```ignore
 // This struct represents the interface to the contract.
 pub struct MyContract<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
@@ -242,31 +256,24 @@ impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ExecutableContract f
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
-```
 
-### Interface usage
+// Implementation for Uploadable
+impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+        Box::new(
+            ContractWrapper::new_with_empty(
+                my_contract::contract::execute,
+                my_contract::contract::instantiate,
+                my_contract::contract::query,
+            )
+            .with_migrate(my_contract::contract::migrate),
+        )
+    }
 
-Now you can use the generated interface to call the contract's entry points in your tests/scripts.
-
-```ignore,ignore
-use my_contract::contract::MyContract;
-
-pub fn my_script() {
-    let sender = "my_address";
-    let mock_chain = Mock::new(sender);
-    // create a new interface for the contract
-    let my_contract = MyContract::new("my_contract", mock_chain.clone());
-    // upload it
-    my_contract.upload().unwrap();
-
-    // Instantiate the contract
-    let instantiate_msg = InstantiateMsg {
-        // ...
-    };
-    my_contract.instantiate(instantiate_msg, None, &[]).unwrap();
-
-    // Execute, Query, Migrate, etc.
-    //...
+    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+        // Wasm path to the artifacts directory of the contract
+        // generated with CARGO_MANIFEST_DIR env variable
+    }
 }
 ```
 */
@@ -284,7 +291,6 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     let func_ident = signature.ident.clone();
     let func_type = get_func_type(signature);
 
-    #[cfg(feature = "propagate_daemon")]
     let wasm_name = get_wasm_name();
 
     let name = get_crate_to_struct();
@@ -376,10 +382,10 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
                 let msg = ::cosmwasm_std::from_slice(&msg)?;
                 #name::<::cw_orch::prelude::Mock>::get_query()(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
             }
-            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::anyhow::Error> {
+            fn sudo(&self, deps: ::cosmwasm_std::DepsMut, env: ::cosmwasm_std::Env, msg: std::vec::Vec<u8>) -> std::result::Result<::cosmwasm_std::Response<::cosmwasm_std::Empty>, ::cw_orch::anyhow::Error> {
                 if let Some(sudo) = #name::<::cw_orch::prelude::Mock>::get_sudo() {
                     let msg = ::cosmwasm_std::from_slice(&msg)?;
-                    sudo(deps, env, msg).map_err(|err| ::anyhow::anyhow!(err))
+                    sudo(deps, env, msg).map_err(|err| ::cw_orch::anyhow::anyhow!(err))
                 }else{
                     panic!("No sudo registered");
                 }
@@ -401,37 +407,29 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             }
         }
 
-        // We need to implement the Uploadable trait for both Mock and Daemon to be able to use the contract later
-        impl ::cw_orch::prelude::Uploadable for #name<::cw_orch::prelude::Mock>{
+        // We need to implement the Uploadable trait in order to be able to upload the contract.
+        impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::Uploadable for #name<Chain>{
+
             fn wrapper(&self) -> Box<dyn ::cw_orch::prelude::MockContract<::cosmwasm_std::Empty, ::cosmwasm_std::Empty>>{
                 // For Mock contract, we need to return a cw_multi_test Contract trait
                 Box::new(#contract_trait_ident{})
             }
+
+            fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
+                // For Daemon contract, we need to return a path for the artifacts to be uploaded
+                // Remember that this is a helper for easy definition of all the traits needed.
+                // We just need to get the local artifacts folder at the root of the workspace
+                // 1. We get the path to the local artifacts dir
+                // We get the workspace dir
+                let mut workspace_dir = find_workspace_dir();
+
+                // We build the artifacts from the artifacts folder (by default) of the package
+                workspace_dir.push("artifacts");
+                let artifacts_dir = ::cw_orch::prelude::ArtifactsDir::new(workspace_dir);
+                artifacts_dir.find_wasm_path(#wasm_name).unwrap()
+            }
         }
     );
-
-    // if `daemon` feature is enabled on cw-orc it will implement Uploadable<Daemon>
-
-    #[cfg(feature = "propagate_daemon")]
-    let daemon_uploadable: TokenStream = quote!(
-            impl ::cw_orch::prelude::Uploadable for #name<::cw_orch::prelude::Daemon>{
-
-                fn wasm(&self) -> ::cw_orch::prelude::WasmPath {
-                    // For Daemon contract, we need to return a path for the artifacts to be uploaded
-                    // Remember that this is a helper for easy definition of all the traits needed.
-                    // We just need to get the local artifacts folder at the root of the workspace
-                    // 1. We get the path to the local artifacts dir
-                    // We get the workspace dir
-                    let mut workspace_dir = find_workspace_dir();
-
-                    // We build the artifacts from the artifacts folder (by default) of the package
-                    workspace_dir.push("artifacts");
-                    let artifacts_dir = ::cw_orch::prelude::ArtifactsDir::new(workspace_dir);
-                    artifacts_dir.find_wasm_path(#wasm_name).unwrap()
-                }
-        }
-    )
-    .into();
 
     let new_func_name = format_ident!("get_{}", func_ident);
 
@@ -507,9 +505,6 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             #func_part
         )
         .into();
-        // Add the Uploadable<Daemon> trait for the contract
-        #[cfg(feature = "propagate_daemon")]
-        interface_def.extend(daemon_uploadable);
 
         interface_def
     } else {

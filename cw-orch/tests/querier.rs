@@ -3,7 +3,7 @@ mod common;
 #[cfg(feature = "node-tests")]
 mod queriers {
 
-    use cw_orch::{daemon::channel::GrpcChannel, environment::TxHandler, prelude::networks};
+    use cw_orch::{daemon::GrpcChannel, environment::TxHandler, prelude::networks};
     use ibc_chain_registry::chain::Grpc;
     use ibc_relayer_types::core::ics24_host::identifier::ChainId;
     use mock_contract::InstantiateMsg;
@@ -12,8 +12,8 @@ mod queriers {
 
     use cw_orch::{
         daemon::{
-            error::DaemonError,
             queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
+            DaemonError,
         },
         prelude::{queriers::StakingBondStatus, *},
     };

@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! # Cosmos blockchain networks
 //! Contains information and helpers for different blockchain networks
 //! See [parse_network] to easily retrieve this static network information
@@ -9,12 +10,12 @@ pub mod neutron;
 pub mod osmosis;
 pub mod terra;
 
-pub use crate::daemon::state::{ChainInfo, ChainKind, NetworkInfo};
+pub use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::CONSTANTINE_1;
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
 pub use kujira::HARPOON_4;
-pub use neutron::BARYON_1;
+pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_2, OSMO_4};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 
@@ -37,12 +38,14 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         LOCAL_TERRA,
         INJECTIVE_888,
         CONSTANTINE_1,
-        BARYON_1,
+        PION_1,
+        NEUTRON_1,
         INJECTIVE_1,
         HARPOON_4,
         OSMO_4,
         OSMO_2,
         LOCAL_OSMO,
+        LOCAL_NEUTRON,
     ];
     for net in networks {
         if net.chain_id == net_id {

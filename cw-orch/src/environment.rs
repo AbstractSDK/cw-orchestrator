@@ -1,3 +1,5 @@
+//! Transactional traits for execution environments.
+
 use crate::{
     error::CwOrchError,
     prelude::{IndexResponse, Uploadable},
@@ -17,8 +19,11 @@ impl<T: TxHandler + ChainUpload + Clone> CwEnv for T {}
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
+    /// Response type for transactions on an environment.
     type Response: IndexResponse + Debug;
+    /// Error type for transactions on an environment.
     type Error: Into<CwOrchError> + Debug;
+    /// Source type for uploading to the environment.
     type ContractSource;
 
     /// Gets the address of the current wallet used to sign transactions.
@@ -72,6 +77,8 @@ pub trait TxHandler: ChainState + Clone {
 }
 
 // Required to be a different trait because it can not be implemented for the generic Mock<...>.
+/// Uploads a contract to the chain.
 pub trait ChainUpload: TxHandler {
+    /// Uploads a contract to the chain.
     fn upload(&self, contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error>;
 }

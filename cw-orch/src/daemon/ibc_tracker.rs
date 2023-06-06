@@ -1,3 +1,6 @@
+// We use that here because the Diff attribute on CwIbcContractState pops errors with this macro
+#![allow(missing_docs)]
+
 use crate::daemon::queriers::{DaemonQuerier, Ibc, Node};
 use cosmrs::proto::ibc::core::channel::v1::State;
 use diff::Diff;
@@ -14,6 +17,8 @@ use self::logged_state::LoggedState;
 
 use super::channel::ChannelAccess;
 
+
+/// Configuration object for tracking an IBC port
 #[derive(derive_builder::Builder)]
 pub struct IbcTrackerConfig<S: LoggedState> {
     #[builder(default = "Duration::from_secs(4)")]
@@ -25,6 +30,8 @@ pub struct IbcTrackerConfig<S: LoggedState> {
     pub(crate) ibc_state: S,
 }
 
+/// Trait used to log ibc updates on a specific port
+/// This allows to debug IBC connections more easily
 #[async_trait]
 pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync {
     /// Spawn this task in a separate thread.
@@ -113,7 +120,9 @@ pub struct CwIbcContractState {
     pub committed_packets: HashMap<String, HashSet<u64>>,
 }
 
+
 impl CwIbcContractState {
+    /// Creates an IBC contract tracking state with the ids of the port that needs to be tracked
     pub fn new(connection_id: impl ToString, port_id: impl ToString) -> Self {
         Self {
             connection_id: connection_id.to_string(),

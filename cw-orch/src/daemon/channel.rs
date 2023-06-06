@@ -7,9 +7,11 @@ use tonic::transport::{Channel, ClientTlsConfig};
 
 use super::error::DaemonError;
 
+/// A helper for constructing a gRPC channel
 pub struct GrpcChannel {}
 
 impl GrpcChannel {
+    /// Connect to any of the provided gRPC endpoints
     pub async fn connect(grpc: &[Grpc], chain_id: &ChainId) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 
@@ -89,8 +91,9 @@ impl GrpcChannel {
     }
 }
 
-/// indicate that the object has access to a gRPC channel
+/// Indicate that the object has access to a gRPC channel
 pub trait ChannelAccess {
+    /// Returns the underlying gRPC channel object used to communicate with the remote server
     fn channel(&self) -> Channel;
 }
 

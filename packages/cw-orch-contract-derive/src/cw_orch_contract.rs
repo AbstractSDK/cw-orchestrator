@@ -1,8 +1,7 @@
 extern crate proc_macro;
 use convert_case::{Case, Casing};
 use quote::{format_ident, quote};
-use syn::__private::TokenStream2;
-use syn::{FnArg, Pat, Signature};
+use syn::{FnArg, Pat, Signature, __private::TokenStream2};
 
 pub fn get_crate_to_struct() -> syn::Ident {
     let kebab_case_pkg = get_raw_crate();
