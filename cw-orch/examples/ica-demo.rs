@@ -33,8 +33,8 @@
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
 use cw_orch::daemon::CwIbcContractState;
-use cw_orch::daemon::IbcTrackerConfigBuilder;
 use cw_orch::daemon::IbcTracker;
+use cw_orch::daemon::IbcTrackerConfigBuilder;
 use cw_orch::interchain::docker::DockerHelper;
 use cw_orch::prelude::*;
 
@@ -66,12 +66,16 @@ pub fn script() -> anyhow::Result<()> {
     let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
 
     let networks = rt.block_on(
-        rt.block_on(DockerHelper::new())?.configure_networks(vec![JUNO_1, OSMO_2])
+        rt.block_on(DockerHelper::new())?
+            .configure_networks(vec![JUNO_1, OSMO_2]),
     )?;
 
     let interchain = InterchainInfrastructure::new(
         rt.handle(),
-        vec![(networks[0].clone(), Some(JUNO_MNEMONIC)), (networks[1].clone(), Some(OSMOSIS_MNEMONIC))],
+        vec![
+            (networks[0].clone(), Some(JUNO_MNEMONIC)),
+            (networks[1].clone(), Some(OSMOSIS_MNEMONIC)),
+        ],
     )?;
 
     let juno = interchain.daemon(JUNO)?;
@@ -196,10 +200,17 @@ fn test_ica(
     )?;
 
     // Folow the transaction execution
-    rt.block_on(interchain.await_ibc_execution(
-        controller.get_chain().state().chain_data.chain_id.to_string(),
-        burn_response.txhash,
-    ))?;
+    rt.block_on(
+        interchain.await_ibc_execution(
+            controller
+                .get_chain()
+                .state()
+                .chain_data
+                .chain_id
+                .to_string(),
+            burn_response.txhash,
+        ),
+    )?;
 
     // check that the balance became 0
     let balance = rt.block_on(juno.query_client::<Bank>().balance(&remote_addr, "ujuno"))?;
@@ -216,7 +227,6 @@ fn test_ica(
     Empty
 )]
 struct Controller;
-
 
 impl Uploadable for Controller<Daemon> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
