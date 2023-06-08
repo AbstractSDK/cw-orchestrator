@@ -5,6 +5,9 @@ use bollard::exec::{CreateExecOptions, StartExecOptions, StartExecResults};
 use bollard::service::ContainerSummary;
 use bollard::Docker;
 use futures_util::StreamExt;
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
+
+use super::infrastructure::contract_port;
 
 pub const HERMES_ID: &str = "hermes";
 
@@ -79,6 +82,7 @@ impl Hermes {
             .chain_data
             .chain_id
             .to_string();
+
         self.create_channel_raw(connection_a, channel_version, chain_id, port_a, port_b)
             .await
     }
@@ -89,8 +93,8 @@ impl Hermes {
         connection_a: &str,
         channel_version: &str,
         chain_id_a: &str,
-        port_a: String,
-        port_b: String,
+        port_a: PortId,
+        port_b: PortId,
     ) {
         let command = [
             "hermes",
@@ -105,9 +109,9 @@ impl Hermes {
             // "--b-chain",
             // &contract_b.get_chain().state.id,
             "--a-port",
-            &port_a,
+            port_a.as_str(),
             "--b-port",
-            &port_b,
+            port_b.as_str(),
             "--yes",
         ]
         .to_vec();
@@ -121,9 +125,4 @@ impl Hermes {
 
         self.exec_command(command).await
     }
-}
-
-/// format the port for a contract
-fn contract_port(contract: &dyn ContractInstance<Daemon>) -> String {
-    format!("wasm.{}", contract.addr_str().unwrap())
 }

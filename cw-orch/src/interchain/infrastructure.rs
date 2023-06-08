@@ -1,12 +1,14 @@
 //! Interactions with docker using bollard
 
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
+use crate::interface_traits::ContractInstance;
 use crate::daemon::networks::parse_network;
 use crate::daemon::Daemon;
 use crate::daemon::DaemonError;
 use crate::interchain::docker::DockerHelper;
 
 use crate::interchain::IcResult;
-use crate::prelude::InterchainEnv;
+use crate::interchain::interchain_env::InterchainEnv;
 use ibc_chain_registry::chain::{ChainData, Grpc};
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use log::LevelFilter;
@@ -27,8 +29,7 @@ use super::error::InterchainError;
 use crate::state::ChainState;
 
 pub type ContainerId = String;
-pub type Port = String;
-pub type ChannelId = String;
+pub type HttpPort = String;
 pub type NetworkId = String;
 pub type Mnemonic = String;
 
@@ -48,16 +49,6 @@ impl InterchainInfrastructure {
     where
         T: Into<ChainData>,
     {
-        // This belongs outside of the object
-        /*
-        let (mut chains, mnemonics): (Vec<ChainData>, _) = chains
-            .into_iter()
-            .map(|(chain, mnemonic)| (chain.into(), mnemonic.to_string()))
-            .unzip::<_, _, Vec<_>, Vec<_>>();
-        // Start update gRPC ports with local daemons
-        runtime.block_on(Self::configure_networks(&mut chains))?;
-        */
-
         let (chains, mnemonics): (Vec<ChainData>, _) = chains
             .into_iter()
             .map(|(chain, mnemonic)| {
@@ -223,17 +214,8 @@ impl InterchainInfrastructure {
         chain_id: NetworkId,
         packet_send_tx_hash: String,
     ) -> Result<(), DaemonError> {
-        // We crate an interchain env
-        let mut interchain_env = InterchainEnv::default();
-
-        for daemon in self.daemons.values() {
-            interchain_env = interchain_env
-                .add_custom_chain(
-                    daemon.state().chain_data.chain_id.clone().to_string(),
-                    daemon.clone(),
-                )?
-                .clone();
-        }
+        // We crate an interchain env object that is safe to send between threads
+        let interchain_env = InterchainEnv::new(&self.chain_config.values().cloned().collect()).await?;
 
         // We follow the trail
         interchain_env
@@ -308,15 +290,15 @@ impl InterchainLog {
 
         // And then we add the new builders
         for chain_id in chain_ids {
-            self.chain_ids.push(chain_id.clone());
             // We verify the log setup is not already created for the chain id
             // We silently continue if we already have a log setup for the daemon
             if self.chain_ids.contains(chain_id) {
                 continue;
             }
+            self.chain_ids.push(chain_id.clone());
             config_builder = self.add_logger(config_builder, chain_id.clone());
             // log startup to each daemon log
-            log::info!(target: chain_id, "Starting daemon {chain_id}");
+            log::info!("Starting specific log: {chain_id}");
         }
         self.handle
             .set_config(InterchainLog::build_logger(config_builder));
@@ -348,4 +330,9 @@ fn generate_log_file_path(file: &str) -> PathBuf {
     log_path.push(file_name);
 
     log_path
+}
+
+/// format the port for a contract
+pub fn contract_port(contract: &dyn ContractInstance<Daemon>) -> PortId {
+    format!("wasm.{}", contract.addr_str().unwrap()).parse().unwrap()
 }

@@ -1,6 +1,9 @@
 // This struct is used to create and/or track the state of a channel between two chains.
 // This is very modular to be able to follow transactions, channel creation...
 
+use ibc_relayer_types::core::ics04_channel::packet::Sequence;
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
+use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 use crate::daemon::CosmTxResponse;
 use crate::daemon::DaemonError;
 use base64::engine::general_purpose;
@@ -11,7 +14,7 @@ use tonic::transport::Channel;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Node;
 
-use super::infrastructure::{ChannelId, NetworkId, Port};
+use super::infrastructure::NetworkId;
 
 // type is from cosmos_sdk_proto::ibc::core::channel::v1::acknowledgement::Response
 // We copy it here to implement serialization for this enum (which is not provided by the proto in the above crate)
@@ -32,7 +35,7 @@ pub struct TxId {
 pub struct IbcPort {
     pub chain: Channel,
     pub chain_id: NetworkId,
-    pub port: Port,
+    pub port: PortId,
     pub channel: Option<ChannelId>,
 }
 
@@ -100,7 +103,7 @@ impl InterchainChannel {
     pub async fn get_packet_send_tx(
         &self,
         from: NetworkId,
-        packet_sequence: String,
+        packet_sequence: Sequence,
     ) -> Result<CosmTxResponse, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from)?;
 
@@ -126,7 +129,7 @@ impl InterchainChannel {
     pub async fn get_packet_receive_tx(
         &self,
         from: NetworkId,
-        packet_sequence: String,
+        packet_sequence: Sequence,
     ) -> Result<CosmTxResponse, DaemonError> {
         let (_src_port, dst_port) = self.get_ordered_ports_from(from)?;
 
@@ -152,7 +155,7 @@ impl InterchainChannel {
     pub async fn get_packet_ack_receive_tx(
         &self,
         from: NetworkId,
-        packet_sequence: String,
+        packet_sequence: Sequence,
     ) -> Result<CosmTxResponse, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from)?;
 
@@ -315,14 +318,14 @@ impl InterchainChannel {
     pub async fn follow_packet(
         &self,
         from: NetworkId,
-        sequence: String,
+        sequence: Sequence,
     ) -> Result<Vec<TxId>, DaemonError> {
         let (src_port, dst_port) = self.get_ordered_ports_from(from.clone())?;
 
         // 1. Query the tx hash on the distant chains related to the packet the origin chain sent
         let counterparty_grpc_channel = dst_port.chain;
 
-        let received_tx = self.get_packet_receive_tx(from, sequence.clone()).await?;
+        let received_tx = self.get_packet_receive_tx(from, sequence).await?;
         // We check if the tx errors (this shouldn't happen in IBC connections)
         if received_tx.code != 0 {
             return Err(DaemonError::TxFailed {
@@ -380,7 +383,7 @@ impl InterchainChannel {
 
         // 3. We look for the acknowledgement packet on the origin chain
         let ack_tx = self
-            .get_packet_ack_receive_tx(src_port.chain_id.clone(), sequence.clone())
+            .get_packet_ack_receive_tx(src_port.chain_id.clone(), sequence)
             .await?;
         // First we check if the tx errors (this shouldn't happen in IBC connections)
         if ack_tx.code != 0 {

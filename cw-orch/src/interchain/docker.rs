@@ -1,6 +1,7 @@
+use crate::interchain::infrastructure::HttpPort;
 use super::error::InterchainError;
 use super::hermes::{Hermes, HERMES_ID};
-use super::infrastructure::{ContainerId, Port};
+use super::infrastructure::{ContainerId};
 use super::IcResult;
 
 use bollard::models::ContainerSummary;
@@ -103,7 +104,7 @@ impl DockerHelper {
     }
 
     /// Get the grpc ports for all the running validator containers
-    pub async fn grpc_ports(&self) -> IcResult<Vec<(ContainerId, Port)>> {
+    pub async fn grpc_ports(&self) -> IcResult<Vec<(ContainerId, HttpPort)>> {
         Self::container_ports(self)
             .await
             .map(|container_binded_ports| {

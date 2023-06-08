@@ -4,7 +4,6 @@ use crate::daemon::Daemon;
 use crate::daemon::DaemonError;
 use crate::interchain::hermes::Hermes;
 use crate::interchain::infrastructure::NetworkId;
-use crate::interchain::infrastructure::Port;
 use crate::interchain::interchain_env::InterchainEnv;
 use crate::interface_traits::ContractInstance;
 use crate::state::ChainState;
@@ -15,14 +14,17 @@ use crate::interchain::docker::DockerHelper;
 use crate::interchain::interchain_channel::InterchainChannel;
 use crate::interchain::IcResult;
 
+use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
 use tonic::transport::Channel;
 
+use super::infrastructure::contract_port;
 use super::interchain_channel::IbcPort;
 
 #[derive(Default, Debug)]
 struct ChainChannelBuilder {
     pub chain_id: Option<NetworkId>,
-    pub port: Option<Port>,
+    pub port: Option<PortId>,
     pub grpc_channel: Option<Channel>,
 }
 
@@ -70,14 +72,14 @@ impl InterchainChannelBuilder {
     }
 
     /// Sets the port that should be followed on chain a
-    pub fn port_a(&mut self, port: impl Into<Port>) -> &mut Self {
-        self.chain_a.port = Some(port.into());
+    pub fn port_a(&mut self, port: PortId) -> &mut Self {
+        self.chain_a.port = Some(port);
         self
     }
 
     /// Sets the port that should be followed on chain b
-    pub fn port_b(&mut self, port: impl Into<Port>) -> &mut Self {
-        self.chain_b.port = Some(port.into());
+    pub fn port_b(&mut self, port: PortId) -> &mut Self {
+        self.chain_b.port = Some(port);
         self
     }
 
@@ -109,7 +111,7 @@ impl InterchainChannelBuilder {
                 .chain_id
                 .to_string(),
         );
-        self.port_a(format!("wasm.{}", contract_a.address().unwrap()));
+        self.port_a(contract_port(contract_a));
         self.grpc_channel_a(contract_a.get_chain().channel())
     }
 
@@ -124,7 +126,7 @@ impl InterchainChannelBuilder {
                 .chain_id
                 .to_string(),
         );
-        self.port_b(format!("wasm.{}", contract_b.address().unwrap()));
+        self.port_b(contract_port(contract_b));
         self.grpc_channel_b(contract_b.get_chain().channel())
     }
 
@@ -139,7 +141,7 @@ impl InterchainChannelBuilder {
     /// So don't hesitate to interchange a and b when constructing the object if you only know the port and channel on one chain
     pub async fn channel_from(
         &self,
-        channel_id_a: String,
+        channel_id_a: ChannelId,
     ) -> Result<InterchainChannel, DaemonError> {
         // First we need to construct the channels for chain a and chain b
         let grpc_channel_a = self.chain_a.grpc_channel.clone().unwrap();
@@ -147,7 +149,7 @@ impl InterchainChannelBuilder {
 
         // Then we check that the channel indeed exists
         let registered_channel = Ibc::new(grpc_channel_a.clone())
-            .channel(self.chain_a.port.clone().unwrap(), channel_id_a.clone())
+            .channel(self.chain_a.port.clone().unwrap().to_string(), channel_id_a.to_string())
             .await?;
         let counterparty = registered_channel.counterparty.unwrap();
 
@@ -162,8 +164,8 @@ impl InterchainChannelBuilder {
             IbcPort {
                 chain: grpc_channel_b,
                 chain_id: self.chain_b.chain_id.clone().unwrap(),
-                port: counterparty.port_id,
-                channel: Some(counterparty.channel_id),
+                port: counterparty.port_id.parse().unwrap(),
+                channel: Some(counterparty.channel_id.parse().unwrap()),
             },
         );
 
@@ -187,8 +189,6 @@ impl InterchainChannelBuilder {
         &self,
         channel_version: &str,
     ) -> Result<InterchainChannel, DaemonError> {
-        log::info!("{:?}", self.chain_a);
-        log::info!("{:?}", self.chain_b);
         let origin_chain_id = self.chain_a.chain_id.clone().unwrap();
 
         // We need to construct the channels for chain a and chain b
@@ -268,10 +268,7 @@ impl InterchainChannelBuilder {
         );
 
         // We create and interchain analysis environment and register our daemons in it
-        let interchain_env = InterchainEnv::default()
-            .add_custom_chain(self.chain_a.chain_id.clone().unwrap(), grpc_channel_a)?
-            .add_custom_chain(self.chain_b.chain_id.clone().unwrap(), grpc_channel_b)?
-            .clone();
+        let interchain_env = InterchainEnv::from_channels(&vec![(self.chain_a.chain_id.clone().unwrap(), grpc_channel_a), (self.chain_b.chain_id.clone().unwrap(), grpc_channel_b)])?;
 
         interchain_env
             .await_ibc_execution(
