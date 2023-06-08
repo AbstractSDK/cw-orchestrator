@@ -36,6 +36,7 @@ use cw_orch::daemon::CwIbcContractState;
 use cw_orch::daemon::IbcTracker;
 use cw_orch::daemon::IbcTrackerConfigBuilder;
 use cw_orch::interchain::docker::DockerHelper;
+use cw_orch::interchain::infrastructure::contract_port;
 use cw_orch::prelude::*;
 
 use crate::daemon::networks::*;
@@ -99,7 +100,7 @@ pub fn script() -> anyhow::Result<()> {
     let tracker = IbcTrackerConfigBuilder::default()
         .ibc_state(CwIbcContractState::new(
             interchain_channel.get_connection(),
-            format!("wasm.{}", host.addr_str()?),
+            contract_port(&host)
         ))
         .build()?;
     // spawn juno logging on a different thread.
@@ -112,7 +113,7 @@ pub fn script() -> anyhow::Result<()> {
     let tracker = IbcTrackerConfigBuilder::default()
         .ibc_state(CwIbcContractState::new(
             interchain_channel.get_connection(),
-            format!("wasm.{}", controller.addr_str()?),
+            contract_port(&controller)
         ))
         .build()?;
     // spawn osmosis logging on a different thread.
