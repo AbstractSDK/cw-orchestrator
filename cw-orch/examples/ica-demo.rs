@@ -100,7 +100,7 @@ pub fn script() -> anyhow::Result<()> {
     let tracker = IbcTrackerConfigBuilder::default()
         .ibc_state(CwIbcContractState::new(
             interchain_channel.get_connection(),
-            contract_port(&host)
+            contract_port(&host),
         ))
         .build()?;
     // spawn juno logging on a different thread.
@@ -113,7 +113,7 @@ pub fn script() -> anyhow::Result<()> {
     let tracker = IbcTrackerConfigBuilder::default()
         .ibc_state(CwIbcContractState::new(
             interchain_channel.get_connection(),
-            contract_port(&controller)
+            contract_port(&controller),
         ))
         .build()?;
     // spawn osmosis logging on a different thread.
