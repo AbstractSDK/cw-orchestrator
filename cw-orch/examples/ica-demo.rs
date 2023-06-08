@@ -35,6 +35,7 @@
 use cw_orch::daemon::CwIbcContractState;
 use cw_orch::daemon::IbcTrackerConfigBuilder;
 use cw_orch::daemon::IbcTracker;
+use cw_orch::interchain::docker::DockerHelper;
 use cw_orch::prelude::*;
 
 use crate::daemon::networks::*;
@@ -49,7 +50,6 @@ use cw_orch::prelude::CwOrcUpload;
 use cw_orch::prelude::TxHandler;
 use cw_orch::state::ChainState;
 use cw_orch::{prelude::WasmPath, *};
-
 use simple_ica_controller::msg::{self as controller_msgs};
 use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
@@ -65,9 +65,13 @@ const OSMOSIS: &str = "osmosis-2";
 pub fn script() -> anyhow::Result<()> {
     let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
 
+    let networks = rt.block_on(
+        rt.block_on(DockerHelper::new())?.configure_networks(vec![JUNO_1, OSMO_2])
+    )?;
+
     let interchain = InterchainInfrastructure::new(
         rt.handle(),
-        vec![(JUNO_1, Some(JUNO_MNEMONIC)), (OSMO_2, Some(OSMOSIS_MNEMONIC))],
+        vec![(networks[0].clone(), Some(JUNO_MNEMONIC)), (networks[1].clone(), Some(OSMOSIS_MNEMONIC))],
     )?;
 
     let juno = interchain.daemon(JUNO)?;
