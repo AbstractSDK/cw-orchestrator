@@ -19,6 +19,8 @@ pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_2, OSMO_4};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 
+use super::DaemonError;
+
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///
 /// ## Example
@@ -28,7 +30,7 @@ pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 /// ```
 /// ---
 /// supported chains are: UNI_6, JUNO_1, LOCAL_JUNO, PISCO_1, PHOENIX_1, LOCAL_TERRA, INJECTIVE_888, CONSTANTINE_1, BARYON_1, INJECTIVE_1, HARPOON_4, OSMO_4, LOCAL_OSMO
-pub fn parse_network(net_id: &str) -> ChainInfo {
+pub fn parse_network(net_id: &str) -> Result<ChainInfo, DaemonError> {
     let networks = vec![
         UNI_6,
         JUNO_1,
@@ -49,8 +51,8 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
     ];
     for net in networks {
         if net.chain_id == net_id {
-            return net;
+            return Ok(net);
         }
     }
-    panic!("Network not found: {}", net_id);
+    Err(DaemonError::Unknown)
 }

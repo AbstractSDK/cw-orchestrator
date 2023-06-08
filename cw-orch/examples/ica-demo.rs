@@ -32,21 +32,17 @@
 //! [Hermes](https://hermes.informal.systems/)
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
-use cw_orch::prelude::CwOrcInstantiate;
-use cw_orch::prelude::CwOrcQuery;
+use cw_orch::daemon::CwIbcContractState;
+use cw_orch::daemon::IbcTrackerConfigBuilder;
+use cw_orch::daemon::IbcTracker;
+use cw_orch::prelude::*;
 
-use crate::contract::Contract;
-use crate::daemon::ibc_tracker::CwIbcContractState;
-use crate::daemon::ibc_tracker::IbcTrackerConfigBuilder;
 use crate::daemon::networks::*;
-use crate::daemon::sync::core::Daemon;
-use crate::environment::CwEnv;
 use crate::prelude::interchain_channel_builder::InterchainChannelBuilder;
 use crate::prelude::queriers::Bank;
 use crate::prelude::InterchainInfrastructure;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{CosmosMsg, Empty};
-use cw_orch::daemon::ibc_tracker::IbcTracker;
 use cw_orch::prelude::ContractInstance;
 use cw_orch::prelude::CwOrcExecute;
 use cw_orch::prelude::CwOrcUpload;
@@ -71,7 +67,7 @@ pub fn script() -> anyhow::Result<()> {
 
     let interchain = InterchainInfrastructure::new(
         rt.handle(),
-        vec![(JUNO_1, JUNO_MNEMONIC), (OSMO_2, OSMOSIS_MNEMONIC)],
+        vec![(JUNO_1, Some(JUNO_MNEMONIC)), (OSMO_2, Some(OSMOSIS_MNEMONIC))],
     )?;
 
     let juno = interchain.daemon(JUNO)?;
@@ -197,7 +193,7 @@ fn test_ica(
 
     // Folow the transaction execution
     rt.block_on(interchain.await_ibc_execution(
-        controller.get_chain().state().chain_id.clone(),
+        controller.get_chain().state().chain_data.chain_id.to_string(),
         burn_response.txhash,
     ))?;
 
@@ -217,12 +213,6 @@ fn test_ica(
 )]
 struct Controller;
 
-impl<Chain: CwEnv> Controller<Chain> {
-    pub fn new(name: &str, chain: Chain) -> Self {
-        let contract = Contract::new(name, chain);
-        Self(contract)
-    }
-}
 
 impl Uploadable for Controller<Daemon> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
@@ -235,13 +225,6 @@ impl Uploadable for Controller<Daemon> {
 
 #[interface(host_msgs::InstantiateMsg, Empty, host_msgs::QueryMsg, Empty)]
 struct Host;
-impl<Chain: CwEnv> Host<Chain> {
-    pub fn new(name: &str, chain: Chain) -> Self {
-        let contract = Contract::new(name, chain);
-        Self(contract)
-    }
-}
-
 impl Uploadable for Host<Daemon> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
         WasmPath::new(format!("{CRATE_PATH}/examples/wasms/simple_ica_host.wasm")).unwrap()
@@ -251,12 +234,6 @@ impl Uploadable for Host<Daemon> {
 // just for uploading
 #[interface(Empty, Empty, Empty, Empty)]
 struct Cw1;
-impl<Chain: CwEnv> Cw1<Chain> {
-    pub fn new(name: &str, chain: Chain) -> Self {
-        let contract = Contract::new(name, chain);
-        Self(contract)
-    }
-}
 
 impl Uploadable for Cw1<Daemon> {
     fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {

@@ -2,13 +2,16 @@
 
 use crate::daemon::Daemon;
 use crate::daemon::DaemonError;
+use crate::daemon::networks::parse_network;
 use crate::interchain::docker::DockerHelper;
 
 use crate::interchain::IcResult;
 use crate::prelude::InterchainEnv;
 use ibc_chain_registry::chain::{ChainData, Grpc};
+use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
+use log4rs::config::runtime::ConfigBuilder;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 
@@ -32,80 +35,110 @@ pub type Mnemonic = String;
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
 pub struct InterchainInfrastructure {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
+    chain_config: HashMap<NetworkId, ChainData>,
     daemons: HashMap<NetworkId, Daemon>,
+
+    log: InterchainLog,
+    runtime: Handle
 }
 
 impl InterchainInfrastructure {
     /// Builds a new `InterchainInfrastructure` instance.
-    pub fn new<T>(runtime: &Handle, chains: Vec<(T, &str)>) -> IcResult<Self>
+    pub fn new<T>(runtime: &Handle, chains: Vec<(T, Option<impl ToString>)>) -> IcResult<Self>
     where
         T: Into<ChainData>,
     {
+
+        // This belongs outside of the object
+        /*
         let (mut chains, mnemonics): (Vec<ChainData>, _) = chains
             .into_iter()
             .map(|(chain, mnemonic)| (chain.into(), mnemonic.to_string()))
             .unzip::<_, _, Vec<_>, Vec<_>>();
         // Start update gRPC ports with local daemons
         runtime.block_on(Self::configure_networks(&mut chains))?;
+        */
 
-        let daemons = Self::build_daemons(
-            runtime,
-            // combine the chain with its mnemonic
-            &chains.into_iter().zip(mnemonics).collect::<Vec<_>>(),
+        let (chains, mnemonics): (Vec<ChainData>, _) = chains
+            .into_iter()
+            .map(|(chain, mnemonic)| {
+                let chain_data = chain.into();
+                (chain_data.clone(), (chain_data.chain_id, mnemonic.map(|mn| mn.to_string())))
+            })
+            .unzip::<_, _, Vec<_>, Vec<_>>();
+
+
+        let mut obj = Self{
+            chain_config: HashMap::new(),
+            daemons: HashMap::new(),
+
+            log: InterchainLog::new(),
+            runtime: runtime.clone()
+        };
+        // First we register the chain_data
+        obj.add_chain_config(chains)?;
+        // Then the mnemonics
+        obj.add_mnemonics(
+            mnemonics.into_iter().filter(|(_, mn)| mn.is_some()).map(|(chain_id, mn)| {
+                (chain_id, mn.unwrap())
+            }).collect()
         )?;
 
-        InterchainInfrastructure::setup_interchain_log(&daemons);
-
-        Ok(Self { daemons })
+        Ok(obj)
     }
 
-    /// Initiates an interchain log setup
-    /// This will log the different chain interactions and updates on separate files for each chain.
-    /// This is useful for tracking operations happenning on IBC chains
-    pub fn setup_interchain_log(daemons: &HashMap<NetworkId, Daemon>) {
-        let encoder = Box::new(PatternEncoder::new(
-            "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
-        ));
-        let main_log_path = generate_log_file_path("main");
-        let main_appender = FileAppender::builder()
-            .encoder(encoder.clone())
-            .build(&main_log_path)
-            .unwrap();
-        // ensure dir exists
-        std::fs::create_dir_all(main_log_path.parent().unwrap()).unwrap();
-        // add main appender to config
-        let mut config =
-            Config::builder().appender(Appender::builder().build("main", Box::new(main_appender)));
+    /// Registers a custom chain to the current interchain environment
+    pub fn add_chain_config<T>(&mut self, chain_configs: Vec<T>) -> IcResult<()>
+    where
+        T: Into<ChainData>{
 
-        // add appender for each daemon
-        for daemon in daemons.values() {
-            let chain_id = daemon.state().chain_data.chain_id.to_string();
-            let log_path = generate_log_file_path(&chain_id);
-            let daemon_appender = FileAppender::builder()
-                .encoder(encoder.clone())
-                .build(&log_path)
-                .unwrap();
+            let chain_data_configs: Vec<ChainData> = chain_configs.into_iter().map(|c| c.into()).collect();
+            // We create logs for the new chains that were just added
+            self.log.add_chains(&chain_data_configs.iter().map(|chain| 
+                chain.chain_id.to_string()
+            ).collect());
 
-            config = config
-                .appender(Appender::builder().build(&chain_id, Box::new(daemon_appender)))
-                .logger(
-                    Logger::builder()
-                        .appender(&chain_id)
-                        .build(&chain_id, LevelFilter::Info),
-                );
+            // We can't update the chain config while running. It's supposed to be created at the beginning of execution
+            for chain_data in chain_data_configs{
+                let chain_id = chain_data.chain_id.to_string();
+                if self.chain_config.contains_key(&chain_id){
+                    return Err(InterchainError::AlreadyRegistered(chain_id))
+                }
+                self.chain_config.insert(chain_id, chain_data);
+            }
+            Ok(())
+    }
+
+    /// Adds a mnemonic to the current configuration for a specific chain.
+    /// This requires that the chain Ids are already registered in the object using the add_chain_config function ?
+    /// TODO allow registering mnemonics for chains accessible using the parse_network function
+    pub fn add_mnemonics(&mut self, mnemonics: Vec<(impl ToString,impl ToString)>) -> IcResult<&mut Self>{
+        // We can't update the chain config while running. It's supposed to be created at the beginning of execution
+        for (chain_id, mn) in mnemonics{
+            let chain_id = ChainId::from_string(chain_id.to_string().as_str());
+            if self.chain_config.contains_key(&chain_id.to_string()){
+                return Err(InterchainError::AlreadyRegistered(chain_id.to_string()))
+            }
+            let chain_data = self.chain_data(chain_id)?;
+            self.build_daemon(chain_data, mn)?;
         }
 
-        let config = config
-            .build(Root::builder().appender("main").build(LevelFilter::Info))
+        Ok(self)
+    }
+
+    /// Build a daemon from chain data and mnemonic and add it to the current configuration
+    pub fn build_daemon(&mut self, chain_data: ChainData, mnemonic: impl ToString) -> IcResult<()>{
+        let daemon = Daemon::builder()
+            .chain(chain_data.clone())
+            .deployment_id("interchain") // TODO, how do we choose that
+            .handle(&self.runtime)
+            .mnemonic(mnemonic)
+            .build()
             .unwrap();
 
-        log4rs::init_config(config).unwrap();
-
-        for daemon in daemons.values() {
-            let log_target = &daemon.state().chain_data.chain_id.to_string();
-            // log startup to each daemon log
-            log::info!(target: log_target, "Starting daemon {log_target}");
-        }
+           self.daemons.insert(chain_data.chain_id.to_string(), daemon);
+        
+        Ok(())
     }
 
     /// Get the daemon for a network-id in the interchain.
@@ -114,6 +147,19 @@ impl InterchainInfrastructure {
             .get(&chain_id.to_string())
             .ok_or(InterchainError::DaemonNotFound(chain_id.to_string()))
             .cloned()
+    }
+
+    /// Get the chain data for a network-id in the interchain.
+    /// If the chain data is not registered in the environment, it fetches the configuration from the ibc_interchain_registry
+    pub fn chain_data(&self, chain_id: impl ToString) -> Result<ChainData, InterchainError> {
+        self.chain_config
+            .get(&chain_id.to_string())
+            .cloned()
+            .or_else(||parse_network(chain_id.to_string().as_str()).ok().map(|i| {
+                let chain_data: ChainData = i.into();
+                chain_data
+            }))
+            .ok_or(InterchainError::ChainConfigNotFound(chain_id.to_string()))
     }
 
     /// Get the gRPC ports for the local daemons and set them in the `ChainData` objects.
@@ -140,26 +186,6 @@ impl InterchainInfrastructure {
             }
         });
         Ok(())
-    }
-
-    /// Build the daemons from the shared runtime and chain data
-    fn build_daemons(
-        runtime_handle: &Handle,
-        chain_data: &[(ChainData, Mnemonic)],
-    ) -> Result<HashMap<NetworkId, Daemon>, DaemonError> {
-        let mut daemons = HashMap::new();
-        for (chain, mnemonic) in chain_data {
-            let daemon = Daemon::builder()
-                .chain(chain.clone())
-                .deployment_id("interchain")
-                .handle(runtime_handle)
-                .mnemonic(mnemonic)
-                .build()
-                .unwrap();
-
-            daemons.insert(chain.chain_id.to_string(), daemon);
-        }
-        Ok(daemons)
     }
 
     /// Blocks until all the IBC packets sent during the transaction on chain `chain_id` with transaction hash `packet_send_tx_hash` have completed their cycle
@@ -189,6 +215,95 @@ impl InterchainInfrastructure {
             .await?;
 
         Ok(())
+    }
+}
+
+
+pub struct InterchainLog{
+    handle: log4rs::Handle,
+    chain_ids: Vec<String>,
+}
+
+impl InterchainLog{
+
+    fn get_encoder() -> Box<PatternEncoder>{
+        Box::new(PatternEncoder::new(
+            "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
+        ))
+    }
+
+    fn builder() -> ConfigBuilder{
+        let encoder = InterchainLog::get_encoder();
+        let main_log_path = generate_log_file_path("main");
+        std::fs::create_dir_all(main_log_path.parent().unwrap()).unwrap();
+
+        let main_appender = FileAppender::builder()
+            .encoder(encoder)
+            .build(&main_log_path)
+            .unwrap();
+       Config::builder().appender(Appender::builder().build("main", Box::new(main_appender)))
+    }
+
+    fn build_logger(config: ConfigBuilder) -> log4rs::Config{
+        config
+            .build(Root::builder().appender("main").build(LevelFilter::Info))
+            .unwrap()
+    }
+
+    fn add_logger(&self, config: ConfigBuilder, chain_id: String) -> ConfigBuilder{
+        // We create the log file and register in the log config
+        let log_path = generate_log_file_path(&chain_id);
+        let daemon_appender = FileAppender::builder()
+            .encoder(InterchainLog::get_encoder())
+            .build(log_path)
+            .unwrap();
+
+        config
+            .appender(Appender::builder().build(&chain_id, Box::new(daemon_appender)))
+            .logger(
+                Logger::builder()
+                    .appender(&chain_id)
+                    .build(&chain_id, LevelFilter::Info),
+            )
+    }
+
+    /// Initiates an interchain log setup
+    /// This will log the different chain interactions and updates on separate files for each chain.
+    /// This is useful for tracking operations happenning on IBC chains
+    pub fn new() -> Self {
+        // ensure dir exists
+        // add main appender to config
+        let config_builder = InterchainLog::builder();
+        let config = InterchainLog::build_logger(config_builder);
+
+        let handle = log4rs::init_config(config).unwrap();
+
+        Self{
+            handle,
+            chain_ids: vec![]
+        }
+    }
+
+    pub fn add_chains(&mut self, chain_ids: &Vec<String>){
+        // We restart the config with the older builders
+        let mut config_builder = InterchainLog::builder();
+        for chain_id in &self.chain_ids{
+            config_builder = self.add_logger(config_builder, chain_id.to_string());
+        }
+
+        // And then we add the new builders
+        for chain_id in chain_ids {
+            self.chain_ids.push(chain_id.clone());
+            // We verify the log setup is not already created for the chain id
+            // We silently continue if we already have a log setup for the daemon
+            if self.chain_ids.contains(chain_id){
+                continue;
+            }
+            config_builder = self.add_logger(config_builder, chain_id.clone());
+            // log startup to each daemon log
+            log::info!(target: chain_id, "Starting daemon {chain_id}");
+        }
+        self.handle.set_config(InterchainLog::build_logger(config_builder));    
     }
 }
 

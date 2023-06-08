@@ -179,7 +179,7 @@ impl InterchainEnv {
             dst_grpc_channel.clone()
         } else {
             // If no custom channel was registered, we try to get it from the registry
-            let chain_data: ChainData = parse_network(chain_id).into();
+            let chain_data: ChainData = parse_network(chain_id).unwrap().into(); // TODO, no unwrap here ?
             GrpcChannel::connect(&chain_data.apis.grpc, &ChainId::from_string(chain_id))
                 .await
                 .unwrap()
