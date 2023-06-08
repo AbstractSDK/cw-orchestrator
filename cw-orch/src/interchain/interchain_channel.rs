@@ -1,13 +1,13 @@
 // This struct is used to create and/or track the state of a channel between two chains.
 // This is very modular to be able to follow transactions, channel creation...
 
-use ibc_relayer_types::core::ics04_channel::packet::Sequence;
-use ibc_relayer_types::core::ics24_host::identifier::PortId;
-use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 use crate::daemon::CosmTxResponse;
 use crate::daemon::DaemonError;
 use base64::engine::general_purpose;
 use base64::Engine;
+use ibc_relayer_types::core::ics04_channel::packet::Sequence;
+use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
 use tokio::time::{sleep, Duration};
 use tonic::transport::Channel;
 

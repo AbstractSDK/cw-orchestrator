@@ -23,7 +23,7 @@ pub enum InterchainError {
 
     #[error("chain config for chain {0} not found")]
     ChainConfigNotFound(String),
-    
+
     #[error("Configuration already registered for chain {0}")]
     AlreadyRegistered(String),
 }

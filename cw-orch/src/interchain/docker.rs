@@ -1,8 +1,8 @@
-use crate::interchain::infrastructure::HttpPort;
 use super::error::InterchainError;
 use super::hermes::{Hermes, HERMES_ID};
-use super::infrastructure::{ContainerId};
+use super::infrastructure::ContainerId;
 use super::IcResult;
+use crate::interchain::infrastructure::HttpPort;
 
 use bollard::models::ContainerSummary;
 use bollard::Docker;

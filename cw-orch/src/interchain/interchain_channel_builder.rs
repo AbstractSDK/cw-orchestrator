@@ -149,7 +149,10 @@ impl InterchainChannelBuilder {
 
         // Then we check that the channel indeed exists
         let registered_channel = Ibc::new(grpc_channel_a.clone())
-            .channel(self.chain_a.port.clone().unwrap().to_string(), channel_id_a.to_string())
+            .channel(
+                self.chain_a.port.clone().unwrap().to_string(),
+                channel_id_a.to_string(),
+            )
             .await?;
         let counterparty = registered_channel.counterparty.unwrap();
 
@@ -268,7 +271,10 @@ impl InterchainChannelBuilder {
         );
 
         // We create and interchain analysis environment and register our daemons in it
-        let interchain_env = InterchainEnv::from_channels(&vec![(self.chain_a.chain_id.clone().unwrap(), grpc_channel_a), (self.chain_b.chain_id.clone().unwrap(), grpc_channel_b)])?;
+        let interchain_env = InterchainEnv::from_channels(&vec![
+            (self.chain_a.chain_id.clone().unwrap(), grpc_channel_a),
+            (self.chain_b.chain_id.clone().unwrap(), grpc_channel_b),
+        ])?;
 
         interchain_env
             .await_ibc_execution(

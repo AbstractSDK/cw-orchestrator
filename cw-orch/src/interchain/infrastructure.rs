@@ -1,14 +1,14 @@
 //! Interactions with docker using bollard
 
-use ibc_relayer_types::core::ics24_host::identifier::PortId;
-use crate::interface_traits::ContractInstance;
 use crate::daemon::networks::parse_network;
 use crate::daemon::Daemon;
 use crate::daemon::DaemonError;
 use crate::interchain::docker::DockerHelper;
+use crate::interface_traits::ContractInstance;
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
-use crate::interchain::IcResult;
 use crate::interchain::interchain_env::InterchainEnv;
+use crate::interchain::IcResult;
 use ibc_chain_registry::chain::{ChainData, Grpc};
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use log::LevelFilter;
@@ -215,7 +215,8 @@ impl InterchainInfrastructure {
         packet_send_tx_hash: String,
     ) -> Result<(), DaemonError> {
         // We crate an interchain env object that is safe to send between threads
-        let interchain_env = InterchainEnv::new(&self.chain_config.values().cloned().collect()).await?;
+        let interchain_env =
+            InterchainEnv::new(&self.chain_config.values().cloned().collect()).await?;
 
         // We follow the trail
         interchain_env
@@ -334,5 +335,7 @@ fn generate_log_file_path(file: &str) -> PathBuf {
 
 /// format the port for a contract
 pub fn contract_port(contract: &dyn ContractInstance<Daemon>) -> PortId {
-    format!("wasm.{}", contract.addr_str().unwrap()).parse().unwrap()
+    format!("wasm.{}", contract.addr_str().unwrap())
+        .parse()
+        .unwrap()
 }

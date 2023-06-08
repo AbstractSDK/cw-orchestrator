@@ -1,17 +1,16 @@
 use crate::daemon::queriers::{DaemonQuerier, Ibc, Node};
-use crate::daemon::{DaemonError, CosmTxResponse};
 use crate::daemon::GrpcChannel;
 use crate::daemon::TxResultBlockEvent;
+use crate::daemon::{CosmTxResponse, DaemonError};
 use crate::interchain::interchain_channel::TxId;
 use crate::interchain::interchain_channel_builder::InterchainChannelBuilder;
 use crate::prelude::networks::parse_network;
-use anyhow::{Result};
+use anyhow::Result;
 use futures::future::try_join_all;
 use ibc_chain_registry::chain::ChainData;
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
-use ibc_relayer_types::core::ics24_host::identifier::{ChainId, PortId, ChannelId};
+use ibc_relayer_types::core::ics24_host::identifier::{ChainId, ChannelId, PortId};
 use tonic::transport::Channel;
-
 
 use crate::interchain::infrastructure::NetworkId;
 use std::collections::HashMap;
@@ -19,20 +18,19 @@ use std::collections::HashMap;
 use super::error::InterchainError;
 
 /// Structure to hold information about a sent packet
-pub struct IbcPackteInfo{
+pub struct IbcPackteInfo {
     src_port: PortId,
     src_channel: ChannelId,
     sequence: Sequence,
-    dst_chain_id: NetworkId
+    dst_chain_id: NetworkId,
 }
-
 
 /// Environement used to track IBC execution and updates on multiple chains.
 /// This can be used to track specific IBC packets or get general information update on channels between multiple chains
 /// This struct is safe to be sent between threads
-/// In contrary to InterchainStructure that holds Daemon in its definition which is not sendable 
+/// In contrary to InterchainStructure that holds Daemon in its definition which is not sendable
 #[derive(Default, Clone)]
-pub (crate) struct InterchainEnv {
+pub(crate) struct InterchainEnv {
     registered_chains: HashMap<NetworkId, Channel>,
 }
 
@@ -55,31 +53,28 @@ impl InterchainEnv {
     /// More precisely, it will need to get a gRPC channel from a `chain_id`.
     /// This struct will use the `crate::prelude::networks::parse_network` function by default to do so.
     /// To override this behavior for specific chains (for example for local testing), you can specify a channel for a specific chain_id
-    pub async fn new(
-        custom_chains: &Vec<ChainData>,
-    ) -> Result<Self> {
+    pub async fn new(custom_chains: &Vec<ChainData>) -> Result<Self> {
         let mut env = InterchainEnv::default();
 
-        for chain in custom_chains{
+        for chain in custom_chains {
             let grpc_channel = GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id).await?;
-            env.registered_chains.insert(chain.chain_id.to_string(), grpc_channel);
+            env.registered_chains
+                .insert(chain.chain_id.to_string(), grpc_channel);
         }
         Ok(env)
     }
-
 
     /// Adds a custom chain to the environment
     /// While following IBC packet execution, this struct will need to get specific chain information from the `chain_id` only
     /// More precisely, it will need to get a gRPC channel from a `chain_id`.
     /// This struct will use the `crate::prelude::networks::parse_network` function by default to do so.
     /// To override this behavior for specific chains (for example for local testing), you can specify a channel for a specific chain_id
-    pub fn from_channels(
-        custom_chains: &Vec<(NetworkId, Channel)>,
-    ) -> Result<Self> {
+    pub fn from_channels(custom_chains: &Vec<(NetworkId, Channel)>) -> Result<Self> {
         let mut env = InterchainEnv::default();
 
-        for (chain_id, grpc_channel) in custom_chains{
-            env.registered_chains.insert(chain_id.to_string(), grpc_channel.clone());
+        for (chain_id, grpc_channel) in custom_chains {
+            env.registered_chains
+                .insert(chain_id.to_string(), grpc_channel.clone());
         }
         Ok(env)
     }
@@ -120,13 +115,13 @@ impl InterchainEnv {
             .find_tx(packet_send_tx_hash.clone())
             .await?;
 
-
         log::info!(
             target: &chain1,
             "Investigating sent packet events on tx {}",
             packet_send_tx_hash
         );
-        let sent_packets = find_ibc_packets_sent_in_tx(chain1.clone(), grpc_channel1.clone(), tx).await?;
+        let sent_packets =
+            find_ibc_packets_sent_in_tx(chain1.clone(), grpc_channel1.clone(), tx).await?;
 
         // 2. We follow the packet history for each packet found inside the transaction
         let txs_to_follow = try_join_all(
@@ -181,7 +176,6 @@ impl InterchainEnv {
         }
     }
 
-
     /// This is a wrapper to follow a packet directly in a single future
     /// Only used internally.
     /// Use `await_ibc_execution` for following IBC packets related to a transaction
@@ -218,9 +212,11 @@ fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
         .collect()
 }
 
-
-async fn find_ibc_packets_sent_in_tx(chain: NetworkId, grpc_channel: Channel, tx: CosmTxResponse) -> Result<Vec<IbcPackteInfo>, InterchainError>{
-
+async fn find_ibc_packets_sent_in_tx(
+    chain: NetworkId,
+    grpc_channel: Channel,
+    tx: CosmTxResponse,
+) -> Result<Vec<IbcPackteInfo>, InterchainError> {
     let send_packet_events = tx.get_events("send_packet");
     if send_packet_events.is_empty() {
         return Ok(vec![]);
@@ -248,9 +244,8 @@ async fn find_ibc_packets_sent_in_tx(chain: NetworkId, grpc_channel: Channel, tx
 
     let mut ibc_packets = vec![];
     for i in 0..src_ports.len() {
-
         // We create the ibcPacketInfo struct
-        ibc_packets.push(IbcPackteInfo{
+        ibc_packets.push(IbcPackteInfo {
             src_port: src_ports[i].parse()?,
             src_channel: src_channels[i].parse()?,
             sequence: sequences[i].parse()?,
