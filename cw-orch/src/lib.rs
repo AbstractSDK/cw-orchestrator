@@ -25,7 +25,8 @@ pub mod environment;
 mod error;
 mod index_response;
 #[cfg(feature = "interchain")]
-mod interchain;
+#[allow(missing_docs)] // TODO
+pub mod interchain;
 mod interface_traits;
 #[cfg(feature = "daemon")]
 mod keys;

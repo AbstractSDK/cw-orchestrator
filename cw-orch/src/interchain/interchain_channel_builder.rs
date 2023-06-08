@@ -19,7 +19,7 @@ use tonic::transport::Channel;
 
 use super::interchain_channel::IbcPort;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct ChainChannelBuilder {
     pub chain_id: Option<NetworkId>,
     pub port: Option<Port>,
@@ -95,7 +95,7 @@ impl InterchainChannelBuilder {
         contract_b: &dyn ContractInstance<Daemon>,
     ) -> &mut Self {
         self.from_contract_a(contract_a);
-        self.from_contract_a(contract_b)
+        self.from_contract_b(contract_b)
     }
 
     /// Sets up the builder object from a contract on chainn A
@@ -187,6 +187,8 @@ impl InterchainChannelBuilder {
         &self,
         channel_version: &str,
     ) -> Result<InterchainChannel, DaemonError> {
+        log::info!("{:?}", self.chain_a);
+        log::info!("{:?}", self.chain_b);
         let origin_chain_id = self.chain_a.chain_id.clone().unwrap();
 
         // We need to construct the channels for chain a and chain b

@@ -116,7 +116,7 @@ impl InterchainInfrastructure {
         // We can't update the chain config while running. It's supposed to be created at the beginning of execution
         for (chain_id, mn) in mnemonics{
             let chain_id = ChainId::from_string(chain_id.to_string().as_str());
-            if self.chain_config.contains_key(&chain_id.to_string()){
+            if self.daemons.contains_key(&chain_id.to_string()){
                 return Err(InterchainError::AlreadyRegistered(chain_id.to_string()))
             }
             let chain_data = self.chain_data(chain_id)?;
@@ -137,6 +137,15 @@ impl InterchainInfrastructure {
             .unwrap();
 
            self.daemons.insert(chain_data.chain_id.to_string(), daemon);
+        
+        Ok(())
+    }
+
+    /// Add already constructed daemons to the environment
+    pub fn add_daemons(&mut self, daemons: &[Daemon]) -> IcResult<()>{
+        // First we add the chain data to our configuration
+        self.add_chain_config(daemons.iter().map(|d| d.state().chain_data.clone()).collect())?;
+        // Then we add the daemons
         
         Ok(())
     }
