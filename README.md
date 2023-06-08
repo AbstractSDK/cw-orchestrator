@@ -205,6 +205,22 @@ impl<Chain: CwEnv> Example<Chain> {
 }
 ```
 
+
+### Interchain
+
+Cw-orch also provides structures that help you work with IBC transactions. It allows you to : 
+1. Create a test scripting environment to work easily with IBC ports, connections and track the on-chain changes on those objects
+2. Follow the execution of an IBC transaction by blocking until the whole 
+
+Those tools can be used either in all kinds of environments (local, testnet, mainnet) and have been made modular to fit any use-case
+
+TODO : 
+    One issue that we have right now is that it's too modular and too distributed for users to actually work with this env.
+    We need to reduce the number of necessary structs and builders to simplify the concept.
+    Should we decompose along the IBC characteristics (PORT --> PORT + connection --> Channel)
+
+
+
 ## Contributing
 
 We'd really appreciate your help! Please read our [contributing guidelines](docs/src/contributing.md) to get started.

@@ -279,18 +279,9 @@ impl InterchainLog{
     /// Initiates an interchain log setup
     /// This will log the different chain interactions and updates on separate files for each chain.
     /// This is useful for tracking operations happenning on IBC chains
+    
     pub fn new() -> Self {
-        // ensure dir exists
-        // add main appender to config
-        let config_builder = InterchainLog::builder();
-        let config = InterchainLog::build_logger(config_builder);
-
-        let handle = log4rs::init_config(config).unwrap();
-
-        Self{
-            handle,
-            chain_ids: vec![]
-        }
+        Self::default()
     }
 
     pub fn add_chains(&mut self, chain_ids: &Vec<String>){
@@ -315,6 +306,23 @@ impl InterchainLog{
         self.handle.set_config(InterchainLog::build_logger(config_builder));    
     }
 }
+
+impl Default for InterchainLog{
+    fn default() -> Self {
+        // ensure dir exists
+        // add main appender to config
+        let config_builder = InterchainLog::builder();
+        let config = InterchainLog::build_logger(config_builder);
+
+        let handle = log4rs::init_config(config).unwrap();
+
+        Self{
+            handle,
+            chain_ids: vec![]
+        }
+    }
+}
+
 
 /// Get the file path for the log target
 fn generate_log_file_path(file: &str) -> PathBuf {
