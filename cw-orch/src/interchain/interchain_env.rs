@@ -1,10 +1,10 @@
 //! Interactions with docker using bollard
 
-use crate::interchain::packet_inspector::PacketInspector;
 use crate::daemon::networks::parse_network;
 use crate::daemon::Daemon;
 use crate::daemon::DaemonError;
 use crate::interchain::docker::DockerHelper;
+use crate::interchain::packet_inspector::PacketInspector;
 use crate::interface_traits::ContractInstance;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 

@@ -19,8 +19,8 @@ use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 use tonic::transport::Channel;
 
-use super::interchain_env::contract_port;
 use super::interchain_channel::IbcPort;
+use super::interchain_env::contract_port;
 
 #[derive(Default, Debug)]
 struct ChainChannelBuilder {
