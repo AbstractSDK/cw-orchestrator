@@ -14,7 +14,7 @@ use tonic::transport::Channel;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::daemon::queriers::Node;
 
-use super::infrastructure::NetworkId;
+use super::interchain_env::NetworkId;
 
 // type is from cosmos_sdk_proto::ibc::core::channel::v1::acknowledgement::Response
 // We copy it here to implement serialization for this enum (which is not provided by the proto in the above crate)

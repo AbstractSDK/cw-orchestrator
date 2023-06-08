@@ -7,7 +7,7 @@ use bollard::Docker;
 use futures_util::StreamExt;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
-use super::infrastructure::contract_port;
+use super::interchain_env::contract_port;
 
 pub const HERMES_ID: &str = "hermes";
 

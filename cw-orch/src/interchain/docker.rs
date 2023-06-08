@@ -1,8 +1,6 @@
 use super::error::InterchainError;
 use super::hermes::{Hermes, HERMES_ID};
-use super::infrastructure::ContainerId;
 use super::IcResult;
-use crate::interchain::infrastructure::HttpPort;
 
 use bollard::models::ContainerSummary;
 use bollard::Docker;
@@ -17,6 +15,10 @@ use std::collections::HashMap;
 use std::default::Default;
 
 use ibc_chain_registry::chain::{ChainData, Grpc};
+
+pub type ContainerId = String;
+pub type HttpPort = String;
+
 /// Helper for interacting with the Docker environment
 /// contains container information for the current environment
 #[derive(Debug)]

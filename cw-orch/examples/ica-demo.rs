@@ -36,13 +36,13 @@ use cw_orch::daemon::CwIbcContractState;
 use cw_orch::daemon::IbcTracker;
 use cw_orch::daemon::IbcTrackerConfigBuilder;
 use cw_orch::interchain::docker::DockerHelper;
-use cw_orch::interchain::infrastructure::contract_port;
+use cw_orch::interchain::interchain_env::contract_port;
 use cw_orch::prelude::*;
 
 use crate::daemon::networks::*;
 use crate::prelude::interchain_channel_builder::InterchainChannelBuilder;
 use crate::prelude::queriers::Bank;
-use crate::prelude::InterchainInfrastructure;
+use crate::prelude::InterchainEnv;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::prelude::ContractInstance;
@@ -71,7 +71,7 @@ pub fn script() -> anyhow::Result<()> {
             .configure_networks(vec![JUNO_1, OSMO_2]),
     )?;
 
-    let interchain = InterchainInfrastructure::new(
+    let interchain = InterchainEnv::new(
         rt.handle(),
         vec![
             (networks[0].clone(), Some(JUNO_MNEMONIC)),
@@ -162,7 +162,7 @@ fn deploy_contracts(
 /// Test the cw-ica contract
 fn test_ica(
     rt: Handle,
-    interchain: &InterchainInfrastructure,
+    interchain: &InterchainEnv,
     // controller on osmosis
     controller: &Controller<Daemon>,
     juno: &Daemon,

@@ -3,8 +3,9 @@
 use crate::daemon::Daemon;
 use crate::daemon::DaemonError;
 use crate::interchain::hermes::Hermes;
-use crate::interchain::infrastructure::NetworkId;
-use crate::interchain::interchain_env::InterchainEnv;
+use crate::interchain::interchain_env::NetworkId;
+
+use crate::interchain::packet_inspector::PacketInspector;
 use crate::interface_traits::ContractInstance;
 use crate::state::ChainState;
 
@@ -18,7 +19,7 @@ use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 use tonic::transport::Channel;
 
-use super::infrastructure::contract_port;
+use super::interchain_env::contract_port;
 use super::interchain_channel::IbcPort;
 
 #[derive(Default, Debug)]
@@ -187,7 +188,7 @@ impl InterchainChannelBuilder {
     /// If it's not provided, it will take the first connection the gRPC on chain A finds with a chain named `chain_id_b`
     /// Think function might block a long time because it waits until :
     /// 1. The channel is properly created
-    /// 2. ALl IBC packets sent out during the channel creation procedure have been resolved (See `InterchainEnv::await_ibc_execution` for more details)
+    /// 2. ALl IBC packets sent out during the channel creation procedure have been resolved (See `PacketInspector::await_ibc_execution` for more details)
     pub async fn create_channel(
         &self,
         channel_version: &str,
@@ -271,19 +272,19 @@ impl InterchainChannelBuilder {
         );
 
         // We create and interchain analysis environment and register our daemons in it
-        let interchain_env = InterchainEnv::from_channels(&vec![
+        let packet_inspector = PacketInspector::from_channels(&vec![
             (self.chain_a.chain_id.clone().unwrap(), grpc_channel_a),
             (self.chain_b.chain_id.clone().unwrap(), grpc_channel_b),
         ])?;
 
-        interchain_env
+        packet_inspector
             .await_ibc_execution(
                 self.chain_a.chain_id.clone().unwrap(),
                 channel_creation_tx_a.txhash.clone(),
             )
             .await?;
 
-        interchain_env
+        packet_inspector
             .await_ibc_execution(
                 self.chain_b.chain_id.clone().unwrap(),
                 channel_creation_tx_b.txhash.clone(),

@@ -1,270 +1,339 @@
-use crate::daemon::queriers::{DaemonQuerier, Ibc, Node};
-use crate::daemon::GrpcChannel;
-use crate::daemon::TxResultBlockEvent;
-use crate::daemon::{CosmTxResponse, DaemonError};
-use crate::interchain::interchain_channel::TxId;
-use crate::interchain::interchain_channel_builder::InterchainChannelBuilder;
-use crate::prelude::networks::parse_network;
-use anyhow::Result;
-use futures::future::try_join_all;
-use ibc_chain_registry::chain::ChainData;
-use ibc_relayer_types::core::ics04_channel::packet::Sequence;
-use ibc_relayer_types::core::ics24_host::identifier::{ChainId, ChannelId, PortId};
-use tonic::transport::Channel;
+//! Interactions with docker using bollard
 
-use crate::interchain::infrastructure::NetworkId;
+use crate::interchain::packet_inspector::PacketInspector;
+use crate::daemon::networks::parse_network;
+use crate::daemon::Daemon;
+use crate::daemon::DaemonError;
+use crate::interchain::docker::DockerHelper;
+use crate::interface_traits::ContractInstance;
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
+
+use crate::interchain::IcResult;
+use ibc_chain_registry::chain::{ChainData, Grpc};
+use ibc_relayer_types::core::ics24_host::identifier::ChainId;
+use log::LevelFilter;
+use log4rs::append::file::FileAppender;
+use log4rs::config::runtime::ConfigBuilder;
+use log4rs::config::{Appender, Logger, Root};
+use log4rs::encode::pattern::PatternEncoder;
+
+use log4rs::Config;
+
 use std::collections::HashMap;
+use std::default::Default;
+use std::path::PathBuf;
+use tokio::runtime::Handle;
 
 use super::error::InterchainError;
 
-/// Structure to hold information about a sent packet
-pub struct IbcPackteInfo {
-    src_port: PortId,
-    src_channel: ChannelId,
-    sequence: Sequence,
-    dst_chain_id: NetworkId,
+use crate::state::ChainState;
+
+pub type NetworkId = String;
+pub type Mnemonic = String;
+
+/// Represents a set of locally running blockchain nodes and a Hermes relayer.
+pub struct InterchainEnv {
+    /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
+    chain_config: HashMap<NetworkId, ChainData>,
+    daemons: HashMap<NetworkId, Daemon>,
+
+    log: InterchainLog,
+    runtime: Handle,
 }
 
-/// Environement used to track IBC execution and updates on multiple chains.
-/// This can be used to track specific IBC packets or get general information update on channels between multiple chains
-/// This struct is safe to be sent between threads
-/// In contrary to InterchainStructure that holds Daemon in its definition which is not sendable
-#[derive(Default, Clone)]
-pub(crate) struct InterchainEnv {
-    registered_chains: HashMap<NetworkId, Channel>,
-}
-
-/// TODO, change this doc comment that is not up to date anymore
-/// Follow all IBC packets included in a transaction (recursively).
-/// ## Example
-/// ```no_run
-///  use cw_orch::prelude::InterchainEnv;
-/// # tokio_test::block_on(async {
-///  InterchainEnv::default()
-///        .await_ibc_execution(
-///             "juno-1".to_string(),
-///             "2E68E86FEFED8459144D19968B36C6FB8928018D720CC29689B4793A7DE50BD5".to_string()
-///         ).await.unwrap();
-/// # })
-/// ```
 impl InterchainEnv {
-    /// Adds a custom chain to the environment
-    /// While following IBC packet execution, this struct will need to get specific chain information from the `chain_id` only
-    /// More precisely, it will need to get a gRPC channel from a `chain_id`.
-    /// This struct will use the `crate::prelude::networks::parse_network` function by default to do so.
-    /// To override this behavior for specific chains (for example for local testing), you can specify a channel for a specific chain_id
-    pub async fn new(custom_chains: &Vec<ChainData>) -> Result<Self> {
-        let mut env = InterchainEnv::default();
+    /// Builds a new `InterchainEnv` instance.
+    pub fn new<T>(runtime: &Handle, chains: Vec<(T, Option<impl ToString>)>) -> IcResult<Self>
+    where
+        T: Into<ChainData>,
+    {
+        let (chains, mnemonics): (Vec<ChainData>, _) = chains
+            .into_iter()
+            .map(|(chain, mnemonic)| {
+                let chain_data = chain.into();
+                (
+                    chain_data.clone(),
+                    (chain_data.chain_id, mnemonic.map(|mn| mn.to_string())),
+                )
+            })
+            .unzip::<_, _, Vec<_>, Vec<_>>();
 
-        for chain in custom_chains {
-            let grpc_channel = GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id).await?;
-            env.registered_chains
-                .insert(chain.chain_id.to_string(), grpc_channel);
-        }
-        Ok(env)
+        let mut obj = Self {
+            chain_config: HashMap::new(),
+            daemons: HashMap::new(),
+
+            log: InterchainLog::new(),
+            runtime: runtime.clone(),
+        };
+        // First we register the chain_data
+        obj.add_chain_config(chains)?;
+        // Then the mnemonics
+        obj.add_mnemonics(
+            mnemonics
+                .into_iter()
+                .filter(|(_, mn)| mn.is_some())
+                .map(|(chain_id, mn)| (chain_id, mn.unwrap()))
+                .collect(),
+        )?;
+
+        Ok(obj)
     }
 
-    /// Adds a custom chain to the environment
-    /// While following IBC packet execution, this struct will need to get specific chain information from the `chain_id` only
-    /// More precisely, it will need to get a gRPC channel from a `chain_id`.
-    /// This struct will use the `crate::prelude::networks::parse_network` function by default to do so.
-    /// To override this behavior for specific chains (for example for local testing), you can specify a channel for a specific chain_id
-    pub fn from_channels(custom_chains: &Vec<(NetworkId, Channel)>) -> Result<Self> {
-        let mut env = InterchainEnv::default();
-
-        for (chain_id, grpc_channel) in custom_chains {
-            env.registered_chains
-                .insert(chain_id.to_string(), grpc_channel.clone());
-        }
-        Ok(env)
-    }
-
-    /// Following the IBC documentation of packets here : https://github.com/CosmWasm/cosmwasm/blob/main/IBC.md
-    /// This function retrieves all ibc packets sent out during a transaction and follows them until they are acknoledged back on the sending chain
-    ///
-    /// 1. Send Packet. The provided transaction hash is used to retrieve all transaction logs from the sending chain.
-    ///     In the logs, we can find all details that allow us to identify the transaction in which the packet is received in the distant chain
-    ///     These include :
-    ///     - The connection_id
-    ///     - The destination port
-    ///     - The destination channel
-    ///     - The packet sequence (to identify a specific packet in the channel)
-    ///
-    ///     ## Remarks
-    ///     - The packet data is also retrieved for logging
-    ///     - Multiple packets can be sent out during the same transaction.
-    ///         In order to identify them, we assume the order of the events is the same for all events of a single packet.
-    ///         Ex: packet_connection = ["connection_id_of_packet_1", "connection_id_of_packet_2"]
-    ///         Ex: packet_dst_port = ["packet_dst_port_of_packet_1", "packet_dst_port_of_packet_2"]
-    ///     - The chain id of the destination chain is not available directly in the logs.
-    ///         However, it is possible to query the node for the chain id of the counterparty chain linked by a connection
-    ///
-    /// 2. Follow all IBC pacjets until they are acknowledged on the origin chain
-    ///
-    /// 3. Scan all encountered transactions along the way for additional IBC packets
-    #[async_recursion::async_recursion]
-    pub async fn await_ibc_execution(
-        &self,
-        chain1: NetworkId,
-        packet_send_tx_hash: String,
-    ) -> Result<()> {
-        // 1. Getting IBC related events for the current tx + finding all IBC packets sent out in the transaction
-        let grpc_channel1 = self.get_grpc_channel(&chain1).await;
-
-        let tx = Node::new(grpc_channel1.clone())
-            .find_tx(packet_send_tx_hash.clone())
-            .await?;
-
-        log::info!(
-            target: &chain1,
-            "Investigating sent packet events on tx {}",
-            packet_send_tx_hash
+    /// Registers a custom chain to the current interchain environment
+    pub fn add_chain_config<T>(&mut self, chain_configs: Vec<T>) -> IcResult<()>
+    where
+        T: Into<ChainData>,
+    {
+        let chain_data_configs: Vec<ChainData> =
+            chain_configs.into_iter().map(|c| c.into()).collect();
+        // We create logs for the new chains that were just added
+        self.log.add_chains(
+            &chain_data_configs
+                .iter()
+                .map(|chain| chain.chain_id.to_string())
+                .collect(),
         );
-        let sent_packets =
-            find_ibc_packets_sent_in_tx(chain1.clone(), grpc_channel1.clone(), tx).await?;
 
-        // 2. We follow the packet history for each packet found inside the transaction
-        let txs_to_follow = try_join_all(
-            sent_packets
-                .iter()
-                .map(|packet| {
-                    self.clone().follow_packet(
-                        chain1.clone(),
-                        packet.src_port.clone(),
-                        grpc_channel1.clone(),
-                        packet.src_channel.clone(),
-                        packet.dst_chain_id.clone(),
-                        packet.sequence,
-                    )
-                })
-                .collect::<Vec<_>>(),
-        )
-        .await?
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
+        // We can't update the chain config while running. It's supposed to be created at the beginning of execution
+        for chain_data in chain_data_configs {
+            let chain_id = chain_data.chain_id.to_string();
+            if self.chain_config.contains_key(&chain_id) {
+                return Err(InterchainError::AlreadyRegistered(chain_id));
+            }
+            self.chain_config.insert(chain_id, chain_data);
+        }
+        Ok(())
+    }
 
-        // 3. We analyze all the encountered tx hashes for outgoing IBC transactions
-        try_join_all(
-            txs_to_follow
-                .iter()
-                .map(|tx| {
-                    let chain_id = tx.chain_id.clone();
-                    let hash = tx.tx_hash.clone();
-                    self.await_ibc_execution(chain_id, hash)
-                })
-                .collect::<Vec<_>>(),
-        )
-        .await?;
+    /// Adds a mnemonic to the current configuration for a specific chain.
+    /// This requires that the chain Ids are already registered in the object using the add_chain_config function ?
+    /// TODO allow registering mnemonics for chains accessible using the parse_network function
+    pub fn add_mnemonics(
+        &mut self,
+        mnemonics: Vec<(impl ToString, impl ToString)>,
+    ) -> IcResult<&mut Self> {
+        // We can't update the chain config while running. It's supposed to be created at the beginning of execution
+        for (chain_id, mn) in mnemonics {
+            let chain_id = ChainId::from_string(chain_id.to_string().as_str());
+            if self.daemons.contains_key(&chain_id.to_string()) {
+                return Err(InterchainError::AlreadyRegistered(chain_id.to_string()));
+            }
+            let chain_data = self.chain_data(chain_id)?;
+            self.build_daemon(chain_data, mn)?;
+        }
+
+        Ok(self)
+    }
+
+    /// Build a daemon from chain data and mnemonic and add it to the current configuration
+    pub fn build_daemon(&mut self, chain_data: ChainData, mnemonic: impl ToString) -> IcResult<()> {
+        let daemon = Daemon::builder()
+            .chain(chain_data.clone())
+            .deployment_id("interchain") // TODO, how do we choose that
+            .handle(&self.runtime)
+            .mnemonic(mnemonic)
+            .build()
+            .unwrap();
+
+        self.daemons.insert(chain_data.chain_id.to_string(), daemon);
 
         Ok(())
     }
 
-    /// Gets the grpc channel associed with a specific `chain_id`
-    /// If it's not registered in this struct (using the `add_custom_chain` member), it will query the grpc from the chain regisry (`networks::parse_network` function)
-    async fn get_grpc_channel(&self, chain_id: &NetworkId) -> Channel {
-        let grpc_channel = self.registered_chains.get(chain_id);
+    /// Add already constructed daemons to the environment
+    pub fn add_daemons(&mut self, daemons: &[Daemon]) -> IcResult<()> {
+        // First we add the chain data to our configuration
+        self.add_chain_config(
+            daemons
+                .iter()
+                .map(|d| d.state().chain_data.clone())
+                .collect(),
+        )?;
+        // Then we add the daemons
 
-        if let Some(dst_grpc_channel) = grpc_channel {
-            dst_grpc_channel.clone()
-        } else {
-            // If no custom channel was registered, we try to get it from the registry
-            let chain_data: ChainData = parse_network(chain_id).unwrap().into(); // TODO, no unwrap here ?
-            GrpcChannel::connect(&chain_data.apis.grpc, &ChainId::from_string(chain_id))
-                .await
-                .unwrap()
-        }
+        Ok(())
     }
 
-    /// This is a wrapper to follow a packet directly in a single future
-    /// Only used internally.
-    /// Use `await_ibc_execution` for following IBC packets related to a transaction
-    async fn follow_packet(
-        self,
-        src_chain: NetworkId,
-        src_port: PortId,
-        src_grpc_channel: Channel,
-        src_channel: ChannelId,
-        dst_chain: NetworkId,
-        sequence: Sequence,
-    ) -> Result<Vec<TxId>, DaemonError> {
-        let dst_grpc_channel = self.get_grpc_channel(&dst_chain).await;
+    /// Get the daemon for a network-id in the interchain.
+    pub fn daemon(&self, chain_id: impl ToString) -> Result<Daemon, InterchainError> {
+        self.daemons
+            .get(&chain_id.to_string())
+            .ok_or(InterchainError::DaemonNotFound(chain_id.to_string()))
+            .cloned()
+    }
 
-        // That's all we need to generate an InterchainChannel object.
-        let interchain_channel = InterchainChannelBuilder::default()
-            .chain_a(src_chain.clone())
-            .port_a(src_port.clone())
-            .grpc_channel_a(src_grpc_channel)
-            .chain_b(dst_chain)
-            // No need for the port_b here
-            .grpc_channel_b(dst_grpc_channel)
-            .channel_from(src_channel)
+    /// Get the chain data for a network-id in the interchain.
+    /// If the chain data is not registered in the environment, it fetches the configuration from the ibc_interchain_registry
+    pub fn chain_data(&self, chain_id: impl ToString) -> Result<ChainData, InterchainError> {
+        self.chain_config
+            .get(&chain_id.to_string())
+            .cloned()
+            .or_else(|| {
+                parse_network(chain_id.to_string().as_str()).ok().map(|i| {
+                    let chain_data: ChainData = i.into();
+                    chain_data
+                })
+            })
+            .ok_or(InterchainError::ChainConfigNotFound(chain_id.to_string()))
+    }
+
+    /// Get the gRPC ports for the local daemons and set them in the `ChainData` objects.
+    pub async fn configure_networks(networks: &mut [ChainData]) -> IcResult<()> {
+        let docker_helper = DockerHelper::new().await?;
+
+        // use chain data network name as to filter container ids
+        let containers_grpc_port = docker_helper.grpc_ports().await?;
+
+        // update network with correct grpc port
+        networks.iter_mut().for_each(|network| {
+            for container in &containers_grpc_port {
+                if container.0.contains(&network.chain_name) {
+                    network.apis.grpc = vec![Grpc {
+                        address: format!("http://0.0.0.0:{}", container.1),
+                        ..Default::default()
+                    }];
+                    log::info!(
+                        "Connected to chain {} on port {}",
+                        network.chain_name,
+                        container.1
+                    );
+                }
+            }
+        });
+        Ok(())
+    }
+
+    /// Blocks until all the IBC packets sent during the transaction on chain `chain_id` with transaction hash `packet_send_tx_hash` have completed their cycle
+    /// (Packet Sent, Packet Received, Packet Acknowledgment)
+    /// This also follows additional packets sent out in the resulting transactions
+    /// See the documentation for `PacketInspector::await_ibc_execution` for more details about the awaiting procedure
+    pub async fn await_ibc_execution(
+        &self,
+        chain_id: NetworkId,
+        packet_send_tx_hash: String,
+    ) -> Result<(), DaemonError> {
+        // We crate an interchain env object that is safe to send between threads
+        let interchain_env =
+            PacketInspector::new(&self.chain_config.values().cloned().collect()).await?;
+
+        // We follow the trail
+        interchain_env
+            .await_ibc_execution(chain_id, packet_send_tx_hash)
             .await?;
 
-        interchain_channel.follow_packet(src_chain, sequence).await
+        Ok(())
     }
 }
 
-fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
-    events
-        .iter()
-        .map(|e| e.get_first_attribute_value(attr_name).unwrap())
-        .collect()
+pub struct InterchainLog {
+    handle: log4rs::Handle,
+    chain_ids: Vec<String>,
 }
 
-async fn find_ibc_packets_sent_in_tx(
-    chain: NetworkId,
-    grpc_channel: Channel,
-    tx: CosmTxResponse,
-) -> Result<Vec<IbcPackteInfo>, InterchainError> {
-    let send_packet_events = tx.get_events("send_packet");
-    if send_packet_events.is_empty() {
-        return Ok(vec![]);
+impl InterchainLog {
+    fn get_encoder() -> Box<PatternEncoder> {
+        Box::new(PatternEncoder::new(
+            "{d(%Y-%m-%d %H:%M:%S)(utc)} - {l}: {m}{n}",
+        ))
     }
 
-    let connections = get_events(&send_packet_events, "packet_connection");
-    let src_ports = get_events(&send_packet_events, "packet_src_port");
-    let src_channels = get_events(&send_packet_events, "packet_src_channel");
-    let sequences = get_events(&send_packet_events, "packet_sequence");
-    let packet_datas = get_events(&send_packet_events, "packet_data");
-    let chain_ids = try_join_all(
-        connections
-            .iter()
-            .map(|c| async {
-                Ok::<_, InterchainError>(
-                    Ibc::new(grpc_channel.clone())
-                        .connection_client(c.clone())
-                        .await?
-                        .chain_id,
-                )
-            })
-            .collect::<Vec<_>>(),
-    )
-    .await?;
+    fn builder() -> ConfigBuilder {
+        let encoder = InterchainLog::get_encoder();
+        let main_log_path = generate_log_file_path("main");
+        std::fs::create_dir_all(main_log_path.parent().unwrap()).unwrap();
 
-    let mut ibc_packets = vec![];
-    for i in 0..src_ports.len() {
-        // We create the ibcPacketInfo struct
-        ibc_packets.push(IbcPackteInfo {
-            src_port: src_ports[i].parse()?,
-            src_channel: src_channels[i].parse()?,
-            sequence: sequences[i].parse()?,
-            dst_chain_id: chain_ids[i].clone(),
-        });
-
-        // We log the packets we follow.
-        log::info!(
-            target: &chain,
-            "IBC packet n° {} : 
-                port : {}, 
-                channel: {} 
-                data: {}",
-            sequences[i],
-            src_ports[i],
-            src_channels[i],
-            packet_datas[i]
-        );
+        let main_appender = FileAppender::builder()
+            .encoder(encoder)
+            .build(&main_log_path)
+            .unwrap();
+        Config::builder().appender(Appender::builder().build("main", Box::new(main_appender)))
     }
 
-    Ok(ibc_packets)
+    fn build_logger(config: ConfigBuilder) -> log4rs::Config {
+        config
+            .build(Root::builder().appender("main").build(LevelFilter::Info))
+            .unwrap()
+    }
+
+    fn add_logger(&self, config: ConfigBuilder, chain_id: String) -> ConfigBuilder {
+        // We create the log file and register in the log config
+        let log_path = generate_log_file_path(&chain_id);
+        let daemon_appender = FileAppender::builder()
+            .encoder(InterchainLog::get_encoder())
+            .build(log_path)
+            .unwrap();
+
+        config
+            .appender(Appender::builder().build(&chain_id, Box::new(daemon_appender)))
+            .logger(
+                Logger::builder()
+                    .appender(&chain_id)
+                    .build(&chain_id, LevelFilter::Info),
+            )
+    }
+
+    /// Initiates an interchain log setup
+    /// This will log the different chain interactions and updates on separate files for each chain.
+    /// This is useful for tracking operations happenning on IBC chains
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add_chains(&mut self, chain_ids: &Vec<String>) {
+        // We restart the config with the older builders
+        let mut config_builder = InterchainLog::builder();
+        for chain_id in &self.chain_ids {
+            config_builder = self.add_logger(config_builder, chain_id.to_string());
+        }
+
+        // And then we add the new builders
+        for chain_id in chain_ids {
+            // We verify the log setup is not already created for the chain id
+            // We silently continue if we already have a log setup for the daemon
+            if self.chain_ids.contains(chain_id) {
+                continue;
+            }
+            self.chain_ids.push(chain_id.clone());
+            config_builder = self.add_logger(config_builder, chain_id.clone());
+            // log startup to each daemon log
+            log::info!("Starting specific log: {chain_id}");
+        }
+        self.handle
+            .set_config(InterchainLog::build_logger(config_builder));
+    }
+}
+
+impl Default for InterchainLog {
+    fn default() -> Self {
+        // ensure dir exists
+        // add main appender to config
+        let config_builder = InterchainLog::builder();
+        let config = InterchainLog::build_logger(config_builder);
+
+        let handle = log4rs::init_config(config).unwrap();
+
+        Self {
+            handle,
+            chain_ids: vec![],
+        }
+    }
+}
+
+/// Get the file path for the log target
+fn generate_log_file_path(file: &str) -> PathBuf {
+    let file_name = format!("{}.log", file);
+
+    let mut log_path = std::env::current_dir().unwrap();
+    log_path.push("logs");
+    log_path.push(file_name);
+
+    log_path
+}
+
+/// format the port for a contract
+pub fn contract_port(contract: &dyn ContractInstance<Daemon>) -> PortId {
+    format!("wasm.{}", contract.addr_str().unwrap())
+        .parse()
+        .unwrap()
 }
