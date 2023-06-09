@@ -1,6 +1,5 @@
 use crate::{
     contract::Contract,
-    environment::ChainUpload,
     error::CwOrchError,
     prelude::{CwEnv, WasmPath},
 };
@@ -168,9 +167,7 @@ pub trait Uploadable {
 }
 
 /// Trait that indicates that the contract can be uploaded.
-pub trait CwOrchUpload<Chain: CwEnv + ChainUpload>:
-    ContractInstance<Chain> + Uploadable + Sized
-{
+pub trait CwOrchUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable + Sized {
     /// upload the contract to the configured environment.
     fn upload(&self) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().upload(self)
@@ -178,10 +175,7 @@ pub trait CwOrchUpload<Chain: CwEnv + ChainUpload>:
 }
 
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
-impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrchUpload<Chain>
-    for T
-{
-}
+impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv> CwOrchUpload<Chain> for T {}
 
 /// Enables calling a contract with a different sender.
 ///

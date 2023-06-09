@@ -1,6 +1,6 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use crate::{
-    environment::{ChainUpload, TxResponse},
+    environment::TxResponse,
     error::CwOrchError,
     index_response::IndexResponse,
     prelude::{CwEnv, Uploadable},
@@ -50,6 +50,18 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     }
 
     // Chain interfaces
+
+    /// Upload a contract given its source
+    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrchError> {
+        log::info!("Uploading {}", self.id);
+        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!("uploaded {} with code id {}", self.id, code_id);
+        log::debug!("Upload response: {:?}", resp);
+        Ok(resp)
+    }
+
     /// Executes an operation on the contract
     pub fn execute<E: Serialize + Debug>(
         &self,
@@ -158,18 +170,5 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     /// Sets default code_id for contract (used only if not present in state)
     pub fn set_default_code_id(&mut self, code_id: u64) {
         self.default_code_id = Some(code_id);
-    }
-}
-
-impl<Chain: CwEnv + Clone + ChainUpload> Contract<Chain> {
-    /// Upload a contract given its source
-    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrchError> {
-        log::info!("Uploading {}", self.id);
-        let resp = self.chain.upload(source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
-        Ok(resp)
     }
 }

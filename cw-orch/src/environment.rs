@@ -13,8 +13,8 @@ use std::fmt::Debug;
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + ChainUpload + Clone {}
-impl<T: TxHandler + ChainUpload + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + Clone {}
+impl<T: TxHandler + Clone> CwEnv for T {}
 
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
@@ -42,13 +42,9 @@ pub trait TxHandler: ChainState + Clone {
     fn block_info(&self) -> Result<BlockInfo, Self::Error>;
 
     // Actions
-    /// Send a ExecMsg to a contract.
-    fn execute<E: Serialize + Debug>(
-        &self,
-        exec_msg: &E,
-        coins: &[Coin],
-        contract_address: &Addr,
-    ) -> Result<Self::Response, Self::Error>;
+
+    /// Uploads a contract to the chain.
+    fn upload(&self, contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error>;
 
     /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(
@@ -58,6 +54,13 @@ pub trait TxHandler: ChainState + Clone {
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error>;
+    /// Send a ExecMsg to a contract.
+    fn execute<E: Serialize + Debug>(
+        &self,
+        exec_msg: &E,
+        coins: &[Coin],
+        contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
 
     /// Send a QueryMsg to a contract.
@@ -74,11 +77,4 @@ pub trait TxHandler: ChainState + Clone {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
-}
-
-// Required to be a different trait because it can not be implemented for the generic Mock<...>.
-/// Uploads a contract to the chain.
-pub trait ChainUpload: TxHandler {
-    /// Uploads a contract to the chain.
-    fn upload(&self, contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error>;
 }
