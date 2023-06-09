@@ -4,7 +4,8 @@ use crate::{
     environment::{ChainUpload, TxHandler},
     prelude::{
         queriers::{CosmWasm, DaemonQuerier},
-        CallAs, ContractInstance, CwOrchExecute, DaemonBuilder, IndexResponse, Uploadable, WasmPath,
+        CallAs, ContractInstance, CwOrchExecute, DaemonBuilder, IndexResponse, Uploadable,
+        WasmPath,
     },
     state::ChainState,
 };

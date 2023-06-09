@@ -178,7 +178,10 @@ pub trait CwOrchUpload<Chain: CwEnv + ChainUpload>:
 }
 
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
-impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrchUpload<Chain> for T {}
+impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv + ChainUpload> CwOrchUpload<Chain>
+    for T
+{
+}
 
 /// Enables calling a contract with a different sender.
 ///
