@@ -3,7 +3,7 @@ use crate::{daemon::queriers::CosmWasm, environment::TxResponse, error::CwOrchEr
 use super::sync::Daemon;
 
 /// Helper methods for conditional uploading of a contract.
-pub trait ConditionalUpload: CwOrcUpload<Daemon> {
+pub trait ConditionalUpload: CwOrchUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
@@ -45,10 +45,10 @@ pub trait ConditionalUpload: CwOrcUpload<Daemon> {
     }
 }
 
-impl<T> ConditionalUpload for T where T: CwOrcUpload<Daemon> {}
+impl<T> ConditionalUpload for T where T: CwOrchUpload<Daemon> {}
 
 /// Helper methods for conditional migration of a contract.
-pub trait ConditionalMigrate: CwOrcMigrate<Daemon> + ConditionalUpload {
+pub trait ConditionalMigrate: CwOrchMigrate<Daemon> + ConditionalUpload {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
@@ -63,4 +63,4 @@ pub trait ConditionalMigrate: CwOrcMigrate<Daemon> + ConditionalUpload {
     }
 }
 
-impl<T> ConditionalMigrate for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}
+impl<T> ConditionalMigrate for T where T: CwOrchMigrate<Daemon> + CwOrchUpload<Daemon> {}

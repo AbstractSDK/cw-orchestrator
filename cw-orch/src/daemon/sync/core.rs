@@ -4,7 +4,7 @@ use crate::{
     environment::{ChainUpload, TxHandler},
     prelude::{
         queriers::{CosmWasm, DaemonQuerier},
-        CallAs, ContractInstance, CwOrcExecute, DaemonBuilder, IndexResponse, Uploadable, WasmPath,
+        CallAs, ContractInstance, CwOrchExecute, DaemonBuilder, IndexResponse, Uploadable, WasmPath,
     },
     state::ChainState,
 };
@@ -222,7 +222,7 @@ impl ChainUpload for Daemon {
     }
 }
 
-impl<T: CwOrcExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
+impl<T: CwOrchExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
     type Sender = Wallet;
 
     fn set_sender(&mut self, sender: &Self::Sender) {

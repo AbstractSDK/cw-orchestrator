@@ -327,7 +327,7 @@ impl ChainUpload for Mock {
     }
 }
 
-impl<T: CwOrcExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
+impl<T: CwOrchExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
     type Sender = Addr;
 
     fn set_sender(&mut self, sender: &Addr) {
