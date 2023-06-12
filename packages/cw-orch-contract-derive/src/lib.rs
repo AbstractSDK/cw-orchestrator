@@ -337,30 +337,6 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             }
         }
 
-        // We need to create default reply, sudo and migrate getter functions because those functions may not be implemented by the contract
-        // These are fallback in case the functions are not defined at a later time
-        type ReplyFn<C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: ::cosmwasm_std::Reply) -> Result<::cosmwasm_std::Response<C>, E>;
-        type PermissionedFn<T, C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: T) -> Result<::cosmwasm_std::Response<C>, E>; // For SUDO
-
-        pub trait DefaultReply<C,  Q: ::cosmwasm_std::CustomQuery, E5A> {
-            fn get_reply() -> Option<ReplyFn<C, E5A , Q>> {
-                None
-            }
-        }
-        pub trait DefaultSudo<C, Q: ::cosmwasm_std::CustomQuery, T4A, E4A> {
-            fn get_sudo() -> Option<PermissionedFn<T4A, C, E4A, Q>,> {
-                None
-            }
-        }
-        pub trait DefaultMigrate<C, Q: ::cosmwasm_std::CustomQuery, E6A, T6A > {
-            fn get_migrate() -> Option<PermissionedFn<T6A, C, E6A, Q>> {
-                None
-            }
-        }
-        impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
-        impl<Chain: ::cw_orch::prelude::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
-        impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
-
         // We add the contract creation script
         impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain> {
             pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
@@ -372,13 +348,38 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     );
 
     // In case the response has a custom generic, we don't implement the mock for it.
-    // Because it's very difficult to implement custom generics with the cw_multi_test library, cw-orch doesn't support mock testing with defined generics on the Response type
+    // Because it's very difficult to implement custom generics with the cw_multi_test library
+    // cw-orch doesn't support mock testing with defined generics on the Response type
     let response_generic = get_response_generic_or_fallback(&func_name, &signature.clone());
     let should_implement_mock_contract = response_generic.to_string() == "Empty";
 
     let uploadable_impl = match should_implement_mock_contract {
         true => {
             quote!(
+
+                // We need to create default reply, sudo and migrate getter functions because those functions may not be implemented by the contract
+                // These are fallback in case the functions are not defined at a later time
+                type ReplyFn<C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: ::cosmwasm_std::Reply) -> Result<::cosmwasm_std::Response<C>, E>;
+                type PermissionedFn<T, C, E, Q> = fn(deps: ::cosmwasm_std::DepsMut<Q>, env: ::cosmwasm_std::Env, msg: T) -> Result<::cosmwasm_std::Response<C>, E>; // For SUDO
+
+                pub trait DefaultReply<C,  Q: ::cosmwasm_std::CustomQuery, E5A> {
+                    fn get_reply() -> Option<ReplyFn<C, E5A , Q>> {
+                        None
+                    }
+                }
+                pub trait DefaultSudo<C, Q: ::cosmwasm_std::CustomQuery, T4A, E4A> {
+                    fn get_sudo() -> Option<PermissionedFn<T4A, C, E4A, Q>,> {
+                        None
+                    }
+                }
+                pub trait DefaultMigrate<C, Q: ::cosmwasm_std::CustomQuery, E6A, T6A > {
+                    fn get_migrate() -> Option<PermissionedFn<T6A, C, E6A, Q>> {
+                        None
+                    }
+                }
+                impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultMigrate<C, Q, ::cosmwasm_std::StdError, ::cosmwasm_std::Empty> for #name<Chain> {}
+                impl<Chain: ::cw_orch::prelude::CwEnv, C,  Q: ::cosmwasm_std::CustomQuery> DefaultReply<C,  Q, ::cosmwasm_std::StdError> for #name<Chain> {}
+                impl<Chain: ::cw_orch::prelude::CwEnv, C, Q: ::cosmwasm_std::CustomQuery> DefaultSudo<C, Q, ::cosmwasm_std::Empty, ::cosmwasm_std::StdError> for #name<Chain> {}
 
                 pub struct #contract_trait_ident{}
 
