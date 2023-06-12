@@ -301,15 +301,15 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     let contract_trait_ident = format_ident!("{}ContractImpl", name);
 
     let struct_def = quote!(
-            #[derive(
-                ::std::clone::Clone,
-            )]
-            pub struct #name<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
+        #[derive(
+            ::std::clone::Clone,
+        )]
+        pub struct #name<Chain: ::cw_orch::prelude::CwEnv>(::cw_orch::contract::Contract<Chain>);
 
-            impl<Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain> {
-                fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
-            &self.0
-        }
+        impl<Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain> {
+            fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
+                &self.0
+            }
             fn as_instance_mut(&mut self) -> &mut ::cw_orch::contract::Contract<Chain> {
                 &mut self.0
             }
@@ -337,7 +337,7 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             }
         }
 
-        // We add the contract creation script
+        // We add the contract creation method
         impl<Chain: ::cw_orch::prelude::CwEnv> #name<Chain> {
             pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
                 Self(
@@ -348,8 +348,10 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     );
 
     // In case the response has a custom generic, we don't implement the mock for it.
-    // Because it's very difficult to implement custom generics with the cw_multi_test library
-    // cw-orch doesn't support mock testing with defined generics on the Response type
+    // Cw-orch doesn't support mock testing with defined generics on the Response type
+    // because it's very difficult to implement custom generics with the cw_multi_test library
+    // This function will identify the generics of the response object if and only if it is registered explicitly in the **instantiate** return type
+    // e.g. ***Result<Response<GenericType>>
     let response_generic = get_response_generic_or_fallback(&func_name, &signature.clone());
     let should_implement_mock_contract = response_generic.to_string() == "Empty";
 
