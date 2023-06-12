@@ -2,7 +2,9 @@
 
 mod cw_orch_contract;
 
-use crate::cw_orch_contract::{get_crate_to_struct, get_response_generic_or_fallback, get_func_type, get_wasm_name};
+use crate::cw_orch_contract::{
+    get_crate_to_struct, get_func_type, get_response_generic_or_fallback, get_wasm_name,
+};
 
 use convert_case::{Case, Casing};
 use syn::{__private::TokenStream2, parse_macro_input, Fields, FnArg, GenericArgument, Item, Path};
@@ -372,8 +374,8 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
     // In case the response has a custom generic, we don't implement the mock for it
     let response_generic = get_response_generic_or_fallback(&func_name, &signature.clone());
     let should_implement_mock_contract = response_generic.to_string() == "Empty";
-    
-    let uploadable_impl = match should_implement_mock_contract{
+
+    let uploadable_impl = match should_implement_mock_contract {
         true => {
             quote!(
 
@@ -441,8 +443,8 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
                     }
                 }
             )
-        },
-        false =>{
+        }
+        false => {
             quote!(
                 // We need to implement the Uploadable trait in order to be able to upload the contract.
                 impl <Chain: ::cw_orch::prelude::CwEnv> ::cw_orch::prelude::Uploadable for #name<Chain>{
@@ -464,7 +466,6 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
             )
         }
     };
-
 
     let new_func_name = format_ident!("get_{}", func_ident);
 
