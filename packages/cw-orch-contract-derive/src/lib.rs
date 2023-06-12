@@ -2,7 +2,6 @@
 
 mod cw_orch_contract;
 
-use syn::TypePath;
 use crate::cw_orch_contract::{get_crate_to_struct, get_response_generic_or_fallback, get_func_type, get_wasm_name};
 
 use convert_case::{Case, Casing};
