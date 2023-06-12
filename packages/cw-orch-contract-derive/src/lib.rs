@@ -119,7 +119,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let types_in_order = attributes.expressions;
 
     if types_in_order.len() != 4 {
-        panic!("Expected four endpoint types (InstantiateMsg,ExecuteMsg,QueryMsg,MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
+        panic!("Expected four endpoint types (InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
     }
 
     let Item::Struct(cw_orch_struct) = &mut item else {
@@ -371,7 +371,8 @@ pub fn interface_entry_point(_attrs: TokenStream, mut input: TokenStream) -> Tok
         }
     );
 
-    // In case the response has a custom generic, we don't implement the mock for it
+    // In case the response has a custom generic, we don't implement the mock for it.
+    // Because it's very difficult to implement custom generics with the cw_multi_test library, cw-orch doesn't support mock testing with defined generics on the Response type
     let response_generic = get_response_generic_or_fallback(&func_name, &signature.clone());
     let should_implement_mock_contract = response_generic.to_string() == "Empty";
 
