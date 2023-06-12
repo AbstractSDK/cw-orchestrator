@@ -64,7 +64,7 @@ fn get_first_generic(path: &syn::Path) -> Result<syn::GenericArgument, String> {
 }
 
 /// Returns the type of the generics of the response type from the signature of the instantiate function
-/// e.g for 
+/// e.g for
 /// `pub fn instantiate(...) -> Result<Response<Generic>, ContractError>`
 /// This returns
 /// `Generic`
