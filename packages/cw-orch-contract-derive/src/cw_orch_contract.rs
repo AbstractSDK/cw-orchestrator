@@ -19,6 +19,7 @@ pub fn get_raw_crate() -> String {
     std::env::var("CARGO_PKG_NAME").unwrap()
 }
 
+/// Returns the function type (e.g. fn (deps: Deps) -> Result<Response, ContractError>) from the function signature object
 pub fn get_func_type(sig: &Signature) -> TokenStream2 {
     let output_type = match &sig.output {
         syn::ReturnType::Default => {
@@ -53,6 +54,7 @@ pub fn get_func_type(sig: &Signature) -> TokenStream2 {
     }
 }
 
+/// Returns the first generic of a path object
 fn get_first_generic(path: &syn::Path) -> Result<syn::GenericArgument, String> {
     let args = match path.segments[0].arguments {
         syn::PathArguments::AngleBracketed(ref angle_bracketed) => &angle_bracketed.args,
@@ -61,6 +63,11 @@ fn get_first_generic(path: &syn::Path) -> Result<syn::GenericArgument, String> {
     Ok(args[0].clone())
 }
 
+/// Returns the type of the generics of the response type from the signature of the instantiate function
+/// e.g for 
+/// `pub fn instantiate(...) -> Result<Response<Generic>, ContractError>`
+/// This returns
+/// `Generic`
 fn get_response_generic(func_name: &str, signature: &Signature) -> Result<TokenStream2, String> {
     let response_type = match func_name {
         "instantiate" => match signature.clone().output {
@@ -89,6 +96,7 @@ fn get_response_generic(func_name: &str, signature: &Signature) -> Result<TokenS
     Ok(quote!(#response_generic))
 }
 
+/// Generates a fallback for the get_response_generic function to always find an generic even if it's not clearly specified (and never error on the generics search)
 pub fn get_response_generic_or_fallback(func_name: &str, signature: &Signature) -> TokenStream2 {
     let generic = get_response_generic(func_name, signature);
 

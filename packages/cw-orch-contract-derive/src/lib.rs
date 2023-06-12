@@ -235,7 +235,7 @@ pub fn instantiate(
 // ... other entry points (execute, query, migrate)
 ```
 
-### Generated code
+### Generated code (without custom bindings)
 
 ```ignore
 // This struct represents the interface to the contract.
