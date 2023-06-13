@@ -105,6 +105,7 @@ impl PrivateKey {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
+        // For injective: https://docs.injective.network/learn/basic-concepts/accounts#injective-accounts
         let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
 
@@ -209,6 +210,31 @@ mod tst {
 
         Ok(())
     }
+
+    #[test]
+    pub fn inj() -> anyhow::Result<()> {
+        let str_1: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
+        let coin_type: u32 = 118;
+        let prefix = "juno";
+        let secp = Secp256k1::new();
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0, coin_type)?;
+        let pub_k = pk.public_key(&secp);
+
+        let account = pub_k.account(prefix)?;
+        assert_eq!(&account, "juno1jdpunqljj5xypxk6f7dnpga6cjfatwu6vfuyrq");
+        // juno1jdpunqljj5xypxk6f7dnpga6cjfatwu6vfuyrq
+        let coin_type: u32 = 60;
+        let prefix = "inj";
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0, coin_type)?;
+        let pub_k = pk.public_key(&secp);
+
+        let account = pub_k.account(prefix)?;
+        assert_eq!(&account, "inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat");
+
+        // inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat
+        Ok(())
+    }
+
     // #[test]
     // pub fn test_sign() -> anyhow::Result<()> {
     //     // This test is using message from python SDK.. so these keys generate same sigs as they do.
