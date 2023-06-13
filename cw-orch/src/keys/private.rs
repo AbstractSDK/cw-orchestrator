@@ -135,6 +135,10 @@ impl PrivateKey {
 
 #[cfg(test)]
 mod tst {
+    use base64::{Engine, engine::general_purpose};
+    use ethers_core::k256::ecdsa::SigningKey;
+    use ethers_signers::{MnemonicBuilder, coins_bip39::English, Signer};
+
     use super::*;
 
     #[test]
@@ -227,7 +231,29 @@ mod tst {
         let prefix = "inj";
         let pk = PrivateKey::from_words(&secp, str_1, 0, 0, coin_type)?;
         let pub_k = pk.public_key(&secp);
+        
+        // step 1. construct the Account Address bytes with a known working method
+        use ethers_signers::LocalWallet;
 
+        let mn = MnemonicBuilder::<English>::default()
+                    .phrase(str_1)
+                    .index(0u32)
+                    .unwrap()
+                    .build()
+                    .unwrap();
+        let addr = mn.address();
+        eprintln!("correct_addr: {}", general_purpose::STANDARD.encode(addr.as_bytes()));
+        // step 2. verify this address (https://lcd.injective.network/swagger/#/Query/AuthAccount) against the one we got from our wallet with this seed phrase. (done)
+
+        // step 3. construct the Account Address bytes with the method we're trying to get working
+        let address = ethers_core::utils::secret_key_to_address(&SigningKey::from_slice(pk.raw_key().as_slice())?);
+
+        eprintln!("bridged_addr: {}", general_purpose::STANDARD.encode(address.as_bytes()));
+        assert_eq!(addr, address);
+
+        // step 4. find a way to construct the PublicKey/PrivateKey with this data
+
+        // see if our pub key derivation matches https://github.com/gakonst/ethers-rs/blob/master/ethers-core/src/utils/mod.rs#L394
         let account = pub_k.account(prefix)?;
         assert_eq!(&account, "inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat");
 
