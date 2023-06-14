@@ -24,6 +24,7 @@ name = "daemon_test"
 required-features = ["daemon"]
 
 [features]
+default = ["eth"]
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
 node-tests = ["daemon"]
@@ -120,3 +121,7 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
   "interface",
 ] }
 serial_test = "2.0.0"
+
+# Ethereum deps
+ethers-signers = { version = "2.0.7" }
+ethers-core = { version = "2.0.7" }

@@ -7,6 +7,8 @@ use bitcoin::{
 use hkd32::mnemonic::{Phrase, Seed};
 use rand_core::OsRng;
 use secp256k1::Secp256k1;
+#[cfg(feature = "eth")]
+use ::ethers_core::k256::ecdsa::SigningKey;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
@@ -86,6 +88,16 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
     ) -> PublicKey {
+        if self.coin_type == 60 {
+            #[cfg(feature = "eth")]
+            return PublicKey::from_ethers_address_bytes(
+                ethers_core::utils::secret_key_to_address(
+                    &SigningKey::from_slice(self.raw_key().as_slice()).unwrap(),
+                ),
+            );
+            panic!("Coin Type 60 not supported without eth feature");
+        }
+
         let x = self.private_key.private_key.public_key(secp);
         PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x))
     }
@@ -136,6 +148,8 @@ impl PrivateKey {
 #[cfg(test)]
 mod tst {
     use base64::{engine::general_purpose, Engine};
+    use bitcoin::bech32::ToBase32;
+    use bitcoin::bech32::{Bech32Writer, Variant};
     use ethers_core::k256::ecdsa::SigningKey;
     use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer};
 
@@ -227,45 +241,17 @@ mod tst {
         let account = pub_k.account(prefix)?;
         assert_eq!(&account, "juno1jdpunqljj5xypxk6f7dnpga6cjfatwu6vfuyrq");
         // juno1jdpunqljj5xypxk6f7dnpga6cjfatwu6vfuyrq
+
+        // Coin type 60 is a bit peculiar, because of how injective derives addresses : https://docs.injective.network/learn/basic-concepts/accounts/
         let coin_type: u32 = 60;
         let prefix = "inj";
         let pk = PrivateKey::from_words(&secp, str_1, 0, 0, coin_type)?;
         let pub_k = pk.public_key(&secp);
 
-        // step 1. construct the Account Address bytes with a known working method
-        use ethers_signers::LocalWallet;
-
-        let mn = MnemonicBuilder::<English>::default()
-            .phrase(str_1)
-            .index(0u32)
-            .unwrap()
-            .build()
-            .unwrap();
-        let addr = mn.address();
-        eprintln!(
-            "correct_addr: {}",
-            general_purpose::STANDARD.encode(addr.as_bytes())
-        );
-        // step 2. verify this address (https://lcd.injective.network/swagger/#/Query/AddressBytesToString) against the one we got from our wallet with this seed phrase. (done)
-
-        // step 3. construct the Account Address bytes with the method we're trying to get working
-        let address = ethers_core::utils::secret_key_to_address(&SigningKey::from_slice(
-            pk.raw_key().as_slice(),
-        )?);
-
-        eprintln!(
-            "bridged_addr: {}",
-            general_purpose::STANDARD.encode(address.as_bytes())
-        );
-        assert_eq!(addr, address);
-
-        // step 4. find a way to construct the PublicKey/PrivateKey with this data
-
-        // see if our pub key derivation matches https://github.com/gakonst/ethers-rs/blob/master/ethers-core/src/utils/mod.rs#L394
         let account = pub_k.account(prefix)?;
         assert_eq!(&account, "inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat");
-
         // inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat
+
         Ok(())
     }
 
