@@ -9,7 +9,7 @@ use secp256k1::All;
 use super::{sender::Sender, DaemonError, Wallet};
 
 const GAS_BUFFER: f64 = 1.2;
-const GAS_LIMIT: u64 = 2_000_000;
+const GAS_LIMIT: u64 = 200_000_000;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 pub struct TxBuilder {
