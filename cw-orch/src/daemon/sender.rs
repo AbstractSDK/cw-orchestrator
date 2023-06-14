@@ -231,7 +231,7 @@ impl Sender<All> {
         let commit = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
                 tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Block.into(),
+                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
             })
             .await?;
 
