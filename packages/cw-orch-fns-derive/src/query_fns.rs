@@ -64,7 +64,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrcQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
+        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
             #(#variant_fns)*
         }
     );
@@ -72,7 +72,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let derived_trait_impl = quote!(
         impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            SupportedContract: ::cw_orch::prelude::CwOrcQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
+            SupportedContract: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
     );
 
     let expand = quote!(

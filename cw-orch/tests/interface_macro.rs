@@ -9,7 +9,7 @@ use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
 use cw_orch::prelude::{
-    ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery, CwOrcUpload,
+    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload,
     Daemon, Mock,
 };
 
