@@ -1,5 +1,7 @@
 use super::public::PublicKey;
 use crate::daemon::DaemonError;
+#[cfg(feature = "eth")]
+use ::ethers_core::k256::ecdsa::SigningKey;
 use bitcoin::{
     bip32::{ExtendedPrivKey, IntoDerivationPath},
     Network,
@@ -7,8 +9,6 @@ use bitcoin::{
 use hkd32::mnemonic::{Phrase, Seed};
 use rand_core::OsRng;
 use secp256k1::Secp256k1;
-#[cfg(feature = "eth")]
-use ::ethers_core::k256::ecdsa::SigningKey;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
