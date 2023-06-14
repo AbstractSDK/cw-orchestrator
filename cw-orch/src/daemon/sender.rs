@@ -1,4 +1,3 @@
-use crate::daemon::types::injective::InjectiveEthAccount;
 use super::{
     chain_info::ChainKind,
     cosmos_modules::{self, auth::BaseAccount},
@@ -7,7 +6,7 @@ use super::{
     state::DaemonState,
     tx_resp::CosmTxResponse,
 };
-            
+use crate::daemon::types::injective::InjectiveEthAccount;
 
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
@@ -22,9 +21,8 @@ use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
-use tonic::transport::Channel;
 use cosmos_modules::vesting::PeriodicVestingAccount;
-
+use tonic::transport::Channel;
 
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
@@ -76,7 +74,7 @@ impl Sender<All> {
         Ok(sender)
     }
 
-    fn cosmos_private_key(&self) -> SigningKey{
+    fn cosmos_private_key(&self) -> SigningKey {
         SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
     }
 
@@ -85,12 +83,10 @@ impl Sender<All> {
     }
 
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
-        Ok(
-            AccountId::new(
-                &self.daemon_state.chain_data.bech32_prefix, 
-                &self.private_key.public_key(&self.secp).raw_address.unwrap()
-            )?
-        )
+        Ok(AccountId::new(
+            &self.daemon_state.chain_data.bech32_prefix,
+            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+        )?)
     }
 
     pub fn address(&self) -> Result<Addr, DaemonError> {
@@ -149,7 +145,8 @@ impl Sender<All> {
         let fee = self.build_fee(0u8, None);
 
         let auth_info =
-            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence).auth_info(fee);
+            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence)
+                .auth_info(fee);
 
         let sign_doc = SignDoc::new(
             tx_body,
@@ -195,7 +192,8 @@ impl Sender<All> {
         let fee = self.build_fee(amount_to_pay as u128, Some(gas_expected as u64));
 
         let auth_info =
-            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence).auth_info(fee);
+            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence)
+                .auth_info(fee);
 
         let sign_doc = SignDoc::new(
             &tx_body,
@@ -226,13 +224,15 @@ impl Sender<All> {
 
         let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
             acc
-        } else if let Ok(acc) = PeriodicVestingAccount::decode(account.as_ref()){
+        } else if let Ok(acc) = PeriodicVestingAccount::decode(account.as_ref()) {
             // try vesting account, (used by Terra2)
             acc.base_vesting_account.unwrap().base_account.unwrap()
-        } else if let Ok(acc) = InjectiveEthAccount::decode(account.as_ref()){
+        } else if let Ok(acc) = InjectiveEthAccount::decode(account.as_ref()) {
             acc.base_account.unwrap()
-        }else{
-            return Err(DaemonError::StdErr("Unknown account type returned from QueryAccountRequest".into()))
+        } else {
+            return Err(DaemonError::StdErr(
+                "Unknown account type returned from QueryAccountRequest".into(),
+            ));
         };
 
         Ok(acc)
