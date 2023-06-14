@@ -1,8 +1,14 @@
 #![allow(unused)]
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, CustomMsg, CustomQuery,
 };
+
+#[cw_serde]
+pub struct A;
+
+impl CustomMsg for A {}
+impl CustomQuery for A {}
 
 #[cw_serde]
 pub struct InstantiateMsg {}
@@ -35,7 +41,7 @@ pub fn instantiate(
     _env: Env,
     _info: MessageInfo,
     _msg: InstantiateMsg,
-) -> StdResult<Response<Uint128>> {
+) -> StdResult<Response<A>> {
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
@@ -46,7 +52,7 @@ pub fn execute(
     _env: Env,
     _info: MessageInfo,
     msg: ExecuteMsg,
-) -> StdResult<Response<Uint128>> {
+) -> StdResult<Response<A>> {
     match msg {
         ExecuteMsg::FirstMessage {} => {
             Ok(Response::new().add_attribute("action", "first message passed"))
@@ -65,7 +71,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 #[cfg_attr(feature = "export", cosmwasm_std::entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response<Uint128>> {
+pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response<A>> {
     if msg.t.eq("success") {
         Ok(Response::new())
     } else {
