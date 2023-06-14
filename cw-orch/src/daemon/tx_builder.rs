@@ -85,8 +85,10 @@ impl TxBuilder {
         let sequence = self.sequence.unwrap_or(sequence);
 
         //
-        let (tx_fee, gas_limit) = if let (Some(fee),Some(gas_limit)) = (self.fee_amount ,self.gas_limit){
-            (fee,gas_limit)
+        let (tx_fee, gas_limit) = if let (Some(fee), Some(gas_limit)) =
+            (self.fee_amount, self.gas_limit)
+        {
+            (fee, gas_limit)
         } else {
             let sim_gas_used = wallet
                 .calculate_gas(&self.body, sequence, account_number)
