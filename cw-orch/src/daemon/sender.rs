@@ -121,7 +121,7 @@ impl Sender<All> {
         let fee = TxBuilder::build_fee(
             0u8,
             &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
-            None,
+            0,
         );
 
         let auth_info =
