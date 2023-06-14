@@ -1,13 +1,13 @@
+use crate::daemon::queriers::CosmWasm;
+use crate::daemon::queriers::DaemonQuerier;
+use crate::prelude::queriers::Bank;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
-use crate::daemon::queriers::DaemonQuerier;
-use crate::daemon::queriers::CosmWasm;
-use crate::prelude::queriers::Bank;
 
 use cosmwasm_std::BankQuery;
 use cosmwasm_std::Binary;
-use ibc_chain_registry::chain::ChainData;
 use cosmwasm_std::Empty;
+use ibc_chain_registry::chain::ChainData;
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
@@ -16,21 +16,17 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult,
-    Uint128, WasmQuery,
+    from_slice, to_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest,
+    SystemError, SystemResult, Uint128, WasmQuery,
 };
 
-
 use crate::daemon::GrpcChannel;
-
-
 
 /// mock_dependencies is a drop-in replacement for cosmwasm_std::testing::mock_dependencies
 /// this uses our CustomQuerier.
 pub fn mock_dependencies(
-    chain_info: ChainData
+    chain_info: ChainData,
 ) -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier> {
-
     let custom_querier: WasmMockQuerier = WasmMockQuerier::new(MockQuerier::new(&[]), chain_info);
 
     OwnedDeps {
@@ -44,7 +40,7 @@ pub fn mock_dependencies(
 pub struct WasmMockQuerier {
     base: MockQuerier<Empty>,
     channel: Channel,
-    runtime: Runtime
+    runtime: Runtime,
 }
 
 impl Querier for WasmMockQuerier {
@@ -67,115 +63,145 @@ impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(x) => {
-
                 let querier = CosmWasm::new(self.channel.clone());
-                match x{
+                match x {
                     WasmQuery::Smart { contract_addr, msg } => {
                         // We forward the request to the cosmwasm querier
 
-                        let query_result: Result<Binary, _> = self.runtime.block_on(querier.contract_state(contract_addr.to_string(), msg.to_vec()))
-                            .map(| query_result| query_result.into());
+                        let query_result: Result<Binary, _> = self
+                            .runtime
+                            .block_on(
+                                querier.contract_state(contract_addr.to_string(), msg.to_vec()),
+                            )
+                            .map(|query_result| query_result.into());
                         SystemResult::Ok(ContractResult::from(query_result))
-                    },
+                    }
                     WasmQuery::Raw { contract_addr, key } => {
                         // We forward the request to the cosmwasm querier
 
-                        let query_result = self.runtime.block_on(querier.contract_raw_state(contract_addr.to_string(), key.to_vec()))
-                            .map(| query_result| query_result.data.into());
+                        let query_result = self
+                            .runtime
+                            .block_on(
+                                querier.contract_raw_state(contract_addr.to_string(), key.to_vec()),
+                            )
+                            .map(|query_result| query_result.data.into());
                         SystemResult::Ok(ContractResult::from(query_result))
-                    },
-                    _ => {    
-                      SystemResult::Err(SystemError::InvalidRequest { error: "Only Bank balances and Wasm (raw + smart) queies are covered for now".to_string(), request: to_binary(&request).unwrap() })
                     }
+                    _ => SystemResult::Err(SystemError::InvalidRequest {
+                        error:
+                            "Only Bank balances and Wasm (raw + smart) queies are covered for now"
+                                .to_string(),
+                        request: to_binary(&request).unwrap(),
+                    }),
                 }
-            },
+            }
             QueryRequest::Bank(x) => {
-
                 let querier = Bank::new(self.channel.clone());
-                match x{
+                match x {
                     BankQuery::Balance { address, denom } => {
-                        let query_result = self.runtime.block_on(querier.balance(address, Some(denom.clone())))
+                        let query_result = self
+                            .runtime
+                            .block_on(querier.balance(address, Some(denom.clone())))
                             .map(|result| {
-                                to_binary(&BalanceResponse{
-                                    amount: Coin{
+                                to_binary(&BalanceResponse {
+                                    amount: Coin {
                                         amount: Uint128::from_str(&result[0].amount).unwrap(),
-                                        denom: result[0].denom.clone()
-                                    }
-                                }).unwrap()
+                                        denom: result[0].denom.clone(),
+                                    },
+                                })
+                                .unwrap()
                             });
                         SystemResult::Ok(ContractResult::from(query_result))
-                    },
+                    }
                     BankQuery::AllBalances { address } => {
-                        let query_result = self.runtime.block_on(querier.balance(address, None))
-                            .map(|result| 
-                                AllBalanceResponse {
-                                    amount: result.into_iter().map(|c| Coin{
+                        let query_result = self
+                            .runtime
+                            .block_on(querier.balance(address, None))
+                            .map(|result| AllBalanceResponse {
+                                amount: result
+                                    .into_iter()
+                                    .map(|c| Coin {
                                         amount: Uint128::from_str(&c.amount).unwrap(),
-                                        denom: c.denom
+                                        denom: c.denom,
                                     })
-                                    .collect()
-                                }
-                            )
-                            .map(|query_result| to_binary(&query_result)).unwrap();
+                                    .collect(),
+                            })
+                            .map(|query_result| to_binary(&query_result))
+                            .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
-                    },
-                     _ => SystemResult::Err(SystemError::InvalidRequest { error: "Only Bank balances and Wasm (raw + smart) queies are covered for now".to_string(), request: to_binary(&request).unwrap() })
+                    }
+                    _ => SystemResult::Err(SystemError::InvalidRequest {
+                        error:
+                            "Only Bank balances and Wasm (raw + smart) queies are covered for now"
+                                .to_string(),
+                        request: to_binary(&request).unwrap(),
+                    }),
                 }
-
-
-            },
-            _ => SystemResult::Err(SystemError::InvalidRequest { error: "Only Bank balances and Wasm (raw + smart) queies are covered for now".to_string(), request: to_binary(&request).unwrap() })
+            }
+            _ => SystemResult::Err(SystemError::InvalidRequest {
+                error: "Only Bank balances and Wasm (raw + smart) queies are covered for now"
+                    .to_string(),
+                request: to_binary(&request).unwrap(),
+            }),
         }
     }
 }
 
 impl WasmMockQuerier {
     pub fn new(base: MockQuerier<Empty>, chain: ChainData) -> Self {
+        let rt = Runtime::new().unwrap();
 
-        let rt = Runtime::new()
+        let channel = rt
+            .block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id))
             .unwrap();
-
-        let channel = rt.block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id)).unwrap();
 
         WasmMockQuerier {
             base,
             channel,
-            runtime: rt
+            runtime: rt,
         }
     }
 }
 
-
-
 #[cfg(test)]
-mod tests{
-    
-use super::*;
+mod tests {
+
+    use super::*;
     use crate::prelude::networks::JUNO_1;
 
     use super::mock_dependencies;
 
     #[test]
-    fn bank_balance_querier() -> Result<(), anyhow::Error>{
+    fn bank_balance_querier() -> Result<(), anyhow::Error> {
         let address = "juno1rkhrfuq7k2k68k0hctrmv8efyxul6tgn8hny6y";
 
         let deps = mock_dependencies(JUNO_1.into());
         let deps_ref = deps.as_ref();
-        let response: BalanceResponse = deps_ref.querier.query(&QueryRequest::Bank(BankQuery::Balance { address: address.to_string(), denom: "ujuno".to_string() }))?;
+        let _response: BalanceResponse =
+            deps_ref
+                .querier
+                .query(&QueryRequest::Bank(BankQuery::Balance {
+                    address: address.to_string(),
+                    denom: "ujuno".to_string(),
+                }))?;
         // We can't really test that response, but it has to unwrap at least !
 
         Ok(())
     }
 
     #[test]
-    fn bank_all_balances_querier() -> Result<(), anyhow::Error>{
+    fn bank_all_balances_querier() -> Result<(), anyhow::Error> {
         let address = "juno1rkhrfuq7k2k68k0hctrmv8efyxul6tgn8hny6y";
 
         let deps = mock_dependencies(JUNO_1.into());
         let deps_ref = deps.as_ref();
-        let response: AllBalanceResponse = deps_ref.querier.query(&QueryRequest::Bank(BankQuery::AllBalances { address: address.to_string()}))?;
+        let _response: AllBalanceResponse =
+            deps_ref
+                .querier
+                .query(&QueryRequest::Bank(BankQuery::AllBalances {
+                    address: address.to_string(),
+                }))?;
         // We can't really test that response, but it has to unwrap at least !
         Ok(())
-
     }
 }

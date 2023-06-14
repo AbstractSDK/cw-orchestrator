@@ -2,8 +2,9 @@
 //! It has an associated state that stores deployment information for easy retrieval and contract interactions.
 
 mod core;
-mod state;
+#[cfg(feature = "daemon")]
 mod mock_querier;
+mod state;
 
 pub use self::core::*;
 pub use state::*;
