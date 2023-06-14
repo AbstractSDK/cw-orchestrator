@@ -19,6 +19,7 @@ pub fn get_raw_crate() -> String {
     std::env::var("CARGO_PKG_NAME").unwrap()
 }
 
+/// Returns the function type (e.g. fn (deps: Deps) -> Result<Response, ContractError>) from the function signature object
 pub fn get_func_type(sig: &Signature) -> TokenStream2 {
     let output_type = match &sig.output {
         syn::ReturnType::Default => {
@@ -50,5 +51,57 @@ pub fn get_func_type(sig: &Signature) -> TokenStream2 {
 
     quote! {
         fn(#(#arg_types),*) -> #output_type
+    }
+}
+
+/// Returns the first generic of a path object
+fn get_first_generic(path: &syn::Path) -> Result<syn::GenericArgument, String> {
+    let args = match path.segments[0].arguments {
+        syn::PathArguments::AngleBracketed(ref angle_bracketed) => &angle_bracketed.args,
+        _ => return Err("Expected angle-bracketed arguments".to_string()),
+    };
+    Ok(args[0].clone())
+}
+
+/// Returns the type of the generics of the response type from the signature of the instantiate function
+/// e.g for
+/// `pub fn instantiate(...) -> Result<Response<Generic>, ContractError>`
+/// This returns
+/// `Generic`
+fn get_response_generic(func_name: &str, signature: &Signature) -> Result<TokenStream2, String> {
+    let response_type = match func_name {
+        "instantiate" => match signature.clone().output {
+            syn::ReturnType::Type(_, ty) => {
+                if let syn::Type::Path(syn::TypePath { path, .. }) = *ty {
+                    // Here we have the path that corresponds to Result<Response<R>, Error>
+                    get_first_generic(&path)
+                } else {
+                    return Err("Instantiate function return type must be a path".to_string());
+                }
+            }
+            syn::ReturnType::Default => {
+                return Err("Instantiate function must have a return type".to_string())
+            }
+        },
+        _ => return Err("Not instantiate entry point".to_string()),
+    }?;
+
+    let parsed_response_path = match response_type {
+        syn::GenericArgument::Type(syn::Type::Path(syn::TypePath { path, .. })) => path,
+        _ => return Err("Response type didn't have any specified generics".to_string()),
+    };
+
+    let response_generic = get_first_generic(&parsed_response_path)?;
+
+    Ok(quote!(#response_generic))
+}
+
+/// Generates a fallback for the get_response_generic function to always find an generic even if it's not clearly specified (and never error on the generics search)
+pub fn get_response_generic_or_fallback(func_name: &str, signature: &Signature) -> TokenStream2 {
+    let generic = get_response_generic(func_name, signature);
+
+    match generic {
+        Err(_) => quote!(Empty),
+        Ok(o) => o,
     }
 }
