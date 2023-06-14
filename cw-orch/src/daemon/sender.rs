@@ -172,7 +172,7 @@ impl Sender<All> {
 
             // update the fee and try again
             let tx = tx_builder.fee_amount(new_fee).build(self).await?;
-            // wait a bit 
+            // wait a bit
             tokio::time::sleep(Duration::from_millis(10000)).await;
 
             tx_response = self.broadcast_tx(tx).await?;
