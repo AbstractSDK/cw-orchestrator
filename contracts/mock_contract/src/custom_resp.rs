@@ -1,8 +1,7 @@
-mod custom_resp;
-
+#![allow(unused)]
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
 };
 
 #[cw_serde]
@@ -10,15 +9,8 @@ pub struct InstantiateMsg {}
 
 #[cw_serde]
 #[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
-pub enum ExecuteMsg<T = String> {
+pub enum ExecuteMsg {
     FirstMessage {},
-    #[cfg_attr(feature = "interface", payable)]
-    SecondMessage {
-        t: T,
-    },
-    ThirdMessage {
-        t: T,
-    },
 }
 
 #[cw_serde]
@@ -43,7 +35,7 @@ pub fn instantiate(
     _env: Env,
     _info: MessageInfo,
     _msg: InstantiateMsg,
-) -> StdResult<Response> {
+) -> StdResult<Response<Uint128>> {
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
@@ -54,14 +46,10 @@ pub fn execute(
     _env: Env,
     _info: MessageInfo,
     msg: ExecuteMsg,
-) -> StdResult<Response> {
+) -> StdResult<Response<Uint128>> {
     match msg {
         ExecuteMsg::FirstMessage {} => {
             Ok(Response::new().add_attribute("action", "first message passed"))
-        }
-        ExecuteMsg::SecondMessage { t: _ } => Err(StdError::generic_err("Second Message Failed")),
-        ExecuteMsg::ThirdMessage { .. } => {
-            Ok(Response::new().add_attribute("action", "third message passed"))
         }
     }
 }
@@ -77,7 +65,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 #[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 #[cfg_attr(feature = "export", cosmwasm_std::entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
+pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response<Uint128>> {
     if msg.t.eq("success") {
         Ok(Response::new())
     } else {
