@@ -36,7 +36,7 @@ pub const JUNO_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "juno-1",
     gas_denom: "ujuno",
-    gas_price: 0.0025,
+    gas_price: 0.0750,
     grpc_urls: &["http://juno-grpc.polkachu.com:12690"],
     network_info: JUNO_NETWORK,
     lcd_url: None,
