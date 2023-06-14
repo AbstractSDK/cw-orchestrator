@@ -158,6 +158,8 @@ impl Sender<All> {
 
         let mut tx_response = self.broadcast_tx(tx).await?;
 
+        log::debug!("tx broadcast response: {:?}", tx_response);
+
         if has_insufficient_fee(&tx_response.raw_log) {
             // get the suggested fee from the error message
             let suggested_fee = parse_suggested_fee(&tx_response.raw_log);
