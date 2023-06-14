@@ -1,3 +1,6 @@
+use base64::Engine;
+use crate::daemon::types::injective::InjectivePubKey;
+use cosmrs::tx::SignerPublicKey;
 use super::public::PublicKey;
 use crate::daemon::DaemonError;
 #[cfg(feature = "eth")]
@@ -100,6 +103,47 @@ impl PrivateKey {
 
         let x = self.private_key.private_key.public_key(secp);
         PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x))
+    }
+
+
+    #[cfg(feature = "eth")]
+    pub fn get_injective_public_key<C: secp256k1::Signing + secp256k1::Context>(
+        &self,
+        secp: &Secp256k1<C>,
+    ) -> SignerPublicKey{
+        use base64::engine::general_purpose;
+        use cosmrs::tx::MessageExt;
+        use secp256k1::SecretKey;
+
+        let secret_key = SecretKey::from_slice(self.raw_key().as_slice()).unwrap();
+        let public_key = secp256k1::PublicKey::from_secret_key(secp, &secret_key);
+
+        let vec_pk = public_key.serialize();
+        let ten = vec
+
+
+        // We create the serialized key
+        let inj_key = InjectivePubKey{
+            key: general_purpose::STANDARD.encode(&public_key.serialize())
+        };
+
+        log::debug!("{:?}", inj_key);
+
+        inj_key.to_any().unwrap().try_into().unwrap()
+    }
+
+
+    pub fn get_signer_public_key<C: secp256k1::Signing + secp256k1::Context>(
+        &self,
+        secp: &Secp256k1<C>,
+    ) -> SignerPublicKey{
+        if self.coin_type == 60 {
+            #[cfg(feature = "eth")]
+            return self.get_injective_public_key(secp);
+            panic!("Coin Type 60 not supported without eth feature");
+        }
+
+        cosmrs::crypto::secp256k1::SigningKey::from_slice(self.raw_key().as_slice()).unwrap().public_key().into()
     }
 
     pub fn raw_key(&self) -> Vec<u8> {
