@@ -67,10 +67,9 @@ impl TxBuilder {
         tx::Body::new(msgs, memo.unwrap_or_default(), timeout as u32)
     }
 
-    pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: Option<u64>) -> Fee {
+    pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: u64) -> Fee {
         let fee = Coin::new(amount.into(), denom).unwrap();
-        let gas = gas_limit.unwrap_or(GAS_LIMIT);
-        Fee::from_amount_and_gas(fee, gas)
+        Fee::from_amount_and_gas(fee, gas_limit)
     }
 
     /// Builds the raw tx with a given body and fee and signs it.
@@ -86,8 +85,8 @@ impl TxBuilder {
         let sequence = self.sequence.unwrap_or(sequence);
 
         //
-        let tx_fee = if let Some(fee) = self.fee_amount {
-            fee
+        let (tx_fee, gas_limit) = if let (Some(fee),Some(gas_limit)) = (self.fee_amount ,self.gas_limit){
+            (fee,gas_limit)
         } else {
             let sim_gas_used = wallet
                 .calculate_gas(&self.body, sequence, account_number)
@@ -99,13 +98,13 @@ impl TxBuilder {
                 * (wallet.daemon_state.chain_data.fees.fee_tokens[0].fixed_min_gas_price + 0.00001);
 
             log::debug!("Calculated fee needed: {:?}", fee_amount);
-            fee_amount as u128
+            (fee_amount as u128, gas_expected as u64)
         };
 
         let fee = Self::build_fee(
             tx_fee,
             &wallet.daemon_state.chain_data.fees.fee_tokens[0].denom,
-            self.gas_limit,
+            gas_limit,
         );
 
         let auth_info = SignerInfo::single_direct(Some(wallet.private_key.public_key()), sequence)
