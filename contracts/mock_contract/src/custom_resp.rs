@@ -1,7 +1,8 @@
 #![allow(unused)]
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128, CustomMsg, CustomQuery,
+    to_binary, Binary, CustomMsg, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult, Uint128,
 };
 
 #[cw_serde]
