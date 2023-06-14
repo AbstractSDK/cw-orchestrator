@@ -18,6 +18,7 @@ mod tx_resp;
 // expose these as mods as they can grow
 pub mod networks;
 pub mod queriers;
+pub(crate) mod tx_builder;
 
 pub use self::{
     builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
