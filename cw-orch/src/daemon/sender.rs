@@ -1,3 +1,4 @@
+use crate::daemon::types::injective::InjectiveEthAccount;
 use super::{
     chain_info::ChainKind,
     cosmos_modules::{self, auth::BaseAccount},
@@ -6,6 +7,8 @@ use super::{
     state::DaemonState,
     tx_resp::CosmTxResponse,
 };
+            
+
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
     bank::MsgSend,
@@ -20,6 +23,8 @@ use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
 use tonic::transport::Channel;
+use cosmos_modules::vesting::PeriodicVestingAccount;
+
 
 const GAS_LIMIT: u64 = 1_000_000;
 const GAS_BUFFER: f64 = 1.2;
@@ -30,7 +35,7 @@ pub type Wallet = Rc<Sender<All>>;
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 pub struct Sender<C: Signing + Context> {
-    pub private_key: SigningKey,
+    pub private_key: PrivateKey, // SigningKey
     pub secp: Secp256k1<C>,
     daemon_state: Rc<DaemonState>,
 }
@@ -58,10 +63,9 @@ impl Sender<All> {
         let p_key: PrivateKey =
             PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
 
-        let cosmos_private_key = SigningKey::from_slice(&p_key.raw_key()).unwrap();
         let sender = Sender {
             daemon_state: daemon_state.clone(),
-            private_key: cosmos_private_key,
+            private_key: p_key,
             secp,
         };
         log::info!(
@@ -72,32 +76,29 @@ impl Sender<All> {
         Ok(sender)
     }
 
+    fn cosmos_private_key(&self) -> SigningKey{
+        SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
+    }
+
     pub fn channel(&self) -> Channel {
         self.daemon_state.grpc_channel.clone()
     }
 
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
-        Ok(self
-            .private_key
-            .public_key()
-            .account_id(&self.daemon_state.chain_data.bech32_prefix)?)
+        Ok(
+            AccountId::new(
+                &self.daemon_state.chain_data.bech32_prefix, 
+                &self.private_key.public_key(&self.secp).raw_address.unwrap()
+            )?
+        )
     }
 
     pub fn address(&self) -> Result<Addr, DaemonError> {
-        Ok(Addr::unchecked(
-            self.private_key
-                .public_key()
-                .account_id(&self.daemon_state.chain_data.bech32_prefix)?
-                .to_string(),
-        ))
+        Ok(Addr::unchecked(self.pub_addr_str()?))
     }
 
     pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
-        Ok(self
-            .private_key
-            .public_key()
-            .account_id(&self.daemon_state.chain_data.bech32_prefix)?
-            .to_string())
+        Ok(self.pub_addr()?.to_string())
     }
 
     pub async fn bank_send(
@@ -148,7 +149,7 @@ impl Sender<All> {
         let fee = self.build_fee(0u8, None);
 
         let auth_info =
-            SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
+            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence).auth_info(fee);
 
         let sign_doc = SignDoc::new(
             tx_body,
@@ -157,7 +158,7 @@ impl Sender<All> {
             account_number,
         )?;
 
-        let tx_raw = sign_doc.sign(&self.private_key)?;
+        let tx_raw = sign_doc.sign(&self.cosmos_private_key())?;
 
         Node::new(self.channel())
             .simulate_tx(tx_raw.to_bytes()?)
@@ -194,7 +195,7 @@ impl Sender<All> {
         let fee = self.build_fee(amount_to_pay as u128, Some(gas_expected as u64));
 
         let auth_info =
-            SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
+            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence).auth_info(fee);
 
         let sign_doc = SignDoc::new(
             &tx_body,
@@ -203,7 +204,7 @@ impl Sender<All> {
             account_number,
         )?;
 
-        let tx_raw = sign_doc.sign(&self.private_key)?;
+        let tx_raw = sign_doc.sign(&self.cosmos_private_key())?;
 
         self.broadcast(tx_raw).await
     }
@@ -225,15 +226,13 @@ impl Sender<All> {
 
         let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
             acc
-        } else {
+        } else if let Ok(acc) = PeriodicVestingAccount::decode(account.as_ref()){
             // try vesting account, (used by Terra2)
-            use cosmos_modules::vesting::PeriodicVestingAccount;
-
-            let acc = PeriodicVestingAccount::decode(account.as_ref()).map_err(|_| {
-                DaemonError::StdErr("Unknown account type returned from QueryAccountRequest".into())
-            })?;
-
             acc.base_vesting_account.unwrap().base_account.unwrap()
+        } else if let Ok(acc) = InjectiveEthAccount::decode(account.as_ref()){
+            acc.base_account.unwrap()
+        }else{
+            return Err(DaemonError::StdErr("Unknown account type returned from QueryAccountRequest".into()))
         };
 
         Ok(acc)
@@ -244,11 +243,11 @@ impl Sender<All> {
         let commit = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
                 tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Block.into(),
+                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
             })
             .await?;
 
-        log::debug!("{:?}", commit);
+        log::debug!("TX commit: {:?}", commit);
 
         let resp = Node::new(self.channel())
             .find_tx(commit.into_inner().tx_response.unwrap().txhash)
