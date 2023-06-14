@@ -246,7 +246,7 @@ mod tst {
             "correct_addr: {}",
             general_purpose::STANDARD.encode(addr.as_bytes())
         );
-        // step 2. verify this address (https://lcd.injective.network/swagger/#/Query/AuthAccount) against the one we got from our wallet with this seed phrase. (done)
+        // step 2. verify this address (https://lcd.injective.network/swagger/#/Query/AddressBytesToString) against the one we got from our wallet with this seed phrase. (done)
 
         // step 3. construct the Account Address bytes with the method we're trying to get working
         let address = ethers_core::utils::secret_key_to_address(&SigningKey::from_slice(
