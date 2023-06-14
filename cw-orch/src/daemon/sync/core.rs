@@ -1,10 +1,11 @@
 use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
 use crate::{
     daemon::{error::DaemonError, state::DaemonState},
-    environment::{ChainUpload, TxHandler},
+    environment::TxHandler,
     prelude::{
         queriers::{CosmWasm, DaemonQuerier},
-        CallAs, ContractInstance, CwOrcExecute, DaemonBuilder, IndexResponse, Uploadable, WasmPath,
+        CallAs, ContractInstance, CwOrchExecute, DaemonBuilder, IndexResponse, Uploadable,
+        WasmPath,
     },
     state::ChainState,
 };
@@ -84,6 +85,36 @@ impl TxHandler for Daemon {
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
+    }
+
+    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+        let sender = &self.daemon.sender;
+        let wasm_path = uploadable.wasm();
+
+        log::debug!("Uploading file at {:?}", wasm_path);
+
+        let file_contents = std::fs::read(wasm_path.path())?;
+        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+            sender: sender.pub_addr()?,
+            wasm_byte_code: file_contents,
+            instantiate_permission: None,
+        };
+        let result = self
+            .rt_handle
+            .block_on(sender.commit_tx(vec![store_msg], None))?;
+
+        log::info!("Uploaded: {:?}", result.txhash);
+
+        let code_id = result.uploaded_code_id().unwrap();
+
+        // wait for the node to return the contract information for this upload
+        let wasm = CosmWasm::new(self.channel());
+        while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
+            self.rt_handle
+                .block_on(tokio::time::sleep(Duration::from_secs(6)));
+        }
+
+        Ok(result)
     }
 
     fn execute<E: Serialize>(
@@ -190,39 +221,7 @@ impl TxHandler for Daemon {
     }
 }
 
-impl ChainUpload for Daemon {
-    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
-        let sender = &self.daemon.sender;
-        let wasm_path = uploadable.wasm();
-
-        log::debug!("Uploading file at {:?}", wasm_path);
-
-        let file_contents = std::fs::read(wasm_path.path())?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: sender.pub_addr()?,
-            wasm_byte_code: file_contents,
-            instantiate_permission: None,
-        };
-        let result = self
-            .rt_handle
-            .block_on(sender.commit_tx(vec![store_msg], None))?;
-
-        log::info!("Uploaded: {:?}", result.txhash);
-
-        let code_id = result.uploaded_code_id().unwrap();
-
-        // wait for the node to return the contract information for this upload
-        let wasm = CosmWasm::new(self.channel());
-        while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(6)));
-        }
-
-        Ok(result)
-    }
-}
-
-impl<T: CwOrcExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
+impl<T: CwOrchExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
     type Sender = Wallet;
 
     fn set_sender(&mut self, sender: &Self::Sender) {
