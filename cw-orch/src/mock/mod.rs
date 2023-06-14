@@ -3,6 +3,7 @@
 
 mod core;
 mod state;
+mod mock_querier;
 
 pub use self::core::*;
 pub use state::*;
