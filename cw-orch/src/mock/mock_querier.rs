@@ -1,12 +1,17 @@
+use cosmwasm_std::Addr;
+use cosmwasm_std::Delegation;
+use cosmwasm_std::{AllDelegationsResponse,BondedDenomResponse};
 use crate::daemon::queriers::CosmWasm;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::prelude::queriers::Bank;
+use crate::prelude::queriers::Staking;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
 
 use cosmwasm_std::BankQuery;
 use cosmwasm_std::Binary;
 use cosmwasm_std::Empty;
+use cosmwasm_std::StakingQuery;
 use ibc_chain_registry::chain::ChainData;
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
@@ -21,6 +26,18 @@ use cosmwasm_std::{
 };
 
 use crate::daemon::GrpcChannel;
+
+
+fn to_cosmwasm_coin(c: cosmrs::proto::cosmos::base::v1beta1::Coin) -> Coin{
+    Coin{
+        amount: Uint128::from_str(&c.amount).unwrap(),
+        denom: c.denom
+    }
+}
+
+const QUERIER_ERROR: &str = "Only Bank balances and Wasm (raw + smart) and Some staking queries are covered for now";
+
+
 
 /// mock_dependencies is a drop-in replacement for cosmwasm_std::testing::mock_dependencies
 /// this uses our CustomQuerier.
@@ -37,6 +54,7 @@ pub fn mock_dependencies(
     }
 }
 
+/// Querier struct that fetches queries on-chain directly
 pub struct WasmMockQuerier {
     base: MockQuerier<Empty>,
     channel: Channel,
@@ -60,6 +78,8 @@ impl Querier for WasmMockQuerier {
 }
 
 impl WasmMockQuerier {
+    /// Function used to handle a query and customize the query behavior
+    /// This implements some queries by querying an actual node for the responses
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(x) => {
@@ -89,7 +109,7 @@ impl WasmMockQuerier {
                     }
                     _ => SystemResult::Err(SystemError::InvalidRequest {
                         error:
-                            "Only Bank balances and Wasm (raw + smart) queies are covered for now"
+                            QUERIER_ERROR
                                 .to_string(),
                         request: to_binary(&request).unwrap(),
                     }),
@@ -132,14 +152,47 @@ impl WasmMockQuerier {
                     }
                     _ => SystemResult::Err(SystemError::InvalidRequest {
                         error:
-                            "Only Bank balances and Wasm (raw + smart) queies are covered for now"
+                            QUERIER_ERROR
                                 .to_string(),
                         request: to_binary(&request).unwrap(),
                     }),
                 }
             }
+            QueryRequest::Staking(x) =>{
+                let querier = Staking::new(self.channel.clone());
+                match x{
+                    StakingQuery::BondedDenom {  } => {
+                        let query_result = self.runtime.block_on(querier.params())
+                            .map(|result| BondedDenomResponse{
+                                denom: result.params.unwrap().bond_denom
+                            })
+                            .map(|query_result| to_binary(&query_result))
+                            .unwrap();
+                        SystemResult::Ok(ContractResult::from(query_result))
+                    },
+                    // This query is not perfect. I guess that on_chain you should be able to get ALL delegations and not a paginated result
+                    // TODO, do better here
+                    StakingQuery::AllDelegations { delegator } => {
+                        let query_result = self.runtime.block_on(querier.delegator_delegations(delegator, None))
+                            .map(|result| AllDelegationsResponse{
+                                delegations: result.delegation_responses.into_iter().filter_map(
+                                    |delegation|
+                                    delegation.delegation.map(|d| Delegation { 
+                                        delegator: Addr::unchecked(d.delegator_address), 
+                                        validator: d.validator_address, 
+                                        amount: to_cosmwasm_coin(delegation.balance.unwrap()) 
+                                        }) 
+                                    ).collect()
+                            })
+                            .map(|query_result| to_binary(&query_result))
+                            .unwrap();
+                        SystemResult::Ok(ContractResult::from(query_result))
+                    }
+                    _ => todo!()
+                }
+            }
             _ => SystemResult::Err(SystemError::InvalidRequest {
-                error: "Only Bank balances and Wasm (raw + smart) queies are covered for now"
+                error: QUERIER_ERROR
                     .to_string(),
                 request: to_binary(&request).unwrap(),
             }),
@@ -148,6 +201,7 @@ impl WasmMockQuerier {
 }
 
 impl WasmMockQuerier {
+    /// Creates a querier from chain information
     pub fn new(base: MockQuerier<Empty>, chain: ChainData) -> Self {
         let rt = Runtime::new().unwrap();
 
