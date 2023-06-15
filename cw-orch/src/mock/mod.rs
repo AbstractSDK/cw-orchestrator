@@ -3,7 +3,8 @@
 
 mod core;
 #[cfg(feature = "daemon")]
-mod mock_querier;
+/// Mock querier used for tests
+pub mod mock_querier;
 mod state;
 
 pub use self::core::*;
