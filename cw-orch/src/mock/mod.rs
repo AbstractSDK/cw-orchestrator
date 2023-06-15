@@ -3,7 +3,7 @@
 
 mod core;
 /// Mock querier used for tests
-#[cfg(feature="daemon")]
+#[cfg(feature = "daemon")]
 pub mod mock_querier;
 mod state;
 
