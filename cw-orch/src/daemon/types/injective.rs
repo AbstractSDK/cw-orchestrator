@@ -12,10 +12,10 @@ pub struct InjectiveEthAccount {
 
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InjectivePubKey {
-    #[prost(string, tag = "1")]
-    pub key: String,
+    #[prost(bytes, tag = 1)]
+    pub key: Vec<u8>,
 }
 
-impl TypeUrl for InjectivePubKey{
+impl TypeUrl for InjectivePubKey {
     const TYPE_URL: &'static str = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
 }

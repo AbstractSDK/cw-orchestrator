@@ -1,4 +1,3 @@
-use cosmrs::tx::{ModeInfo, SignMode};
 use super::{
     chain_info::ChainKind,
     cosmos_modules::{self, auth::BaseAccount},
@@ -8,6 +7,7 @@ use super::{
     tx_resp::CosmTxResponse,
 };
 use crate::daemon::types::injective::InjectiveEthAccount;
+use cosmrs::tx::{ModeInfo, SignMode};
 
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
@@ -193,13 +193,11 @@ impl Sender<All> {
         let fee = self.build_fee(amount_to_pay as u128, Some(gas_expected as u64));
 
         let auth_info = SignerInfo {
-            public_key: Some(self.private_key.get_signer_public_key(&self.secp)),
+            public_key: self.private_key.get_signer_public_key(&self.secp),
             mode_info: ModeInfo::single(SignMode::Direct),
             sequence,
         }
-            .auth_info(fee);
-
-
+        .auth_info(fee);
 
         let sign_doc = SignDoc::new(
             &tx_body,

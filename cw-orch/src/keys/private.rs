@@ -1,14 +1,14 @@
-use base64::Engine;
-use crate::daemon::types::injective::InjectivePubKey;
-use cosmrs::tx::SignerPublicKey;
 use super::public::PublicKey;
+use crate::daemon::types::injective::InjectivePubKey;
 use crate::daemon::DaemonError;
 #[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;
+use base64::Engine;
 use bitcoin::{
     bip32::{ExtendedPrivKey, IntoDerivationPath},
     Network,
 };
+use cosmrs::tx::SignerPublicKey;
 use hkd32::mnemonic::{Phrase, Seed};
 use rand_core::OsRng;
 use secp256k1::Secp256k1;
@@ -105,12 +105,11 @@ impl PrivateKey {
         PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x))
     }
 
-
     #[cfg(feature = "eth")]
     pub fn get_injective_public_key<C: secp256k1::Signing + secp256k1::Context>(
         &self,
         secp: &Secp256k1<C>,
-    ) -> SignerPublicKey{
+    ) -> SignerPublicKey {
         use base64::engine::general_purpose;
         use cosmrs::tx::MessageExt;
         use secp256k1::SecretKey;
@@ -119,31 +118,30 @@ impl PrivateKey {
         let public_key = secp256k1::PublicKey::from_secret_key(secp, &secret_key);
 
         let vec_pk = public_key.serialize();
-        let ten = vec
 
+        log::debug!("{:?}, public key", vec_pk);
 
-        // We create the serialized key
-        let inj_key = InjectivePubKey{
-            key: general_purpose::STANDARD.encode(&public_key.serialize())
-        };
-
-        log::debug!("{:?}", inj_key);
+        let inj_key = InjectivePubKey { key: vec_pk.into() };
 
         inj_key.to_any().unwrap().try_into().unwrap()
     }
 
-
     pub fn get_signer_public_key<C: secp256k1::Signing + secp256k1::Context>(
         &self,
         secp: &Secp256k1<C>,
-    ) -> SignerPublicKey{
+    ) -> Option<SignerPublicKey> {
         if self.coin_type == 60 {
             #[cfg(feature = "eth")]
-            return self.get_injective_public_key(secp);
+            return Some(self.get_injective_public_key(secp));
             panic!("Coin Type 60 not supported without eth feature");
         }
 
-        cosmrs::crypto::secp256k1::SigningKey::from_slice(self.raw_key().as_slice()).unwrap().public_key().into()
+        Some(
+            cosmrs::crypto::secp256k1::SigningKey::from_slice(self.raw_key().as_slice())
+                .unwrap()
+                .public_key()
+                .into(),
+        )
     }
 
     pub fn raw_key(&self) -> Vec<u8> {
