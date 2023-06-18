@@ -22,7 +22,7 @@ pub const PHOENIX_1: ChainInfo = ChainInfo {
     chain_id: "phoenix-1",
     gas_denom: "uluna",
     gas_price: 0.15,
-    grpc_urls: &["https://terra-grpc.polkachu.com:11790"],
+    grpc_urls: &["http://terra-grpc.polkachu.com:11790"],
     network_info: TERRA_NETWORK,
     lcd_url: None,
     fcd_url: None,

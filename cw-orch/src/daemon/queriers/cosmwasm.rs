@@ -106,6 +106,14 @@ impl CosmWasm {
         Ok(client.code(request).await?.into_inner().code_info.unwrap())
     }
 
+    /// Query code bytes
+    pub async fn code_data(&self, code_id: u64) -> Result<Vec<u8>, DaemonError> {
+        use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
+        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let request = QueryCodeRequest { code_id };
+        Ok(client.code(request).await?.into_inner().data)
+    }
+
     /// Query codes
     pub async fn codes(
         &self,
