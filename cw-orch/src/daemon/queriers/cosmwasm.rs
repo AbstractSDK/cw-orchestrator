@@ -81,7 +81,7 @@ impl CosmWasm {
         &self,
         address: impl Into<String>,
         pagination: Option<PageRequest>,
-    ) -> Result<Vec<cosmos_modules::cosmwasm::Model>, DaemonError> {
+    ) -> Result<cosmos_modules::cosmwasm::QueryAllContractStateResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryAllContractStateRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryAllContractStateRequest {
@@ -92,7 +92,7 @@ impl CosmWasm {
             .all_contract_state(request)
             .await?
             .into_inner()
-            .models)
+        )
     }
 
     /// Query code
