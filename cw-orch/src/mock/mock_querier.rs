@@ -19,7 +19,7 @@ use tonic::transport::Channel;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage};
+use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
     from_slice, to_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest,
     SystemError, SystemResult, Uint128, WasmQuery,
@@ -42,7 +42,7 @@ const QUERIER_ERROR: &str =
 pub fn mock_dependencies(
     chain_info: ChainData,
 ) -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier> {
-    let custom_querier: WasmMockQuerier = WasmMockQuerier::new(MockQuerier::new(&[]), chain_info);
+    let custom_querier: WasmMockQuerier = WasmMockQuerier::new(chain_info);
 
     OwnedDeps {
         storage: MockStorage::default(),
@@ -54,7 +54,6 @@ pub fn mock_dependencies(
 
 /// Querier struct that fetches queries on-chain directly
 pub struct WasmMockQuerier {
-    base: MockQuerier<Empty>,
     channel: Channel,
     runtime: Runtime,
 }
@@ -202,7 +201,7 @@ impl WasmMockQuerier {
 
 impl WasmMockQuerier {
     /// Creates a querier from chain information
-    pub fn new(base: MockQuerier<Empty>, chain: ChainData) -> Self {
+    pub fn new(chain: ChainData) -> Self {
         let rt = Runtime::new().unwrap();
 
         let channel = rt
@@ -210,7 +209,6 @@ impl WasmMockQuerier {
             .unwrap();
 
         WasmMockQuerier {
-            base,
             channel,
             runtime: rt,
         }
