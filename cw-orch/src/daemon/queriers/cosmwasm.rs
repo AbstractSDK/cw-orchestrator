@@ -88,11 +88,7 @@ impl CosmWasm {
             address: address.into(),
             pagination,
         };
-        Ok(client
-            .all_contract_state(request)
-            .await?
-            .into_inner()
-            )
+        Ok(client.all_contract_state(request).await?.into_inner())
     }
 
     /// Query code
