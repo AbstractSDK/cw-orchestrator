@@ -25,6 +25,7 @@ pub use self::{
     tx_resp::*,
 };
 pub use sender::Wallet;
+pub use tx_builder::TxBuilder;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{

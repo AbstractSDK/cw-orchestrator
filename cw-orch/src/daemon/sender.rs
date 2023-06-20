@@ -13,12 +13,12 @@ use cosmrs::{
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, Fee, Msg, Raw, SequenceNumber, SignDoc, SignerInfo},
-    AccountId, Any, Coin,
+    tx::{self, Msg, Raw, SignDoc, SignerInfo},
+    AccountId,
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, env, rc::Rc, str::FromStr, time::Duration};
+use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
 use tonic::transport::Channel;
 
@@ -171,9 +171,8 @@ impl Sender<All> {
             };
 
             // update the fee and try again
-            let tx = tx_builder.fee_amount(new_fee).build(self).await?;
-            // wait a bit
-            tokio::time::sleep(Duration::from_millis(10000)).await;
+            tx_builder.fee_amount(new_fee);
+            let tx = tx_builder.build(self).await?;
 
             tx_response = self.broadcast_tx(tx).await?;
         }
