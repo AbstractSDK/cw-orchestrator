@@ -1,3 +1,6 @@
+//! Live mock is a mock that uses a live chain to query for data.
+//! It can be used to do chain-backed unit-testing. It can't be used for state-changing operations.
+
 use crate::daemon::queriers::CosmWasm;
 use crate::daemon::queriers::DaemonQuerier;
 use crate::prelude::queriers::Bank;
