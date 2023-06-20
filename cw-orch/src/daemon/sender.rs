@@ -237,7 +237,7 @@ impl Sender<All> {
             .await?;
 
         let commit = commit.into_inner().tx_response.unwrap();
-        return Ok(commit);
+        Ok(commit)
     }
 }
 
