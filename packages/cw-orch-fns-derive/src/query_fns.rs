@@ -44,6 +44,9 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 // sort fields on field name
                 LexiographicMatching::default().visit_fields_named_mut(variant_fields);
 
+                // remove attributes from fields
+                variant_fields.named.iter_mut().for_each(|f| f.attrs = vec![]);
+
                 // Parse these fields as arguments to function
                 let variant_fields = variant_fields.named.clone();
                 let variant_idents = variant_fields.iter().map(|f|f.ident.clone().unwrap());
