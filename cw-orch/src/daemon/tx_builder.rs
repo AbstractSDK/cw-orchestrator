@@ -137,6 +137,5 @@ impl TxBuilder {
             account_number,
         )?;
         wallet.sign(sign_doc).map_err(Into::into)
-
     }
 }

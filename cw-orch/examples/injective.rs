@@ -3,8 +3,8 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
 };
 use cw_orch::prelude::{
-    networks, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
+    networks, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload,
+    Daemon, TxHandler,
 };
 
 use tokio::runtime::Runtime;
