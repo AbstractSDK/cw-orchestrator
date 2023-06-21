@@ -24,7 +24,7 @@ pub const INJECTIVE_888: ChainInfo = ChainInfo {
     chain_id: "injective-888",
     gas_denom: "inj",
     gas_price: 500_000_000.0,
-    grpc_urls: &["http://injective-testnet-grpc.polkachu.com:14390"],
+    grpc_urls: &["https://k8s.testnet.chain.grpc.injective.network:443"],
     network_info: INJECTIVE_NETWORK,
     lcd_url: None,
     fcd_url: None,

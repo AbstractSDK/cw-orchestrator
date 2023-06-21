@@ -1,5 +1,5 @@
 use super::public::PublicKey;
-use crate::daemon::types::injective::InjectivePubKey;
+use crate::daemon::types::injective::{InjectivePubKey, ETHEREUM_COIN_TYPE};
 use crate::daemon::DaemonError;
 #[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;
@@ -91,14 +91,17 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
     ) -> PublicKey {
-        if self.coin_type == 60 {
+        if self.coin_type == ETHEREUM_COIN_TYPE {
             #[cfg(feature = "eth")]
             return PublicKey::from_ethers_address_bytes(
                 ethers_core::utils::secret_key_to_address(
                     &SigningKey::from_slice(self.raw_key().as_slice()).unwrap(),
                 ),
             );
-            panic!("Coin Type 60 not supported without eth feature");
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
         }
 
         let x = self.private_key.private_key.public_key(secp);
@@ -119,7 +122,7 @@ impl PrivateKey {
 
         let vec_pk = public_key.serialize();
 
-        log::debug!("{:?}, public key", vec_pk);
+        log::debug!("{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
 
         let inj_key = InjectivePubKey { key: vec_pk.into() };
 
@@ -130,10 +133,13 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
     ) -> Option<SignerPublicKey> {
-        if self.coin_type == 60 {
+        if self.coin_type == ETHEREUM_COIN_TYPE {
             #[cfg(feature = "eth")]
             return Some(self.get_injective_public_key(secp));
-            panic!("Coin Type 60 not supported without eth feature");
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
         }
 
         Some(

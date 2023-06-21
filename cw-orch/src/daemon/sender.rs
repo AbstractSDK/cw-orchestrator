@@ -1,3 +1,5 @@
+use crate::daemon::types::injective::ETHEREUM_COIN_TYPE;
+
 use super::{
     chain_info::ChainKind,
     cosmos_modules::{self, auth::BaseAccount},
@@ -7,6 +9,10 @@ use super::{
     tx_resp::CosmTxResponse,
 };
 use crate::daemon::types::injective::InjectiveEthAccount;
+
+#[cfg(feature = "eth")]
+use crate::daemon::types::injective::InjectiveSigner;
+
 use cosmrs::tx::{ModeInfo, SignMode};
 
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
@@ -26,7 +32,7 @@ use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
 const GAS_LIMIT: u64 = 1_000_000;
-const GAS_BUFFER: f64 = 1.2;
+const GAS_BUFFER: f64 = 1.3;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Rc<Sender<All>>;
@@ -206,12 +212,21 @@ impl Sender<All> {
             account_number,
         )?;
 
-        let tx_raw = sign_doc.sign(&self.cosmos_private_key())?;
+        let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(not(feature = "eth"))]
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+            #[cfg(feature = "eth")]
+            self.private_key.sign_injective(sign_doc)?
+        } else {
+            sign_doc.sign(&self.cosmos_private_key())?
+        };
 
         self.broadcast(tx_raw).await
     }
 
-    // TODO: this does not work for injective because it's eth account
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.pub_addr().unwrap().to_string();
 
@@ -221,8 +236,6 @@ impl Sender<All> {
             .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
             .await?
             .into_inner();
-
-        log::debug!("base account query response: {:?}", resp);
 
         let account = resp.account.unwrap().value;
 

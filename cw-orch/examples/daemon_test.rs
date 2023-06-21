@@ -13,6 +13,7 @@ pub fn main() {
     // There are two types of daemon, sync and async. Sync daemons can be used is generic code. Async daemons can be used
     // in async code (e.g. tokio), which enables multi-threaded and non-blocking code.
 
+    env_logger::init();
     // We start by creating a runtime, which is required for a sync daemon.
     let runtime = Runtime::new().unwrap();
 

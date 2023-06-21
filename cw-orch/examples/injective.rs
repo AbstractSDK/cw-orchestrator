@@ -6,6 +6,7 @@ use cw_orch::prelude::{
     networks, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload, Daemon,
     TxHandler,
 };
+
 use tokio::runtime::Runtime;
 const TESTNET_MNEMONIC: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
 
@@ -14,7 +15,6 @@ pub fn main() {
     // in async code (e.g. tokio), which enables multi-threaded and non-blocking code.
 
     env_logger::init();
-
     // We start by creating a runtime, which is required for a sync daemon.
     let runtime = Runtime::new().unwrap();
 
@@ -33,7 +33,6 @@ pub fn main() {
     let counter = CounterContract::new("local:counter", daemon.clone());
 
     let upload_res = counter.upload();
-    println!("{:?}", upload_res);
     assert!(upload_res.is_ok());
 
     let init_res = counter.instantiate(
