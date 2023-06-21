@@ -49,6 +49,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
                 // parse these fields as arguments to function
                 let mut variant_idents = variant_fields.named.clone();
+
                 // remove any attributes for use in fn arguments
                 variant_idents.iter_mut().for_each(|f| f.attrs = vec![]);
 
