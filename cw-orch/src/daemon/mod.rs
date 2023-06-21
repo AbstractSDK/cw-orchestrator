@@ -18,12 +18,14 @@ mod tx_resp;
 // expose these as mods as they can grow
 pub mod networks;
 pub mod queriers;
+pub(crate) mod tx_builder;
 
 pub use self::{
     builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
     tx_resp::*,
 };
 pub use sender::Wallet;
+pub use tx_builder::TxBuilder;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{

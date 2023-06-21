@@ -183,7 +183,9 @@ mod node {
 
     #[ctor]
     fn common_start() {
-        env_logger::init();
+        env_logger::Builder::new()
+            .filter_level(log::LevelFilter::Debug)
+            .init();
         docker_container_start()
     }
 
