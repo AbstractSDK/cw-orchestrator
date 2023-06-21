@@ -4,7 +4,7 @@ use counter_contract::{
     contract::CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
 };
-use cw_orch::prelude::{CwOrcExecute, CwOrcInstantiate, CwOrcQuery, CwOrcUpload, Mock};
+use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Mock};
 
 pub fn main() {
     let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");

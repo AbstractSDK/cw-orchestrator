@@ -9,7 +9,7 @@ use std::fs::File;
 ///
 /// ## Example:
 /// ```ignore
-/// use cw_orch::{Deploy, CwOrchError, Empty, CwEnv, CwOrcUpload};
+/// use cw_orch::{Deploy, CwOrchError, Empty, CwEnv, CwOrchUpload};
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
