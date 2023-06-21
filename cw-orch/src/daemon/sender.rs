@@ -32,7 +32,7 @@ use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
 const GAS_LIMIT: u64 = 1_000_000;
-const GAS_BUFFER: f64 = 1.3;
+const GAS_BUFFER: f64 = 1.2;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Rc<Sender<All>>;
@@ -40,7 +40,7 @@ pub type Wallet = Rc<Sender<All>>;
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 pub struct Sender<C: Signing + Context> {
-    pub private_key: PrivateKey, // SigningKey
+    pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
     daemon_state: Rc<DaemonState>,
 }
@@ -162,7 +162,7 @@ impl Sender<All> {
             account_number,
         )?;
 
-        let tx_raw = sign_doc.sign(&self.cosmos_private_key())?;
+        let tx_raw = self.sign(sign_doc)?;
 
         Node::new(self.channel())
             .simulate_tx(tx_raw.to_bytes()?)
@@ -211,7 +211,12 @@ impl Sender<All> {
             &Id::try_from(self.daemon_state.chain_data.chain_id.to_string())?,
             account_number,
         )?;
+        let tx_raw = self.sign(sign_doc)?;
 
+        self.broadcast(tx_raw).await
+    }
+
+    fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
         let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
             #[cfg(not(feature = "eth"))]
             panic!(
@@ -223,8 +228,7 @@ impl Sender<All> {
         } else {
             sign_doc.sign(&self.cosmos_private_key())?
         };
-
-        self.broadcast(tx_raw).await
+        Ok(tx_raw)
     }
 
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
