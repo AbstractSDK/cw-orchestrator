@@ -6,6 +6,7 @@ use super::{
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
     state::DaemonState,
+    tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
 };
 use crate::daemon::types::injective::InjectiveEthAccount;
@@ -13,16 +14,14 @@ use crate::daemon::types::injective::InjectiveEthAccount;
 #[cfg(feature = "eth")]
 use crate::daemon::types::injective::InjectiveSigner;
 
-use cosmrs::tx::{ModeInfo, SignMode};
-
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, Fee, Msg, Raw, SignDoc, SignerInfo},
-    AccountId, Any, Coin,
+    tx::{self, Msg, Raw, SignDoc, SignerInfo},
+    AccountId,
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
@@ -30,9 +29,6 @@ use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
-
-const GAS_LIMIT: u64 = 1_000_000;
-const GAS_BUFFER: f64 = 1.2;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Rc<Sender<All>>;
@@ -42,7 +38,7 @@ pub type Wallet = Rc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
-    daemon_state: Rc<DaemonState>,
+    pub(crate) daemon_state: Rc<DaemonState>,
 }
 
 impl Sender<All> {
@@ -118,38 +114,17 @@ impl Sender<All> {
         self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 
-    pub(crate) fn build_tx_body<T: Msg>(
-        &self,
-        msgs: Vec<T>,
-        memo: Option<&str>,
-        timeout: u64,
-    ) -> tx::Body {
-        let msgs = msgs
-            .into_iter()
-            .map(Msg::into_any)
-            .collect::<Result<Vec<Any>, _>>()
-            .unwrap();
-
-        tx::Body::new(msgs, memo.unwrap_or_default(), timeout as u32)
-    }
-
-    pub(crate) fn build_fee(&self, amount: impl Into<u128>, gas_limit: Option<u64>) -> Fee {
-        let fee = Coin::new(
-            amount.into(),
-            &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
-        )
-        .unwrap();
-        let gas = gas_limit.unwrap_or(GAS_LIMIT);
-        Fee::from_amount_and_gas(fee, gas)
-    }
-
     pub async fn calculate_gas(
         &self,
         tx_body: &tx::Body,
         sequence: u64,
         account_number: u64,
     ) -> Result<u64, DaemonError> {
-        let fee = self.build_fee(0u8, None);
+        let fee = TxBuilder::build_fee(
+            0u8,
+            &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
+            0,
+        );
 
         let auth_info =
             SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence)
@@ -176,47 +151,52 @@ impl Sender<All> {
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
 
-        let BaseAccount {
-            account_number,
-            sequence,
-            ..
-        } = self.base_account().await?;
+        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
-        let tx_body = self.build_tx_body(msgs, memo, timeout_height);
+        let mut tx_builder = TxBuilder::new(tx_body);
 
-        let sim_gas_used = self
-            .calculate_gas(&tx_body, sequence, account_number)
+        // now commit and check the result, if we get an insufficient fee error, we can try again with the proposed fee
+
+        let tx = tx_builder.build(self).await?;
+
+        let mut tx_response = self.broadcast_tx(tx).await?;
+
+        log::debug!("tx broadcast response: {:?}", tx_response);
+
+        if has_insufficient_fee(&tx_response.raw_log) {
+            // get the suggested fee from the error message
+            let suggested_fee = parse_suggested_fee(&tx_response.raw_log);
+
+            let Some(new_fee) = suggested_fee else {
+                return Err(DaemonError::InsufficientFee(
+                    tx_response.raw_log,
+                ));
+            };
+
+            // update the fee and try again
+            tx_builder.fee_amount(new_fee);
+            let tx = tx_builder.build(self).await?;
+
+            tx_response = self.broadcast_tx(tx).await?;
+        }
+
+        let resp = Node::new(self.channel())
+            .find_tx(tx_response.txhash)
             .await?;
 
-        log::debug!("Simulated gas needed {:?}", sim_gas_used);
-
-        let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
-        let amount_to_pay = gas_expected
-            * (self.daemon_state.chain_data.fees.fee_tokens[0].fixed_min_gas_price + 0.00001);
-
-        log::debug!("Calculated gas needed: {:?}", amount_to_pay);
-
-        let fee = self.build_fee(amount_to_pay as u128, Some(gas_expected as u64));
-
-        let auth_info = SignerInfo {
-            public_key: self.private_key.get_signer_public_key(&self.secp),
-            mode_info: ModeInfo::single(SignMode::Direct),
-            sequence,
+        // if tx result != 0 then the tx failed, so we return an error
+        // if tx result == 0 then the tx succeeded, so we return the tx response
+        if resp.code == 0 {
+            Ok(resp)
+        } else {
+            Err(DaemonError::TxFailed {
+                code: resp.code,
+                reason: resp.raw_log,
+            })
         }
-        .auth_info(fee);
-
-        let sign_doc = SignDoc::new(
-            &tx_body,
-            &auth_info,
-            &Id::try_from(self.daemon_state.chain_data.chain_id.to_string())?,
-            account_number,
-        )?;
-        let tx_raw = self.sign(sign_doc)?;
-
-        self.broadcast(tx_raw).await
     }
 
-    fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
+    pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
         let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
             #[cfg(not(feature = "eth"))]
             panic!(
@@ -259,7 +239,10 @@ impl Sender<All> {
         Ok(acc)
     }
 
-    async fn broadcast(&self, tx: Raw) -> Result<CosmTxResponse, DaemonError> {
+    async fn broadcast_tx(
+        &self,
+        tx: Raw,
+    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
         let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
         let commit = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
@@ -268,21 +251,61 @@ impl Sender<All> {
             })
             .await?;
 
-        log::debug!("TX commit: {:?}", commit);
+        let commit = commit.into_inner().tx_response.unwrap();
+        Ok(commit)
+    }
+}
 
-        let resp = Node::new(self.channel())
-            .find_tx(commit.into_inner().tx_response.unwrap().txhash)
-            .await?;
+fn has_insufficient_fee(raw_log: &str) -> bool {
+    raw_log.contains("insufficient fees")
+}
 
-        // if tx result != 0 then the tx failed, so we return an error
-        // if tx result == 0 then the tx succeeded, so we return the tx response
-        if resp.code == 0 {
-            Ok(resp)
-        } else {
-            Err(DaemonError::TxFailed {
-                code: resp.code,
-                reason: resp.raw_log,
-            })
-        }
+// from logs: "insufficient fees; got: 14867ujuno
+// required: 17771ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9,444255ujuno: insufficient fee"
+fn parse_suggested_fee(raw_log: &str) -> Option<u128> {
+    // Step 1: Split the log message into "got" and "required" parts.
+    let parts: Vec<&str> = raw_log.split("required: ").collect();
+
+    // Make sure the log message is in the expected format.
+    if parts.len() != 2 {
+        return None;
+    }
+
+    // Step 2: Split the "got" part to extract the paid fee and denomination.
+    let got_parts: Vec<&str> = parts[0].split_whitespace().collect();
+
+    // Extract the paid fee and denomination.
+    let paid_fee_with_denom = got_parts.last()?;
+    let (_, denomination) =
+        paid_fee_with_denom.split_at(paid_fee_with_denom.find(|c: char| !c.is_numeric())?);
+
+    eprintln!("denom: {}", denomination);
+
+    // Step 3: Iterate over each fee in the "required" part.
+    let required_fees: Vec<&str> = parts[1].split(denomination).collect();
+
+    eprintln!("required fees: {:?}", required_fees);
+
+    // read until the first non-numeric character backwards on the first string
+    let (_, suggested_fee) =
+        required_fees[0].split_at(required_fees[0].rfind(|c: char| !c.is_numeric())?);
+    eprintln!("suggested fee: {}", suggested_fee);
+
+    // remove the first character if parsing errors, which can be a comma
+    suggested_fee
+        .parse::<u128>()
+        .ok()
+        .or(suggested_fee[1..].parse::<u128>().ok())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_suggested_fee() {
+        let log = "insufficient fees; got: 14867ujuno required: 17771ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9,444255ujuno: insufficient fee";
+        let fee = parse_suggested_fee(log).unwrap();
+        assert_eq!(fee, 444255);
     }
 }

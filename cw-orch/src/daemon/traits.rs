@@ -61,6 +61,28 @@ pub trait ConditionalMigrate: CwOrchMigrate<Daemon> + ConditionalUpload {
             Some(self.migrate(migrate_msg, self.code_id()?)).transpose()
         }
     }
+    /// Uploads the contract if the local contract hash is different from the latest on-chain code hash.
+    /// Proceeds to migrates the contract if the contract is not running the latest code.
+    fn upload_and_migrate_if_needed(
+        &self,
+        migrate_msg: &Self::MigrateMsg,
+    ) -> Result<Option<Vec<TxResponse<Daemon>>>, CwOrchError> {
+        let mut txs = Vec::with_capacity(2);
+
+        if let Some(tx) = self.upload_if_needed()? {
+            txs.push(tx);
+        };
+
+        if let Some(tx) = self.migrate_if_needed(migrate_msg)? {
+            txs.push(tx);
+        };
+
+        if txs.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(txs))
+        }
+    }
 }
 
 impl<T> ConditionalMigrate for T where T: CwOrchMigrate<Daemon> + CwOrchUpload<Daemon> {}
