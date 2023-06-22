@@ -34,6 +34,7 @@ pub trait IndexResponse {
             // for injective
             #[cfg(not(feature = "eth"))]
             panic!("Injective instantiate event parsing not supported without eth feature");
+            #[cfg(feature = "eth")]
             return self
                 .event_attr_value(
                     INJECTIVE_ADDRESS_INSTANTIATE_EVENT.0,
@@ -54,6 +55,7 @@ pub trait IndexResponse {
             // for injective
             #[cfg(not(feature = "eth"))]
             panic!("Injective upload event parsing not supported without eth feature");
+            #[cfg(feature = "eth")]
             self.event_attr_value(
                 INJECTIVE_CODE_ID_UPLOAD_EVENT.0,
                 INJECTIVE_CODE_ID_UPLOAD_EVENT.1,
