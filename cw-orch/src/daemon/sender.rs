@@ -20,7 +20,7 @@ use cosmrs::{
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, Msg, Raw, SignDoc, SignerInfo},
+    tx::{self, Msg, Raw, SignDoc, SignerInfo, ModeInfo, SignMode},
     AccountId,
 };
 use cosmwasm_std::Addr;
@@ -126,9 +126,12 @@ impl Sender<All> {
             0,
         );
 
-        let auth_info =
-            SignerInfo::single_direct(Some(self.cosmos_private_key().public_key()), sequence)
-                .auth_info(fee);
+        let auth_info = SignerInfo {
+            public_key: self.private_key.get_signer_public_key(&self.secp),
+            mode_info: ModeInfo::single(SignMode::Direct),
+            sequence,
+        }
+        .auth_info(fee);
 
         let sign_doc = SignDoc::new(
             tx_body,
