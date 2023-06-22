@@ -5,7 +5,8 @@ use snailquote::unescape;
 const CODE_ID_UPLOAD_EVENT: (&str, &str) = ("store_code", "code_id");
 const ADDRESS_INSTANTIATE_EVENT: (&str, &str) = ("instantiate", "_contract_address");
 
-const INJECTIVE_CODE_ID_UPLOAD_EVENT: (&str, &str) = ("cosmwasm.wasm.v1.EventCodeStored", "code_id");
+const INJECTIVE_CODE_ID_UPLOAD_EVENT: (&str, &str) =
+    ("cosmwasm.wasm.v1.EventCodeStored", "code_id");
 const INJECTIVE_ADDRESS_INSTANTIATE_EVENT: (&str, &str) = (
     "cosmwasm.wasm.v1.EventContractInstantiated",
     "contract_address",
