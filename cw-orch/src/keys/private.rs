@@ -1,5 +1,5 @@
 use super::public::PublicKey;
-use crate::daemon::types::injective::{InjectivePubKey, ETHEREUM_COIN_TYPE};
+use crate::daemon::proto::injective::{InjectivePubKey, ETHEREUM_COIN_TYPE};
 use crate::daemon::DaemonError;
 #[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;

@@ -1,4 +1,4 @@
-use crate::daemon::types::injective::ETHEREUM_COIN_TYPE;
+use crate::daemon::proto::injective::ETHEREUM_COIN_TYPE;
 
 use super::{
     chain_info::ChainKind,
@@ -9,10 +9,10 @@ use super::{
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
 };
-use crate::daemon::types::injective::InjectiveEthAccount;
+use crate::daemon::proto::injective::InjectiveEthAccount;
 
 #[cfg(feature = "eth")]
-use crate::daemon::types::injective::InjectiveSigner;
+use crate::daemon::proto::injective::InjectiveSigner;
 
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{

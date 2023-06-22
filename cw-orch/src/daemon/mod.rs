@@ -15,7 +15,7 @@ mod sync;
 mod traits;
 mod tx_resp;
 /// Proto types for different blockchains
-pub mod types;
+pub mod proto;
 // expose these as mods as they can grow
 pub mod networks;
 pub mod queriers;
