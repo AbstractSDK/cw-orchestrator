@@ -51,7 +51,7 @@ daemon = [
   "dep:bitcoin",
   "dep:prost",
 ]
-eth = ["daemon", "dep:ethers-signers", "dep:ethers-core"]
+eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
 
 [dependencies]
 # Default deps
@@ -101,7 +101,7 @@ ring = { version = "0.16.20", optional = true }
 # Ethereum deps
 ethers-signers = { version = "2.0.7", optional = true }
 ethers-core = { version = "2.0.7", optional = true }
-snailquote = "0.3.1"
+snailquote = { version = "0.3.1", optional = true }
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }

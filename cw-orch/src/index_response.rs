@@ -32,11 +32,14 @@ pub trait IndexResponse {
             Ok(code_id)
         } else {
             // for injective
-            self.event_attr_value(
-                INJECTIVE_ADDRESS_INSTANTIATE_EVENT.0,
-                INJECTIVE_ADDRESS_INSTANTIATE_EVENT.1,
-            )
-            .map(|s| Addr::unchecked(unescape(&s).unwrap()))
+            #[cfg(not(feature = "eth"))]
+            panic!("Injective instantiate event parsing not supported without eth feature");
+            return self
+                .event_attr_value(
+                    INJECTIVE_ADDRESS_INSTANTIATE_EVENT.0,
+                    INJECTIVE_ADDRESS_INSTANTIATE_EVENT.1,
+                )
+                .map(|s| Addr::unchecked(unescape(&s).unwrap()));
         }
     }
 
@@ -49,6 +52,8 @@ pub trait IndexResponse {
             Ok(code_id)
         } else {
             // for injective
+            #[cfg(not(feature = "eth"))]
+            panic!("Injective upload event parsing not supported without eth feature");
             self.event_attr_value(
                 INJECTIVE_CODE_ID_UPLOAD_EVENT.0,
                 INJECTIVE_CODE_ID_UPLOAD_EVENT.1,
