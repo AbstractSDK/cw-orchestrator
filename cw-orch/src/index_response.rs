@@ -2,10 +2,10 @@ use cosmwasm_std::{Addr, Binary, Event, StdError, StdResult};
 use cw_multi_test::AppResponse;
 use snailquote::unescape;
 
-const CODE_ID_UPOAD_EVENT: (&str, &str) = ("store_code", "code_id");
+const CODE_ID_UPLOAD_EVENT: (&str, &str) = ("store_code", "code_id");
 const ADDRESS_INSTANTIATE_EVENT: (&str, &str) = ("instantiate", "_contract_address");
 
-const INJECTIVE_CODE_ID_UPOAD_EVENT: (&str, &str) = ("cosmwasm.wasm.v1.EventCodeStored", "code_id");
+const INJECTIVE_CODE_ID_UPLOAD_EVENT: (&str, &str) = ("cosmwasm.wasm.v1.EventCodeStored", "code_id");
 const INJECTIVE_ADDRESS_INSTANTIATE_EVENT: (&str, &str) = (
     "cosmwasm.wasm.v1.EventContractInstantiated",
     "contract_address",
@@ -42,15 +42,15 @@ pub trait IndexResponse {
     /// Shortcut to get the code id of a contract of an upload response.
     fn uploaded_code_id(&self) -> StdResult<u64> {
         if let Ok(code_id) = self
-            .event_attr_value(CODE_ID_UPOAD_EVENT.0, CODE_ID_UPOAD_EVENT.1)
+            .event_attr_value(CODE_ID_UPLOAD_EVENT.0, CODE_ID_UPLOAD_EVENT.1)
             .map(|s| s.parse().unwrap())
         {
             Ok(code_id)
         } else {
             // for injective
             self.event_attr_value(
-                INJECTIVE_CODE_ID_UPOAD_EVENT.0,
-                INJECTIVE_CODE_ID_UPOAD_EVENT.1,
+                INJECTIVE_CODE_ID_UPLOAD_EVENT.0,
+                INJECTIVE_CODE_ID_UPLOAD_EVENT.1,
             )
             .map(|s| unescape(&s).unwrap().parse().unwrap())
         }
