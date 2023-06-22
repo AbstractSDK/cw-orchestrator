@@ -6,8 +6,9 @@ use cw_orch::prelude::{
     networks, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload,
     Daemon, TxHandler,
 };
+
 use tokio::runtime::Runtime;
-const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
+const TESTNET_MNEMONIC: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
 
 pub fn main() {
     // There are two types of daemon, sync and async. Sync daemons can be used is generic code. Async daemons can be used
@@ -20,9 +21,9 @@ pub fn main() {
     // We can now create a daemon. This daemon will be used to interact with the chain.
     let res = Daemon::builder()
         // set the network to use
-        .chain(networks::LOCAL_JUNO)
+        .chain(networks::INJECTIVE_888)
         .handle(runtime.handle())
-        .mnemonic(LOCAL_MNEMONIC)
+        .mnemonic(TESTNET_MNEMONIC)
         .build();
 
     let Some(daemon) = res.as_ref().ok() else {

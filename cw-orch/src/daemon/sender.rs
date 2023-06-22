@@ -1,3 +1,5 @@
+use crate::daemon::proto::injective::ETHEREUM_COIN_TYPE;
+
 use super::{
     chain_info::ChainKind,
     cosmos_modules::{self, auth::BaseAccount},
@@ -7,19 +9,25 @@ use super::{
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
 };
+use crate::daemon::proto::injective::InjectiveEthAccount;
+
+#[cfg(feature = "eth")]
+use crate::daemon::proto::injective::InjectiveSigner;
+
 use crate::{daemon::core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, Msg, Raw, SignDoc, SignerInfo},
+    tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId,
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
+use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
@@ -28,7 +36,7 @@ pub type Wallet = Rc<Sender<All>>;
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 pub struct Sender<C: Signing + Context> {
-    pub private_key: SigningKey,
+    pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
     pub(crate) daemon_state: Rc<DaemonState>,
 }
@@ -56,10 +64,9 @@ impl Sender<All> {
         let p_key: PrivateKey =
             PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
 
-        let cosmos_private_key = SigningKey::from_slice(&p_key.raw_key()).unwrap();
         let sender = Sender {
             daemon_state: daemon_state.clone(),
-            private_key: cosmos_private_key,
+            private_key: p_key,
             secp,
         };
         log::info!(
@@ -70,32 +77,27 @@ impl Sender<All> {
         Ok(sender)
     }
 
+    fn cosmos_private_key(&self) -> SigningKey {
+        SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
+    }
+
     pub fn channel(&self) -> Channel {
         self.daemon_state.grpc_channel.clone()
     }
 
     pub(crate) fn pub_addr(&self) -> Result<AccountId, DaemonError> {
-        Ok(self
-            .private_key
-            .public_key()
-            .account_id(&self.daemon_state.chain_data.bech32_prefix)?)
+        Ok(AccountId::new(
+            &self.daemon_state.chain_data.bech32_prefix,
+            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+        )?)
     }
 
     pub fn address(&self) -> Result<Addr, DaemonError> {
-        Ok(Addr::unchecked(
-            self.private_key
-                .public_key()
-                .account_id(&self.daemon_state.chain_data.bech32_prefix)?
-                .to_string(),
-        ))
+        Ok(Addr::unchecked(self.pub_addr_str()?))
     }
 
     pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
-        Ok(self
-            .private_key
-            .public_key()
-            .account_id(&self.daemon_state.chain_data.bech32_prefix)?
-            .to_string())
+        Ok(self.pub_addr()?.to_string())
     }
 
     pub async fn bank_send(
@@ -124,8 +126,12 @@ impl Sender<All> {
             0,
         );
 
-        let auth_info =
-            SignerInfo::single_direct(Some(self.private_key.public_key()), sequence).auth_info(fee);
+        let auth_info = SignerInfo {
+            public_key: self.private_key.get_signer_public_key(&self.secp),
+            mode_info: ModeInfo::single(SignMode::Direct),
+            sequence,
+        }
+        .auth_info(fee);
 
         let sign_doc = SignDoc::new(
             tx_body,
@@ -134,7 +140,7 @@ impl Sender<All> {
             account_number,
         )?;
 
-        let tx_raw = sign_doc.sign(&self.private_key)?;
+        let tx_raw = self.sign(sign_doc)?;
 
         Node::new(self.channel())
             .simulate_tx(tx_raw.to_bytes()?)
@@ -193,7 +199,21 @@ impl Sender<All> {
         }
     }
 
-    // TODO: this does not work for injective because it's eth account
+    pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
+        let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(not(feature = "eth"))]
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+            #[cfg(feature = "eth")]
+            self.private_key.sign_injective(sign_doc)?
+        } else {
+            sign_doc.sign(&self.cosmos_private_key())?
+        };
+        Ok(tx_raw)
+    }
+
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.pub_addr().unwrap().to_string();
 
@@ -204,21 +224,19 @@ impl Sender<All> {
             .await?
             .into_inner();
 
-        log::debug!("base account query response: {:?}", resp);
-
         let account = resp.account.unwrap().value;
 
         let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
             acc
-        } else {
+        } else if let Ok(acc) = PeriodicVestingAccount::decode(account.as_ref()) {
             // try vesting account, (used by Terra2)
-            use cosmos_modules::vesting::PeriodicVestingAccount;
-
-            let acc = PeriodicVestingAccount::decode(account.as_ref()).map_err(|_| {
-                DaemonError::StdErr("Unknown account type returned from QueryAccountRequest".into())
-            })?;
-
             acc.base_vesting_account.unwrap().base_account.unwrap()
+        } else if let Ok(acc) = InjectiveEthAccount::decode(account.as_ref()) {
+            acc.base_account.unwrap()
+        } else {
+            return Err(DaemonError::StdErr(
+                "Unknown account type returned from QueryAccountRequest".into(),
+            ));
         };
 
         Ok(acc)

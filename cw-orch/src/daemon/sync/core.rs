@@ -67,6 +67,11 @@ impl Daemon {
     pub fn channel(&self) -> Channel {
         self.state().grpc_channel.clone()
     }
+
+    /// Get the channel configured for this Daemon
+    pub fn wallet(&self) -> Wallet {
+        self.daemon.sender.clone()
+    }
 }
 
 impl ChainState for Daemon {

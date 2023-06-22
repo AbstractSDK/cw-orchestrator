@@ -8,13 +8,14 @@ mod channel;
 mod core;
 mod error;
 pub(crate) mod json_file;
+/// Proto types for different blockchains
+pub mod proto;
 mod sender;
 mod state;
 mod sync;
 /// Custom traits for DaemonAsync contracts
 mod traits;
 mod tx_resp;
-
 // expose these as mods as they can grow
 pub mod networks;
 pub mod queriers;

@@ -1,3 +1,4 @@
+use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
     tendermint::chain::Id,
@@ -122,8 +123,12 @@ impl TxBuilder {
             sequence
         );
 
-        let auth_info = SignerInfo::single_direct(Some(wallet.private_key.public_key()), sequence)
-            .auth_info(fee);
+        let auth_info = SignerInfo {
+            public_key: wallet.private_key.get_signer_public_key(&wallet.secp),
+            mode_info: ModeInfo::single(SignMode::Direct),
+            sequence,
+        }
+        .auth_info(fee);
 
         let sign_doc = SignDoc::new(
             &self.body,
@@ -131,7 +136,6 @@ impl TxBuilder {
             &Id::try_from(wallet.daemon_state.chain_data.chain_id.to_string())?,
             account_number,
         )?;
-
-        sign_doc.sign(&wallet.private_key).map_err(Into::into)
+        wallet.sign(sign_doc).map_err(Into::into)
     }
 }
