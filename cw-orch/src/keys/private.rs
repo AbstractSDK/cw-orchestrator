@@ -1,9 +1,14 @@
 use super::public::PublicKey;
+use crate::daemon::proto::injective::{InjectivePubKey, ETHEREUM_COIN_TYPE};
 use crate::daemon::DaemonError;
+#[cfg(feature = "eth")]
+use ::ethers_core::k256::ecdsa::SigningKey;
+use base64::Engine;
 use bitcoin::{
     bip32::{ExtendedPrivKey, IntoDerivationPath},
     Network,
 };
+use cosmrs::tx::SignerPublicKey;
 use hkd32::mnemonic::{Phrase, Seed};
 use rand_core::OsRng;
 use secp256k1::Secp256k1;
@@ -86,8 +91,63 @@ impl PrivateKey {
         &self,
         secp: &Secp256k1<C>,
     ) -> PublicKey {
+        if self.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(feature = "eth")]
+            return PublicKey::from_ethers_address_bytes(
+                ethers_core::utils::secret_key_to_address(
+                    &SigningKey::from_slice(self.raw_key().as_slice()).unwrap(),
+                ),
+            );
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+        }
+
         let x = self.private_key.private_key.public_key(secp);
         PublicKey::from_bitcoin_public_key(&bitcoin::PublicKey::new(x))
+    }
+
+    #[cfg(feature = "eth")]
+    pub fn get_injective_public_key<C: secp256k1::Signing + secp256k1::Context>(
+        &self,
+        secp: &Secp256k1<C>,
+    ) -> SignerPublicKey {
+        use base64::engine::general_purpose;
+        use cosmrs::tx::MessageExt;
+        use secp256k1::SecretKey;
+
+        let secret_key = SecretKey::from_slice(self.raw_key().as_slice()).unwrap();
+        let public_key = secp256k1::PublicKey::from_secret_key(secp, &secret_key);
+
+        let vec_pk = public_key.serialize();
+
+        log::debug!("{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
+
+        let inj_key = InjectivePubKey { key: vec_pk.into() };
+
+        inj_key.to_any().unwrap().try_into().unwrap()
+    }
+
+    pub fn get_signer_public_key<C: secp256k1::Signing + secp256k1::Context>(
+        &self,
+        secp: &Secp256k1<C>,
+    ) -> Option<SignerPublicKey> {
+        if self.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(feature = "eth")]
+            return Some(self.get_injective_public_key(secp));
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+        }
+
+        Some(
+            cosmrs::crypto::secp256k1::SigningKey::from_slice(self.raw_key().as_slice())
+                .unwrap()
+                .public_key()
+                .into(),
+        )
     }
 
     pub fn raw_key(&self) -> Vec<u8> {
@@ -105,6 +165,7 @@ impl PrivateKey {
         let seed = phrase.to_seed(seed_phrase);
         let root_private_key =
             ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
+        // For injective: https://docs.injective.network/learn/basic-concepts/accounts#injective-accounts
         let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
 
@@ -134,6 +195,12 @@ impl PrivateKey {
 
 #[cfg(test)]
 mod tst {
+    use base64::{engine::general_purpose, Engine};
+    use bitcoin::bech32::ToBase32;
+    use bitcoin::bech32::{Bech32Writer, Variant};
+    use ethers_core::k256::ecdsa::SigningKey;
+    use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer};
+
     use super::*;
 
     #[test]
@@ -209,6 +276,33 @@ mod tst {
 
         Ok(())
     }
+
+    #[test]
+    pub fn inj() -> anyhow::Result<()> {
+        let str_1: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
+        let coin_type: u32 = 118;
+        let prefix = "juno";
+        let secp = Secp256k1::new();
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0, coin_type)?;
+        let pub_k = pk.public_key(&secp);
+
+        let account = pub_k.account(prefix)?;
+        assert_eq!(&account, "juno1jdpunqljj5xypxk6f7dnpga6cjfatwu6vfuyrq");
+        // juno1jdpunqljj5xypxk6f7dnpga6cjfatwu6vfuyrq
+
+        // Coin type 60 is a bit peculiar, because of how injective derives addresses : https://docs.injective.network/learn/basic-concepts/accounts/
+        let coin_type: u32 = 60;
+        let prefix = "inj";
+        let pk = PrivateKey::from_words(&secp, str_1, 0, 0, coin_type)?;
+        let pub_k = pk.public_key(&secp);
+
+        let account = pub_k.account(prefix)?;
+        assert_eq!(&account, "inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat");
+        // inj1u4f9tvhkltksfr5ezz5cfe8fcsl9k5t5ycjhat
+
+        Ok(())
+    }
+
     // #[test]
     // pub fn test_sign() -> anyhow::Result<()> {
     //     // This test is using message from python SDK.. so these keys generate same sigs as they do.
