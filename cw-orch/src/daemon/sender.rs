@@ -20,7 +20,7 @@ use cosmrs::{
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, Msg, Raw, SignDoc, SignerInfo, ModeInfo, SignMode},
+    tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId,
 };
 use cosmwasm_std::Addr;
