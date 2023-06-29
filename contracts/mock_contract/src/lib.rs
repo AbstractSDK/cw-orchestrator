@@ -14,9 +14,12 @@ pub enum ExecuteMsg<T = String> {
     FirstMessage {},
     #[cfg_attr(feature = "interface", payable)]
     SecondMessage {
+        /// test doc-comment
         t: T,
     },
+    /// test doc-comment
     ThirdMessage {
+        /// test doc-comment
         t: T,
     },
 }
@@ -26,9 +29,13 @@ pub enum ExecuteMsg<T = String> {
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(String)]
+    /// test-doc-comment
     FirstQuery {},
     #[returns(String)]
-    SecondQuery { t: String },
+    SecondQuery {
+        /// test doc-comment
+        t: String,
+    },
 }
 
 #[cw_serde]

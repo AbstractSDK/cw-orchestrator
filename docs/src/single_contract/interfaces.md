@@ -102,6 +102,7 @@ The environments that are currently supported are:
 
 1. [cw-multi-test](https://crates.io/crates/cw-multi-test) by using [`Mock`](https://docs.rs/cw-orch/latest/cw_orch/prelude/struct.Mock.html) as the environment.
 2. Blockchain daemons like [junod](https://github.com/CosmosContracts/juno), [osmosisd](https://github.com/osmosis-labs/osmosis), etc. These use the [`Daemon`](https://docs.rs/cw-orch/latest/cw_orch/prelude/struct.Daemon.html) environment.
+3. Chain-backed mock `deps` for unit-testing. This uses the [`MockQuerier`](https://docs.rs/cw-orch/latest/cw_orch/live_mock/struct.MockQuerier.html) that resolves all queries on a real node over gRPC.
 
 ### Generic function
 
