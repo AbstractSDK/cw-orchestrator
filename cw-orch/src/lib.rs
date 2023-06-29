@@ -31,3 +31,6 @@ pub mod mock;
 mod paths;
 
 pub mod state;
+
+#[cfg(feature = "daemon")]
+pub mod live_mock;

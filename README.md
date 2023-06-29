@@ -24,7 +24,7 @@ We maintain a small set of interfaces ourselves that we use in our own projects.
 |---|---|
 | [cw-plus](https://github.com/AbstractSDK/cw-plus) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/cw-plus"> |
 | [wyndex](https://github.com/AbstractSDK/integration-bundles) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/integration-bundles"> |
-| [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-boot) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-boot"> |
+| [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-interface) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-interface"> |
 
 ## Creating an Interface
 
