@@ -1,26 +1,28 @@
-use std::str::FromStr;
-use cosmwasm_std::Uint128;
-use osmosis_test_tube::Bank;
-use crate::interface_traits::Uploadable;
 use crate::interface_traits::CallAs;
-use crate::paths::WasmPath;
-use crate::interface_traits::CwOrchExecute;
 use crate::interface_traits::ContractInstance;
-use cosmwasm_std::Coin;
+use crate::interface_traits::CwOrchExecute;
+use crate::interface_traits::Uploadable;
+use crate::paths::WasmPath;
 use cosmwasm_std::Binary;
-use cosmwasm_std::Timestamp;
 use cosmwasm_std::BlockInfo;
-use osmosis_test_tube::Account;
-use osmosis_test_tube::SigningAccount;
-use osmosis_test_tube::Module;
+use cosmwasm_std::Coin;
+use cosmwasm_std::Timestamp;
+use cosmwasm_std::Uint128;
 use cw_multi_test::AppResponse;
+use osmosis_test_tube::Account;
+use osmosis_test_tube::Bank;
+use osmosis_test_tube::Module;
+use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
+use std::str::FromStr;
 
+use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::{
+    QueryAllBalancesRequest, QueryBalanceRequest,
+};
 use osmosis_test_tube::OsmosisTestApp;
-use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::{QueryBalanceRequest, QueryAllBalancesRequest};
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr};
+use cosmwasm_std::Addr;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -74,8 +76,6 @@ pub struct TestTube<S: StateInterface = MockState> {
 }
 
 impl<S: StateInterface> TestTube<S> {
-    
-
     /// Creates an account and sets its balance
     pub fn init_account(
         &self,
@@ -92,7 +92,7 @@ impl<S: StateInterface> TestTube<S> {
     pub fn init_accounts(
         &self,
         amount: Vec<cosmwasm_std::Coin>,
-        account_n: u64
+        account_n: u64,
     ) -> Result<Vec<SigningAccount>, CwOrchError> {
         self.app
             .borrow()
@@ -104,9 +104,9 @@ impl<S: StateInterface> TestTube<S> {
     /// Returns the amount of the native token.
     pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwOrchError> {
         let amount = Bank::new(&*self.app.borrow())
-            .query_balance(&QueryBalanceRequest{
+            .query_balance(&QueryBalanceRequest {
                 address: address.to_owned(),
-                denom: denom.to_string()
+                denom: denom.to_string(),
             })?
             .balance
             .map(|c| Uint128::from_str(&c.amount).unwrap())
@@ -120,21 +120,20 @@ impl<S: StateInterface> TestTube<S> {
         address: &str,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
         let amount = Bank::new(&*self.app.borrow())
-            .query_all_balances(&QueryAllBalancesRequest{
+            .query_all_balances(&QueryAllBalancesRequest {
                 address: address.to_owned(),
                 pagination: None,
             })?
             .balances
             .into_iter()
-            .map(|c| Coin{
+            .map(|c| Coin {
                 amount: Uint128::from_str(&c.amount).unwrap(),
-                denom: c.denom
+                denom: c.denom,
             })
             .collect();
         Ok(amount)
     }
 }
-
 
 impl TestTube<MockState> {
     /// Create a mock environment with the default mock state.
@@ -179,13 +178,16 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
-
         let wasm_contents = std::fs::read(contract.wasm().path())?;
-        let upload_response = Wasm::new(&*self.app.borrow()).store_code(&wasm_contents, None, &self.sender.borrow())?;
+        let upload_response = Wasm::new(&*self.app.borrow()).store_code(
+            &wasm_contents,
+            None,
+            &self.sender.borrow(),
+        )?;
 
-        Ok(AppResponse{
+        Ok(AppResponse {
             data: Some(Binary(upload_response.raw_data)),
-            events: upload_response.events
+            events: upload_response.events,
         })
     }
 
@@ -195,17 +197,16 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, CwOrchError> {
-
         let execute_response = Wasm::new(&*self.app.borrow()).execute(
-                contract_address.as_ref(),
-                exec_msg,
-                coins,
-                &self.sender.borrow(),    
-            )?;
+            contract_address.as_ref(),
+            exec_msg,
+            coins,
+            &self.sender.borrow(),
+        )?;
 
-        Ok(AppResponse{
+        Ok(AppResponse {
             data: Some(Binary(execute_response.raw_data)),
-            events: execute_response.events
+            events: execute_response.events,
         })
     }
 
@@ -217,19 +218,18 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwOrchError> {
-
         let instantiate_response = Wasm::new(&*self.app.borrow()).instantiate(
-                code_id,
-                init_msg,
-                admin.map(|a| a.to_string()).as_deref(),
-                label,
-                coins,
-                &self.sender.borrow() 
-            )?;
+            code_id,
+            init_msg,
+            admin.map(|a| a.to_string()).as_deref(),
+            label,
+            coins,
+            &self.sender.borrow(),
+        )?;
 
-        Ok(AppResponse{
+        Ok(AppResponse {
             data: Some(Binary(instantiate_response.raw_data)),
-            events: instantiate_response.events
+            events: instantiate_response.events,
         })
     }
 
@@ -238,7 +238,6 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, CwOrchError> {
-
         let query = Wasm::new(&*self.app.borrow()).query(contract_address.as_ref(), query_msg)?;
 
         Ok(query)
@@ -250,7 +249,6 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
         _new_code_id: u64,
         _contract_address: &Addr,
     ) -> Result<Self::Response, CwOrchError> {
-
         panic!("Migrate not implemented on osmosis test_tube")
     }
 
@@ -264,14 +262,16 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
     }
 
     fn next_block(&self) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")    
+        panic!("Can't wait blocks on osmosis_test_tube")
     }
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
-        Ok(BlockInfo{
+        Ok(BlockInfo {
             chain_id: "osmosis-1".to_string(),
             height: self.app.borrow().get_block_height().try_into().unwrap(),
-            time: Timestamp::from_nanos(self.app.borrow().get_block_time_nanos().try_into().unwrap()),
+            time: Timestamp::from_nanos(
+                self.app.borrow().get_block_time_nanos().try_into().unwrap(),
+            ),
         })
     }
 }

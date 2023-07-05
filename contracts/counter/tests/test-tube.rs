@@ -1,11 +1,11 @@
 // ANCHOR: all
 use cosmwasm_std::coins;
-use cw_orch::test_tube::TestTube;
 use counter_contract::{
     contract::CONTRACT_NAME,
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract,
 };
+use cw_orch::test_tube::TestTube;
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
 
@@ -28,7 +28,9 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
 
     // Instantiate the contract
     let msg = InstantiateMsg { count: 1i32 };
-    let init_resp = contract.instantiate(&msg, Some(&chain.sender()), None).unwrap();
+    let init_resp = contract
+        .instantiate(&msg, Some(&chain.sender()), None)
+        .unwrap();
 
     // Get the address from the response
     let contract_addr = init_resp.instantiated_contract_address().unwrap();
@@ -46,7 +48,9 @@ fn count() {
     // Create the mock
     let test_tube = TestTube::new(coins(100_000_000_000, "uosmo"));
 
-    let account = test_tube.init_account(coins(100_000_000_000, "uosmo")).unwrap();
+    let account = test_tube
+        .init_account(coins(100_000_000_000, "uosmo"))
+        .unwrap();
 
     // Set up the contract
     let contract = setup(test_tube);
