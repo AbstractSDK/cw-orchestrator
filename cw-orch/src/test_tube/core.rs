@@ -9,6 +9,7 @@ use cosmwasm_std::Coin;
 use cosmwasm_std::Timestamp;
 use cosmwasm_std::Uint128;
 use cw_multi_test::AppResponse;
+use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::MsgSend;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
 use osmosis_test_tube::Module;
@@ -98,6 +99,35 @@ impl<S: StateInterface> TestTube<S> {
             .borrow()
             .init_accounts(&amount, account_n)
             .map_err(Into::into)
+    }
+
+    /// Creates accounts and sets their balance
+    pub fn bank_send(
+        &self,
+        to: String,
+        amount: Vec<cosmwasm_std::Coin>,
+    ) -> Result<AppResponse, CwOrchError> {
+        let send_response = Bank::new(&*self.app.borrow()).send(
+            MsgSend {
+                from_address: self.sender.borrow().address(),
+                to_address: to,
+                amount: amount
+                    .into_iter()
+                    .map(
+                        |c| osmosis_test_tube::cosmrs::proto::cosmos::base::v1beta1::Coin {
+                            amount: c.amount.to_string(),
+                            denom: c.denom,
+                        },
+                    )
+                    .collect(),
+            },
+            &self.sender.borrow(),
+        )?;
+
+        Ok(AppResponse {
+            data: Some(Binary(send_response.raw_data)),
+            events: send_response.events,
+        })
     }
 
     /// Query the (bank) balance of a native token for and address.
