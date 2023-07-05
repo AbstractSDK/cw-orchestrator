@@ -1,4 +1,3 @@
-use osmosis_test_tube::Gamm;
 use crate::interface_traits::CallAs;
 use crate::interface_traits::ContractInstance;
 use crate::interface_traits::CwOrchExecute;
@@ -13,6 +12,7 @@ use cw_multi_test::AppResponse;
 use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::MsgSend;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
+use osmosis_test_tube::Gamm;
 use osmosis_test_tube::Module;
 use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
@@ -34,7 +34,6 @@ use crate::{
 };
 
 use crate::mock::MockState;
-
 
 pub use osmosis_test_tube;
 
@@ -135,20 +134,16 @@ impl<S: StateInterface> TestTube<S> {
     }
 
     /// Creates accounts and sets their balance
-    pub fn create_pool(
-        &self,
-        liquidity: Vec<Coin>,
-    ) -> Result<u64, CwOrchError> {
+    pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
         // create balancer pool with basic configuration
         let pool_id = Gamm::new(&*self.app.borrow())
-            .create_basic_pool(&liquidity,  &self.sender.borrow())
+            .create_basic_pool(&liquidity, &self.sender.borrow())
             .unwrap()
             .data
             .pool_id;
 
         Ok(pool_id)
     }
-
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
