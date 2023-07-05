@@ -11,6 +11,9 @@ pub enum CwOrchError {
     #[cfg(feature = "daemon")]
     #[error(transparent)]
     DaemonError(#[from] DaemonError),
+    #[cfg(feature = "test-tube")]
+    #[error(transparent)]
+    TestTubeError(#[from] osmosis_test_tube::RunnerError),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
     #[error(transparent)]
