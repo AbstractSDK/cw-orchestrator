@@ -9,6 +9,7 @@ pub mod kujira;
 pub mod neutron;
 pub mod osmosis;
 pub mod terra;
+pub mod sei;
 
 pub use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::CONSTANTINE_1;
