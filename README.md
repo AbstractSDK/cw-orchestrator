@@ -205,6 +205,10 @@ impl<Chain: CwEnv> Example<Chain> {
 }
 ```
 
+### Testing with OsmosisTestTube
+
+OsmosisTestTube is available for testing in cw-orchestrator. In order to use it, you may need to install [clang] and [go] to compile the osmosis blockchain that serves as the backend for this env. 
+
 ## Contributing
 
 We'd really appreciate your help! Please read our [contributing guidelines](docs/src/contributing.md) to get started.

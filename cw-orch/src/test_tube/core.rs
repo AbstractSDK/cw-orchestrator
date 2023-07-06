@@ -37,7 +37,7 @@ use crate::mock::MockState;
 
 pub use osmosis_test_tube;
 
-/// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
+/// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
 ///
 /// Stores a local state with a mapping of contract_id -> code_id/address
 ///
@@ -45,32 +45,22 @@ pub use osmosis_test_tube;
 ///
 /// ## Example
 /// ```
-/// # use cosmwasm_std::{Addr, coin, Uint128};
-/// use cw_orch::prelude::Mock;
+/// # use cosmwasm_std::{Addr, coins, Uint128};
+/// use cw_orch::test_tube::OsmosisTestTube;
+/// use crate::cw_orch::test_tube::osmosis_test_tube::Account;
+/// 
+/// // Creates an app, creates a sender with an initial balance
+/// let tube: OsmosisTestTube = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 ///
-/// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new(&sender);
-///
-/// // set a balance
-/// mock.set_balance(&sender, vec![coin(100u128, "token")]).unwrap();
+/// // create an additional account
+/// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = mock.query_balance(&sender, "token").unwrap();
-/// assert_eq!(balance.u128(), 100u128);
-/// ```
-///
-/// ## Example with custom state
-/// ```
-/// # use cosmwasm_std::{Addr, coin, Uint128};
-/// use cw_orch::prelude::{Mock, StateInterface};
-/// // We just use the MockState as an example here, but you can implement your own state struct.
-/// use cw_orch::mock::MockState as CustomState;
-///
-/// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
+/// let balance: Uint128 = tube.query_balance(&account.borrow().address(), "uatom").unwrap();
+/// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
-pub struct TestTube<S: StateInterface = MockState> {
+pub struct OsmosisTestTube<S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Rc<RefCell<SigningAccount>>,
     /// Inner mutable state storage for contract addresses and code-ids
@@ -79,7 +69,7 @@ pub struct TestTube<S: StateInterface = MockState> {
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
 
-impl<S: StateInterface> TestTube<S> {
+impl<S: StateInterface> OsmosisTestTube<S> {
     /// Creates an account and sets its balance
     pub fn init_account(
         &self,
@@ -180,14 +170,17 @@ impl<S: StateInterface> TestTube<S> {
     }
 }
 
-impl TestTube<MockState> {
+impl OsmosisTestTube<MockState> {
     /// Create a mock environment with the default mock state.
+    /// init_coins are minted to the sender that is created in the OsmosisTestTube environment
+    /// Unlike for mocks, the accounts are created by the struct and not provided by the client
+    /// Make sure to use only valid bech32 osmosis addresses, not mock 
     pub fn new(init_coins: Vec<Coin>) -> Self {
         Self::new_custom(init_coins, MockState::new())
     }
 }
 
-impl<S: StateInterface> TestTube<S> {
+impl<S: StateInterface> OsmosisTestTube<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
     pub fn new_custom(init_coins: Vec<Coin>, custom_state: S) -> Self {
@@ -204,7 +197,7 @@ impl<S: StateInterface> TestTube<S> {
     }
 }
 
-impl<S: StateInterface> ChainState for TestTube<S> {
+impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -213,7 +206,7 @@ impl<S: StateInterface> ChainState for TestTube<S> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for TestTube<S> {
+impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
@@ -321,7 +314,7 @@ impl<S: StateInterface> TxHandler for TestTube<S> {
     }
 }
 
-impl<T: CwOrchExecute<TestTube> + ContractInstance<TestTube> + Clone> CallAs<TestTube> for T {
+impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone> CallAs<OsmosisTestTube> for T {
     type Sender = Rc<RefCell<SigningAccount>>;
 
     fn set_sender(&mut self, sender: &Rc<RefCell<SigningAccount>>) {
