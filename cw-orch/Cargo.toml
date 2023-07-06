@@ -24,7 +24,7 @@ name = "daemon_test"
 required-features = ["daemon"]
 
 [features]
-default = ["test-tube"]
+default = []
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
 node-tests = ["daemon"]
