@@ -48,7 +48,7 @@ pub use osmosis_test_tube;
 /// # use cosmwasm_std::{Addr, coins, Uint128};
 /// use cw_orch::test_tube::OsmosisTestTube;
 /// use crate::cw_orch::test_tube::osmosis_test_tube::Account;
-/// 
+///
 /// // Creates an app, creates a sender with an initial balance
 /// let tube: OsmosisTestTube = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 ///
@@ -174,7 +174,7 @@ impl OsmosisTestTube<MockState> {
     /// Create a mock environment with the default mock state.
     /// init_coins are minted to the sender that is created in the OsmosisTestTube environment
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
-    /// Make sure to use only valid bech32 osmosis addresses, not mock 
+    /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
         Self::new_custom(init_coins, MockState::new())
     }
@@ -314,7 +314,9 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
-impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone> CallAs<OsmosisTestTube> for T {
+impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone>
+    CallAs<OsmosisTestTube> for T
+{
     type Sender = Rc<RefCell<SigningAccount>>;
 
     fn set_sender(&mut self, sender: &Rc<RefCell<SigningAccount>>) {
