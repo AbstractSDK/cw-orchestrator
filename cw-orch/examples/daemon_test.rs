@@ -23,7 +23,8 @@ pub fn main() {
         .chain(networks::LOCAL_JUNO)
         .handle(runtime.handle())
         .mnemonic(LOCAL_MNEMONIC)
-        .build().unwrap();
+        .build()
+        .unwrap();
 
     let counter = CounterContract::new("local:counter", daemon.clone());
 
