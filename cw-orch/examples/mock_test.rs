@@ -2,7 +2,7 @@ use cosmwasm_std::Addr;
 
 use counter_contract::{
     contract::CounterContract,
-    msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg, ExecuteMsgFns, QueryMsgFns},
+    msg::{ExecuteMsg, ExecuteMsgFns, GetCountResponse, InstantiateMsg, QueryMsg, QueryMsgFns},
 };
 use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Mock};
 
@@ -23,5 +23,5 @@ pub fn main() {
     exec_res.unwrap();
 
     let query_res = contract_counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
-    assert_eq!(query_res.unwrap().count,1);
+    assert_eq!(query_res.unwrap().count, 1);
 }
