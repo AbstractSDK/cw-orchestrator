@@ -23,6 +23,14 @@ name = "mock_test"
 name = "daemon_test"
 required-features = ["daemon"]
 
+[[example]]
+name = "osmosis_test_tube"
+required-features = ["osmosis-test-tube"]
+
+[[example]]
+name = "injective"
+required-features = ["eth"]
+
 [features]
 default = []
 # enable node-backed tests (ensure Docker is running)
@@ -52,7 +60,7 @@ daemon = [
   "dep:prost",
 ]
 eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
-test-tube = ["dep:osmosis-test-tube"]
+osmosis-test-tube = ["dep:osmosis-test-tube"]
 
 [dependencies]
 # Default deps

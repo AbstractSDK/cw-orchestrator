@@ -28,6 +28,10 @@ pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 // Mock for testing
 pub use crate::mock::Mock;
 
+// OsmosisTestTube for testing
+#[cfg(feature = "osmosis-test-tube")]
+pub use crate::osmosis_test_tube::OsmosisTestTube;
+
 // error
 pub use crate::error::CwOrchError;
 

@@ -5,7 +5,7 @@ use counter_contract::{
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract,
 };
-use cw_orch::test_tube::OsmosisTestTube;
+use cw_orch::osmosis_test_tube::OsmosisTestTube;
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
 

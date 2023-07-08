@@ -28,9 +28,9 @@ mod interface_traits;
 #[cfg(feature = "daemon")]
 mod keys;
 pub mod mock;
+#[cfg(feature = "osmosis-test-tube")]
+pub mod osmosis_test_tube;
 mod paths;
-#[cfg(feature = "test-tube")]
-pub mod test_tube;
 
 pub mod state;
 
