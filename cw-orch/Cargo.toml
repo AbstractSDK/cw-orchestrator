@@ -60,6 +60,7 @@ cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
+cw-remote-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 schemars = "0.8.10"

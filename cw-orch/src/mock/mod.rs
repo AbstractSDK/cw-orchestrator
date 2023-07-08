@@ -2,7 +2,7 @@
 //! It has an associated state that stores deployment information for easy retrieval and contract interactions.
 
 mod core;
-mod state;
+pub(crate) mod state;
 
 pub use self::core::*;
 pub use state::*;
