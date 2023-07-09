@@ -89,6 +89,7 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
   "interface",
 ] }
 serial_test = "2.0.0"
+ibc-relayer-types = { version = "0.24.1"}
 
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }
