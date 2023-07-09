@@ -8,14 +8,14 @@ Before we can create an interface we need to add cw-orch to the contract's `Carg
 
 ```shell
 $ cargo add --optional cw-orch
-> Adding cw-orch v0.12.0 to optional dependencies.
+> Adding cw-orch v0.13.3 to optional dependencies.
 ```
 
 or add it manually to the `counter/Cargo.toml` file:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.12.0", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.13.3", optional = true } # Latest version at time of writing
 ```
 
 We add `cw-orch` as an optional dependency to ensure that it is not included in the wasm artifact of the contract. This way there are no trust assumptions made about the code added by `cw-orch`, making it safe to use for production contracts.

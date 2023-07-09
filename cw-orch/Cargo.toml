@@ -59,8 +59,8 @@ eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
 
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.13.0" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.0" }
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.13.3" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
 
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }

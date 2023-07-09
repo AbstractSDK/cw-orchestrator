@@ -1,6 +1,6 @@
 [workspace]
 members = ["cw-orch", "packages/*", "contracts/*"]
-version = "0.13.1"
+version = "0.13.3"
 resolver = "2"
 
 [workspace.package]
