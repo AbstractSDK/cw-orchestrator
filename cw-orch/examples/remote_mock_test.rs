@@ -1,6 +1,5 @@
-use cw_orch::remote_mock::RemoteMock;
 use cw_orch::daemon::networks::JUNO_1;
-
+use cw_orch::remote_mock::RemoteMock;
 
 use counter_contract::{
     contract::CounterContract,
@@ -10,9 +9,7 @@ use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUplo
 use tokio::runtime::Runtime;
 
 pub fn main() {
-
     env_logger::init();
-
 
     let rt = Runtime::new().unwrap();
 
@@ -23,7 +20,8 @@ pub fn main() {
     let upload_res = contract_counter.upload();
     assert!(upload_res.is_ok());
 
-    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, Some(&mock.sender), None);
+    let init_res =
+        contract_counter.instantiate(&InstantiateMsg { count: 0 }, Some(&mock.sender), None);
     assert!(init_res.is_ok());
 
     let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);

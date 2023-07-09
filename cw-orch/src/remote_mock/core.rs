@@ -1,15 +1,15 @@
-use cw_remote_test::wasm_emulation::storage::analyzer::StorageAnalyzer;
-use tokio::runtime::Handle;
-use crate::daemon::GrpcChannel;
 use crate::daemon::queriers::DaemonQuerier;
+use crate::daemon::GrpcChannel;
 use crate::remote_mock::core::queriers::Node;
 use cosmwasm_std::Timestamp;
+use cw_remote_test::wasm_emulation::storage::analyzer::StorageAnalyzer;
 use cw_remote_test::AppBuilder;
+use cw_remote_test::BankKeeper;
 use cw_remote_test::FailingModule;
 use cw_remote_test::WasmKeeper;
-use cw_remote_test::BankKeeper;
 use ibc_chain_registry::chain::ChainData;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use tokio::runtime::Handle;
 
 use cosmwasm_std::{Addr, Empty, Event, Uint128};
 use cw_remote_test::{next_block, AppResponse, BasicApp, Contract, Executor};
@@ -118,7 +118,7 @@ impl<S: StateInterface> RemoteMock<S> {
     }
 
     /// Storage analysis of all the chanegs since instantiation of the app object
-    pub fn analysis(&self) -> StorageAnalyzer{
+    pub fn analysis(&self) -> StorageAnalyzer {
         StorageAnalyzer::new(&self.app.borrow()).unwrap()
     }
 }
@@ -143,7 +143,10 @@ impl<S: StateInterface> RemoteMock<S> {
         let mut bank = BankKeeper::new();
         bank.set_chain(chain.clone());
 
-        let node_querier = Node::new(rt.block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id)).unwrap());
+        let node_querier = Node::new(
+            rt.block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id))
+                .unwrap(),
+        );
         let block = rt.block_on(node_querier.latest_block()).unwrap();
 
         // First we instantiate a new app
@@ -151,17 +154,22 @@ impl<S: StateInterface> RemoteMock<S> {
             .with_wasm::<FailingModule<Empty, Empty, Empty>, _>(wasm)
             .with_chain(chain.clone())
             .with_bank(bank)
-            .with_block(cosmwasm_std::BlockInfo { height: block.header.height.into(), time: Timestamp::from_seconds(block.header.time.unix_timestamp().try_into().unwrap()), chain_id: block.header.chain_id.to_string() });
+            .with_block(cosmwasm_std::BlockInfo {
+                height: block.header.height.into(),
+                time: Timestamp::from_seconds(
+                    block.header.time.unix_timestamp().try_into().unwrap(),
+                ),
+                chain_id: block.header.chain_id.to_string(),
+            });
 
-
-        let app = Rc::new(RefCell::new(app.build(| _,_,_| {})));
+        let app = Rc::new(RefCell::new(app.build(|_, _, _| {})));
         let sender = app.borrow_mut().next_address();
 
         Self {
             sender,
             state,
             app,
-            chain
+            chain,
         }
     }
 }
@@ -186,7 +194,12 @@ impl<S: StateInterface> TxHandler for RemoteMock<S> {
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
         let wasm_contents = std::fs::read(contract.wasm().path())?;
-        let code_id = self.app.borrow_mut().store_code(cw_remote_test::wasm_emulation::contract::WasmContract::new_local(wasm_contents, self.chain.clone()));
+        let code_id = self.app.borrow_mut().store_code(
+            cw_remote_test::wasm_emulation::contract::WasmContract::new_local(
+                wasm_contents,
+                self.chain.clone(),
+            ),
+        );
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
