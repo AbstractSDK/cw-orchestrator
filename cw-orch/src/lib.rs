@@ -9,14 +9,14 @@ pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 /// Re-export anyhow for use in the macros
 pub extern crate anyhow;
 
-/// Re-export tokio, the async runtime when using daemons.
-#[cfg(feature = "daemon")]
-pub extern crate tokio;
-
 // prelude
 pub mod prelude;
 
 pub mod contract;
+
+/// Re-export tokio, the async runtime when using daemons.
+#[cfg(feature = "daemon")]
+pub extern crate tokio;
 #[cfg(feature = "daemon")]
 pub mod daemon;
 
@@ -25,8 +25,6 @@ pub mod environment;
 mod error;
 mod index_response;
 mod interface_traits;
-#[cfg(feature = "daemon")]
-mod keys;
 pub mod mock;
 mod paths;
 
