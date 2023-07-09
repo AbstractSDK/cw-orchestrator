@@ -1,14 +1,25 @@
+use cw_remote_test::wasm_emulation::storage::analyzer::StorageAnalyzer;
+use tokio::runtime::Handle;
+use crate::daemon::GrpcChannel;
+use crate::daemon::queriers::DaemonQuerier;
+use crate::remote_mock::core::queriers::Node;
+use cosmwasm_std::Timestamp;
+use cw_remote_test::AppBuilder;
+use cw_remote_test::FailingModule;
+use cw_remote_test::WasmKeeper;
+use cw_remote_test::BankKeeper;
+use ibc_chain_registry::chain::ChainData;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, Empty, Event, Uint128};
-use cw_remote_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cw_remote_test::{next_block, AppResponse, BasicApp, Contract, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     environment::TxHandler,
     error::CwOrchError,
     prelude::*,
-    state::{ChainState, DeployDetails, StateInterface},
+    state::{ChainState, StateInterface},
 };
 
 use crate::mock::state::MockState;
@@ -53,6 +64,8 @@ pub struct RemoteMock<S: StateInterface = MockState> {
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+    /// Distant chain associated with the backend env
+    pub chain: ChainData,
 }
 
 impl<S: StateInterface> RemoteMock<S> {
@@ -103,26 +116,52 @@ impl<S: StateInterface> RemoteMock<S> {
         let amount = self.app.borrow().wrap().query_all_balances(address)?;
         Ok(amount)
     }
+
+    /// Storage analysis of all the chanegs since instantiation of the app object
+    pub fn analysis(&self) -> StorageAnalyzer{
+        StorageAnalyzer::new(&self.app.borrow()).unwrap()
+    }
 }
 
 impl RemoteMock<MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new(sender: &Addr) -> Self {
-        RemoteMock::new_custom(sender, MockState::new())
+    pub fn new(chain: impl Into<ChainData>, rt: &Handle) -> Self {
+        RemoteMock::new_custom(chain, rt, MockState::new())
     }
 }
 
 impl<S: StateInterface> RemoteMock<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
+    pub fn new_custom(chain: impl Into<ChainData>, rt: &Handle, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(custom_app::<Empty, Empty, _>(|_, _, _| {})));
+        let chain: ChainData = chain.into();
+
+        let mut wasm = WasmKeeper::<Empty, Empty>::new();
+        wasm.set_chain(chain.clone());
+
+        let mut bank = BankKeeper::new();
+        bank.set_chain(chain.clone());
+
+        let node_querier = Node::new(rt.block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id)).unwrap());
+        let block = rt.block_on(node_querier.latest_block()).unwrap();
+
+        // First we instantiate a new app
+        let app = AppBuilder::default()
+            .with_wasm::<FailingModule<Empty, Empty, Empty>, _>(wasm)
+            .with_chain(chain.clone())
+            .with_bank(bank)
+            .with_block(cosmwasm_std::BlockInfo { height: block.header.height.into(), time: Timestamp::from_seconds(block.header.time.unix_timestamp().try_into().unwrap()), chain_id: block.header.chain_id.to_string() });
+
+
+        let app = Rc::new(RefCell::new(app.build(| _,_,_| {})));
+        let sender = app.borrow_mut().next_address();
 
         Self {
-            sender: sender.clone(),
+            sender,
             state,
             app,
+            chain
         }
     }
 }
@@ -147,7 +186,7 @@ impl<S: StateInterface> TxHandler for RemoteMock<S> {
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
         let wasm_contents = std::fs::read(contract.wasm().path())?;
-        let code_id = self.app.borrow_mut().store_code(wasm_contents);
+        let code_id = self.app.borrow_mut().store_code(cw_remote_test::wasm_emulation::contract::WasmContract::new_local(wasm_contents, self.chain.clone()));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -267,178 +306,5 @@ impl<T: CwOrchExecute<RemoteMock> + ContractInstance<RemoteMock> + Clone> CallAs
         let mut contract = self.clone();
         contract.set_sender(sender);
         contract
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use cosmwasm_std::{
-        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-        Uint128,
-    };
-    use cw_multi_test::ContractWrapper;
-    use serde::Serialize;
-    use speculoos::prelude::*;
-
-    use crate::mock::core::*;
-
-    const SENDER: &str = "cosmos123";
-    const BALANCE_ADDR: &str = "cosmos456";
-
-    #[derive(Debug, Serialize)]
-    struct MigrateMsg {}
-
-    fn execute(
-        _deps: DepsMut,
-        _env: Env,
-        _info: MessageInfo,
-        msg: cw20::Cw20ExecuteMsg,
-    ) -> Result<Response, cw20_base::ContractError> {
-        match msg {
-            cw20::Cw20ExecuteMsg::Mint { recipient, amount } => Ok(Response::default()
-                .add_attribute("action", "mint")
-                .add_attribute("recipient", recipient)
-                .add_attribute("amount", amount)),
-            _ => unimplemented!(),
-        }
-    }
-
-    fn query(_deps: Deps, _env: Env, msg: cw20_base::msg::QueryMsg) -> StdResult<Binary> {
-        match msg {
-            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_binary::<Response>(
-                &Response::default()
-                    .add_attribute("address", address)
-                    .add_attribute("balance", String::from("0")),
-            )
-            .unwrap()),
-            _ => unimplemented!(),
-        }
-    }
-
-    #[test]
-    fn mock() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
-        let amount = 1000000u128;
-        let denom = "uosmo";
-
-        let chain = Mock::new(sender);
-
-        chain
-            .set_balance(recipient, vec![Coin::new(amount, denom)])
-            .unwrap();
-        let balance = chain.query_balance(recipient, denom).unwrap();
-
-        asserting("address balance amount is correct")
-            .that(&amount)
-            .is_equal_to(balance.u128());
-
-        asserting("sender is correct")
-            .that(sender)
-            .is_equal_to(chain.sender());
-
-        let contract_source = Box::new(
-            ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
-                .with_migrate(cw20_base::contract::migrate),
-        );
-
-        let init_res = chain.upload_custom("cw20", contract_source).unwrap();
-        asserting("contract initialized properly")
-            .that(&init_res.events[0].attributes[0].value)
-            .is_equal_to(&String::from("1"));
-
-        let init_msg = cw20_base::msg::InstantiateMsg {
-            name: String::from("Token"),
-            symbol: String::from("TOK"),
-            decimals: 6u8,
-            initial_balances: vec![],
-            mint: None,
-            marketing: None,
-        };
-        let init_res = chain
-            .instantiate(1, &init_msg, None, Some(sender), &[])
-            .unwrap();
-
-        let contract_address = Addr::unchecked(&init_res.events[0].attributes[0].value);
-
-        let exec_res = chain
-            .execute(
-                &cw20_base::msg::ExecuteMsg::Mint {
-                    recipient: recipient.to_string(),
-                    amount: Uint128::from(100u128),
-                },
-                &[],
-                &contract_address,
-            )
-            .unwrap();
-
-        asserting("that exect passed on correctly")
-            .that(&exec_res.events[1].attributes[1].value)
-            .is_equal_to(&String::from("mint"));
-
-        let query_res = chain
-            .query::<cw20_base::msg::QueryMsg, Response>(
-                &cw20_base::msg::QueryMsg::Balance {
-                    address: recipient.to_string(),
-                },
-                &contract_address,
-            )
-            .unwrap();
-
-        asserting("that query passed on correctly")
-            .that(&query_res.attributes[1].value)
-            .is_equal_to(&String::from("0"));
-
-        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg {}, 1, &contract_address);
-        asserting("that migration passed on correctly")
-            .that(&migration_res)
-            .is_ok();
-    }
-
-    #[test]
-    fn custom_mock_env() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
-        let amount = 1000000u128;
-        let denom = "uosmo";
-
-        let mock_state = Rc::new(RefCell::new(MockState::new()));
-
-        let chain = Mock::<_>::new_custom(sender, mock_state);
-
-        chain
-            .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
-            .unwrap();
-
-        let balances = chain.query_all_balances(recipient).unwrap();
-        asserting("recipient balances length is 1")
-            .that(&balances.len())
-            .is_equal_to(1);
-    }
-
-    #[test]
-    fn state_interface() {
-        let contract_id = "my_contract";
-        let code_id = 1u64;
-        let address = &Addr::unchecked(BALANCE_ADDR);
-        let mut mock_state = Rc::new(RefCell::new(MockState::new()));
-
-        mock_state.set_address(contract_id, address);
-        asserting!("that address has been set")
-            .that(&address)
-            .is_equal_to(&mock_state.get_address(contract_id).unwrap());
-
-        mock_state.set_code_id(contract_id, code_id);
-        asserting!("that code_id has been set")
-            .that(&code_id)
-            .is_equal_to(mock_state.get_code_id(contract_id).unwrap());
-
-        asserting!("that total code_ids is 1")
-            .that(&mock_state.get_all_code_ids().unwrap().len())
-            .is_equal_to(1);
-
-        asserting!("that total addresses is 1")
-            .that(&mock_state.get_all_addresses().unwrap().len())
-            .is_equal_to(1);
     }
 }

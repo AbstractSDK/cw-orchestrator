@@ -91,6 +91,29 @@ impl IndexResponse for AppResponse {
     }
 }
 
+impl IndexResponse for cw_remote_test::AppResponse {
+    fn events(&self) -> Vec<Event> {
+        self.events.clone()
+    }
+
+    fn data(&self) -> Option<Binary> {
+        self.data.clone()
+    }
+
+    fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String> {
+        for event in &self.events {
+            if event.ty == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key {
+                        return Ok(attr.value.clone());
+                    }
+                }
+            }
+        }
+        Err(StdError::generic_err("missing "))
+    }
+}
+
 #[cfg(test)]
 mod index_response {
     use cosmwasm_std::{Addr, Event};

@@ -29,6 +29,8 @@ mod interface_traits;
 mod keys;
 pub mod mock;
 mod paths;
+
+#[cfg(feature = "daemon")]
 pub mod remote_mock;
 
 pub mod state;

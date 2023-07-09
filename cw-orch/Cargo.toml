@@ -23,6 +23,10 @@ name = "mock_test"
 name = "daemon_test"
 required-features = ["daemon"]
 
+[[example]]
+name = "remote_mock_test"
+required-features = ["daemon"]
+
 [features]
 default = []
 # enable node-backed tests (ensure Docker is running)
