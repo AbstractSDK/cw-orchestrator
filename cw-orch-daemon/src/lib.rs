@@ -2,19 +2,28 @@
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
 
-mod core;
-mod state;
-mod sync;
-mod traits;
-mod tx_resp;
+pub mod builder;
+pub mod chain_info;
+pub mod channel;
+pub mod core;
+pub mod error;
+pub(crate) mod json_file;
+/// Proto types for different blockchains
+pub mod proto;
+pub mod sender;
+pub mod state;
+pub mod sync;
+pub mod tx_resp;
+// expose these as mods as they can grow
+pub mod keys;
+pub mod networks;
+pub mod queriers;
+pub mod tx_builder;
 
 pub use self::{
-    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
-    tx_resp::*,
+    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*,
 };
-
-pub use cw_orch_daemon::sender::Wallet;
-pub use cw_orch_daemon::*;
+pub use sender::Wallet;
 pub use tx_builder::TxBuilder;
 
 pub(crate) mod cosmos_modules {

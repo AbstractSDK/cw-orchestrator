@@ -1,7 +1,5 @@
 use crate::{daemon::queriers::CosmWasm, environment::TxResponse, error::CwOrchError, prelude::*};
 
-use super::sync::Daemon;
-
 /// Helper methods for conditional uploading of a contract.
 pub trait ConditionalUpload: CwOrchUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
