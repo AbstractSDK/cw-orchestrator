@@ -100,9 +100,9 @@ impl TxBuilder {
                 .await?;
             log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
-            let gas_expected = if sim_gas_used < BUFFER_CHANGE_LIMIT{
+            let gas_expected = if sim_gas_used < BUFFER_CHANGE_LIMIT {
                 sim_gas_used as f64 * SMALL_GAS_BUFFER
-            }else{
+            } else {
                 sim_gas_used as f64 * GAS_BUFFER
             };
             let fee_amount = gas_expected
