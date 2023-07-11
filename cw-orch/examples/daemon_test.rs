@@ -18,16 +18,13 @@ pub fn main() {
     let runtime = Runtime::new().unwrap();
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
-    let res = Daemon::builder()
+    let daemon = Daemon::builder()
         // set the network to use
         .chain(networks::LOCAL_JUNO)
         .handle(runtime.handle())
         .mnemonic(LOCAL_MNEMONIC)
-        .build();
-
-    let Some(daemon) = res.as_ref().ok() else {
-        panic!("Error: {}", res.err().unwrap());
-    };
+        .build()
+        .unwrap();
 
     let counter = CounterContract::new("local:counter", daemon.clone());
 
