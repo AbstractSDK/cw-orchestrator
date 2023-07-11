@@ -19,6 +19,7 @@ pub use kujira::HARPOON_4;
 pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_5};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
+pub use sei::{LOCAL_SEI, SEI_DEVNET_3, ATLANTIC_2};
 
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///
