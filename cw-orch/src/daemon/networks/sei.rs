@@ -6,7 +6,18 @@ pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
-pub const SEI_DEVNET_3: ChainInfo = ChainInfo {
+pub const LOCAL: ChainInfo = ChainInfo {
+    kind: ChainKind::Local,
+    chain_id: "sei-chain",
+    gas_denom: "usei",
+    gas_price: 0.0,
+    grpc_urls: &["http://localhost:9090"],
+    network_info: SEI_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+
+pub const DEVNET_3: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "sei-devnet-3",
     gas_denom: "usei",
