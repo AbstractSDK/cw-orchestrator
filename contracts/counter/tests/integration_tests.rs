@@ -2,7 +2,7 @@
 use counter_contract::{
     contract::CONTRACT_NAME,
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
-    CounterContract,
+    ContractError, CounterContract,
 };
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
@@ -49,6 +49,8 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
 fn count() {
     // Create a sender
     let sender = Addr::unchecked(ADMIN);
+    // Create a user
+    let user = Addr::unchecked(USER);
     // Create the mock
     let mock = Mock::new(&sender);
 
@@ -58,7 +60,7 @@ fn count() {
     // Increment the count of the contract
     contract
         // Set the caller to user
-        .call_as(&Addr::unchecked(USER))
+        .call_as(&user)
         // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
         .increment()
         .unwrap();
@@ -84,6 +86,15 @@ fn count() {
     let count = contract.get_count().unwrap();
     assert_eq!(count.count, 0);
     // ANCHOR_END: reset
+
+    // Check negative case
+    let exec_res = contract.call_as(&user).reset(0);
+
+    let expected_err = ContractError::Unauthorized {};
+    assert_eq!(
+        exec_res.unwrap_err().downcast::<ContractError>().unwrap(),
+        expected_err
+    );
 }
 // ANCHOR_END: count_test
 // ANCHOR_END: integration_test
