@@ -2,7 +2,12 @@ use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
 
-use crate::prelude::{DaemonAsync, DaemonBuilder};
+use crate::prelude::{DaemonAsync};
+
+#[cfg(feature = "daemon")]
+use crate::
+    DaemonBuilder;
+
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
 
@@ -46,7 +51,7 @@ impl DaemonAsyncBuilder {
     }
 
     /// Set the mnemonic to use with this chain.
-    /// Defaults to env variable depending on the environment.  
+    /// Defaults to env variable depending on the environment.
     ///
     /// Variables: LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
@@ -79,6 +84,7 @@ impl DaemonAsyncBuilder {
     }
 }
 
+#[cfg(feature = "daemon")]
 impl From<DaemonBuilder> for DaemonAsyncBuilder {
     fn from(value: DaemonBuilder) -> Self {
         DaemonAsyncBuilder {

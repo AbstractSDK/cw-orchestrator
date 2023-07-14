@@ -43,16 +43,21 @@ pub use cosmwasm_std::{Addr, Coin, Empty};
 pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 
 // builder, core type, networks mod, queriers mod, traits
-#[cfg(feature = "daemon")]
+#[cfg(feature = "daemon-without-runtime")]
 pub use crate::daemon::{
     networks,
     queriers,
+    DaemonAsync,
+    DaemonAsyncBuilder,
+};
+
+// builder, core type, networks mod, queriers mod, traits
+#[cfg(feature = "daemon")]
+pub use crate::daemon::{
     // sync helpers
     ConditionalMigrate,
     ConditionalUpload,
     Daemon,
-    DaemonAsync,
-    DaemonAsyncBuilder,
     // expose the sync variants
     DaemonBuilder,
 };

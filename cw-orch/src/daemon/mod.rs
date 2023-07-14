@@ -12,19 +12,25 @@ pub(crate) mod json_file;
 pub mod proto;
 mod sender;
 mod state;
+#[cfg(feature = "daemon")]
 mod sync;
 /// Custom traits for DaemonAsync contracts
+#[cfg(feature = "daemon")]
 mod traits;
 mod tx_resp;
 // expose these as mods as they can grow
 pub mod networks;
 pub mod queriers;
 pub(crate) mod tx_builder;
+pub(crate) mod runtime;
 
 pub use self::{
-    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
-    tx_resp::*,
+    builder::*, chain_info::*, channel::*, core::*, error::*, state::*,
+    tx_resp::*
 };
+#[cfg(feature = "daemon")]
+pub use self::{sync::*, traits::*};
+
 pub use sender::Wallet;
 pub use tx_builder::TxBuilder;
 

@@ -16,6 +16,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{fmt::Debug, rc::Rc, time::Duration};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
+use crate::daemon::runtime::sleep;
 
 #[derive(Clone)]
 /**
@@ -116,7 +117,7 @@ impl TxHandler for Daemon {
         let wasm = CosmWasm::new(self.channel());
         while self.rt_handle.block_on(wasm.code(code_id)).is_err() {
             self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(6)));
+                .block_on(sleep(Duration::from_secs(6)));
         }
 
         Ok(result)
@@ -176,7 +177,7 @@ impl TxHandler for Daemon {
         while last_height < end_height {
             // wait
             self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+                .block_on(sleep(Duration::from_secs(4)));
 
             // ping latest block
             last_height = self
@@ -188,7 +189,7 @@ impl TxHandler for Daemon {
 
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
         self.rt_handle
-            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
+            .block_on(sleep(Duration::from_secs(secs)));
 
         Ok(())
     }
@@ -202,7 +203,7 @@ impl TxHandler for Daemon {
         while last_height < end_height {
             // wait
             self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
+                .block_on(sleep(Duration::from_secs(4)));
 
             // ping latest block
             last_height = self

@@ -7,6 +7,7 @@ use cosmrs::{
     tendermint::{Block, Time},
 };
 use tonic::transport::Channel;
+use crate::daemon::runtime::sleep;
 
 use super::DaemonQuerier;
 
@@ -91,7 +92,7 @@ impl Node {
 
         while latest_block_height <= 1 {
             // wait to get some blocks
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            sleep(Duration::from_secs(1)).await;
             latest_block = self.latest_block().await?;
             latest_block_height = latest_block.header.height.value();
         }
@@ -223,7 +224,7 @@ impl Node {
                 Err(err) => {
                     log::debug!("TX not found with error: {:?}", err);
                     log::debug!("Waiting {block_speed} seconds");
-                    tokio::time::sleep(Duration::from_secs(block_speed)).await;
+                    sleep(Duration::from_secs(block_speed)).await;
                 }
             }
         }

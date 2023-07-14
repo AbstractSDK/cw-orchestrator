@@ -27,6 +27,7 @@ use std::{
 };
 
 use tonic::transport::Channel;
+use crate::daemon::runtime::sleep;
 
 #[derive(Clone)]
 /**
@@ -183,12 +184,12 @@ impl DaemonAsync {
         let wait_time = average_block_speed * amount;
 
         // now wait for that amount of time
-        tokio::time::sleep(Duration::from_secs(wait_time)).await;
+        sleep(Duration::from_secs(wait_time)).await;
         // now check every block until we hit the target
         while last_height < end_height {
             // wait
 
-            tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
+            sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
             last_height = self.query_client::<Node>().block_height().await?;
@@ -198,7 +199,7 @@ impl DaemonAsync {
 
     /// Wait for a given amount of seconds.
     pub async fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        tokio::time::sleep(Duration::from_secs(secs)).await;
+        sleep(Duration::from_secs(secs)).await;
 
         Ok(())
     }

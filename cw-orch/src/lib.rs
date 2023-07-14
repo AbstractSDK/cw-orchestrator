@@ -17,7 +17,7 @@ pub extern crate tokio;
 pub mod prelude;
 
 pub mod contract;
-#[cfg(feature = "daemon")]
+#[cfg(feature = "daemon-without-runtime")]
 pub mod daemon;
 
 pub mod deploy;
@@ -25,7 +25,7 @@ pub mod environment;
 mod error;
 mod index_response;
 mod interface_traits;
-#[cfg(feature = "daemon")]
+#[cfg(feature = "daemon-without-runtime")]
 mod keys;
 pub mod mock;
 #[cfg(feature = "osmosis-test-tube")]
