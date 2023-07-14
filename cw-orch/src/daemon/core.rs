@@ -235,6 +235,7 @@ impl DaemonAsync {
             wasm_byte_code: file_contents,
             instantiate_permission: None,
         };
+
         let result = sender.commit_tx(vec![store_msg], None).await?;
 
         log::info!("Uploaded: {:?}", result.txhash);

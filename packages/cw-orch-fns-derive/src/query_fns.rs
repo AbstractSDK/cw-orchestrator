@@ -44,6 +44,9 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 // sort fields on field name
                 LexiographicMatching::default().visit_fields_named_mut(variant_fields);
 
+                // remove attributes from fields
+                variant_fields.named.iter_mut().for_each(|f| f.attrs = vec![]);
+
                 // Parse these fields as arguments to function
                 let variant_fields = variant_fields.named.clone();
                 let variant_idents = variant_fields.iter().map(|f|f.ident.clone().unwrap());
@@ -64,7 +67,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrcQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
+        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause> {
             #(#variant_fns)*
         }
     );
@@ -72,7 +75,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let derived_trait_impl = quote!(
         impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         where
-            SupportedContract: ::cw_orch::prelude::CwOrcQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
+            SupportedContract: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
     );
 
     let expand = quote!(

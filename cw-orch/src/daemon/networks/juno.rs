@@ -1,5 +1,7 @@
 use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
+// https://notional.ventures/resources/endpoints#juno
+
 pub const JUNO_NETWORK: NetworkInfo = NetworkInfo {
     id: "juno",
     pub_address_prefix: "juno",
@@ -36,8 +38,11 @@ pub const JUNO_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "juno-1",
     gas_denom: "ujuno",
-    gas_price: 0.0025,
-    grpc_urls: &["http://juno-grpc.polkachu.com:12690"],
+    gas_price: 0.0750,
+    grpc_urls: &[
+        "https://grpc-juno-ia.cosmosia.notional.ventures",
+        "http://juno-grpc.polkachu.com:12690",
+    ],
     network_info: JUNO_NETWORK,
     lcd_url: None,
     fcd_url: None,

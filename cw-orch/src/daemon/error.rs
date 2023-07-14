@@ -102,6 +102,8 @@ pub enum DaemonError {
     IbcError(String),
     #[error("daemon builder missing {0}")]
     BuilderMissing(String),
+    #[error("insufficient fee, check gas price: {0}")]
+    InsufficientFee(String),
 }
 
 impl DaemonError {

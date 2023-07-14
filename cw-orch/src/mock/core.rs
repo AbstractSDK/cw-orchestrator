@@ -1,11 +1,12 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, CustomMsg, CustomQuery, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    environment::{ChainUpload, TxHandler},
+    environment::TxHandler,
     error::CwOrchError,
     prelude::*,
     state::{ChainState, DeployDetails, StateInterface},
@@ -46,20 +47,16 @@ use super::state::MockState;
 /// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
 /// ```
 #[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState, ExecC = Empty, QueryC = Empty> {
+pub struct Mock<S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Addr,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<RefCell<BasicApp<ExecC, QueryC>>>,
+    pub app: Rc<RefCell<BasicApp<Empty, Empty>>>,
 }
 
-impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
-where
-    ExecC: CustomMsg + DeserializeOwned + 'static,
-    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
-{
+impl<S: StateInterface> Mock<S> {
     /// Set the bank balance of an address.
     pub fn set_balance(
         &self,
@@ -69,6 +66,24 @@ where
         self.app
             .borrow_mut()
             .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
+            .map_err(Into::into)
+    }
+
+    /// Adds the bank balance of an address.
+    pub fn add_balance(
+        &self,
+        address: &Addr,
+        amount: Vec<cosmwasm_std::Coin>,
+    ) -> Result<(), CwOrchError> {
+        let b = self.query_all_balances(address)?;
+        let new_amount = NativeBalance(b) + NativeBalance(amount);
+        self.app
+            .borrow_mut()
+            .init_modules(|router, _, storage| {
+                router
+                    .bank
+                    .init_balance(storage, address, new_amount.into_vec())
+            })
             .map_err(Into::into)
     }
 
@@ -109,27 +124,19 @@ where
     }
 }
 
-impl<ExecC, QueryC> Mock<MockState, ExecC, QueryC>
-where
-    ExecC: CustomMsg + DeserializeOwned + 'static,
-    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
-{
+impl Mock<MockState> {
     /// Create a mock environment with the default mock state.
     pub fn new(sender: &Addr) -> Self {
         Mock::new_custom(sender, MockState::new())
     }
 }
 
-impl<S: StateInterface, ExecC, QueryC> Mock<S, ExecC, QueryC>
-where
-    ExecC: CustomMsg + DeserializeOwned + 'static,
-    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
-{
+impl<S: StateInterface> Mock<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
     pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(custom_app::<ExecC, QueryC, _>(|_, _, _| {})));
+        let app = Rc::new(RefCell::new(custom_app::<Empty, Empty, _>(|_, _, _| {})));
 
         Self {
             sender: sender.clone(),
@@ -143,7 +150,7 @@ where
     pub fn upload_custom(
         &self,
         contract_id: &str,
-        wrapper: Box<dyn Contract<ExecC, QueryC>>,
+        wrapper: Box<dyn Contract<Empty, Empty>>,
     ) -> Result<AppResponse, CwOrchError> {
         let code_id = self.app.borrow_mut().store_code(wrapper);
         // add contract code_id to events manually
@@ -159,11 +166,7 @@ where
     }
 }
 
-impl<S: StateInterface, ExecC, QueryC> ChainState for Mock<S, ExecC, QueryC>
-where
-    ExecC: CustomMsg + DeserializeOwned + 'static,
-    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
-{
+impl<S: StateInterface> ChainState for Mock<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -202,17 +205,25 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface, ExecC, QueryC> TxHandler for Mock<S, ExecC, QueryC>
-where
-    ExecC: CustomMsg + DeserializeOwned + 'static,
-    QueryC: CustomQuery + Debug + DeserializeOwned + 'static,
-{
+impl<S: StateInterface> TxHandler for Mock<S> {
     type Response = AppResponse;
     type Error = CwOrchError;
-    type ContractSource = Box<dyn Contract<ExecC, QueryC>>;
+    type ContractSource = Box<dyn Contract<Empty, Empty>>;
 
     fn sender(&self) -> Addr {
         self.sender.clone()
+    }
+
+    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
+        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
     }
 
     fn execute<E: Serialize + Debug>(
@@ -313,21 +324,7 @@ where
     }
 }
 
-impl ChainUpload for Mock {
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
-        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
-        // add contract code_id to events manually
-        let mut event = Event::new("store_code");
-        event = event.add_attribute("code_id", code_id.to_string());
-        let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
-        };
-        Ok(resp)
-    }
-}
-
-impl<T: CwOrcExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
+impl<T: CwOrchExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
     type Sender = Addr;
 
     fn set_sender(&mut self, sender: &Addr) {
@@ -475,7 +472,7 @@ mod test {
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
 
-        let chain = Mock::<_, Empty, Empty>::new_custom(sender, mock_state);
+        let chain = Mock::<_>::new_custom(sender, mock_state);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
@@ -511,5 +508,28 @@ mod test {
         asserting!("that total addresses is 1")
             .that(&mock_state.get_all_addresses().unwrap().len())
             .is_equal_to(1);
+    }
+
+    #[test]
+    fn add_balance() {
+        let sender = &Addr::unchecked(SENDER);
+        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let amount = 1000000u128;
+        let denom_1 = "uosmo";
+        let denom_2 = "osmou";
+
+        let chain = Mock::new(sender);
+
+        chain
+            .add_balance(recipient, vec![Coin::new(amount, denom_1)])
+            .unwrap();
+        chain
+            .add_balance(recipient, vec![Coin::new(amount, denom_2)])
+            .unwrap();
+
+        let balances = chain.query_all_balances(recipient).unwrap();
+        asserting("recipient balances added")
+            .that(&balances)
+            .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
     }
 }
