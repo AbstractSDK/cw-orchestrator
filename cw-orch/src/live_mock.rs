@@ -119,12 +119,12 @@ impl WasmMockQuerier {
                     BankQuery::Balance { address, denom } => {
                         let query_result = self
                             .runtime
-                            .block_on(querier.balance(address, Some(denom.clone())))
+                            .block_on(querier.balance(address, denom.clone()))
                             .map(|result| {
                                 to_binary(&BalanceResponse {
                                     amount: Coin {
-                                        amount: Uint128::from_str(&result[0].amount).unwrap(),
-                                        denom: result[0].denom.clone(),
+                                        amount: Uint128::from_str(&result.amount).unwrap(),
+                                        denom: result.denom.clone(),
                                     },
                                 })
                                 .unwrap()
@@ -134,7 +134,7 @@ impl WasmMockQuerier {
                     BankQuery::AllBalances { address } => {
                         let query_result = self
                             .runtime
-                            .block_on(querier.balance(address, None))
+                            .block_on(querier.coin_balances(address))
                             .map(|result| AllBalanceResponse {
                                 amount: result
                                     .into_iter()
