@@ -41,7 +41,6 @@ required-features = ["eth"]
 default = []
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
-default = []
 node-tests = ["daemon"]
 # enable the optional dependencies
 daemon = [

@@ -1,4 +1,5 @@
 use super::super::{queriers::Node, sender::Wallet, tx_resp::CosmTxResponse, DaemonAsync};
+use crate::daemon::ChannelAccess;
 use crate::{
     daemon::{error::DaemonError, state::DaemonState},
     environment::TxHandler,
@@ -55,11 +56,6 @@ impl Daemon {
     /// Get the daemon builder
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
-    }
-
-    /// Get the underlying wallet associated with the daemon
-    pub fn wallet(&self) -> Option<Wallet> {
-        Some(self.daemon.sender.clone())
     }
 
     /// Perform a query with a given querier
