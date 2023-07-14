@@ -37,6 +37,7 @@ use cw_orch::daemon::IbcTracker;
 use cw_orch::daemon::IbcTrackerConfigBuilder;
 use cw_orch::interchain::docker::DockerHelper;
 use cw_orch::interchain::interchain_env::contract_port;
+use cw_orch::prelude::networks::osmosis::OSMO_2;
 use cw_orch::prelude::*;
 
 use crate::daemon::networks::*;
@@ -46,8 +47,8 @@ use crate::prelude::InterchainEnv;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{CosmosMsg, Empty};
 use cw_orch::prelude::ContractInstance;
-use cw_orch::prelude::CwOrcExecute;
-use cw_orch::prelude::CwOrcUpload;
+use cw_orch::prelude::CwOrchExecute;
+use cw_orch::prelude::CwOrchUpload;
 use cw_orch::prelude::TxHandler;
 use cw_orch::state::ChainState;
 use cw_orch::{prelude::WasmPath, *};
@@ -180,7 +181,6 @@ fn test_ica(
     // send some funds to the remote account
     rt.block_on(
         juno.wallet()
-            .unwrap()
             .bank_send(&remote_addr, vec![cosmwasm_std::coin(100u128, "ujuno")]),
     )?;
 
