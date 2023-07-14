@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.12.1"
+version = "0.13.3"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -29,7 +29,16 @@ required-features = ["daemon"]
 name = "ica-demo"
 required-features = ["interchain"]
 
+[[example]]
+name = "osmosis_test_tube"
+required-features = ["osmosis-test-tube"]
+
+[[example]]
+name = "injective"
+required-features = ["eth"]
+
 [features]
+default = []
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
 default = []
@@ -62,13 +71,16 @@ daemon = [
 ]
 # Interact with interchaintest's docker nodes
 interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
+eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
+osmosis-test-tube = ["dep:osmosis-test-tube"]
 
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.12" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.12" }
+cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.13.3" }
+cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
 
 cosmwasm-std = { workspace = true }
+cw-utils = { workspace = true }
 cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
@@ -83,8 +95,8 @@ prost = { version = "0.11", optional = true }
 bitcoin = { version = "0.30.0", optional = true }
 hex = { version = "0.4.3", optional = true }
 ripemd = { version = "0.1.3", optional = true }
-ibc-chain-registry = { version = "0.23.0", optional = true }
-ibc-relayer-types = { version = "0.23.0", optional = true }
+ibc-chain-registry = { version = "0.24.1", optional = true }
+ibc-relayer-types = { version = "0.24.1", optional = true }
 tokio = { version = "1.4", features = ["full"], optional = true }
 tonic = { version = "0.9.2", optional = true, features = ["tls", "tls-roots"] }
 secp256k1 = { version = "0.27.0", default-features = false, optional = true }
@@ -121,6 +133,14 @@ cosmos-sdk-proto = "0.19.0"
 dotenv = { version = "0.15.0" }
 env_logger = { version = "0.10.0" }
 
+# Ethereum deps
+ethers-signers = { version = "2.0.7", optional = true }
+ethers-core = { version = "2.0.7", optional = true }
+snailquote = { version = "0.3.1", optional = true }
+
+# Test Tube env deps
+osmosis-test-tube = { version = "16.0.0", optional = true }
+
 [dev-dependencies]
 simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
@@ -143,3 +163,7 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
 ] }
 
 serial_test = "2.0.0"
+
+# Ethereum deps
+ethers-signers = { version = "2.0.7" }
+ethers-core = { version = "2.0.7" }

@@ -9,7 +9,7 @@ use std::fs::File;
 ///
 /// ## Example:
 /// ```ignore
-/// use cw_orch::{Deploy, CwOrchError, Empty, CwEnv, CwOrcUpload};
+/// use cw_orch::{Deploy, CwOrchError, Empty, CwEnv, CwOrchUpload};
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
@@ -118,6 +118,44 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                 }
             }
         }
+    }
+
+    /// Gets all the chain ids on which the library is deployed on
+    /// This loads all chains that are registered in the crate-local daemon_state file
+    /// The state file should have the following format :
+    /// {
+    ///     "juno":{
+    ///         "juno-1":{
+    ///             ...
+    ///         },
+    ///         "uni-6": {
+
+    ///         }
+    ///     }
+    ///     ...
+    /// }
+    /// So this function actually looks for the second level of indices in the deployed_state_file
+    fn get_all_deployed_chains(&self) -> Vec<String> {
+        let deployed_state_file = self.deployed_state_file_path();
+        if let Some(state_file) = deployed_state_file {
+            if let Ok(module_state_json) = read_json(&state_file) {
+                let all_chain_ids: Vec<String> = module_state_json
+                    .as_object()
+                    .unwrap()
+                    .into_iter()
+                    .flat_map(|(_, v)| {
+                        v.as_object()
+                            .unwrap()
+                            .into_iter()
+                            .map(|(chain_id, _)| chain_id.clone())
+                            .collect::<Vec<_>>()
+                    })
+                    .collect();
+
+                return all_chain_ids;
+            }
+        }
+        vec![]
     }
 
     /// Sets the custom state file path for exporting the state with the package.

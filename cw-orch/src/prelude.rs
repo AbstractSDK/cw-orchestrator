@@ -12,8 +12,8 @@
 
 // Contract traits
 pub use crate::interface_traits::{
-    CallAs, ContractInstance, CwOrcExecute, CwOrcInstantiate, CwOrcMigrate, CwOrcQuery,
-    CwOrcUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
+    CallAs, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery,
+    CwOrchUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
 pub use crate::paths::from_workspace as artifacts_dir_from_workspace;
@@ -28,6 +28,10 @@ pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
 pub use crate::mock::Mock;
+
+// OsmosisTestTube for testing
+#[cfg(feature = "osmosis-test-tube")]
+pub use crate::osmosis_test_tube::OsmosisTestTube;
 
 // error
 pub use crate::error::CwOrchError;

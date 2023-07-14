@@ -24,7 +24,7 @@ We maintain a small set of interfaces ourselves that we use in our own projects.
 |---|---|
 | [cw-plus](https://github.com/AbstractSDK/cw-plus) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/cw-plus"> |
 | [wyndex](https://github.com/AbstractSDK/integration-bundles) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/integration-bundles"> |
-| [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-boot) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-boot"> |
+| [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-interface) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-interface"> |
 
 ## Creating an Interface
 
@@ -220,6 +220,9 @@ TODO :
     Should we decompose along the IBC characteristics (PORT --> PORT + connection --> Channel)
 
 
+### Testing with OsmosisTestTube
+
+[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise. Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
 
 ## Contributing
 

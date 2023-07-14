@@ -89,6 +89,31 @@ mod tests {
             .is_ok();
     }
 
+    // #[test]
+    // #[serial_test::serial]
+    // fn wrong_min_fee() {
+    //     use cw_orch::prelude::networks;
+
+    //     let runtime = tokio::runtime::Runtime::new().unwrap();
+
+    //     let mut chain = networks::UNI_6;
+    //     chain.gas_price = 0.00001;
+
+    //     let daemon = Daemon::builder()
+    //         .chain(chain)
+    //         .handle(runtime.handle())
+    //         .mnemonic("tide genuine angle mass fall promote blind skull swim army maximum add peasant fringe uncle october female crisp voyage blind extend jeans give wrap")
+    //         .build()
+    //         .unwrap();
+
+    //     let contract = mock_contract::MockContract::new(
+    //         format!("test:mock_contract:{}", Id::new()),
+    //         daemon.clone(),
+    //     );
+
+    //     contract.upload().unwrap();
+    // }
+
     #[test]
     #[serial_test::serial]
     fn cw_orch_interface_traits() {

@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
 name: test
+env: 
+  CODECOV_TOKEN: 62fac3fe-498a-4449-a00d-a9b30b443acf
 jobs:
   required:
     runs-on: ubuntu-latest

@@ -24,7 +24,7 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
     chain_id: "neutron-1",
     gas_denom: "untrn",
     gas_price: 0.001,
-    grpc_urls: &["grpc-kralum.neutron-1.neutron.org:80"],
+    grpc_urls: &["https://grpc.novel.remedy.tm.p2p.org"],
     network_info: NEUTRON_NETWORK,
     lcd_url: Some("https://rest-kralum.neutron-1.neutron.org"),
     fcd_url: None,

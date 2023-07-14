@@ -3,7 +3,7 @@ use crate::{daemon::queriers::CosmWasm, environment::TxResponse, error::CwOrchEr
 use super::sync::Daemon;
 
 /// Helper methods for conditional uploading of a contract.
-pub trait ConditionalUpload: CwOrcUpload<Daemon> {
+pub trait ConditionalUpload: CwOrchUpload<Daemon> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Daemon>>, CwOrchError> {
         if self.latest_is_uploaded()? {
@@ -45,10 +45,10 @@ pub trait ConditionalUpload: CwOrcUpload<Daemon> {
     }
 }
 
-impl<T> ConditionalUpload for T where T: CwOrcUpload<Daemon> {}
+impl<T> ConditionalUpload for T where T: CwOrchUpload<Daemon> {}
 
 /// Helper methods for conditional migration of a contract.
-pub trait ConditionalMigrate: CwOrcMigrate<Daemon> + ConditionalUpload {
+pub trait ConditionalMigrate: CwOrchMigrate<Daemon> + ConditionalUpload {
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
@@ -61,6 +61,28 @@ pub trait ConditionalMigrate: CwOrcMigrate<Daemon> + ConditionalUpload {
             Some(self.migrate(migrate_msg, self.code_id()?)).transpose()
         }
     }
+    /// Uploads the contract if the local contract hash is different from the latest on-chain code hash.
+    /// Proceeds to migrates the contract if the contract is not running the latest code.
+    fn upload_and_migrate_if_needed(
+        &self,
+        migrate_msg: &Self::MigrateMsg,
+    ) -> Result<Option<Vec<TxResponse<Daemon>>>, CwOrchError> {
+        let mut txs = Vec::with_capacity(2);
+
+        if let Some(tx) = self.upload_if_needed()? {
+            txs.push(tx);
+        };
+
+        if let Some(tx) = self.migrate_if_needed(migrate_msg)? {
+            txs.push(tx);
+        };
+
+        if txs.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(txs))
+        }
+    }
 }
 
-impl<T> ConditionalMigrate for T where T: CwOrcMigrate<Daemon> + CwOrcUpload<Daemon> {}
+impl<T> ConditionalMigrate for T where T: CwOrchMigrate<Daemon> + CwOrchUpload<Daemon> {}
