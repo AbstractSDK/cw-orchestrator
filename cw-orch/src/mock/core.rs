@@ -2,6 +2,7 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -65,6 +66,24 @@ impl<S: StateInterface> Mock<S> {
         self.app
             .borrow_mut()
             .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
+            .map_err(Into::into)
+    }
+
+    /// Adds the bank balance of an address.
+    pub fn add_balance(
+        &self,
+        address: &Addr,
+        amount: Vec<cosmwasm_std::Coin>,
+    ) -> Result<(), CwOrchError> {
+        let b = self.query_all_balances(address)?;
+        let new_amount = NativeBalance(b) + NativeBalance(amount);
+        self.app
+            .borrow_mut()
+            .init_modules(|router, _, storage| {
+                router
+                    .bank
+                    .init_balance(storage, address, new_amount.into_vec())
+            })
             .map_err(Into::into)
     }
 
@@ -489,5 +508,28 @@ mod test {
         asserting!("that total addresses is 1")
             .that(&mock_state.get_all_addresses().unwrap().len())
             .is_equal_to(1);
+    }
+
+    #[test]
+    fn add_balance() {
+        let sender = &Addr::unchecked(SENDER);
+        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let amount = 1000000u128;
+        let denom_1 = "uosmo";
+        let denom_2 = "osmou";
+
+        let chain = Mock::new(sender);
+
+        chain
+            .add_balance(recipient, vec![Coin::new(amount, denom_1)])
+            .unwrap();
+        chain
+            .add_balance(recipient, vec![Coin::new(amount, denom_2)])
+            .unwrap();
+
+        let balances = chain.query_all_balances(recipient).unwrap();
+        asserting("recipient balances added")
+            .that(&balances)
+            .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
     }
 }
