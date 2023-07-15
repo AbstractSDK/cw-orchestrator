@@ -211,7 +211,11 @@ impl Node {
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
-        let block_speed = self.average_block_speed(Some(0.7)).await?;
+        let mut block_speed = self.average_block_speed(Some(0.7)).await?;
+
+        if block_speed == 0{
+            block_speed = 1;
+        }
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
