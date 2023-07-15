@@ -51,6 +51,7 @@ use speculoos::assert_that;
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 const JUNO: &str = "juno-1";
 const OSMOSIS: &str = "osmosis-1";
+pub const IBC_APP_VERSION: &str = "simple-ica-v2";
 
 pub fn script() -> anyhow::Result<()> {
     let rt = Runtime::new().unwrap();
@@ -66,6 +67,8 @@ pub fn script() -> anyhow::Result<()> {
 
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
+
+    rt.block_on(starship.client().create_channel( OSMOSIS,JUNO,  &format!("wasm.{}",controller.addr_str()?),&format!("wasm.{}",host.addr_str()?), IBC_APP_VERSION))?;
 
     // // test the ica implementation
     // test_ica(rt.handle().clone(), &starship, &controller, &juno)?;
