@@ -19,6 +19,8 @@ pub mod prelude;
 pub mod contract;
 #[cfg(feature = "daemon")]
 pub mod daemon;
+#[cfg(feature = "wasm-daemon")]
+pub mod wasm_daemon;
 
 pub mod deploy;
 pub mod environment;
@@ -36,3 +38,5 @@ pub mod state;
 
 #[cfg(feature = "daemon")]
 pub mod live_mock;
+
+

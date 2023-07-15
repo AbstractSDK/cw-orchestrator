@@ -61,6 +61,7 @@ daemon = [
 ]
 eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
 osmosis-test-tube = ["dep:osmosis-test-tube"]
+wasm-daemon = ["dep:cosmos-client", "dep:pasts",   "dep:ibc-chain-registry",   "dep:cosmrs",   "dep:chrono"]
 
 [dependencies]
 # Default deps
@@ -107,6 +108,9 @@ chrono = { version = "0.4", optional = true }
 base16 = { version = "0.2.1", optional = true }
 derive_builder = { version = "0.12.0", optional = true }
 ring = { version = "0.16.20", optional = true }
+cosmos-client = { version = "0.1.7", optional = true }
+wasm-bindgen-futures = { version = "0.4.37", optional = true }
+pasts = { version = "0.14.3", optional = true, features = ["web"] }
 
 # Ethereum deps
 ethers-signers = { version = "2.0.7", optional = true }
