@@ -48,13 +48,9 @@ use simple_ica_controller::msg::{self as controller_msgs};
 use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
 
-use tokio::runtime::Handle;
-
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
-const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort grow essence fish husband seven hollow envelope wedding host dry permit game april present panic move";
-const OSMOSIS_MNEMONIC: &str = "settle gas lobster judge silk stem act shoulder pluck waste pistol word comfort require early mouse provide marine butter crowd clock tube move wool";
 const JUNO: &str = "juno-1";
-const OSMOSIS: &str = "osmosis-2";
+const OSMOSIS: &str = "osmosis-1";
 
 pub fn script() -> anyhow::Result<()> {
     let rt = Runtime::new().unwrap();
