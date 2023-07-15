@@ -214,7 +214,7 @@ impl Node {
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
         if block_speed == 0 {
-            block_speed = 1;
+            block_speed = 3;
         }
 
         for _ in 0..retries {
