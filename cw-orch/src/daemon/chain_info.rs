@@ -11,7 +11,7 @@ impl Into<RegistryChainInfo> for ChainInfo<'_> {
             bech32_prefix: self.network_info.pub_address_prefix.into(),
             fees: FeeTokens {
                 fee_tokens: vec![FeeToken {
-                    fixed_min_gas_price: self.gas_price,
+                    average_gas_price: self.gas_price,
                     denom: self.gas_denom.to_string(),
                     ..Default::default()
                 }],

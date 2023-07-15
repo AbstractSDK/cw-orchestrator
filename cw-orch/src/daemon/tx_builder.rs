@@ -100,7 +100,7 @@ impl TxBuilder {
 
             let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
             let fee_amount = gas_expected
-                * (wallet.daemon_state.chain_data.fees.fee_tokens[0].fixed_min_gas_price + 0.00001);
+                * (wallet.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price);
 
             log::debug!("Calculated fee needed: {:?}", fee_amount);
             // set the gas limit of self for future txs
