@@ -14,6 +14,9 @@ pub enum CwOrchError {
     #[cfg(feature = "osmosis-test-tube")]
     #[error(transparent)]
     TestTubeError(#[from] osmosis_test_tube::RunnerError),
+    #[cfg(feature = "starship")]
+    #[error(transparent)]
+    Starship(#[from] cw_orch_starship::StarshipClientError),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
     #[error(transparent)]

@@ -39,3 +39,5 @@ pub mod state;
 
 #[cfg(feature = "daemon")]
 pub mod live_mock;
+#[cfg(feature = "starship")]
+pub mod starship;

@@ -30,6 +30,11 @@ name = "ica-demo"
 required-features = ["interchain"]
 
 [[example]]
+name = "starship"
+required-features = ["starship"]
+
+
+[[example]]
 name = "osmosis_test_tube"
 required-features = ["osmosis-test-tube"]
 
@@ -72,6 +77,7 @@ daemon = [
 interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
 eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
 osmosis-test-tube = ["dep:osmosis-test-tube"]
+starship = ["daemon","dep:cw-orch-starship"]
 
 [dependencies]
 # Default deps
@@ -128,6 +134,7 @@ cosmwasm-schema = "1.2.5"
 async-recursion = { version = "1.0.4", optional = true }
 futures = "0.3.28"
 cosmos-sdk-proto = "0.19.0"
+cw-orch-starship = {path = "../packages/cw-orch-starship", optional = true }
 
 dotenv = { version = "0.15.0" }
 env_logger = { version = "0.10.0" }
