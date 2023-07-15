@@ -152,7 +152,7 @@ impl Sender<All> {
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
+        let timeout_height = Node::new(self.channel()).block_height().await? + 50u64;
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
