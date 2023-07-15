@@ -49,4 +49,8 @@ impl Starship {
             .get(chain_id)
             .ok_or(anyhow::anyhow!("Chain not found: {}", chain_id).into())
     }
+    /// Get the starship client
+    pub fn client(&self) -> &StarshipClient {
+        &self.starship_client
+    }
 }
