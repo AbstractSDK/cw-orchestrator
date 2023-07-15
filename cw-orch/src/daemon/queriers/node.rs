@@ -213,7 +213,7 @@ impl Node {
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
-        if block_speed == 0{
+        if block_speed == 0 {
             block_speed = 1;
         }
 
