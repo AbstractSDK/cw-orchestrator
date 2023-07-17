@@ -39,4 +39,14 @@ impl CwOrchError {
             _ => panic!("Unexpected error type"),
         }
     }
+
+    pub fn downcast<E>(self) -> anyhow::Result<E>
+    where
+        E: std::fmt::Display + std::fmt::Debug + Send + Sync + 'static,
+    {
+        match self {
+            CwOrchError::AnyError(e) => e.downcast(),
+            _ => panic!("Unexpected error type"),
+        }
+    }
 }
