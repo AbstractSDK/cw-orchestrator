@@ -3,7 +3,7 @@ pub use artifacts_dir::ArtifactsDir;
 pub use wasm_path::WasmPath;
 
 mod wasm_path {
-    use crate::error::CwOrchError;
+    use crate::error::CwEnvError;
     use cosmwasm_std::ensure_eq;
     use std::path::{Path, PathBuf};
 
@@ -26,7 +26,7 @@ mod wasm_path {
 
     impl WasmPath {
         /// Create a new WasmPath from a path to a WASM file.
-        pub fn new(path: impl Into<PathBuf>) -> Result<Self, CwOrchError> {
+        pub fn new(path: impl Into<PathBuf>) -> Result<Self, CwEnvError> {
             let path: PathBuf = path.into();
             assert!(
                 path.exists(),
@@ -36,7 +36,7 @@ mod wasm_path {
             ensure_eq!(
                 path.extension(),
                 Some("wasm".as_ref()),
-                CwOrchError::StdErr("File must be a wasm file".into())
+                CwEnvError::NotWasm {}
             );
             Ok(Self(path))
         }
@@ -47,7 +47,7 @@ mod wasm_path {
         }
 
         /// Calculate the checksum of the WASM file.
-        pub fn checksum(&self) -> Result<String, CwOrchError> {
+        pub fn checksum(&self) -> Result<String, CwEnvError> {
             let checksum = sha256::try_digest(self.path())?;
             Ok(checksum)
         }
@@ -55,9 +55,10 @@ mod wasm_path {
 }
 
 mod artifacts_dir {
-    use std::{env, fs, path::PathBuf};
+    use super::WasmPath;
+    use crate::error::CwEnvError;
 
-    use crate::{error::CwOrchError, paths::wasm_path::WasmPath};
+    use std::{env, fs, path::PathBuf};
 
     pub fn find_workspace_dir(start_path: Option<String>) -> ::std::path::PathBuf {
         let crate_path = start_path.unwrap_or(env!("CARGO_MANIFEST_DIR").to_string());
@@ -139,7 +140,7 @@ mod artifacts_dir {
         }
 
         /// Find a WASM file in the artifacts directory that contains the given name.
-        pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwOrchError> {
+        pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwEnvError> {
             let path_str = fs::read_dir(self.path())?
                 .find_map(|entry| {
                     let path = entry.ok()?.path();
@@ -153,12 +154,7 @@ mod artifacts_dir {
                         None
                     }
                 })
-                .ok_or_else(|| {
-                    CwOrchError::StdErr(format!(
-                        "Could not find wasm file with name {} in artifacts dir",
-                        name,
-                    ))
-                })?;
+                .ok_or_else(|| CwEnvError::WasmNotFound(name.to_owned()))?;
             WasmPath::new(self.path().join(path_str))
         }
     }

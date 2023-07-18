@@ -1,20 +1,17 @@
 //! Transactional traits for execution environments.
 
-use crate::{
-    error::CwOrchError,
-    prelude::{IndexResponse, Uploadable},
-    state::ChainState,
-};
+use super::{ChainState, IndexResponse};
+use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
-/// Response type for actions on an environment
-pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
-
 /// Signals a supported execution environment for CosmWasm contracts
 pub trait CwEnv: TxHandler + Clone {}
 impl<T: TxHandler + Clone> CwEnv for T {}
+
+/// Response type for actions on an environment
+pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 
 /// Signer trait for chains.
 /// Accesses the sender information from the chain object to perform actions.
@@ -22,12 +19,17 @@ pub trait TxHandler: ChainState + Clone {
     /// Response type for transactions on an environment.
     type Response: IndexResponse + Debug;
     /// Error type for transactions on an environment.
-    type Error: Into<CwOrchError> + Debug;
+    type Error: Into<CwEnvError> + Debug;
     /// Source type for uploading to the environment.
     type ContractSource;
 
+    type Sender: Clone;
+
     /// Gets the address of the current wallet used to sign transactions.
     fn sender(&self) -> Addr;
+
+    /// Sets wallet to sign transactions.
+    fn set_sender(&mut self, sender: Self::Sender);
 
     /// Wait for an amount of blocks.
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;

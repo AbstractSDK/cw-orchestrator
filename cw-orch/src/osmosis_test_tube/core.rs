@@ -1,21 +1,11 @@
-use crate::interface_traits::CallAs;
-use crate::interface_traits::ContractInstance;
-use crate::interface_traits::CwOrchExecute;
-use crate::interface_traits::Uploadable;
-use crate::paths::WasmPath;
-use cosmwasm_std::Binary;
-use cosmwasm_std::BlockInfo;
-use cosmwasm_std::Coin;
-use cosmwasm_std::Timestamp;
-use cosmwasm_std::Uint128;
+use crate::contract::WasmPath;
+use crate::prelude::{CallAs, ContractInstance, CwOrchExecute, Uploadable};
+use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::MsgSend;
-use osmosis_test_tube::Account;
-use osmosis_test_tube::Bank;
-use osmosis_test_tube::Gamm;
-use osmosis_test_tube::Module;
-use osmosis_test_tube::SigningAccount;
-use osmosis_test_tube::Wasm;
+use osmosis_test_tube::{
+    cosmrs::proto::cosmos::bank::v1beta1::MsgSend, Account, Bank, Gamm, Module, SigningAccount,
+    Wasm,
+};
 use std::str::FromStr;
 
 use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::{
@@ -29,8 +19,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     environment::TxHandler,
+    environment::{ChainState, StateInterface},
     error::CwOrchError,
-    state::{ChainState, StateInterface},
 };
 
 use crate::mock::MockState;

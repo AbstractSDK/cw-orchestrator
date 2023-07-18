@@ -1,7 +1,7 @@
+use super::{Contract, WasmPath};
 use crate::{
-    contract::Contract,
-    error::CwOrchError,
-    prelude::{CwEnv, WasmPath},
+    environment::{CwEnv, TxHandler},
+    error::CwEnvError,
 };
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
@@ -23,17 +23,17 @@ pub trait ContractInstance<Chain: CwEnv> {
     }
 
     /// Returns the contract address for this instance.
-    fn address(&self) -> Result<Addr, CwOrchError> {
+    fn address(&self) -> Result<Addr, CwEnvError> {
         Contract::address(self.as_instance())
     }
 
     /// Returns the contract address as a [`String`].
-    fn addr_str(&self) -> Result<String, CwOrchError> {
+    fn addr_str(&self) -> Result<String, CwEnvError> {
         Contract::address(self.as_instance()).map(|addr| addr.into_string())
     }
 
     /// Returns contract code_id.
-    fn code_id(&self) -> Result<u64, CwOrchError> {
+    fn code_id(&self) -> Result<u64, CwEnvError> {
         Contract::code_id(self.as_instance())
     }
 
@@ -98,7 +98,7 @@ pub trait CwOrchExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Cha
         &self,
         execute_msg: &Self::ExecuteMsg,
         coins: Option<&[Coin]>,
-    ) -> Result<Chain::Response, CwOrchError> {
+    ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().execute(&execute_msg, coins)
     }
 }
@@ -113,7 +113,7 @@ pub trait CwOrchInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstan
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
-    ) -> Result<Chain::Response, CwOrchError> {
+    ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
     }
@@ -130,7 +130,7 @@ pub trait CwOrchQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain>
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Self::QueryMsg,
-    ) -> Result<G, CwOrchError> {
+    ) -> Result<G, CwEnvError> {
         self.as_instance().query(query_msg)
     }
 }
@@ -144,7 +144,7 @@ pub trait CwOrchMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Cha
         &self,
         migrate_msg: &Self::MigrateMsg,
         new_code_id: u64,
-    ) -> Result<Chain::Response, CwOrchError> {
+    ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().migrate(migrate_msg, new_code_id)
     }
 }
@@ -169,7 +169,7 @@ pub trait Uploadable {
 /// Trait that indicates that the contract can be uploaded.
 pub trait CwOrchUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable + Sized {
     /// upload the contract to the configured environment.
-    fn upload(&self) -> Result<Chain::Response, CwOrchError> {
+    fn upload(&self) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().upload(self)
     }
 }
@@ -181,13 +181,16 @@ impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv> CwOrchUpload<Chain> 
 ///
 /// Clones the contract interface to prevent mutation of the original.
 pub trait CallAs<Chain: CwEnv>: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone {
-    /// The sender type for environment
-    type Sender: Clone;
-
-    /// Set the sender for interactions with the contract.
-    fn set_sender(&mut self, sender: &Self::Sender);
-
+    fn set_sender(&mut self, sender: &<Chain as TxHandler>::Sender) {
+        self.as_instance_mut().chain.set_sender(sender.clone())
+    }
     /// Call a contract as a different sender.
     /// Clones the contract interface with a different sender.
-    fn call_as(&self, sender: &Self::Sender) -> Self;
+    fn call_as(&self, sender: &<Chain as TxHandler>::Sender) -> Self {
+        let mut contract = self.clone();
+        contract.set_sender(sender);
+        contract
+    }
 }
+
+impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: CwEnv> CallAs<Chain> for T {}

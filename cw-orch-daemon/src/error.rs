@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use cw_orch_environment::CwEnvError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -24,6 +25,8 @@ pub enum DaemonError {
     TransportError(#[from] ::tonic::transport::Error),
     #[error(transparent)]
     TendermintError(#[from] ::cosmrs::tendermint::Error),
+    #[error(transparent)]
+    CwEnvError(#[from] ::cw_orch_environment::CwEnvError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
@@ -109,5 +112,11 @@ pub enum DaemonError {
 impl DaemonError {
     pub fn ibc_err(msg: impl ToString) -> Self {
         Self::IbcError(msg.to_string())
+    }
+}
+
+impl From<DaemonError> for CwEnvError {
+    fn from(val: DaemonError) -> Self {
+        CwEnvError::StdErr(val.to_string())
     }
 }
