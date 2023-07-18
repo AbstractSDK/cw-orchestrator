@@ -32,6 +32,10 @@ pub use crate::Mock;
 // #[cfg(feature = "osmosis-test-tube")]
 // pub use crate::osmosis_test_tube::OsmosisTestTube;
 
+// OsmosisTestTube for testing
+// #[cfg(feature = "osmosis-test-tube")]
+// pub use crate::osmosis_test_tube::OsmosisTestTube;
+
 // error
 pub use crate::error::CwOrchError;
 
