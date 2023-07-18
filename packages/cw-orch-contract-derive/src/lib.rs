@@ -229,7 +229,7 @@ pub fn instantiate(
    env: Env,
    info: MessageInfo,
    msg: InstantiateMsg,
- -> StdResult<Response> {
+) -> StdResult<Response> {
     // ...
 }
 // ... other entry points (execute, query, migrate)

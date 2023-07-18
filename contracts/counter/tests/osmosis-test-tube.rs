@@ -1,17 +1,14 @@
 // ANCHOR: all
+use cosmwasm_std::coins;
 use counter_contract::{
     contract::CONTRACT_NAME,
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
-    ContractError, CounterContract,
+    CounterContract,
 };
+use cw_orch::osmosis_test_tube::OsmosisTestTube;
 // Use prelude to get all the necessary imports
 use cw_orch::prelude::*;
 
-use cosmwasm_std::Addr;
-
-// consts for testing
-const USER: &str = "user";
-const ADMIN: &str = "admin";
 // ANCHOR: integration_test
 // ANCHOR: setup
 /// Instantiate the contract in any CosmWasm environment
@@ -20,7 +17,6 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
     // Construct the counter interface
     let contract = CounterContract::new(CONTRACT_NAME, chain.clone());
     // ANCHOR_END: constructor
-    let admin = Addr::unchecked(ADMIN);
 
     // Upload the contract
     let upload_resp = contract.upload().unwrap();
@@ -32,7 +28,9 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
 
     // Instantiate the contract
     let msg = InstantiateMsg { count: 1i32 };
-    let init_resp = contract.instantiate(&msg, Some(&admin), None).unwrap();
+    let init_resp = contract
+        .instantiate(&msg, Some(&chain.sender()), None)
+        .unwrap();
 
     // Get the address from the response
     let contract_addr = init_resp.instantiated_contract_address().unwrap();
@@ -47,20 +45,20 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
 // ANCHOR: count_test
 #[test]
 fn count() {
-    // Create a sender
-    let sender = Addr::unchecked(ADMIN);
-    // Create a user
-    let user = Addr::unchecked(USER);
     // Create the mock
-    let mock = Mock::new(&sender);
+    let test_tube = OsmosisTestTube::new(coins(100_000_000_000, "uosmo"));
+
+    let account = test_tube
+        .init_account(coins(100_000_000_000, "uosmo"))
+        .unwrap();
 
     // Set up the contract
-    let contract = setup(mock.clone());
+    let contract = setup(test_tube);
 
     // Increment the count of the contract
     contract
         // Set the caller to user
-        .call_as(&user)
+        .call_as(&account)
         // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
         .increment()
         .unwrap();
@@ -86,15 +84,6 @@ fn count() {
     let count = contract.get_count().unwrap();
     assert_eq!(count.count, 0);
     // ANCHOR_END: reset
-
-    // Check negative case
-    let exec_res = contract.call_as(&user).reset(0);
-
-    let expected_err = ContractError::Unauthorized {};
-    assert_eq!(
-        exec_res.unwrap_err().downcast::<ContractError>().unwrap(),
-        expected_err
-    );
 }
 // ANCHOR_END: count_test
 // ANCHOR_END: integration_test

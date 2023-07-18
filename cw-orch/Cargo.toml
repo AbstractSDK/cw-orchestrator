@@ -23,6 +23,14 @@ name = "mock_test"
 name = "daemon_test"
 required-features = ["daemon"]
 
+[[example]]
+name = "osmosis_test_tube"
+required-features = ["osmosis-test-tube"]
+
+[[example]]
+name = "injective"
+required-features = ["eth"]
+
 [features]
 default = []
 # enable node-backed tests (ensure Docker is running)
@@ -37,6 +45,7 @@ daemon = [
   "dep:cw-orch-daemon",
 ]
 eth = ["daemon", "dep:snailquote"]
+osmosis-test-tube = ["dep:osmosis-test-tube"]
 
 [dependencies]
 # Default deps
@@ -44,6 +53,7 @@ cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", versio
 cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
 
 cosmwasm-std = { workspace = true }
+cw-utils = { workspace = true }
 cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
@@ -69,6 +79,9 @@ tonic = { version = "0.9.2", optional = true, features = ["tls", "tls-roots"] }
 
 # Ethereum deps
 snailquote = { version = "0.3.1", optional = true }
+
+# Test Tube env deps
+osmosis-test-tube = { version = "16.0.0", optional = true }
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }

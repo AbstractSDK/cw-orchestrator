@@ -265,6 +265,7 @@ mod tst {
         Ok(())
     }
 
+    #[cfg(feature = "eth")]
     #[test]
     pub fn inj() -> anyhow::Result<()> {
         let str_1: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
