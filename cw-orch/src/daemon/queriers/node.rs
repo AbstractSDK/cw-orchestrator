@@ -10,7 +10,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-const MAX_TX_QUERY_RETRIES: usize = 20;
+const MAX_TX_QUERY_RETRIES: usize = 50;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -211,7 +211,7 @@ impl Node {
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
-        let block_speed = self.average_block_speed(Some(0.7)).await?;
+        let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -221,6 +221,8 @@ impl Node {
                     return Ok(resp.into());
                 }
                 Err(err) => {
+                    // increase wait time
+                    block_speed = (block_speed as f64 * 1.6) as u64;
                     log::debug!("TX not found with error: {:?}", err);
                     log::debug!("Waiting {block_speed} seconds");
                     tokio::time::sleep(Duration::from_secs(block_speed)).await;
