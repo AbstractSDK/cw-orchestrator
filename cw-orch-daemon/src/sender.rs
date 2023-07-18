@@ -180,6 +180,7 @@ impl Sender<All> {
             let tx = tx_builder.build(self).await?;
 
             tx_response = self.broadcast_tx(tx).await?;
+            log::debug!("tx broadcast response: {:?}", tx_response);
         }
 
         let resp = Node::new(self.channel())
