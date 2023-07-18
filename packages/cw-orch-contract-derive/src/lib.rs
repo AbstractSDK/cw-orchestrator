@@ -186,12 +186,12 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
 
             impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
                 fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
-                &self.0
+                    &self.0
+                }
+                fn as_instance_mut(&mut self) -> &mut ::cw_orch::contract::Contract<Chain> {
+                    &mut self.0
+                }
             }
-            fn as_instance_mut(&mut self) -> &mut ::cw_orch::contract::Contract<Chain> {
-                &mut self.0
-            }
-        }
 
         impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type InstantiateMsg = #init;

@@ -1,10 +1,11 @@
+use crate::RcDaemon;
+
 use super::{
     builder::DaemonAsyncBuilder,
     cosmos_modules,
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
     sender::Wallet,
-    state::DaemonState,
     tx_resp::CosmTxResponse,
 };
 
@@ -14,11 +15,11 @@ use cosmrs::{
     AccountId, Denom,
 };
 use cosmwasm_std::{Addr, Coin};
+use cw_orch_environment::environment::ChainState;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
-    rc::Rc,
     str::{from_utf8, FromStr},
     time::Duration,
 };
@@ -54,7 +55,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Rc<DaemonState>,
+    pub state: RcDaemon,
 }
 
 impl DaemonAsync {
@@ -71,9 +72,18 @@ impl DaemonAsync {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.state.grpc_channel.clone()
+        self.state.0.grpc_channel.clone()
     }
 }
+
+impl ChainState for DaemonAsync {
+    type Out = RcDaemon;
+
+    fn state(&self) -> Self::Out {
+        self.state.clone()
+    }
+}
+
 // Execute on the real chain, returns tx response.
 impl DaemonAsync {
     /// Get the sender address

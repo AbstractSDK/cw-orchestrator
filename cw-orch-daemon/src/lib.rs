@@ -18,10 +18,12 @@ pub mod tx_resp;
 pub mod keys;
 pub mod networks;
 pub mod queriers;
+mod traits;
 pub mod tx_builder;
 
 pub use self::{
-    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*,
+    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
+    tx_resp::*,
 };
 pub use sender::Wallet;
 pub use tx_builder::TxBuilder;

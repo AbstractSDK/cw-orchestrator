@@ -6,10 +6,10 @@ use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
+    contract::interface_traits::Uploadable,
     environment::TxHandler,
-    error::CwOrchError,
-    prelude::*,
-    state::{ChainState, DeployDetails, StateInterface},
+    environment::{ChainState, DeployDetails, IndexResponse, StateInterface},
+    error::CwEnvError,
 };
 
 use super::state::MockState;
@@ -62,7 +62,7 @@ impl<S: StateInterface> Mock<S> {
         &self,
         address: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwOrchError> {
+    ) -> Result<(), CwEnvError> {
         self.app
             .borrow_mut()
             .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
@@ -74,7 +74,7 @@ impl<S: StateInterface> Mock<S> {
         &self,
         address: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwOrchError> {
+    ) -> Result<(), CwEnvError> {
         let b = self.query_all_balances(address)?;
         let new_amount = NativeBalance(b) + NativeBalance(amount);
         self.app
@@ -91,10 +91,10 @@ impl<S: StateInterface> Mock<S> {
     pub fn set_balances(
         &self,
         balances: &[(&Addr, &[cosmwasm_std::Coin])],
-    ) -> Result<(), CwOrchError> {
+    ) -> Result<(), CwEnvError> {
         self.app
             .borrow_mut()
-            .init_modules(|router, _, storage| -> Result<(), CwOrchError> {
+            .init_modules(|router, _, storage| -> Result<(), CwEnvError> {
                 for (addr, coins) in balances {
                     router.bank.init_balance(storage, addr, coins.to_vec())?;
                 }
@@ -104,7 +104,7 @@ impl<S: StateInterface> Mock<S> {
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwOrchError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
         let amount = self
             .app
             .borrow()
@@ -118,7 +118,7 @@ impl<S: StateInterface> Mock<S> {
     pub fn query_all_balances(
         &self,
         address: &Addr,
-    ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
+    ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         let amount = self.app.borrow().wrap().query_all_balances(address)?;
         Ok(amount)
     }
@@ -151,7 +151,7 @@ impl<S: StateInterface> Mock<S> {
         &self,
         contract_id: &str,
         wrapper: Box<dyn Contract<Empty, Empty>>,
-    ) -> Result<AppResponse, CwOrchError> {
+    ) -> Result<AppResponse, CwEnvError> {
         let code_id = self.app.borrow_mut().store_code(wrapper);
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
@@ -175,7 +175,7 @@ impl<S: StateInterface> ChainState for Mock<S> {
 }
 
 impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
-    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrchError> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         self.borrow().get_address(contract_id)
     }
 
@@ -183,7 +183,7 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow_mut().set_address(contract_id, address)
     }
 
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrchError> {
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         self.borrow().get_code_id(contract_id)
     }
 
@@ -191,11 +191,11 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
         self.borrow_mut().set_code_id(contract_id, code_id)
     }
 
-    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwOrchError> {
+    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwEnvError> {
         self.borrow().get_all_addresses()
     }
 
-    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwOrchError> {
+    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
         self.borrow().get_all_code_ids()
     }
 
@@ -207,14 +207,19 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 // Execute on the test chain, returns test response type
 impl<S: StateInterface> TxHandler for Mock<S> {
     type Response = AppResponse;
-    type Error = CwOrchError;
+    type Error = CwEnvError;
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
+    type Sender = Addr;
 
     fn sender(&self) -> Addr {
         self.sender.clone()
     }
 
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
+    fn set_sender(&mut self, sender: Self::Sender) {
+        self.sender = sender;
+    }
+
+    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwEnvError> {
         let code_id = self.app.borrow_mut().store_code(contract.wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
@@ -231,7 +236,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, CwOrchError> {
+    ) -> Result<Self::Response, CwEnvError> {
         self.app
             .borrow_mut()
             .execute_contract(
@@ -250,7 +255,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
-    ) -> Result<Self::Response, CwOrchError> {
+    ) -> Result<Self::Response, CwEnvError> {
         let addr = self.app.borrow_mut().instantiate_contract(
             code_id,
             self.sender.clone(),
@@ -273,7 +278,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, CwOrchError> {
+    ) -> Result<T, CwEnvError> {
         self.app
             .borrow()
             .wrap()
@@ -286,7 +291,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, CwOrchError> {
+    ) -> Result<Self::Response, CwEnvError> {
         self.app
             .borrow_mut()
             .migrate_contract(
@@ -298,7 +303,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             .map_err(From::from)
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
         self.app.borrow_mut().update_block(|b| {
             b.height += amount;
             b.time = b.time.plus_seconds(5 * amount);
@@ -306,7 +311,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         Ok(())
     }
 
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
+    fn wait_seconds(&self, secs: u64) -> Result<(), CwEnvError> {
         self.app.borrow_mut().update_block(|b| {
             b.time = b.time.plus_seconds(secs);
             b.height += secs / 5;
@@ -314,27 +319,13 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         Ok(())
     }
 
-    fn next_block(&self) -> Result<(), CwOrchError> {
+    fn next_block(&self) -> Result<(), CwEnvError> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
     }
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
         Ok(self.app.borrow().block_info())
-    }
-}
-
-impl<T: CwOrchExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
-    type Sender = Addr;
-
-    fn set_sender(&mut self, sender: &Addr) {
-        self.as_instance_mut().chain.sender = sender.clone();
-    }
-
-    fn call_as(&self, sender: &Self::Sender) -> Self {
-        let mut contract = self.clone();
-        contract.set_sender(sender);
-        contract
     }
 }
 

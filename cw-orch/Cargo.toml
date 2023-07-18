@@ -44,7 +44,7 @@ daemon = [
   "dep:cosmrs",
   "dep:cw-orch-daemon",
 ]
-eth = ["daemon", "dep:snailquote"]
+eth = ["daemon"]
 osmosis-test-tube = ["dep:osmosis-test-tube"]
 
 [dependencies]
@@ -53,17 +53,14 @@ cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", versio
 cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
 
 cosmwasm-std = { workspace = true }
-cw-utils = { workspace = true }
 cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 schemars = "0.8.10"
-log = "0.4.14"
-serde_json = "1.0.79"
-thiserror = { version = "1.0.21" }
+log = { workspace = true }
+thiserror = { workspace = true }
 
 # Daemon deps
-sha256 = { version = "1.1.1" }
 cw-orch-daemon = { path = "../cw-orch-daemon", optional = true }
 ibc-chain-registry = { version = "0.24.1", optional = true }
 ibc-relayer-types = { version = "0.24.1", optional = true }
@@ -77,21 +74,19 @@ cosmrs = { version = "0.14.0", features = [
 # Live mock deps
 tonic = { version = "0.9.2", optional = true, features = ["tls", "tls-roots"] }
 
-# Ethereum deps
-snailquote = { version = "0.3.1", optional = true }
-
 # Test Tube env deps
 osmosis-test-tube = { version = "16.0.0", optional = true }
+
+# Env deps
+cw-orch-environment = { workspace = true }
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }
 uid = "0.1.7"
 env_logger = "0.10.0"
-cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
-cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cosmwasm-schema = "1.2"
 tokio-test = "0.4.2"
-speculoos = "0.11.0"
+speculoos = { workspace = true }
 ctor = "0.2.0"
 duct = "0.13"
 counter-contract = { path = "../contracts/counter", features = ["interface"] }
@@ -103,7 +98,9 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
 ] }
 serial_test = "2.0.0"
 ibc-relayer-types = { version = "0.24.1" }
-
+serde_json = { workspace = true }
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }
 ethers-core = { version = "2.0.7" }
+cw20-base = { workspace = true }
+cw20 = { workspace = true }

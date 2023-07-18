@@ -1,9 +1,14 @@
 //! Introduces the Deploy trait only
-use crate::prelude::*;
 use cosmwasm_std::Addr;
 use serde_json::from_reader;
 use serde_json::Value;
 use std::fs::File;
+
+use crate::environment::CwEnv;
+use crate::environment::StateInterface;
+use crate::CwEnvError;
+
+use super::interface_traits::ContractInstance;
 
 /// Indicates the ability to deploy an application to a mock chain.
 ///
@@ -53,7 +58,7 @@ use std::fs::File;
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: CwEnv>: Sized {
     /// Error type returned by the deploy functions.  
-    type Error: From<CwOrchError>;
+    type Error: From<CwEnvError>;
     /// Data required to deploy the application.
     type DeployData;
     /// Stores/uploads the application to the chain.
@@ -170,7 +175,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 }
 
 /// Read a json value from a file (redundant with crate::daemon::json_file, but returns an err instead of panicking)
-pub fn read_json(filename: &String) -> anyhow::Result<Value> {
+pub(crate) fn read_json(filename: &String) -> anyhow::Result<Value> {
     let file = File::open(filename)?;
     let json: serde_json::Value = from_reader(file)?;
     Ok(json)

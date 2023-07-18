@@ -1,11 +1,10 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
+use super::interface_traits::Uploadable;
 use crate::{
-    environment::TxResponse,
-    error::CwOrchError,
-    index_response::IndexResponse,
-    prelude::{CwEnv, Uploadable},
-    state::StateInterface,
+    environment::{CwEnv, IndexResponse, StateInterface, TxResponse},
+    error::CwEnvError,
 };
+
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -52,7 +51,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     // Chain interfaces
 
     /// Upload a contract given its source
-    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrchError> {
+    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
@@ -67,7 +66,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self,
         msg: &E,
         coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, CwOrchError> {
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!("Executing {:#?} on {}", msg, self.id);
         let resp = self
             .chain
@@ -82,7 +81,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         msg: &I,
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, CwOrchError> {
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!("Instantiating {} with msg {:#?}", self.id, msg);
 
         let resp = self
@@ -110,7 +109,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
         query_msg: &Q,
-    ) -> Result<T, CwOrchError> {
+    ) -> Result<T, CwEnvError> {
         log::info!("Querying {:#?} on {}", query_msg, self.id);
         let resp = self
             .chain
@@ -125,7 +124,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self,
         migrate_msg: &M,
         new_code_id: u64,
-    ) -> Result<TxResponse<Chain>, CwOrchError> {
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!("Migrating {:?} to code_id {}", self.id, new_code_id);
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
@@ -134,13 +133,13 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 
     // State interfaces
     /// Returns state address for contract
-    pub fn address(&self) -> Result<Addr, CwOrchError> {
+    pub fn address(&self) -> Result<Addr, CwEnvError> {
         let state_address = self.chain.state().get_address(&self.id);
         // If the state address is not present, we default to the default address or an error
         state_address.or(self
             .default_address
             .clone()
-            .ok_or(CwOrchError::AddrNotInStore(self.id.clone())))
+            .ok_or(CwEnvError::AddrNotInStore(self.id.clone())))
     }
 
     /// Sets state address for contract
@@ -154,12 +153,12 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     }
 
     /// Returns state code_id for contract
-    pub fn code_id(&self) -> Result<u64, CwOrchError> {
+    pub fn code_id(&self) -> Result<u64, CwEnvError> {
         let state_code_id = self.chain.state().get_code_id(&self.id);
         // If the code_ids is not present, we default to the default code_id or an error
         state_code_id.or(self
             .default_code_id
-            .ok_or(CwOrchError::CodeIdNotInStore(self.id.clone())))
+            .ok_or(CwEnvError::CodeIdNotInStore(self.id.clone())))
     }
 
     /// Sets state code_id for contract
