@@ -1,5 +1,5 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/AbstractSDK/assets/mainline/logo.svg")]
-#![doc = include_str ! ("../README.md")]
+#![doc = include_str ! (concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 #![deny(missing_docs)]
 
 // macros
@@ -26,6 +26,8 @@ mod error;
 mod index_response;
 mod interface_traits;
 pub mod mock;
+#[cfg(feature = "osmosis-test-tube")]
+pub mod osmosis_test_tube;
 mod paths;
 
 pub mod state;

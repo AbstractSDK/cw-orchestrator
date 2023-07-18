@@ -31,4 +31,4 @@ counter-contract = { path = ".", features = ["interface"] }
 # Deps for deployment
 dotenv = { version = "0.15.0" }
 env_logger = { version = "0.10.0" }
-cw-orch = { path = "../../cw-orch", features = ["daemon"] }
+cw-orch = { path = "../../cw-orch", features = ["daemon", "osmosis-test-tube"] }

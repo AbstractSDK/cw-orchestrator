@@ -11,6 +11,9 @@ pub enum CwOrchError {
     #[cfg(feature = "daemon")]
     #[error(transparent)]
     DaemonError(#[from] DaemonError),
+    #[cfg(feature = "osmosis-test-tube")]
+    #[error(transparent)]
+    TestTubeError(#[from] osmosis_test_tube::RunnerError),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
     #[error(transparent)]
@@ -33,6 +36,16 @@ impl CwOrchError {
     pub fn root(&self) -> &dyn std::error::Error {
         match self {
             CwOrchError::AnyError(e) => e.root_cause(),
+            _ => panic!("Unexpected error type"),
+        }
+    }
+
+    pub fn downcast<E>(self) -> anyhow::Result<E>
+    where
+        E: std::fmt::Display + std::fmt::Debug + Send + Sync + 'static,
+    {
+        match self {
+            CwOrchError::AnyError(e) => e.downcast(),
             _ => panic!("Unexpected error type"),
         }
     }
