@@ -10,7 +10,7 @@ use tonic::transport::Channel;
 
 use super::DaemonQuerier;
 
-const MAX_TX_QUERY_RETRIES: usize = 10;
+const MAX_TX_QUERY_RETRIES: usize = 20;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -115,7 +115,7 @@ impl Node {
             None => average_block_time,
         };
 
-        Ok(average_block_time)
+        Ok(std::cmp::max(average_block_time,1))
     }
 
     /// Returns latests validator set
