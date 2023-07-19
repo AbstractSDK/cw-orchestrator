@@ -1,7 +1,8 @@
 use crate::contract::WasmPath;
-use crate::prelude::{CallAs, ContractInstance, CwOrchExecute, Uploadable};
+use crate::prelude::Uploadable;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
+use cw_orch_mock::RcState;
 use osmosis_test_tube::{
     cosmrs::proto::cosmos::bank::v1beta1::MsgSend, Account, Bank, Gamm, Module, SigningAccount,
     Wasm,
@@ -23,7 +24,7 @@ use crate::{
     error::CwOrchError,
 };
 
-use crate::mock::MockState;
+use crate::MockState;
 
 pub use osmosis_test_tube;
 
@@ -54,7 +55,7 @@ pub struct OsmosisTestTube<S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Rc<RefCell<SigningAccount>>,
     /// Inner mutable state storage for contract addresses and code-ids
-    pub state: Rc<RefCell<S>>,
+    pub state: RcState<S>,
     /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
@@ -181,17 +182,17 @@ impl<S: StateInterface> OsmosisTestTube<S> {
 
         Self {
             sender: Rc::new(RefCell::new(sender)),
-            state,
+            state: RcState(state),
             app,
         }
     }
 }
 
 impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
-    type Out = Rc<RefCell<S>>;
+    type Out = RcState<S>;
 
     fn state(&self) -> Self::Out {
-        Rc::clone(&self.state)
+        self.state.clone()
     }
 }
 
@@ -200,9 +201,14 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
+    type Sender = Rc<RefCell<SigningAccount>>;
 
     fn sender(&self) -> Addr {
         Addr::unchecked(self.sender.borrow().address())
+    }
+
+    fn set_sender(&mut self, sender: Self::Sender) {
+        self.sender = sender;
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
@@ -301,21 +307,5 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
                 self.app.borrow().get_block_time_nanos().try_into().unwrap(),
             ),
         })
-    }
-}
-
-impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone>
-    CallAs<OsmosisTestTube> for T
-{
-    type Sender = Rc<RefCell<SigningAccount>>;
-
-    fn set_sender(&mut self, sender: &Rc<RefCell<SigningAccount>>) {
-        self.as_instance_mut().chain.sender = sender.clone();
-    }
-
-    fn call_as(&self, sender: &Self::Sender) -> Self {
-        let mut contract = self.clone();
-        contract.set_sender(sender);
-        contract
     }
 }
