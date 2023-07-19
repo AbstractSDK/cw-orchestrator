@@ -13,7 +13,7 @@ mod wasm_path {
     ///
     /// # Example
     /// ```no_run
-    /// use cw_orch::prelude::WasmPath;
+    /// use cw_orch_environment::contract::WasmPath;
     ///
     /// // Create a new WasmPath from a path to a WASM file.
     /// let wasm_path: WasmPath = WasmPath::new("path/to/contract.wasm").unwrap();
@@ -96,7 +96,7 @@ mod artifacts_dir {
     ///
     /// # Example
     /// ```no_run
-    /// use cw_orch::prelude::{ArtifactsDir, WasmPath};
+    /// use cw_orch_environment::contract::{ArtifactsDir, WasmPath};
     /// // Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
     /// let artifact_dir = ArtifactsDir::env();
     ///

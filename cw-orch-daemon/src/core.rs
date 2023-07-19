@@ -34,7 +34,7 @@ use tonic::transport::Channel;
     ## Usage
     ```rust,no_run
     # tokio_test::block_on(async {
-    use cw_orch::prelude::{DaemonAsync, networks};
+    use cw_orch_daemon::{DaemonAsync, networks};
 
     let daemon: DaemonAsync = DaemonAsync::builder()
         .chain(networks::JUNO_1)

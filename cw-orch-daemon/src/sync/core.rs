@@ -24,13 +24,12 @@ use tonic::transport::Channel;
     ## Usage
 
     ```rust,no_run
-    use cw_orch::prelude::Daemon;
-    use cw_orch::networks::JUNO_1;
+    use cw_orch_daemon::{Daemon, networks};
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();
     let daemon: Daemon = Daemon::builder()
-        .chain(JUNO_1)
+        .chain(networks::JUNO_1)
         .handle(rt.handle())
         .build()
         .unwrap();
