@@ -9,7 +9,7 @@
 //!
 //! ```no_run
 //! // require the querier you want to use, in this case Node
-//! use cw_orch::prelude::{queriers::Node, DaemonAsync, networks, queriers::DaemonQuerier};
+//! use cw_orch_daemon::{queriers::Node, DaemonAsync, networks, queriers::DaemonQuerier};
 //! # tokio_test::block_on(async {
 //! // call the builder and configure it as you need
 //! let daemon = DaemonAsync::builder()

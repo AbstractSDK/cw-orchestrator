@@ -25,7 +25,7 @@ pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 ///
 /// ## Example
 /// ```rust,no_run
-/// use cw_orch::prelude::networks::{parse_network, ChainInfo};
+/// use cw_orch_daemon::networks::{parse_network, ChainInfo};
 /// let juno_mainnet: ChainInfo = parse_network("juno-1");
 /// ```
 /// ---

@@ -8,7 +8,7 @@ use super::{super::error::DaemonError, core::Daemon};
 /// Create [`Daemon`] through [`DaemonBuilder`]
 /// ## Example
 /// ```no_run
-///     use cw_orch::prelude::{DaemonBuilder, networks};
+///     use cw_orch_daemon::{networks, DaemonBuilder};
 ///
 ///     let Daemon = DaemonBuilder::default()
 ///         .chain(networks::LOCAL_JUNO)
@@ -44,7 +44,7 @@ impl DaemonBuilder {
     ///
     /// ## Example
     /// ```no_run
-    /// use cw_orch::prelude::Daemon;
+    /// use cw_orch_daemon::Daemon;
     /// use tokio::runtime::Runtime;
     /// let rt = Runtime::new().unwrap();
     /// let Daemon = Daemon::builder()
