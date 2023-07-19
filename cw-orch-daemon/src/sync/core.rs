@@ -228,11 +228,3 @@ impl TxHandler for Daemon {
         })
     }
 }
-
-// impl<T: CwOrchExecute<Daemon> + ContractInstance<Daemon> + Clone> CallAs<Daemon> for T {
-//     fn call_as(&self, sender: &Self::Sender) -> Self {
-//         let mut contract = self.clone();
-//         contract.set_sender(sender);
-//         contract
-//     }
-// }
