@@ -14,7 +14,7 @@ pub mod prelude;
 
 pub use cw_orch_environment::contract;
 pub use cw_orch_environment::environment;
-pub use cw_orch_environment::Mock;
+pub use cw_orch_mock::{Mock, MockState};
 
 /// Re-export tokio, the async runtime when using daemons.
 #[cfg(feature = "daemon")]
@@ -23,8 +23,8 @@ pub extern crate tokio;
 pub mod daemon;
 
 mod error;
-// #[cfg(feature = "osmosis-test-tube")]
-// pub mod osmosis_test_tube;
+#[cfg(feature = "osmosis-test-tube")]
+pub mod osmosis_test_tube;
 
 #[cfg(feature = "daemon")]
 pub mod live_mock;

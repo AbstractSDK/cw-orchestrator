@@ -1,8 +1,8 @@
-use crate::{
-    environment::{DeployDetails, StateInterface},
-    error::CwEnvError,
-};
 use cosmwasm_std::{testing::mock_env, Addr};
+use cw_orch_environment::{
+    environment::{DeployDetails, StateInterface},
+    CwEnvError,
+};
 
 use std::collections::HashMap;
 
@@ -78,8 +78,8 @@ impl StateInterface for MockState {
 
 #[cfg(test)]
 mod test {
-    use crate::{environment::StateInterface, error::CwEnvError};
     use cosmwasm_std::Addr;
+    use cw_orch_environment::{environment::StateInterface, CwEnvError};
     use speculoos::prelude::*;
 
     use super::MockState;
