@@ -117,6 +117,6 @@ impl DaemonError {
 
 impl From<DaemonError> for CwEnvError {
     fn from(val: DaemonError) -> Self {
-        CwEnvError::StdErr(val.to_string())
+        CwEnvError::AnyError(val.into())
     }
 }
