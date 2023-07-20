@@ -60,6 +60,12 @@ pub struct Mock<S: StateInterface = MockState> {
 #[derive(Clone, Debug)]
 pub struct RcState<S: StateInterface>(pub Rc<RefCell<S>>);
 
+impl<S: StateInterface> RcState<S> {
+    pub fn new(state: S) -> Self {
+        RcState(Rc::new(RefCell::new(state)))
+    }
+}
+
 impl<S: StateInterface> Mock<S> {
     /// Set the bank balance of an address.
     pub fn set_balance(
@@ -484,7 +490,7 @@ mod test {
         let contract_id = "my_contract";
         let code_id = 1u64;
         let address = &Addr::unchecked(BALANCE_ADDR);
-        let mut mock_state = RcState(Rc::new(RefCell::new(MockState::new())));
+        let mut mock_state = RcState::new(MockState::new());
 
         mock_state.set_address(contract_id, address);
         asserting!("that address has been set")
