@@ -33,6 +33,7 @@ pub fn main() {
     let counter = CounterContract::new("local:counter", daemon.clone());
 
     let upload_res = counter.upload();
+    println!("upload_res: {upload_res:?}");
     assert!(upload_res.is_ok());
 
     let init_res = counter.instantiate(
