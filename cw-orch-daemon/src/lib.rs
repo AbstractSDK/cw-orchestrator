@@ -3,7 +3,6 @@
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
 
 pub mod builder;
-pub mod chain_info;
 pub mod channel;
 pub mod core;
 pub mod error;
@@ -16,15 +15,14 @@ pub mod sync;
 pub mod tx_resp;
 // expose these as mods as they can grow
 pub mod keys;
-pub mod networks;
 pub mod queriers;
 mod traits;
 pub mod tx_builder;
 
 pub use self::{
-    builder::*, chain_info::*, channel::*, core::*, error::*, state::*, sync::*, traits::*,
-    tx_resp::*,
+    builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
 };
+pub use cw_orch_environment::networks;
 pub use sender::Wallet;
 pub use tx_builder::TxBuilder;
 

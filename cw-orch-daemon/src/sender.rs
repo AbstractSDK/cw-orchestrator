@@ -1,7 +1,6 @@
 use crate::proto::injective::ETHEREUM_COIN_TYPE;
 
 use super::{
-    chain_info::ChainKind,
     cosmos_modules::{self, auth::BaseAccount},
     error::DaemonError,
     queriers::{DaemonQuerier, Node},
@@ -11,6 +10,7 @@ use super::{
 };
 use crate::proto::injective::InjectiveEthAccount;
 
+#[cfg(feature = "eth")]
 use crate::proto::injective::InjectiveSigner;
 
 use crate::{core::parse_cw_coins, keys::private::PrivateKey};
@@ -23,6 +23,7 @@ use cosmrs::{
     AccountId,
 };
 use cosmwasm_std::Addr;
+use cw_orch_environment::networks::ChainKind;
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
@@ -201,6 +202,12 @@ impl Sender<All> {
 
     pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
         let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(not(feature = "eth"))]
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+            #[cfg(feature = "eth")]
             self.private_key.sign_injective(sign_doc)?
         } else {
             sign_doc.sign(&self.cosmos_private_key())?

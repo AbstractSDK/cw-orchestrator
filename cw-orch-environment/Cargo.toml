@@ -38,6 +38,8 @@ sha256 = { workspace = true }
 anyhow = { workspace = true }
 serde_json = { workspace = true }
 
+ibc-chain-registry = { version = "0.24.1" }
+
 # Test Tube env deps
 osmosis-test-tube = { workspace = true, optional = true }
 

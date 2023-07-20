@@ -45,7 +45,6 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    networks,
     queriers,
     // sync helpers
     ConditionalMigrate,
@@ -56,6 +55,8 @@ pub use crate::daemon::{
     // expose the sync variants
     DaemonBuilder,
 };
+
+pub use cw_orch_environment::networks;
 
 /// Re-export trait and data required to fetch daemon data from chain-registry
 #[cfg(feature = "daemon")]

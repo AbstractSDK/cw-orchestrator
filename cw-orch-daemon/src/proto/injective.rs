@@ -4,7 +4,10 @@ use crate::DaemonError;
 use cosmrs::tx::SignDoc;
 use cosmrs::{proto::traits::TypeUrl, tx::Raw};
 
+#[cfg(feature = "eth")]
 use crate::keys::private::PrivateKey;
+
+#[cfg(feature = "eth")]
 use ::{cosmrs::proto, ethers_core::utils::keccak256};
 
 pub const ETHEREUM_COIN_TYPE: u32 = 60;
@@ -31,6 +34,7 @@ pub trait InjectiveSigner {
     fn sign_injective(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError>;
 }
 
+#[cfg(feature = "eth")]
 impl InjectiveSigner for PrivateKey {
     fn sign_injective(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
         let sign_doc_bytes = sign_doc.clone().into_bytes()?;
