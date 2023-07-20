@@ -44,7 +44,7 @@ daemon = [
   "dep:cosmrs",
   "dep:cw-orch-daemon",
 ]
-eth = ["daemon"]
+eth = ["daemon", "cw-orch-environment/eth"]
 osmosis-test-tube = [
   "dep:osmosis-test-tube",
   "cw-orch-environment/osmosis-test-tube",
