@@ -20,8 +20,8 @@ pub enum CwEnvError {
     SerdeJson(#[from] ::serde_json::Error),
     #[error("File must be a wasm file")]
     NotWasm,
-    #[error("Could not find wasm file with name {0} in artifacts dir")]
-    WasmNotFound(String),
+    #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]
+    WasmNotFound(String, String),
     #[error("calling contract with unimplemented action")]
     NotImplemented,
     #[error(transparent)]
