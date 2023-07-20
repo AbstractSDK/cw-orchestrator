@@ -1,6 +1,7 @@
 use super::public::PublicKey;
 use crate::proto::injective::{InjectivePubKey, ETHEREUM_COIN_TYPE};
 use crate::DaemonError;
+#[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;
 use base64::Engine;
 use bitcoin::{
@@ -91,10 +92,15 @@ impl PrivateKey {
         secp: &Secp256k1<C>,
     ) -> PublicKey {
         if self.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(feature = "eth")]
             return PublicKey::from_ethers_address_bytes(
                 ethers_core::utils::secret_key_to_address(
                     &SigningKey::from_slice(self.raw_key().as_slice()).unwrap(),
                 ),
+            );
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
             );
         }
 
@@ -127,7 +133,12 @@ impl PrivateKey {
         secp: &Secp256k1<C>,
     ) -> Option<SignerPublicKey> {
         if self.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(feature = "eth")]
             return Some(self.get_injective_public_key(secp));
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
         }
 
         Some(
