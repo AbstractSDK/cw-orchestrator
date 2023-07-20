@@ -155,7 +155,12 @@ mod artifacts_dir {
                         None
                     }
                 })
-                .ok_or_else(|| CwEnvError::WasmNotFound(name.to_owned()))?;
+                .ok_or_else(|| {
+                    CwEnvError::WasmNotFound(
+                        name.to_owned(),
+                        self.path().to_str().unwrap_or_default().to_owned(),
+                    )
+                })?;
             WasmPath::new(self.path().join(path_str))
         }
     }
