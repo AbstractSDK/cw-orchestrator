@@ -1,4 +1,4 @@
-use crate::RcDaemonState;
+use crate::{queriers::CosmWasm, RcDaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder,
@@ -15,7 +15,10 @@ use cosmrs::{
     AccountId, Denom,
 };
 use cosmwasm_std::{Addr, Coin};
-use cw_orch_environment::environment::ChainState;
+use cw_orch_environment::{
+    contract::interface_traits::Uploadable,
+    environment::{ChainState, IndexResponse},
+};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
@@ -216,6 +219,37 @@ impl DaemonAsync {
             time,
             chain_id: block.header.chain_id.to_string(),
         })
+    }
+
+    /// Upload a contract to the chain.
+    pub async fn upload(
+        &self,
+        uploadable: &impl Uploadable,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let sender = &self.sender;
+        let wasm_path = uploadable.wasm();
+
+        log::debug!("Uploading file at {:?}", wasm_path);
+
+        let file_contents = std::fs::read(wasm_path.path())?;
+        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+            sender: sender.pub_addr()?,
+            wasm_byte_code: file_contents,
+            instantiate_permission: None,
+        };
+
+        let result = sender.commit_tx(vec![store_msg], None).await?;
+
+        log::info!("Uploaded: {:?}", result.txhash);
+
+        let code_id = result.uploaded_code_id().unwrap();
+
+        // wait for the node to return the contract information for this upload
+        let wasm = CosmWasm::new(self.channel());
+        while wasm.code(code_id).await.is_err() {
+            self.next_block().await?;
+        }
+        Ok(result)
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
