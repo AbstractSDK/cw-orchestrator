@@ -1,4 +1,4 @@
-use crate::RcDaemon;
+use crate::RcDaemonState;
 
 use super::{
     builder::DaemonAsyncBuilder,
@@ -55,7 +55,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: RcDaemon,
+    pub state: RcDaemonState,
 }
 
 impl DaemonAsync {
@@ -77,7 +77,7 @@ impl DaemonAsync {
 }
 
 impl ChainState for DaemonAsync {
-    type Out = RcDaemon;
+    type Out = RcDaemonState;
 
     fn state(&self) -> Self::Out {
         self.state.clone()

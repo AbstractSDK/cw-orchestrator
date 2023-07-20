@@ -1,4 +1,4 @@
-use crate::{DaemonAsync, DaemonBuilder, RcDaemon};
+use crate::{DaemonAsync, DaemonBuilder, RcDaemonState};
 use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
@@ -71,7 +71,7 @@ impl DaemonAsyncBuilder {
             Sender::new(&state)?
         };
         let daemon = DaemonAsync {
-            state: RcDaemon(state),
+            state: RcDaemonState(state),
             sender: Rc::new(sender),
         };
         Ok(daemon)
