@@ -44,7 +44,7 @@ use tonic::transport::Channel;
     ```
     ## Environment Execution
 
-    The DaemonAsync implements [`TxHandler`](crate::prelude::TxHandler) which allows you to perform transactions on the chain.
+    The DaemonAsync implements async methods of [`TxHandler`](cw_orch_environment::environment::TxHandler) which allows you to perform transactions on the chain.
 
     ## Querying
 
