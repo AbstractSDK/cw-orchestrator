@@ -11,10 +11,10 @@ use crate::{
 };
 use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
-use flate2::Compression;
+use flate2::{write, Compression};
 use serde::{de::DeserializeOwned, Serialize};
 
-use std::{fmt::Debug, rc::Rc, time::Duration};
+use std::{fmt::Debug, io::Write, rc::Rc, time::Duration};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -100,11 +100,12 @@ impl TxHandler for Daemon {
         log::debug!("Uploading file at {:?}", wasm_path);
 
         let file_contents = std::fs::read(wasm_path.path())?;
-        let encoded =
-            flate2::write::GzEncoder::new(file_contents, Compression::default()).finish()?;
+        let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
+        e.write_all(&file_contents)?;
+        let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
             sender: sender.pub_addr()?,
-            wasm_byte_code: encoded,
+            wasm_byte_code,
             instantiate_permission: None,
         };
         let result = self
