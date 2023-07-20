@@ -3,15 +3,13 @@ use crate::prelude::Uploadable;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use cw_orch_mock::RcState;
-use osmosis_test_tube::{
-    cosmrs::proto::cosmos::bank::v1beta1::MsgSend, Account, Bank, Gamm, Module, SigningAccount,
-    Wasm,
+use osmosis_test_tube::osmosis_std::cosmwasm_to_proto_coins;
+use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
+    MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
 };
+use osmosis_test_tube::{Account, Bank, Gamm, Module, SigningAccount, Wasm};
 use std::str::FromStr;
 
-use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::{
-    QueryAllBalancesRequest, QueryBalanceRequest,
-};
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
@@ -95,15 +93,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             MsgSend {
                 from_address: self.sender.borrow().address(),
                 to_address: to,
-                amount: amount
-                    .into_iter()
-                    .map(
-                        |c| osmosis_test_tube::cosmrs::proto::cosmos::base::v1beta1::Coin {
-                            amount: c.amount.to_string(),
-                            denom: c.denom,
-                        },
-                    )
-                    .collect(),
+                amount: cosmwasm_to_proto_coins(amount),
             },
             &self.sender.borrow(),
         )?;
