@@ -3,7 +3,7 @@ use std::{fmt::Debug, time::Duration};
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
     queriers::{CosmWasm, DaemonQuerier, Node},
-    CosmTxResponse, DaemonBuilder, DaemonError, RcDaemon,
+    CosmTxResponse, DaemonBuilder, DaemonError, RcDaemonState,
 };
 
 use cosmrs::tendermint::Time;
@@ -73,7 +73,7 @@ impl Daemon {
 }
 
 impl ChainState for Daemon {
-    type Out = RcDaemon;
+    type Out = RcDaemonState;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()

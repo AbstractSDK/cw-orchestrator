@@ -27,7 +27,7 @@ pub struct DaemonState {
 }
 
 #[derive(Clone, Debug)]
-pub struct RcDaemon(pub Rc<DaemonState>);
+pub struct RcDaemonState(pub Rc<DaemonState>);
 
 impl DaemonState {
     /// Creates a new state from the given chain data and deployment id.
@@ -126,7 +126,7 @@ impl DaemonState {
     }
 }
 
-impl StateInterface for RcDaemon {
+impl StateInterface for RcDaemonState {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         let value = self
