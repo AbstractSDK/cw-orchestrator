@@ -4,5 +4,5 @@
 mod core;
 mod state;
 
-pub use self::core::{Mock, RcState};
+pub use self::core::Mock;
 pub use state::MockState;
