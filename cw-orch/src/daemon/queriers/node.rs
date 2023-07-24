@@ -115,7 +115,7 @@ impl Node {
             None => average_block_time,
         };
 
-        Ok(std::cmp::max(average_block_time,1))
+        Ok(std::cmp::max(average_block_time, 1))
     }
 
     /// Returns latests validator set
