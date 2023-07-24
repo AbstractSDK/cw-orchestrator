@@ -16,6 +16,11 @@ pub use cw_orch_environment::contract;
 pub use cw_orch_environment::environment;
 pub use cw_orch_mock::{Mock, MockState};
 
+#[deprecated(since = "0.13.4", note = "Deploy trait moved to contract namespace")]
+/// Used to introduce Deploy trait.
+/// Deprecated since 0.13.4.
+pub mod deploy {}
+
 /// Re-export tokio, the async runtime when using daemons.
 #[cfg(feature = "daemon")]
 pub extern crate tokio;
