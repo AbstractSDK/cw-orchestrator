@@ -2,7 +2,6 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use cw_orch_mock::RcState;
 use osmosis_test_tube::osmosis_std::cosmwasm_to_proto_coins;
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
@@ -53,7 +52,7 @@ pub struct OsmosisTestTube<S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Rc<RefCell<SigningAccount>>,
     /// Inner mutable state storage for contract addresses and code-ids
-    pub state: RcState<S>,
+    pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
@@ -172,14 +171,14 @@ impl<S: StateInterface> OsmosisTestTube<S> {
 
         Self {
             sender: Rc::new(RefCell::new(sender)),
-            state: RcState(state),
+            state,
             app,
         }
     }
 }
 
 impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
-    type Out = RcState<S>;
+    type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
         self.state.clone()

@@ -8,7 +8,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use cw_orch_environment::{
     contract::interface_traits::Uploadable,
     environment::TxHandler,
-    environment::{ChainState, DeployDetails, IndexResponse, StateInterface},
+    environment::{ChainState, IndexResponse, StateInterface},
     CwEnvError,
 };
 
@@ -52,18 +52,9 @@ pub struct Mock<S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Addr,
     /// Inner mutable state storage for contract addresses and code-ids
-    pub state: RcState<S>,
+    pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<BasicApp<Empty, Empty>>>,
-}
-
-#[derive(Clone, Debug)]
-pub struct RcState<S: StateInterface>(pub Rc<RefCell<S>>);
-
-impl<S: StateInterface> RcState<S> {
-    pub fn new(state: S) -> Self {
-        RcState(Rc::new(RefCell::new(state)))
-    }
 }
 
 impl<S: StateInterface> Mock<S> {
@@ -150,7 +141,7 @@ impl<S: StateInterface> Mock<S> {
 
         Self {
             sender: sender.clone(),
-            state: RcState(state),
+            state,
             app,
         }
     }
@@ -171,46 +162,16 @@ impl<S: StateInterface> Mock<S> {
             ..Default::default()
         };
         let code_id = IndexResponse::uploaded_code_id(&resp)?;
-        self.state.0.borrow_mut().set_code_id(contract_id, code_id);
+        self.state.borrow_mut().set_code_id(contract_id, code_id);
         Ok(resp)
     }
 }
 
 impl<S: StateInterface> ChainState for Mock<S> {
-    type Out = RcState<S>;
+    type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
         self.state.clone()
-    }
-}
-
-impl<S: StateInterface> StateInterface for RcState<S> {
-    fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
-        self.0.borrow().get_address(contract_id)
-    }
-
-    fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.0.borrow_mut().set_address(contract_id, address)
-    }
-
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
-        self.0.borrow().get_code_id(contract_id)
-    }
-
-    fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        self.0.borrow_mut().set_code_id(contract_id, code_id)
-    }
-
-    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwEnvError> {
-        self.0.borrow().get_all_addresses()
-    }
-
-    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
-        self.0.borrow().get_all_code_ids()
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        self.0.borrow().deploy_details()
     }
 }
 
@@ -490,7 +451,7 @@ mod test {
         let contract_id = "my_contract";
         let code_id = 1u64;
         let address = &Addr::unchecked(BALANCE_ADDR);
-        let mut mock_state = RcState::new(MockState::new());
+        let mut mock_state = Rc::new(RefCell::new(MockState::new()));
 
         mock_state.set_address(contract_id, address);
         asserting!("that address has been set")
