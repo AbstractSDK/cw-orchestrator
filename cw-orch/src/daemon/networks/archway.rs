@@ -33,7 +33,6 @@ pub const CONSTANTINE_3: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-
 /// <https://docs.archway.io/resources/networks>
 pub const ARCHWAY_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
