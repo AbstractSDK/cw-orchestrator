@@ -21,6 +21,11 @@ pub use cw_orch_mock::{Mock, MockState};
 /// Deprecated since 0.13.4.
 pub mod deploy {}
 
+#[deprecated(since = "0.13.4", note = "State trait moved to environment namespace")]
+/// Used to introduce state traits.
+/// Deprecated since 0.13.4.
+pub mod state {}
+
 /// Re-export tokio, the async runtime when using daemons.
 #[cfg(feature = "daemon")]
 pub extern crate tokio;
