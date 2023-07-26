@@ -39,7 +39,6 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         PHOENIX_1,
         LOCAL_TERRA,
         INJECTIVE_888,
-        CONSTANTINE_1,
         CONSTANTINE_3,
         ARCHWAY_1,
         PION_1,
