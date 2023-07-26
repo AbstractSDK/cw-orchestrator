@@ -2,7 +2,7 @@ use cosmwasm_std::Addr;
 
 use counter_contract::{
     contract::CounterContract,
-    msg::{ExecuteMsg, ExecuteMsgFns, GetCountResponse, InstantiateMsg, QueryMsg, QueryMsgFns},
+    msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
 };
 use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Mock};
 
