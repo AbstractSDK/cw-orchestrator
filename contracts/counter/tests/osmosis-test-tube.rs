@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 // ANCHOR: all
 use cosmwasm_std::coins;
 use counter_contract::{
@@ -58,7 +60,7 @@ fn count() {
     // Increment the count of the contract
     contract
         // Set the caller to user
-        .call_as(&account)
+        .call_as(&Rc::new(account))
         // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
         .increment()
         .unwrap();
