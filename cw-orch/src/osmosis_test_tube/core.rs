@@ -57,7 +57,7 @@ pub use osmosis_test_tube;
 /// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = tube.query_balance(&account.borrow().address(), "uatom").unwrap();
+/// let balance: Uint128 = tube.query_balance(&account.address(), "uatom").unwrap();
 /// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
