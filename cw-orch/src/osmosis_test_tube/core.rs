@@ -75,8 +75,12 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     pub fn init_account(
         &self,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<SigningAccount, CwOrchError> {
-        self.app.borrow().init_account(&amount).map_err(Into::into)
+    ) -> Result<Rc<SigningAccount>, CwOrchError> {
+        self.app
+            .borrow()
+            .init_account(&amount)
+            .map_err(Into::into)
+            .map(Rc::new)
     }
 
     /// Creates accounts and sets their balance
@@ -84,11 +88,12 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &self,
         amount: Vec<cosmwasm_std::Coin>,
         account_n: u64,
-    ) -> Result<Vec<SigningAccount>, CwOrchError> {
+    ) -> Result<Vec<Rc<SigningAccount>>, CwOrchError> {
         self.app
             .borrow()
             .init_accounts(&amount, account_n)
             .map_err(Into::into)
+            .map(|s| s.into_iter().map(Rc::new).collect())
     }
 
     /// Creates accounts and sets their balance
