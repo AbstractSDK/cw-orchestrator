@@ -3,6 +3,7 @@ use crate::prelude::Uploadable;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use osmosis_test_tube::osmosis_std::cosmwasm_to_proto_coins;
+
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
 };
