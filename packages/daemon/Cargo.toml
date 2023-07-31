@@ -24,8 +24,8 @@ node-tests = []
 eth = ["dep:ethers-signers", "dep:ethers-core"]
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.13.3" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
+cw-orch-contract-derive = { workspace = true, version = "0.13.3" }
+cw-orch-fns-derive = { workspace = true, version = "0.13.3" }
 cw-orch-environment = { workspace = true }
 
 cosmwasm-std = { workspace = true }
@@ -75,11 +75,11 @@ tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
-counter-contract = { path = "../contracts/counter", features = ["interface"] }
-mock-contract = { path = "../contracts/mock_contract", features = [
+counter-contract = { path = "../../contracts/counter", features = ["interface"] }
+mock-contract = { path = "../../contracts/mock_contract", features = [
   "interface",
 ] }
-mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
+mock-contract-u64 = { path = "../../contracts/mock_contract_u64", features = [
   "interface",
 ] }
 serial_test = "2.0.0"
