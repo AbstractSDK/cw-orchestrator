@@ -17,7 +17,7 @@ const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
 const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
 
 /// The response from a transaction performed on a blockchain.
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct CosmTxResponse {
     /// Height of the block in which the transaction was included.
     pub height: u64,

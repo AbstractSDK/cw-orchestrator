@@ -22,6 +22,7 @@ use cw_orch_environment::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
+use tonic::transport::Channel;
 use std::{
     fmt::Debug,
     str::{from_utf8, FromStr},
@@ -88,7 +89,7 @@ impl ChainState for DaemonAsync {
 
 impl ChannelAccess for DaemonAsync {
     fn channel(&self) -> tonic::transport::Channel {
-        self.state().grpc_channel.clone()
+        self.state.0.grpc_channel.clone()
     }
 }
 

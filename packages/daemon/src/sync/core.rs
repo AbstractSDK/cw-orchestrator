@@ -5,7 +5,7 @@ use super::super::{sender::Wallet, DaemonAsync};
 
 use crate::{
     queriers::{DaemonQuerier, Node},
-    CosmTxResponse, DaemonBuilder, DaemonError, RcDaemonState,
+    CosmTxResponse, DaemonBuilder, DaemonError, RcDaemonState, ChannelAccess,
 };
 
 use cosmrs::tendermint::Time;

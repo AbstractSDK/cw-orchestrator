@@ -80,8 +80,8 @@ thiserror = { workspace = true }
 
 # Daemon deps
 cw-orch-daemon = { workspace = true, optional = true }
-ibc-chain-registry = { version = "0.24.1", optional = true }
-ibc-relayer-types = { version = "0.24.1", optional = true }
+ibc-chain-registry = { workspace=true, optional = true }
+ibc-relayer-types = { workspace=true, optional = true }
 tokio = { version = "1.4", features = ["full"], optional = true }
 cosmrs = { version = "0.14.0", features = [
   "dev",
@@ -121,7 +121,7 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
 ] }
 
 serial_test = "2.0.0"
-ibc-relayer-types = { version = "0.24.1" }
+ibc-relayer-types = { workspace=true }
 serde_json = { workspace = true }
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }

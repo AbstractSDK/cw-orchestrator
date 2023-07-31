@@ -14,8 +14,6 @@ pub mod sender;
 pub mod state;
 pub mod sync;
 pub mod tx_resp;
-// Tracking IBC state
-mod ibc_tracker;
 // expose these as mods as they can grow
 pub mod keys;
 pub mod queriers;
@@ -23,7 +21,7 @@ mod traits;
 pub mod tx_builder;
 
 pub use self::{
-    builder::*, channel::*, chain_info::*, core::*, error::*, state::*, sync::*, traits::*, ibc_tracker::*, tx_resp::*,
+    builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
 };
 pub use cw_orch_environment::chain_info::*;
 pub use cw_orch_environment::networks;

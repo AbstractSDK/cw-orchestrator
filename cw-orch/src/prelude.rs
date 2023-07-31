@@ -16,7 +16,7 @@ pub use crate::contract::interface_traits::{
     CwOrchUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
-pub use crate::paths::from_workspace as artifacts_dir_from_workspace;
+pub use cw_orch_environment::contract::artifacts_dir_from_workspace;
 
 pub use crate::environment::StateInterface;
 
