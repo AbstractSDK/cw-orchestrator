@@ -9,7 +9,6 @@ use cosmwasm_std::Coin;
 use cosmwasm_std::Timestamp;
 use cosmwasm_std::Uint128;
 use cw_multi_test::AppResponse;
-use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::MsgSend;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
 use osmosis_test_tube::Gamm;
@@ -18,8 +17,8 @@ use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
 use std::str::FromStr;
 
-use osmosis_test_tube::cosmrs::proto::cosmos::bank::v1beta1::{
-    QueryAllBalancesRequest, QueryBalanceRequest,
+use osmosis_std::types::cosmos::bank::v1beta1::{
+    MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
 };
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
@@ -107,7 +106,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
                 amount: amount
                     .into_iter()
                     .map(
-                        |c| osmosis_test_tube::cosmrs::proto::cosmos::base::v1beta1::Coin {
+                        |c| osmosis_std::types::cosmos::base::v1beta1::Coin {
                             amount: c.amount.to_string(),
                             denom: c.denom,
                         },

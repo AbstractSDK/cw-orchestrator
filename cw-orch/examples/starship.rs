@@ -23,14 +23,15 @@
 //! ```
 //!
 //! ## What it does
-//! This script starts by creating an `Starship` object that connects with the locally running blockchain nodes. These nodes are spun up by interchaintest as a preparation for the test.
+//! This script starts by creating an `Starship` object that connects with the locally running blockchain nodes.
+//! Those blockchain nodes and the connections between them are setup using the Cosmology/Starship test environment
 //!
 //! ## Resources
 //!
 //! [Python/notebook ibc relayer](https://github.com/bear-market-labs/pybc-relayer)
 //! [Cosmwasm IBC demo repo](https://github.com/confio/cw-ibc-demo)
 //! [Hermes](https://hermes.informal.systems/)
-//! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
+//! [Starship](https://github.com/cosmology-tech/starship)
 use cw_orch::prelude::*;
 use cw_orch::starship::Starship;
 use tokio::runtime::Runtime;

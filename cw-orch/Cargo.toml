@@ -76,7 +76,7 @@ daemon = [
 # Interact with interchaintest's docker nodes
 interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
 eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
-osmosis-test-tube = ["dep:osmosis-test-tube"]
+osmosis-test-tube = ["dep:osmosis-test-tube", "dep:osmosis-std"]
 starship = ["daemon","dep:cw-orch-starship"]
 
 [dependencies]
@@ -146,6 +146,7 @@ snailquote = { version = "0.3.1", optional = true }
 
 # Test Tube env deps
 osmosis-test-tube = { version = "16.0.0", optional = true }
+osmosis-std = { version = "0.16.0", optional = true }
 
 [dev-dependencies]
 simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
