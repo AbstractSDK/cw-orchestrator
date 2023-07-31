@@ -1,11 +1,10 @@
-
 use std::{fmt::Debug, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 
 use crate::{
     queriers::{DaemonQuerier, Node},
-    CosmTxResponse, DaemonBuilder, DaemonError, RcDaemonState, ChannelAccess,
+    ChannelAccess, CosmTxResponse, DaemonBuilder, DaemonError, RcDaemonState,
 };
 
 use cosmrs::tendermint::Time;

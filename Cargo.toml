@@ -1,9 +1,5 @@
 [workspace]
-members = [
-  "cw-orch",
-  "packages/*",
-  "contracts/*",
-]
+members = ["cw-orch", "packages/*", "contracts/*"]
 version = "0.13.3"
 resolver = "2"
 

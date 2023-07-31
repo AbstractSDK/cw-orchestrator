@@ -60,14 +60,14 @@ osmosis-test-tube = [
   "dep:osmosis-test-tube",
   "cw-orch-environment/osmosis-test-tube",
 ]
-starship = ["daemon","dep:cw-orch-starship"]
+starship = ["daemon", "dep:cw-orch-starship"]
 interchain = ["daemon"]
 
 [dependencies]
 # Default deps
 cw-orch-contract-derive = { workspace = true, version = "0.13.3" }
 cw-orch-fns-derive = { workspace = true, version = "0.13.3" }
-cw-orch-starship = { workspace = true, version = "0.13.3", optional = true}
+cw-orch-starship = { workspace = true, version = "0.13.3", optional = true }
 
 cosmwasm-std = { workspace = true }
 cw-utils = { workspace = true }
@@ -80,8 +80,8 @@ thiserror = { workspace = true }
 
 # Daemon deps
 cw-orch-daemon = { workspace = true, optional = true }
-ibc-chain-registry = { workspace=true, optional = true }
-ibc-relayer-types = { workspace=true, optional = true }
+ibc-chain-registry = { workspace = true, optional = true }
+ibc-relayer-types = { workspace = true, optional = true }
 tokio = { version = "1.4", features = ["full"], optional = true }
 cosmrs = { version = "0.14.0", features = [
   "dev",
@@ -121,7 +121,7 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
 ] }
 
 serial_test = "2.0.0"
-ibc-relayer-types = { workspace=true }
+ibc-relayer-types = { workspace = true }
 serde_json = { workspace = true }
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }

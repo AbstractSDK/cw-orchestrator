@@ -38,9 +38,11 @@ pub mod daemon;
 
 mod error;
 
+/*
 #[cfg(feature = "interchain")]
 #[allow(missing_docs)] // TODO
 pub mod interchain;
+*/
 
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;

@@ -22,12 +22,12 @@ use cw_orch_environment::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
-use tonic::transport::Channel;
 use std::{
     fmt::Debug,
     str::{from_utf8, FromStr},
     time::Duration,
 };
+use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**

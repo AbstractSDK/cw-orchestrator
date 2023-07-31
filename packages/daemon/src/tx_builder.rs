@@ -83,32 +83,31 @@ impl TxBuilder {
         let sequence = self.sequence.unwrap_or(sequence);
 
         //
-        let (tx_fee, gas_limit) = if let (Some(fee), Some(gas_limit)) =
-            (self.fee_amount, self.gas_limit)
-        {
-            log::debug!(
-                "Using pre-defined fee and gas limits: {}, {}",
-                fee,
-                gas_limit
-            );
-            (fee, gas_limit)
-        } else {
-            let sim_gas_used = wallet
-                .calculate_gas(&self.body, sequence, account_number)
-                .await?;
-            log::debug!("Simulated gas needed {:?}", sim_gas_used);
+        let (tx_fee, gas_limit) =
+            if let (Some(fee), Some(gas_limit)) = (self.fee_amount, self.gas_limit) {
+                log::debug!(
+                    "Using pre-defined fee and gas limits: {}, {}",
+                    fee,
+                    gas_limit
+                );
+                (fee, gas_limit)
+            } else {
+                let sim_gas_used = wallet
+                    .calculate_gas(&self.body, sequence, account_number)
+                    .await?;
+                log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
-            let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
-            let fee_amount = gas_expected
-                * (wallet.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price);
+                let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
+                let fee_amount = gas_expected
+                    * (wallet.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price);
 
-            log::debug!("Calculated fee needed: {:?}", fee_amount);
-            // set the gas limit of self for future txs
-            // there's no way to change the tx_builder body so simulation gas should remain the same as well
-            self.gas_limit = Some(gas_expected as u64);
+                log::debug!("Calculated fee needed: {:?}", fee_amount);
+                // set the gas limit of self for future txs
+                // there's no way to change the tx_builder body so simulation gas should remain the same as well
+                self.gas_limit = Some(gas_expected as u64);
 
-            (fee_amount as u128, gas_expected as u64)
-        };
+                (fee_amount as u128, gas_expected as u64)
+            };
 
         let fee = Self::build_fee(
             tx_fee,

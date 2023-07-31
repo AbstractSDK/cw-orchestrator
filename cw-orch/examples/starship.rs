@@ -69,7 +69,13 @@ pub fn script() -> anyhow::Result<()> {
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
 
-    rt.block_on(starship.client().create_channel( OSMOSIS,JUNO,  &format!("wasm.{}",controller.addr_str()?),&format!("wasm.{}",host.addr_str()?), IBC_APP_VERSION))?;
+    rt.block_on(starship.client().create_channel(
+        OSMOSIS,
+        JUNO,
+        &format!("wasm.{}", controller.addr_str()?),
+        &format!("wasm.{}", host.addr_str()?),
+        IBC_APP_VERSION,
+    ))?;
 
     // // test the ica implementation
     // test_ica(rt.handle().clone(), &starship, &controller, &juno)?;
