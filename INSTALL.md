@@ -1,8 +1,10 @@
 # Dependencies
 
+## Ubuntu
+
 In order to be able to compile, you will need to install the following packages : 
 1. [The rust toolchain](https://www.rust-lang.org/tools/install)
-2. The gcc compiler. For instance on Ubuntu
+2. The gcc compiler.
     ```bash
         sudo apt install build-essential
     ``` 
