@@ -10,7 +10,7 @@ In order to be able to compile, you will need to install the following packages 
     ``` 
 3. The pkg-config library 
     ```bash
-        sudo apt install pkg-config`
+        sudo apt install pkg-config
     ``` 
 4. The open-ssl development library
     ```bash
@@ -20,4 +20,29 @@ In order to be able to compile, you will need to install the following packages 
 6. The clang library for osmosis test tube
     ```bash
         sudo apt install clang
+    ``` 
+
+## Arch Linux
+
+In order to be able to compile, you will need to install the following packages : 
+1. [The rust toolchain](https://www.rust-lang.org/tools/install)
+2. The gcc compiler.
+    ```bash
+        sudo pacman -Sy gcc
+    ``` 
+3. The pkg-config library 
+    ```bash
+        sudo pacman -Sy pkgconf
+    ``` 
+4. The open-ssl development library
+    ```bash
+        sudo pacman -Sy openssl
+    ``` 
+5. The go compile for osmosis-test-tube
+    ```bash
+        sudo pacman -Sy go
+    ```
+6. The clang library for osmosis test tube
+    ```bash
+        sudo pacman -Sy clang
     ``` 
