@@ -1,0 +1,17 @@
+[package]
+name = "cw-orch-contract-derive"
+version = "0.13.3"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Attribute macro for creating a contract interface."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+convert_case = "0.6.0"
+log = { workspace = true }
+quote = "1"
+syn = { version = "1", features = ["full", "extra-traits"] }

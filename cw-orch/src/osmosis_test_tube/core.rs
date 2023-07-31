@@ -1,25 +1,15 @@
-use crate::interface_traits::CallAs;
-use crate::interface_traits::ContractInstance;
-use crate::interface_traits::CwOrchExecute;
-use crate::interface_traits::Uploadable;
-use crate::paths::WasmPath;
-use cosmwasm_std::Binary;
-use cosmwasm_std::BlockInfo;
-use cosmwasm_std::Coin;
-use cosmwasm_std::Timestamp;
-use cosmwasm_std::Uint128;
+use crate::contract::WasmPath;
+use crate::prelude::Uploadable;
+use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_test_tube::Account;
-use osmosis_test_tube::Bank;
-use osmosis_test_tube::Gamm;
-use osmosis_test_tube::Module;
-use osmosis_test_tube::SigningAccount;
-use osmosis_test_tube::Wasm;
-use std::str::FromStr;
+use osmosis_test_tube::osmosis_std::cosmwasm_to_proto_coins;
 
-use osmosis_std::types::cosmos::bank::v1beta1::{
+use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
 };
+use osmosis_test_tube::{Account, Bank, Gamm, Module, SigningAccount, Wasm};
+use std::str::FromStr;
+
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
@@ -28,11 +18,11 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     environment::TxHandler,
+    environment::{ChainState, StateInterface},
     error::CwOrchError,
-    state::{ChainState, StateInterface},
 };
 
-use crate::mock::MockState;
+use crate::MockState;
 
 pub use osmosis_test_tube;
 
@@ -103,15 +93,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             MsgSend {
                 from_address: self.sender.borrow().address(),
                 to_address: to,
-                amount: amount
-                    .into_iter()
-                    .map(
-                        |c| osmosis_std::types::cosmos::base::v1beta1::Coin {
-                            amount: c.amount.to_string(),
-                            denom: c.denom,
-                        },
-                    )
-                    .collect(),
+                amount: cosmwasm_to_proto_coins(amount),
             },
             &self.sender.borrow(),
         )?;
@@ -200,7 +182,7 @@ impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
-        Rc::clone(&self.state)
+        self.state.clone()
     }
 }
 
@@ -209,9 +191,14 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
+    type Sender = Rc<RefCell<SigningAccount>>;
 
     fn sender(&self) -> Addr {
         Addr::unchecked(self.sender.borrow().address())
+    }
+
+    fn set_sender(&mut self, sender: Self::Sender) {
+        self.sender = sender;
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
@@ -310,21 +297,5 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
                 self.app.borrow().get_block_time_nanos().try_into().unwrap(),
             ),
         })
-    }
-}
-
-impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone>
-    CallAs<OsmosisTestTube> for T
-{
-    type Sender = Rc<RefCell<SigningAccount>>;
-
-    fn set_sender(&mut self, sender: &Rc<RefCell<SigningAccount>>) {
-        self.as_instance_mut().chain.sender = sender.clone();
-    }
-
-    fn call_as(&self, sender: &Self::Sender) -> Self {
-        let mut contract = self.clone();
-        contract.set_sender(sender);
-        contract
     }
 }

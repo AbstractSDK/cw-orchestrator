@@ -1,0 +1,21 @@
+[package]
+name = "cw-orch-mock"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cw-orch-environment = { workspace = true }
+cosmwasm-std = { workspace = true }
+cw-multi-test = { workspace = true }
+cw-utils = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+speculoos = { workspace = true }
+cw20 = { workspace = true }
+cw20-base = { workspace = true }

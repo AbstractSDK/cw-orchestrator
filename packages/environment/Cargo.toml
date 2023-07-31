@@ -1,0 +1,50 @@
+[package]
+name = "cw-orch-environment"
+version = "0.13.3"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
+keywords = ["cosmwasm", "blockchain"]
+categories = ["development-tools"]
+readme = "../README.md"
+
+exclude = [".env"]
+
+[package.metadata.docs.rs]
+# passes all-features to cargo when building the docs.
+all-features = true
+
+[features]
+default = []
+# enable node-backed tests (ensure Docker is running)
+# run with `cargo test --jobs 1 --features node-tests`
+node-tests = []
+osmosis-test-tube = ["dep:osmosis-test-tube"]
+eth = ["dep:snailquote"]
+
+[dependencies]
+thiserror = { workspace = true }
+cosmwasm-std = { workspace = true }
+serde = { workspace = true }
+cw-multi-test = { workspace = true }
+cw-utils = { workspace = true }
+cw20 = { workspace = true }
+cw20-base = { workspace = true }
+
+log = { workspace = true }
+sha256 = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+
+ibc-chain-registry = { version = "0.24.1" }
+
+# Test Tube env deps
+osmosis-test-tube = { workspace = true, optional = true }
+
+# Ethereum deps
+snailquote = { version = "0.3.1", optional = true }
+[dev-dependencies]
+speculoos = { workspace = true }
+anyhow = { workspace = true }

@@ -9,33 +9,41 @@ pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 /// Re-export anyhow for use in the macros
 pub extern crate anyhow;
 
-/// Re-export tokio, the async runtime when using daemons.
-#[cfg(feature = "daemon")]
-pub extern crate tokio;
-
 // prelude
 pub mod prelude;
 
-pub mod contract;
+pub use cw_orch_environment::contract;
+pub use cw_orch_environment::environment;
+pub use cw_orch_mock::{Mock, MockState};
+
+#[deprecated(since = "0.13.4", note = "Deploy trait moved to contract namespace")]
+/// Used to introduce Deploy trait.
+/// Deprecated since 0.13.4.
+pub mod deploy {
+    pub use cw_orch_environment::contract::Deploy;
+}
+
+#[deprecated(since = "0.13.4", note = "State trait moved to environment namespace")]
+/// Used to introduce state traits.
+/// Deprecated since 0.13.4.
+pub mod state {
+    pub use cw_orch_environment::environment::{ChainState, DeployDetails, StateInterface};
+}
+
+/// Re-export tokio, the async runtime when using daemons.
+#[cfg(feature = "daemon")]
+pub extern crate tokio;
 #[cfg(feature = "daemon")]
 pub mod daemon;
 
-pub mod deploy;
-pub mod environment;
 mod error;
-mod index_response;
+
 #[cfg(feature = "interchain")]
 #[allow(missing_docs)] // TODO
 pub mod interchain;
-mod interface_traits;
-#[cfg(feature = "daemon")]
-mod keys;
-pub mod mock;
+
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
-mod paths;
-
-pub mod state;
 
 #[cfg(feature = "daemon")]
 pub mod live_mock;

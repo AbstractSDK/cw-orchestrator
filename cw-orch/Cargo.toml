@@ -50,39 +50,24 @@ node-tests = ["daemon"]
 # enable the optional dependencies
 daemon = [
   "dep:ibc-chain-registry",
-  "dep:ibc-relayer-types",
   "dep:tokio",
   "dep:tonic",
-  "dep:secp256k1",
-  "dep:reqwest",
-  "dep:base64",
-  "dep:hkd32",
-  "dep:rand_core",
-  "dep:ed25519-dalek",
   "dep:cosmrs",
-  "dep:derive_builder",
-  "dep:eyre",
-  "dep:chrono",
-  "dep:base16",
-  "dep:ripemd",
-  "dep:ring",
-  "dep:hex",
-  "dep:bitcoin",
-  "dep:prost",
-  "dep:log4rs",
-  "dep:diff-struct",
-  "dep:futures-util",
+  "dep:cw-orch-daemon",
 ]
-# Interact with interchaintest's docker nodes
-interchain = ["daemon", "dep:bollard", "dep:async-recursion"]
-eth = ["daemon", "dep:ethers-signers", "dep:ethers-core", "dep:snailquote"]
-osmosis-test-tube = ["dep:osmosis-test-tube", "dep:osmosis-std"]
+eth = ["daemon", "cw-orch-environment/eth", "cw-orch-daemon?/eth"]
+osmosis-test-tube = [
+  "dep:osmosis-test-tube",
+  "cw-orch-environment/osmosis-test-tube",
+]
 starship = ["daemon","dep:cw-orch-starship"]
+interchain = ["daemon"]
 
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.13.3" }
-cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
+cw-orch-contract-derive = { workspace = true, version = "0.13.3" }
+cw-orch-fns-derive = { workspace = true, version = "0.13.3" }
+cw-orch-starship = { workspace = true, version = "0.13.3", optional = true}
 
 cosmwasm-std = { workspace = true }
 cw-utils = { workspace = true }
@@ -90,74 +75,40 @@ cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 schemars = "0.8.10"
-log = "0.4.14"
-serde_json = "1.0.79"
-thiserror = { version = "1.0.21" }
+log = { workspace = true }
+thiserror = { workspace = true }
 
 # Daemon deps
-sha256 = { version = "1.1.1" }
-prost = { version = "0.11", optional = true }
-bitcoin = { version = "0.30.0", optional = true }
-hex = { version = "0.4.3", optional = true }
-ripemd = { version = "0.1.3", optional = true }
+cw-orch-daemon = { workspace = true, optional = true }
 ibc-chain-registry = { version = "0.24.1", optional = true }
 ibc-relayer-types = { version = "0.24.1", optional = true }
 tokio = { version = "1.4", features = ["full"], optional = true }
-tonic = { version = "0.9.2", optional = true, features = ["tls", "tls-roots"] }
-secp256k1 = { version = "0.27.0", default-features = false, optional = true }
-reqwest = { version = "0.11.9", optional = true }
-base64 = { version = "0.21.0", optional = true }
-hkd32 = { version = "0.7.0", features = [
-  "bip39",
-  "mnemonic",
-  "bech32",
-], optional = true }
-rand_core = { version = "0.6.4", default-features = false, optional = true }
-ed25519-dalek = { version = "1", features = ["serde"], optional = true }
-eyre = { version = "0.6", optional = true }
 cosmrs = { version = "0.14.0", features = [
   "dev",
   "cosmwasm",
   "grpc",
 ], optional = true }
-chrono = { version = "0.4", optional = true }
-base16 = { version = "0.2.1", optional = true }
-derive_builder = { version = "0.12.0", optional = true }
-ring = { version = "0.16.20", optional = true }
-diff-struct = { version = "0.5", optional = true }
 
-# Interchain deps
-bollard = { version = "0.14.0", optional = true }
-futures-util = { version = "0.3.28", optional = true }
-log4rs = { version = "1", optional = true }
-cosmwasm-schema = "1.2.5"
-async-recursion = { version = "1.0.4", optional = true }
-futures = "0.3.28"
-cosmos-sdk-proto = "0.19.0"
-cw-orch-starship = {path = "../packages/cw-orch-starship", optional = true }
 
-dotenv = { version = "0.15.0" }
-env_logger = { version = "0.10.0" }
-
-# Ethereum deps
-ethers-signers = { version = "2.0.7", optional = true }
-ethers-core = { version = "2.0.7", optional = true }
-snailquote = { version = "0.3.1", optional = true }
+# Live mock deps
+tonic = { version = "0.9.2", optional = true, features = ["tls", "tls-roots"] }
 
 # Test Tube env deps
-osmosis-test-tube = { version = "16.0.0", optional = true }
-osmosis-std = { version = "0.16.0", optional = true }
+osmosis-test-tube = { workspace = true, optional = true }
+
+# Env deps
+cw-orch-environment = { workspace = true }
+cw-orch-mock = { workspace = true }
 
 [dev-dependencies]
 simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 cw-orch = { features = ["daemon"], path = "." }
 uid = "0.1.7"
-cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
-cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+env_logger = "0.10.0"
 cosmwasm-schema = "1.2"
 tokio-test = "0.4.2"
-speculoos = "0.11.0"
+speculoos = { workspace = true }
 ctor = "0.2.0"
 duct = "0.13"
 
@@ -170,7 +121,10 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
 ] }
 
 serial_test = "2.0.0"
-
+ibc-relayer-types = { version = "0.24.1" }
+serde_json = { workspace = true }
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }
 ethers-core = { version = "2.0.7" }
+cw20-base = { workspace = true }
+cw20 = { workspace = true }

@@ -79,7 +79,7 @@ jobs:
     # https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
     strategy:
       matrix:
-        msrv: [1.65.0] # let .. else .. is stable in 1.65.0
+        msrv: [1.71.0] # let .. else .. is stable in 1.65.0
     name: ubuntu / ${{ matrix.msrv }}
     steps:
       - uses: actions/checkout@v3
@@ -110,5 +110,5 @@ jobs:
           docker run --rm -v "$(pwd)":/code \
           --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
           --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-          cosmwasm/workspace-optimizer:0.12.13
+          cosmwasm/workspace-optimizer:0.13.0
           tar -zcvf cosmwasm-artifacts.tar.gz artifacts
