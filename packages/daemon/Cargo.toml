@@ -24,8 +24,8 @@ node-tests = []
 eth = ["dep:ethers-signers", "dep:ethers-core"]
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { workspace = true, version = "0.13.3" }
-cw-orch-fns-derive = { workspace = true, version = "0.13.3" }
+cw-orch-contract-derive = { workspace = true }
+cw-orch-fns-derive = { workspace = true }
 cw-orch-environment = { workspace = true }
 
 cosmwasm-std = { workspace = true }
