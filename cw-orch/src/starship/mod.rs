@@ -1,8 +1,8 @@
 //! Starship integration
 
 use crate::{
-    daemon::{DaemonAsyncBuilder, DaemonBuilder},
-    prelude::{CwOrchError, Daemon},
+    daemon::DaemonBuilder,
+    prelude::{CwOrchError, Daemon, InterchainEnv},
 };
 use cw_orch_starship::StarshipClient;
 use std::collections::HashMap;
@@ -52,5 +52,13 @@ impl Starship {
     /// Get the starship client
     pub fn client(&self) -> &StarshipClient {
         &self.starship_client
+    }
+    /// Get all daemons
+    pub fn daemons(&self) -> Vec<Daemon> {
+        self.daemons.values().cloned().collect()
+    }
+    /// Creates an interchain environement object to be able to track all transactions and ibc related operations
+    pub fn interchain_env(&self) -> InterchainEnv {
+        InterchainEnv::from_daemons(self.daemons())
     }
 }

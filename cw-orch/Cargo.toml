@@ -27,7 +27,7 @@ required-features = ["daemon"]
 # Interact with local/remote daemons over gRPC
 [[example]]
 name = "ica-demo"
-required-features = ["interchain"]
+required-features = ["interchain", "starship"]
 
 [[example]]
 name = "starship"
@@ -60,7 +60,7 @@ osmosis-test-tube = [
   "dep:osmosis-test-tube",
   "cw-orch-environment/osmosis-test-tube",
 ]
-starship = ["daemon", "dep:cw-orch-starship"]
+starship = ["daemon", "interchain", "dep:cw-orch-starship"]
 interchain = ["daemon", "dep:cw-orch-interchain"]
 
 [dependencies]
@@ -129,3 +129,4 @@ ethers-signers = { version = "2.0.7" }
 ethers-core = { version = "2.0.7" }
 cw20-base = { workspace = true }
 cw20 = { workspace = true }
+dotenv = "0.15.0"

@@ -10,6 +10,8 @@ use secp256k1::All;
 use super::{sender::Sender, DaemonError};
 
 const GAS_BUFFER: f64 = 1.2;
+const BUFFER_CHANGE_LIMIT: u64 = 100_000;
+const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]
@@ -97,7 +99,11 @@ impl TxBuilder {
                     .await?;
                 log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
-                let gas_expected = sim_gas_used as f64 * GAS_BUFFER;
+                let gas_expected = if sim_gas_used < BUFFER_CHANGE_LIMIT {
+                    sim_gas_used as f64 * SMALL_GAS_BUFFER
+                } else {
+                    sim_gas_used as f64 * GAS_BUFFER
+                };
                 let fee_amount = gas_expected
                     * (wallet.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price);
 

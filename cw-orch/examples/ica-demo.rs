@@ -32,10 +32,6 @@
 //! [Hermes](https://hermes.informal.systems/)
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
-use cw_orch::daemon::CwIbcContractState;
-use cw_orch::daemon::IbcTracker;
-use cw_orch::daemon::IbcTrackerConfigBuilder;
-use cw_orch::interchain::docker::DockerHelper;
 use cw_orch::interchain::interchain_env::contract_port;
 use cw_orch::prelude::networks::osmosis::OSMO_2;
 use cw_orch::prelude::*;
@@ -56,29 +52,24 @@ use simple_ica_controller::msg::{self as controller_msgs};
 use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
 
+use crate::starship::Starship;
+use cw_orch_interchain::ibc_tracker::IbcTracker;
 use tokio::runtime::Handle;
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 const JUNO_MNEMONIC: &str = "dilemma imitate split detect useful creek cart sort grow essence fish husband seven hollow envelope wedding host dry permit game april present panic move";
 const OSMOSIS_MNEMONIC: &str = "settle gas lobster judge silk stem act shoulder pluck waste pistol word comfort require early mouse provide marine butter crowd clock tube move wool";
 const JUNO: &str = "juno-1";
-const OSMOSIS: &str = "osmosis-2";
+const OSMOSIS: &str = "osmosis-1";
 
 pub fn script() -> anyhow::Result<()> {
-    let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
+    log::info!("test");
+    let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new()?;
 
-    let networks = rt.block_on(
-        rt.block_on(DockerHelper::new())?
-            .configure_networks(vec![JUNO_1, OSMO_2]),
-    )?;
+    // We create the test starship object
+    let starship = Starship::new(rt.handle().to_owned(), None)?;
 
-    let interchain = InterchainEnv::new(
-        rt.handle(),
-        vec![
-            (networks[0].clone(), Some(JUNO_MNEMONIC)),
-            (networks[1].clone(), Some(OSMOSIS_MNEMONIC)),
-        ],
-    )?;
+    let interchain: InterchainEnv = starship.interchain_env();
 
     let juno = interchain.daemon(JUNO)?;
     let osmosis = interchain.daemon(OSMOSIS)?;
@@ -93,34 +84,8 @@ pub fn script() -> anyhow::Result<()> {
     let interchain_channel = rt.block_on(
         InterchainChannelBuilder::default()
             .from_contracts(&controller, &host)
-            .create_channel("simple-ica-v2"),
+            .create_channel(starship.client(), "simple-ica-v2"),
     )?;
-
-    // Track IBC on JUNO
-    let juno_channel = juno.channel();
-    let tracker = IbcTrackerConfigBuilder::default()
-        .ibc_state(CwIbcContractState::new(
-            interchain_channel.get_connection(),
-            contract_port(&host),
-        ))
-        .build()?;
-    // spawn juno logging on a different thread.
-    rt.spawn(async move {
-        juno_channel.cron_log(tracker).await.unwrap();
-    });
-
-    // Track IBC on OSMOSIS
-    let osmosis_channel = osmosis.channel();
-    let tracker = IbcTrackerConfigBuilder::default()
-        .ibc_state(CwIbcContractState::new(
-            interchain_channel.get_connection(),
-            contract_port(&controller),
-        ))
-        .build()?;
-    // spawn osmosis logging on a different thread.
-    rt.spawn(async move {
-        osmosis_channel.cron_log(tracker).await.unwrap();
-    });
 
     // test the ica implementation
     test_ica(rt.handle().clone(), &interchain, &controller, &juno)?;
@@ -131,6 +96,7 @@ pub fn script() -> anyhow::Result<()> {
 fn main() {
     dotenv().ok();
     use dotenv::dotenv;
+    env_logger::init();
 
     if let Err(ref err) = script() {
         log::error!("{}", err);
@@ -206,6 +172,7 @@ fn test_ica(
             controller
                 .get_chain()
                 .state()
+                .0
                 .chain_data
                 .chain_id
                 .to_string(),

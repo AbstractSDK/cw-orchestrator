@@ -64,6 +64,4 @@ pub use cw_orch_environment::networks;
 pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
 
 #[cfg(feature = "interchain")]
-pub use super::interchain::{
-    interchain_channel_builder, interchain_env::InterchainEnv,
-};
+pub use super::interchain::{interchain_channel_builder, interchain_env::InterchainEnv};
