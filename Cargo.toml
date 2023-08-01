@@ -8,6 +8,7 @@ authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 license = "GPL-3.0-only"
 repository = "https://github.com/AbstractSDK/cw-orchestrator"
+version = "0.13.3"
 
 [workspace.dependencies]
 cw-utils = { version = "1.0.1" }
@@ -21,12 +22,13 @@ osmosis-test-tube = { version = "16.0.1" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch-daemon = { path = "packages/daemon" }
-cw-orch-environment = { path = "packages/environment" }
-cw-orch-mock = { path = "packages/mock" }
-cw-orch-contract-derive = { path = "packages/contract-derive" }
-cw-orch-fns-derive = { path = "packages/fns-derive" }
-cw-orch-starship = { path = "packages/starship" }
+cw-orch-daemon = { path = "packages/daemon", version = "0.13.3" }
+cw-orch-environment = { path = "packages/environment", version = "0.13.3" }
+cw-orch-mock = { path = "packages/mock", version = "0.13.3" }
+cw-orch-contract-derive = { path = "packages/contract-derive", version = "0.13.3" }
+cw-orch-fns-derive = { path = "packages/fns-derive", version = "0.13.3" }
+cw-orch-starship = { path = "packages/starship", version = "0.13.3" }
+cw-orch-interchain = { path = "packages/interchain", version = "0.13.3" }
 thiserror = { version = "1.0.21" }
 sha256 = { version = "1.2.1" }
 serde_json = "1.0.79"
