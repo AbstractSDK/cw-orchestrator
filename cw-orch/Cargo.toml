@@ -61,7 +61,7 @@ osmosis-test-tube = [
   "cw-orch-environment/osmosis-test-tube",
 ]
 starship = ["daemon", "dep:cw-orch-starship"]
-interchain = ["daemon"]
+interchain = ["daemon", "dep:cw-orch-interchain"]
 
 [dependencies]
 # Default deps
