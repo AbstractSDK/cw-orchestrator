@@ -25,6 +25,10 @@ pub trait TxHandler: ChainState + Clone {
     type Error: Into<CwOrchError> + Debug;
     /// Source type for uploading to the environment.
     type ContractSource;
+    /// Execution type for custom messages
+    type ExecC;
+    /// Query type for custom messages
+    type QueryC;
 
     /// Gets the address of the current wallet used to sign transactions.
     fn sender(&self) -> Addr;
@@ -44,7 +48,10 @@ pub trait TxHandler: ChainState + Clone {
     // Actions
 
     /// Uploads a contract to the chain.
-    fn upload(&self, contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error>;
+    fn upload(
+        &self,
+        contract_source: &impl Uploadable<Self::ExecC, Self::QueryC>,
+    ) -> Result<Self::Response, Self::Error>;
 
     /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(

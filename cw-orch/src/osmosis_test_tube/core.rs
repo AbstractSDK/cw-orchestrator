@@ -6,6 +6,7 @@ use crate::paths::WasmPath;
 use cosmwasm_std::Binary;
 use cosmwasm_std::BlockInfo;
 use cosmwasm_std::Coin;
+use cosmwasm_std::Empty;
 use cosmwasm_std::Timestamp;
 use cosmwasm_std::Uint128;
 use cw_multi_test::AppResponse;
@@ -203,12 +204,17 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
+    type ExecC = Empty;
+    type QueryC = Empty;
 
     fn sender(&self) -> Addr {
         Addr::unchecked(self.sender.borrow().address())
     }
 
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
+    fn upload(
+        &self,
+        contract: &impl Uploadable<Self::ExecC, Self::QueryC>,
+    ) -> Result<Self::Response, CwOrchError> {
         let wasm_contents = std::fs::read(contract.wasm().path())?;
         let upload_response = Wasm::new(&*self.app.borrow()).store_code(
             &wasm_contents,

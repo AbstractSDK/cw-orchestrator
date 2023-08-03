@@ -154,14 +154,14 @@ impl<T: MigratableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchMigrat
 /// Trait to implement on the contract to enable it to be uploaded
 /// Should return [`WasmPath`](crate::prelude::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
-pub trait Uploadable {
+pub trait Uploadable<ExecT = Empty, QueryT = Empty> {
     /// Return an object that can be used to upload the contract to a WASM-supported environment.
     fn wasm(&self) -> WasmPath {
         unimplemented!("no wasm file provided for this contract")
     }
 
     /// Return the wrapper object for the contract, only works for non-custom mock environments
-    fn wrapper(&self) -> Box<dyn MockContract<Empty, Empty>> {
+    fn wrapper(&self) -> Box<dyn MockContract<ExecT, QueryT>> {
         unimplemented!("no wrapper function implemented for this contract")
     }
 }

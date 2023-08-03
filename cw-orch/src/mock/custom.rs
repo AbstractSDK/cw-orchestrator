@@ -1,7 +1,7 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, Empty, Event, Uint128};
-use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cw_multi_test::{custom_app, next_block, App, AppResponse, Contract, Executor, FailingModule};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -9,10 +9,23 @@ use crate::{
     environment::TxHandler,
     error::CwOrchError,
     prelude::*,
-    state::{ChainState, DeployDetails, StateInterface},
+    state::{ChainState, StateInterface},
 };
 
 use super::state::MockState;
+
+/// Type alias for default build `App` to make its storing simpler in typical scenario
+/// TODO: do we want to customize other things as well?
+pub type MockApp<ExecC = Empty, QueryC = Empty, CustomT = FailingModule<ExecC, QueryC, Empty>> =
+    App<
+        cw_multi_test::BankKeeper,
+        cosmwasm_std::testing::MockApi,
+        cosmwasm_std::testing::MockStorage,
+        CustomT,
+        cw_multi_test::WasmKeeper<ExecC, QueryC>,
+        cw_multi_test::StakeKeeper,
+        cw_multi_test::DistributionKeeper,
+    >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
 ///
@@ -46,17 +59,38 @@ use super::state::MockState;
 /// let sender = Addr::unchecked("sender");
 /// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
 /// ```
-#[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState> {
+// #[derive(Clone)]
+pub struct CustomMock<
+    S: StateInterface = MockState,
+    ExecC = Empty,
+    QueryC = Empty,
+    CustomT = FailingModule<ExecC, QueryC, Empty>,
+> {
     /// Address used for the operations.
     pub sender: Addr,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+    pub app: Rc<RefCell<MockApp<ExecC, QueryC, CustomT>>>,
 }
 
-impl<S: StateInterface> Mock<S> {
+impl<S: StateInterface, ExecC, QueryC, CustomT> Clone for CustomMock<S, ExecC, QueryC, CustomT> {
+    fn clone(&self) -> Self {
+        Self {
+            sender: self.sender.clone(),
+            state: self.state.clone(),
+            app: self.app.clone(),
+        }
+    }
+}
+
+impl<CustomT, S: StateInterface> CustomMock<S, CustomT::ExecT, CustomT::QueryT, CustomT>
+where
+    CustomT: cw_multi_test::Module,
+    CustomT::ExecT:
+        Clone + std::fmt::Debug + PartialEq + schemars::JsonSchema + DeserializeOwned + 'static,
+    CustomT::QueryT: cosmwasm_std::CustomQuery + DeserializeOwned + 'static,
+{
     /// Set the bank balance of an address.
     pub fn set_balance(
         &self,
@@ -124,19 +158,33 @@ impl<S: StateInterface> Mock<S> {
     }
 }
 
-impl Mock<MockState> {
+impl CustomMock<MockState> {
     /// Create a mock environment with the default mock state.
     pub fn new(sender: &Addr) -> Self {
-        Mock::new_custom(sender, MockState::new())
+        CustomMock::new_custom(
+            sender,
+            MockState::new(),
+            custom_app::<Empty, Empty, _>(|_, _, _| {}),
+        )
     }
 }
 
-impl<S: StateInterface> Mock<S> {
+impl<CustomT, S: StateInterface> CustomMock<S, CustomT::ExecT, CustomT::QueryT, CustomT>
+where
+    CustomT: cw_multi_test::Module,
+    CustomT::ExecT:
+        Clone + std::fmt::Debug + PartialEq + schemars::JsonSchema + DeserializeOwned + 'static,
+    CustomT::QueryT: cosmwasm_std::CustomQuery + DeserializeOwned + 'static,
+{
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
+    pub fn new_custom(
+        sender: &Addr,
+        custom_state: S,
+        app: MockApp<CustomT::ExecT, CustomT::QueryT, CustomT>,
+    ) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(custom_app::<Empty, Empty, _>(|_, _, _| {})));
+        let app = Rc::new(RefCell::new(app));
 
         Self {
             sender: sender.clone(),
@@ -150,7 +198,7 @@ impl<S: StateInterface> Mock<S> {
     pub fn upload_custom(
         &self,
         contract_id: &str,
-        wrapper: Box<dyn Contract<Empty, Empty>>,
+        wrapper: Box<dyn Contract<CustomT::ExecT, CustomT::QueryT>>,
     ) -> Result<AppResponse, CwOrchError> {
         let code_id = self.app.borrow_mut().store_code(wrapper);
         // add contract code_id to events manually
@@ -166,7 +214,9 @@ impl<S: StateInterface> Mock<S> {
     }
 }
 
-impl<S: StateInterface> ChainState for Mock<S> {
+impl<ExecC, QueryC, CustomT, S: StateInterface> ChainState
+    for CustomMock<S, ExecC, QueryC, CustomT>
+{
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -174,43 +224,20 @@ impl<S: StateInterface> ChainState for Mock<S> {
     }
 }
 
-impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
-    fn get_address(&self, contract_id: &str) -> Result<Addr, CwOrchError> {
-        self.borrow().get_address(contract_id)
-    }
-
-    fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.borrow_mut().set_address(contract_id, address)
-    }
-
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwOrchError> {
-        self.borrow().get_code_id(contract_id)
-    }
-
-    fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        self.borrow_mut().set_code_id(contract_id, code_id)
-    }
-
-    fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwOrchError> {
-        self.borrow().get_all_addresses()
-    }
-
-    fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwOrchError> {
-        self.borrow().get_all_code_ids()
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        self.borrow().deploy_details()
-    }
-}
-
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for Mock<S> {
+impl<CustomT, S: StateInterface> TxHandler
+    for CustomMock<S, CustomT::ExecT, CustomT::QueryT, CustomT>
+where
+    CustomT: cw_multi_test::Module,
+    CustomT::ExecT:
+        Clone + std::fmt::Debug + PartialEq + schemars::JsonSchema + DeserializeOwned + 'static,
+    CustomT::QueryT: cosmwasm_std::CustomQuery + DeserializeOwned + 'static,
+{
     type Response = AppResponse;
     type Error = CwOrchError;
-    type ContractSource = Box<dyn Contract<Empty, Empty>>;
-    type ExecC = Empty;
-    type QueryC = Empty;
+    type ContractSource = Box<dyn Contract<CustomT::ExecT, CustomT::QueryT>>;
+    type ExecC = CustomT::ExecT;
+    type QueryC = CustomT::QueryT;
 
     fn sender(&self) -> Addr {
         self.sender.clone()
@@ -329,7 +356,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 }
 
-impl<T: CwOrchExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T {
+impl<T: CwOrchExecute<CustomMock> + ContractInstance<CustomMock> + Clone> CallAs<CustomMock> for T {
     type Sender = Addr;
 
     fn set_sender(&mut self, sender: &Addr) {
@@ -345,18 +372,27 @@ impl<T: CwOrchExecute<Mock> + ContractInstance<Mock> + Clone> CallAs<Mock> for T
 
 #[cfg(test)]
 mod test {
+    use cosmwasm_schema::cw_serde;
     use cosmwasm_std::{
-        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-        Uint128,
+        to_binary, Addr, Binary, Coin, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response,
+        StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
     use serde::Serialize;
     use speculoos::prelude::*;
 
-    use crate::mock::core::*;
+    use crate::mock::custom::*;
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
+
+    #[cw_serde]
+    struct TestExec {}
+
+    #[cw_serde]
+    struct TestQuery {}
+
+    impl CustomQuery for TestQuery {}
 
     #[derive(Debug, Serialize)]
     struct MigrateMsg {}
@@ -395,7 +431,7 @@ mod test {
         let amount = 1000000u128;
         let denom = "uosmo";
 
-        let chain = Mock::new(sender);
+        let chain = CustomMock::new(sender);
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -476,8 +512,9 @@ mod test {
         let denom = "uosmo";
 
         let mock_state = Rc::new(RefCell::new(MockState::new()));
+        let app = custom_app::<TestExec, TestQuery, _>(|_, _, _| {});
 
-        let chain = Mock::<_>::new_custom(sender, mock_state);
+        let chain = CustomMock::<_, _, _, _>::new_custom(sender, mock_state, app);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
@@ -523,7 +560,7 @@ mod test {
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
 
-        let chain = Mock::new(sender);
+        let chain = CustomMock::new(sender);
 
         chain
             .add_balance(recipient, vec![Coin::new(amount, denom_1)])

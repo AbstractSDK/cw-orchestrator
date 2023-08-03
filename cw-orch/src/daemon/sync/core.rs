@@ -10,7 +10,7 @@ use crate::{
     state::ChainState,
 };
 use cosmrs::tendermint::Time;
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Coin, Empty};
 use flate2::{write, Compression};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -88,12 +88,17 @@ impl TxHandler for Daemon {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
+    type ExecC = Empty;
+    type QueryC = Empty;
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
     }
 
-    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+    fn upload(
+        &self,
+        uploadable: &impl Uploadable<Self::ExecC, Self::QueryC>,
+    ) -> Result<Self::Response, DaemonError> {
         let sender = &self.daemon.sender;
         let wasm_path = uploadable.wasm();
 

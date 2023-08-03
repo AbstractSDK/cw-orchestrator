@@ -4,7 +4,7 @@ use crate::{
     error::CwOrchError,
     index_response::IndexResponse,
     prelude::{CwEnv, Uploadable},
-    state::StateInterface,
+    state::StateInterface, interface_traits,
 };
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
