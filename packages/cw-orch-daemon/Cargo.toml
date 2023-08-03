@@ -75,7 +75,9 @@ tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
-counter-contract = { path = "../../contracts/counter", features = ["interface"] }
+counter-contract = { path = "../../contracts/counter", features = [
+  "interface",
+] }
 mock-contract = { path = "../../contracts/mock_contract", features = [
   "interface",
 ] }
