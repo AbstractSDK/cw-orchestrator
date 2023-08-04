@@ -1,7 +1,7 @@
 use crate::{
     contract::Contract,
     error::CwOrchError,
-    prelude::{CwEnv, WasmPath, TxHandler},
+    prelude::{CwEnv, TxHandler, WasmPath},
 };
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
@@ -167,7 +167,11 @@ pub trait Uploadable<ExecT = Empty, QueryT = Empty> {
 }
 
 /// Trait that indicates that the contract can be uploaded.
-pub trait CwOrchUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable<<Chain as TxHandler>::ExecC, <Chain as TxHandler>::QueryC> + Sized {
+pub trait CwOrchUpload<Chain: CwEnv>:
+    ContractInstance<Chain>
+    + Uploadable<<Chain as TxHandler>::ExecC, <Chain as TxHandler>::QueryC>
+    + Sized
+{
     /// upload the contract to the configured environment.
     fn upload(&self) -> Result<Chain::Response, CwOrchError> {
         self.as_instance().upload(self)
@@ -175,7 +179,13 @@ pub trait CwOrchUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable<<Chai
 }
 
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
-impl<T: ContractInstance<Chain> + Uploadable<<Chain as TxHandler>::ExecC, <Chain as TxHandler>::QueryC>, Chain: CwEnv> CwOrchUpload<Chain> for T {}
+impl<
+        T: ContractInstance<Chain>
+            + Uploadable<<Chain as TxHandler>::ExecC, <Chain as TxHandler>::QueryC>,
+        Chain: CwEnv,
+    > CwOrchUpload<Chain> for T
+{
+}
 
 /// Enables calling a contract with a different sender.
 ///
