@@ -15,7 +15,7 @@ const ADMIN: &str = "admin";
 // ANCHOR: integration_test
 // ANCHOR: setup
 /// Instantiate the contract in any CosmWasm environment
-fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
+fn setup(chain: Mock) -> CounterContract<Mock> {
     // ANCHOR: constructor
     // Construct the counter interface
     let contract = CounterContract::new(CONTRACT_NAME, chain.clone());

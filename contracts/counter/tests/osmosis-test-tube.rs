@@ -12,7 +12,7 @@ use cw_orch::prelude::*;
 // ANCHOR: integration_test
 // ANCHOR: setup
 /// Instantiate the contract in any CosmWasm environment
-fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
+fn setup(chain: OsmosisTestTube) -> CounterContract<OsmosisTestTube> {
     // ANCHOR: constructor
     // Construct the counter interface
     let contract = CounterContract::new(CONTRACT_NAME, chain.clone());

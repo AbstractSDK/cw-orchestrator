@@ -3,8 +3,8 @@ use crate::{
     environment::TxResponse,
     error::CwOrchError,
     index_response::IndexResponse,
-    prelude::{CwEnv, Uploadable},
-    state::StateInterface, interface_traits,
+    prelude::{CwEnv, TxHandler, Uploadable},
+    state::StateInterface,
 };
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
@@ -52,7 +52,10 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     // Chain interfaces
 
     /// Upload a contract given its source
-    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwOrchError> {
+    pub fn upload(
+        &self,
+        source: &impl Uploadable<<Chain as TxHandler>::ExecC, <Chain as TxHandler>::QueryC>,
+    ) -> Result<TxResponse<Chain>, CwOrchError> {
         log::info!("Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
