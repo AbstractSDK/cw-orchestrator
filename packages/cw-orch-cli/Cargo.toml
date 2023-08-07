@@ -1,0 +1,22 @@
+[package]
+name = "cw-orch-cli"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cw-orch = { path = "../../cw-orch" }
+cw-orch-cli-derive = { path = "../cw-orch-cli-derive", version = "0.13.3" }
+interactive-clap = "0.2.4"
+clap = { version = "4.0.18", features = ["derive"] }
+color-eyre = { version = "0.6" }
+inquire = { version = "0.6" }
+strum = { version = "0.25", features = ["derive"] }
+
+serde_json = "1.0.79"
+serde = { workspace = true }

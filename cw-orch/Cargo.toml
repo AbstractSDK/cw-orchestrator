@@ -66,6 +66,12 @@ osmosis-test-tube = ["dep:osmosis-test-tube"]
 # Default deps
 cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", version = "0.13.3" }
 cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
+cw-orch-cli-derive = { path = "../packages/cw-orch-cli-derive", version = "0.13.3" }
+interactive-clap = "0.2.4"
+clap = { version = "4.0.18", features = ["derive"] }
+color-eyre = { version = "0.6" }
+inquire = { version = "0.6" }
+strum = { version = "0.25", features = ["derive"] }
 
 cosmwasm-std = { workspace = true }
 cw-utils = { workspace = true }

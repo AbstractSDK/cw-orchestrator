@@ -1,4 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cw_orch::cli;
+pub use cw_orch_cli::strum;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -7,6 +9,7 @@ pub struct InstantiateMsg {
 
 // ANCHOR: exec_msg
 #[cw_serde]
+#[cli]
 #[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))] // Function generation
 pub enum ExecuteMsg {
     Increment {},
