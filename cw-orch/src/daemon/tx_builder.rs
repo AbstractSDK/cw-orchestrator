@@ -9,7 +9,7 @@ use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
 
-const GAS_BUFFER: f64 = 1.2;
+const GAS_BUFFER: f64 = 1.3;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]

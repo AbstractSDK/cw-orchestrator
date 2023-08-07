@@ -12,7 +12,7 @@ pub mod sei;
 pub mod terra;
 
 pub use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
-pub use archway::CONSTANTINE_1;
+pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
 pub use kujira::HARPOON_4;
@@ -39,7 +39,8 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         PHOENIX_1,
         LOCAL_TERRA,
         INJECTIVE_888,
-        CONSTANTINE_1,
+        CONSTANTINE_3,
+        ARCHWAY_1,
         PION_1,
         NEUTRON_1,
         INJECTIVE_1,
