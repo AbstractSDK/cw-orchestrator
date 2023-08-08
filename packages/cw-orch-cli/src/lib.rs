@@ -61,7 +61,10 @@ where
             match action {
                 ActionVariants::Execute => instance.execute()?,
                 ActionVariants::Query => instance.query()?,
-                ActionVariants::Deploy => instance.contract.upload().map(|_| ())?,
+                ActionVariants::Deploy => {
+                    instance.contract.upload()?;
+                    println!("Code_id: {}", instance.contract.addr_str()?);
+                },
                 ActionVariants::Instantiate => instance.instantiate()?,
                 ActionVariants::Migrate => instance.migrate()?,
                 ActionVariants::Quit => return Ok(()),
@@ -75,6 +78,7 @@ where
                 serde_json::from_str(&input).map_err(|_| ())
             })?;
         self.contract.instantiate(&instantiate_msg, None, None)?;
+        println!("Instantiation succesfull");
         Ok(())
     }
 
