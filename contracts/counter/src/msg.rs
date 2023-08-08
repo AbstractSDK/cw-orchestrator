@@ -1,6 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cw_orch::cli;
-pub use cw_orch_cli::strum;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -19,6 +18,7 @@ pub enum ExecuteMsg {
 
 // ANCHOR: query_msg
 #[cw_serde]
+#[cli]
 #[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))] // Function generation
 #[derive(QueryResponses)]
 pub enum QueryMsg {

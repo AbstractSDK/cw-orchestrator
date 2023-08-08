@@ -1,40 +1,39 @@
+use cw_orch::{
+    prelude::{networks::parse_network, Daemon, DaemonBuilder, TxHandler},
+    tokio::runtime::Runtime,
+};
 pub use strum;
 
 use std::marker::PhantomData;
 
 use inquire::{ui::RenderConfig, CustomType};
 use serde::{de::DeserializeOwned, Serialize};
-use strum::{EnumIter, IntoEnumIterator, VariantNames};
+use strum::{Display, EnumIter, IntoEnumIterator, VariantNames};
 
 pub trait ContractError: From<cosmwasm_std::StdError> + 'static {}
-
 impl<T> ContractError for T where T: From<cosmwasm_std::StdError> + 'static {}
 
-#[derive(EnumIter)]
+pub trait ContractEnumMsg: Clone + Serialize + DeserializeOwned + VariantNames + 'static {}
+impl<T> ContractEnumMsg for T where T: Clone + Serialize + DeserializeOwned + VariantNames + 'static {}
+
+pub trait ContractStructMsg: Clone + Serialize + DeserializeOwned + 'static {}
+impl<T> ContractStructMsg for T where T: Clone + Serialize + DeserializeOwned + 'static {}
+
+#[derive(EnumIter, Display)]
 pub enum ActionVariants {
     Execute,
     Query,
     Instantiate,
     Migrate,
-}
-
-impl std::fmt::Display for ActionVariants {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ActionVariants::Execute => write!(f, "execute"),
-            ActionVariants::Query => write!(f, "query"),
-            ActionVariants::Instantiate => write!(f, "instantiate"),
-            ActionVariants::Migrate => write!(f, "migrate"),
-        }
-    }
+    Quit,
 }
 
 pub struct ContractCli<
     Error: ContractError,
-    CustomInitMsg: Clone + Serialize + DeserializeOwned + 'static,
-    CustomExecMsg: Clone + Serialize + DeserializeOwned + VariantNames + 'static,
-    CustomQueryMsg: Clone + Serialize + DeserializeOwned + 'static,
-    CustomMigrateMsg: Clone + Serialize + DeserializeOwned + 'static,
+    CustomInitMsg: ContractStructMsg,
+    CustomExecMsg: ContractEnumMsg,
+    CustomQueryMsg: ContractEnumMsg,
+    CustomMigrateMsg: ContractStructMsg,
 > {
     pub(crate) init: PhantomData<CustomInitMsg>,
     pub(crate) exec: PhantomData<CustomExecMsg>,
@@ -45,21 +44,31 @@ pub struct ContractCli<
 
 impl<
         Error: ContractError,
-        CustomInitMsg: Clone + Serialize + DeserializeOwned + 'static,
-        CustomExecMsg: Clone + Serialize + DeserializeOwned + VariantNames + 'static,
-        CustomQueryMsg: Clone + Serialize + DeserializeOwned + 'static,
-        CustomMigrateMsg: Clone + Serialize + DeserializeOwned + 'static,
+        CustomInitMsg: ContractStructMsg,
+        CustomExecMsg: ContractEnumMsg,
+        CustomQueryMsg: ContractEnumMsg,
+        CustomMigrateMsg: ContractStructMsg,
     > ContractCli<Error, CustomInitMsg, CustomExecMsg, CustomQueryMsg, CustomMigrateMsg>
 {
     pub fn select_action() -> cw_orch::anyhow::Result<()> {
-        let action =
-            inquire::Select::new("Select action", ActionVariants::iter().collect()).prompt()?;
-
-        match action {
-            ActionVariants::Execute => Self::execute(),
-            ActionVariants::Query => todo!(),
-            ActionVariants::Instantiate => todo!(),
-            ActionVariants::Migrate => todo!(),
+        let network = inquire::Text::new("Chain id").prompt()?;
+        let chain = parse_network(&network);
+        let rt = Runtime::new()?;
+        // TODO: option to change wallet
+        let daemon = DaemonBuilder::default()
+            .chain(chain)
+            .handle(rt.handle())
+            .build()?;
+        loop {
+            let action =
+                inquire::Select::new("Select action", ActionVariants::iter().collect()).prompt()?;
+            match action {
+                ActionVariants::Execute => Self::execute()?,
+                ActionVariants::Query => todo!(),
+                ActionVariants::Instantiate => todo!(),
+                ActionVariants::Migrate => todo!(),
+                ActionVariants::Quit => return Ok(()),
+            }
         }
     }
     fn execute() -> cw_orch::anyhow::Result<()> {
@@ -78,9 +87,9 @@ impl<
                 let s = format!("{{\"{variant}\": {input}}}");
                 serde_json::from_str(&s).map_err(|_| ())
             },
-            validators: vec![],
+            validators: CustomType::DEFAULT_VALIDATORS,
             error_message: "Serialization failed".to_owned(),
-            render_config: RenderConfig::empty(),
+            render_config: RenderConfig::default_colored(),
         }
         .prompt()?;
         println!(

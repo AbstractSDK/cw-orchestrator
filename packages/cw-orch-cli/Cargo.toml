@@ -10,7 +10,7 @@ repository.workspace = true
 
 [dependencies]
 cosmwasm-std = { workspace = true }
-cw-orch = { path = "../../cw-orch" }
+cw-orch = { path = "../../cw-orch", features = ["daemon"]}
 cw-orch-cli-derive = { path = "../cw-orch-cli-derive", version = "0.13.3" }
 interactive-clap = "0.2.4"
 clap = { version = "4.0.18", features = ["derive"] }
