@@ -5,8 +5,11 @@ install-docs:
   cargo install mdbook
   cargo install mdbook-keeper
 
+setup-docs:
+  cargo install mdbook-keeper
+
 serve-docs:
-  (cd docs && mdbook serve --open) 
+  (cd docs && mdbook serve --open)
 
 build-docs:
   (cd docs && mdbook build)

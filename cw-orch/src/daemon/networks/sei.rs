@@ -6,6 +6,8 @@ pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
+// ANCHOR: sei
+
 pub const LOCAL_SEI: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "sei-chain",
@@ -38,3 +40,4 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+// ANCHOR_END: sei
