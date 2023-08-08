@@ -1,13 +1,24 @@
 use counter_contract::{
     msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
-    ContractError,
+    ContractError, CounterContract,
 };
-use cw_orch::anyhow;
+use cw_orch::{anyhow, tokio::runtime::Runtime, prelude::{networks, DaemonBuilder}};
 use cw_orch_cli::ContractCli;
 
-type CounterCli = ContractCli<ContractError, InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg>;
-
 pub fn main() -> anyhow::Result<()> {
-    CounterCli::select_action()?;
+    dotenv::dotenv().ok();
+    env_logger::init();
+
+    let rt = Runtime::new()?;
+    let network = networks::UNI_6;
+    let chain = DaemonBuilder::default()
+        .handle(rt.handle())
+        .chain(network)
+        .build()?;
+
+    let counter = CounterContract::new("counter_contract", chain);
+
+    ContractCli::select_action(counter)?;
+
     Ok(())
 }
