@@ -15,7 +15,7 @@ or add it manually to the `counter/Cargo.toml` file:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.13.3", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.14.0", optional = true } # Latest version at time of writing
 ```
 
 We add `cw-orch` as an optional dependency to ensure that it is not included in the wasm artifact of the contract. This way there are no trust assumptions made about the code added by `cw-orch`, making it safe to use for production contracts.
