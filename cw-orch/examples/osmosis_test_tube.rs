@@ -13,12 +13,12 @@ pub fn main() {
 
     // ANCHOR: osmosis_test_tube_usage
     let contract_counter = CounterContract::new("osmosis_test_tube:contract_counter", chain);
-   
+
     let upload_res = contract_counter.upload();
     assert!(upload_res.is_ok());
 
     let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None);
-    assert!(init_res.is_ok()); 
+    assert!(init_res.is_ok());
     // ANCHOR_END: osmosis_test_tube_usage
 
     let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);
