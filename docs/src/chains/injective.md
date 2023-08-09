@@ -14,5 +14,5 @@ Injective is a unique blockchain tailored for finance, offering out-of-the-box m
 
 ## References
 
-[Injective Documentation](https://docs.injective.network/)
-[Injective Discord](https://discord.gg/injective)
+- [Injective Documentation](https://docs.injective.network/)
+- [Injective Discord](https://discord.gg/injective)
