@@ -1,12 +1,11 @@
 use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: osmosis
 pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
     id: "osmosis",
     pub_address_prefix: "osmo",
     coin_type: 118u32,
 };
-
-// ANCHOR: osmosis
 
 pub const OSMO_5: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
@@ -29,5 +28,4 @@ pub const LOCAL_OSMO: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
-
 // ANCHOR_END: osmosis

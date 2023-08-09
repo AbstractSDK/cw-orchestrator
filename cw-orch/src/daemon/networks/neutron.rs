@@ -1,12 +1,12 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: neutron
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
     id: "neutron",
     pub_address_prefix: "neutron",
     coin_type: 118u32,
 };
 
-// ANCHOR: neutron
 /// <https://github.com/cosmos/chain-registry/blob/master/testnets/neutrontestnet/chain.json>
 pub const PION_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
@@ -41,5 +41,4 @@ pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
-
 // ANCHOR_END: neutron
