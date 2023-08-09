@@ -1,12 +1,11 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: sei
 pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
     id: "sei",
     pub_address_prefix: "sei",
     coin_type: 118u32,
 };
-
-// ANCHOR: sei
 
 pub const LOCAL_SEI: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
