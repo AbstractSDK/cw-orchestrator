@@ -48,10 +48,9 @@ You can then use the resulting `OsmosisTestTube` variable to interact with your 
 {{#include ../../../cw-orch/examples/osmosis_test_tube.rs:osmosis_test_tube_usage}}
 ```
 
-When executing contracts in a cw-multi-test environment, the messages and sub-messages sent along the Response of an endpoint, will be executed as well.
-This environment mocks the actual on-chain execution exactly 
+When executing contracts in an `osmosis_test_tube` environment, the messages and sub-messages sent along the Response of an endpoint, will be executed as well. This environment mimics the actual on-chain execution by dispatching the messages inside the actual chain binaries.
 
-> If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../single_contract/interfaces.md#customizable-interface-macro).
+> If you are using the customizable Interface Macro, you will need to have implemented the `wasm` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../single_contract/interfaces.md#customizable-interface-macro).
 
 
 > **_NOTE:_** Keep in mind that cw-multi-test is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.
