@@ -21,6 +21,7 @@ pub const CONSTANTINE_1: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
+// ANCHOR: archway
 /// Archway Docs: <https://docs.archway.io/resources/networks>
 /// Parameters: <https://testnet.mintscan.io/archway-testnet/parameters>
 pub const CONSTANTINE_3: ChainInfo = ChainInfo {
@@ -46,3 +47,4 @@ pub const ARCHWAY_1: ChainInfo = ChainInfo {
     lcd_url: Some("https://api.mainnet.archway.io"),
     fcd_url: None,
 };
+// ANCHOR_END: archway

@@ -6,6 +6,8 @@ pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
+// ANCHOR: kujira
+
 pub const HARPOON_4: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "harpoon-4",
@@ -16,3 +18,5 @@ pub const HARPOON_4: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+
+// ANCHOR_END: kujira

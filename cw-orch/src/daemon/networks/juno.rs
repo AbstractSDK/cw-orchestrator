@@ -23,6 +23,7 @@ pub const UNI_5: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
+// ANCHOR: juno
 pub const UNI_6: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "uni-6",
@@ -58,3 +59,4 @@ pub const LOCAL_JUNO: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+// ANCHOR_END: juno

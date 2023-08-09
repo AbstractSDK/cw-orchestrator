@@ -5,6 +5,7 @@ pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {
     pub_address_prefix: "inj",
     coin_type: 60u32,
 };
+// ANCHOR: injective
 
 pub const INJECTIVE_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
@@ -29,3 +30,5 @@ pub const INJECTIVE_888: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+
+// ANCHOR_END: injective
