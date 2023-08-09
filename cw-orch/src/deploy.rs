@@ -157,10 +157,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 
     /// Sets the custom state file path for exporting the state with the package.
     // TODO, we might want to enforce the projects to redefine this function ?
-    fn deployed_state_file_path(&self) -> Option<String> {
-        // No file by default
-        None
-    }
+    fn deployed_state_file_path(&self) -> Option<String>;
 
     /// Returns all the contracts in this deployment instance
     /// Used to set the contract state (addr and code_id) when importing the package.

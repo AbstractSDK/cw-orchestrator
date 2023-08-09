@@ -31,6 +31,11 @@ required-features = ["osmosis-test-tube"]
 name = "injective"
 required-features = ["eth"]
 
+[[example]]
+name = "bank_query"
+path = "examples/queries/bank_query.rs"
+require-features = ["daemon"]
+
 [features]
 default = []
 # enable node-backed tests (ensure Docker is running)

@@ -4,7 +4,7 @@ Cw Multi Test is a rust-based test framework that allows developers to test  for
 
 ## Quick Start
 
-The cw-multi-test integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages cw-multi-test goes along the lines of : 
+The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages `cw-multi-test` goes along the lines of : 
 
 ```rust,ignore
     use cw_orch::prelude::*;
@@ -12,9 +12,9 @@ The cw-multi-test integration comes at no extra cost for the developer. Creating
 {{#include ../../../cw-orch/examples/mock_test.rs:mock_creation}}
 ```
 
-> **_NOTE:_** When using `cw-multi-test`, the addresses ARE NOT validated like on a live chain. Therefore, you can use any string format for designating addresses. For instance,`Addr::unchecked("my-first-sender")` is a valid cw-multi-test address.
+> **_NOTE:_** When using `cw-multi-test`, the addresses ARE NOT validated like on a live chain. Therefore, you can use any string format for designating addresses. For instance,`Addr::unchecked("my-first-sender")` is a valid `cw-multi-test` address.
 
-> **_NOTE:_** When using cw-multi-test, NO gas fees are charged to the sender address.
+> **_NOTE:_** When using `cw-multi-test`, NO gas fees are charged to the sender address.
 
 ## Interacting with contracts
 
@@ -32,7 +32,7 @@ This environment mocks the actual on-chain execution exactly
 > If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../single_contract/interfaces.md#customizable-interface-macro).
 
 
-> **_NOTE:_** Keep in mind that cw-multi-test is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.
+> **_NOTE:_** Keep in mind that `cw-multi-test` is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.
 
 ## Cloning
 
@@ -50,7 +50,7 @@ The `Mock` test environment allows you to change application variables (such as 
 
 ## Additional customization
 
-As we don't provide wrappers around each and every functionality that cw-multi-test provides, you can also customize the underyling `cw_multi_test::App`object to your specific needs. In the following example, we create a new validator in the test environment : 
+As we don't provide wrappers around each and every functionality that `cw-multi-test` provides, you can also customize the underlying `cw_multi_test::App`object to your specific needs. In the following example, we create a new validator in the test environment : 
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/mock_test.rs:deep_mock_customization}}
