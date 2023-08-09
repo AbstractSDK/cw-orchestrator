@@ -12,6 +12,12 @@
   - [Scripting](./single_contract/scripting.md)
   - [Integration Tests](./single_contract/integration-tests.md)
 
+- [Integrations](./integrations/index.md)
+  - [Daemon (Live Chains)](./integrations/daemon.md)
+  - [Cw Multi Test](./integrations/cw-multi-test.md)
+  - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
+  - [Starship](./integrations/starship.md)
+
 
 - [Workspace](./workspace/index.md)
   - [Structure]()
