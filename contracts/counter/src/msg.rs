@@ -1,15 +1,14 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cw_orch::cli;
 
 #[cw_serde]
-#[cli]
+#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
 pub struct InstantiateMsg {
     pub count: i32,
 }
 
 // ANCHOR: exec_msg
 #[cw_serde]
-#[cli]
+#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
 #[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))] // Function generation
 pub enum ExecuteMsg {
     Increment {},
@@ -19,7 +18,7 @@ pub enum ExecuteMsg {
 
 // ANCHOR: query_msg
 #[cw_serde]
-#[cli]
+#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
 #[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))] // Function generation
 #[derive(QueryResponses)]
 pub enum QueryMsg {
@@ -36,6 +35,7 @@ pub struct GetCountResponse {
 // ANCHOR_END: query_msg
 
 #[cw_serde]
+#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
 pub struct MigrateMsg {
     pub t: String,
 }

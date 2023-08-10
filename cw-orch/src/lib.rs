@@ -3,7 +3,6 @@
 #![deny(missing_docs)]
 
 // macros
-pub use cw_orch_cli_derive::cli;
 pub use cw_orch_contract_derive::{interface, interface_entry_point};
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 
