@@ -26,7 +26,7 @@
 
 [//]: # (- [live-chains]&#40;&#41;)
 
-- [Supported Chains]()
+- [Supported Chains](./chains/index.md)
   - [Archway](./chains/archway.md)
   - [Injective](./chains/injective.md)
   - [Juno](./chains/juno.md)
@@ -35,7 +35,6 @@
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
-  - [Other](./chains/other.md)
 
 # Extras
 
