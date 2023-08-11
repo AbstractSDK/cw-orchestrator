@@ -1,7 +1,8 @@
+use convert_case::Casing;
 use proc_macro::TokenStream;
 extern crate proc_macro;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, FieldsNamed};
+use syn::{parse_macro_input, DeriveInput, FieldsNamed, Fields};
 
 #[proc_macro_derive(ParseCwMsg)]
 pub fn derive_parse_cw_message(input: TokenStream) -> TokenStream {
@@ -13,29 +14,11 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
     let name = &input.ident;
     match &input.data {
         syn::Data::Struct(data) => {
-            let syn::Fields::Named(FieldsNamed { named, .. }) = data.fields.clone() else {
-                unimplemented!()
-            };
-            let fields = named.into_iter().map(|field| {
-                let ident = field.ident.unwrap();
-                let ty = field.ty;
-                let message = format!("{}({})", ident, quote!(#ty).to_string());
-                quote!(#ident: ::cw_orch_cli::custom_type_serialize(#message)?)
-            });
-            let derived_trait_impl = quote!(
-                #[automatically_derived]
-                impl ::cw_orch_cli::ParseCwMsg for #name {
-                    fn parse() -> ::cw_orch::anyhow::Result<Self> {
-                        Ok(Self {
-                            #(#fields),*
-                        })
-                    }
-                }
-            );
-            derived_trait_impl.into()
+            impl_parse_for_struct(&data.fields, name)
         }
         syn::Data::Enum(data) => {
             let idents: Vec<_> = data.variants.iter().map(|variant| &variant.ident).collect();
+            // Generate helper enum
             let enum_variants_ident =
                 proc_macro2::Ident::new(&format!("{name}Variants"), name.span());
             let enum_of_variant_names = quote!(
@@ -44,7 +27,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
                 }
             );
             let display_for_enum_variant_names = idents.iter().map(|&ident| {
-                let name = ident.to_string().to_lowercase();
+                let name = ident.to_string().to_case(convert_case::Case::Snake);
                 quote!(
                     #enum_variants_ident::#ident => f.pad(#name)
                 )
@@ -58,6 +41,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
                     }
                 }
             );
+            
             let variants_as_structs = data.variants.iter().map(|variant| {
                 let struct_name = &variant.ident;
                 let fields = &variant.fields;
@@ -71,22 +55,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
                         }
                     }
                 );
-                let sub_fields = fields.iter().map(|field| {
-                    let ident = field.ident.clone().unwrap();
-                    let ty = &field.ty;
-                    let message = format!("{}({})", ident, quote!(#ty).to_string());
-                    quote!(#ident: ::cw_orch_cli::custom_type_serialize(#message)?)
-                });
-                let sub_derived_trait_impl = quote!(
-                    #[automatically_derived]
-                    impl ::cw_orch_cli::ParseCwMsg for #struct_name {
-                        fn parse() -> ::cw_orch::anyhow::Result<Self> {
-                            Ok(Self {
-                                #(#sub_fields),*
-                            })
-                        }
-                    }
-                );
+                let sub_derived_trait_impl = impl_parse_for_struct(fields, struct_name);
                 quote!(
                     struct #struct_name
                     #fields
@@ -94,7 +63,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
                     #sub_derived_trait_impl
                 )
             });
-            let derived_trait_impl = quote!(
+            quote!(
                 #[automatically_derived]
                 impl ::cw_orch_cli::ParseCwMsg for #name {
                     fn parse() -> ::cw_orch::anyhow::Result<Self> {
@@ -104,16 +73,41 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
                         let variant = ::cw_orch_cli::select_msg(options)?;
                         #(#variants_as_structs)*
                         let msg = match variant {
-                            #(#enum_variants_ident:: #idents => #idents::parse()?.into()),*
+                            #(#enum_variants_ident::#idents => #idents::parse()?.into()),*
                         };
                         Ok(msg)
                     }
                 }
-            );
-            derived_trait_impl.into()
+            )
         }
         syn::Data::Union(_) => {
             unimplemented!()
         }
-    }
+    }.into()
+}
+
+fn impl_parse_for_struct(fields: &Fields, name: &proc_macro2::Ident) -> proc_macro2::TokenStream {
+    let syn::Fields::Named(FieldsNamed { 
+        named,
+         .. 
+    }) = fields else {
+        unimplemented!()
+    };
+    let fields = named.into_iter().map(|field| {
+        let ident = field.ident.clone().unwrap();
+        let ty = field.ty.clone();
+        let message = format!("{}({})", ident, quote!(#ty).to_string());
+        quote!(#ident: ::cw_orch_cli::custom_type_serialize(#message)?)
+    });
+    let derived_trait_impl = quote!(
+        #[automatically_derived]
+        impl ::cw_orch_cli::ParseCwMsg for #name {
+            fn parse() -> ::cw_orch::anyhow::Result<Self> {
+                Ok(Self {
+                    #(#fields),*
+                })
+            }
+        }
+    );
+    derived_trait_impl
 }

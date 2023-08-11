@@ -9,16 +9,7 @@ pub use strum;
 
 use inquire::{ui::RenderConfig, CustomType};
 use serde::{de::DeserializeOwned, Serialize};
-use strum::{Display, EnumIter, IntoEnumIterator, VariantNames};
-
-pub trait ContractError: From<cosmwasm_std::StdError> + 'static {}
-impl<T> ContractError for T where T: From<cosmwasm_std::StdError> + 'static {}
-
-pub trait ContractEnumMsg: Clone + Serialize + DeserializeOwned + VariantNames + 'static {}
-impl<T> ContractEnumMsg for T where T: Clone + Serialize + DeserializeOwned + VariantNames + 'static {}
-
-pub trait ContractStructMsg: Clone + Serialize + DeserializeOwned + 'static {}
-impl<T> ContractStructMsg for T where T: Clone + Serialize + DeserializeOwned + 'static {}
+use strum::{Display, EnumIter, IntoEnumIterator};
 
 #[derive(EnumIter, Display)]
 pub enum ActionVariants {
