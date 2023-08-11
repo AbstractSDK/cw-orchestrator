@@ -2,7 +2,7 @@ use convert_case::Casing;
 use proc_macro::TokenStream;
 extern crate proc_macro;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, FieldsNamed, Fields};
+use syn::{parse_macro_input, DeriveInput, Fields, FieldsNamed};
 
 #[proc_macro_derive(ParseCwMsg)]
 pub fn derive_parse_cw_message(input: TokenStream) -> TokenStream {
@@ -13,9 +13,7 @@ pub fn derive_parse_cw_message(input: TokenStream) -> TokenStream {
 fn parse_fn_derive(input: DeriveInput) -> TokenStream {
     let name = &input.ident;
     match &input.data {
-        syn::Data::Struct(data) => {
-            impl_parse_for_struct(&data.fields, name)
-        }
+        syn::Data::Struct(data) => impl_parse_for_struct(&data.fields, name),
         syn::Data::Enum(data) => {
             let idents: Vec<_> = data.variants.iter().map(|variant| &variant.ident).collect();
             // Generate helper enum
@@ -41,7 +39,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
                     }
                 }
             );
-            
+
             let variants_as_structs = data.variants.iter().map(|variant| {
                 let struct_name = &variant.ident;
                 let fields = &variant.fields;
@@ -83,20 +81,21 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
         syn::Data::Union(_) => {
             unimplemented!()
         }
-    }.into()
+    }
+    .into()
 }
 
 fn impl_parse_for_struct(fields: &Fields, name: &proc_macro2::Ident) -> proc_macro2::TokenStream {
-    let syn::Fields::Named(FieldsNamed { 
+    let syn::Fields::Named(FieldsNamed {
         named,
-         .. 
+        ..
     }) = fields else {
         unimplemented!()
     };
     let fields = named.into_iter().map(|field| {
         let ident = field.ident.clone().unwrap();
         let ty = field.ty.clone();
-        let message = format!("{}({})", ident, quote!(#ty).to_string());
+        let message = format!("{}({})", ident, quote!(#ty));
         quote!(#ident: ::cw_orch_cli::custom_type_serialize(#message)?)
     });
     let derived_trait_impl = quote!(
