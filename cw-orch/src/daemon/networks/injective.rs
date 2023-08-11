@@ -1,11 +1,11 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: injective
 pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {
     id: "injective",
     pub_address_prefix: "inj",
     coin_type: 60u32,
 };
-// ANCHOR: injective
 
 /// <https://docs.injective.network/develop/public-endpoints/#mainnet>
 /// <https://www.mintscan.io/injective/parameters>
@@ -33,5 +33,4 @@ pub const INJECTIVE_888: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
-
 // ANCHOR_END: injective

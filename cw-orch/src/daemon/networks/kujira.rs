@@ -1,12 +1,11 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: kujira
 pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
     id: "kujira",
     pub_address_prefix: "kujira",
     coin_type: 118u32,
 };
-
-// ANCHOR: kujira
 
 pub const HARPOON_4: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
@@ -18,5 +17,4 @@ pub const HARPOON_4: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
-
 // ANCHOR_END: kujira

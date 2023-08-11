@@ -1,12 +1,12 @@
 use crate::daemon::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: terra
 pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
     id: "terra2",
     pub_address_prefix: "terra",
     coin_type: 330u32,
 };
 
-// ANCHOR: terra
 /// Terra testnet network.
 /// <https://docs.terra.money/develop/endpoints>
 pub const PISCO_1: ChainInfo = ChainInfo {
