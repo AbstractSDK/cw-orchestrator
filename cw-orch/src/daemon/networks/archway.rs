@@ -35,8 +35,8 @@ pub const ARCHWAY_1: ChainInfo = ChainInfo {
 // ANCHOR_END: archway
 
 #[deprecated(
-since = "0.6.1",
-note = "Constantine-1 does not exist anymore. Use Constantine-3 instead."
+    since = "0.6.1",
+    note = "Constantine-1 does not exist anymore. Use Constantine-3 instead."
 )]
 pub const CONSTANTINE_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,

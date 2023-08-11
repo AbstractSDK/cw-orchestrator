@@ -46,10 +46,9 @@ pub const LOCAL_JUNO: ChainInfo = ChainInfo {
 };
 // ANCHOR_END: juno
 
-
 #[deprecated(
-since = "0.6.1",
-note = "Uni-5 does not exist anymore. Use Uni-6 instead."
+    since = "0.6.1",
+    note = "Uni-5 does not exist anymore. Use Uni-6 instead."
 )]
 pub const UNI_5: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
