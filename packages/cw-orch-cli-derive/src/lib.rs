@@ -42,17 +42,23 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
 
             let variants_as_structs = data.variants.iter().map(|variant| {
                 let struct_name = &variant.ident;
-                let fields = &variant.fields;
+                let syn::Fields::Named(FieldsNamed {
+                    named,
+                    ..
+                }) = &variant.fields else {
+                    unimplemented!()
+                };
+                let field_names = named.into_iter().map(|a| a.ident.clone().unwrap());
+                let field_names = quote!({#(#field_names),*});
                 let into_enum = quote!(
                     impl From<#struct_name> for #name {
                         fn from(val: #struct_name) -> Self {
-                            let #struct_name #fields = val;
-                            #name::#struct_name
-                                #fields
-
+                            let #struct_name #field_names = val;
+                            #name::#struct_name #field_names
                         }
                     }
                 );
+                let fields = &variant.fields;
                 let sub_derived_trait_impl = impl_parse_for_struct(fields, struct_name);
                 quote!(
                     struct #struct_name
