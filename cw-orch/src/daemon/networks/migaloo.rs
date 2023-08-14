@@ -1,0 +1,29 @@
+use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
+
+pub const MIGALOO_NETWORK: NetworkInfo = NetworkInfo {
+    id: "migaloo-1",
+    pub_address_prefix: "migaloo",
+    coin_type: 118u32,
+};
+
+pub const LOCAL_MIGALOO: ChainInfo = ChainInfo {
+    kind: ChainKind::Local,
+    chain_id: "migaloo-chain",
+    gas_denom: "uwhale",
+    gas_price: 0.1,
+    grpc_urls: &["http://localhost:9090"],
+    network_info: MIGALOO_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+
+pub const NARWHAL_2: ChainInfo = ChainInfo {
+    kind: ChainKind::Testnet,
+    chain_id: "narwhal-1",
+    gas_denom: "uwhale",
+    gas_price: 0.1,
+    grpc_urls: &["migaloo-testnet-grpc.polkachu.com:20790"],
+    network_info: MIGALOO_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
