@@ -6,6 +6,7 @@ pub mod archway;
 pub mod injective;
 pub mod juno;
 pub mod kujira;
+pub mod migaloo;
 pub mod neutron;
 pub mod osmosis;
 pub mod sei;
@@ -16,6 +17,7 @@ pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
 pub use kujira::HARPOON_4;
+pub use migaloo::{LOCAL_MIGALOO, NARWHAL_2};
 pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_5};
 pub use sei::{ATLANTIC_2, LOCAL_SEI, SEI_DEVNET_3};
@@ -42,11 +44,13 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         CONSTANTINE_3,
         ARCHWAY_1,
         PION_1,
+        NARWHAL_2,
         NEUTRON_1,
         INJECTIVE_1,
         HARPOON_4,
         OSMO_5,
         LOCAL_OSMO,
+        LOCAL_MIGALOO,
         LOCAL_NEUTRON,
     ];
     for net in networks {
