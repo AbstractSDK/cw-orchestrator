@@ -1,10 +1,11 @@
+use cosmwasm_std::Empty;
 use counter_contract::CounterContract;
 use cw_orch::{
     anyhow,
-    prelude::{networks, DaemonBuilder},
+    prelude::{networks, DaemonBuilder, Daemon},
     tokio::runtime::Runtime,
 };
-use cw_orch_cli::ContractCli;
+use cw_orch_cli::{ContractCli, CwCliAddons};
 
 pub fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
@@ -18,7 +19,7 @@ pub fn main() -> anyhow::Result<()> {
 
     let counter = CounterContract::new("counter_contract", chain);
 
-    ContractCli::select_action(counter)?;
+    ContractCli::select_action(counter, Empty {})?;
 
     Ok(())
 }
