@@ -10,7 +10,7 @@ pub const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 impl cw_orch_cli::CwCliAddons<Empty> for CounterContract<cw_orch::prelude::Daemon> {
-    fn addons(&mut self, context: Empty) -> cw_orch::anyhow::Result<()>
+    fn addons(&mut self, _context: Empty) -> cw_orch::anyhow::Result<()>
     where
         Self: cw_orch::prelude::ContractInstance<cw_orch::prelude::Daemon>,
     {

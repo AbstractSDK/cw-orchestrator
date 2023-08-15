@@ -2,7 +2,7 @@ use cosmwasm_std::Empty;
 use counter_contract::CounterContract;
 use cw_orch::{
     anyhow,
-    prelude::{networks, DaemonBuilder, Daemon},
+    prelude::{networks, Daemon, DaemonBuilder},
     tokio::runtime::Runtime,
 };
 use cw_orch_cli::{ContractCli, CwCliAddons};
