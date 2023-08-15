@@ -1,9 +1,17 @@
-use std::fmt::{Display, Write};
+use std::{
+    fmt::{Display, Write},
+    rc::Rc,
+};
 
 use cosmwasm_std::{Addr, Coin};
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload,
-    Daemon, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
+use cw_orch::{
+    daemon::DaemonState,
+    prelude::{
+        ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery,
+        CwOrchUpload, Daemon, ExecutableContract, InstantiableContract, MigratableContract,
+        QueryableContract,
+    },
+    state::ChainState,
 };
 
 use inquire::{ui::RenderConfig, Confirm, CustomType, Text};
@@ -34,7 +42,7 @@ pub trait ParseCwMsg
 where
     Self: Sized,
 {
-    fn cw_parse() -> cw_orch::anyhow::Result<Self>;
+    fn cw_parse(state: &Rc<DaemonState>) -> cw_orch::anyhow::Result<Self>;
 }
 
 impl<Contract> ContractCli<Contract>
@@ -52,25 +60,27 @@ where
 {
     pub fn select_action(contract: Contract) -> cw_orch::anyhow::Result<()> {
         let instance = ContractCli { contract };
+        let state_interface = instance.contract.get_chain().state();
         loop {
             let action =
                 inquire::Select::new("Select action", ActionVariants::iter().collect()).prompt()?;
             match action {
-                ActionVariants::Execute => instance.execute()?,
-                ActionVariants::Query => instance.query()?,
+                ActionVariants::Execute => instance.execute(&state_interface)?,
+                ActionVariants::Query => instance.query(&state_interface)?,
                 ActionVariants::Deploy => {
                     instance.contract.upload()?;
                     println!("Code_id: {}", instance.contract.addr_str()?);
                 }
-                ActionVariants::Instantiate => instance.instantiate()?,
-                ActionVariants::Migrate => instance.migrate()?,
+                ActionVariants::Instantiate => instance.instantiate(&state_interface)?,
+                ActionVariants::Migrate => instance.migrate(&state_interface)?,
                 ActionVariants::Quit => return Ok(()),
             }
         }
     }
 
-    fn instantiate(&self) -> cw_orch::anyhow::Result<()> {
-        let instantiate_msg = <Contract as InstantiableContract>::InstantiateMsg::cw_parse()?;
+    fn instantiate(&self, state_interface: &Rc<DaemonState>) -> cw_orch::anyhow::Result<()> {
+        let instantiate_msg =
+            <Contract as InstantiableContract>::InstantiateMsg::cw_parse(state_interface)?;
         let coins = helpers::parse_coins()?;
 
         let admin = Text::new("Admin addr")
@@ -89,8 +99,8 @@ where
         Ok(())
     }
 
-    fn execute(&self) -> cw_orch::anyhow::Result<()> {
-        let execute_msg = <Contract as ExecutableContract>::ExecuteMsg::cw_parse()?;
+    fn execute(&self, state_interface: &Rc<DaemonState>) -> cw_orch::anyhow::Result<()> {
+        let execute_msg = <Contract as ExecutableContract>::ExecuteMsg::cw_parse(state_interface)?;
         let coins = helpers::parse_coins()?;
 
         if Self::confirm_action("Execute", &execute_msg, Some(coins.as_slice()))? {
@@ -102,17 +112,17 @@ where
         Ok(())
     }
 
-    fn query(&self) -> cw_orch::anyhow::Result<()> {
-        let query_msg = <Contract as QueryableContract>::QueryMsg::cw_parse()?;
+    fn query(&self, state_interface: &Rc<DaemonState>) -> cw_orch::anyhow::Result<()> {
+        let query_msg = <Contract as QueryableContract>::QueryMsg::cw_parse(state_interface)?;
 
         let resp: serde_json::Value = self.contract.query(&query_msg)?;
         println!("{}", serde_json::to_string_pretty(&resp)?);
         Ok(())
     }
 
-    fn migrate(&self) -> cw_orch::anyhow::Result<()> {
+    fn migrate(&self, state_interface: &Rc<DaemonState>) -> cw_orch::anyhow::Result<()> {
         let new_code_id = inquire::CustomType::<u64>::new("New code_id").prompt()?;
-        let migrate_msg = <Contract as MigratableContract>::MigrateMsg::cw_parse()?;
+        let migrate_msg = <Contract as MigratableContract>::MigrateMsg::cw_parse(state_interface)?;
 
         if Self::confirm_action("Migrate", &migrate_msg, None)? {
             let res = self.contract.migrate(&migrate_msg, new_code_id)?;
