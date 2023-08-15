@@ -1,5 +1,6 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: migaloo
 pub const MIGALOO_NETWORK: NetworkInfo = NetworkInfo {
     id: "migaloo-1",
     pub_address_prefix: "migaloo",
@@ -17,7 +18,8 @@ pub const LOCAL_MIGALOO: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const NARWHAL_2: ChainInfo = ChainInfo {
+/// <https://docs.migaloo.zone/validators/testnet>
+pub const NARWHAL_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "narwhal-1",
     gas_denom: "uwhale",
@@ -27,3 +29,16 @@ pub const NARWHAL_2: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+
+/// <https://docs.migaloo.zone/validators/mainnet>
+pub const MIGALOO_1: ChainInfo = ChainInfo {
+    kind: ChainKind::Mainnet,
+    chain_id: "migaloo-1",
+    gas_denom: "uwhale",
+    gas_price: 0.1,
+    grpc_urls: &["migaloo-grpc.polkachu.com:20790"],
+    network_info: MIGALOO_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+// ANCHOR_END: migaloo
