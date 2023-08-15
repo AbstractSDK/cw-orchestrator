@@ -42,7 +42,7 @@ pub trait ParseCwMsg
 where
     Self: Sized,
 {
-    fn cw_parse(state: &Rc<DaemonState>) -> cw_orch::anyhow::Result<Self>;
+    fn cw_parse(state: &impl cw_orch::state::StateInterface) -> cw_orch::anyhow::Result<Self>;
 }
 
 impl<Contract> ContractCli<Contract>
