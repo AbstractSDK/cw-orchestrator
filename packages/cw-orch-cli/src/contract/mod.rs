@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Coin, Empty};
 use cw_orch::{
     daemon::DaemonState,
     prelude::{
@@ -22,10 +22,11 @@ use strum::{Display, EnumIter, IntoEnumIterator};
 enum ActionVariants {
     Execute,
     Query,
-    Deploy,
+    Upload,
     Instantiate,
     Migrate,
     Quit,
+    // TODO: Addons
 }
 
 pub struct ContractCli<
@@ -43,6 +44,12 @@ where
     Self: Sized,
 {
     fn cw_parse(state: &impl cw_orch::state::StateInterface) -> cw_orch::anyhow::Result<Self>;
+}
+
+impl ParseCwMsg for Empty {
+    fn cw_parse(_state: &impl cw_orch::state::StateInterface) -> cw_orch::anyhow::Result<Self> {
+        Ok(Empty {})
+    }
 }
 
 impl<Contract> ContractCli<Contract>
@@ -67,7 +74,7 @@ where
             match action {
                 ActionVariants::Execute => instance.execute(&state_interface)?,
                 ActionVariants::Query => instance.query(&state_interface)?,
-                ActionVariants::Deploy => {
+                ActionVariants::Upload => {
                     instance.contract.upload()?;
                     println!("Code_id: {}", instance.contract.addr_str()?);
                 }
