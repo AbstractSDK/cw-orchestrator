@@ -1,4 +1,7 @@
 mod contract;
+mod daemon;
+
+pub use daemon::DaemonFromCli;
 
 pub use cw_orch_cli_derive::ParseCwMsg;
 
@@ -8,5 +11,7 @@ pub use contract::{
     AddonsContext,
     ContractCli,
     CwCliAddons,
+    OrchCliError,
+    OrchCliResult,
     ParseCwMsg,
 };

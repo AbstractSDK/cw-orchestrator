@@ -70,7 +70,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
             quote!(
                 #[automatically_derived]
                 impl ::cw_orch_cli::ParseCwMsg for #name {
-                    fn cw_parse(state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch::anyhow::Result<Self> {
+                    fn cw_parse(state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch_cli::OrchCliResult<Self> {
                         #enum_of_variant_names
                         #display_for_enum_variant_names
                         let options = vec![#(#enum_variants_ident::#idents),*];
@@ -107,7 +107,7 @@ fn impl_parse_for_struct(fields: &Fields, name: &proc_macro2::Ident) -> proc_mac
     let derived_trait_impl = quote!(
         #[automatically_derived]
         impl ::cw_orch_cli::ParseCwMsg for #name {
-            fn cw_parse(_state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch::anyhow::Result<Self> {
+            fn cw_parse(_state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch_cli::OrchCliResult<Self> {
                 Ok(Self {
                     #(#fields),*
                 })
