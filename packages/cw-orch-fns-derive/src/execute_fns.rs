@@ -15,6 +15,8 @@ fn payable(v: &syn::Variant) -> bool {
 }
 
 pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
+
+
     let name = &input.ident;
     let bname = Ident::new(&format!("{name}Fns"), name.span());
 
@@ -75,16 +77,29 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     });
 
     let derived_trait = quote!(
-        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics #where_clause> {
+        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics> #where_clause {
             #(#variant_fns)*
         }
+    );
+
+    // We need to merge the where clauses (rust doesn't support 2 wheres)
+    // If there is no where clause, we simply add the necessary where
+    let necessary_where = quote!(SupportedContract: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics >);
+    let combined_where_clause = where_clause.map(|w|
+        quote!(
+            #w #necessary_where
+        )
+    ).unwrap_or(
+        quote!(
+            where
+                #necessary_where
+        )
     );
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
         impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
-        where
-            SupportedContract: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics #where_clause>{}
+        #combined_where_clause {}
     );
 
     let expand = quote!(
