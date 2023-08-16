@@ -1,5 +1,6 @@
 use std::{
     fmt::{Display, Write},
+    marker::PhantomData,
     rc::Rc,
 };
 
@@ -26,7 +27,15 @@ enum ActionVariants {
     Instantiate,
     Migrate,
     Quit,
-    // TODO: Addons
+    Info,
+    Addons,
+}
+
+#[derive(Debug)]
+#[allow(dead_code)]
+struct ContractInfo {
+    addr: Option<Addr>,
+    code_id: Option<u64>,
 }
 
 pub struct ContractCli<
@@ -35,8 +44,10 @@ pub struct ContractCli<
         + ExecutableContract
         + QueryableContract
         + MigratableContract,
+    AddonsContext,
 > {
     pub(crate) contract: Contract,
+    addons_context: PhantomData<AddonsContext>,
 }
 
 pub trait ParseCwMsg
@@ -52,21 +63,36 @@ impl ParseCwMsg for Empty {
     }
 }
 
-impl<Contract> ContractCli<Contract>
+pub trait AddonsContext: Clone {}
+
+impl AddonsContext for Empty {}
+
+pub trait CwCliAddons<AddonsContext> {
+    fn addons(&mut self, context: AddonsContext) -> cw_orch::anyhow::Result<()>
+    where
+        Self: ContractInstance<Daemon>;
+}
+
+impl<Contract, C> ContractCli<Contract, C>
 where
+    C: AddonsContext,
     Contract: ContractInstance<Daemon>
         + CwOrchUpload<Daemon>
         + InstantiableContract
         + ExecutableContract
         + QueryableContract
-        + MigratableContract,
+        + MigratableContract
+        + CwCliAddons<C>,
     <Contract as InstantiableContract>::InstantiateMsg: ParseCwMsg,
     <Contract as ExecutableContract>::ExecuteMsg: ParseCwMsg,
     <Contract as QueryableContract>::QueryMsg: ParseCwMsg,
     <Contract as MigratableContract>::MigrateMsg: ParseCwMsg,
 {
-    pub fn select_action(contract: Contract) -> cw_orch::anyhow::Result<()> {
-        let instance = ContractCli { contract };
+    pub fn select_action(contract: Contract, context: C) -> cw_orch::anyhow::Result<()> {
+        let mut instance = ContractCli {
+            contract,
+            addons_context: PhantomData,
+        };
         let state_interface = instance.contract.get_chain().state();
         loop {
             let action =
@@ -81,6 +107,14 @@ where
                 ActionVariants::Instantiate => instance.instantiate(&state_interface)?,
                 ActionVariants::Migrate => instance.migrate(&state_interface)?,
                 ActionVariants::Quit => return Ok(()),
+                ActionVariants::Info => {
+                    let contract_info = ContractInfo {
+                        addr: instance.contract.address().ok(),
+                        code_id: instance.contract.code_id().ok(),
+                    };
+                    println!("{contract_info:?}");
+                }
+                ActionVariants::Addons => instance.contract.addons(context.clone())?,
             }
         }
     }
@@ -149,9 +183,12 @@ where
         );
         if let Some(c) = coins {
             let coins_str = c.iter().map(|c| c.to_string()).collect::<Vec<String>>();
-            write!(message, ", and attached coins: {coins_str:?}",)?;
+            write!(message, ", and attached coins: {coins_str:?} y/n?",)?;
         }
-        Ok(Confirm::new(&message).prompt_skippable()? == Some(true))
+        Ok(Confirm::new(&message)
+            .with_default(true)
+            .prompt_skippable()?
+            == Some(true))
     }
 }
 

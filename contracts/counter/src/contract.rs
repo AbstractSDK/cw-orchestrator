@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
 
@@ -8,15 +8,6 @@ use crate::{error::*, execute, msg::*, query, state::*};
 // version info for migration info
 pub const CONTRACT_NAME: &str = "crates.io:counter";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-impl cw_orch_cli::CwCliAddons<Empty> for CounterContract<cw_orch::prelude::Daemon> {
-    fn addons(&mut self, _context: Empty) -> cw_orch::anyhow::Result<()>
-    where
-        Self: cw_orch::prelude::ContractInstance<cw_orch::prelude::Daemon>,
-    {
-        Ok(())
-    }
-}
 
 // ANCHOR: interface_entry
 // ANCHOR: entry_point_line

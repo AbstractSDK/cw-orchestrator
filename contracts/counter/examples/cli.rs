@@ -2,10 +2,10 @@ use cosmwasm_std::Empty;
 use counter_contract::CounterContract;
 use cw_orch::{
     anyhow,
-    prelude::{networks, Daemon, DaemonBuilder},
+    prelude::{networks, DaemonBuilder},
     tokio::runtime::Runtime,
 };
-use cw_orch_cli::{ContractCli, CwCliAddons};
+use cw_orch_cli::ContractCli;
 
 pub fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();

@@ -17,5 +17,18 @@ pub use crate::msg::{ExecuteMsgFns as CounterExecuteMsgFns, QueryMsgFns as Count
 
 // ANCHOR: custom_interface
 #[cfg(feature = "interface")]
-mod interface;
+mod interface {
+    use cosmwasm_std::Empty;
+
+    use crate::CounterContract;
+
+    impl cw_orch_cli::CwCliAddons<cosmwasm_std::Empty> for CounterContract<cw_orch::prelude::Daemon> {
+        fn addons(&mut self, _context: Empty) -> cw_orch::anyhow::Result<()>
+        where
+            Self: cw_orch::prelude::ContractInstance<cw_orch::prelude::Daemon>,
+        {
+            Ok(())
+        }
+    }
+}
 // ANCHOR_END: custom_interface
