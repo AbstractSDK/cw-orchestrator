@@ -14,4 +14,4 @@ exclude = [".env"]
 
 [dependencies]
 serde = { workspace = true }
-ibc-chain-registry = { version = "0.24.1" }
+ibc-chain-registry = { version = "0.25.0" }
