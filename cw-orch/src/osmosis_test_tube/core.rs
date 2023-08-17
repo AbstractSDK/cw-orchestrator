@@ -1,13 +1,6 @@
-use crate::interface_traits::CallAs;
-use crate::interface_traits::ContractInstance;
-use crate::interface_traits::CwOrchExecute;
-use crate::interface_traits::Uploadable;
-use crate::paths::WasmPath;
-use cosmwasm_std::Binary;
-use cosmwasm_std::BlockInfo;
-use cosmwasm_std::Coin;
-use cosmwasm_std::Timestamp;
-use cosmwasm_std::Uint128;
+use crate::contract::WasmPath;
+use crate::prelude::Uploadable;
+use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
@@ -40,11 +33,11 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     environment::TxHandler,
+    environment::{ChainState, StateInterface},
     error::CwOrchError,
-    state::{ChainState, StateInterface},
 };
 
-use crate::mock::MockState;
+use crate::MockState;
 
 pub use osmosis_test_tube;
 
@@ -205,7 +198,7 @@ impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
-        Rc::clone(&self.state)
+        self.state.clone()
     }
 }
 
@@ -214,9 +207,14 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
+    type Sender = Rc<SigningAccount>;
 
     fn sender(&self) -> Addr {
         Addr::unchecked(self.sender.address())
+    }
+
+    fn set_sender(&mut self, sender: Self::Sender) {
+        self.sender = sender;
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
@@ -312,21 +310,5 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
                 self.app.borrow().get_block_time_nanos().try_into().unwrap(),
             ),
         })
-    }
-}
-
-impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone>
-    CallAs<OsmosisTestTube> for T
-{
-    type Sender = Rc<SigningAccount>;
-
-    fn set_sender(&mut self, sender: &Self::Sender) {
-        self.as_instance_mut().chain.sender = sender.clone();
-    }
-
-    fn call_as(&self, sender: &Self::Sender) -> Self {
-        let mut contract = self.clone();
-        contract.set_sender(sender);
-        contract
     }
 }
