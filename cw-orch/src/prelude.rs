@@ -56,8 +56,8 @@ pub use crate::daemon::{
     DaemonBuilder,
 };
 
-pub use cw_orch_networks::networks;
 pub use crate::contract::artifacts_dir_from_workspace;
+pub use cw_orch_networks::networks;
 
 /// Re-export trait and data required to fetch daemon data from chain-registry
 #[cfg(feature = "daemon")]

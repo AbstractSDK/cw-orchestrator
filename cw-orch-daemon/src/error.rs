@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-
 use cw_orch_core::CwEnvError;
 use thiserror::Error;
 

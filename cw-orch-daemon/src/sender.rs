@@ -1,4 +1,3 @@
-
 use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE};
 
 use super::{
