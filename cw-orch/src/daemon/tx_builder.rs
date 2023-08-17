@@ -9,8 +9,8 @@ use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
 
-const GAS_BUFFER: f64 = 1.2;
-const BUFFER_CHANGE_LIMIT: u64 = 150_000;
+const GAS_BUFFER: f64 = 1.3;
+const BUFFER_CHANGE_LIMIT: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
