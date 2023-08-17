@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = "0.13.3"
+version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -24,8 +24,8 @@ node-tests = []
 eth = ["dep:ethers-signers", "dep:ethers-core"]
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { workspace = true, version = "0.13.3" }
-cw-orch-fns-derive = { workspace = true, version = "0.13.3" }
+cw-orch-contract-derive = { workspace = true }
+cw-orch-fns-derive = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-networks = { workspace = true }
 
