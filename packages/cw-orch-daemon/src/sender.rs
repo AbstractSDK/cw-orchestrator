@@ -1,4 +1,4 @@
-use crate::proto::injective::ETHEREUM_COIN_TYPE;
+use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE};
 
 use super::{
     cosmos_modules::{self, auth::BaseAccount},
@@ -23,7 +23,6 @@ use cosmrs::{
     AccountId,
 };
 use cosmwasm_std::Addr;
-use cw_orch_core::networks::ChainKind;
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 

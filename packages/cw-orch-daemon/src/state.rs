@@ -1,10 +1,9 @@
 use super::error::DaemonError;
-use crate::channel::GrpcChannel;
+use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
     environment::{DeployDetails, StateInterface},
-    networks::ChainKind,
     CwEnvError,
 };
 use ibc_chain_registry::chain::ChainData;
