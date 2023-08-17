@@ -1,14 +1,13 @@
 [workspace]
-members = ["cw-orch", "packages/*", "contracts/*"]
-version = "0.13.3"
+members = ["cw-orch", "cw-orch-daemon", "packages/*", "contracts/*"]
 resolver = "2"
 
 [workspace.package]
+version = "0.13.3"
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 license = "GPL-3.0-only"
 repository = "https://github.com/AbstractSDK/cw-orchestrator"
-version = "0.13.3"
 
 [workspace.dependencies]
 cw-utils = { version = "1.0.1" }
@@ -18,17 +17,21 @@ cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
 # Test Tube env deps
-osmosis-test-tube = { version = "16.0.1" }
+
+osmosis-test-tube = { version = "=17.0.0-rc0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch-daemon = { path = "packages/daemon", version = "0.13.3" }
-cw-orch-environment = { path = "packages/environment", version = "0.13.3" }
-cw-orch-mock = { path = "packages/mock", version = "0.13.3" }
-cw-orch-contract-derive = { path = "packages/contract-derive", version = "0.13.3" }
-cw-orch-fns-derive = { path = "packages/fns-derive", version = "0.13.3" }
-cw-orch-starship = { path = "packages/starship", version = "0.13.3" }
-cw-orch-interchain = { path = "packages/interchain", version = "0.13.3" }
+cw-orch-daemon = { path = "./cw-orch-daemon" }
+cw-orch = { path = "./cw-orch" }
+cw-orch-core = { path = "packages/cw-orch-core" }
+cw-orch-mock = { path = "packages/cw-orch-mock" }
+cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive" }
+cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive" }
+cw-orch-networks = { path = "packages/cw-orch-networks" }
+cw-orch-interchain = { path = "packages/interchain" }
+cw-orch-starship = { path = "packages/starship" }
+
 thiserror = { version = "1.0.21" }
 sha256 = { version = "1.2.1" }
 serde_json = "1.0.79"

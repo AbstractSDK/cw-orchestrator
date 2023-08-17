@@ -16,7 +16,6 @@ pub use crate::contract::interface_traits::{
     CwOrchUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
-pub use cw_orch_environment::contract::artifacts_dir_from_workspace;
 
 pub use crate::environment::StateInterface;
 
@@ -57,7 +56,8 @@ pub use crate::daemon::{
     DaemonBuilder,
 };
 
-pub use cw_orch_environment::networks;
+pub use cw_orch_networks::networks;
+pub use crate::contract::artifacts_dir_from_workspace;
 
 /// Re-export trait and data required to fetch daemon data from chain-registry
 #[cfg(feature = "daemon")]

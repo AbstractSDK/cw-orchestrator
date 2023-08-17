@@ -33,7 +33,6 @@
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
 use cw_orch::interchain::interchain_env::contract_port;
-use cw_orch::prelude::networks::osmosis::OSMO_2;
 use cw_orch::prelude::*;
 
 use crate::daemon::networks::*;
