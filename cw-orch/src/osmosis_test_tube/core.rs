@@ -9,8 +9,6 @@ use cosmwasm_std::Coin;
 use cosmwasm_std::Timestamp;
 use cosmwasm_std::Uint128;
 use cw_multi_test::AppResponse;
-use osmosis_test_tube::osmosis_std::cosmwasm_to_proto_coins;
-use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::MsgSend;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
 use osmosis_test_tube::Gamm;
@@ -19,9 +17,21 @@ use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
 use std::str::FromStr;
 
-use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
-    QueryAllBalancesRequest, QueryBalanceRequest,
+// This should be the way to import stuff.
+// But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
+// use osmosis_test_tube::osmosis_std::{
+//     types::cosmos::bank::v1beta1::{
+//         QueryAllBalancesRequest, QueryBalanceRequest, MsgSend
+//     },
+//     cosmwasm_to_proto_coins
+// };
+
+// So we need this fix (not ideal)
+use osmosis_std::{
+    cosmwasm_to_proto_coins,
+    types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
 };
+
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
