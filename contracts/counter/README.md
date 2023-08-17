@@ -179,7 +179,7 @@ For more details about this attribute, [see the full documentation](https://orch
 ### Deploy
 
 cw-orchestrator defines the [Deploy](../../cw-orch/src/deploy.rs) trait that allows developers to create an interface that allows themselves or other developers to : 
-1. Simply deploy their codebase on a test chain or elsewhere. [See it live here](https://github.com/AbstractSDK/abstract/blob/main/framework/scripts/src/bin/full_deploy.rs#L29).
+1. Easily deploy their codebase on a test chain or elsewhere. [See it live here](https://github.com/AbstractSDK/abstract/blob/main/framework/scripts/src/bin/full_deploy.rs#L29).
 2. Provide bindings (addresses, code_ids), for other developers to integrate with the platform. [See it live here](https://github.com/AbstractSDK/abstract/blob/main/modules/contracts/apps/croncat/examples/deploy.rs#L32).
 
 This is even more powerful than simply exposing the single contract interfaces, because it allows full customization of the deployment procedure. It also allows shipping other custom methods for simplifying the life of the integrator.
