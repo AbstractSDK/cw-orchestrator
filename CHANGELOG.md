@@ -2,6 +2,8 @@
 
 ## Unpublished
 
+- Add `add_balance` function on the `Mock` type. 
+
 ## v0.10.0
 
 - Update `CallAs` to be generic over environments.

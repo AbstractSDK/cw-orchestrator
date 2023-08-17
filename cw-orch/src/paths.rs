@@ -5,6 +5,7 @@ pub use wasm_path::WasmPath;
 mod wasm_path {
     use crate::error::CwOrchError;
     use cosmwasm_std::ensure_eq;
+    use sha256::TrySha256Digest;
     use std::path::{Path, PathBuf};
 
     /// Direct path to a `.wasm` file
@@ -48,7 +49,7 @@ mod wasm_path {
 
         /// Calculate the checksum of the WASM file.
         pub fn checksum(&self) -> Result<String, CwOrchError> {
-            let checksum = sha256::try_digest(self.path())?;
+            let checksum = self.path().digest()?;
             Ok(checksum)
         }
     }

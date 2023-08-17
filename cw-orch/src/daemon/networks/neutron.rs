@@ -1,5 +1,6 @@
 use crate::daemon::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: neutron
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
     id: "neutron",
     pub_address_prefix: "neutron",
@@ -23,8 +24,8 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "neutron-1",
     gas_denom: "untrn",
-    gas_price: 0.001,
-    grpc_urls: &["https://grpc.novel.remedy.tm.p2p.org"],
+    gas_price: 0.01,
+    grpc_urls: &["http://grpc-kralum.neutron-1.neutron.org:80"],
     network_info: NEUTRON_NETWORK,
     lcd_url: Some("https://rest-kralum.neutron-1.neutron.org"),
     fcd_url: None,
@@ -40,3 +41,4 @@ pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+// ANCHOR_END: neutron

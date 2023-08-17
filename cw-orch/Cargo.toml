@@ -68,6 +68,7 @@ cw-orch-contract-derive = { path = "../packages/cw-orch-contract-derive", versio
 cw-orch-fns-derive = { path = "../packages/cw-orch-fns-derive", version = "0.13.3" }
 
 cosmwasm-std = { workspace = true }
+cw-utils = { workspace = true }
 cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
@@ -106,6 +107,7 @@ chrono = { version = "0.4", optional = true }
 base16 = { version = "0.2.1", optional = true }
 derive_builder = { version = "0.12.0", optional = true }
 ring = { version = "0.16.20", optional = true }
+flate2 = { version = "1.0.26" }
 
 # Ethereum deps
 ethers-signers = { version = "2.0.7", optional = true }
@@ -113,7 +115,7 @@ ethers-core = { version = "2.0.7", optional = true }
 snailquote = { version = "0.3.1", optional = true }
 
 # Test Tube env deps
-osmosis-test-tube = { version = "15.1.0", optional = true }
+osmosis-test-tube = { version = "16.0.0", optional = true }
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }
