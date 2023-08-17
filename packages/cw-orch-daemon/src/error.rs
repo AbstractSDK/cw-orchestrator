@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use cw_orch_environment::CwEnvError;
+use cw_orch_core::CwEnvError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -26,7 +26,7 @@ pub enum DaemonError {
     #[error(transparent)]
     TendermintError(#[from] ::cosmrs::tendermint::Error),
     #[error(transparent)]
-    CwEnvError(#[from] ::cw_orch_environment::CwEnvError),
+    CwEnvError(#[from] ::cw_orch_core::CwEnvError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]

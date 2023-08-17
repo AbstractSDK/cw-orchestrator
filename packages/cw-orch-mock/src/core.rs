@@ -5,7 +5,7 @@ use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Exe
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
-use cw_orch_environment::{
+use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::TxHandler,
     environment::{ChainState, IndexResponse, StateInterface},
@@ -40,7 +40,7 @@ use super::state::MockState;
 /// ```
 /// # use cosmwasm_std::{Addr, coin, Uint128};
 /// use cw_orch_mock::Mock;
-/// use cw_orch_environment::environment::StateInterface;
+/// use cw_orch_core::environment::StateInterface;
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_mock::MockState as CustomState;
 ///

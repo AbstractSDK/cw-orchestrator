@@ -1,5 +1,5 @@
 use cosmwasm_std::{testing::mock_env, Addr};
-use cw_orch_environment::{
+use cw_orch_core::{
     environment::{DeployDetails, StateInterface},
     CwEnvError,
 };
@@ -79,7 +79,7 @@ impl StateInterface for MockState {
 #[cfg(test)]
 mod test {
     use cosmwasm_std::Addr;
-    use cw_orch_environment::{environment::StateInterface, CwEnvError};
+    use cw_orch_core::{environment::StateInterface, CwEnvError};
     use speculoos::prelude::*;
 
     use super::MockState;

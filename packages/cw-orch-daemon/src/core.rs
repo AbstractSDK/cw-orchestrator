@@ -15,7 +15,7 @@ use cosmrs::{
     AccountId, Denom,
 };
 use cosmwasm_std::{Addr, Coin};
-use cw_orch_environment::{
+use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{ChainState, IndexResponse},
 };
@@ -47,7 +47,7 @@ use tonic::transport::Channel;
     ```
     ## Environment Execution
 
-    The DaemonAsync implements async methods of [`TxHandler`](cw_orch_environment::environment::TxHandler) which allows you to perform transactions on the chain.
+    The DaemonAsync implements async methods of [`TxHandler`](cw_orch_core::environment::TxHandler) which allows you to perform transactions on the chain.
 
     ## Querying
 

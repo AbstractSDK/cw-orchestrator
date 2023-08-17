@@ -1,5 +1,5 @@
 [package]
-name = "cw-orch-environment"
+name = "cw-orch-core"
 version = "0.13.3"
 authors = { workspace = true }
 edition = { workspace = true }

@@ -8,7 +8,7 @@ use crate::{
 
 use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
-use cw_orch_environment::{
+use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
     environment::{ChainState, TxHandler},
 };

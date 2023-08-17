@@ -9,7 +9,7 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cw-orch-environment = { workspace = true }
+cw-orch-core = { workspace = true }
 cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }

@@ -2,7 +2,7 @@ use super::error::DaemonError;
 use crate::channel::GrpcChannel;
 
 use cosmwasm_std::Addr;
-use cw_orch_environment::{
+use cw_orch_core::{
     environment::{DeployDetails, StateInterface},
     networks::ChainKind,
     CwEnvError,

@@ -1,4 +1,4 @@
-use cw_orch_environment::{
+use cw_orch_core::{
     contract::interface_traits::{CwOrchMigrate, CwOrchUpload},
     environment::TxResponse,
 };

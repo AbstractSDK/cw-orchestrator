@@ -8,7 +8,7 @@ use super::{
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
 use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
-use cw_orch_environment::environment::IndexResponse;
+use cw_orch_core::environment::IndexResponse;
 use serde::{Deserialize, Serialize};
 
 const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
