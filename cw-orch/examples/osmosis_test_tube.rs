@@ -3,7 +3,7 @@ use counter_contract::{
     contract::CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
 };
-use cw_orch::prelude::OsmosisTestTube;
+use cw_orch::prelude::{CallAs, ContractInstance, OsmosisTestTube};
 use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload};
 
 pub fn main() {
@@ -19,6 +19,13 @@ pub fn main() {
 
     let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);
     assert!(exec_res.is_ok());
+
+    let sender = contract_counter.as_instance().get_chain().sender.clone();
+
+    let exec_call_as = contract_counter
+        .call_as(&sender)
+        .execute(&ExecuteMsg::Increment {}, None);
+    assert!(exec_call_as.is_ok());
 
     let query_res = contract_counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
     assert!(query_res.is_ok());

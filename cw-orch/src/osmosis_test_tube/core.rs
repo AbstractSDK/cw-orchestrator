@@ -312,19 +312,3 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         })
     }
 }
-
-// impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone>
-//     CallAs<OsmosisTestTube> for T
-// {
-//     type Sender = Rc<SigningAccount>;
-
-//     fn set_sender(&mut self, sender: &Self::Sender) {
-//         self.as_instance_mut().chain.sender = sender.clone();
-//     }
-
-//     fn call_as(&self, sender: &Self::Sender) -> Self {
-//         let mut contract = self.clone();
-//         contract.set_sender(sender);
-//         contract
-//     }
-// }
