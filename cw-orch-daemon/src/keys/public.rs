@@ -1,6 +1,6 @@
 use crate::DaemonError;
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
-pub use ed25519_dalek::PublicKey as Ed25519;
+pub use ed25519_dalek::VerifyingKey as Ed25519;
 use ring::digest::{Context, SHA256};
 use ripemd::{Digest as _, Ripemd160};
 use serde::{Deserialize, Serialize};
@@ -222,7 +222,7 @@ impl PublicKey {
             let len = BECH32_PUBKEY_DATA_PREFIX_ED25519.len();
             let len2 = pub_key.len();
             let vec = &pub_key[len..len2];
-            let ed25519_pubkey = ed25519_dalek::PublicKey::from_bytes(vec)?;
+            let ed25519_pubkey = Ed25519::from_bytes(vec.try_into().unwrap())?;
             Ok(ed25519_pubkey.to_bytes().to_vec())
         } else {
             log::info!("pub key does not start with BECH32 PREFIX");
