@@ -1,5 +1,6 @@
 use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: sei
 pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
     id: "sei",
     pub_address_prefix: "sei",
@@ -38,3 +39,4 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+// ANCHOR_END: sei

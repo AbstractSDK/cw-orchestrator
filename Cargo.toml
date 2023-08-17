@@ -3,7 +3,7 @@ members = ["cw-orch", "cw-orch-daemon", "packages/*", "contracts/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.13.3" 
+version = "0.13.3"
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 license = "GPL-3.0-only"

@@ -4,13 +4,17 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
 };
+use serde::Serialize;
 
 #[cw_serde]
 pub struct InstantiateMsg {}
 
 #[cw_serde]
 #[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
-pub enum ExecuteMsg<T = String> {
+pub enum ExecuteMsg<T = String>
+where
+    T: Serialize,
+{
     FirstMessage {},
     #[cfg_attr(feature = "interface", payable)]
     SecondMessage {
@@ -27,14 +31,17 @@ pub enum ExecuteMsg<T = String> {
 #[cw_serde]
 #[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
 #[derive(QueryResponses)]
-pub enum QueryMsg {
+pub enum QueryMsg<T = String>
+where
+    T: Serialize,
+{
     #[returns(String)]
     /// test-doc-comment
     FirstQuery {},
     #[returns(String)]
     SecondQuery {
         /// test doc-comment
-        t: String,
+        t: T,
     },
 }
 
@@ -91,5 +98,26 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
         Err(StdError::generic_err(
             "migrate endpoint reached but no test implementation",
         ))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::MockContract as LocalMockContract;
+    use super::*;
+    use cw_orch::prelude::*;
+    #[test]
+    fn compiles() -> Result<(), CwOrchError> {
+        // We need to check we can still call the execute msgs conveniently
+        let sender = Addr::unchecked("sender");
+        let mock = Mock::new(&sender);
+        let contract = LocalMockContract::new("mock-contract", mock.clone());
+
+        contract.upload()?;
+        contract.instantiate(&InstantiateMsg {}, None, None)?;
+        contract.first_message()?;
+        contract.second_message("s".to_string(), &[]).unwrap_err();
+
+        Ok(())
     }
 }

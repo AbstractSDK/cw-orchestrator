@@ -1,5 +1,6 @@
 use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: osmosis
 pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
     id: "osmosis",
     pub_address_prefix: "osmo",
@@ -17,17 +18,6 @@ pub const OSMO_5: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-// pub const JUNO_1: NetworkInfo = NetworkInfo {
-//     kind: ChainKind::Mainnet,
-//     id: "juno-1",
-//     gas_denom: "ujuno",
-//     gas_price: 0.0026,
-//     grpc_url: "http://65.108.235.46:26090",
-//     network_info: JUNO_CHAIN,
-//     lcd_url: None,
-//     fcd_url: None,
-// };
-
 pub const LOCAL_OSMO: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "localosmosis",
@@ -38,3 +28,4 @@ pub const LOCAL_OSMO: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+// ANCHOR_END: osmosis
