@@ -10,7 +10,7 @@ use secp256k1::All;
 use super::{sender::Sender, DaemonError};
 
 const GAS_BUFFER: f64 = 1.3;
-const BUFFER_CHANGE_LIMIT: u64 = 200_000;
+const BUFFER_THRESHOLD: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
@@ -100,7 +100,7 @@ impl TxBuilder {
                 .await?;
             log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
-            let gas_expected = if sim_gas_used < BUFFER_CHANGE_LIMIT {
+            let gas_expected = if sim_gas_used < BUFFER_THRESHOLD {
                 sim_gas_used as f64 * SMALL_GAS_BUFFER
             } else {
                 sim_gas_used as f64 * GAS_BUFFER
