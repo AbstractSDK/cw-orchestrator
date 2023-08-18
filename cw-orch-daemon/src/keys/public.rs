@@ -511,7 +511,7 @@ mod tst {
         );
 
         let public_key = "4A25C6640A1F72B9C975338294EF51B6D1C33158BB6ECBA69FBC3FB5A33C9DCE";
-        let ed = Ed25519::from_bytes(&hex::decode(public_key)?)?;
+        let ed = Ed25519::from_bytes(&hex::decode(public_key)?.try_into().unwrap())?;
         let foo_v8 = PublicKey::pubkey_from_ed25519_public_key(&ed.to_bytes());
         //  let ed2: tendermint::PublicKey =
         //      tendermint::PublicKey::from_raw_ed25519(&hex::decode(public_key)?).unwrap();
