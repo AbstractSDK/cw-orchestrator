@@ -58,7 +58,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                             let msg = #name::#variant_name {
                                 #(#variant_idents,)*
                             };
-                            self.query(&msg #maybe_into)
+                            Ok(self.query(&msg #maybe_into)?)
                         }
                     )
                 }
