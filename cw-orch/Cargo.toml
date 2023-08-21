@@ -44,7 +44,6 @@ eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
 osmosis-test-tube = [
   "dep:osmosis-test-tube",
   "dep:osmosis-std",
-  "cw-orch-core/osmosis-test-tube",
 ]
 
 [dependencies]

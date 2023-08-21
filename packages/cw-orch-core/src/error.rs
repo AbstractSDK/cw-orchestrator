@@ -5,9 +5,6 @@ use thiserror::Error;
 /// cw-orchestrator error wrapper using thiserror.
 #[derive(Error, Debug)]
 pub enum CwEnvError {
-    #[cfg(feature = "osmosis-test-tube")]
-    #[error(transparent)]
-    TestTubeError(#[from] osmosis_test_tube::RunnerError),
     #[error(transparent)]
     CosmWasmError(#[from] cosmwasm_std::StdError),
     #[error("Code id for {0} not found in store")]
