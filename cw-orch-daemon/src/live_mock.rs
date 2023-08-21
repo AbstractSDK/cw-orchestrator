@@ -1,10 +1,10 @@
 //! Live mock is a mock that uses a live chain to query for data.
 //! It can be used to do chain-backed unit-testing. It can't be used for state-changing operations.
 
-use crate::daemon::queriers::CosmWasm;
-use crate::daemon::queriers::DaemonQuerier;
-use crate::prelude::queriers::Bank;
-use crate::prelude::queriers::Staking;
+use crate::queriers::Bank;
+use crate::queriers::CosmWasm;
+use crate::queriers::DaemonQuerier;
+use crate::queriers::Staking;
 use cosmwasm_std::Addr;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
@@ -28,7 +28,7 @@ use cosmwasm_std::{
     SystemError, SystemResult, Uint128, WasmQuery,
 };
 
-use crate::daemon::GrpcChannel;
+use crate::channel::GrpcChannel;
 
 fn to_cosmwasm_coin(c: cosmrs::proto::cosmos::base::v1beta1::Coin) -> Coin {
     Coin {
@@ -222,7 +222,7 @@ impl WasmMockQuerier {
 mod tests {
 
     use super::*;
-    use crate::prelude::networks::JUNO_1;
+    use crate::networks::JUNO_1;
 
     use super::mock_dependencies;
 

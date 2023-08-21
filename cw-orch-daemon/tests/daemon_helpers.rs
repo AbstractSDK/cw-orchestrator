@@ -5,7 +5,8 @@ mod tests {
         DaemonAsync contract general tests
     */
 
-    use cw_orch::{environment::TxHandler, prelude::*};
+    use cw_orch_core::{contract::interface_traits::*, environment::TxHandler};
+    use cw_orch_daemon::{ConditionalMigrate, ConditionalUpload, Daemon};
     use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
 
     use cosmwasm_std::Addr;
@@ -17,7 +18,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn helper_traits() {
-        use cw_orch::prelude::networks;
+        use cw_orch_networks::networks;
 
         let runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -48,7 +49,7 @@ mod tests {
 
         let init_msg = &InstantiateMsg {};
 
-        let _ = contract.instantiate(&init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
+        let _ = contract.instantiate(init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
 
         asserting!("address is present")
             .that(&contract.address())
@@ -117,7 +118,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn cw_orch_interface_traits() {
-        use cw_orch::prelude::networks;
+        use cw_orch_networks::networks;
 
         let runtime = tokio::runtime::Runtime::new().unwrap();
 
