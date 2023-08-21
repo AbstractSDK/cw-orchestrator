@@ -42,7 +42,20 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
         let is_payable = payable(&variant);
         match &mut variant.fields {
             Fields::Unnamed(_) => None,
-            Fields::Unit => None,
+            Fields::Unit => {
+
+                let (maybe_coins_attr, passed_coins) = if is_payable {
+                    (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
+                } else {
+                    (quote!(),quote!(None))
+                };
+                Some(quote!(
+                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name;
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                    }
+                ))
+            }
             Fields::Named(variant_fields) => {
                 // sort fields on field name
                 LexiographicMatching::default().visit_fields_named_mut(variant_fields);
