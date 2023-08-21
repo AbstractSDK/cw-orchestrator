@@ -41,7 +41,6 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
             Fields::Unnamed(_) => panic!("Expected named variant"),
             Fields::Unit => {
                 quote!(
-                    #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
                         self.query(&msg #maybe_into)

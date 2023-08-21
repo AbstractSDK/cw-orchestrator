@@ -50,7 +50,6 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                     (quote!(),quote!(None))
                 };
                 Some(quote!(
-                    #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
                         <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
