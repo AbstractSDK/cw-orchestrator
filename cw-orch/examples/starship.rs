@@ -57,7 +57,7 @@ pub const IBC_APP_VERSION: &str = "simple-ica-v2";
 pub fn script() -> anyhow::Result<()> {
     let rt = Runtime::new().unwrap();
 
-    let config_path =  format!(
+    let config_path = format!(
         "{}{}",
         env!("CARGO_MANIFEST_DIR"),
         "/../packages/starship/examples/starship.yaml"

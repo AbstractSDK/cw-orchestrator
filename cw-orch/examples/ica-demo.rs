@@ -64,7 +64,7 @@ pub fn script() -> anyhow::Result<()> {
     let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new()?;
 
     // We create the test starship object
-    let config_path =  format!(
+    let config_path = format!(
         "{}{}",
         env!("CARGO_MANIFEST_DIR"),
         "/../packages/starship/examples/starship.yaml"

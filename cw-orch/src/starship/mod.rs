@@ -16,7 +16,11 @@ pub struct Starship {
 
 impl Starship {
     ///
-    pub fn new(rt_handle: Handle, config_file_path: &str, url: Option<&str>) -> Result<Self, CwOrchError> {
+    pub fn new(
+        rt_handle: Handle,
+        config_file_path: &str,
+        url: Option<&str>,
+    ) -> Result<Self, CwOrchError> {
         let starship_client = StarshipClient::new(rt_handle.clone(), config_file_path, url)?;
 
         let mut daemons = HashMap::new();
