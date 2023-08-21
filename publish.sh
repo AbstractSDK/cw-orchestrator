@@ -1,4 +1,7 @@
 #!/bin/bash
+
+
+# Before publishing, test the version with the Abstract implementation to make sure you're not breaking important API
 set -o errexit -o nounset -o pipefail
 command -v shellcheck >/dev/null && shellcheck "$0"
 
