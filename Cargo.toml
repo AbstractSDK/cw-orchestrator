@@ -3,7 +3,7 @@ members = ["cw-orch", "cw-orch-daemon", "packages/*", "contracts/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.13.3"
+version = "0.15.0"
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 license = "GPL-3.0-only"
@@ -18,6 +18,7 @@ cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
 # Test Tube env deps
 osmosis-test-tube = { version = "=17.0.0-rc0" }
+osmosis-std = { version = "=0.17.0-rc0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
