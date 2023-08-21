@@ -8,7 +8,7 @@ use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use cosmwasm_std::Event;
 use cw_orch::prelude::{
     ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload,
-    Daemon, Mock,
+    Mock,
 };
 
 use cosmwasm_std::Addr;
@@ -19,13 +19,6 @@ const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 pub struct MockContract;
 
 impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
-    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
-        // create contract base configuration
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}/{}", crate_path, MOCK_CONTRACT_WASM);
-        log::info!("Using wasm path {}", wasm_path);
-        WasmPath::new(wasm_path).unwrap()
-    }
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
