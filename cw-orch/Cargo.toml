@@ -41,10 +41,7 @@ daemon = [
   "dep:cw-orch-daemon",
 ]
 eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
-osmosis-test-tube = [
-  "dep:osmosis-test-tube",
-  "dep:osmosis-std",
-]
+osmosis-test-tube = ["dep:osmosis-test-tube", "dep:osmosis-std"]
 
 [dependencies]
 # Default deps
