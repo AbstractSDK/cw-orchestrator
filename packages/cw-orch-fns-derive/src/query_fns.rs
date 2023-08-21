@@ -39,7 +39,15 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
         match &mut variant.fields {
             Fields::Unnamed(_) => panic!("Expected named variant"),
-            Fields::Unit => panic!("Expected named variant"),
+            Fields::Unit => {
+                quote!(
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name;
+                        self.query(&msg #maybe_into)
+                    }
+                )
+            },
             Fields::Named(variant_fields) => {
                 // sort fields on field name
                 LexiographicMatching::default().visit_fields_named_mut(variant_fields);
@@ -53,18 +61,17 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
                 let variant_attr = variant_fields.iter();
                 quote!(
-                        #[allow(clippy::too_many_arguments)]
-                        fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
-                            let msg = #name::#variant_name {
-                                #(#variant_idents,)*
-                            };
-                            self.query(&msg #maybe_into)
-                        }
-                    )
-                }
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name {
+                            #(#variant_idents,)*
+                        };
+                        self.query(&msg #maybe_into)
+                    }
+                )
             }
         }
-    );
+    });
 
     let derived_trait = quote!(
         pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics > #where_clause {

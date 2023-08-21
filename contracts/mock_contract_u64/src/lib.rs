@@ -31,6 +31,9 @@ pub fn execute(
         ExecuteMsg::ThirdMessage { .. } => {
             Ok(Response::new().add_attribute("action", "third message passed"))
         }
+        ExecuteMsg::FourthMessage => {
+            Ok(Response::new().add_attribute("action", "fourth message passed"))
+        }
     }
 }
 
@@ -40,6 +43,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
+        QueryMsg::ThirdQuery {} => to_binary("third query passed"),
     }
 }
 
