@@ -26,6 +26,7 @@ where
         /// test doc-comment
         t: T,
     },
+    FourthMessage,
 }
 
 #[cw_serde]
@@ -43,6 +44,8 @@ where
         /// test doc-comment
         t: T,
     },
+    #[returns(String)]
+    ThirdQuery,
 }
 
 #[cw_serde]
@@ -77,6 +80,9 @@ pub fn execute(
         ExecuteMsg::ThirdMessage { .. } => {
             Ok(Response::new().add_attribute("action", "third message passed"))
         }
+        ExecuteMsg::FourthMessage => {
+            Ok(Response::new().add_attribute("action", "fourth message passed"))
+        }
     }
 }
 
@@ -86,6 +92,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
+        QueryMsg::ThirdQuery {} => to_binary("third query passed"),
     }
 }
 
@@ -117,6 +124,7 @@ mod test {
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
         contract.second_message("s".to_string(), &[]).unwrap_err();
+        contract.fourth_message().unwrap();
 
         Ok(())
     }
