@@ -57,7 +57,12 @@ pub const IBC_APP_VERSION: &str = "simple-ica-v2";
 pub fn script() -> anyhow::Result<()> {
     let rt = Runtime::new().unwrap();
 
-    let starship = Starship::new(rt.handle().to_owned(), None)?;
+    let config_path =  format!(
+        "{}{}",
+        env!("CARGO_MANIFEST_DIR"),
+        "/../packages/starship/examples/starship.yaml"
+    ); // This variable will disappear in the future when starship makes the config available online
+    let starship = Starship::new(rt.handle().to_owned(), &config_path, None)?;
 
     let juno = starship.daemon(JUNO)?;
     let osmosis = starship.daemon(OSMOSIS)?;

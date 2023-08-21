@@ -64,7 +64,12 @@ pub fn script() -> anyhow::Result<()> {
     let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new()?;
 
     // We create the test starship object
-    let starship = Starship::new(rt.handle().to_owned(), None)?;
+    let config_path =  format!(
+        "{}{}",
+        env!("CARGO_MANIFEST_DIR"),
+        "/../packages/starship/examples/starship.yaml"
+    ); // This variable will disappear in the future when starship makes the config available online
+    let starship = Starship::new(rt.handle().to_owned(), &config_path, None)?;
 
     let interchain: InterchainEnv = starship.interchain_env();
 
