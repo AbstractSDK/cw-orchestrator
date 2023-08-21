@@ -1,9 +1,7 @@
 use cw_orch::{daemon::Daemon, environment::CwEnv, interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-use cosmwasm_std::Event;
-mod common;
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Event};
 use cw_orch::prelude::Mock;
 
 const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
