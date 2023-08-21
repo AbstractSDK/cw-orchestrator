@@ -26,7 +26,7 @@ pub use crate::environment::IndexResponse;
 pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
-pub use crate::Mock;
+pub use crate::mock::Mock;
 
 // OsmosisTestTube for testing
 #[cfg(feature = "osmosis-test-tube")]
