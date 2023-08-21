@@ -37,7 +37,7 @@ use crate::{
     error::CwOrchError,
 };
 
-use crate::MockState;
+use crate::mock::MockState;
 
 pub use osmosis_test_tube;
 
