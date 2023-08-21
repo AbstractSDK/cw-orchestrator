@@ -67,7 +67,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                         let msg = #name::#variant_name {
                             #(#variant_ident_content_names,)*
                         };
-                        Ok(<Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)?)
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
                     }
                 ))
             }
