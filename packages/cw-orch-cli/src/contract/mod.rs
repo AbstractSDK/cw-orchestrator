@@ -160,6 +160,8 @@ impl ParseCwMsg for Empty {
     }
 }
 
+pub trait AddonsContext: Clone {}
+
 impl<T: Clone> AddonsContext for T {}
 
 pub trait CwCliAddons<AddonsContext> {
