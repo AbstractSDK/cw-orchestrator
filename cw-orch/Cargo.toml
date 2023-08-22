@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.14.0"
+version = "0.14.1"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -116,6 +116,8 @@ snailquote = { version = "0.3.1", optional = true }
 
 # Test Tube env deps
 osmosis-test-tube = { version = "16.0.0", optional = true }
+osmosis-std = "=0.16.1"
+test-tube = "=0.1.5"
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }
