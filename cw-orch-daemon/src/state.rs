@@ -10,7 +10,7 @@ use cw_orch_core::{
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs::File, path::Path, rc::Rc};
+use std::{collections::HashMap, env, fs::File, path::Path};
 use tonic::transport::Channel;
 
 /// Stores the chain information and deployment state.
@@ -26,9 +26,6 @@ pub struct DaemonState {
     /// Information about the chain
     pub chain_data: ChainData,
 }
-
-#[derive(Clone, Debug)]
-pub struct RcDaemonState(pub Rc<DaemonState>);
 
 impl DaemonState {
     /// Creates a new state from the given chain data and deployment id.
@@ -127,12 +124,11 @@ impl DaemonState {
     }
 }
 
-impl StateInterface for RcDaemonState {
+impl StateInterface for DaemonState {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         let value = self
-            .0
-            .get(&self.0.deployment_id)
+            .get(&self.deployment_id)
             .get(contract_id)
             .ok_or_else(|| CwEnvError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
@@ -141,14 +137,12 @@ impl StateInterface for RcDaemonState {
 
     /// Set address for contract in deployment id in state file
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.0
-            .set(&self.0.deployment_id, contract_id, address.as_str());
+        self.set(&self.deployment_id, contract_id, address.as_str());
     }
 
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
-            .0
             .get("code_ids")
             .get(contract_id)
             .ok_or_else(|| CwEnvError::CodeIdNotInStore(contract_id.to_owned()))?
@@ -158,13 +152,13 @@ impl StateInterface for RcDaemonState {
 
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        self.0.set("code_ids", contract_id, code_id);
+        self.set("code_ids", contract_id, code_id);
     }
 
     /// Get all addresses for deployment id from state file
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
         let mut store = HashMap::new();
-        let addresses = self.0.get(&self.0.deployment_id);
+        let addresses = self.get(&self.deployment_id);
         let value = addresses.as_object().unwrap();
         for (id, addr) in value {
             store.insert(id.clone(), Addr::unchecked(addr.as_str().unwrap()));
@@ -174,7 +168,7 @@ impl StateInterface for RcDaemonState {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         let mut store = HashMap::new();
-        let code_ids = self.0.get("code_ids");
+        let code_ids = self.get("code_ids");
         let value = code_ids.as_object().unwrap();
         for (id, code_id) in value {
             store.insert(id.clone(), code_id.as_u64().unwrap());
@@ -184,9 +178,9 @@ impl StateInterface for RcDaemonState {
 
     fn deploy_details(&self) -> DeployDetails {
         DeployDetails {
-            chain_id: self.0.chain_data.chain_id.to_string(),
-            chain_name: self.0.chain_data.chain_name.clone(),
-            deployment_id: self.0.deployment_id.clone(),
+            chain_id: self.chain_data.chain_id.to_string(),
+            chain_name: self.chain_data.chain_name.clone(),
+            deployment_id: self.deployment_id.clone(),
         }
     }
 }

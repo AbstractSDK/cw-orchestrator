@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-networks"
-version = "0.13.3"
+version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -8,10 +8,10 @@ repository = { workspace = true }
 description = "Networks library for deploying and interacting with CosmWasm smart-contracts"
 keywords = ["cosmwasm", "blockchain"]
 categories = ["development-tools"]
-readme = "../README.md"
+readme = "README.md"
 
 exclude = [".env"]
 
 [dependencies]
 serde = { workspace = true }
-ibc-chain-registry = { version = "0.24.1" }
+ibc-chain-registry = { workspace = true }

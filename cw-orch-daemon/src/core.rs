@@ -1,4 +1,4 @@
-use crate::{queriers::CosmWasm, RcDaemonState};
+use crate::{queriers::CosmWasm, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder,
@@ -24,6 +24,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
+    rc::Rc,
     str::{from_utf8, FromStr},
     time::Duration,
 };
@@ -58,7 +59,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: RcDaemonState,
+    pub state: Rc<DaemonState>,
 }
 
 impl DaemonAsync {
@@ -75,12 +76,12 @@ impl DaemonAsync {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.state.0.grpc_channel.clone()
+        self.state.grpc_channel.clone()
     }
 }
 
 impl ChainState for DaemonAsync {
-    type Out = RcDaemonState;
+    type Out = Rc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.state.clone()

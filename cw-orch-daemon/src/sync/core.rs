@@ -1,10 +1,10 @@
-use std::{fmt::Debug, time::Duration};
+use std::{fmt::Debug, rc::Rc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 
 use crate::{
     queriers::{DaemonQuerier, Node},
-    ChannelAccess, CosmTxResponse, DaemonBuilder, DaemonError, RcDaemonState,
+    CosmTxResponse, DaemonBuilder, DaemonError, DaemonState, ChannelAccess,
 };
 
 use cosmrs::tendermint::Time;
@@ -65,7 +65,7 @@ impl Daemon {
 
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.daemon.state.0.grpc_channel.clone()
+        self.daemon.state.grpc_channel.clone()
     }
 
     /// Get the channel configured for this Daemon
@@ -81,7 +81,7 @@ impl ChannelAccess for Daemon {
 }
 
 impl ChainState for Daemon {
-    type Out = RcDaemonState;
+    type Out = Rc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()

@@ -14,7 +14,7 @@ pub mod prelude;
 
 pub use cw_orch_core::contract;
 pub use cw_orch_core::environment;
-pub use cw_orch_mock::{Mock, MockState};
+pub use cw_orch_mock as mock;
 
 #[deprecated(since = "0.13.4", note = "Deploy trait moved to contract namespace")]
 /// Used to introduce Deploy trait.
@@ -45,7 +45,5 @@ pub mod interchain;
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
 
-#[cfg(feature = "daemon")]
-pub mod live_mock;
 #[cfg(feature = "starship")]
 pub mod starship;

@@ -1,10 +1,11 @@
 [package]
 name = "cw-orch-mock"
-version = "0.1.0"
+version = { workspace = true }
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Adapter for interacting with cw-multi-test via the cw-orchestrator tool"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

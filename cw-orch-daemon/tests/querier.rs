@@ -3,19 +3,20 @@ mod common;
 #[cfg(feature = "node-tests")]
 mod queriers {
 
-    use cw_orch::{daemon::GrpcChannel, environment::TxHandler, prelude::networks};
+    use cw_orch_core::contract::interface_traits::*;
+    use cw_orch_core::environment::TxHandler;
+    use cw_orch_daemon::GrpcChannel;
+    use cw_orch_networks::networks;
     use ibc_chain_registry::chain::Grpc;
     use ibc_relayer_types::core::ics24_host::identifier::ChainId;
     use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
     use std::str::FromStr;
 
-    use cw_orch::{
-        daemon::{
-            queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
-            DaemonError,
-        },
-        prelude::{queriers::StakingBondStatus, *},
+    use cw_orch_daemon::{
+        queriers::StakingBondStatus,
+        queriers::{Bank, CosmWasm, DaemonQuerier, Gov, Ibc, Node, Staking},
+        Daemon, DaemonError,
     };
     use tokio::runtime::Runtime;
 
@@ -214,7 +215,7 @@ mod queriers {
     #[serial_test::serial]
     fn contract_info() {
         use crate::common::Id;
-        use cw_orch::prelude::networks;
+        use cw_orch_networks::networks;
 
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());

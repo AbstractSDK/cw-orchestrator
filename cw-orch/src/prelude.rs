@@ -26,7 +26,7 @@ pub use crate::environment::IndexResponse;
 pub use crate::environment::{CwEnv, TxHandler, TxResponse};
 
 // Mock for testing
-pub use crate::Mock;
+pub use crate::mock::Mock;
 
 // OsmosisTestTube for testing
 #[cfg(feature = "osmosis-test-tube")]
@@ -45,6 +45,7 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
+    live_mock,
     queriers,
     // sync helpers
     ConditionalMigrate,
@@ -58,10 +59,6 @@ pub use crate::daemon::{
 
 pub use crate::contract::artifacts_dir_from_workspace;
 pub use cw_orch_networks::networks;
-
-/// Re-export trait and data required to fetch daemon data from chain-registry
-#[cfg(feature = "daemon")]
-pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
 
 #[cfg(feature = "interchain")]
 pub use super::interchain::{interchain_channel_builder, interchain_env::InterchainEnv};

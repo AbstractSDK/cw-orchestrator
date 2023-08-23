@@ -1,24 +1,13 @@
-use cw_orch::{daemon::Daemon, environment::CwEnv, interface, prelude::*};
+use cw_orch::{environment::CwEnv, interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-use cosmwasm_std::Event;
-mod common;
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Event};
 use cw_orch::prelude::Mock;
-
-const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg)]
 pub struct MockContract;
 
 impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
-    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
-        // create contract base configuration
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}/{}", crate_path, MOCK_CONTRACT_WASM);
-        log::info!("Using wasm path {}", wasm_path);
-        WasmPath::new(wasm_path).unwrap()
-    }
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
