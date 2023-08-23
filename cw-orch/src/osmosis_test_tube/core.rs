@@ -2,7 +2,7 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_test_tube::{Account, Bank, Gamm, Module, SigningAccount, Wasm};
+use osmosis_test_tube::{Account, Bank, Gamm, Module, RunnerError, SigningAccount, Wasm};
 
 use std::str::FromStr;
 

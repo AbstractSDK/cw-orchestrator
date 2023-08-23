@@ -27,11 +27,10 @@ impl Starship {
         for chain in starship_client.chains.iter() {
             let mnemonic = rt_handle.block_on(async {
                 let registry = starship_client.registry().await;
-                let mnemonic = registry
+                registry
                     .test_mnemonic(chain.chain_id.as_str())
                     .await
-                    .unwrap();
-                mnemonic
+                    .unwrap()
             });
 
             let daemon = DaemonBuilder::default()
