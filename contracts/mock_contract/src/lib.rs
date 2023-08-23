@@ -27,6 +27,8 @@ where
         t: T,
     },
     FourthMessage,
+    #[cfg_attr(feature = "interface", payable)]
+    FifthMessage,
 }
 
 #[cw_serde]
@@ -69,7 +71,7 @@ pub fn instantiate(
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg {
@@ -83,6 +85,12 @@ pub fn execute(
         ExecuteMsg::FourthMessage => {
             Ok(Response::new().add_attribute("action", "fourth message passed"))
         }
+        ExecuteMsg::FifthMessage => {
+            if info.funds.is_empty() {
+                return Err(StdError::generic_err("Coins missing"));
+            }
+            Ok(Response::new().add_attribute("action", "fourth message passed"))
+        }
     }
 }
 
@@ -92,7 +100,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery {} => to_binary("third query passed"),
+        QueryMsg::ThirdQuery => to_binary("third query passed"),
     }
 }
 
@@ -112,6 +120,7 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
 mod test {
     use super::MockContract as LocalMockContract;
     use super::*;
+    use cosmwasm_std::coins;
     use cw_orch::prelude::*;
     #[test]
     fn compiles() -> Result<(), CwOrchError> {
@@ -125,6 +134,11 @@ mod test {
         contract.first_message()?;
         contract.second_message("s".to_string(), &[]).unwrap_err();
         contract.fourth_message().unwrap();
+        contract.fifth_message(&coins(156, "ujuno")).unwrap();
+
+        contract.first_query().unwrap();
+        contract.second_query("arg".to_string()).unwrap_err();
+        contract.third_query().unwrap();
 
         Ok(())
     }
