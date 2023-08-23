@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-
 use cosmos_sdk_proto::traits::TypeUrl;
 use cosmrs::{tx::Msg, ErrorReport, Result};
 /// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
@@ -39,9 +38,9 @@ pub struct ProtoMsgTransfer {
 }
 
 impl TypeUrl for ProtoMsgTransfer {
-    const TYPE_URL: &'static str = cosmos_sdk_proto::ibc::applications::transfer::v1::MsgTransfer::TYPE_URL;
+    const TYPE_URL: &'static str =
+        cosmos_sdk_proto::ibc::applications::transfer::v1::MsgTransfer::TYPE_URL;
 }
-
 
 /// MsgSend represents a message to send coins from one account to another.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

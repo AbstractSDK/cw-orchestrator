@@ -33,7 +33,6 @@ impl TypeUrl for ProtoMsgMint {
     const TYPE_URL: &'static str = "/osmosis.tokenfactory.v1beta1.MsgMint";
 }
 
-
 /// MsgCreateDenom represents a message to send coins from one account to another.
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct MsgCreateDenom {
