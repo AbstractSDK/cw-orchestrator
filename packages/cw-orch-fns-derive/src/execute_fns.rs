@@ -40,15 +40,17 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
         variant_func_name.set_span(variant_name.span());
 
         let is_payable = payable(&variant);
+
+        let (maybe_coins_attr, passed_coins) = if is_payable {
+            (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
+        } else {
+            (quote!(),quote!(None))
+        };
+
         match &mut variant.fields {
             Fields::Unnamed(_) => None,
             Fields::Unit => {
 
-                let (maybe_coins_attr, passed_coins) = if is_payable {
-                    (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
-                } else {
-                    (quote!(),quote!(None))
-                };
                 Some(quote!(
                     fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
@@ -68,11 +70,6 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
                 let variant_ident_content_names = variant_idents.iter().map(|f|f.ident.clone().unwrap());
 
-                let (maybe_coins_attr, passed_coins) = if is_payable {
-                    (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
-                } else {
-                    (quote!(),quote!(None))
-                };
                 let variant_attr = variant_idents.iter();
                 Some(quote!(
                     #[allow(clippy::too_many_arguments)]
