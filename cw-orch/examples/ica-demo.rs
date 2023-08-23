@@ -174,7 +174,6 @@ fn test_ica(
             controller
                 .get_chain()
                 .state()
-                .0
                 .chain_data
                 .chain_id
                 .to_string(),
