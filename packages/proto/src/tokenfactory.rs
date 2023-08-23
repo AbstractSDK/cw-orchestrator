@@ -141,7 +141,7 @@ use cosmrs::Denom;
 use cosmwasm_std::Coin;
 use cw_orch::{
     daemon::DaemonError,
-    interchain::{interchain_channel::InterchainChannel, IcResult, types::TxHashIbcAnalysisResult},
+    interchain::{interchain_channel::InterchainChannel, types::TxHashIbcAnalysisResult, IcResult},
     prelude::{interchain_channel_builder::InterchainChannelBuilder, Daemon, TxHandler},
     starship::Starship,
     state::ChainState,
