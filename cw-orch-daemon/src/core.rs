@@ -90,7 +90,7 @@ impl ChainState for DaemonAsync {
 
 impl ChannelAccess for DaemonAsync {
     fn channel(&self) -> tonic::transport::Channel {
-        self.state.0.grpc_channel.clone()
+        self.state.grpc_channel.clone()
     }
 }
 
