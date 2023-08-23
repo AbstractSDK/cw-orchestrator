@@ -127,6 +127,7 @@ mod test {
         // We need to check we can still call the execute msgs conveniently
         let sender = Addr::unchecked("sender");
         let mock = Mock::new(&sender);
+        mock.set_balance(&sender, coins(156, "ujuno"))?;
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
