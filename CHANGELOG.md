@@ -2,6 +2,11 @@
 
 ## Unpublished
 
+- Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
+
+
+## v0.15.0
+
 - Add `add_balance` function on the `Mock` type. 
 
 ## v0.10.0
