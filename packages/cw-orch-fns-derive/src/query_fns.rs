@@ -133,7 +133,5 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
         #derived_trait_impl
     );
 
-    // panic!("{}", expand);
-
     expand.into()
 }
