@@ -2,6 +2,7 @@ extern crate proc_macro;
 use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::{format_ident, quote};
 use syn::{visit_mut::VisitMut, Fields, Ident, ItemEnum, Type};
 
@@ -38,7 +39,36 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
         variant_func_name.set_span(variant_name.span());
 
         match &mut variant.fields {
-            Fields::Unnamed(_) => panic!("Expected named variant"),
+            Fields::Unnamed(variant_fields) => {
+                let mut variant_idents = variant_fields.unnamed.clone();
+
+                // remove attributes from fields
+                variant_idents.iter_mut().for_each(|f| f.attrs = vec![]);
+
+                // Parse these fields as arguments to function
+
+                 // We need to figure out a parameter name for all fields associated to their types
+                // They will be numbered from 0 to n-1
+                let variant_ident_content_names = variant_idents
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)|  Ident::new(&format!("arg{}", i), Span::call_site()));
+
+                let variant_attr = variant_idents.clone().into_iter()
+                    .enumerate()
+                    .map(|(i, mut id)| {
+                    id.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
+                    id
+                });
+
+                quote!(
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name (#(#variant_ident_content_names,)*);
+                        self.query(&msg #maybe_into)
+                    }
+                )
+            }
             Fields::Unit => {
                 quote!(
                     fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
@@ -102,6 +132,8 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
         #derived_trait_impl
     );
+
+    // panic!("{}", expand);
 
     expand.into()
 }

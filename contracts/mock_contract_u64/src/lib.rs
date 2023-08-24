@@ -40,6 +40,16 @@ pub fn execute(
             }
             Ok(Response::new().add_attribute("action", "fourth message passed"))
         }
+        ExecuteMsg::SixthMessage(_, _) => {
+            Ok(Response::new().add_attribute("action", "sixth message passed"))
+        }
+        ExecuteMsg::SeventhMessage(amount, denom) => {
+            let c = info.funds[0].clone();
+            if c.amount != amount && c.denom.ne(&denom) {
+                return Err(StdError::generic_err("Coins don't match message"));
+            }
+            Ok(Response::new().add_attribute("action", "fourth message passed"))
+        }
     }
 }
 
@@ -50,6 +60,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
         QueryMsg::ThirdQuery => to_binary("third query passed"),
+        QueryMsg::FourthQuery(_, _) => to_binary("fourth query passed"),
     }
 }
 
