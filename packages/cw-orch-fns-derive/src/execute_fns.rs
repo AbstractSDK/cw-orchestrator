@@ -2,6 +2,7 @@ extern crate proc_macro;
 use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::{format_ident, quote};
 use syn::{visit_mut::VisitMut, DeriveInput, Fields, Ident};
 
@@ -31,7 +32,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
         unimplemented!();
     };
 
-    let variant_fns = variants.into_iter().filter_map( |mut variant|{
+    let variant_fns = variants.into_iter().map( |mut variant|{
         let variant_name = variant.ident.clone();
 
         // We rename the variant if it has a fn_name attribute associated with it
@@ -40,9 +41,55 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
         variant_func_name.set_span(variant_name.span());
 
         let is_payable = payable(&variant);
+
+        let (maybe_coins_attr, passed_coins) = if is_payable {
+            (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
+        } else {
+            (quote!(),quote!(None))
+        };
+
         match &mut variant.fields {
-            Fields::Unnamed(_) => None,
-            Fields::Unit => None,
+            Fields::Unnamed(variant_fields) => {
+                // This is dangerous because of field ordering. Though, if people use like that, they know what to expect anyway
+
+                let mut variant_idents = variant_fields.unnamed.clone();
+                // remove any attributes for use in fn arguments
+                variant_idents.iter_mut().for_each(|f: &mut syn::Field| f.attrs = vec![]);
+
+
+                // We need to figure out a parameter name for all fields associated to their types
+                // They will be numbered from 0 to n-1
+                let variant_ident_content_names = variant_idents
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)|  Ident::new(&format!("arg{}", i), Span::call_site()));
+
+                let variant_attr = variant_idents.clone().into_iter()
+                    .enumerate()
+                    .map(|(i, mut id)| {
+                    id.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
+                    id
+                });
+
+                quote!(
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name (
+                            #(#variant_ident_content_names,)*
+                        );
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                    }
+                )
+            },
+            Fields::Unit => {
+
+                quote!(
+                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name;
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                    }
+                )
+            }
             Fields::Named(variant_fields) => {
                 // sort fields on field name
                 LexiographicMatching::default().visit_fields_named_mut(variant_fields);
@@ -51,17 +98,12 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 let mut variant_idents = variant_fields.named.clone();
 
                 // remove any attributes for use in fn arguments
-                variant_idents.iter_mut().for_each(|f| f.attrs = vec![]);
+                variant_idents.iter_mut().for_each(|f: &mut syn::Field| f.attrs = vec![]);
 
                 let variant_ident_content_names = variant_idents.iter().map(|f|f.ident.clone().unwrap());
 
-                let (maybe_coins_attr, passed_coins) = if is_payable {
-                    (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
-                } else {
-                    (quote!(),quote!(None))
-                };
                 let variant_attr = variant_idents.iter();
-                Some(quote!(
+                quote!(
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name {
@@ -69,7 +111,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                         };
                         <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
                     }
-                ))
+                )
             }
         }
     });
