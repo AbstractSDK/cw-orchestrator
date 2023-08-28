@@ -32,10 +32,8 @@
 //! [Hermes](https://hermes.informal.systems/)
 //! [Interchaintest](https://github.com/strangelove-ventures/interchaintest)
 
-use cw_orch::interchain::interchain_env::contract_port;
 use cw_orch::prelude::*;
 
-use crate::daemon::networks::*;
 use crate::prelude::interchain_channel_builder::InterchainChannelBuilder;
 use crate::prelude::queriers::Bank;
 use crate::prelude::InterchainEnv;
@@ -52,7 +50,6 @@ use simple_ica_host::msg::{self as host_msgs};
 use speculoos::assert_that;
 
 use crate::starship::Starship;
-use cw_orch_interchain::ibc_tracker::IbcTracker;
 use tokio::runtime::Handle;
 
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
@@ -83,7 +80,7 @@ pub fn script() -> anyhow::Result<()> {
     // ### SETUP ###
     deploy_contracts(&cw1, &host, &controller)?;
 
-    let interchain_channel = rt.block_on(
+    let _interchain_channel = rt.block_on(
         InterchainChannelBuilder::default()
             .from_contracts(&controller, &host)
             .create_channel(starship.client(), "simple-ica-v2"),
