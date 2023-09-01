@@ -2,7 +2,9 @@
 
 ## Unpublished
 
-- Add `add_balance` function on the `Mock` type. 
+- Add ChannelAccess trait to be able to access the underyling gRPC tonic channel of the daemon 
+- Added ibc denom query (for completeness and working with ibc token transfers)
+- Added transaction by event query (mainly for querying packets in and out of the chain)
 
 ## v0.10.0
 
