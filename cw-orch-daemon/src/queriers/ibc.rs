@@ -2,7 +2,7 @@ use super::DaemonQuerier;
 use crate::{cosmos_modules, error::DaemonError};
 use cosmos_modules::ibc_channel;
 use cosmrs::proto::ibc::{
-    applications::transfer::v1::{DenomTrace, QueryDenomTraceResponse},
+    applications::transfer::v1::{DenomTrace, QueryDenomHashResponse, QueryDenomTraceResponse},
     core::{
         channel::v1::QueryPacketCommitmentResponse,
         client::v1::{IdentifiedClientState, QueryClientStatesResponse},
@@ -36,6 +36,17 @@ impl Ibc {
             QueryDenomTraceRequest { hash: hash }
         );
         Ok(denom_trace.denom_trace.unwrap())
+    }
+
+    /// Get the hash of a specific denom from its trace
+    pub async fn denom_hash(&self, trace: String) -> Result<String, DaemonError> {
+        let denom_hash: QueryDenomHashResponse = cosmos_query!(
+            self,
+            ibc_transfer,
+            denom_hash,
+            QueryDenomHashRequest { trace: trace }
+        );
+        Ok(denom_hash.hash)
     }
 
     // ### Client queries ###
