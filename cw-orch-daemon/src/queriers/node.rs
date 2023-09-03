@@ -1,4 +1,4 @@
-use std::{cmp::min, time::Duration};
+use std::{cmp::min, env, time::Duration};
 
 use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -11,6 +11,14 @@ use tonic::transport::Channel;
 use super::DaemonQuerier;
 
 const MAX_TX_QUERY_RETRIES: usize = 50;
+
+fn get_max_tx_query_retries() -> Result<usize, DaemonError> {
+    if let Ok(retries) = env::var("CW_ORCH_MAX_TX_QUERY_RETRIES") {
+        Ok(retries.parse()?)
+    } else {
+        Ok(MAX_TX_QUERY_RETRIES)
+    }
+}
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -198,7 +206,8 @@ impl Node {
 
     /// Find TX by hash
     pub async fn find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self.find_tx_with_retries(hash, MAX_TX_QUERY_RETRIES).await
+        self.find_tx_with_retries(hash, get_max_tx_query_retries()?)
+            .await
     }
 
     /// Find TX by hash with a given amount of retries
