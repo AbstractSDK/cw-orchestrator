@@ -9,7 +9,12 @@ use cw_orch_core::{
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs::File, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    env,
+    fs::File,
+    path::{Path, PathBuf},
+};
 use tonic::transport::Channel;
 
 pub const CW_ORCH_DEFAULT_FOLDER: &str = ".cw-orchestrator";
@@ -46,15 +51,21 @@ impl DaemonState {
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
         // check if STATE_FILE en var is configured, default to state.json
-        let env_file_path = PathBuf::from(env::var("STATE_FILE").unwrap_or("./state.json".to_string()));
+        let env_file_path =
+            PathBuf::from(env::var("STATE_FILE").unwrap_or("./state.json".to_string()));
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/.cw-orchestrator
-        let mut json_file_path = if env_file_path.is_relative(){
+        let mut json_file_path = if env_file_path.is_relative() {
             let home_folder: String = env::var("HOME").unwrap().to_string();
-            PathBuf::from(home_folder).join(CW_ORCH_DEFAULT_FOLDER).join(env_file_path)
-        }else{
+            PathBuf::from(home_folder)
+                .join(CW_ORCH_DEFAULT_FOLDER)
+                .join(env_file_path)
+        } else {
             env_file_path
-        }.into_os_string().into_string().unwrap();
+        }
+        .into_os_string()
+        .into_string()
+        .unwrap();
 
         log::info!("{}", json_file_path);
 
