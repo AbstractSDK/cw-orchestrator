@@ -3,7 +3,7 @@
 ## Unpublished
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
-
+- Broadcast function on the sender is public by @Kayanski
 
 ## v0.15.0
 
