@@ -3,6 +3,7 @@
 ## Unpublished
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
+- Added optional disable of sorting of ExecuteFns and QueryFns fields by @Kayanski
 
 
 ## v0.15.0
