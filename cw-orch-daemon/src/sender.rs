@@ -242,7 +242,7 @@ impl Sender<All> {
         Ok(acc)
     }
 
-    async fn broadcast_tx(
+    pub async fn broadcast_tx(
         &self,
         tx: Raw,
     ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
