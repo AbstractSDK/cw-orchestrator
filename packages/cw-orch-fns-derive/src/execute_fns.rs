@@ -1,5 +1,5 @@
 extern crate proc_macro;
-use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
+use crate::helpers::{process_fn_name, process_impl_into, process_sorting, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -24,11 +24,9 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let (maybe_into, entrypoint_msg_type, type_generics) =
         process_impl_into(&input.attrs, name, input.generics);
 
-    let syn::Data::Enum(syn::DataEnum {
-        variants,
-        ..
-    }) = input.data
-     else {
+    let is_attributes_sorted = process_sorting(&input.attrs);
+
+    let syn::Data::Enum(syn::DataEnum { variants, .. }) = input.data else {
         unimplemented!();
     };
 
@@ -50,7 +48,6 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
         match &mut variant.fields {
             Fields::Unnamed(variant_fields) => {
-                // This is dangerous because of field ordering. Though, if people use like that, they know what to expect anyway
 
                 let mut variant_idents = variant_fields.unnamed.clone();
                 // remove any attributes for use in fn arguments
@@ -91,8 +88,10 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 )
             }
             Fields::Named(variant_fields) => {
-                // sort fields on field name
-                LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                if is_attributes_sorted{
+                    // sort fields on field name
+                    LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                }
 
                 // parse these fields as arguments to function
                 let mut variant_idents = variant_fields.named.clone();
