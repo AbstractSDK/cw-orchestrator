@@ -170,9 +170,7 @@ impl Sender<All> {
             let suggested_fee = parse_suggested_fee(&tx_response.raw_log);
 
             let Some(new_fee) = suggested_fee else {
-                return Err(DaemonError::InsufficientFee(
-                    tx_response.raw_log,
-                ));
+                return Err(DaemonError::InsufficientFee(tx_response.raw_log));
             };
 
             // update the fee and try again
