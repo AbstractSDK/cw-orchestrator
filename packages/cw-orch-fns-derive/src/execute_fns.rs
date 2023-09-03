@@ -24,11 +24,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let (maybe_into, entrypoint_msg_type, type_generics) =
         process_impl_into(&input.attrs, name, input.generics);
 
-    let syn::Data::Enum(syn::DataEnum {
-        variants,
-        ..
-    }) = input.data
-     else {
+    let syn::Data::Enum(syn::DataEnum { variants, .. }) = input.data else {
         unimplemented!();
     };
 
