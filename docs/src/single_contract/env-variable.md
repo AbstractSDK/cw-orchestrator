@@ -16,7 +16,7 @@ RUST_LOG=info
 ARTIFACTS_DIR="../artifacts"
 
 # where to store the state of your deployments (default: ./state.json)
-STATE_FILE="./daemon_state.json"
+STATE_FILE="./my_state.json"
 
 # Mnemonics of the account that will be used to sign transactions
 # Can optionally be set on DaemonBuilder as well.
