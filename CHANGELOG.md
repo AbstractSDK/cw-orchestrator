@@ -4,6 +4,8 @@
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
 - Broadcast function on the sender is public by @Kayanski
+- Added automatic tx retrying in case of an account sequence error by @Kayanski
+- Made transaction retrying more modular (for adding more retry cases) by Kayanski
 
 ## v0.15.0
 
