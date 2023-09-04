@@ -1,4 +1,8 @@
-use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE};
+use crate::{
+    networks::ChainKind,
+    proto::injective::ETHEREUM_COIN_TYPE,
+    tx_broadcaster::{account_sequence_strategy, insufficient_fee_strategy, TxBroadcaster},
+};
 
 use super::{
     cosmos_modules::{self, auth::BaseAccount},
@@ -155,31 +159,18 @@ impl Sender<All> {
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
-        let mut tx_builder = TxBuilder::new(tx_body);
+        let tx_builder = TxBuilder::new(tx_body);
 
-        // now commit and check the result, if we get an insufficient fee error, we can try again with the proposed fee
+        // We retry broadcasting the tx, with the following strategies
+        // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
+        // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
+        // 3. In case there is an other error, we fail
 
-        let tx = tx_builder.build(self).await?;
-
-        let mut tx_response = self.broadcast_tx(tx).await?;
-
-        log::debug!("tx broadcast response: {:?}", tx_response);
-
-        if has_insufficient_fee(&tx_response.raw_log) {
-            // get the suggested fee from the error message
-            let suggested_fee = parse_suggested_fee(&tx_response.raw_log);
-
-            let Some(new_fee) = suggested_fee else {
-                return Err(DaemonError::InsufficientFee(tx_response.raw_log));
-            };
-
-            // update the fee and try again
-            tx_builder.fee_amount(new_fee);
-            let tx = tx_builder.build(self).await?;
-
-            tx_response = self.broadcast_tx(tx).await?;
-            log::debug!("tx broadcast response: {:?}", tx_response);
-        }
+        let tx_response = TxBroadcaster::default()
+            .add_strategy(insufficient_fee_strategy())
+            .add_strategy(account_sequence_strategy())
+            .broadcast(tx_builder, self)
+            .await?;
 
         let resp = Node::new(self.channel())
             .find_tx(tx_response.txhash)
@@ -254,59 +245,5 @@ impl Sender<All> {
 
         let commit = commit.into_inner().tx_response.unwrap();
         Ok(commit)
-    }
-}
-
-fn has_insufficient_fee(raw_log: &str) -> bool {
-    raw_log.contains("insufficient fees")
-}
-
-// from logs: "insufficient fees; got: 14867ujuno
-// required: 17771ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9,444255ujuno: insufficient fee"
-fn parse_suggested_fee(raw_log: &str) -> Option<u128> {
-    // Step 1: Split the log message into "got" and "required" parts.
-    let parts: Vec<&str> = raw_log.split("required: ").collect();
-
-    // Make sure the log message is in the expected format.
-    if parts.len() != 2 {
-        return None;
-    }
-
-    // Step 2: Split the "got" part to extract the paid fee and denomination.
-    let got_parts: Vec<&str> = parts[0].split_whitespace().collect();
-
-    // Extract the paid fee and denomination.
-    let paid_fee_with_denom = got_parts.last()?;
-    let (_, denomination) =
-        paid_fee_with_denom.split_at(paid_fee_with_denom.find(|c: char| !c.is_numeric())?);
-
-    eprintln!("denom: {}", denomination);
-
-    // Step 3: Iterate over each fee in the "required" part.
-    let required_fees: Vec<&str> = parts[1].split(denomination).collect();
-
-    eprintln!("required fees: {:?}", required_fees);
-
-    // read until the first non-numeric character backwards on the first string
-    let (_, suggested_fee) =
-        required_fees[0].split_at(required_fees[0].rfind(|c: char| !c.is_numeric())?);
-    eprintln!("suggested fee: {}", suggested_fee);
-
-    // remove the first character if parsing errors, which can be a comma
-    suggested_fee
-        .parse::<u128>()
-        .ok()
-        .or(suggested_fee[1..].parse::<u128>().ok())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_suggested_fee() {
-        let log = "insufficient fees; got: 14867ujuno required: 17771ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9,444255ujuno: insufficient fee";
-        let fee = parse_suggested_fee(log).unwrap();
-        assert_eq!(fee, 444255);
     }
 }

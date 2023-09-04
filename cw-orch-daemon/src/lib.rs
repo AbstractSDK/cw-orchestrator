@@ -18,6 +18,7 @@ pub mod keys;
 pub mod live_mock;
 pub mod queriers;
 mod traits;
+pub mod tx_broadcaster;
 pub mod tx_builder;
 
 pub use self::{
