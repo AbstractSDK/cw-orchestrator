@@ -2,7 +2,7 @@ use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
     tendermint::chain::Id,
-    tx::{self, Body, Fee, Msg, Raw, SequenceNumber, SignDoc, SignerInfo},
+    tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
     Any, Coin,
 };
 use secp256k1::All;
@@ -52,17 +52,7 @@ impl TxBuilder {
     }
 
     /// Builds the body of the tx with a given memo and timeout.
-    pub fn build_body<T: cosmrs::tx::Msg>(
-        msgs: Vec<T>,
-        memo: Option<&str>,
-        timeout: u64,
-    ) -> tx::Body {
-        let msgs = msgs
-            .into_iter()
-            .map(Msg::into_any)
-            .collect::<Result<Vec<Any>, _>>()
-            .unwrap();
-
+    pub fn build_body(msgs: Vec<Any>, memo: Option<&str>, timeout: u64) -> tx::Body {
         tx::Body::new(msgs, memo.unwrap_or_default(), timeout as u32)
     }
 

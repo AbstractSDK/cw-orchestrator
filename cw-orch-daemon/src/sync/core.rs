@@ -201,4 +201,14 @@ impl TxHandler for Daemon {
             chain_id: block.header.chain_id.to_string(),
         })
     }
+
+    /// Specify Empty for the type of R if you don't know the type to unwrap the response to
+    fn commit_any<R>(
+        &self,
+        msgs: Vec<cosmrs::Any>,
+        memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle
+            .block_on(self.wallet().commit_tx_any(msgs, memo))
+    }
 }

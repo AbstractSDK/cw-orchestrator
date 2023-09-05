@@ -20,7 +20,7 @@ use cosmrs::{
     proto::traits::Message,
     tendermint::chain::Id,
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
-    AccountId,
+    AccountId, Any,
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
@@ -151,6 +151,20 @@ impl Sender<All> {
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
+        let msgs = msgs
+            .into_iter()
+            .map(Msg::into_any)
+            .collect::<Result<Vec<Any>, _>>()
+            .unwrap();
+
+        self.commit_tx_any(msgs, memo).await
+    }
+
+    pub async fn commit_tx_any(
+        &self,
+        msgs: Vec<Any>,
+        memo: Option<&str>,
+    ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
@@ -170,9 +184,7 @@ impl Sender<All> {
             let suggested_fee = parse_suggested_fee(&tx_response.raw_log);
 
             let Some(new_fee) = suggested_fee else {
-                return Err(DaemonError::InsufficientFee(
-                    tx_response.raw_log,
-                ));
+                return Err(DaemonError::InsufficientFee(tx_response.raw_log));
             };
 
             // update the fee and try again

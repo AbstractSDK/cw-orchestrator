@@ -298,6 +298,15 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
         Ok(self.app.borrow().block_info())
     }
+
+    /// Specify Empty for the type of R if you don't know the type to unwrap the response to
+    fn commit_any<R>(
+        &self,
+        _msgs: Vec<cosmrs::Any>,
+        _memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        panic!("Un-implemented, mock env doesn't support starship messages yet")
+    }
 }
 
 #[cfg(test)]
