@@ -1,4 +1,4 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{queriers::CosmWasm, ChannelAccess, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder,
@@ -88,6 +88,12 @@ impl ChainState for DaemonAsync {
     }
 }
 
+impl ChannelAccess for DaemonAsync {
+    fn channel(&self) -> tonic::transport::Channel {
+        self.state.grpc_channel.clone()
+    }
+}
+
 // Execute on the real chain, returns tx response.
 impl DaemonAsync {
     /// Get the sender address
@@ -143,8 +149,7 @@ impl DaemonAsync {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, DaemonError> {
-        let sender = &self.sender;
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
         let resp = client
             .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),

@@ -3,6 +3,9 @@
 ## Unpublished
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
+- Add ChannelAccess trait to be able to access the underyling gRPC tonic channel of the daemon 
+- Added ibc denom query (for completeness and working with ibc token transfers)
+- Added transaction by event query (mainly for querying packets in and out of the chain)
 
 
 ## v0.15.0
