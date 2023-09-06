@@ -18,7 +18,7 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
     /// Response type for transactions on an environment.
-    type Response: IndexResponse + Debug + Send;
+    type Response: IndexResponse + Debug + Send + Clone;
     /// Error type for transactions on an environment.
     type Error: Into<CwEnvError> + Debug;
     /// Source type for uploading to the environment.
