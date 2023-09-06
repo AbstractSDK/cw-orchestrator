@@ -1,6 +1,9 @@
 # cw-orchestrator Changelog
 
 ## Unpublished
+## v0.13.4
+
+- Updated the tx query retry number to 50
 
 ## v0.10.0
 
