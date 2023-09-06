@@ -6,7 +6,7 @@ use cosmrs::proto::ibc::{
     core::{
         channel::v1::QueryPacketCommitmentResponse,
         client::v1::{IdentifiedClientState, QueryClientStatesResponse},
-        connection::v1::{IdentifiedConnection, State},
+        connection::v1::{ConnectionEnd, IdentifiedConnection, State},
     },
     lightclients::tendermint::v1::ClientState,
 };
@@ -161,6 +161,26 @@ impl Ibc {
         }
 
         Ok(filtered_connections)
+    }
+
+    // Get the information about a specific connection
+    pub async fn connection_end(
+        &self,
+        connection_id: impl Into<String>,
+    ) -> Result<Option<ConnectionEnd>, DaemonError> {
+        use cosmos_modules::ibc_connection::QueryConnectionResponse;
+
+        let connection_id = connection_id.into();
+        let ibc_client_connections: QueryConnectionResponse = cosmos_query!(
+            self,
+            ibc_connection,
+            connection,
+            QueryConnectionRequest {
+                connection_id: connection_id.clone()
+            }
+        );
+
+        Ok(ibc_client_connections.connection)
     }
 
     /// Get all the connections for this client
