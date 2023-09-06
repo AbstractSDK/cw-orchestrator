@@ -8,7 +8,7 @@ repository = { workspace = true }
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
 keywords = ["cosmwasm", "blockchain"]
 categories = ["development-tools"]
-readme = "../README.md"
+readme = "README.md"
 
 exclude = [".env"]
 
