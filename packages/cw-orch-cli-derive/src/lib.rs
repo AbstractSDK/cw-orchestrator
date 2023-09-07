@@ -92,10 +92,7 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
 }
 
 fn impl_parse_for_struct(fields: &Fields, name: &proc_macro2::Ident) -> proc_macro2::TokenStream {
-    let syn::Fields::Named(FieldsNamed {
-        named,
-        ..
-    }) = fields else {
+    let syn::Fields::Named(FieldsNamed { named, .. }) = fields else {
         unimplemented!()
     };
     let fields = named.into_iter().map(|field| {

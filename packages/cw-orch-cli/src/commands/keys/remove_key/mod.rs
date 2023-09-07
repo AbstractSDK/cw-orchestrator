@@ -1,3 +1,5 @@
+use crate::utils::entry_for_seed;
+
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
 #[interactive_clap(output_context = RemoveKeyOutput)]
@@ -13,7 +15,7 @@ impl RemoveKeyOutput {
         _previous_context: (),
         scope:&<RemoveKeyCommand as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let entry = keyring::Entry::new("cw-cli", &scope.name)?;
+        let entry = entry_for_seed(&scope.name)?;
         entry.delete_password()?;
         Ok(RemoveKeyOutput)
     }

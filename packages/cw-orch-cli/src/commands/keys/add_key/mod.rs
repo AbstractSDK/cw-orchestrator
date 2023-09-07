@@ -1,7 +1,8 @@
 use base64::{prelude::BASE64_STANDARD as B64, Engine};
-use color_eyre::eyre::Context;
 use cosmrs::bip32;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
+
+use crate::utils::entry_for_seed;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
@@ -51,17 +52,20 @@ impl AddKeyOutput {
         let name = previous_context.0;
         let mnemonic = match scope {
             AddKeyActionsDiscriminants::New => {
-                bip32::Mnemonic::random(&mut rand_core::OsRng, Default::default())
+                bip32::Mnemonic::random(rand_core::OsRng, Default::default())
             }
             AddKeyActionsDiscriminants::FromSeed => {
                 // TODO: do we want to hide the input?
-                let mnemonic_seed =
-                    rpassword::prompt_password("Mnemonic 🔑: ").context("unable to read")?;
+                let mnemonic_seed = inquire::Password::new("Mnemonic 🔑: ")
+                    .with_display_mode(inquire::PasswordDisplayMode::Masked)
+                    .with_display_toggle_enabled()
+                    .prompt()?;
                 bip32::Mnemonic::new(mnemonic_seed, Default::default())?
             }
         };
-        let entry = keyring::Entry::new("cw-cli", &name)?;
-
+        // TODO: do we want to output seed
+        // println!("seed: {}", mnemonic.phrase());
+        let entry = entry_for_seed(&name)?;
         let password = B64.encode(mnemonic.phrase().as_bytes());
         entry.set_password(&password)?;
         Ok(AddKeyOutput)
