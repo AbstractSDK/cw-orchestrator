@@ -59,11 +59,13 @@ impl AddKeyOutput {
                 let mnemonic_seed = inquire::Password::new("Mnemonic 🔑: ")
                     .with_display_mode(inquire::PasswordDisplayMode::Masked)
                     .with_display_toggle_enabled()
+                    .with_help_message("Show seed on ctrl+R")
+                    .without_confirmation()
                     .prompt()?;
                 bip32::Mnemonic::new(mnemonic_seed, Default::default())?
             }
         };
-        // TODO: do we want to output seed
+        // TODO: do we want to output seed?
         // println!("seed: {}", mnemonic.phrase());
         let entry = entry_for_seed(&name)?;
         let password = B64.encode(mnemonic.phrase().as_bytes());
