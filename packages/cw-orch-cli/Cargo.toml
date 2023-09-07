@@ -14,7 +14,7 @@ directories = "5.0.1"
 keyring = "2.0.5"
 rpassword = "7.2.0"
 cosmrs = "0.14.0"
-bip39 = { version = "2.0.0", features = ["rand"] }
+rand_core = { version = "0.6", features = ["std"] }
 base64 = { version = "0.21.0" }                                             # TODO: move to workspace
 cosmwasm-std = { version = "1.3" }
 cw-orch = { path = "../../cw-orch", features = ["daemon"] }
