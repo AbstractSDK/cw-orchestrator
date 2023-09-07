@@ -21,7 +21,7 @@ impl ShowKeyOutput {
 
         let password = entry.get_password()?;
         let phrase = String::from_utf8(B64.decode(password)?)?;
-        println!("phrase: {phrase}");
+        println!("your seed phrase: {phrase}");
         Ok(ShowKeyOutput)
     }
 }
