@@ -1,6 +1,4 @@
-use base64::{prelude::BASE64_STANDARD as B64, Engine};
-
-use crate::utils::entry_for_seed;
+use crate::utils::seed_phrase_for_id;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
@@ -17,10 +15,7 @@ impl ShowKeyOutput {
         _previous_context: (),
         scope:&<ShowKeyCommand as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let entry = entry_for_seed(&scope.name)?;
-
-        let password = entry.get_password()?;
-        let phrase = String::from_utf8(B64.decode(password)?)?;
+        let phrase = seed_phrase_for_id(&scope.name)?;
         println!("your seed phrase: {phrase}");
         Ok(ShowKeyOutput)
     }

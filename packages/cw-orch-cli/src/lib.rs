@@ -1,3 +1,6 @@
+/// Allow integrating keys and stuff
+pub mod utils;
+
 mod contract;
 mod daemon;
 

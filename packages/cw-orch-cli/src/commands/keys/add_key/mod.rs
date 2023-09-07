@@ -1,8 +1,8 @@
-use base64::{prelude::BASE64_STANDARD as B64, Engine};
+use base64::Engine;
 use cosmrs::bip32;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
-use crate::utils::entry_for_seed;
+use crate::utils::{entry_for_seed, B64};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]

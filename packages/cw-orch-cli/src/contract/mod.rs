@@ -97,7 +97,7 @@ where
     fn instantiate_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
         let instantiate_msg =
             <Self as InstantiableContract>::InstantiateMsg::cw_parse(state_interface)?;
-        let coins = helpers::parse_coins()?;
+        let coins = crate::utils::parse_coins()?;
 
         let admin = Text::new("Admin addr")
             .with_help_message("Press ESC to not set admin")
@@ -118,7 +118,7 @@ where
     fn execute_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
         let execute_msg = <Self as ExecutableContract>::ExecuteMsg::cw_parse(state_interface)?;
         // TODO: figure out a way to make this only with `payable` attribute
-        let coins = helpers::parse_coins()?;
+        let coins = crate::utils::parse_coins()?;
 
         if helpers::confirm_action("Execute", &execute_msg, Some(coins.as_slice()))? {
             let res = self.execute(&execute_msg, Some(coins.as_slice()))?;
@@ -189,22 +189,6 @@ where
 
 pub mod helpers {
     use super::*;
-
-    pub fn parse_coins() -> InquireResult<Vec<Coin>> {
-        let mut coins = Vec::new();
-        loop {
-            let coin = CustomType::<Coin>::new("Add coin to transaction")
-                .with_placeholder("5ucosm")
-                .with_help_message("Press ESC to finish adding coins")
-                .prompt_skippable()?;
-            if let Some(c) = coin {
-                coins.push(c)
-            } else {
-                break;
-            }
-        }
-        Ok(coins)
-    }
 
     pub fn custom_type_serialize<Msg: Serialize + DeserializeOwned + Clone>(
         message: &str,
