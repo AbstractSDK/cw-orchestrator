@@ -2,6 +2,7 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 pub struct TxCommands {
+    /// Chain id
     chain_id: String,
     #[interactive_clap(subcommand)]
     action: CwAction,
