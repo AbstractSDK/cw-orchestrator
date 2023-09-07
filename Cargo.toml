@@ -18,7 +18,7 @@ cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
 # Test Tube env deps
 osmosis-test-tube = { version = "=17.0.0-rc0" }
-osmosis-std = { version = "=0.17.0-rc0" }
+osmosis-std = { version = "=0.19.1" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
