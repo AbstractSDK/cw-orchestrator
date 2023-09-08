@@ -1,4 +1,4 @@
-use crate::utils::entry_for_seed;
+use crate::common::entry_for_seed;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]

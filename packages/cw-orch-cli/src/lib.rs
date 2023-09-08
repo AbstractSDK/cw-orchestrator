@@ -1,5 +1,5 @@
 /// Allow integrating keys and stuff
-pub mod utils;
+pub mod common;
 
 mod contract;
 mod daemon;

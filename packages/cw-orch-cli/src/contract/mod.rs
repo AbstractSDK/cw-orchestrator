@@ -97,15 +97,15 @@ where
     fn instantiate_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
         let instantiate_msg =
             <Self as InstantiableContract>::InstantiateMsg::cw_parse(state_interface)?;
-        let coins = crate::utils::parse_coins()?;
+        let coins = crate::common::parse_coins()?;
 
         let admin = Text::new("Admin addr")
             .with_help_message("Press ESC to not set admin")
             .prompt_skippable()?
             .map(Addr::unchecked);
 
-        if helpers::confirm_action("Execute", &instantiate_msg, Some(coins.as_slice()))? {
-            let res = self.instantiate(&instantiate_msg, admin.as_ref(), Some(coins.as_slice()))?;
+        if helpers::confirm_action("Execute", &instantiate_msg, Some(&coins.to_vec()))? {
+            let res = self.instantiate(&instantiate_msg, admin.as_ref(), Some(&coins.to_vec()))?;
             println!(
                 "Instantiation succesfull\naddr: {}\nhash: {}",
                 self.addr_str()?,
@@ -118,10 +118,10 @@ where
     fn execute_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
         let execute_msg = <Self as ExecutableContract>::ExecuteMsg::cw_parse(state_interface)?;
         // TODO: figure out a way to make this only with `payable` attribute
-        let coins = crate::utils::parse_coins()?;
+        let coins = crate::common::parse_coins()?;
 
-        if helpers::confirm_action("Execute", &execute_msg, Some(coins.as_slice()))? {
-            let res = self.execute(&execute_msg, Some(coins.as_slice()))?;
+        if helpers::confirm_action("Execute", &execute_msg, Some(&coins.to_vec()))? {
+            let res = self.execute(&execute_msg, Some(&coins.to_vec()))?;
             println!("Execution succesfull, hash: {}", res.txhash);
         }
         Ok(())

@@ -2,7 +2,7 @@ use base64::Engine;
 use cosmrs::bip32;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
-use crate::utils::{entry_for_seed, B64};
+use crate::common::{entry_for_seed, B64};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]

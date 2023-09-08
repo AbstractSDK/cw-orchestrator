@@ -1,4 +1,4 @@
-use crate::utils::seed_phrase_for_id;
+use crate::common::seed_phrase_for_id;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]

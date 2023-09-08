@@ -1,0 +1,74 @@
+use std::str::FromStr;
+
+use base64::Engine;
+use color_eyre::eyre::Context;
+use inquire::Select;
+use strum::{EnumDiscriminants, EnumIter, EnumMessage, IntoEnumIterator};
+
+#[derive(Debug, EnumDiscriminants, Clone, clap::ValueEnum)]
+#[strum_discriminants(derive(EnumMessage, EnumIter))]
+/// How do you want to pass the message arguments?
+pub enum MsgType {
+    #[strum_discriminants(strum(message = "json message"))]
+    /// Valid JSON string (e.g. {"foo": "bar"})
+    JsonMsg,
+    #[strum_discriminants(strum(message = "base64 message"))]
+    /// Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)
+    Base64Msg,
+}
+
+impl interactive_clap::ToCli for MsgType {
+    type CliVariant = MsgType;
+}
+
+impl std::str::FromStr for MsgType {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "json-msg" => Ok(Self::JsonMsg),
+            "base64-msg" => Ok(Self::Base64Msg),
+            _ => Err("MsgType: incorrect message type".to_string()),
+        }
+    }
+}
+
+impl std::fmt::Display for MsgType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::JsonMsg => write!(f, "json-msg"),
+            Self::Base64Msg => write!(f, "base64-msg"),
+        }
+    }
+}
+
+impl std::fmt::Display for MsgTypeDiscriminants {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::JsonMsg => write!(f, "json-msg"),
+            Self::Base64Msg => write!(f, "base64-msg"),
+        }
+    }
+}
+
+pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
+    let variants = MsgTypeDiscriminants::iter().collect::<Vec<_>>();
+    let selected = Select::new("How would you like to proceed?", variants).prompt()?;
+    match selected {
+        MsgTypeDiscriminants::JsonMsg => Ok(Some(MsgType::JsonMsg)),
+        MsgTypeDiscriminants::Base64Msg => Ok(Some(MsgType::Base64Msg)),
+    }
+}
+
+pub fn msg_bytes(
+    args: String,
+    msg_type: MsgType,
+) -> color_eyre::eyre::Result<Vec<u8>> {
+    match msg_type {
+        MsgType::JsonMsg => {
+            let data_json =
+                serde_json::Value::from_str(&args).wrap_err("Data not in JSON format!")?;
+            Ok(data_json.to_string().into_bytes())
+        }
+        MsgType::Base64Msg => Ok(crate::common::B64.decode(&args)?),
+    }
+}
