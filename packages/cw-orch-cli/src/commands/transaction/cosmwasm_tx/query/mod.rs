@@ -1,0 +1,64 @@
+use cosmrs::proto::cosmwasm::wasm::v1::{
+    query_client::QueryClient, QuerySmartContractStateRequest,
+};
+use cw_orch::{
+    daemon::{ChainRegistryData, GrpcChannel},
+    prelude::networks::parse_network,
+    tokio::runtime::Runtime,
+};
+
+use super::{msg_type, CwActionContext};
+
+#[derive(Debug, Clone, interactive_clap::InteractiveClap)]
+#[interactive_clap(input_context = CwActionContext)]
+#[interactive_clap(output_context = QueryWasmOutput)]
+pub struct QueryCommands {
+    #[interactive_clap(value_enum)]
+    #[interactive_clap(skip_default_input_arg)]
+    /// How do you want to pass the message arguments?
+    msg_type: msg_type::MsgType,
+    /// Enter message
+    msg: String,
+}
+
+impl QueryCommands {
+    fn input_msg_type(
+        _context: &CwActionContext,
+    ) -> color_eyre::eyre::Result<Option<msg_type::MsgType>> {
+        msg_type::input_msg_type()
+    }
+}
+pub struct QueryWasmOutput;
+
+impl QueryWasmOutput {
+    fn from_previous_context(
+        previous_context: CwActionContext,
+        scope:&<QueryCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
+    ) -> color_eyre::eyre::Result<Self> {
+        // TODO: non-panic parse_network
+        let chain = parse_network(&previous_context.chain_id);
+        let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
+
+        let chain_data: ChainRegistryData = chain.into();
+
+        let rt = Runtime::new()?;
+        rt.block_on(async {
+            let grpc_channel =
+                GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
+            let mut client = QueryClient::new(grpc_channel);
+
+            // TODO: support other types of queries
+            let resp = client
+                .smart_contract_state(QuerySmartContractStateRequest {
+                    address: previous_context.contract_addr,
+                    query_data: msg,
+                })
+                .await?;
+            let parsed_output: serde_json::Value = serde_json::from_slice(&resp.into_inner().data)?;
+            println!("{}", serde_json::to_string_pretty(&parsed_output)?);
+            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+        })?;
+
+        Ok(QueryWasmOutput)
+    }
+}

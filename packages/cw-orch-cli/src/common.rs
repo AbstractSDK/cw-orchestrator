@@ -1,6 +1,5 @@
 pub use base64::prelude::BASE64_STANDARD as B64;
 use base64::Engine;
-use color_eyre::eyre::Context;
 use inquire::{error::InquireResult, InquireError};
 use interactive_clap::ToCli;
 use keyring::Entry;

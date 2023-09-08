@@ -12,7 +12,6 @@ use super::{msg_type, CwActionContext};
 #[interactive_clap(input_context = CwActionContext)]
 #[interactive_clap(output_context = ExecuteWasmOutput)]
 pub struct ExecuteCommands {
-    contract_address: String,
     #[interactive_clap(value_enum)]
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
@@ -23,7 +22,7 @@ pub struct ExecuteCommands {
     /// Input coins
     coins: CliCoins,
     /// Signer id
-    // TODO: sign it from seed phrase
+    // TODO: should be possible to sign it from the seed phrase
     signer: String,
 }
 
@@ -67,7 +66,8 @@ impl ExecuteWasmOutput {
                 msg,
                 funds: coins,
             };
-            daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;
 

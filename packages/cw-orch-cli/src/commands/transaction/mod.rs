@@ -1,6 +1,5 @@
 mod cosmwasm_tx;
 
-use cw_orch::{daemon::ChainInfo, prelude::networks::parse_network};
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
@@ -19,7 +18,7 @@ pub struct TxCommands {
 /// Select type of transaction
 pub enum TxAction {
     /// Cosmwasm Action
-    #[strum_discriminants(strum(message = "Execute cosmwasm action"))]
+    #[strum_discriminants(strum(message = "Perform CosmWasm action"))]
     Cw(cosmwasm_tx::CwCommands),
 }
 

@@ -1,7 +1,7 @@
 mod execute;
+mod query;
 pub mod msg_type;
 
-use cw_orch::daemon::ChainInfo;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use super::TxContext;
@@ -10,7 +10,7 @@ use super::TxContext;
 #[interactive_clap(input_context = TxContext)]
 #[interactive_clap(output_context = CwActionContext)]
 pub struct CwCommands {
-    /// Contract addr
+    /// Contract address
     contract_addr: String,
     #[interactive_clap(subcommand)]
     action: CwAction,
@@ -22,11 +22,11 @@ pub struct CwCommands {
 /// Select cosmwasm action
 pub enum CwAction {
     /// Execute
-    #[strum_discriminants(strum(message = "Execute cosmwasm message"))]
+    #[strum_discriminants(strum(message = "Execute"))]
     Execute(execute::ExecuteCommands),
     /// Query
-    #[strum_discriminants(strum(message = "Query cosmwasm message"))]
-    Query,
+    #[strum_discriminants(strum(message = "Query"))]
+    Query(query::QueryCommands),
 }
 
 #[derive(Clone)]
