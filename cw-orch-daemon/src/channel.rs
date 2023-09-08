@@ -91,18 +91,6 @@ impl GrpcChannel {
     }
 }
 
-/// Indicate that the object has access to a gRPC channel
-pub trait ChannelAccess {
-    /// Returns the underlying gRPC channel object used to communicate with the remote server
-    fn channel(&self) -> Channel;
-}
-
-impl ChannelAccess for Channel {
-    fn channel(&self) -> tonic::transport::Channel {
-        self.clone()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     /*

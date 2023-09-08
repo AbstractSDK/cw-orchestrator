@@ -1,4 +1,4 @@
-use crate::{queriers::CosmWasm, ChannelAccess, DaemonState};
+use crate::{queriers::CosmWasm, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder,
@@ -85,12 +85,6 @@ impl ChainState for DaemonAsync {
 
     fn state(&self) -> Self::Out {
         self.state.clone()
-    }
-}
-
-impl ChannelAccess for DaemonAsync {
-    fn channel(&self) -> tonic::transport::Channel {
-        self.state.grpc_channel.clone()
     }
 }
 

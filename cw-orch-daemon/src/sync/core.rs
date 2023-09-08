@@ -3,7 +3,7 @@ use std::{fmt::Debug, rc::Rc, time::Duration};
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
     queriers::{DaemonQuerier, Node},
-    ChannelAccess, CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
+    CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
 use cosmrs::tendermint::Time;
@@ -69,12 +69,6 @@ impl Daemon {
     /// Get the channel configured for this Daemon
     pub fn wallet(&self) -> Wallet {
         self.daemon.sender.clone()
-    }
-}
-
-impl ChannelAccess for Daemon {
-    fn channel(&self) -> tonic::transport::Channel {
-        self.daemon.channel()
     }
 }
 
