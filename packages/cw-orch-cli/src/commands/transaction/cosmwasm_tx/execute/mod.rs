@@ -1,6 +1,8 @@
 use color_eyre::eyre::Context;
-use cw_orch::prelude::{networks::parse_network, DaemonBuilder, TxHandler};
-use strum::{EnumDiscriminants, EnumIter, EnumMessage};
+use cw_orch::{
+    prelude::{networks::parse_network, DaemonAsync},
+    tokio::runtime::Runtime,
+};
 
 use crate::common::CliCoins;
 
@@ -15,10 +17,13 @@ pub struct ExecuteCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
     msg_type: msg_type::MsgType,
+    /// Enter message
+    msg: String,
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
     coins: CliCoins,
-    /// Signer
+    /// Signer id
+    // TODO: sign it from seed phrase
     signer: String,
 }
 
@@ -35,18 +40,6 @@ impl ExecuteCommands {
             .wrap_err("Bad coins input")
     }
 }
-
-// #[derive(Debug, EnumDiscriminants, Clone, interactive_clap::InteractiveClap)]
-// #[strum_discriminants(derive(EnumMessage, EnumIter))]
-// #[interactive_clap(input_context = ())]
-// #[interactive_clap(output_context = ExecuteWasmOutput)]
-// /// Select cosmwasm action
-// pub enum ExecuteAction {
-//     /// Query
-//     #[strum_discriminants(strum(message = "Query cosmwasm message"))]
-//     Query,
-// }
-
 pub struct ExecuteWasmOutput;
 
 impl ExecuteWasmOutput {
@@ -54,12 +47,30 @@ impl ExecuteWasmOutput {
         previous_context: CwActionContext,
         scope:&<ExecuteCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        /// TODO: non-panic parse_network
-        let chain = parse_network(&previous_context.0);
-        let seed = crate::common::seed_phrase_for_id("aloha")?;
-        let coins = crate::common::parse_coins()?;
+        // TODO: non-panic parse_network
+        let chain = parse_network(&previous_context.chain_id);
+        let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let coins = (&scope.coins).try_into()?;
+        let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
-        let d = DaemonBuilder::default().chain(chain).build()?;
+        let rt = Runtime::new()?;
+        rt.block_on(async {
+            let daemon = DaemonAsync::builder()
+                .chain(chain)
+                .mnemonic(seed)
+                .build()
+                .await?;
+
+            let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
+                sender: daemon.sender.pub_addr()?,
+                contract: previous_context.contract_addr.parse()?,
+                msg,
+                funds: coins,
+            };
+            daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+        })?;
+
         Ok(ExecuteWasmOutput)
     }
 }

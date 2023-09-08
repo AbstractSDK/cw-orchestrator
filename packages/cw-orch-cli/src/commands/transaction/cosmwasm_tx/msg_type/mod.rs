@@ -60,15 +60,15 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
 }
 
 pub fn msg_bytes(
-    args: String,
+    message: String,
     msg_type: MsgType,
 ) -> color_eyre::eyre::Result<Vec<u8>> {
     match msg_type {
         MsgType::JsonMsg => {
             let data_json =
-                serde_json::Value::from_str(&args).wrap_err("Data not in JSON format!")?;
+                serde_json::Value::from_str(&message).wrap_err("Data not in JSON format!")?;
             Ok(data_json.to_string().into_bytes())
         }
-        MsgType::Base64Msg => Ok(crate::common::B64.decode(&args)?),
+        MsgType::Base64Msg => Ok(crate::common::B64.decode(&message)?),
     }
 }

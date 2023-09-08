@@ -1,10 +1,13 @@
 mod execute;
 pub mod msg_type;
 
+use cw_orch::daemon::ChainInfo;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
+use super::TxContext;
+
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
-#[interactive_clap(input_context = ())]
+#[interactive_clap(input_context = TxContext)]
 #[interactive_clap(output_context = CwActionContext)]
 pub struct CwCommands {
     /// Contract addr
@@ -28,15 +31,17 @@ pub enum CwAction {
 
 #[derive(Clone)]
 pub struct CwActionContext {
+    chain_id: String,
     contract_addr: String,
 }
 
 impl CwActionContext {
     fn from_previous_context(
-        _previous_context: (),
+        previous_context: TxContext,
         scope:&<CwCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         Ok(CwActionContext {
+            chain_id: previous_context.chain_id.clone(),
             contract_addr: scope.contract_addr.clone(),
         })
     }
