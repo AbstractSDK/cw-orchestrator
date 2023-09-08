@@ -7,8 +7,8 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 #[strum_discriminants(derive(EnumMessage, EnumIter))]
 /// Select one of the options with up-down arrows and press enter to select action
 pub enum Commands {
-    /// Construct transaction
-    #[strum_discriminants(strum(message = "Construct transaction"))]
+    /// Construct action
+    #[strum_discriminants(strum(message = "Construct action"))]
     Tx(transaction::TxCommands),
     /// Add, View or Remove key
     #[strum_discriminants(strum(message = "Manage keys"))]
