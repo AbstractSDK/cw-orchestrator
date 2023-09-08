@@ -182,32 +182,43 @@ cw-orchestrator defines the [Deploy](../../cw-orch/src/deploy.rs) trait that all
 
 This is more powerful than simply exposing the single contract interfaces, because it allows full customization of the deployment procedure. It also allows shipping other custom methods for simplifying the life of the integrator.
 
-Imagine you are a developer that wants to integrate with [DA0-DA0](https://github.com/DA0-DA0). With this deploy trait, you could test your application like so:
+Imagine you are a developer that wants to integrate with [Abstract](https://github.com/AbstractSDK/). With this deploy trait, you could test your application like so:
 
 ```rust,ignore
-use daodao::core::DaoDao;
+use abstract_interface::Abstract;
 use cw_orch::daemon::networks::JUNO_1;
 
-pub fn test(){
+pub fn test() -> anyhow::Result<()>{
     let chain = Daemon::builder()
         .chain(JUNO_1) 
         .handle(Runtime::new().unwrap().handle()) 
-        .build()
-        .unwrap();
+        .build()?;
         
-    let dao_id = 56u64;
-    let daodao = DaoDao::load_from(chain.clone())?;
-    daodao.set_account_id(dao_id)?;
+    // Here you load all the contracts from the addresses and code_ids that abstract ships along with the Deploy trait they implement
+    let abstract_deploy = Abstract::load_from(chain.clone())?;
+    
+    // Then you can call abstract specific commands without having to specify any addresses yourself. 
+    // You just need to import the crate and you can interact with it directly
+    let new_account = abstract_deploy.account_factory.create_new_account(
+        AccountDetails{
+            name: "New account name, input something funny ?".to_string(),
+            description: Some("Account description".to_string()),
+            link: None,
+            namespace: None,
+            base_asset: None,
+            install_modules: vec![],
+        },
+        GovernanceDetails::Monarchy{
+            monarch: "<monarch-address>"
+        }
+    )?;
 
-    let my_custom_gov_admin = GovAdmin::new("gov-admin", chain)?;
-    my_custom_gov_admin.upload()?;
-    my_custom_gov_admin.instantiate(&InstantiateMsg { account_id: dao_id } );
-
-    daodao.nominate_admin(my_custom_gov_admin.address().to_string())?;
+    println!("Created new abstract account with manager address : {}", new_account.manager.address()?);
+    Ok(())
 }
 ```
 
-In our example, all the daodao core addresses, which we require to interact with the contracts, are included in the `daodao` crate directly. By including the addresses of their deployment in their published software, other developers can easily interact and integrate with their platform.
+In our example, all the abstract core addresses, which we require to interact with the contracts, are included in the `abstract_interface` crate directly. By using this Deploy trait, Abstract includes the addresses of their deployment and code ids in their published software, they allows other developers to easily interact and integrate with their platform.
 
 To do this for your project you need to verify certain conditions.
 
@@ -250,6 +261,61 @@ You can customize the `Deploy::deployed_state_file_path` and `Deploy::load_from`
 > 
 > We recommend defining this location from the absolute crate path `env!("CARGO_MANIFEST_DIR")` for it to be accessible even when imported from a crate. 
 
+Our abstract workspace structure looks like this : 
+
+```
+.
+├── artifacts
+├── contracts
+│   ├── contract1
+│   │   └── src
+│   │       ├── contract.rs
+│   │       └── ...
+│   └── contract2
+│       └── src
+│           ├── contract.rs
+│           └── ...
+├── packages
+|   └── interface 
+|       ├── src
+│       │   ├── deploy.rs   // <-- Definition of the deploy struct and implementation of the Deploy trait. 
+|       │   |               // <--   Leverages contract1 and contract2 structures
+│       │   └── ...
+│       └── state.json      /// <-- Usually a symlink to the state.json file you use for deployment (by default in ~/.cw-orchestrator)
+├── scripts
+|   └── src
+|       └── bin             // <-- Your deployment script can be located here
+└── .env 					// <-- Place your .env file at the root of your workspace
+```
+
+In the Deploy trait implementation (here in`deploy.rs` file), use this to indicate that `packages/interface/state.json` has your state : 
+```rust
+    fn deployed_state_file_path(&self) -> Option<String> {
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+
+        Some(
+            PathBuf::from(crate_path)
+                .join("state.json")
+                .display()
+                .to_string(),
+        )
+    }
+```
+
+Make sure you are adding the `set_contract_state`, helper function in the `load_from` function of the `Deploy` trait to make sure your deployment leverages the saved contract addresses. 
+
+```rust
+
+    fn load_from(chain: Chain) -> Result<Self, Self::Error> {
+        let mut abstr = Self::new(chain);
+        // We register all the contracts default state
+        abstr.set_contracts_state();
+        Ok(abstr)
+    }
+```
+
+
+Those 2 steps will allow users to access your state from their script when importing you `interface` crate.
 
 #### Limitations
 
