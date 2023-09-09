@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
+use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc, Rpc};
 
 #[allow(clippy::from_over_into)]
 impl Into<RegistryChainInfo> for ChainInfo<'_> {
@@ -26,6 +26,14 @@ impl Into<RegistryChainInfo> for ChainInfo<'_> {
                         ..Default::default()
                     })
                     .collect(),
+                rpc: self
+                    .rpc_urls
+                    .iter()
+                    .map(|url| Rpc {
+                        address: url.to_string(),
+                        ..Default::default()
+                    })
+                    .collect(),
                 ..Default::default()
             },
             slip44: self.network_info.coin_type,
@@ -47,6 +55,8 @@ pub struct ChainInfo<'a> {
     pub gas_price: f64,
     /// gRPC urls, used to attempt connection
     pub grpc_urls: &'a [&'a str],
+    /// gRPC urls, used to attempt connection
+    pub rpc_urls: &'a [&'a str],
     /// Optional urls for custom functionality
     pub lcd_url: Option<&'a str>,
     /// Optional urls for custom functionality

@@ -5,9 +5,7 @@ mod queriers {
 
     use cw_orch_core::contract::interface_traits::*;
     use cw_orch_core::environment::TxHandler;
-    use cw_orch_daemon::GrpcChannel;
     use cw_orch_networks::networks;
-    use ibc_chain_registry::chain::Grpc;
     use ibc_relayer_types::core::ics24_host::identifier::ChainId;
     use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
@@ -26,7 +24,11 @@ mod queriers {
         AccountId, Denom,
     };
 
+
+    #[cfg(feature="grpc")]
     pub async fn build_channel() -> tonic::transport::Channel {
+        use ibc_chain_registry::chain::Grpc;
+
         let network = networks::LOCAL_JUNO;
 
         let grpcs: Vec<Grpc> = vec![Grpc {
@@ -36,7 +38,29 @@ mod queriers {
 
         let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
 
-        let channel = GrpcChannel::connect(&grpcs, &chain).await;
+        let channel = cw_orch_daemon::GrpcChannel::connect(&grpcs, &chain).await;
+
+        asserting!("channel connection is succesful")
+            .that(&channel)
+            .is_ok();
+
+        channel.unwrap()
+    }
+
+    #[cfg(feature="rpc")]
+    pub async fn build_channel() -> cosmrs::rpc::HttpClient {
+        use ibc_chain_registry::chain::Rpc;
+
+        let network = networks::LOCAL_JUNO;
+
+        let rpcs: Vec<Rpc> = vec![Rpc {
+            address: network.rpc_urls[0].into(),
+            provider: None,
+        }];
+
+        let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
+
+        let channel = cw_orch_daemon::RpcChannel::connect(&rpcs, &chain).await;
 
         asserting!("channel connection is succesful")
             .that(&channel)

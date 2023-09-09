@@ -1,6 +1,14 @@
+
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
+//! 
+#[cfg(all(feature = "rpc", feature = "grpc"))]
+compile_error!("feature \"rpc\" and feature \"grpc\" cannot be enabled at the same time");
+
+#[cfg(not(any(feature = "rpc", feature = "grpc")))]
+compile_error!("At least one of feature \"rpc\" and feature \"grpc\" needs to be enabled");
+
 pub mod builder;
 pub mod core;
 pub mod error;

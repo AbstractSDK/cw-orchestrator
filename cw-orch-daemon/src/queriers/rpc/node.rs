@@ -3,7 +3,7 @@ use std::{cmp::min, time::Duration};
 use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, queriers::{MAX_TX_QUERY_RETRIES, DaemonQuerier}, cosmos_rpc_query};
 
 use cosmrs::{
-    proto::cosmos::base::{query::v1beta1::PageRequest, abci::v1beta1::TxResponse},
+    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::GetTxResponse},
     tendermint::{Block, Time}, rpc::{HttpClient, Client}, tx::MessageExt,
 };
 use prost::Message;
@@ -223,10 +223,11 @@ impl Node {
                 None, 
                 true, 
             ).await?;
-            match TxResponse::decode(tx_response.value.as_slice()) {
+
+            match GetTxResponse::decode(tx_response.value.as_slice()) {
                 Ok(tx) => {
                     log::debug!("TX found: {:?}", tx);
-                    return Ok(tx.into());
+                    return Ok(tx.tx_response.unwrap().into());
                 }
                 Err(err) => {
                     // increase wait time
