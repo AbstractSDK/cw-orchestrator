@@ -1,5 +1,10 @@
 use super::error::DaemonError;
-use crate::{channel::GrpcChannel, networks::ChainKind};
+use crate::networks::ChainKind;
+
+#[cfg(feature="grpc")]
+use crate::grpc_channel::GrpcChannel;
+#[cfg(feature="rpc")]
+use crate::rpc_channel::RpcChannel;
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
@@ -10,7 +15,6 @@ use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{collections::HashMap, env, fs::File, path::Path};
-use tonic::transport::Channel;
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
@@ -20,10 +24,23 @@ pub struct DaemonState {
     pub json_file_path: String,
     /// Deployment identifier
     pub deployment_id: String,
-    /// gRPC channel
-    pub grpc_channel: Channel,
+    /// Transport channel
+    #[cfg(feature="grpc")]
+    pub transport_channel: tonic::transport::Channel,
+    #[cfg(feature="rpc")]
+    pub transport_channel: cosmrs::rpc::HttpClient,
     /// Information about the chain
     pub chain_data: ChainData,
+}
+
+#[cfg(feature="grpc")]
+pub async fn create_transport_channel(chain_data: &ChainData) -> Result<tonic::transport::Channel, DaemonError>{
+    GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await
+}
+
+#[cfg(feature="rpc")]
+pub async fn create_transport_channel(chain_data: &ChainData) -> Result<cosmrs::rpc::HttpClient, DaemonError>{
+    RpcChannel::connect(&chain_data.apis.rpc, &chain_data.chain_id).await
 }
 
 impl DaemonState {
@@ -40,8 +57,7 @@ impl DaemonState {
         log::info!("Found {} gRPC endpoints", chain_data.apis.grpc.len());
 
         // find working grpc channel
-        let grpc_channel =
-            GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
+        let transport_channel = create_transport_channel(&chain_data).await?;
 
         // check if STATE_FILE en var is configured, default to state.json
         let mut json_file_path = env::var("STATE_FILE").unwrap_or("./state.json".to_string());
@@ -80,7 +96,7 @@ impl DaemonState {
         let state = DaemonState {
             json_file_path,
             deployment_id,
-            grpc_channel,
+            transport_channel,
             chain_data,
         };
 
@@ -113,7 +129,7 @@ impl DaemonState {
     }
 
     /// Set a stateful value using the chainId and networkId
-    pub fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
+    pub fn set<V: Serialize>(&self, key: &str, contract_id: &str, value: V) {
         let mut json = self.read_state();
 
         json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key]

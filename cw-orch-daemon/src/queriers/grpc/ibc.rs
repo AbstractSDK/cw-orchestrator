@@ -1,4 +1,4 @@
-use super::DaemonQuerier;
+use crate::queriers::DaemonQuerier;
 use crate::{cosmos_modules, error::DaemonError};
 use cosmos_modules::ibc_channel;
 use cosmrs::proto::ibc::{

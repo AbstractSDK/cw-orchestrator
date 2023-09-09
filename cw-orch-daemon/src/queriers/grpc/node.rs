@@ -1,6 +1,6 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
+use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, queriers::MAX_TX_QUERY_RETRIES};
 
 use cosmrs::{
     proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
@@ -8,9 +8,7 @@ use cosmrs::{
 };
 use tonic::transport::Channel;
 
-use super::DaemonQuerier;
-
-const MAX_TX_QUERY_RETRIES: usize = 50;
+use crate::queriers::DaemonQuerier;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -172,6 +170,7 @@ impl Node {
     }
 
     /// Simulate TX
+    /// TODO, should be transferred over to the tx namespace
     pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());

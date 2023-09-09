@@ -2,7 +2,7 @@ use crate::{cosmos_modules, error::DaemonError};
 use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use tonic::transport::Channel;
 
-use super::DaemonQuerier;
+use crate::queriers::DaemonQuerier;
 
 /// Queries for Cosmos Bank Module
 pub struct Bank {

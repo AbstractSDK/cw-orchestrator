@@ -1,10 +1,9 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::DaemonState;
 
 use super::{
     builder::DaemonAsyncBuilder,
-    cosmos_modules,
     error::DaemonError,
-    queriers::{DaemonQuerier, Node},
+    queriers::{DaemonQuerier, Node, CosmWasm},
     sender::Wallet,
     tx_resp::CosmTxResponse,
 };
@@ -28,7 +27,6 @@ use std::{
     time::Duration,
 };
 
-use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**
@@ -75,8 +73,13 @@ impl DaemonAsync {
     }
 
     /// Get the channel configured for this DaemonAsync.
-    pub fn channel(&self) -> Channel {
-        self.state.grpc_channel.clone()
+    #[cfg(feature="grpc")]
+    pub fn channel(&self) -> tonic::transport::Channel {
+        self.state.transport_channel.clone()
+    }
+    #[cfg(feature="rpc")]
+    pub fn channel(&self) -> cosmrs::rpc::HttpClient {
+        self.state.transport_channel.clone()
     }
 }
 
@@ -138,21 +141,16 @@ impl DaemonAsync {
     }
 
     /// Query a contract.
-    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    pub async fn query<Q: Serialize + Debug, R: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        let sender = &self.sender;
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
-        let resp = client
-            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-                address: contract_address.to_string(),
-                query_data: serde_json::to_vec(&query_msg)?,
-            })
-            .await?;
+    ) -> Result<R, DaemonError> {
+        let querier = CosmWasm::new(self.channel());
 
-        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
+        let resp: Vec<u8> = querier.contract_state(contract_address, serde_json::to_vec(&query_msg)?).await?;
+
+        Ok(from_str(from_utf8(&resp).unwrap())?)
     }
 
     /// Migration a contract.

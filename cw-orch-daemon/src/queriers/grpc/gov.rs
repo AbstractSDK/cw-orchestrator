@@ -2,7 +2,7 @@ use crate::{cosmos_modules, error::DaemonError};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use tonic::transport::Channel;
 
-use super::DaemonQuerier;
+use crate::queriers::DaemonQuerier;
 
 /// Querier for the Cosmos Gov module
 pub struct Gov {

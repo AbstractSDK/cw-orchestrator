@@ -14,7 +14,6 @@ use cw_orch_core::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
 
 #[derive(Clone)]
 /**
@@ -62,8 +61,13 @@ impl Daemon {
     }
 
     /// Get the channel configured for this Daemon
-    pub fn channel(&self) -> Channel {
-        self.daemon.state.grpc_channel.clone()
+    #[cfg(feature="grpc")]
+    pub fn channel(&self) -> tonic::transport::Channel {
+        self.daemon.state.transport_channel.clone()
+    }
+    #[cfg(feature="rpc")]
+    pub fn channel(&self) -> cosmrs::rpc::HttpClient {
+        self.daemon.state.transport_channel.clone()
     }
 
     /// Get the channel configured for this Daemon

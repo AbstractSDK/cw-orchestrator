@@ -1,9 +1,7 @@
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
-pub mod rpc_queriers;
 pub mod builder;
-pub mod channel;
 pub mod core;
 pub mod error;
 pub(crate) mod json_file;
@@ -16,12 +14,25 @@ pub mod tx_resp;
 // expose these as mods as they can grow
 pub mod keys;
 pub mod live_mock;
+
 pub mod queriers;
+
+#[cfg(feature="rpc")]
+pub mod rpc_channel;
+#[cfg(feature="rpc")]
+pub use self::rpc_channel::*;
+
+#[cfg(feature="grpc")]
+pub mod grpc_channel;
+#[cfg(feature="grpc")]
+pub use self::grpc_channel::*;
+
+
 mod traits;
 pub mod tx_builder;
 
 pub use self::{
-    builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
+    builder::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
 };
 pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;

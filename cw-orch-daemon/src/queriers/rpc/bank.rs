@@ -1,16 +1,15 @@
-use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query};
-use cosmrs::{proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin}, rpc::HttpClient, tx::MessageExt};
+use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query, queriers::DaemonQuerier};
+use cosmrs::{proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin}, rpc::HttpClient};
 
-use super::RpcQuerier;
 
 /// Queries for Cosmos Bank Module
 pub struct Bank {
     client: HttpClient,
 }
 
-impl RpcQuerier for Bank {
-    fn new(rpc: String) -> Self {
-        Self { client: HttpClient::new(rpc.as_str()).unwrap() }
+impl DaemonQuerier for Bank {
+    fn new(client: HttpClient) -> Self {
+        Self { client }
     }
 }
 

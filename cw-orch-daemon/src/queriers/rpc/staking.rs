@@ -1,17 +1,16 @@
-use crate::{cosmos_modules, error::DaemonError};
-use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-use tonic::transport::Channel;
+use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query};
+use cosmrs::{proto::cosmos::base::query::v1beta1::PageRequest, rpc::HttpClient};
 
-use super::DaemonQuerier;
+use crate::queriers::DaemonQuerier;
 
 /// Querier for the Cosmos Staking module
 pub struct Staking {
-    channel: Channel,
+    client: HttpClient,
 }
 
 impl DaemonQuerier for Staking {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+    fn new(client: HttpClient) -> Self {
+        Self { client }
     }
 }
 
@@ -21,13 +20,14 @@ impl Staking {
         &self,
         validator_addr: impl Into<String>,
     ) -> Result<cosmos_modules::staking::Validator, DaemonError> {
-        let validator: cosmos_modules::staking::QueryValidatorResponse = cosmos_query!(
+        let validator = cosmos_rpc_query!(
             self,
             staking,
-            validator,
+            "/cosmos.staking.v1beta1.Query/Validator",
             QueryValidatorRequest {
                 validator_addr: validator_addr.into()
-            }
+            },
+            QueryValidatorResponse,
         );
         Ok(validator.validator.unwrap())
     }
@@ -39,14 +39,15 @@ impl Staking {
         &self,
         status: StakingBondStatus,
     ) -> Result<Vec<cosmos_modules::staking::Validator>, DaemonError> {
-        let validators: cosmos_modules::staking::QueryValidatorsResponse = cosmos_query!(
+        let validators = cosmos_rpc_query!(
             self,
             staking,
-            validators,
+            "/cosmos.staking.v1beta1.Query/Validators",
             QueryValidatorsRequest {
                 status: status.to_string(),
                 pagination: None,
-            }
+            },
+            QueryValidatorsResponse,
         );
         Ok(validators.validators)
     }
@@ -59,14 +60,15 @@ impl Staking {
         validator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::staking::DelegationResponse>, DaemonError> {
-        let validator_delegations: cosmos_modules::staking::QueryValidatorDelegationsResponse = cosmos_query!(
+        let validator_delegations = cosmos_rpc_query!(
             self,
             staking,
-            validator_delegations,
+            "/cosmos.staking.v1beta1.Query/ValidatorDelegations",
             QueryValidatorDelegationsRequest {
                 validator_addr: validator_addr.into(),
                 pagination: pagination
-            }
+            },
+            QueryValidatorDelegationsResponse,
         );
         Ok(validator_delegations.delegation_responses)
     }
@@ -76,14 +78,15 @@ impl Staking {
         &self,
         validator_addr: impl Into<String>,
     ) -> Result<Vec<cosmos_modules::staking::UnbondingDelegation>, DaemonError> {
-        let validator_unbonding_delegations: cosmos_modules::staking::QueryValidatorUnbondingDelegationsResponse = cosmos_query!(
+        let validator_unbonding_delegations = cosmos_rpc_query!(
             self,
             staking,
-            validator_unbonding_delegations,
+            "/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations",
             QueryValidatorUnbondingDelegationsRequest {
                 validator_addr: validator_addr.into(),
                 pagination: None
-            }
+            },
+            QueryValidatorUnbondingDelegationsResponse,
         );
         Ok(validator_unbonding_delegations.unbonding_responses)
     }
@@ -94,14 +97,15 @@ impl Staking {
         validator_addr: impl Into<String>,
         delegator_addr: impl Into<String>,
     ) -> Result<cosmos_modules::staking::DelegationResponse, DaemonError> {
-        let delegation: cosmos_modules::staking::QueryDelegationResponse = cosmos_query!(
+        let delegation = cosmos_rpc_query!(
             self,
             staking,
-            delegation,
+            "/cosmos.staking.v1beta1.Query/Delegation",
             QueryDelegationRequest {
                 validator_addr: validator_addr.into(),
                 delegator_addr: delegator_addr.into()
-            }
+            },
+            QueryDelegationResponse,
         );
         Ok(delegation.delegation_response.unwrap())
     }
@@ -112,14 +116,15 @@ impl Staking {
         validator_addr: impl Into<String>,
         delegator_addr: impl Into<String>,
     ) -> Result<cosmos_modules::staking::UnbondingDelegation, DaemonError> {
-        let unbonding_delegation: cosmos_modules::staking::QueryUnbondingDelegationResponse = cosmos_query!(
+        let unbonding_delegation = cosmos_rpc_query!(
             self,
             staking,
-            unbonding_delegation,
+            "/cosmos.staking.v1beta1.Query/UnbondingDelegation",
             QueryUnbondingDelegationRequest {
                 validator_addr: validator_addr.into(),
                 delegator_addr: delegator_addr.into()
-            }
+            },
+            QueryUnbondingDelegationResponse,
         );
         Ok(unbonding_delegation.unbond.unwrap())
     }
@@ -132,14 +137,15 @@ impl Staking {
         delegator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::staking::QueryDelegatorDelegationsResponse, DaemonError> {
-        let delegator_delegations: cosmos_modules::staking::QueryDelegatorDelegationsResponse = cosmos_query!(
+        let delegator_delegations = cosmos_rpc_query!(
             self,
             staking,
-            delegator_delegations,
+            "/cosmos.staking.v1beta1.Query/DelegatorDelegations",
             QueryDelegatorDelegationsRequest {
                 delegator_addr: delegator_addr.into(),
                 pagination: pagination
-            }
+            },
+            QueryDelegatorDelegationsResponse,
         );
         Ok(delegator_delegations)
     }
@@ -153,14 +159,15 @@ impl Staking {
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::staking::QueryDelegatorUnbondingDelegationsResponse, DaemonError>
     {
-        let delegator_unbonding_delegations: cosmos_modules::staking::QueryDelegatorUnbondingDelegationsResponse = cosmos_query!(
+        let delegator_unbonding_delegations = cosmos_rpc_query!(
             self,
             staking,
-            delegator_unbonding_delegations,
+            "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations",
             QueryDelegatorUnbondingDelegationsRequest {
                 delegator_addr: delegator_addr.into(),
                 pagination: pagination
-            }
+            },
+            QueryDelegatorUnbondingDelegationsResponse,
         );
         Ok(delegator_unbonding_delegations)
     }
@@ -175,16 +182,17 @@ impl Staking {
         dst_validator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::staking::QueryRedelegationsResponse, DaemonError> {
-        let redelegations: cosmos_modules::staking::QueryRedelegationsResponse = cosmos_query!(
+        let redelegations = cosmos_rpc_query!(
             self,
             staking,
-            redelegations,
+            "/cosmos.staking.v1beta1.Query/Redelegations",
             QueryRedelegationsRequest {
                 delegator_addr: delegator_addr.into(),
                 src_validator_addr: src_validator_addr.into(),
                 dst_validator_addr: dst_validator_addr.into(),
                 pagination: pagination
-            }
+            },
+            QueryRedelegationsResponse,
         );
         Ok(redelegations)
     }
@@ -195,14 +203,15 @@ impl Staking {
         validator_addr: impl Into<String>,
         delegator_addr: impl Into<String>,
     ) -> Result<cosmos_modules::staking::QueryDelegatorValidatorResponse, DaemonError> {
-        let delegator_validator: cosmos_modules::staking::QueryDelegatorValidatorResponse = cosmos_query!(
+        let delegator_validator = cosmos_rpc_query!(
             self,
             staking,
-            delegator_validator,
+            "/cosmos.staking.v1beta1.Query/DelegatorValidator",
             QueryDelegatorValidatorRequest {
                 validator_addr: validator_addr.into(),
                 delegator_addr: delegator_addr.into(),
-            }
+            },
+            QueryDelegatorValidatorResponse,
         );
         Ok(delegator_validator)
     }
@@ -215,14 +224,15 @@ impl Staking {
         delegator_addr: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::staking::QueryDelegatorValidatorsResponse, DaemonError> {
-        let delegator_validators: cosmos_modules::staking::QueryDelegatorValidatorsResponse = cosmos_query!(
+        let delegator_validators = cosmos_rpc_query!(
             self,
             staking,
-            delegator_validators,
+            "/cosmos.staking.v1beta1.Query/DelegatorValidators",
             QueryDelegatorValidatorsRequest {
                 delegator_addr: delegator_addr.into(),
                 pagination: pagination
-            }
+            },
+            QueryDelegatorValidatorsResponse,
         );
 
         Ok(delegator_validators)
@@ -233,19 +243,20 @@ impl Staking {
         &self,
         height: i64,
     ) -> Result<cosmos_modules::staking::QueryHistoricalInfoResponse, DaemonError> {
-        let historical_info: cosmos_modules::staking::QueryHistoricalInfoResponse = cosmos_query!(
+        let historical_info = cosmos_rpc_query!(
             self,
             staking,
-            historical_info,
-            QueryHistoricalInfoRequest { height: height }
+            "/cosmos.staking.v1beta1.Query/HistoricalInfo",
+            QueryHistoricalInfoRequest { height: height },
+            QueryHistoricalInfoResponse,
         );
         Ok(historical_info)
     }
 
     /// Query the pool info
     pub async fn pool(&self) -> Result<cosmos_modules::staking::QueryPoolResponse, DaemonError> {
-        let pool: cosmos_modules::staking::QueryPoolResponse =
-            cosmos_query!(self, staking, pool, QueryPoolRequest {});
+        let pool =
+        cosmos_rpc_query!(self, staking, "/cosmos.staking.v1beta1.Query/Pool", QueryPoolRequest {}, QueryPoolResponse,);
         Ok(pool)
     }
 
@@ -253,8 +264,8 @@ impl Staking {
     pub async fn params(
         &self,
     ) -> Result<cosmos_modules::staking::QueryParamsResponse, DaemonError> {
-        let params: cosmos_modules::staking::QueryParamsResponse =
-            cosmos_query!(self, staking, params, QueryParamsRequest {});
+        let params =
+        cosmos_rpc_query!(self, staking, "/cosmos.staking.v1beta1.Query/Params", QueryParamsRequest {}, QueryParamsResponse,);
         Ok(params)
     }
 }

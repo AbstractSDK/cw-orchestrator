@@ -1,4 +1,4 @@
-use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE};
+use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE, queriers::{Auth, Tx}};
 
 use super::{
     cosmos_modules::{self, auth::BaseAccount},
@@ -27,7 +27,6 @@ use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
-use tonic::transport::Channel;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Rc<Sender<All>>;
@@ -80,8 +79,13 @@ impl Sender<All> {
         SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
     }
 
-    pub fn channel(&self) -> Channel {
-        self.daemon_state.grpc_channel.clone()
+    #[cfg(feature="grpc")]
+    pub fn channel(&self) -> tonic::transport::Channel {
+        self.daemon_state.transport_channel.clone()
+    }
+    #[cfg(feature="rpc")]
+    pub fn channel(&self) -> cosmrs::rpc::HttpClient {
+        self.daemon_state.transport_channel.clone()
     }
 
     pub fn pub_addr(&self) -> Result<AccountId, DaemonError> {
@@ -146,9 +150,9 @@ impl Sender<All> {
             .await
     }
 
-    pub async fn commit_tx<T: Msg>(
+    pub async fn commit_tx<M: Msg>(
         &self,
-        msgs: Vec<T>,
+        msgs: Vec<M>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
@@ -215,14 +219,9 @@ impl Sender<All> {
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.pub_addr().unwrap().to_string();
 
-        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel());
+        let querier = Auth::new(self.channel().clone());
 
-        let resp = client
-            .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
-            .await?
-            .into_inner();
-
-        let account = resp.account.unwrap().value;
+        let account = querier.account(addr).await?;
 
         let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
             acc
@@ -244,15 +243,9 @@ impl Sender<All> {
         &self,
         tx: Raw,
     ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-        let commit = client
-            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
-                tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
-            })
-            .await?;
+        let broadcaster = Tx::new(self.channel().clone());
+        let commit = broadcaster.broadcast(tx).await?;
 
-        let commit = commit.into_inner().tx_response.unwrap();
         Ok(commit)
     }
 }

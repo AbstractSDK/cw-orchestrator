@@ -1,10 +1,8 @@
 //! Live mock is a mock that uses a live chain to query for data.
 //! It can be used to do chain-backed unit-testing. It can't be used for state-changing operations.
 
-use crate::queriers::Bank;
-use crate::queriers::CosmWasm;
-use crate::queriers::DaemonQuerier;
-use crate::queriers::Staking;
+use crate::create_transport_channel;
+use crate::queriers::{DaemonQuerier, Staking, Bank, CosmWasm};
 use cosmwasm_std::Addr;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
@@ -17,7 +15,6 @@ use cosmwasm_std::Empty;
 use cosmwasm_std::StakingQuery;
 use ibc_chain_registry::chain::ChainData;
 use tokio::runtime::Runtime;
-use tonic::transport::Channel;
 
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -27,8 +24,6 @@ use cosmwasm_std::{
     from_slice, to_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest,
     SystemError, SystemResult, Uint128, WasmQuery,
 };
-
-use crate::channel::GrpcChannel;
 
 fn to_cosmwasm_coin(c: cosmrs::proto::cosmos::base::v1beta1::Coin) -> Coin {
     Coin {
@@ -57,7 +52,10 @@ pub fn mock_dependencies(
 
 /// Querier struct that fetches queries on-chain directly
 pub struct WasmMockQuerier {
-    channel: Channel,
+    #[cfg(feature="grpc")]
+    channel: tonic::transport::Channel,
+    #[cfg(feature="rpc")]
+    channel: cosmrs::rpc::HttpClient,
     runtime: Runtime,
 }
 
@@ -208,7 +206,7 @@ impl WasmMockQuerier {
         let rt = Runtime::new().unwrap();
 
         let channel = rt
-            .block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id))
+            .block_on(create_transport_channel(&chain))
             .unwrap();
 
         WasmMockQuerier {
