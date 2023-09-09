@@ -1,17 +1,16 @@
-use crate::{cosmos_modules, error::DaemonError};
-use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
-use tonic::transport::Channel;
+use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query};
+use cosmrs::{proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin}, rpc::HttpClient, tx::MessageExt};
 
-use super::DaemonQuerier;
+use super::RpcQuerier;
 
 /// Queries for Cosmos Bank Module
 pub struct Bank {
-    channel: Channel,
+    client: HttpClient,
 }
 
-impl DaemonQuerier for Bank {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl RpcQuerier for Bank {
+    fn new(rpc: String) -> Self {
+        Self { client: HttpClient::new(rpc.as_str()).unwrap() }
     }
 }
 
@@ -25,30 +24,32 @@ impl Bank {
     ) -> Result<Vec<Coin>, DaemonError> {
         match denom {
             Some(denom) => {
-                let resp = cosmos_query!(
+                let balance_response = cosmos_rpc_query!(
                     self,
                     bank,
-                    balance,
+                    "/cosmos.bank.v1beta1.Query/Balance",
                     QueryBalanceRequest {
                         address: address.into(),
                         denom: denom,
-                    }
+                    },
+                    QueryBalanceResponse,
                 );
-                let coin = resp.balance.unwrap();
+                let coin = balance_response.balance.unwrap();
                 Ok(vec![coin])
             }
             None => {
-                let resp = cosmos_query!(
+                let balance_response = cosmos_rpc_query!(
                     self,
                     bank,
-                    all_balances,
+                    "/cosmos.bank.v1beta1.Query/AllBalances",
                     QueryAllBalancesRequest {
                         address: address.into(),
                         pagination: None,
-                    }
+                    },
+                    QueryAllBalancesResponse,
                 );
 
-                let coins = resp.balances;
+                let coins = balance_response.balances;
                 Ok(coins.into_iter().collect())
             }
         }
@@ -59,46 +60,49 @@ impl Bank {
         &self,
         address: impl Into<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
-        let spendable_balances: cosmos_modules::bank::QuerySpendableBalancesResponse = cosmos_query!(
+        let spendable_balances = cosmos_rpc_query!(
             self,
             bank,
-            spendable_balances,
+            "/cosmos.bank.v1beta1.Query/SpendableBalances",
             QuerySpendableBalancesRequest {
                 address: address.into(),
                 pagination: None,
-            }
+            },
+            QuerySpendableBalancesResponse,
         );
         Ok(spendable_balances.balances)
     }
 
     /// Query total supply in the bank
     pub async fn total_supply(&self) -> Result<Vec<Coin>, DaemonError> {
-        let total_supply: cosmos_modules::bank::QueryTotalSupplyResponse = cosmos_query!(
+        let total_supply = cosmos_rpc_query!(
             self,
             bank,
-            total_supply,
-            QueryTotalSupplyRequest { pagination: None }
+            "/cosmos.bank.v1beta1.Query/TotalSupply",
+            QueryTotalSupplyRequest { pagination: None },
+            QueryTotalSupplyResponse,
         );
         Ok(total_supply.supply)
     }
 
     /// Query total supply in the bank for a denom
     pub async fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, DaemonError> {
-        let supply_of: cosmos_modules::bank::QuerySupplyOfResponse = cosmos_query!(
+        let supply_of = cosmos_rpc_query!(
             self,
             bank,
-            supply_of,
+            "/cosmos.bank.v1beta1.Query/SupplyOf",
             QuerySupplyOfRequest {
                 denom: denom.into()
-            }
+            },
+            QuerySupplyOfResponse,
         );
         Ok(supply_of.amount.unwrap())
     }
 
     /// Query params
     pub async fn params(&self) -> Result<cosmos_modules::bank::Params, DaemonError> {
-        let params: cosmos_modules::bank::QueryParamsResponse =
-            cosmos_query!(self, bank, params, QueryParamsRequest {});
+        let params = 
+            cosmos_rpc_query!(self, bank, "/cosmos.bank.v1beta1.Query/Params", QueryParamsRequest {}, QueryParamsResponse,);
         Ok(params.params.unwrap())
     }
 
@@ -107,13 +111,14 @@ impl Bank {
         &self,
         denom: impl Into<String>,
     ) -> Result<cosmos_modules::bank::Metadata, DaemonError> {
-        let denom_metadata: cosmos_modules::bank::QueryDenomMetadataResponse = cosmos_query!(
+        let denom_metadata = cosmos_rpc_query!(
             self,
             bank,
-            denom_metadata,
+            "/cosmos.bank.v1beta1.Query/DenomMetadata",
             QueryDenomMetadataRequest {
                 denom: denom.into()
-            }
+            },
+            QueryDenomMetadataResponse,
         );
         Ok(denom_metadata.metadata.unwrap())
     }
@@ -125,13 +130,14 @@ impl Bank {
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::bank::Metadata>, DaemonError> {
-        let denoms_metadata: cosmos_modules::bank::QueryDenomsMetadataResponse = cosmos_query!(
+        let denoms_metadata = cosmos_rpc_query!(
             self,
             bank,
-            denoms_metadata,
+            "/cosmos.bank.v1beta1.Query/DenomsMetadata",
             QueryDenomsMetadataRequest {
                 pagination: pagination
-            }
+            },
+            QueryDenomsMetadataResponse,      
         );
         Ok(denoms_metadata.metadatas)
     }

@@ -26,6 +26,10 @@ pub enum DaemonError {
     #[error(transparent)]
     TendermintError(#[from] ::cosmrs::tendermint::Error),
     #[error(transparent)]
+    TendermintRPCError(#[from] cosmrs::rpc::Error),
+    #[error(transparent)]
+    ProseEncoreError(#[from] prost::EncodeError),
+    #[error(transparent)]
     CwEnvError(#[from] ::cw_orch_core::CwEnvError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,

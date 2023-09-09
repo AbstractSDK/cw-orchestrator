@@ -36,5 +36,5 @@ fn temp_test() {
     let balance_response = QueryAllBalancesResponse::decode(response.value.as_slice()).unwrap();
 
     // Printing the response
-    panic!("{:?}", response);
+    panic!("{:?}", balance_response);
 }
