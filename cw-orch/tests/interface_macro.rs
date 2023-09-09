@@ -1,5 +1,3 @@
-mod common;
-
 use cw_orch::{
     environment::{CwEnv, TxHandler},
     prelude::{ContractWrapper, Uploadable, WasmPath},
@@ -10,7 +8,7 @@ use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use cosmwasm_std::Event;
 use cw_orch::prelude::{
     ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload,
-    Daemon, Mock,
+    Mock,
 };
 
 use cosmwasm_std::Addr;
@@ -21,13 +19,6 @@ const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 pub struct MockContract;
 
 impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
-    fn wasm(&self) -> <Daemon as TxHandler>::ContractSource {
-        // create contract base configuration
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}/{}", crate_path, MOCK_CONTRACT_WASM);
-        log::info!("Using wasm path {}", wasm_path);
-        WasmPath::new(wasm_path).unwrap()
-    }
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
@@ -126,67 +117,4 @@ fn test_migrate() {
         )
         .unwrap();
     assert_eq!(response.events.len(), 1);
-}
-
-#[test]
-#[cfg(feature = "node-tests")]
-#[serial_test::serial]
-fn daemon_test() {
-    use cw_orch::prelude::networks;
-
-    use crate::common::Id;
-
-    let runtime = tokio::runtime::Runtime::new().unwrap();
-
-    let daemon = Daemon::builder()
-        .chain(networks::LOCAL_JUNO)
-        .handle(runtime.handle())
-        .build()
-        .unwrap();
-
-    let contract = mock_contract::MockContract::new(
-        format!("test:mock_contract:{}", Id::new()),
-        daemon.clone(),
-    );
-    contract.upload().unwrap();
-
-    contract
-        .instantiate(&InstantiateMsg {}, Some(&daemon.sender()), None)
-        .unwrap();
-
-    let response = contract
-        .execute(&ExecuteMsg::FirstMessage {}, None)
-        .unwrap();
-    assert_eq!(
-        response.get_events("wasm")[0].get_first_attribute_value("action"),
-        Some("first message passed".to_string())
-    );
-
-    contract
-        .execute(&ExecuteMsg::SecondMessage { t: "".to_string() }, None)
-        .unwrap_err();
-
-    let response: String = contract.query(&QueryMsg::FirstQuery {}).unwrap();
-    assert_eq!(response, "first query passed");
-
-    contract
-        .query::<String>(&QueryMsg::SecondQuery { t: "".to_string() })
-        .unwrap_err();
-
-    contract
-        .migrate(
-            &MigrateMsg {
-                t: "error".to_string(),
-            },
-            contract.code_id().unwrap(),
-        )
-        .unwrap_err();
-    contract
-        .migrate(
-            &MigrateMsg {
-                t: "success".to_string(),
-            },
-            contract.code_id().unwrap(),
-        )
-        .unwrap();
 }
