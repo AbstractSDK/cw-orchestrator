@@ -372,15 +372,15 @@ mod test {
 
     #[test]
     fn wallet_balance_assertion() -> Result<(), CwOrchError> {
-        let receiver = "receiver".to_string();
         // We test a simple bank transfer first with an account that has funds, and then with an account that doesn't
         let mut app = OsmosisTestTube::new(coins(100_000_000_000, "uosmo"));
+        let receiver = app.init_account(coins(1, "uosmos"))?;
 
         let res = Bank::new(&*app.app.borrow())
             .send(
                 MsgSend {
                     from_address: app.sender.address(),
-                    to_address: receiver,
+                    to_address: receiver.address(),
                     amount: cosmwasm_to_proto_coins(coins(2, "uosmo")),
                 },
                 &app.sender,
@@ -391,9 +391,10 @@ mod test {
 
         // Now we have a new sender and they don't have enough funds for a transfer
         app.set_sender(app.init_account(coins(1, "uosmo"))?);
+        assert!(!app._assert_wallet_balance(gas_used).unwrap().assertion);
 
-        let err = app.assert_wallet_balance(gas_used).unwrap_err();
-        panic!("{:?}", err);
+        app.set_sender(app.init_account(coins(100_000_000_000, "uosmo"))?);
+        assert!(app._assert_wallet_balance(gas_used).unwrap().assertion);
 
         Ok(())
     }
