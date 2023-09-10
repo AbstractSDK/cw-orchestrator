@@ -4,8 +4,8 @@ use serde_json::from_reader;
 use serde_json::Value;
 use std::fs::File;
 
-use crate::environment::CwEnv;
 use crate::environment::StateInterface;
+use crate::environment::WalletBalanceAssertion;
 use crate::CwEnvError;
 
 use super::interface_traits::ContractInstance;
@@ -56,11 +56,15 @@ use super::interface_traits::ContractInstance;
 ///
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
-pub trait Deploy<Chain: CwEnv>: Sized {
+pub trait Deploy<Chain: WalletBalanceAssertion>: Sized {
     /// Error type returned by the deploy functions.  
     type Error: From<CwEnvError>;
     /// Data required to deploy the application.
     type DeployData;
+    /// Gas necessary to deploy the whole application
+    /// If you don't want to set this constant, use a zero value here
+    /// This is ONLY used to check if the deployer has enough balance to do the whole deploy operation.
+    const GAS_TO_DEPLOY: u64;
     /// Stores/uploads the application to the chain.
     fn store_on(chain: Chain) -> Result<Self, Self::Error>;
     /// Deploy the application to the chain. This could include instantiating contracts.
@@ -68,6 +72,19 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error> {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
+    }
+
+    /// 1. Checks wether the deploying wallet has enough funds
+    /// 2. Deploys the application
+    fn deploy_on_with_balance_assertion(
+        chain: Chain,
+        data: Self::DeployData,
+    ) -> Result<Self, Self::Error> {
+        // We verify the deploying wallet has enough funds
+        chain.assert_wallet_balance(Self::GAS_TO_DEPLOY)?;
+
+        // if not implemented, just store the application on the chain
+        Self::deploy_on(chain, data)
     }
 
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
@@ -161,16 +178,14 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     }
 
     /// Sets the custom state file path for exporting the state with the package.
-    // TODO, we might want to enforce the projects to redefine this function ?
-    fn deployed_state_file_path(&self) -> Option<String> {
-        // No file by default
-        None
-    }
+    // This function needs to be defined by projects. If the project doesn't want to give deployment state with their crate, they can return None here.
+    fn deployed_state_file_path(&self) -> Option<String>;
 
     /// Returns all the contracts in this deployment instance
     /// Used to set the contract state (addr and code_id) when importing the package.
     fn get_contracts_mut(&mut self) -> Vec<Box<&mut dyn ContractInstance<Chain>>>;
     /// Load the application from the chain, assuming it has already been deployed.
+    /// In order to leverage the deployed state, don't forget to call `Self::set_contracts_state` after loading the contract objects
     fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
 

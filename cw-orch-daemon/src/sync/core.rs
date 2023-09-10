@@ -2,15 +2,15 @@ use std::{fmt::Debug, rc::Rc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{DaemonQuerier, Node},
+    queriers::{self, DaemonQuerier, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
 use cosmrs::tendermint::Time;
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{ChainState, TxHandler},
+    environment::{ChainState, TxHandler, WalletBalanceAssertion, WalletBalanceAssertionResult},
 };
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::runtime::Handle;
@@ -199,6 +199,41 @@ impl TxHandler for Daemon {
             height: block.header.height.value(),
             time,
             chain_id: block.header.chain_id.to_string(),
+        })
+    }
+}
+
+impl WalletBalanceAssertion for Daemon {
+    fn _assert_wallet_balance(
+        &self,
+        gas: u64,
+    ) -> Result<WalletBalanceAssertionResult, DaemonError> {
+        let chain_data = self.state().as_ref().chain_data.clone();
+
+        let fee_token = chain_data.fees.fee_tokens[0].clone();
+        let fee = (gas as f64 * fee_token.fixed_min_gas_price) as u128;
+
+        let bank = self.query_client::<queriers::Bank>();
+        let balance = self
+            .rt_handle
+            .block_on(bank.balance(self.sender(), Some(fee_token.denom.clone())))
+            .unwrap()[0]
+            .clone();
+
+        log::debug!(
+            "Checking balance {} on chain {}, address {}. Expecting {}{}",
+            balance.amount,
+            chain_data.chain_id,
+            self.sender(),
+            fee,
+            fee_token.denom.as_str()
+        );
+        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
+
+        Ok(WalletBalanceAssertionResult {
+            expected: coin(fee, fee_token.denom),
+            current: parsed_balance.clone(),
+            assertion: parsed_balance.amount >= fee.into(),
         })
     }
 }
