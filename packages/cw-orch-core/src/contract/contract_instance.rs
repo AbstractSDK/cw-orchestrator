@@ -7,7 +7,7 @@ use crate::{
 
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
-use std::fmt::Debug;
+use std::{env, fmt::Debug};
 
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
@@ -67,7 +67,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         msg: &E,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Executing {:#?} on {}", msg, self.id);
+        log::info!("Executing {} on {}", log_serialize_message(msg)?, self.id);
         let resp = self
             .chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?);
@@ -82,7 +82,11 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Instantiating {} with msg {:#?}", self.id, msg);
+        log::info!(
+            "Instantiating {} with msg {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
 
         let resp = self
             .chain
@@ -110,7 +114,11 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self,
         query_msg: &Q,
     ) -> Result<T, CwEnvError> {
-        log::info!("Querying {:#?} on {}", query_msg, self.id);
+        log::info!(
+            "Querying {} on {}",
+            log_serialize_message(query_msg)?,
+            self.id
+        );
         let resp = self
             .chain
             .query(query_msg, &self.address()?)
@@ -125,7 +133,12 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         migrate_msg: &M,
         new_code_id: u64,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Migrating {:?} to code_id {}", self.id, new_code_id);
+        log::info!(
+            "Migrating {:?} to code_id {}, with message {}",
+            self.id,
+            new_code_id,
+            log_serialize_message(migrate_msg)?
+        );
         self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
             .map_err(Into::into)
@@ -169,5 +182,14 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
     /// Sets default code_id for contract (used only if not present in state)
     pub fn set_default_code_id(&mut self, code_id: u64) {
         self.default_code_id = Some(code_id);
+    }
+}
+
+/// Helper to serialize objects (JSON or Rust DEBUG)
+fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
+    if env::var("CW_ORCH_SERIALIZE_JSON") == Ok("true".to_string()) {
+        Ok(serde_json::to_string(msg)?)
+    } else {
+        Ok(format!("{:#?}", msg))
     }
 }

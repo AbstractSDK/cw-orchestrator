@@ -1,3 +1,5 @@
+use std::env;
+
 use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
@@ -89,7 +91,9 @@ impl TxBuilder {
                     .await?;
                 log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
-                let gas_expected = if sim_gas_used < BUFFER_THRESHOLD {
+                let gas_expected = if let Ok(gas_buffer) = env::var("CW_ORCH_GAS_BUFFER") {
+                    sim_gas_used as f64 * gas_buffer.parse::<f64>()?
+                } else if sim_gas_used < BUFFER_THRESHOLD {
                     sim_gas_used as f64 * SMALL_GAS_BUFFER
                 } else {
                     sim_gas_used as f64 * GAS_BUFFER

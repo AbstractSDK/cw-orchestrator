@@ -10,6 +10,7 @@ use cw_orch::prelude::{CallAs, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, Cw
 
 /// This example shows how to create and use the cw-multi-test mock environment
 pub fn main() {
+    env_logger::init();
     // ANCHOR: mock_creation
     let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
 

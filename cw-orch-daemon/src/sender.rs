@@ -179,7 +179,6 @@ impl Sender<All> {
         // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
         // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
         // 3. In case there is an other error, we fail
-
         let tx_response = TxBroadcaster::default()
             .add_strategy(insufficient_fee_strategy())
             .add_strategy(account_sequence_strategy())

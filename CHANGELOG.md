@@ -16,6 +16,8 @@
 - Added a trait to be able to commit any transaction to chain (Protobuf any type)
 - Added min gas and average gas utilization for computing the tx fee
 - Added Install Readme 
+- Change the state file default location for relative paths `./` --> `~/.cw-orchestrator`
+- Added env variables for customizing experience
 
 ## v0.15.0
 
