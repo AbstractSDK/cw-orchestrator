@@ -9,8 +9,15 @@ use cw_orch_core::{
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs::File, path::Path};
+use std::{
+    collections::HashMap,
+    env,
+    fs::File,
+    path::{Path, PathBuf},
+};
 use tonic::transport::Channel;
+
+pub const CW_ORCH_DEFAULT_FOLDER: &str = "~/.cw-orchestrator";
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
@@ -44,7 +51,23 @@ impl DaemonState {
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
         // check if STATE_FILE en var is configured, default to state.json
-        let mut json_file_path = env::var("STATE_FILE").unwrap_or("./state.json".to_string());
+        let env_file_path =
+            PathBuf::from(env::var("STATE_FILE").unwrap_or("./state.json".to_string()));
+
+        // If the path is relative, we dis-ambiguate it and take the root at $HOME/.cw-orchestrator
+        let mut json_file_path = if env_file_path.is_relative() {
+            let state_folder =
+                env::var("CW_ORCH_STATE_FOLDER").unwrap_or(CW_ORCH_DEFAULT_FOLDER.to_string());
+
+            PathBuf::from(state_folder).join(env_file_path)
+        } else {
+            env_file_path
+        }
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+        log::info!("{}", json_file_path);
 
         // if the network we are connecting is a local kind, add it to the fn
         if chain_data.network_type == ChainKind::Local.to_string() {
