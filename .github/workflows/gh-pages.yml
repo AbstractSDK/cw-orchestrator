@@ -34,10 +34,6 @@ jobs:
         uses: ATiltedTree/setup-rust@v1
         with:
           rust-version: stable
-        continue-on-error: true
-      - name: Delete rustup cache
-        run: rm -rf ~/.rustup
-        if: ${{ steps.rustup.outcome }} != "success"
 
       - name: Setup | Just
         id: just
