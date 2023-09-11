@@ -3,7 +3,8 @@
 ## Unpublished
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
-
+- Added Sei Network
+- Make the broadcast function public on Sender
 
 ## v0.15.0
 

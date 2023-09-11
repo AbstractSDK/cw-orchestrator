@@ -65,7 +65,7 @@ pub fn execute(
 
 By adding these lines, we generate code whenever the `interface` feature is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.
 
-When uploading to a blockchain the marco will search for an `artifacts` directory in the project's root. If this is not what you want you can specify the paths yourself using the `interface` macro covered in [interfaces](./tutorial/interfaces.md#defining-contract-interfaces).
+When uploading to a blockchain the macro will search for an `artifacts` directory in the project's root. If this is not what you want you can specify the paths yourself using the `interface` macro covered in [interfaces](./tutorial/interfaces.md#defining-contract-interfaces).
 
 > The name of the crate is defined in the `Cargo.toml` file of your contract.
 
@@ -83,7 +83,7 @@ You can now create a test in `contract/tests` or an executable in `contract/bin`
 
 cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
 
-Enabling this functionality is very straight-forward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
+Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
 ```rust,no_run
 use cosmwasm_schema::{QueryResponses, cw_serde};
@@ -109,7 +109,7 @@ pub enum QueryMsg {
 
 Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface through a trait. The function will have the snake_case name of the variant and will take the same arguments as the variant. The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
 
-You can access these functions by importing the generated traits form the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. Again it's helpful to re-export these traits in the crate's root so that they are easy to import:
+You can access these functions by importing the generated traits from the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. Again it's helpful to re-export these traits in the crate's root so that they are easy to import:
 
 ```rust,ignore
 // in lib.rs
