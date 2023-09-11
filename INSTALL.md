@@ -1,5 +1,12 @@
 # Dependencies
 
+Cw-orch relies on external libraries that need additional tools installed on your machine : 
+- Rust
+- Gcc + Clang
+- OpenSSL
+- Go (optional, only for osmosis-test-tube)
+
+
 ## Ubuntu
 
 In order to be able to compile, you will need to install the following packages : 
