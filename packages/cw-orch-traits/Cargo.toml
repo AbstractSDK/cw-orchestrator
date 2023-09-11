@@ -13,6 +13,5 @@ readme = "README.md"
 
 
 [dependencies]
-
 cosmrs = "0.14.0"
 cw-orch-core = { workspace = true }
