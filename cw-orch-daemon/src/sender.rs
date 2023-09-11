@@ -24,7 +24,7 @@ use cosmrs::{
     proto::traits::Message,
     tendermint::chain::Id,
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
-    AccountId,
+    AccountId, Any,
 };
 use cosmwasm_std::Addr;
 use secp256k1::{All, Context, Secp256k1, Signing};
@@ -153,6 +153,20 @@ impl Sender<All> {
     pub async fn commit_tx<T: Msg>(
         &self,
         msgs: Vec<T>,
+        memo: Option<&str>,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let msgs = msgs
+            .into_iter()
+            .map(Msg::into_any)
+            .collect::<Result<Vec<Any>, _>>()
+            .unwrap();
+
+        self.commit_tx_any(msgs, memo).await
+    }
+
+    pub async fn commit_tx_any(
+        &self,
+        msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;

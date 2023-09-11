@@ -9,6 +9,12 @@
 - Added optional disable of sorting of ExecuteFns and QueryFns fields by @Kayanski
 - Added automatic tx retrying in case of an account sequence error by @Kayanski
 - Made transaction retrying more modular (for adding more retry cases) by Kayanski
+- Added ibc denom query (for completeness and working with ibc token transfers)
+- Added ibc connection-end query (for completeness and working with ibc connections)
+- Added transaction by event query (mainly for querying packets in and out of the chain)
+- Added helper to modify the chain id of cw-multi-test (Mock)
+- Added a trait to be able to commit any transaction to chain (Protobuf any type)
+- Added min gas and average gas utilization for computing the tx fee
 
 ## v0.15.0
 

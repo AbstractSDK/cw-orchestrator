@@ -3,7 +3,10 @@ use std::{cmp::min, time::Duration};
 use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
 use cosmrs::{
-    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},
+    proto::cosmos::{
+        base::query::v1beta1::PageRequest,
+        tx::v1beta1::{OrderBy, SimulateResponse},
+    },
     tendermint::{Block, Time},
 };
 use tonic::transport::Channel;
@@ -232,5 +235,82 @@ impl Node {
 
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(hash, retries))
+    }
+
+    /// Find TX by events
+    pub async fn find_tx_by_events(
+        &self,
+        events: Vec<String>,
+        page: Option<u64>,
+        order_by: Option<OrderBy>,
+    ) -> Result<Vec<CosmTxResponse>, DaemonError> {
+        self.find_tx_by_events_with_retries(events, page, order_by, false, MAX_TX_QUERY_RETRIES)
+            .await
+    }
+
+    /// Find Tx by events
+    /// This function will consider that no transactions found is an error
+    /// This either returns a non empty vector or errors
+    pub async fn find_some_tx_by_events(
+        &self,
+        events: Vec<String>,
+        page: Option<u64>,
+        order_by: Option<OrderBy>,
+    ) -> Result<Vec<CosmTxResponse>, DaemonError> {
+        self.find_tx_by_events_with_retries(events, page, order_by, true, MAX_TX_QUERY_RETRIES)
+            .await
+    }
+
+    /// Find TX by events with  :
+    /// 1. Specify if an empty tx object is a valid response
+    /// 2. Specify a given amount of retries
+    pub async fn find_tx_by_events_with_retries(
+        &self,
+        events: Vec<String>,
+        page: Option<u64>,
+        order_by: Option<OrderBy>,
+        retry_on_empty: bool,
+        retries: usize,
+    ) -> Result<Vec<CosmTxResponse>, DaemonError> {
+        let mut client =
+            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+
+        #[allow(deprecated)]
+        let request = cosmos_modules::tx::GetTxsEventRequest {
+            events: events.clone(),
+            page: page.unwrap_or(0),
+            limit: 100,
+            pagination: None, // This is not used, so good.
+            order_by: order_by.unwrap_or(OrderBy::Desc).into(),
+        };
+
+        for _ in 0..retries {
+            match client.get_txs_event(request.clone()).await {
+                Ok(tx) => {
+                    let resp = tx.into_inner().tx_responses;
+                    if retry_on_empty && resp.is_empty() {
+                        log::debug!("Not TX by events found");
+                        log::debug!("Waiting 10s");
+                        tokio::time::sleep(Duration::from_secs(10)).await;
+                    } else {
+                        log::debug!(
+                            "TX found by events: {:?}",
+                            resp.iter().map(|t| t.txhash.clone())
+                        );
+                        return Ok(resp.iter().map(|r| r.clone().into()).collect());
+                    }
+                }
+                Err(err) => {
+                    log::debug!("TX not found with error: {:?}", err);
+                    log::debug!("Waiting 10s");
+                    tokio::time::sleep(Duration::from_secs(10)).await;
+                }
+            }
+        }
+        // return error if tx not found by now
+        Err(DaemonError::TXNotFound(
+            format!("with events {:?}", events),
+            MAX_TX_QUERY_RETRIES,
+        ))
     }
 }
