@@ -7,7 +7,7 @@
 - Make the broadcast function public on Sender
 - Added a `call_as` helper on TxHandler Trait
 - Added optional disable of sorting of ExecuteFns and QueryFns fields by @Kayanski
-
+- Added Install Readme 
 
 ## v0.15.0
 
