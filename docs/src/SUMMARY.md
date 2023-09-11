@@ -12,19 +12,15 @@
   - [Scripting](./single_contract/scripting.md)
   - [Integration Tests](./single_contract/integration-tests.md)
 
+- [Integrations](./integrations/index.md)
+  - [Daemon (Live Chains)](./integrations/daemon.md)
+  - [Cw Multi Test](./integrations/cw-multi-test.md)
+  - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
 
 - [Workspace](./workspace/index.md)
   - [Structure]()
   - [Project Wrapper]()
   - [Colloboration]()
-
-[//]: # (# Integrations)
-
-[//]: # (- [cw-multi-test]&#40;&#41;)
-
-[//]: # (- [test-tube]&#40;&#41;)
-
-[//]: # (- [live-chains]&#40;&#41;)
 
 - [Supported Chains](./chains/index.md)
   - [Archway](./chains/archway.md)

@@ -101,7 +101,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .map(|s| s.into_iter().map(Rc::new).collect())
     }
 
-    /// Creates accounts and sets their balance
+    /// Sends coins a specific address
     pub fn bank_send(
         &self,
         to: String,
@@ -124,7 +124,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         })
     }
 
-    /// Creates accounts and sets their balance
+    /// Creates an osmosis pool (helper)
     pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
         // create balancer pool with basic configuration
         let pool_id = Gamm::new(&*self.app.borrow())

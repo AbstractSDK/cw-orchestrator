@@ -2,6 +2,8 @@
 
 Interfaces are virtual wrappers around CosmWasm contracts. They allow you to interact with your contracts in a type-safe way, and provide a convenient way to reason about contract interactions. Interfaces are the core reason why we built cw-orchestrator and we hope that you'll find them as useful as we do.
 
+You can find the code for this example in the [cw-orch counter-contract folder](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+
 ## Setup
 
 Before we can create an interface we need to add cw-orch to the contract's `Cargo.toml` file. In `counter` run:

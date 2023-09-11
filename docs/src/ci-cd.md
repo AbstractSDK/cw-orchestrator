@@ -18,8 +18,8 @@ on:
   
 env:
   VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
-  STATE_FILE: "./daemon_state.json"  
-  ARTIFACTS_DIR: "./target/wasm32-unknown-unknown/release"  
+  STATE_FILE: "./state.json"  # Optional
+  ARTIFACTS_DIR: "./target/wasm32-unknown-unknown/release" # Optional
   SCHEMA_DIR: "./schema"  
   
 jobs:  
