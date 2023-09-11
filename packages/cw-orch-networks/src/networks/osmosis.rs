@@ -7,6 +7,17 @@ pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
+pub const OSMOSIS_1: ChainInfo = ChainInfo {
+    kind: ChainKind::Mainnet,
+    chain_id: "osmois-1",
+    gas_denom: "uosmo",
+    gas_price: 0.025,
+    grpc_urls: &["http://grpc.osmosis.zone:9090"],
+    network_info: OSMO_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+
 pub const OSMO_5: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "osmo-test-5",

@@ -2,6 +2,8 @@
 
 Interfaces are virtual wrappers around CosmWasm contracts. They allow you to interact with your contracts in a type-safe way, and provide a convenient way to reason about contract interactions. Interfaces are the core reason why we built cw-orchestrator and we hope that you'll find them as useful as we do.
 
+You can find the code for this example in the [cw-orch counter-contract folder](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+
 ## Setup
 
 Before we can create an interface we need to add cw-orch to the contract's `Cargo.toml` file. In `counter` run:
@@ -204,6 +206,46 @@ impl<Chain: CwEnv> Example<Chain> {
     }
 }
 ```
+
+### `disable_fields_sorting` Attribute
+
+By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields of each enum member. For instance, 
+
+```rust 
+use cw_orch::interface;
+use cw_orch::prelude::*;
+
+#[cosmwasm_schema::cw_serde]
+#[derive(cw_orch::ExecuteFns)]
+pub enum ExecuteMsg {
+    Bar { b: String, a: u64 },
+}
+```
+ will generate 
+ ```rust
+ pub fn bar(a: u64, b: String) -> ...{
+    ...
+ } 
+ ```
+You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior : 
+
+```rust 
+
+use cw_orch::interface;
+use cw_orch::prelude::*;
+
+#[cosmwasm_schema::cw_serde]
+#[derive(cw_orch::ExecuteFns)]
+#[disable_fields_sorting]
+pub enum ExecuteMsg {
+    Bar { b: String, a: u64 },
+}
+ 
+ pub fn bar(b: String, a: u64) -> ...{
+    ...
+ } 
+ ```
+
 
 ## Learn more
 

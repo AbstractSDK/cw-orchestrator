@@ -87,7 +87,10 @@ impl IndexResponse for AppResponse {
                 }
             }
         }
-        Err(StdError::generic_err("missing "))
+        Err(StdError::generic_err(format!(
+            "missing combination (event: {}, attribute: {})",
+            event_type, attr_key
+        )))
     }
 }
 

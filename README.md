@@ -207,7 +207,14 @@ impl<Chain: CwEnv> Example<Chain> {
 
 ### Testing with OsmosisTestTube
 
-[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise. Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
+[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise. 
+- Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies. 
+- Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  
+
+
+## Installation
+
+Cw-orch relies on external tools to work properly. Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies and install commands that are needed for cw-orch to work properly on your machine.
 
 ## Contributing
 
