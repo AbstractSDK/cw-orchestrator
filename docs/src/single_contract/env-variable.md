@@ -36,7 +36,7 @@ CW_ORCH_MIN_BLOCK_SPEED = 1
 CW_ORCH_SERIALIZE_JSON = "false" 
 # Optional - Absolute Path. Sets the directory where the state file will be saved.
 # This is not enforced to be an absolute path but this is highly recommended
-CW_ORCH_STATE_FOLDER = "~/.cw-orchestrator
+CW_ORCH_STATE_FOLDER = "~/.cw-orchestrator"
 
 ```
 
