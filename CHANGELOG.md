@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## v0.16.0
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
 - Added Sei Network
