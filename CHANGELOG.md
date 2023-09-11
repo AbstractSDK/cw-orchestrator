@@ -3,10 +3,12 @@
 ## Unpublished
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
-- Add ChannelAccess trait to be able to access the underyling gRPC tonic channel of the daemon 
 - Added ibc denom query (for completeness and working with ibc token transfers)
+- Added ibc connection-end query (for completeness and working with ibc connections)
 - Added transaction by event query (mainly for querying packets in and out of the chain)
-
+- Added helper to modify the chain id of cw-multi-test (Mock)
+- Added a trait to be able to commit any transaction to chain (Protobuf any type)
+- Added min gas and average gas utilization for computing the tx fee
 
 ## v0.15.0
 
