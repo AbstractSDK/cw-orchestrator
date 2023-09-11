@@ -1,27 +1,23 @@
-use crate::interface_traits::CallAs;
-use crate::interface_traits::ContractInstance;
-use crate::interface_traits::CwOrchExecute;
-use crate::interface_traits::Uploadable;
-use crate::paths::WasmPath;
-use cosmwasm_std::Binary;
-use cosmwasm_std::BlockInfo;
-use cosmwasm_std::Coin;
-use cosmwasm_std::Timestamp;
-use cosmwasm_std::Uint128;
+use crate::contract::WasmPath;
+use crate::prelude::Uploadable;
+use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_test_tube::osmosis_std::cosmwasm_to_proto_coins;
-use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::MsgSend;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
 use osmosis_test_tube::Gamm;
 use osmosis_test_tube::Module;
+use osmosis_test_tube::RunnerError;
 use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
 use std::str::FromStr;
 
-use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
-    QueryAllBalancesRequest, QueryBalanceRequest,
+// This should be the way to import stuff.
+// But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
+use osmosis_test_tube::osmosis_std::{
+    cosmwasm_to_proto_coins,
+    types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
 };
+
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
@@ -30,8 +26,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     environment::TxHandler,
+    environment::{ChainState, StateInterface},
     error::CwOrchError,
-    state::{ChainState, StateInterface},
 };
 
 use crate::mock::MockState;
@@ -57,17 +53,21 @@ pub use osmosis_test_tube;
 /// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = tube.query_balance(&account.borrow().address(), "uatom").unwrap();
+/// let balance: Uint128 = tube.query_balance(&account.address(), "uatom").unwrap();
 /// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
 pub struct OsmosisTestTube<S: StateInterface = MockState> {
     /// Address used for the operations.
-    pub sender: Rc<RefCell<SigningAccount>>,
+    pub sender: Rc<SigningAccount>,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<OsmosisTestApp>>,
+}
+
+fn map_err(e: RunnerError) -> CwOrchError {
+    CwOrchError::StdErr(e.to_string())
 }
 
 impl<S: StateInterface> OsmosisTestTube<S> {
@@ -75,12 +75,12 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     pub fn init_account(
         &self,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<Rc<RefCell<SigningAccount>>, CwOrchError> {
+    ) -> Result<Rc<SigningAccount>, CwOrchError> {
         self.app
             .borrow()
             .init_account(&amount)
-            .map_err(Into::into)
-            .map(|a| Rc::new(RefCell::new(a)))
+            .map_err(map_err)
+            .map(Rc::new)
     }
 
     /// Creates accounts and sets their balance
@@ -88,11 +88,12 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &self,
         amount: Vec<cosmwasm_std::Coin>,
         account_n: u64,
-    ) -> Result<Vec<SigningAccount>, CwOrchError> {
+    ) -> Result<Vec<Rc<SigningAccount>>, CwOrchError> {
         self.app
             .borrow()
             .init_accounts(&amount, account_n)
-            .map_err(Into::into)
+            .map_err(map_err)
+            .map(|s| s.into_iter().map(Rc::new).collect())
     }
 
     /// Creates accounts and sets their balance
@@ -101,14 +102,16 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         to: String,
         amount: Vec<cosmwasm_std::Coin>,
     ) -> Result<AppResponse, CwOrchError> {
-        let send_response = Bank::new(&*self.app.borrow()).send(
-            MsgSend {
-                from_address: self.sender.borrow().address(),
-                to_address: to,
-                amount: cosmwasm_to_proto_coins(amount),
-            },
-            &self.sender.borrow(),
-        )?;
+        let send_response = Bank::new(&*self.app.borrow())
+            .send(
+                MsgSend {
+                    from_address: self.sender.address(),
+                    to_address: to,
+                    amount: cosmwasm_to_proto_coins(amount),
+                },
+                &self.sender,
+            )
+            .map_err(map_err)?;
 
         Ok(AppResponse {
             data: Some(Binary(send_response.raw_data)),
@@ -120,7 +123,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
         // create balancer pool with basic configuration
         let pool_id = Gamm::new(&*self.app.borrow())
-            .create_basic_pool(&liquidity, &self.sender.borrow())
+            .create_basic_pool(&liquidity, &self.sender)
             .unwrap()
             .data
             .pool_id;
@@ -135,7 +138,8 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .query_balance(&QueryBalanceRequest {
                 address: address.to_owned(),
                 denom: denom.to_string(),
-            })?
+            })
+            .map_err(map_err)?
             .balance
             .map(|c| Uint128::from_str(&c.amount).unwrap())
             .unwrap_or(Uint128::zero());
@@ -151,7 +155,8 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .query_all_balances(&QueryAllBalancesRequest {
                 address: address.to_owned(),
                 pagination: None,
-            })?
+            })
+            .map_err(map_err)?
             .balances
             .into_iter()
             .map(|c| Coin {
@@ -183,7 +188,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         let sender = app.borrow().init_account(&init_coins).unwrap();
 
         Self {
-            sender: Rc::new(RefCell::new(sender)),
+            sender: Rc::new(sender),
             state,
             app,
         }
@@ -194,7 +199,7 @@ impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
-        Rc::clone(&self.state)
+        self.state.clone()
     }
 }
 
@@ -203,18 +208,21 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
+    type Sender = Rc<SigningAccount>;
 
     fn sender(&self) -> Addr {
-        Addr::unchecked(self.sender.borrow().address())
+        Addr::unchecked(self.sender.address())
+    }
+
+    fn set_sender(&mut self, sender: Self::Sender) {
+        self.sender = sender;
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
         let wasm_contents = std::fs::read(contract.wasm().path())?;
-        let upload_response = Wasm::new(&*self.app.borrow()).store_code(
-            &wasm_contents,
-            None,
-            &self.sender.borrow(),
-        )?;
+        let upload_response = Wasm::new(&*self.app.borrow())
+            .store_code(&wasm_contents, None, &self.sender)
+            .map_err(map_err)?;
 
         Ok(AppResponse {
             data: Some(Binary(upload_response.raw_data)),
@@ -228,12 +236,9 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, CwOrchError> {
-        let execute_response = Wasm::new(&*self.app.borrow()).execute(
-            contract_address.as_ref(),
-            exec_msg,
-            coins,
-            &self.sender.borrow(),
-        )?;
+        let execute_response = Wasm::new(&*self.app.borrow())
+            .execute(contract_address.as_ref(), exec_msg, coins, &self.sender)
+            .map_err(map_err)?;
 
         Ok(AppResponse {
             data: Some(Binary(execute_response.raw_data)),
@@ -249,14 +254,16 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwOrchError> {
-        let instantiate_response = Wasm::new(&*self.app.borrow()).instantiate(
-            code_id,
-            init_msg,
-            admin.map(|a| a.to_string()).as_deref(),
-            label,
-            coins,
-            &self.sender.borrow(),
-        )?;
+        let instantiate_response = Wasm::new(&*self.app.borrow())
+            .instantiate(
+                code_id,
+                init_msg,
+                admin.map(|a| a.to_string()).as_deref(),
+                label,
+                coins,
+                &self.sender,
+            )
+            .map_err(map_err)?;
 
         Ok(AppResponse {
             data: Some(Binary(instantiate_response.raw_data)),
@@ -269,7 +276,9 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, CwOrchError> {
-        let query = Wasm::new(&*self.app.borrow()).query(contract_address.as_ref(), query_msg)?;
+        let query = Wasm::new(&*self.app.borrow())
+            .query(contract_address.as_ref(), query_msg)
+            .map_err(map_err)?;
 
         Ok(query)
     }
@@ -304,21 +313,5 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
                 self.app.borrow().get_block_time_nanos().try_into().unwrap(),
             ),
         })
-    }
-}
-
-impl<T: CwOrchExecute<OsmosisTestTube> + ContractInstance<OsmosisTestTube> + Clone>
-    CallAs<OsmosisTestTube> for T
-{
-    type Sender = Rc<RefCell<SigningAccount>>;
-
-    fn set_sender(&mut self, sender: &Rc<RefCell<SigningAccount>>) {
-        self.as_instance_mut().chain.sender = sender.clone();
-    }
-
-    fn call_as(&self, sender: &Self::Sender) -> Self {
-        let mut contract = self.clone();
-        contract.set_sender(sender);
-        contract
     }
 }

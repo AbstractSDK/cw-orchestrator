@@ -1,4 +1,7 @@
 #!/bin/bash
+
+
+# Before publishing, test the version with the Abstract implementation to make sure you're not breaking important API
 set -o errexit -o nounset -o pipefail
 command -v shellcheck >/dev/null && shellcheck "$0"
 
@@ -14,8 +17,14 @@ then
 fi
 
 # these are imported by other packages
-BASE_PACKAGES="cw-orch-contract-derive cw-orch-fns-derive"
-CORE="cw-orch"
+BASE_PACKAGES="
+  cw-orch-contract-derive 
+  cw-orch-fns-derive
+  cw-orch-core  
+  cw-orch-mock 
+  cw-orch-networks  
+"
+CORE="cw-orch-daemon cw-orch"
 
 for pack in $BASE_PACKAGES; do
   (

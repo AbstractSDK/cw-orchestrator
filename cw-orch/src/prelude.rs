@@ -11,16 +11,16 @@
 // 4. Objects that need to be available to implement required traits
 
 // Contract traits
-pub use crate::interface_traits::{
+pub use crate::contract::interface_traits::{
     CallAs, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery,
     CwOrchUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
     Uploadable,
 };
 
-pub use crate::state::StateInterface;
+pub use crate::environment::StateInterface;
 
 // Response trait
-pub use crate::index_response::IndexResponse;
+pub use crate::environment::IndexResponse;
 
 // Environment
 pub use crate::environment::{CwEnv, TxHandler, TxResponse};
@@ -36,7 +36,7 @@ pub use crate::osmosis_test_tube::OsmosisTestTube;
 pub use crate::error::CwOrchError;
 
 // Paths for implementing `Uploadable`
-pub use crate::paths::{ArtifactsDir, WasmPath};
+pub use crate::contract::{ArtifactsDir, WasmPath};
 
 // re-export as it is used in the public API
 pub use cosmwasm_std::{Addr, Coin, Empty};
@@ -45,7 +45,7 @@ pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]
 pub use crate::daemon::{
-    networks,
+    live_mock,
     queriers,
     // sync helpers
     ConditionalMigrate,
@@ -57,8 +57,6 @@ pub use crate::daemon::{
     DaemonBuilder,
 };
 
-/// Re-export trait and data required to fetch daemon data from chain-registry
-#[cfg(feature = "daemon")]
-pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
+pub use cw_orch_networks::networks;
 
-pub use crate::paths::from_workspace as artifacts_dir_from_workspace;
+pub use crate::contract::artifacts_dir_from_workspace;
