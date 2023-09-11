@@ -31,6 +31,11 @@ required-features = ["osmosis-test-tube"]
 name = "injective"
 required-features = ["eth"]
 
+[[example]]
+name = "bank_query"
+path = "examples/queries/bank_query.rs"
+require-features = ["daemon"]
+
 [features]
 default = []
 # enable the optional dependencies
@@ -75,6 +80,7 @@ osmosis-test-tube = { workspace = true, optional = true }
 osmosis-std = { version = "=0.19.1" }
 # Env deps
 cw-orch-core = { workspace = true }
+cw-orch-traits = { workspace = true }
 cw-orch-mock = { workspace = true }
 
 [dev-dependencies]

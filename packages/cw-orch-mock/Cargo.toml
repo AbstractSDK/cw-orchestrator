@@ -15,6 +15,7 @@ cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }
+cosmrs = "0.14.0"
 
 [dev-dependencies]
 speculoos = { workspace = true }

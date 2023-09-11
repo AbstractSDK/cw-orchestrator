@@ -1,0 +1,17 @@
+[package]
+name = "cw-orch-traits"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
+keywords = ["cosmwasm", "blockchain"]
+categories = ["development-tools"]
+readme = "README.md"
+
+
+
+[dependencies]
+cosmrs = "0.14.0"
+cw-orch-core = { workspace = true }
