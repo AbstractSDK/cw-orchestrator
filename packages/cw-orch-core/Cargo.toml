@@ -37,7 +37,6 @@ serde_json = { workspace = true }
 
 # Ethereum deps
 snailquote = { version = "0.3.1", optional = true }
-cosmrs = "0.14.0"
 
 [dev-dependencies]
 speculoos = { workspace = true }
