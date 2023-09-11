@@ -13,13 +13,20 @@ pub type StrategyAction =
     fn(&mut TxBuilder, &Result<TxResponse, DaemonError>) -> Result<(), DaemonError>;
 
 pub struct RetryStrategy {
-    /// This correspond to errors caught when submitting transactions
+    /// This function is called right after a transaction has been submitted to a node.
+    /// It is used to check if the transaction has been submitted successfully or if an error occurred
+    /// This function returns true if an error corresponding to the current strategy is detected
     pub broadcast_condition: fn(&TxResponse) -> bool,
-    /// This correspond to errors caught when simulating the transaction
+    /// This function is called when a simulation error occurs
+    /// This function return true if an error corresponding to the current strategy is detected
     pub simulation_condition: fn(&DaemonError) -> bool,
+    /// Once the algorithm detects an error when broadcasting/simulating a transaction, it triggers this action before re-trying tx submission
+    /// This action takes the transaction builder and the transaction response result as arguments
+    /// It should make changes to the tx builder object (which is passed as a mutable reference)
+    /// The tx_builder object will be used after that to re-try submitting the transaction
     pub action: Option<StrategyAction>,
     pub max_retries: BroadcastRetry,
-    pub current_retries: u64,
+    pub(crate) current_retries: u64,
     pub reason: String,
 }
 
@@ -58,7 +65,8 @@ impl TxBroadcaster {
         self
     }
 
-    // We can't make async recursions easily because wallet is not `Sync`, so we have this shit function structure
+    // We can't make async recursions easily because wallet is not `Sync`
+    // Thus we use a `while` loop structure here
     pub async fn broadcast(
         mut self,
         mut tx_builder: TxBuilder,

@@ -37,7 +37,6 @@ schemars = "0.8.10"
 log = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-async-recursion = "1.0.5"
 
 # Daemon deps
 sha256 = { workspace = true }
