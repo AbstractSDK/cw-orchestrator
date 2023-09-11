@@ -3,6 +3,12 @@
 ## Unpublished
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
+- Added Sei Network
+- Make the broadcast function public on Sender
+- Added a `call_as` helper on TxHandler Trait
+- Added optional disable of sorting of ExecuteFns and QueryFns fields by @Kayanski
+- Added automatic tx retrying in case of an account sequence error by @Kayanski
+- Made transaction retrying more modular (for adding more retry cases) by Kayanski
 - Added ibc denom query (for completeness and working with ibc token transfers)
 - Added ibc connection-end query (for completeness and working with ibc connections)
 - Added transaction by event query (mainly for querying packets in and out of the chain)

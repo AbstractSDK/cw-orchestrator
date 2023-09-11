@@ -39,4 +39,15 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+
+pub const PACIFIC_1: ChainInfo = ChainInfo {
+    kind: ChainKind::Mainnet,
+    chain_id: "pacific-1",
+    gas_denom: "usei",
+    gas_price: 0.1,
+    grpc_urls: &["http://sei-grpc.polkachu.com:11990"],
+    network_info: SEI_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
 // ANCHOR_END: sei

@@ -205,6 +205,46 @@ impl<Chain: CwEnv> Example<Chain> {
 }
 ```
 
+### `disable_fields_sorting` Attribute
+
+By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields of each enum member. For instance, 
+
+```rust 
+use cw_orch::interface;
+use cw_orch::prelude::*;
+
+#[cosmwasm_schema::cw_serde]
+#[derive(cw_orch::ExecuteFns)]
+pub enum ExecuteMsg {
+    Bar { b: String, a: u64 },
+}
+```
+ will generate 
+ ```rust
+ pub fn bar(a: u64, b: String) -> ...{
+    ...
+ } 
+ ```
+You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior : 
+
+```rust 
+
+use cw_orch::interface;
+use cw_orch::prelude::*;
+
+#[cosmwasm_schema::cw_serde]
+#[derive(cw_orch::ExecuteFns)]
+#[disable_fields_sorting]
+pub enum ExecuteMsg {
+    Bar { b: String, a: u64 },
+}
+ 
+ pub fn bar(b: String, a: u64) -> ...{
+    ...
+ } 
+ ```
+
+
 ## Learn more
 
 Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#cw-orchestrator` channel.
