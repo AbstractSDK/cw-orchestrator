@@ -60,6 +60,9 @@ pub enum BroadcastRetry {
 }
 
 impl TxBroadcaster {
+    /// Adds a retry strategy to the broadcaster
+    /// Order of strategy addition matters, strategy conditions are tested in order of addition.
+    /// Each time a transaction is retried, only the first retry strategy met is applied
     pub fn add_strategy(mut self, s: RetryStrategy) -> Self {
         self.strategies.push(s);
         self
