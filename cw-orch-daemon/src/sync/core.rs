@@ -12,6 +12,7 @@ use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
     environment::{ChainState, TxHandler},
 };
+use cw_orch_traits::stargate::Stargate;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -201,8 +202,10 @@ impl TxHandler for Daemon {
             chain_id: block.header.chain_id.to_string(),
         })
     }
+}
 
-    /// Specify Empty for the type of R if you don't know the type to unwrap the response to
+impl Stargate for Daemon{
+
     fn commit_any<R>(
         &self,
         msgs: Vec<cosmrs::Any>,

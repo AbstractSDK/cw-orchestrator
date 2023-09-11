@@ -325,7 +325,9 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             ),
         })
     }
+}
 
+impl Stargate for OsmosisTestTube{
     fn commit_any<R: Message + Default>(
         &self,
         msgs: Vec<cosmrs::Any>,

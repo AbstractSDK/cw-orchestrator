@@ -2,7 +2,6 @@
 
 use super::{ChainState, IndexResponse};
 use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
-use cosmrs::{proto::traits::Message, Any};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -79,14 +78,5 @@ pub trait TxHandler: ChainState + Clone {
         migrate_msg: &M,
         new_code_id: u64,
         contract_address: &Addr,
-    ) -> Result<Self::Response, Self::Error>;
-
-    /// Execute a custom abci/starship message on the environment
-    /// The message should already be encoded as protobuf any
-    /// We enforce a generic parameter to be able to unwrap the response (because of osmosis test tube for now)
-    fn commit_any<R: Message + Default>(
-        &self,
-        msgs: Vec<Any>,
-        memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error>;
 }

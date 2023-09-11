@@ -27,6 +27,7 @@ eth = ["dep:ethers-signers", "dep:ethers-core"]
 cw-orch-contract-derive = { workspace = true }
 cw-orch-fns-derive = { workspace = true }
 cw-orch-core = { workspace = true }
+cw-orch-traits = { workspace = true }
 cw-orch-networks = { workspace = true }
 
 cosmwasm-std = { workspace = true }
