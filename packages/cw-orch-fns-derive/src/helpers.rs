@@ -69,6 +69,17 @@ pub(crate) fn process_impl_into(
     }
 }
 
+pub(crate) fn process_sorting(attrs: &Vec<Attribute>) -> bool {
+    // If the disable_fields_sorting attribute is enabled, we return false, no sorting should be done
+    for attr in attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "disable_fields_sorting"
+        {
+            return false;
+        }
+    }
+    true
+}
+
 #[derive(Default)]
 pub(crate) struct LexiographicMatching {}
 

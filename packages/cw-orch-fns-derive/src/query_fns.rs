@@ -1,5 +1,5 @@
 extern crate proc_macro;
-use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
+use crate::helpers::{process_fn_name, process_impl_into, process_sorting, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -28,6 +28,8 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl().clone();
     let (maybe_into, entrypoint_msg_type, type_generics) =
         process_impl_into(&input.attrs, name, input.generics);
+
+    let is_attributes_sorted = process_sorting(&input.attrs);
 
     let variants = input.variants;
 
@@ -78,8 +80,10 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 )
             },
             Fields::Named(variant_fields) => {
-                // sort fields on field name
-                LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                if is_attributes_sorted{
+                    // sort fields on field name
+                    LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                }
 
                 // remove attributes from fields
                 variant_fields.named.iter_mut().for_each(|f| f.attrs = vec![]);
