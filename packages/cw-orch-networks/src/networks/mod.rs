@@ -20,7 +20,7 @@ pub use kujira::HARPOON_4;
 pub use migaloo::{LOCAL_MIGALOO, MIGALOO_1, NARWHAL_1};
 pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_5};
-pub use sei::{ATLANTIC_2, LOCAL_SEI, SEI_DEVNET_3};
+pub use sei::{ATLANTIC_2, LOCAL_SEI, PACIFIC_1, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
@@ -53,6 +53,10 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         LOCAL_MIGALOO,
         LOCAL_NEUTRON,
         MIGALOO_1,
+        LOCAL_SEI,
+        SEI_DEVNET_3,
+        ATLANTIC_2,
+        PACIFIC_1,
     ];
     for net in networks {
         if net.chain_id == net_id {

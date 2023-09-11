@@ -79,4 +79,12 @@ pub trait TxHandler: ChainState + Clone {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
+
+    /// Clones the chain with a different sender.
+    /// Usually used to call a contract as a different sender.
+    fn call_as(&self, sender: &<Self as TxHandler>::Sender) -> Self {
+        let mut chain = self.clone();
+        chain.set_sender(sender.clone());
+        chain
+    }
 }

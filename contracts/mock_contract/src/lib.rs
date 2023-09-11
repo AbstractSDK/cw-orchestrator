@@ -1,5 +1,8 @@
 mod custom_resp;
 
+#[cfg(feature = "interface")]
+mod msg_tests;
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
