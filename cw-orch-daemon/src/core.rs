@@ -143,8 +143,7 @@ impl DaemonAsync {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, DaemonError> {
-        let sender = &self.sender;
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(sender.channel());
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
         let resp = client
             .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
                 address: contract_address.to_string(),

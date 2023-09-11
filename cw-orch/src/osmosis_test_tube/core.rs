@@ -1,11 +1,16 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
+use cw_orch_traits::stargate::Stargate;
+
+use cosmrs::proto::traits::Message;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
+use osmosis_test_tube::ExecuteResponse;
 use osmosis_test_tube::Gamm;
 use osmosis_test_tube::Module;
+use osmosis_test_tube::Runner;
 use osmosis_test_tube::RunnerError;
 use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
@@ -312,6 +317,25 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             time: Timestamp::from_nanos(
                 self.app.borrow().get_block_time_nanos().try_into().unwrap(),
             ),
+        })
+    }
+}
+
+impl Stargate for OsmosisTestTube {
+    fn commit_any<R: Message + Default>(
+        &self,
+        msgs: Vec<cosmrs::Any>,
+        _memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        let tx_response: ExecuteResponse<R> = self
+            .app
+            .borrow()
+            .execute_multiple_raw(msgs, &self.sender)
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary(tx_response.raw_data)),
+            events: tx_response.events,
         })
     }
 }

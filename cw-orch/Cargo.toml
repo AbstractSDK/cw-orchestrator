@@ -75,6 +75,7 @@ osmosis-test-tube = { workspace = true, optional = true }
 osmosis-std = { version = "=0.19.1" }
 # Env deps
 cw-orch-core = { workspace = true }
+cw-orch-traits = { workspace = true }
 cw-orch-mock = { workspace = true }
 
 [dev-dependencies]
