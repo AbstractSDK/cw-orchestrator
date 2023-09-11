@@ -1,8 +1,8 @@
-## TODO (+ not tested, snippets should be included in the code directly)
 
 # Starship integration
 
 Starship is a development environment that allows developers to spin up mini cosmos chain ecosystems and especially allows developers to write and execute IBC integration tests. 
+The starship integration into cw-orchestrator is now a paid feature of the software. Contact us @ TODO for more details and pricing ? 
 
 ## Quickstart
 
