@@ -204,8 +204,7 @@ impl TxHandler for Daemon {
     }
 }
 
-impl Stargate for Daemon{
-
+impl Stargate for Daemon {
     fn commit_any<R>(
         &self,
         msgs: Vec<cosmrs::Any>,

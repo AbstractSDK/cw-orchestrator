@@ -1,5 +1,7 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
+use cw_orch_traits::stargate::Stargate;
+
 use cosmrs::proto::traits::Message;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
@@ -319,7 +321,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
-impl Stargate for OsmosisTestTube{
+impl Stargate for OsmosisTestTube {
     fn commit_any<R: Message + Default>(
         &self,
         msgs: Vec<cosmrs::Any>,

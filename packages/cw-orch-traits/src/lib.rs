@@ -3,11 +3,6 @@ use stargate::Stargate;
 
 pub mod stargate;
 
+pub trait FullNode: CwEnv + Stargate {}
 
-
-pub trait FullNode: CwEnv + Stargate{
-    
-}
-
-
-impl<C: CwEnv + Stargate> FullNode for C{}
+impl<C: CwEnv + Stargate> FullNode for C {}
