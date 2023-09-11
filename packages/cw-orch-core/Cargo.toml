@@ -1,0 +1,43 @@
+[package]
+name = "cw-orch-core"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
+keywords = ["cosmwasm", "blockchain"]
+categories = ["development-tools"]
+readme = "README.md"
+
+exclude = [".env"]
+
+[package.metadata.docs.rs]
+# passes all-features to cargo when building the docs.
+all-features = true
+
+[features]
+default = []
+# enable node-backed tests (ensure Docker is running)
+# run with `cargo test --jobs 1 --features node-tests`
+node-tests = []
+eth = ["dep:snailquote"]
+
+[dependencies]
+thiserror = { workspace = true }
+cosmwasm-std = { workspace = true }
+serde = { workspace = true }
+cw-multi-test = { workspace = true }
+
+log = { workspace = true }
+sha256 = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+
+
+# Ethereum deps
+snailquote = { version = "0.3.1", optional = true }
+
+[dev-dependencies]
+speculoos = { workspace = true }
+anyhow = { workspace = true }
