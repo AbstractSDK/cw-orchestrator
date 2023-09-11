@@ -17,7 +17,7 @@ use std::{
 };
 use tonic::transport::Channel;
 
-pub const CW_ORCH_DEFAULT_FOLDER: &str = ".cw-orchestrator";
+pub const CW_ORCH_DEFAULT_FOLDER: &str = "~/.cw-orchestrator";
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
@@ -56,10 +56,10 @@ impl DaemonState {
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/.cw-orchestrator
         let mut json_file_path = if env_file_path.is_relative() {
-            let home_folder: String = env::var("HOME").unwrap().to_string();
-            PathBuf::from(home_folder)
-                .join(CW_ORCH_DEFAULT_FOLDER)
-                .join(env_file_path)
+            let state_folder =
+                env::var("CW_ORCH_STATE_FOLDER").unwrap_or(CW_ORCH_DEFAULT_FOLDER.to_string());
+
+            PathBuf::from(state_folder).join(env_file_path)
         } else {
             env_file_path
         }
