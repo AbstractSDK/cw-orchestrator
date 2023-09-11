@@ -5,6 +5,7 @@
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
 - Added Sei Network
 - Make the broadcast function public on Sender
+- Added a `call_as` helper on TxHandler Trait
 
 ## v0.15.0
 
