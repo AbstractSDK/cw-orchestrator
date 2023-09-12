@@ -207,7 +207,7 @@ impl TxHandler for Daemon {
 impl Stargate for Daemon {
     fn commit_any<R>(
         &self,
-        msgs: Vec<cosmrs::Any>,
+        msgs: Vec<prost_types::Any>,
         memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle

@@ -1,5 +1,6 @@
-use cosmrs::{proto::traits::Message, Any};
 use cw_orch_core::environment::TxHandler;
+use prost::Message;
+use prost_types::Any;
 
 /// Alows the execution of stargate like messages on cw-orch environments
 pub trait Stargate: TxHandler {
