@@ -101,7 +101,7 @@ jobs:
         with:
           rust-version: stable
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Generate Cargo.lock
         run: |
           cargo fetch --verbose
