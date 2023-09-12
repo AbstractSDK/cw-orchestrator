@@ -1,6 +1,7 @@
 # cw-orchestrator Changelog
 
 ## v0.16.2 [12th September 2023]
+
 - Fix finding state file using cw-orch-daemon
 
 ## v0.16.1 [12th September 2023]
