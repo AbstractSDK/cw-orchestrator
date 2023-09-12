@@ -326,14 +326,6 @@ impl Stargate for OsmosisTestTube {
         msgs: Vec<prost_types::Any>,
         _memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
-        let msgs = msgs
-            .iter()
-            .map(|m| cosmrs::Any {
-                type_url: m.type_url.clone(),
-                value: m.value.clone(),
-            })
-            .collect();
-
         let tx_response: ExecuteResponse<R> = self
             .app
             .borrow()
