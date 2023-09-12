@@ -52,7 +52,7 @@ impl DaemonState {
 
         // check if STATE_FILE en var is configured, default to state.json
         let env_file_path =
-            PathBuf::from(env::var("STATE_FILE").unwrap_or("./state.json".to_string()));
+            PathBuf::from(env::var("STATE_FILE").unwrap_or("state.json".to_string()));
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/.cw-orchestrator
         let mut json_file_path = if env_file_path.is_relative() {
