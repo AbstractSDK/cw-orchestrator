@@ -1,6 +1,11 @@
 # cw-orchestrator Changelog
 
-## v0.16.0
+## v0.16.1 [12th September 2023]
+
+- Fix dependencies on the traits::Stargate trait and on the osmosis-test-tube implementation
+- Made the chain_id mandatory in `Mock::with_chain_id`
+
+## v0.16.0 [11th September 2023]
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
 - Added Sei Network
