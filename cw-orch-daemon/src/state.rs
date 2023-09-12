@@ -57,7 +57,8 @@ impl DaemonState {
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = if env_file_path.is_relative() {
             let home_folder = env::var("HOME").unwrap();
-            let state_folder = env::var("CW_ORCH_STATE_FOLDER").unwrap_or(CW_ORCH_DEFAULT_FOLDER.to_string());
+            let state_folder =
+                env::var("CW_ORCH_STATE_FOLDER").unwrap_or(CW_ORCH_DEFAULT_FOLDER.to_string());
 
             let absolute_state_folder = PathBuf::from(home_folder).join(state_folder);
 
