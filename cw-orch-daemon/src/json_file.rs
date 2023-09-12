@@ -5,12 +5,13 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
     // open file pointer set read/write permissions to true
     // create it if it does not exists
     // dont truncate it
+
     let file = OpenOptions::new()
         .create(true)
         .read(true)
         .write(true)
         .truncate(false)
-        .open(filename)
+        .open(filename.clone())
         .unwrap();
 
     // return empty json object if file is empty
