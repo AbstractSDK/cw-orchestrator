@@ -152,7 +152,7 @@ pub trait CwOrchMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Cha
 impl<T: MigratableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchMigrate<Chain> for T {}
 
 /// Trait to implement on the contract to enable it to be uploaded
-/// Should return [`WasmPath`](crate::prelude::WasmPath) for `Chain = Daemon`
+/// Should return [`WasmPath`](crate::contract::interface_traits::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
     /// Return an object that can be used to upload the contract to a WASM-supported environment.
