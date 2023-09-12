@@ -131,14 +131,12 @@ impl Mock<MockState> {
         Mock::new_custom(sender, MockState::new())
     }
 
-    pub fn with_chain_id(sender: &Addr, chain_id: Option<&str>) -> Self {
+    pub fn with_chain_id(sender: &Addr, chain_id: &str) -> Self {
         let chain = Mock::new_custom(sender, MockState::new());
-        if let Some(chain_id) = chain_id {
-            chain
-                .app
-                .borrow_mut()
-                .update_block(|b| b.chain_id = chain_id.to_string());
-        }
+        chain
+            .app
+            .borrow_mut()
+            .update_block(|b| b.chain_id = chain_id.to_string());
 
         chain
     }
