@@ -2,7 +2,6 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cw_orch_traits::stargate::Stargate;
 
-use cosmrs::proto::traits::Message;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use osmosis_test_tube::Account;
@@ -322,11 +321,19 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
 }
 
 impl Stargate for OsmosisTestTube {
-    fn commit_any<R: Message + Default>(
+    fn commit_any<R: prost::Message + Default>(
         &self,
-        msgs: Vec<cosmrs::Any>,
+        msgs: Vec<prost_types::Any>,
         _memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
+        let msgs = msgs
+            .iter()
+            .map(|m| cosmrs::Any {
+                type_url: m.type_url.clone(),
+                value: m.value.clone(),
+            })
+            .collect();
+
         let tx_response: ExecuteResponse<R> = self
             .app
             .borrow()

@@ -207,9 +207,17 @@ impl TxHandler for Daemon {
 impl Stargate for Daemon {
     fn commit_any<R>(
         &self,
-        msgs: Vec<cosmrs::Any>,
+        msgs: Vec<prost_types::Any>,
         memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
+        let msgs = msgs
+            .iter()
+            .map(|m| cosmrs::Any {
+                type_url: m.type_url.clone(),
+                value: m.value.clone(),
+            })
+            .collect();
+
         self.rt_handle
             .block_on(self.wallet().commit_tx_any(msgs, memo))
     }

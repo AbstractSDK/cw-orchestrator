@@ -82,6 +82,8 @@ osmosis-std = { version = "=0.19.1" }
 cw-orch-core = { workspace = true }
 cw-orch-traits = { workspace = true }
 cw-orch-mock = { workspace = true }
+prost-types = "0.11.0"
+prost = "0.11.0"
 
 [dev-dependencies]
 cw-orch = { features = ["daemon"], path = "." }

@@ -11,7 +11,7 @@ categories = ["development-tools"]
 readme = "README.md"
 
 
-
 [dependencies]
-cosmrs = "0.14.0"
 cw-orch-core = { workspace = true }
+prost-types = "0.11.0"
+prost = "0.11.0"
