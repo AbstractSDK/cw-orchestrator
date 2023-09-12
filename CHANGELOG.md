@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## v0.16.0
 
 - Ability to use the ExecuteFns and QueryFns traits on Units and Unnamed enum variants by @Kayanski
 - Added Sei Network
@@ -16,6 +16,8 @@
 - Added a trait to be able to commit any transaction to chain (Protobuf any type)
 - Added min gas and average gas utilization for computing the tx fee
 - Added Install Readme 
+- Change the state file default location for relative paths `./` --> `~/.cw-orchestrator`
+- Added env variables for customizing experience
 
 ## v0.15.0
 

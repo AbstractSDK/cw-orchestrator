@@ -20,7 +20,8 @@ fi
 BASE_PACKAGES="
   cw-orch-contract-derive 
   cw-orch-fns-derive
-  cw-orch-core  
+  cw-orch-core
+  cw-orch-traits  
   cw-orch-mock 
   cw-orch-networks  
 "

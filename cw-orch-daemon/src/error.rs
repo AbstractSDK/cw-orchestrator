@@ -12,6 +12,8 @@ pub enum DaemonError {
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
+    ParseFloatError(#[from] std::num::ParseFloatError),
+    #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
     #[error(transparent)]
     Secp256k1(#[from] ::secp256k1::Error),
