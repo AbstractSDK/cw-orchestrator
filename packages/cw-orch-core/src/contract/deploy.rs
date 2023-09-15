@@ -71,51 +71,61 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     }
 
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
-    fn set_contracts_state(&mut self) {
+    /// If a state is provided, it is used for all contracts, otherwise, the state is loaded from the crate's state file.
+    fn set_contracts_state(&mut self, custom_state: Option<Value>) {
+        let state;
+
         let state_file = self.deployed_state_file_path();
-        let all_contracts = self.get_contracts_mut();
-        if let Some(state_file) = state_file {
+        if let Some(custom_state) = custom_state {
+            state = custom_state;
+        } else if let Some(state_file) = state_file {
             if let Ok(module_state_json) = read_json(&state_file) {
-                for contract in all_contracts {
-                    // We set the code_id and/or address of the contract in question if they are not present already
-                    let deploy_details = contract.get_chain().state().deploy_details();
-                    // We load the file
-                    // We try to get the code_id for the contract
-                    if contract.code_id().is_err() {
-                        let code_id = module_state_json
-                            .get(deploy_details.chain_name.clone())
-                            .unwrap_or(&Value::Null)
-                            .get(deploy_details.chain_id.to_string())
-                            .unwrap_or(&Value::Null)
-                            .get("code_ids")
-                            .unwrap_or(&Value::Null)
-                            .get(contract.id());
+                state = module_state_json;
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
 
-                        if let Some(code_id) = code_id {
-                            if code_id.is_u64() {
-                                contract.set_default_code_id(code_id.as_u64().unwrap())
-                            }
-                        }
+        let all_contracts = self.get_contracts_mut();
+
+        for contract in all_contracts {
+            // We set the code_id and/or address of the contract in question if they are not present already
+            let deploy_details = contract.get_chain().state().deploy_details();
+            // We load the file
+            // We try to get the code_id for the contract
+            if contract.code_id().is_err() {
+                let code_id = state
+                    .get(deploy_details.chain_name.clone())
+                    .unwrap_or(&Value::Null)
+                    .get(deploy_details.chain_id.to_string())
+                    .unwrap_or(&Value::Null)
+                    .get("code_ids")
+                    .unwrap_or(&Value::Null)
+                    .get(contract.id());
+
+                if let Some(code_id) = code_id {
+                    if code_id.is_u64() {
+                        contract.set_default_code_id(code_id.as_u64().unwrap())
                     }
-                    // We try to get the address for the contract
-                    if contract.address().is_err() {
-                        // Try and get the code id from file
-                        let address = module_state_json
-                            .get(deploy_details.chain_name.clone())
-                            .unwrap_or(&Value::Null)
-                            .get(deploy_details.chain_id.to_string())
-                            .unwrap_or(&Value::Null)
-                            .get(deploy_details.deployment_id)
-                            .unwrap_or(&Value::Null)
-                            .get(contract.id());
+                }
+            }
+            // We try to get the address for the contract
+            if contract.address().is_err() {
+                // Try and get the code id from file
+                let address = state
+                    .get(deploy_details.chain_name.clone())
+                    .unwrap_or(&Value::Null)
+                    .get(deploy_details.chain_id.to_string())
+                    .unwrap_or(&Value::Null)
+                    .get(deploy_details.deployment_id)
+                    .unwrap_or(&Value::Null)
+                    .get(contract.id());
 
-                        if let Some(address) = address {
-                            if address.is_string() {
-                                contract.set_default_address(&Addr::unchecked(
-                                    address.as_str().unwrap(),
-                                ))
-                            }
-                        }
+                if let Some(address) = address {
+                    if address.is_string() {
+                        contract.set_default_address(&Addr::unchecked(address.as_str().unwrap()))
                     }
                 }
             }
