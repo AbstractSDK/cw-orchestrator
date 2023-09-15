@@ -4,14 +4,17 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::common::CliCoins;
+use crate::{commands::transaction::CosmosContext, types::CliCoins};
 
-use super::{msg_type, CwActionContext};
+use super::super::msg_type;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
-#[interactive_clap(input_context = CwActionContext)]
+#[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = ExecuteWasmOutput)]
-pub struct ExecuteCommands {
+/// Execute contract method
+pub struct ExecuteContractCommands {
+    /// Contract address
+    contract_addr: String,
     #[interactive_clap(value_enum)]
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
@@ -26,14 +29,14 @@ pub struct ExecuteCommands {
     signer: String,
 }
 
-impl ExecuteCommands {
+impl ExecuteContractCommands {
     fn input_msg_type(
-        _context: &CwActionContext,
+        _context: &CosmosContext,
     ) -> color_eyre::eyre::Result<Option<msg_type::MsgType>> {
         msg_type::input_msg_type()
     }
 
-    fn input_coins(_context: &CwActionContext) -> color_eyre::eyre::Result<Option<CliCoins>> {
+    fn input_coins(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<CliCoins>> {
         crate::common::parse_coins()
             .map(|c| Some(CliCoins(c)))
             .wrap_err("Bad coins input")
@@ -43,8 +46,8 @@ pub struct ExecuteWasmOutput;
 
 impl ExecuteWasmOutput {
     fn from_previous_context(
-        previous_context: CwActionContext,
-        scope:&<ExecuteCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
+        previous_context: CosmosContext,
+        scope:&<ExecuteContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         // TODO: non-panic parse_network
         let chain = parse_network(&previous_context.chain_id);
@@ -62,7 +65,7 @@ impl ExecuteWasmOutput {
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
                 sender: daemon.sender.pub_addr()?,
-                contract: previous_context.contract_addr.parse()?,
+                contract: scope.contract_addr.parse()?,
                 msg,
                 funds: coins,
             };

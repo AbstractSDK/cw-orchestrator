@@ -59,10 +59,7 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
     }
 }
 
-pub fn msg_bytes(
-    message: String,
-    msg_type: MsgType,
-) -> color_eyre::eyre::Result<Vec<u8>> {
+pub fn msg_bytes(message: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
     match msg_type {
         MsgType::JsonMsg => {
             let data_json =
@@ -70,5 +67,23 @@ pub fn msg_bytes(
             Ok(data_json.to_string().into_bytes())
         }
         MsgType::Base64Msg => Ok(crate::common::B64.decode(&message)?),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn check_message() {
+        let b_64_msg = msg_bytes(
+            "eyJsYXRlc3RfY29udHJhY3RzIjp7fX0=".to_owned(),
+            MsgType::Base64Msg,
+        )
+        .unwrap();
+        let json_msg =
+            msg_bytes(r#"{"latest_contracts":{}}"#.to_owned(), MsgType::JsonMsg).unwrap();
+
+        assert_eq!(b_64_msg, json_msg);
     }
 }

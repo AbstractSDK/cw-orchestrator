@@ -31,3 +31,6 @@ serde_json = "1.0.79"
 serde = { workspace = true }
 log = "0.4.14"
 shell-words = "1.0.0"
+
+tonic = "0.10.0"
+derive_more = "0.99"
