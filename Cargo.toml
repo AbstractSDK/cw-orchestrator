@@ -21,9 +21,9 @@ osmosis-test-tube = { version = "19.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.16.0" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.16.3" }
 cw-orch-core = { path = "packages/cw-orch-core", version = "0.16.0" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.16.0" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.16.2" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.16.0" }
 cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.15.0" }
 cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.16.0" }
