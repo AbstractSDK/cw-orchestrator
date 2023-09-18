@@ -42,7 +42,7 @@ thiserror = { workspace = true }
 # Daemon deps
 sha256 = { workspace = true }
 ibc-relayer-types = { workspace = true }
-prost = { version = "0.11" }
+prost = { version = "0.12" }
 prost-types = "0.11.9"
 bitcoin = { version = "0.30.0" }
 hex = { version = "0.4.3" }
