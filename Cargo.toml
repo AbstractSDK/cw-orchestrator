@@ -12,7 +12,7 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 cw-utils = { version = "1.0.1" }
 cosmwasm-std = { version = "1.1" }
 #cw-multi-test = { version = "0.16.4" }
-cw-multi-test = { package = "abstract-cw-multi-test", git = "https://github.com/AbstractSDK/cw-multi-test/", branch = "update/add-ibc-support" }
+cw-multi-test = { package = "abstract-cw-multi-test", git = "https://github.com/AbstractSDK/cw-multi-test/", branch = "update/add-ibc-support", version="0.16.5" }
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
