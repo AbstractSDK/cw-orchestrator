@@ -4,7 +4,7 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::{format_ident, quote};
-use syn::{visit_mut::VisitMut, DeriveInput, Fields, Ident, parse_quote};
+use syn::{parse_quote, visit_mut::VisitMut, DeriveInput, Fields, Ident};
 
 fn payable(v: &syn::Variant) -> bool {
     for attr in &v.attrs {

@@ -19,9 +19,9 @@ pub enum ExecuteMsg {
     Increment {},
     /// Reset count
     Reset {
-        /// Count value after reset 
-        count: i32
-     },
+        /// Count value after reset
+        count: i32,
+    },
 }
 // ANCHOR_END: exec_msg
 
