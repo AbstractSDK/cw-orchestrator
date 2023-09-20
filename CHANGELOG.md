@@ -4,6 +4,7 @@
 
 - Added automatically derived docs
 - Added gzip support for smaller files sent on-chain
+- Added faster error when broadcast returns a non-0 error code
 
 ## v0.16.3 [19th September 2023]
 
