@@ -1,8 +1,9 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## v0.16.3 [19th September 2023]
 
 - Changed cw-multi-test to an in-house cw-multi-test version
+- Fixed finding state file using cw-orch-daemon, the Home folder is now recognized from "~"
 
 ## v0.16.2 [12th September 2023]
 
