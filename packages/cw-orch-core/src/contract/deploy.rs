@@ -5,8 +5,8 @@ use serde_json::Value;
 use std::fs::File;
 
 use crate::environment::StateInterface;
-use crate::environment::WalletBalanceAssertion;
 use crate::CwEnvError;
+use crate::environment::TxHandler;
 
 use super::interface_traits::ContractInstance;
 
@@ -56,7 +56,7 @@ use super::interface_traits::ContractInstance;
 ///
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
-pub trait Deploy<Chain: WalletBalanceAssertion>: Sized {
+pub trait Deploy<Chain: TxHandler>: Sized {
     /// Error type returned by the deploy functions.  
     type Error: From<CwEnvError>;
     /// Data required to deploy the application.
@@ -80,9 +80,6 @@ pub trait Deploy<Chain: WalletBalanceAssertion>: Sized {
         chain: Chain,
         data: Self::DeployData,
     ) -> Result<Self, Self::Error> {
-        // We verify the deploying wallet has enough funds
-        chain.assert_wallet_balance(Self::GAS_TO_DEPLOY)?;
-
         // if not implemented, just store the application on the chain
         Self::deploy_on(chain, data)
     }

@@ -4,7 +4,7 @@ pub mod modules;
 mod state;
 
 pub use cosmwasm_environment::{
-    CwEnv, TxHandler, TxResponse, WalletBalanceAssertion, WalletBalanceAssertionResult,
+    CwEnv, TxHandler, TxResponse,
 };
 pub use index_response::IndexResponse;
 pub use state::{ChainState, DeployDetails, StateInterface};

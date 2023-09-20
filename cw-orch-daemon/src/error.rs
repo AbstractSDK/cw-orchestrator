@@ -10,6 +10,8 @@ pub enum DaemonError {
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
     #[error(transparent)]
+    StdError(#[from] cosmwasm_std::StdError),
+    #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     IOErr(#[from] ::std::io::Error),

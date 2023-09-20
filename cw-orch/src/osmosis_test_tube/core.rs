@@ -1,25 +1,19 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::coin;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use cw_orch_core::environment::WalletBalanceAssertion;
-use cw_orch_core::environment::WalletBalanceAssertionResult;
 use osmosis_test_tube::Bank;
 use osmosis_test_tube::Gamm;
 use osmosis_test_tube::Module;
 use osmosis_test_tube::RunnerError;
 use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
-use osmosis_test_tube::{Account, FeeSetting};
+use osmosis_test_tube::Account;
 use std::str::FromStr;
 
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
-use osmosis_test_tube::osmosis_std::{
-    cosmwasm_to_proto_coins,
-    types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
-};
+use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{QueryAllBalancesRequest, QueryBalanceRequest};
 
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
@@ -69,7 +63,7 @@ pub struct OsmosisTestTube<S: StateInterface = MockState> {
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
 
-fn map_err(e: RunnerError) -> CwOrchError {
+pub(crate) fn map_err(e: RunnerError) -> CwOrchError {
     CwOrchError::StdErr(e.to_string())
 }
 
@@ -97,29 +91,6 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .init_accounts(&amount, account_n)
             .map_err(map_err)
             .map(|s| s.into_iter().map(Rc::new).collect())
-    }
-
-    /// Creates accounts and sets their balance
-    pub fn bank_send(
-        &self,
-        to: String,
-        amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<AppResponse, CwOrchError> {
-        let send_response = Bank::new(&*self.app.borrow())
-            .send(
-                MsgSend {
-                    from_address: self.sender.address(),
-                    to_address: to,
-                    amount: cosmwasm_to_proto_coins(amount),
-                },
-                &self.sender,
-            )
-            .map_err(map_err)?;
-
-        Ok(AppResponse {
-            data: Some(Binary(send_response.raw_data)),
-            events: send_response.events,
-        })
     }
 
     /// Creates accounts and sets their balance
@@ -319,54 +290,12 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
-impl WalletBalanceAssertion for OsmosisTestTube {
-    fn _assert_wallet_balance(
-        &self,
-        gas: u64,
-    ) -> Result<WalletBalanceAssertionResult, CwOrchError> {
-        let fee = self.sender.fee_setting();
-
-        let fee = match fee {
-            FeeSetting::Auto {
-                gas_price,
-                gas_adjustment,
-            } => coin(
-                (((gas as f64) * gas_adjustment) as u128) * gas_price.amount.u128(),
-                gas_price.denom.clone(),
-            ),
-            FeeSetting::Custom { amount, .. } => amount.clone(),
-        };
-
-        // Will be simplified when the bank trait will exist
-        let balance = Bank::new(&*self.app.borrow())
-            .query_balance(&QueryBalanceRequest {
-                address: self.sender().to_string(),
-                denom: fee.denom.clone(),
-            })
-            .unwrap()
-            .balance
-            .map(|b| coin(b.amount.parse().unwrap(), b.denom))
-            .unwrap_or(coin(0, fee.denom.clone()));
-
-        log::debug!(
-            "Checking balance {} on chain {}, address {}. Expecting {}",
-            balance.amount,
-            "osmosis test tube",
-            self.sender(),
-            fee
-        );
-
-        Ok(WalletBalanceAssertionResult {
-            expected: fee.clone(),
-            current: balance.clone(),
-            assertion: balance.amount >= fee.amount,
-        })
-    }
-}
 
 #[cfg(test)]
 mod test {
     use cosmwasm_std::coins;
+    use cw_orch_core::environment::modules::fee_estimation::WalletBalanceAssertion;
+    use osmosis_std::{cosmwasm_to_proto_coins, types::cosmos::bank::v1beta1::MsgSend};
 
     use super::*;
 
@@ -391,10 +320,10 @@ mod test {
 
         // Now we have a new sender and they don't have enough funds for a transfer
         app.set_sender(app.init_account(coins(1, "uosmo"))?);
-        assert!(!app._assert_wallet_balance(gas_used).unwrap().assertion);
+        assert!(!app._wallet_balance_assertion(gas_used).unwrap().assertion);
 
         app.set_sender(app.init_account(coins(100_000_000_000, "uosmo"))?);
-        assert!(app._assert_wallet_balance(gas_used).unwrap().assertion);
+        assert!(app._wallet_balance_assertion(gas_used).unwrap().assertion);
 
         Ok(())
     }
