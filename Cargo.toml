@@ -12,7 +12,7 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 cw-utils = { version = "1.0.1" }
 cosmwasm-std = { version = "1.1" }
 #cw-multi-test = { version = "0.16.4" }
-cw-multi-test = { package = "abstract-cw-multi-test", git = "https://github.com/AbstractSDK/cw-multi-test/", branch = "update/add-ibc-support" }
+cw-multi-test = { package = "abstract-cw-multi-test", git = "https://github.com/AbstractSDK/cw-multi-test/", branch = "update/add-ibc-support", version = "0.16.5" }
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
@@ -21,10 +21,10 @@ osmosis-test-tube = { version = "19.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.16.0" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.16.3" }
 cw-orch-core = { path = "packages/cw-orch-core", version = "0.16.0" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.16.0" }
-cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.16.0" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.16.2" }
+cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.16.2" }
 cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.15.0" }
 cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.16.0" }
 cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.16.0" }
