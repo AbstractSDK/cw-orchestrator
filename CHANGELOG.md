@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- Added possibility to not panic in parse network by @Buckram123
+
 ## v0.16.4 [20th September 2023]
 
 - Added automatically derived docs
