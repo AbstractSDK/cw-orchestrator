@@ -1,6 +1,6 @@
 //! Transactional traits for execution environments.
 
-use super::{ChainState, IndexResponse};
+use super::{modules::Bank, ChainState, IndexResponse};
 use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
 use cosmwasm_std::{Addr, BlockInfo, Coin};
 use dialoguer::Confirm;
