@@ -1,7 +1,10 @@
 use crate::{
     networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
-    tx_broadcaster::{account_sequence_strategy, insufficient_fee_strategy, TxBroadcaster},
+    tx_broadcaster::{
+        account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
+        TxBroadcaster,
+    },
 };
 
 use super::{
@@ -189,16 +192,7 @@ impl Sender<All> {
             .find_tx(tx_response.txhash)
             .await?;
 
-        // if tx result != 0 then the tx failed, so we return an error
-        // if tx result == 0 then the tx succeeded, so we return the tx response
-        if resp.code == 0 {
-            Ok(resp)
-        } else {
-            Err(DaemonError::TxFailed {
-                code: resp.code,
-                reason: resp.raw_log,
-            })
-        }
+        assert_broadcast_code_cosm_response(resp)
     }
 
     pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
