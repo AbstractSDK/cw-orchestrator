@@ -12,7 +12,7 @@ const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foa
 pub fn main() {
     // There are two types of daemon, sync and async. Sync daemons can be used is generic code. Async daemons can be used
     // in async code (e.g. tokio), which enables multi-threaded and non-blocking code.
-    std::env::set_var("TEST_MNEMONIC", LOCAL_MNEMONIC);
+    std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
     env_logger::init();
 
     // ANCHOR: daemon_creation
@@ -22,7 +22,7 @@ pub fn main() {
     // We can now create a daemon. This daemon will be used to interact with the chain.
     let daemon = Daemon::builder()
         // set the network to use
-        .chain(cw_orch::daemon::networks::PISCO_1) // chain parameter
+        .chain(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
         .handle(runtime.handle()) // handler parameter
         .build()
         .unwrap();
