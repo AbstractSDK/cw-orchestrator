@@ -1,5 +1,10 @@
 # cw-orchestrator Changelog
 
+## v0.16.4 [20th September 2023]
+
+- Added automatically derived docs
+- Added gzip support for smaller files sent on-chain
+
 ## v0.16.3 [19th September 2023]
 
 - Changed cw-multi-test to an in-house cw-multi-test version
