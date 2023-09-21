@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- Added stargate feature to cw-multi-test
+
 ## v0.16.4 [20th September 2023]
 
 - Added automatically derived docs
