@@ -3,6 +3,8 @@
 ## Unpublished
 
 - Changed cw-multi-test to an in-house cw-multi-test version
+- Added `Deploy` to prelude
+- Add ability to provide custom state in `Deploy::set_contracts_state`
 
 ## v0.16.2 [12th September 2023]
 
