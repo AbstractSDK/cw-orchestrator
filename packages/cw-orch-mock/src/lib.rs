@@ -2,7 +2,7 @@
 //! It has an associated state that stores deployment information for easy retrieval and contract interactions.
 
 // Export our fork
-extern crate cw_multi_test;
+pub extern crate cw_multi_test;
 
 mod core;
 mod state;
