@@ -17,10 +17,16 @@
   - [Cw Multi Test](./integrations/cw-multi-test.md)
   - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
 
+- [IBC](./interchain/index.md)
+  - [Quick Start](./interchain/quick-start.md)
+  - [Integrations](./interchain/integrations/index.md)
+    - [Daemon (Live Chains)](./interchain/integrations/starship.md)
+    - [Cw Multi Test](./interchain/integrations/mock.md)
+
 - [Workspace](./workspace/index.md)
   - [Structure]()
   - [Project Wrapper]()
-  - [Colloboration]()
+  - [Collaboration]()
 
 - [Supported Chains](./chains/index.md)
   - [Archway](./chains/archway.md)
