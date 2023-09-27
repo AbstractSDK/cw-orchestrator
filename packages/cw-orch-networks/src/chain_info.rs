@@ -57,8 +57,14 @@ pub struct ChainInfo<'a> {
     pub kind: ChainKind,
 }
 
+impl PartialEq for ChainInfo<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.chain_id == other.chain_id
+    }
+}
+
 /// Information about the underlying network, used for key derivation
-#[derive(Clone, Debug, Serialize, Default)]
+#[derive(Clone, Debug, Serialize, Default, PartialEq, Eq)]
 pub struct NetworkInfo<'a> {
     /// network identifier (ex. juno, terra, osmosis, etc)
     pub id: &'a str,
