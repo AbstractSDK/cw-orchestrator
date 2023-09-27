@@ -20,7 +20,7 @@
 - [IBC](./interchain/index.md)
   - [Quick Start](./interchain/quick-start.md)
   - [Integrations](./interchain/integrations/index.md)
-    - [Daemon (Live Chains)](./interchain/integrations/starship.md)
+    - [Daemon (Live Chains)](./interchain/integrations/daemon.md)
     - [Cw Multi Test](./interchain/integrations/mock.md)
 
 - [Workspace](./workspace/index.md)

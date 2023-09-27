@@ -5,7 +5,7 @@
 ### Creating the environment
 
 In order to interact with your environment using IBC capabilities, you first need to create an interchain structure.
-In this guide, we will create a mock environment for local testing. [Click here, if you want to interact with actual nodes](#with-actual-cosmos-sdk-nodes).
+In this guide, we will create a mock environment for local testing. [↓Click here, if you want to interact with actual nodes](#with-actual-cosmos-sdk-nodes).
 
 
 With mock chains, you can create a mock environment simply by specifying chains ids and sender addresses.
@@ -17,7 +17,7 @@ For this guide, we will create 2 chains, `juno` and `osmosis`, with the same add
 
 ### Interacting with the environment
 
-Now, we will work with InterChain Accounts. There is a [simple implementation of the ICA protocol on Github](https://github.com/confio/cw-ibc-demo), and we will use that application with a few simplifications for brevity.
+Now, we will work with interchain accounts (ICA). There is a [simple implementation of the ICA protocol on Github](https://github.com/confio/cw-ibc-demo), and we will use that application with a few simplifications for brevity.
 
 In this protocol, we have 2 smart-contracts that are able to create a connection between them. 
 The `client` will send IBC messages to the `host` that in turn will execute the messages on its chain. 
@@ -35,15 +35,23 @@ client.instantiate(&Empty{}, None, None)?;
 host.instantiate(&Empty{}, None, None)?;
 
 ```
-The Client and Host structures here are [cw-orch Contracts](../single_contract/index.md) with registered ibc endpoints. 
+The `Client` and `Host` structures here are [cw-orch Contracts](../single_contract/interfaces.md) with registered ibc endpoints. 
 
 <details>
   <summary><strong>Client contract definition</strong> (Click to get the full code)</summary>
 
 ```rust
+#[interface(
+    simple_ica_controller::msg::InstantiateMsg,
+    simple_ica_controller::msg::ExecuteMsg,
+    simple_ica_controller::msg::QueryMsg,
+    Empty
+)]
+struct Client;
+
 impl<Chain: CwEnv> Uploadable for Client<Chain> {
     // No wasm needed for this example
-    // You will need to get the contract wasm of the contracts to be able to interact with actual Cosmos SDK nodes
+    // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
     fn wasm(&self) -> WasmPath {
         let wasm_path = format!("No wasm");
         WasmPath::new(wasm_path).unwrap()
@@ -74,9 +82,22 @@ impl<Chain: CwEnv> Uploadable for Client<Chain> {
   <summary><strong>Host contract definition</strong> (Click to get the full code)</summary>
 
 ```rust
+// This is used because the simple_ica_host contract doesn't have an execute endpoint defined 
+pub fn host_execute(_: DepsMut, _: Env, _: MessageInfo, _: Empty) -> StdResult<Response> {
+    Err(StdError::generic_err("Execute not implemented for host"))
+}
+
+#[interface(
+    simple_ica_host::msg::InstantiateMsg,
+    Empty,
+    simple_ica_host::msg::QueryMsg,
+    Empty
+)]
+struct Host;
+
 impl<Chain: CwEnv> Uploadable for Host<Chain> {
     // No wasm needed for this example
-    // You will need to get the contract wasm of the contracts to be able to interact with actual Cosmos SDK nodes
+    // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
     fn wasm(&self) -> WasmPath {
         let wasm_path = format!("No wasm");
         WasmPath::new(wasm_path).unwrap()
@@ -104,64 +125,65 @@ impl<Chain: CwEnv> Uploadable for Host<Chain> {
 ```  
 </details>
 
-Then, we can create a channel between them : 
+Then, we can create an IBC channel between the two contracts : 
 
 ```rust
 let channel_receipt = interchain.create_contract_channel(&client, &host, None, "simple-ica-v2").await?;
 
-// We get the channel id, which is necessary for ICA remote execution
+// After channel creation is complete, we get the channel id, which is necessary for ICA remote execution
 let juno_channel = channel.0.get_chain("juno")?.channel.unwrap();
-
 ```
-This step will also await until all the packets sent during channel creation are relayed. In our case for instance, a `{"who_am_i":{}}` packet is sent out right after channel creation and allows to identify the calling chain. 
+
+This step will also await until all the packets sent during channel creation are relayed. In the case of the ICA contracts, a [`{"who_am_i":{}}`](https://github.com/confio/cw-ibc-demo/blob/main/contracts/simple-ica-controller/src/ibc.rs#L54) packet is sent out right after channel creation and allows to identify the calling chain. 
 
 
 Finally, the two contracts can interact like so :
 ```rust
-    /// This broadcasts a transaction on the client
-    /// It sends an IBC packet to the host
-    let tx_response = client.send_msgs(
-        juno_channel.to_string(), 
-        vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
-                amount: vec![cosmwasm_std::coin(100u128, "uosmo")],
-        })],
-        None
-    )?;
+/// This broadcasts a transaction on the client
+/// It sends an IBC packet to the host
+let tx_response = client.send_msgs(
+    juno_channel.to_string(), 
+    vec![CosmosMsg::Bank(cosmwasm_std::BankMsg::Burn {
+            amount: vec![cosmwasm_std::coin(100u128, "uosmo")],
+    })],
+    None
+)?;
 ```
 
 Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This is done through : 
 ```rust
-    let packet_lifetime: IbcTxAnalysis<Daemon> = interchain.wait_ibc(
-        "juno",
-        tx_response
-    ).await?;
+let packet_lifetime = interchain.wait_ibc("juno", tx_response).await?;
 ```
 
-After that step, we make sure that the packets was relayed correctly
+After that step, we make sure that the packets were relayed correctly
 ```rust 
-    if let IbcPacketOutcome::Success{
-        ack,
-        ..
-    } = packet_lifetime.packets[0].outcome{
-        if let IbcPacketAckDecode::Success(_) = ack{
-            /// Packet has been successfully acknowledged and decoded, the transaction has gone through correctly
-        }
-        /// Else, there was a decode error (maybe you are using the wrong acknowledgement format)
-    }else{
-        /// Else the packet timed-out, you may have a relayer error or something is wrong in your application
-    };
+// For testing a successful outcome of the first packet sent out in the tx, you can use : 
+if let IbcPacketOutcome::Success{
+    ack,
+    ..
+} = packet_lifetime.packets[0].outcome{
+    if let IbcPacketAckDecode::Success(_) = ack{
+        /// Packet has been successfully acknowledged and decoded, the transaction has gone through correctly
+    }
+    /// Else, there was a decode error (maybe you are using the wrong acknowledgement format)
+}else{
+    /// Else the packet timed-out, you may have a relayer error or something is wrong in your application
+};
 
-    // OR you can use a helper, that will only error if a packet failed
-    assert_packets_success_decode(packet_lifetime)?;
-
+// OR you can use a helper, that will only error if one of the packets being relayed failed
+assert_packets_success_decode(packet_lifetime)?;
 ```
 
 If it was relayed correctly, we can proceed with our application.
 
 
+With this simple guide, you should be able to test and debug your IBC application in no time. 
+[Learn more about the implementation and details of the IBC-enabled local testing environment](./integrations/mock.md).
+
+
 ## With actual Cosmos SDK Nodes
 
-You can also create an interchain environment that interacts with actual running chains. Keep in mind in that case that this type of environment doesn't allow channel creation. This step will have to be done manually with external tooling. If you're looking to test your application in a full local test setup, please turn to [Starship](#with-starship)
+You can also create an interchain environment that interacts with actual running chains. Keep in mind in that case that this type of environment doesn't allow channel creation. This step will have to be done manually with external tooling. If you're looking to test your application in a full local test setup, please turn to [↓Starship](#with-starship)
 
 
 ```rust
@@ -194,7 +216,9 @@ let interchain = DaemonInterchainEnv::from_daemons(
 // In case one wants to analyze packets between more chains, you just need to add them to the interchain object
 ```
 
-With this setup, you can now resume this quick-start guide from [Interacting with the environment](#interacting-with-the-environment)
+With this setup, you can now resume this quick-start guide from [↑Interacting with the environment](#interacting-with-the-environment).
+
+You can also [learn more about the interchain daemon implementation](./integrations/daemon.md).
 
 ## With Starship
 
@@ -218,4 +242,6 @@ let interchain = starship.interchain_env();
 ```
 
 This snippet will identify the local Starship setup and initialize all helpers and information needed for interaction using cw-orch. 
-With this setup, you can now resume this quick-start guide from [Interacting with the environment](#interacting-with-the-environment)
+With this setup, you can now resume this quick-start guide from [↑Interacting with the environment](#interacting-with-the-environment)
+
+You can also [learn more about the interchain daemon implementation](./integrations/daemon.md).
