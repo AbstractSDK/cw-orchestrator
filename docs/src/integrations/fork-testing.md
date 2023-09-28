@@ -48,58 +48,52 @@ Let's take an example for clarity. Say I want to deposit some funds into Anchor 
 
 1. The user needs funds to interact with the protocol. A `fork-helper` allows to increase the balance of an address.
    ```rust
-    let sender = "terra1..."; // Sender address. Can also be an actual account with funds.
+    // Sender address. Can also be an actual account with funds.
+    // Could also be app.sender() for creating an address automatically.
+    let sender = "terra1..."; 
+    let sender_addr = Addr::unchecked(sender);
+    app.set_sender(&sender_addr);
     // We add some funds specific for our application
-    app.init_modules(|router, _, storage| {
-        router.bank
-            .init_balance(storage, &Addr::unchecked(sender), coins(10_000_000, "uusd"))
-    })?;
+    app.set_balance(&sender_addr, coins(10_000_000, "uusd"))?;
    ```
+
 2. The user calls the following `ExecuteMsg` on the actual mainnet Anchor Moneymarket Contract :
     ```rust
-    let market = "terra1..."; // Actual contract address of the Anchor deployment.
-    app.execute_contract(
-            Addr::unchecked(sender),
-            Addr::unchecked(market),
-            &ExecuteMsg::DepositStable {},
-            &coins(10_000, "uusd"),
-        )?;
+    let market_addr = Addr::unchecked("terra1..."); // Actual contract address of the Anchor deployment.
+    let market = AnchorMarket::new("anchor:money-market", app.clone());
+    market.set_address(&market_addr);
+    market.deposit_stable(&coins(10_000, "uusd"))?;
     ```
-1. During message execution, the contract code will be queried from the chain and executed locally. During contract execution, all the necessary storage values will also be retrieved as the programs needs them. No local storage is used until something is written to it [^storage_cache].
-2. Even in the case of multiple chained contract calls, storage is modified accordingly and usable by contracts. 
-3. After message execution, queries and states are modified according the contract execution. After depositing, it is now possible to query your stake or even to withdraw your funds : 
+3. During the whole message execution, when storage is queried, if it doesn't exist locally it will be queried from the chain. This is true for storage during contract execution but this is also true for querying the actual Wasm Code when executing/querying a contract. No local storage is used until something is written to it [^storage_cache].
+4. Even in the case of multiple chained contract calls, storage is modified accordingly and usable by contracts. 
+5. After message execution, queries and states are modified according the contract execution. After depositing, it is now possible to query your stake or even to withdraw your funds : 
     ```rust
     let a_currency = "terra1..."; // The contract address for the staking receipt
 
     /// This should give a non-zero value, even if no change occurred on the actual mainnet state
     let response: BalanceResponse = app
-        .wrap()
-        .query_wasm_smart(
-            a_currency,
-            &Cw20QueryMsg::Balance {
+        .query(&Cw20QueryMsg::Balance {
                 address: sender.to_string(),
             },
+            &Addr::unchecked(a_currency),
         )?;
 
-    /// We can get our funds back, no problem
-    app.execute_contract(
-        Addr::unchecked(sender),
-        Addr::unchecked(market),
-        &ExecuteMsg::RedeemAllStable {},
-        &[],
-    )?;
+    /// We can get our funds back, no problem, the state changes get propagated as well locally
+    market.redeem_all_stable()?;
     ```
 
 ## Usage
 
 You use this fork environment as you would use the `Mock` environment, with a few subtle changes : 
-1. You can't use human readable addresses, because this environment uses actual APIs and needs to be able to verify addresses. In order to generate a new address, you can use : 
+1. You can't use human readable addresses, because this environment uses actual APIs and needs to be able to verify addresses. When creating the Mock environment, a sender gets created along and attach automatically to the `ForkMock` instance. If you need additional addresses, you can use : 
 
     ```rust
-    let new_sender = fork.init_account();
+    let new_sender: Addr = fork.init_account();
     ```
- 2. The environment doesn't allow (yet) contracts to be defined using its functions. A contract in this environment is executed through its compiled wasm. When testing with this environment, make sure that you compile your project before running the tests. We are aware that this is very easy on the user and are working on being able to accept both structure that implement the `Contract` trait AND wasm files.
+ 2. The environment doesn't allow (yet) contracts to be defined using its functions (just like the [`Mock`](./cw-multi-test.md) can). A contract in this environment is executed through its compiled wasm. When testing with this environment, make sure that you compile your project before running the tests[^mock-wasm].
 
 
 
-[^storage_cache]In the future, we might leverage a local storage cache to avoid querying distant RPCs too much (for more speed and less data consumption).
+[^storage_cache] In the future, we might leverage a local storage cache to avoid querying distant RPCs too much (for more speed and less data consumption).
+
+[^mock-wasm] We are aware that this is not very easy on the user and we are working on being able to accept both structures that implement the `Contract` trait **AND** wasm files for testing with this for environment. 
