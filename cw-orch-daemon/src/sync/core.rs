@@ -71,6 +71,16 @@ impl Daemon {
     pub fn wallet(&self) -> Wallet {
         self.daemon.sender.clone()
     }
+
+    /// Get the chain's chain-id
+    pub(crate) fn chain_id(&self) -> String {
+        self.daemon.state.chain_data.chain_id.to_string()
+    }
+
+    /// Get the chain's network-id
+    pub(crate) fn network_id(&self) -> String {
+        self.daemon.state.chain_data.chain_name.to_string()
+    }
 }
 
 impl ChainState for Daemon {
