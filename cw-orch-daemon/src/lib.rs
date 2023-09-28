@@ -14,13 +14,13 @@ pub mod state;
 pub mod sync;
 pub mod tx_resp;
 // expose these as mods as they can grow
+pub mod build;
 pub mod keys;
 pub mod live_mock;
 pub mod queriers;
 mod traits;
 pub mod tx_broadcaster;
 pub mod tx_builder;
-pub mod build;
 
 pub use self::{
     builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,

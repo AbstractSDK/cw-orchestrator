@@ -8,7 +8,7 @@ use crate::Daemon;
 pub enum BuildPostfix {
     /// Default, doesn't look for anything but the contract name.
     None,
-    /// Uses the chain to figure out the network name. I.e. "uni-6" = "juno-1" -> "juno" post-fix on build. 
+    /// Uses the chain to figure out the network name. I.e. "uni-6" = "juno-1" -> "juno" post-fix on build.
     Network(Daemon),
     /// Uses the chain name as the build-postfix. I.e. "uni-6", "juno-1", "osmosis-5", ect.
     Chain(Daemon),
