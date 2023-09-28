@@ -71,3 +71,9 @@ Visit the dedicated [Starship](./integrations/daemon.md#starship) page for more 
 The `DaemonInterchainEnvironment` object allows developers to script, deploy and manage their application on running chains with attention to IBC functionalities. This enhances the developer experience with more tooling, more useful logging. This is the all-in-one toolbox cor the cosmwasm IBC developer. 
 
 Visit the dedicated [Daemon Interchain](./integrations/daemon.md#scripting) page for more details and code snippets.
+
+
+
+## Access
+
+The interchain features of cw-orchestrator are not open-source and freely available to all users. [Learn more about pricing on our dedicated page ](https://abstract.money/orchestrator)
