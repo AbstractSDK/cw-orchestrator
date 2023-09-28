@@ -16,6 +16,7 @@
   - [Daemon (Live Chains)](./integrations/daemon.md)
   - [Cw Multi Test](./integrations/cw-multi-test.md)
   - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
+  - [Fork Testing](./integrations/fork-testing.md)
 
 - [Workspace](./workspace/index.md)
   - [Structure]()
