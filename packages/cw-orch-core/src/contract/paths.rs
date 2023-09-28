@@ -57,7 +57,7 @@ mod wasm_path {
 
 mod artifacts_dir {
     use super::WasmPath;
-    use crate::error::CwEnvError;
+    use crate::{error::CwEnvError, environment::CwEnv};
 
     use std::{env, fs, path::PathBuf};
 
@@ -142,13 +142,23 @@ mod artifacts_dir {
 
         /// Find a WASM file in the artifacts directory that contains the given name.
         pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwEnvError> {
+            self.find_wasm_path_with_build_postfix(name, "")
+        }
+
+
+        /// Find a WASM file in the artifacts directory that contains the given AND build name.
+        pub fn find_wasm_path_with_build_postfix(&self, name: &str, build_postfix: impl Into<String>) -> Result<WasmPath, CwEnvError> {
+            let build_postfix: String = build_postfix.into();
             let path_str = fs::read_dir(self.path())?
                 .find_map(|entry| {
                     let path = entry.ok()?.path();
                     let file_name = path.file_name().unwrap_or_default().to_string_lossy();
                     if path.is_file()
                         && path.extension().unwrap_or_default() == "wasm"
-                        && file_name.contains(name)
+                        // Path needs to contain the contract name
+                        && file_name.contains(name) 
+                        // And if a build_postfix is provided, it needs to be in the the file name as well.
+                        && (build_postfix.is_empty() || file_name.contains(&build_postfix))
                     {
                         Some(file_name.into_owned())
                     } else {
@@ -162,6 +172,7 @@ mod artifacts_dir {
                     )
                 })?;
             WasmPath::new(self.path().join(path_str))
+
         }
     }
 }
