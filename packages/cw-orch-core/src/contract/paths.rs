@@ -57,7 +57,7 @@ mod wasm_path {
 
 mod artifacts_dir {
     use super::WasmPath;
-    use crate::{error::CwEnvError, build::BuildPostfix, environment::ChainState};
+    use crate::{build::BuildPostfix, environment::ChainState, error::CwEnvError};
 
     use std::{env, fs, path::PathBuf};
 
@@ -142,7 +142,7 @@ mod artifacts_dir {
 
         /// Find a WASM file in the artifacts directory that contains the given name.
         pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwEnvError> {
-            self.find_wasm_path_with_build_postfix(name, BuildPostfix::None)
+            self.find_wasm_path_with_build_postfix(name, <BuildPostfix>::None)
         }
 
         /// Find a WASM file in the artifacts directory that contains the given contract name AND build post-fix.
