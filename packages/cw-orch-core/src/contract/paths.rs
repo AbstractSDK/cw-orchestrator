@@ -57,7 +57,7 @@ mod wasm_path {
 
 mod artifacts_dir {
     use super::WasmPath;
-    use crate::{error::CwEnvError};
+    use crate::error::CwEnvError;
 
     use std::{env, fs, path::PathBuf};
 
@@ -145,7 +145,9 @@ mod artifacts_dir {
             self.find_wasm_path_with_build_postfix(name, "")
         }
 
-        /// Find a WASM file in the artifacts directory that contains the given AND build name.
+        /// Find a WASM file in the artifacts directory that contains the given contract name AND build post-fix.
+        /// If a build with the post-fix is not found, the default build will be used.
+        /// If none of the two are found, an error is returned.
         pub fn find_wasm_path_with_build_postfix(
             &self,
             name: &str,
@@ -161,7 +163,13 @@ mod artifacts_dir {
                         // Path needs to contain the contract name
                         && file_name.contains(name)
                         // And if a build_postfix is provided, it needs to be in the the file name as well.
-                        && (build_postfix.is_empty() || file_name.contains(&build_postfix))
+                        && (build_postfix.is_empty() || file_name.ends_with(format!("{}.wasm", build_postfix).as_str()))
+                    {
+                        Some(file_name.into_owned())
+                    // If not found, check if the default build is present.
+                    } else if path.is_file()
+                        // Path needs to contain the contract name
+                        && file_name.ends_with(format!("{}.wasm", name).as_str())
                     {
                         Some(file_name.into_owned())
                     } else {
