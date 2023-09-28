@@ -1,8 +1,8 @@
 pub mod contract;
 pub mod environment;
 
-mod error;
 pub mod build;
+mod error;
 
 pub use error::CwEnvError;
 
