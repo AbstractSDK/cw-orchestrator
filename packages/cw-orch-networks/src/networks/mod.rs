@@ -33,6 +33,13 @@ pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 /// ---
 /// supported chains are: UNI_6, JUNO_1, LOCAL_JUNO, PISCO_1, PHOENIX_1, LOCAL_TERRA, INJECTIVE_888, CONSTANTINE_1, BARYON_1, INJECTIVE_1, HARPOON_4, OSMO_4, LOCAL_OSMO
 pub fn parse_network(net_id: &str) -> ChainInfo {
+    match parse_network_safe(net_id) {
+        Ok(net) => net,
+        Err(err) => panic!("{}", err),
+    }
+}
+
+pub fn parse_network_safe(net_id: &str) -> Result<ChainInfo, String> {
     let networks = vec![
         UNI_6,
         JUNO_1,
@@ -58,10 +65,8 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
         ATLANTIC_2,
         PACIFIC_1,
     ];
-    for net in networks {
-        if net.chain_id == net_id {
-            return net;
-        }
-    }
-    panic!("Network not found: {}", net_id);
+    networks
+        .into_iter()
+        .find(|net| net.chain_id == net_id)
+        .ok_or(format!("Network not found: {}", net_id))
 }

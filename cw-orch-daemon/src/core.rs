@@ -19,10 +19,12 @@ use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{ChainState, IndexResponse},
 };
+use flate2::{write, Compression};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
+    io::Write,
     rc::Rc,
     str::{from_utf8, FromStr},
     time::Duration,
@@ -232,9 +234,12 @@ impl DaemonAsync {
         log::debug!("Uploading file at {:?}", wasm_path);
 
         let file_contents = std::fs::read(wasm_path.path())?;
+        let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
+        e.write_all(&file_contents)?;
+        let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
             sender: sender.pub_addr()?,
-            wasm_byte_code: file_contents,
+            wasm_byte_code,
             instantiate_permission: None,
         };
 

@@ -40,6 +40,13 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 format_ident!("{}", process_fn_name(&variant).to_case(Case::Snake));
         variant_func_name.set_span(variant_name.span());
 
+        let variant_doc: syn::Attribute = {
+            let doc = format!("Automatically generated wrapper around {}::{} variant", name, variant_name);
+            syn::parse_quote!(
+                #[doc=#doc]
+            )
+        };
+
         match &mut variant.fields {
             Fields::Unnamed(variant_fields) => {
                 let mut variant_idents = variant_fields.unnamed.clone();
@@ -64,6 +71,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 });
 
                 quote!(
+                    #variant_doc
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name (#(#variant_ident_content_names,)*);
@@ -73,6 +81,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
             }
             Fields::Unit => {
                 quote!(
+                    #variant_doc
                     fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
                         self.query(&msg #maybe_into)
@@ -94,6 +103,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
                 let variant_attr = variant_fields.iter();
                 quote!(
+                    #variant_doc
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name {
@@ -107,6 +117,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     });
 
     let derived_trait = quote!(
+        /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
         pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics > #where_clause {
             #(#variant_fns)*
         }
@@ -127,6 +138,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
         ));
 
     let derived_trait_impl = quote!(
+        #[automatically_derived]
         impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         #combined_where_clause {}
     );

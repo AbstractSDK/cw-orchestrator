@@ -6,7 +6,7 @@ use secp256k1::All;
 use crate::{
     queriers::{DaemonQuerier, Node},
     sender::Sender,
-    DaemonError, TxBuilder,
+    CosmTxResponse, DaemonError, TxBuilder,
 };
 
 pub type StrategyAction =
@@ -130,7 +130,39 @@ async fn broadcast_helper(
     let tx_response = wallet.broadcast_tx(tx).await?;
     log::debug!("tx broadcast response: {:?}", tx_response);
 
-    Ok(tx_response)
+    assert_broadcast_code_response(tx_response)
+}
+
+/// Tx Responses with a non 0 code, should also error with the raw loq
+pub(crate) fn assert_broadcast_code_response(
+    tx_response: TxResponse,
+) -> Result<TxResponse, DaemonError> {
+    // if tx result != 0 then the tx failed, so we return an error
+    // if tx result == 0 then the tx succeeded, so we return the tx response
+    if tx_response.code == 0 {
+        Ok(tx_response)
+    } else {
+        Err(DaemonError::TxFailed {
+            code: tx_response.code as usize,
+            reason: tx_response.raw_log,
+        })
+    }
+}
+
+/// Tx Responses with a non 0 code, should also error with the raw loq
+pub(crate) fn assert_broadcast_code_cosm_response(
+    tx_response: CosmTxResponse,
+) -> Result<CosmTxResponse, DaemonError> {
+    // if tx result != 0 then the tx failed, so we return an error
+    // if tx result == 0 then the tx succeeded, so we return the tx response
+    if tx_response.code == 0 {
+        Ok(tx_response)
+    } else {
+        Err(DaemonError::TxFailed {
+            code: tx_response.code,
+            reason: tx_response.raw_log,
+        })
+    }
 }
 
 fn can_retry(s: &mut RetryStrategy) -> bool {
