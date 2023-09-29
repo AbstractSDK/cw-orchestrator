@@ -14,10 +14,9 @@ use std::{
     env,
     fs::File,
     path::{Path, PathBuf},
+    str::FromStr,
 };
 use tonic::transport::Channel;
-
-pub const CW_ORCH_DEFAULT_FOLDER: &str = "~/.cw-orchestrator";
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
@@ -56,16 +55,14 @@ impl DaemonState {
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = if env_file_path.is_relative() {
-            let state_folder =
-                env::var("CW_ORCH_STATE_FOLDER").unwrap_or(CW_ORCH_DEFAULT_FOLDER.to_string());
-
-            // Expand potential tildes
-            let absolute_state_folder = shellexpand::full(&state_folder).unwrap().to_string();
+            let state_folder = env::var("CW_ORCH_STATE_FOLDER")
+                .map(|s| PathBuf::from_str(&s).unwrap())
+                .unwrap_or(Self::default_state_dir());
 
             // We need to create the default state folder if it doesn't exist
-            std::fs::create_dir_all(absolute_state_folder.clone())?;
+            std::fs::create_dir_all(state_folder.clone())?;
 
-            PathBuf::from(absolute_state_folder).join(env_file_path)
+            state_folder.join(env_file_path)
         } else {
             env_file_path
         }
@@ -149,6 +146,11 @@ impl DaemonState {
             [contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+    }
+
+    pub fn default_state_dir() -> PathBuf {
+        // The program panics if the home_dir is not set in the environment
+        dirs::home_dir().unwrap().join(".cw-orchestrator")
     }
 }
 
