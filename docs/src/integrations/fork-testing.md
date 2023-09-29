@@ -66,7 +66,7 @@ Let's take an example for clarity. Say I want to deposit some funds into Anchor 
     ```
 3. During the whole message execution, when storage is queried, if it doesn't exist locally it will be queried from the chain. This is true for storage during contract execution but this is also true for querying the actual Wasm Code when executing/querying a contract. No local storage is used until something is written to it [^storage_cache].
 4. Even in the case of multiple chained contract calls, storage is modified accordingly and usable by contracts. 
-5. After message execution, queries and states are modified according the contract execution. After depositing, it is now possible to query your stake or even to withdraw your funds : 
+5. After message execution, queries and states are modified according to the contract execution. After depositing, it is now possible to query your stake or even to withdraw your funds : 
     ```rust
     let a_currency = "terra1..."; // The contract address for the staking receipt
 
