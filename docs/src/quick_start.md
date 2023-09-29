@@ -11,6 +11,14 @@ $ cargo add --optional cw-orch
 > Adding cw-orch v0.16.0 to optional dependencies.
 ```
 
+When using workspaces, you need to add `cw-orch` in the crate where the messages are defined. For instance for the cw20-base contract on the [cw-plus repository](https://github.com/CosmWasm/cw-plus/): 
+```shell
+$ cargo add cw-orch --optional --package cw20-base
+> Adding cw-orch v0.16.0 to optional dependencies.
+$ cargo add cw-orch --optional --package cw20
+> Adding cw-orch v0.16.0 to optional dependencies.
+```
+
 Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
@@ -18,72 +26,84 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 cw-orch = {version = "0.16.0", optional = true } # Latest version at time of writing
 ```
 
+> **NOTE**: In the rest of this guide we will assume your project is a rust workspace. We also provide an example setup on the [cw-plus](https://github.com/AbstractSDK/cw-plus/tree/main) repository for you to follow along or get help if you're lost. 
+
 Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
 
-To do this include the following in the `Cargo.toml`:
+To do this include the following in the `Cargo.toml` of the packages where you included `cw-orch` as an optional dependency:
 
 ```toml
 [features]
 interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
 ```
 
+> **NOTE**: If you are using `rust-analyzer`, you can add the following two lines in your `settings.json` to make sure the features get taken into account when checking the project : 
+>
+>    ```json 
+>     "rust-analyzer.cargo.features": "all",
+>     "rust-analyzer.check.features": "all",
+>    ```
+
 ## Creating an Interface
 
-Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's entry points. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's entry points:
-
-```rust,no_run,noplayground
-# use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
-# pub struct InstantiateMsg;
-# pub struct ExecuteMsg;
-#
-// In `contract.rs`
-#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
-pub fn instantiate(
-   deps: DepsMut,
-   env: Env,
-   info: MessageInfo,
-   msg: InstantiateMsg,
-) -> StdResult<Response> {
-    // ...
-    Ok(Response::new())
-}
-
-#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
-pub fn execute(
-   deps: DepsMut,
-   env: Env,
-   info: MessageInfo,
-   msg: ExecuteMsg,
-) -> StdResult<Response> {
-    // ...
-    Ok(Response::new())
-}
-#
-# fn main() {}
-// ... Do the same for the other entry points (query, migrate, reply, sudo)
+When using workspaces, we advise you to create a new crate inside your workspace for defining your contract interfaces. In order to do that, use : 
+```shell
+cargo new interface --lib
+cargo add cw-orch --package interface 
 ```
 
-By adding these lines, we generate code whenever the `interface` feature is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.
-
-When uploading to a blockchain the macro will search for an `artifacts` directory in the project's root. If this is not what you want you can specify the paths yourself using the `interface` macro covered in [interfaces](./tutorial/interfaces.md#defining-contract-interfaces).
-
-> The name of the crate is defined in the `Cargo.toml` file of your contract.
-
-It can be helpful to re-expose the interface in the crate's root so that it is easy to import:
-
-```rust,ignore
-// in lib.rs
-#[cfg(feature = "interface")]
-pub use crate::contract::MyContract
+And add the interface package to your workspace `Cargo.toml` file
+```toml
+[workspace]
+members = ["packages/*", "contracts/*", "interface"]
 ```
 
-You can now create a test in `contract/tests` or an executable in `contract/bin` and start interacting with the contract.
+In the interface package, you can define all the interfaces to your contracts. For instance, for the `cw20-base` contract : 
+```rust
+use cw_orch::interface;
+use cw_orch::prelude::*;
+use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
+
+/// Creates a `Cw20Base` struct representing a contract and link it to the different messages that can be sent to it
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct Cw20Base;
+
+/// Allow your structure to be uploaded (on a test or an actual environment)
+impl<Chain: CwEnv> Uploadable for Cw20Base<Chain> {
+    // Use for your struct to be able to access the associated wasm file. This is used for scripting mostly. 
+    // You don't need to implement this function when testing with the `Mock` environment
+    fn wasm(&self) -> WasmPath {
+        let crate_path = env!("CARGO_MANIFEST_DIR");
+        let wasm_path = format!("{}/../artifacts/{}", crate_path, "cw20_base.wasm");
+
+        WasmPath::new(wasm_path).unwrap()
+    }
+    // This needs to be implemented ONLY if you are testing with the `Mock` environment
+    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+        Box::new(
+            ContractWrapper::new_with_empty(
+                cw20_base::contract::execute,
+                cw20_base::contract::instantiate,
+                cw20_base::contract::query,
+            )
+            .with_migrate(cw20_base::contract::migrate),
+        )
+    }
+}
+
+```
+When importing your crates to get the messages types, you can use the following command in the interface folder. Don't forget to activate the interface feature to be able to use the cw_orch functionalities. 
+
+```shell
+cargo add cw20-base --path ../contracts/cw20-base/ --features=interface
+cargo add cw20 --path ../packages/cw20 --features=interface
+```
 
 ## Interaction helpers
 
 cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
 
-Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
+Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below. In our example, you have to define it for the `QueryMsg` in the `cw20-base` crate and for the `ExecuteMsg` in the `cw20` crate.
 
 ```rust,no_run
 use cosmwasm_schema::{QueryResponses, cw_serde};
@@ -99,15 +119,16 @@ pub enum ExecuteMsg {
 #[derive(QueryResponses)]
 #[cw_serde]
 pub enum QueryMsg {
-    #[returns(String)]
-    Config {}
+    /// Returns the current balance of the given address, 0 if unset.
+    #[returns(cw20::BalanceResponse)]
+    Balance { address: String },
     // ...
 }
 
 # fn main() {}
 ```
 
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface through a trait. The function will have the snake_case name of the variant and will take the same arguments as the variant. The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `Cw20Base`) through a trait. The function will have the snake_case name of the variant and will take the same arguments as the variant. The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
 
 You can access these functions by importing the generated traits from the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. Again it's helpful to re-export these traits in the crate's root so that they are easy to import:
 
@@ -117,7 +138,7 @@ You can access these functions by importing the generated traits from the messag
 pub use crate::msg::{ExecuteMsgFns as MyContractExecuteFns, QueryMsgFns as MyContractQueryFns};
 ```
 
-## Example Counter Contract
+## Example Cw20Base Contract interaction
 
 To show all this functionality in action, we will use an example counter contract. The example counter contract is a simple contract that allows you to increment and decrement a counter. The contract also allows you to query the current value of the counter. The contract is available [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
 
