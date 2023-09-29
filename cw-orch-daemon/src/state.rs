@@ -55,9 +55,7 @@ impl DaemonState {
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = if env_file_path.is_relative() {
-            let state_folder = env::var("CW_ORCH_STATE_FOLDER")
-                .map(|s| PathBuf::from_str(&s).unwrap())
-                .unwrap_or(Self::default_state_dir());
+            let state_folder = Self::state_dir();
 
             // We need to create the default state folder if it doesn't exist
             std::fs::create_dir_all(state_folder.clone())?;
@@ -149,8 +147,14 @@ impl DaemonState {
     }
 
     pub fn default_state_dir() -> PathBuf {
-        // The program panics if the home_dir is not set in the environment
+        // The program panics if the home_dir is not set
         dirs::home_dir().unwrap().join(".cw-orchestrator")
+    }
+
+    pub fn state_dir() -> PathBuf {
+        env::var("CW_ORCH_STATE_FOLDER")
+            .map(|s| PathBuf::from_str(&s).unwrap())
+            .unwrap_or(Self::default_state_dir())
     }
 }
 

@@ -4,6 +4,8 @@
 
 - Added possibility to not panic in parse network by @Buckram123
 - Added stargate feature to cw-multi-test
+- Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir. 
+- Exposed the state_dir location
 
 ## v0.16.4 [20th September 2023]
 
