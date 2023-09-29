@@ -78,7 +78,7 @@ cosmrs = { version = "0.14.0", features = [
 ], optional = true }
 
 # Live mock deps
-tonic = { version = "0.9.2", optional = true, features = ["tls", "tls-roots"] }
+tonic = { version = "0.10.2", optional = true, features = ["tls", "tls-roots"] }
 
 # Test Tube env deps
 osmosis-test-tube = { workspace = true, optional = true }
