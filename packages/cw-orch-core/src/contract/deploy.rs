@@ -75,7 +75,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     fn set_contracts_state(&mut self, custom_state: Option<Value>) {
         let state;
 
-        let state_file = self.deployed_state_file_path();
+        let state_file = Self::deployed_state_file_path();
         if let Some(custom_state) = custom_state {
             state = custom_state;
         } else if let Some(state_file) = state_file {
@@ -147,8 +147,8 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     ///     ...
     /// }
     /// So this function actually looks for the second level of indices in the deployed_state_file
-    fn get_all_deployed_chains(&self) -> Vec<String> {
-        let deployed_state_file = self.deployed_state_file_path();
+    fn get_all_deployed_chains() -> Vec<String> {
+        let deployed_state_file = Self::deployed_state_file_path();
         if let Some(state_file) = deployed_state_file {
             if let Ok(module_state_json) = read_json(&state_file) {
                 let all_chain_ids: Vec<String> = module_state_json
@@ -172,7 +172,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 
     /// Sets the custom state file path for exporting the state with the package.
     // TODO, we might want to enforce the projects to redefine this function ?
-    fn deployed_state_file_path(&self) -> Option<String>;
+    fn deployed_state_file_path() -> Option<String>;
 
     /// Returns all the contracts in this deployment instance
     /// Used to set the contract state (addr and code_id) when importing the package.
