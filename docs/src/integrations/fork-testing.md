@@ -8,7 +8,7 @@ Cw-orchestrator supports testing in a forked environment. With this feature, you
 
 ## Brief Overview
 
-We leverage the beautiful [`cw-multi-test`](https://github.com/CosmWasm/cw-multi-test/) package, created and maintained by Cosmwasm and added a few functionalities that allows your to execute your code just as if you were interacting with an actual on-chain node, but locally, and without any on-chain funds necessary.
+We leverage the beautiful [`cw-multi-test`](https://github.com/CosmWasm/cw-multi-test/) package, created and maintained by Cosmwasm and added a few functionalities that allow you to execute your code just as if you were interacting with an actual on-chain node, but locally, and without any on-chain funds necessary.
 
 ### Setup
 Setting up the environment is really easy and only requires feeding a `ChainData` object to the struct constructor : 
@@ -20,7 +20,7 @@ use cw_orch::ForkMock;
 let app = ForkMock::new(JUNO_1)?;
 ```
 
-With this, you are ready to upload, instantiate, migrate, interact with on-chain contracts...
+With this, you are ready to upload, instantiate, migrate and interact with on-chain contracts...
 
 ### Execution Flow
 
