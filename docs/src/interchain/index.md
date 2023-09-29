@@ -3,7 +3,7 @@
 Because of its asynchronous and decentralized nature, the **I**nter-**B**lockchain **C**ommunication protocol makes developing and debugging applications more difficult than simple blockchain transactions. 
 Cw-orch simplifies those tasks by providing developers tools, full testing environments and standard interfaces to interact with applications that leverage IBC capabilities. 
 
-Here are a few examples of what cw-orch allows: 
+Here are a few examples of what cw-orchestrator allows: 
 
 ## Interchain packet following
 Using some simple tools, one can follow the execution of IBC packets through their whole lifetime (*Receive*, *Acknowledge* or *Timeout*). 
@@ -20,7 +20,7 @@ let packet_lifetime = interchain.follow_packet(
 ```
 
 ## Interchain transaction waiting
-To further simplify the developer experience and provide simple syntax, cw-orch allows developers to await execution of transactions that create IBC packets. 
+To further simplify the developer experience and provide simple syntax, cw-orchestrator allows developers to await execution of transactions that create IBC packets. 
 This is mostly useful when interacting with existing contracts in a script to simplify the execution pipeline.
 
 ```rust

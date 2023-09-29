@@ -1,6 +1,6 @@
 # Daemon
 
-Daemon is an execution environment for interacting with live chains. This allows you to test your deployment on a local chain instance or deploy your contracts on mainnet. `Cw-orchestrator Daemon` provides a wide range of tools to interact with live chains. We describe those tools in depth in this page.
+Daemon is an execution environment for interacting with live chains. This allows you to test your deployment on a local chain instance or deploy your contracts on mainnet. cw-orchestrator's `Daemon` provides a wide range of tools to interact with live chains. We describe those tools in depth in this page.
 
 ## Quick Start
 

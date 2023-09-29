@@ -35,7 +35,7 @@ client.instantiate(&Empty{}, None, None)?;
 host.instantiate(&Empty{}, None, None)?;
 
 ```
-The `Client` and `Host` structures here are [cw-orch Contracts](../single_contract/interfaces.md) with registered ibc endpoints. 
+The `Client` and `Host` structures here are [cw-orchestrator Contracts](../single_contract/interfaces.md) with registered ibc endpoints. 
 
 <details>
   <summary><strong>Client contract definition</strong> (Click to get the full code)</summary>
@@ -241,7 +241,7 @@ let starship = Starship::new(rt.handle().to_owned(), None).unwrap();
 let interchain = starship.interchain_env();
 ```
 
-This snippet will identify the local Starship setup and initialize all helpers and information needed for interaction using cw-orch. 
+This snippet will identify the local Starship setup and initialize all helpers and information needed for interaction using cw-orchestrator. 
 With this setup, you can now resume this quick-start guide from [↑Interacting with the environment](#interacting-with-the-environment)
 
 You can also [learn more about the interchain daemon implementation](./integrations/daemon.md).
