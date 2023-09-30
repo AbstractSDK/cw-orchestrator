@@ -158,18 +158,17 @@ mod artifacts_dir {
                 .find_map(|entry| {
                     let path = entry.ok()?.path();
                     let file_name = path.file_name().unwrap_or_default().to_string_lossy();
-                    if path.is_file()
-                        && path.extension().unwrap_or_default() == "wasm"
+                    if !path.is_file() {
+                        return None;
+                    }
+
+                    if (path.extension().unwrap_or_default() == "wasm"
                         // If a postfix is provided
                         && !build_postfix.is_empty()
                         // It needs to be in the the file name as well.
-                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix)
-                    {
-                        Some(file_name.into_owned())
-                    // If not found, check if the default build is present.
-                    } else if path.is_file()
-                        // Path needs to contain the contract name
-                        && is_default_artifact(&file_name, name)
+                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix))
+                        // If not found, check if the default build is present.
+                        || is_default_artifact(&file_name, name)
                     {
                         Some(file_name.into_owned())
                     } else {
@@ -191,7 +190,8 @@ mod artifacts_dir {
     }
 
     fn is_default_artifact(file_name: &str, contract_name: &str) -> bool {
-        file_name.ends_with(format!("{}.wasm", contract_name).as_str()) || file_name.ends_with(format!("{}-arm64.wasm", contract_name).as_str())
+        file_name.ends_with(format!("{}.wasm", contract_name).as_str())
+            || file_name.ends_with(format!("{}-arm64.wasm", contract_name).as_str())
     }
 
     fn is_artifact_with_build_postfix(
