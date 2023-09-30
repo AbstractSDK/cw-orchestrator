@@ -160,16 +160,16 @@ mod artifacts_dir {
                     let file_name = path.file_name().unwrap_or_default().to_string_lossy();
                     if path.is_file()
                         && path.extension().unwrap_or_default() == "wasm"
-                        // Path needs to contain the contract name
-                        && file_name.contains(name)
-                        // And if a build_postfix is provided, it needs to be in the the file name as well.
-                        && (build_postfix.is_empty() || file_name.ends_with(format!("{}.wasm", build_postfix).as_str()))
+                        // If a postfix is provided
+                        && !build_postfix.is_empty()
+                        // It needs to be in the the file name as well.
+                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix)
                     {
                         Some(file_name.into_owned())
                     // If not found, check if the default build is present.
                     } else if path.is_file()
                         // Path needs to contain the contract name
-                        && file_name.ends_with(format!("{}.wasm", name).as_str())
+                        && is_default_artifact(&file_name, name)
                     {
                         Some(file_name.into_owned())
                     } else {
@@ -184,5 +184,23 @@ mod artifacts_dir {
                 })?;
             WasmPath::new(self.path().join(path_str))
         }
+    }
+
+    fn is_artifact(file_name: &str, contract_name: &str) -> bool {
+        file_name.contains(contract_name)
+    }
+
+    fn is_default_artifact(file_name: &str, contract_name: &str) -> bool {
+        file_name.ends_with(format!("{}.wasm", contract_name).as_str()) || file_name.ends_with(format!("{}-arm64.wasm", contract_name).as_str())
+    }
+
+    fn is_artifact_with_build_postfix(
+        file_name: &str,
+        contract_name: &str,
+        build_postfix: &str,
+    ) -> bool {
+        is_artifact(file_name, contract_name)
+            && (file_name.ends_with(format!("{}.wasm", build_postfix).as_str())
+                || file_name.ends_with(format!("{}-arm64.wasm", build_postfix).as_str()))
     }
 }
