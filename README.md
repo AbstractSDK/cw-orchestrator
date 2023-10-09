@@ -63,16 +63,12 @@ You now have a contract interface that you can use to interact with your contrac
 
 ### Usage
 
-You can use this interface to interact with the contract:
+You can use this interface to deploy and interact with the contract:
 
 ```rust
 use cw_orch::interface;
 use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
-use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
-
-#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Cw20;
 
 // Implement the Uploadable trait so it can be uploaded to the mock. 
 impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
@@ -88,77 +84,78 @@ impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
     }
 }
 
-// ## Environment setup ##
 
-let sender = Addr::unchecked("sender");
-// Create a new mock chain (backed by cw-multi-test)
-let chain = Mock::new(&sender);
+fn example_test() {
+  let sender = Addr::unchecked("sender");
+  // Create a new mock chain (backed by cw-multi-test)
+  let chain = Mock::new(&sender);
+  
+  // Create a new Cw20 interface
+  let cw20_base: Cw20<Mock> = Cw20::new("my_token", chain);
+  
+  // Upload the contract
+  cw20_base.upload().unwrap();
 
-// Create a new Cw20 interface
-let cw20_base: Cw20<Mock> = Cw20::new("my_token", chain);
+  // Instantiate a CW20 token
+  let cw20_init_msg = InstantiateMsg {
+      decimals: 6,
+      name: "Test Token".to_string(),
+      initial_balances: vec![Cw20Coin {
+          address: sender.to_string(),
+          amount: 10u128.into(),
+      }],
+      marketing: None,
+      mint: None,
+      symbol: "TEST".to_string(),
+  };
+  cw20_base.instantiate(&cw20_init_msg, None, None).unwrap();
 
-// Upload the contract
-cw20_base.upload().unwrap();
+  // Query the balance
+  let balance: BalanceResponse = cw20_base.query(&QueryMsg::Balance { address: sender.to_string() }).unwrap();
 
-// Instantiate a CW20 token
-let cw20_init_msg = InstantiateMsg {
-    decimals: 6,
-    name: "Test Token".to_string(),
-    initial_balances: vec![Cw20Coin {
-        address: sender.to_string(),
-        amount: 10u128.into(),
-    }],
-    marketing: None,
-    mint: None,
-    symbol: "TEST".to_string(),
-};
-cw20_base.instantiate(&cw20_init_msg, None, None).unwrap();
-
-// Query the balance
-let balance: BalanceResponse = cw20_base.query(&QueryMsg::Balance { address: sender.to_string() }).unwrap();
-
-assert_eq!(balance.balance.u128(), 10u128);
+  assert_eq!(balance.balance.u128(), 10u128);
+}
 ```
 
 ## Features
 
-cw-orchestrator provides two additional macros that can be used to improve the scripting experience.
+`cw-orchestrator` provides two additional macros that can be used to improve the scripting experience.
 
 ### ExecuteFns
 
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
 
-The macros should only be added to the structs when the "interface" trait is enable. This is ensured by the `interface` feature in the following example
-
-Example:
+The `ExecuteFns` macro should only run on the Msg when the "interface" trait is enable. This is ensured by the `interface` feature in the following example:
 
 ```rust
 use cw_orch::prelude::*;
 
 #[cosmwasm_schema::cw_serde]
-#[derive(cw_orch::ExecuteFns)]
+// ⬇️ This feature flag prevents cw-orchestrator from entering your contract.
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
 pub enum ExecuteMsg {
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
-    /// the `payable` attribute will add a `coins` argument to the generated function
+    /// the `payable` attribute can be used to add a `coins` argument to the generated function.
     #[payable]
     Deposit {}
 }
-
+```
+The generated functions can then be used for any interface that uses this `ExecuteMsg`.
+```rust
 // Define the interface, which is generic over the CosmWasm environment (Chain)
 #[cw_orch::interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1<Chain>;
 
 impl<Chain: CwEnv> Cw1<Chain> {
     pub fn test_macro(&self) {
+        // Enjoy the nice API! 
         self.freeze().unwrap();
         self.update_admins(vec!["new_admin".to_string()]).unwrap();
         self.deposit(&[Coin::new(13,"juno")]).unwrap();
     }
 }
 ```
-
-> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `cw-orchestrator` by default.
 
 ### QueryFns
 
@@ -178,16 +175,18 @@ pub enum GenericExecuteMsg<T> {
     Generic(T),
 }
 
-// Now the following is possible:
-type ExecuteMsg = GenericExecuteMsg<Foo>;
-
+// A type that will fill the generic.
 #[cosmwasm_schema::cw_serde]
-#[derive(cw_orch::ExecuteFns)]
-#[impl_into(ExecuteMsg)]
+#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
+#[cfg_attr(feature = "interface", impl_into(ExecuteMsg))]
 pub enum Foo {
     Bar { a: String },
 }
 
+
+// Now we construct the concrete type with `Foo` in place of the generic.
+type ExecuteMsg = GenericExecuteMsg<Foo>;
+// And we implement the `From` trait (which auto-implements `Into`).
 impl From<Foo> for ExecuteMsg {
     fn from(msg: Foo) -> Self {
         ExecuteMsg::Generic(msg)
@@ -199,7 +198,7 @@ struct Example<Chain>;
 
 impl<Chain: CwEnv> Example<Chain> {
     pub fn test_macro(&self) {
-        // function `bar` is available because of the `impl_into` attribute!
+        // Function `bar` is available because of the `impl_into` attribute!
         self.bar("hello".to_string()).unwrap();
     }
 }
