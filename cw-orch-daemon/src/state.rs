@@ -73,7 +73,7 @@ impl DaemonState {
         .into_string()
         .unwrap();
 
-        log::info!("{}", json_file_path);
+        log::debug!("Using state file : {}", json_file_path);
 
         // if the network we are connecting is a local kind, add it to the fn
         if chain_data.network_type == ChainKind::Local.to_string() {

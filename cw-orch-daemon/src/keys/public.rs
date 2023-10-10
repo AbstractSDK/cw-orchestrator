@@ -97,7 +97,7 @@ impl PublicKey {
                         }
                     })?;
                     //   log::debug!("{:#?}", hex::encode(&vu8));
-                    log::info!("ED25519 public keys are not fully supported");
+                    log::error!("ED25519 public keys are not fully supported");
                     if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
                         //   let public_key = PublicKey::pubkey_from_ed25519_public_key(&vu8);
                         let raw = PublicKey::address_from_public_ed25519_key(&vu8)?;
@@ -225,7 +225,7 @@ impl PublicKey {
             let ed25519_pubkey = Ed25519::from_bytes(vec.try_into().unwrap())?;
             Ok(ed25519_pubkey.to_bytes().to_vec())
         } else {
-            log::info!("pub key does not start with BECH32 PREFIX");
+            log::error!("pub key does not start with BECH32 PREFIX");
             Err(DaemonError::Bech32DecodeErr)
         }
     }
