@@ -14,7 +14,7 @@
 pub use crate::contract::interface_traits::{
     CallAs, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery,
     CwOrchUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
-    Uploadable,
+    Uploadable, ConditionalMigrate, ConditionalUpload,
 };
 
 pub use crate::environment::StateInterface;
@@ -23,7 +23,7 @@ pub use crate::environment::StateInterface;
 pub use crate::environment::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, TxHandler, TxResponse};
+pub use crate::environment::{CwEnv, TxHandler, TxResponse, WasmCodeQuerier};
 
 // Mock for testing
 pub use crate::mock::Mock;
@@ -48,8 +48,6 @@ pub use crate::daemon::{
     live_mock,
     queriers,
     // sync helpers
-    ConditionalMigrate,
-    ConditionalUpload,
     Daemon,
     DaemonAsync,
     DaemonAsyncBuilder,
