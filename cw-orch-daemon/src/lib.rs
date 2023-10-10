@@ -20,7 +20,7 @@ pub mod queriers;
 mod traits;
 pub mod tx_broadcaster;
 pub mod tx_builder;
-
+mod log;
 pub use self::{
     builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
 };

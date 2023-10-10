@@ -1,4 +1,4 @@
-use crate::{DaemonAsync, DaemonBuilder};
+use crate::{DaemonAsync, DaemonBuilder, log::print_if_disabled_log};
 use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
@@ -74,6 +74,7 @@ impl DaemonAsyncBuilder {
             state,
             sender: Rc::new(sender),
         };
+        print_if_disabled_log();
         Ok(daemon)
     }
 }
