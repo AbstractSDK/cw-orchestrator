@@ -146,7 +146,7 @@ impl DaemonState {
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
 
-    pub fn default_state_dir() -> PathBuf {
+    fn default_state_dir() -> PathBuf {
         // The program panics if the home_dir is not set
         dirs::home_dir().unwrap().join(".cw-orchestrator")
     }
