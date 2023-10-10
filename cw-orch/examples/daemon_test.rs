@@ -1,5 +1,5 @@
 use counter_contract::{
-    contract::CounterContract,
+    CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
 };
 use cw_orch::prelude::{

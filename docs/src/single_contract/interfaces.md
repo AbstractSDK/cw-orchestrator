@@ -33,6 +33,17 @@ interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
 
 Features (aka. feature flags) are a way to enable or disable parts of your code. In this case, we are including `cw-orch` as a dependency when the `interface` feature is enabled. This is a common pattern for feature flags.
 
+
+    /// We advise using the `artifacts_dir_from_workspace` macro that will help you look inside your `artifacts` directory for compiled wasms
+    /// You can also use the following syntax for manually indicating the location of the wasm file
+    /// We advise using `env!("CARGO_MANIFEST_DIR")` as the start of your path construction
+    /// ```rust 
+    ///     let crate_path = env!("CARGO_MANIFEST_DIR");
+    ///     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
+    ///     WasmPath::new(wasm_path).unwrap()
+    /// ```
+
+
 ## Creating an Interface
 
 Now that we have our dependency set up we can create the interface. `cw-orch` provides two methods to easily create an interface for your contract.
@@ -121,6 +132,16 @@ Generic functions can be executed over any environment. Setup functions are a go
 ```
 
 ## Entry Point Function Generation
+
+You can access these functions by importing the generated traits from the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. 
+
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros : 
+
+- The function created will have the snake_case name of the variant and will take the same arguments as the variant. 
+- The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. 
+- If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
+- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice).
+
 
 Contract execution and querying is so common that we felt the need to improve the method of calling them. To do this we created two macros: `ExecuteFns` and `QueryFns`. As their name implies they can be used to automatically generate functions for executing and querying your contract through the interface.
 
