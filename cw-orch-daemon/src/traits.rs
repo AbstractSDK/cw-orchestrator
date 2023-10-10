@@ -1,7 +1,7 @@
-use cosmwasm_std::{ContractInfo, ContractInfoResponse};
+use cosmwasm_std::ContractInfoResponse;
 use cw_orch_core::{
-    contract::interface_traits::{CwOrchMigrate, CwOrchUpload, ConditionalUpload},
-    environment::{TxResponse, WasmCodeQuerier},
+    contract::interface_traits::CwOrchUpload,
+    environment::WasmCodeQuerier,
 };
 
 use crate::{queriers::CosmWasm, Daemon, DaemonError};
