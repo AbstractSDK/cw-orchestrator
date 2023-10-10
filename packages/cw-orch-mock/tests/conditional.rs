@@ -16,10 +16,7 @@ mod tests {
         let sender = Addr::unchecked("sender");
         let chain = Mock::new(&sender);
 
-        let contract = mock_contract::MockContract::new(
-            "test:mock_contract",
-            chain.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
         asserting!("address is not present")
             .that(&contract.address())
@@ -106,10 +103,7 @@ mod tests {
         let sender = Addr::unchecked("sender");
         let chain = Mock::new(&sender);
 
-        let contract = mock_contract::MockContract::new(
-            "test:mock_contract",
-            chain.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
         // upload contract
         let upload_res = contract.upload();
@@ -140,6 +134,6 @@ mod tests {
 
         asserting!("that upload_if_needed returns None")
             .that(&contract.upload_if_needed().unwrap())
-            .is_some();  // This is false, because of how checksum works in cw-multi-test
+            .is_some(); // This is false, because of how checksum works in cw-multi-test
     }
 }

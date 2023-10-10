@@ -12,9 +12,9 @@
 
 // Contract traits
 pub use crate::contract::interface_traits::{
-    CallAs, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery,
-    CwOrchUpload, ExecutableContract, InstantiableContract, MigratableContract, QueryableContract,
-    Uploadable, ConditionalMigrate, ConditionalUpload,
+    CallAs, ConditionalMigrate, ConditionalUpload, ContractInstance, CwOrchExecute,
+    CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload, ExecutableContract,
+    InstantiableContract, MigratableContract, QueryableContract, Uploadable,
 };
 
 pub use crate::environment::StateInterface;

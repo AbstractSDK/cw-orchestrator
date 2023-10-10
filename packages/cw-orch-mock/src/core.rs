@@ -1,14 +1,14 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, Empty, Event, Uint128, ContractInfoResponse};
+use cosmwasm_std::{Addr, ContractInfoResponse, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
-    contract::interface_traits::{Uploadable, CwOrchUpload},
-    environment::{TxHandler, WasmCodeQuerier},
+    contract::interface_traits::{CwOrchUpload, Uploadable},
     environment::{ChainState, IndexResponse, StateInterface},
+    environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
 
@@ -310,24 +310,26 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 }
 
-
-impl WasmCodeQuerier for Mock{
-
+impl WasmCodeQuerier for Mock {
     /// Returns whether the checksum of the WASM file matches the checksum of the latest uploaded code for this contract.
-    fn get_contract_hash(&self, code_id: u64) -> Result<String, CwEnvError>{
+    fn get_contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
         let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
         Ok(code_info.checksum.to_string())
     }
 
     /// Returns whether the contract is running the latest uploaded code for it
-    fn get_contract_info<T:CwOrchUpload<Self>>(&self, contract: &T) -> Result<ContractInfoResponse, CwEnvError> {
-        let info = self.app.borrow().wrap().query_wasm_contract_info(contract.address()?)?;
+    fn get_contract_info<T: CwOrchUpload<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<ContractInfoResponse, CwEnvError> {
+        let info = self
+            .app
+            .borrow()
+            .wrap()
+            .query_wasm_contract_info(contract.address()?)?;
         Ok(info)
     }
-
 }
-
-
 
 #[cfg(test)]
 mod test {

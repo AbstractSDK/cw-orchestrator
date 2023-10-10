@@ -195,7 +195,6 @@ pub trait CallAs<Chain: CwEnv>: CwOrchExecute<Chain> + ContractInstance<Chain> +
 
 impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: CwEnv> CallAs<Chain> for T {}
 
-
 /// Helper methods for conditional uploading of a contract.
 pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
@@ -207,17 +206,18 @@ pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
         }
     }
 
-     /// Returns whether the checksum of the WASM file matches the checksum of the latest uploaded code for this contract.
-     fn latest_is_uploaded(&self) -> Result<bool, CwEnvError> {
+    /// Returns whether the checksum of the WASM file matches the checksum of the latest uploaded code for this contract.
+    fn latest_is_uploaded(&self) -> Result<bool, CwEnvError> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
 
         let chain = self.get_chain();
-        let on_chain_hash = chain.get_contract_hash(latest_uploaded_code_id).map_err(Into::into)?;
+        let on_chain_hash = chain
+            .get_contract_hash(latest_uploaded_code_id)
+            .map_err(Into::into)?;
         let local_hash = self.wasm().checksum()?;
         Ok(local_hash == on_chain_hash)
-        
     }
 
     /// Returns whether the contract is running the latest uploaded code for it
@@ -228,15 +228,15 @@ pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
         let chain = self.get_chain();
         let info = chain.get_contract_info(self).map_err(Into::into)?;
         Ok(latest_uploaded_code_id == info.code_id)
-
     }
 }
-
 
 impl<T, Chain: WasmCodeQuerier> ConditionalUpload<Chain> for T where T: CwOrchUpload<Chain> {}
 
 /// Helper methods for conditional migration of a contract.
-pub trait ConditionalMigrate<Chain: WasmCodeQuerier>: CwOrchMigrate<Chain> + ConditionalUpload<Chain> {
+pub trait ConditionalMigrate<Chain: WasmCodeQuerier>:
+    CwOrchMigrate<Chain> + ConditionalUpload<Chain>
+{
     /// Only migrate the contract if it is not on the latest code-id yet
     fn migrate_if_needed(
         &self,
@@ -274,4 +274,7 @@ pub trait ConditionalMigrate<Chain: WasmCodeQuerier>: CwOrchMigrate<Chain> + Con
         }
     }
 }
-impl<T, Chain: WasmCodeQuerier> ConditionalMigrate<Chain> for T where T: CwOrchMigrate<Chain> + ConditionalUpload<Chain> {}
+impl<T, Chain: WasmCodeQuerier> ConditionalMigrate<Chain> for T where
+    T: CwOrchMigrate<Chain> + ConditionalUpload<Chain>
+{
+}
