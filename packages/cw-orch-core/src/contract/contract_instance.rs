@@ -3,6 +3,7 @@ use super::interface_traits::Uploadable;
 use crate::{
     environment::{CwEnv, IndexResponse, StateInterface, TxResponse},
     error::CwEnvError,
+    log::{CONTRACT_LOGS, TRANSACTION_LOGS},
 };
 
 use cosmwasm_std::{Addr, Coin};
@@ -52,12 +53,12 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 
     /// Upload a contract given its source
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Uploading {}", self.id);
+        log::info!(target: CONTRACT_LOGS, "Uploading {}", self.id);
         let resp = self.chain.upload(source).map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
+        log::info!(target: CONTRACT_LOGS, "Uploaded {} with code id {}", self.id, code_id);
+        log::debug!(target: TRANSACTION_LOGS, "Upload response: {:?}", resp);
         Ok(resp)
     }
 
@@ -67,11 +68,11 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         msg: &E,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Executing {} on {}", log_serialize_message(msg)?, self.id);
+        log::info!(target: CONTRACT_LOGS, "Executing {} on {}", log_serialize_message(msg)?, self.id);
         let resp = self
             .chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?);
-        log::debug!("execute response: {:?}", resp);
+        log::debug!(target: TRANSACTION_LOGS, "execute response: {:?}", resp);
         resp.map_err(Into::into)
     }
 
@@ -83,6 +84,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
+            target: CONTRACT_LOGS,
             "Instantiating {} with msg {}",
             self.id,
             log_serialize_message(msg)?
@@ -102,9 +104,9 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 
         self.set_address(&contract_address);
 
-        log::info!("Instantiated {} with address {}", self.id, contract_address);
+        log::info!(target: CONTRACT_LOGS, "Instantiated {} with address {}", self.id, contract_address);
 
-        log::debug!("Instantiate response: {:?}", resp);
+        log::debug!(target: TRANSACTION_LOGS, "Instantiate response: {:?}", resp);
 
         Ok(resp)
     }
@@ -115,6 +117,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         query_msg: &Q,
     ) -> Result<T, CwEnvError> {
         log::info!(
+            target: CONTRACT_LOGS,
             "Querying {} on {}",
             log_serialize_message(query_msg)?,
             self.id
@@ -123,7 +126,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             .chain
             .query(query_msg, &self.address()?)
             .map_err(Into::into)?;
-        log::debug!("Query response: {:?}", resp);
+        log::debug!(target: CONTRACT_LOGS, "Query response: {:?}", resp);
         Ok(resp)
     }
 
@@ -134,6 +137,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         new_code_id: u64,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
+            target: CONTRACT_LOGS,
             "Migrating {:?} to code_id {}, with message {}",
             self.id,
             new_code_id,

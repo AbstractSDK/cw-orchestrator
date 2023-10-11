@@ -57,7 +57,7 @@ mod wasm_path {
 
 mod artifacts_dir {
     use super::WasmPath;
-    use crate::error::CwEnvError;
+    use crate::{error::CwEnvError, log::LOCAL_LOGS};
 
     use std::{env, fs, path::PathBuf};
 
@@ -120,7 +120,7 @@ mod artifacts_dir {
         pub fn auto(start_path: Option<String>) -> Self {
             // We find the artifacts dir automatically from the place that this function was invoked
             let workspace_dir = find_workspace_dir(start_path).join("artifacts");
-            log::debug!("Found artifacts dir at {:?}", workspace_dir);
+            log::debug!(target: LOCAL_LOGS, "Found artifacts dir at {:?}", workspace_dir);
             Self::new(workspace_dir)
         }
 

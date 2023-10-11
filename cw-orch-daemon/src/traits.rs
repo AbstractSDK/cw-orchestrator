@@ -1,6 +1,7 @@
 use cw_orch_core::{
     contract::interface_traits::{CwOrchMigrate, CwOrchUpload},
     environment::TxResponse,
+    log::CONTRACT_LOGS,
 };
 
 use crate::{queriers::CosmWasm, Daemon, DaemonError};
@@ -58,7 +59,7 @@ pub trait ConditionalMigrate: CwOrchMigrate<Daemon> + ConditionalUpload {
         migrate_msg: &Self::MigrateMsg,
     ) -> Result<Option<TxResponse<Daemon>>, DaemonError> {
         if self.is_running_latest()? {
-            log::info!("{} is already running the latest code", self.id());
+            log::info!(target: CONTRACT_LOGS, "{} is already running the latest code", self.id());
             Ok(None)
         } else {
             Some(self.migrate(migrate_msg, self.code_id()?))
