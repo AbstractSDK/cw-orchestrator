@@ -1,5 +1,3 @@
-use std::env;
-
 use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
@@ -7,6 +5,7 @@ use cosmrs::{
     tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
     Any, Coin,
 };
+use cw_orch_core::env::CwOrchEnvVars;
 use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
@@ -91,7 +90,7 @@ impl TxBuilder {
                     .await?;
                 log::debug!("Simulated gas needed {:?}", sim_gas_used);
 
-                let gas_expected = if let Ok(gas_buffer) = env::var("CW_ORCH_GAS_BUFFER") {
+                let gas_expected = if let Ok(gas_buffer) = CwOrchEnvVars::GasBuffer.get() {
                     sim_gas_used as f64 * gas_buffer.parse::<f64>()?
                 } else if sim_gas_used < BUFFER_THRESHOLD {
                     sim_gas_used as f64 * SMALL_GAS_BUFFER

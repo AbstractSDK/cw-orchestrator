@@ -7,6 +7,7 @@ mod node {
 
     use ctor::{ctor, dtor};
 
+    use cw_orch_core::env::CwOrchEnvVars;
     use duct::cmd;
 
     // Config
@@ -151,20 +152,23 @@ mod node {
         let temp_dir = env::temp_dir();
         let state_file = temp_dir.join("cw_orch_test.json");
 
-        if env::var("STATE_FILE").is_err() {
+        if CwOrchEnvVars::StateFile.get().is_err() {
             env::set_var("STATE_FILE", state_file);
         }
 
-        if env::var("LOCAL_MNEMONIC").is_err() {
+        if CwOrchEnvVars::LocalMnemonic.get().is_err() {
             env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
         }
 
         log::info!("Using RUST_LOG: {}", env::var("RUST_LOG").unwrap());
         log::info!("Using CONTAINER_NAME: {}", container);
-        log::info!("Using STATE_FILE: {}", env::var("STATE_FILE").unwrap());
+        log::info!(
+            "Using STATE_FILE: {}",
+            CwOrchEnvVars::StateFile.get().unwrap()
+        );
         log::info!(
             "Using LOCAL_MNEMONIC: {}",
-            env::var("LOCAL_MNEMONIC").unwrap()
+            CwOrchEnvVars::LocalMnemonic.get().unwrap()
         );
 
         container::start(&container, &image);

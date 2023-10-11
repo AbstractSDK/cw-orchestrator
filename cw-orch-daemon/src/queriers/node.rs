@@ -1,4 +1,4 @@
-use std::{cmp::min, env, time::Duration};
+use std::{cmp::min, time::Duration};
 
 use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -9,6 +9,7 @@ use cosmrs::{
     },
     tendermint::{Block, Time},
 };
+use cw_orch_core::env::CwOrchEnvVars;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -16,7 +17,7 @@ use super::DaemonQuerier;
 const MAX_TX_QUERY_RETRIES: usize = 50;
 
 fn get_max_tx_query_retries() -> Result<usize, DaemonError> {
-    if let Ok(retries) = env::var("CW_ORCH_MAX_TX_QUERY_RETRIES") {
+    if let Ok(retries) = CwOrchEnvVars::MaxTxQueryRetries.get() {
         Ok(retries.parse()?)
     } else {
         Ok(MAX_TX_QUERY_RETRIES)
@@ -225,7 +226,7 @@ impl Node {
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
-        if let Ok(min_block_speed) = env::var("CW_ORCH_MIN_BLOCK_SPEED") {
+        if let Ok(min_block_speed) = CwOrchEnvVars::MinBlockSpeed.get() {
             block_speed = block_speed.max(min_block_speed.parse()?);
         }
 
