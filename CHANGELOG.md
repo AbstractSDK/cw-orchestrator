@@ -6,6 +6,7 @@
 - Added stargate feature to cw-multi-test
 - Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir. 
 - Exposed the state_dir location
+- Added better env variable management by @Kayanski
 
 ## v0.16.4 [20th September 2023]
 

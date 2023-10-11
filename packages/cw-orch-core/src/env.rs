@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, fmt::Display};
 
 /// This regroups all env variables used by cw-orch-daemon. It allows for easier documentation and env variable management
 pub enum CwOrchEnvVars {
@@ -56,22 +56,24 @@ pub enum CwOrchEnvVars {
 
 impl CwOrchEnvVars {
     pub fn get(&self) -> Result<String, env::VarError> {
-        env::var(self.name())
+        env::var(self.to_string())
     }
+}
 
-    pub fn name(&self) -> String {
-        match self {
-            CwOrchEnvVars::StateFolder => "CW_ORCH_STATE_FOLDER".to_string(),
-            CwOrchEnvVars::StateFile => "STATE_FILE".to_string(),
-            CwOrchEnvVars::ArtifactsDir => "ARTIFACTS_DIR".to_string(),
-            CwOrchEnvVars::GasBuffer => "CW_ORCH_GAS_BUFFER".to_string(),
-            CwOrchEnvVars::MaxTxQueryRetries => "CW_ORCH_MAX_TX_QUERY_RETRIES".to_string(),
-            CwOrchEnvVars::MinBlockSpeed => "CW_ORCH_MIN_BLOCK_SPEED".to_string(),
-            CwOrchEnvVars::SerializeJson => "CW_ORCH_SERIALIZE_JSON".to_string(),
+impl Display for CwOrchEnvVars {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            CwOrchEnvVars::StateFolder => "CW_ORCH_STATE_FOLDER",
+            CwOrchEnvVars::StateFile => "STATE_FILE",
+            CwOrchEnvVars::ArtifactsDir => "ARTIFACTS_DIR",
+            CwOrchEnvVars::GasBuffer => "CW_ORCH_GAS_BUFFER",
+            CwOrchEnvVars::MaxTxQueryRetries => "CW_ORCH_MAX_TX_QUERY_RETRIES",
+            CwOrchEnvVars::MinBlockSpeed => "CW_ORCH_MIN_BLOCK_SPEED",
+            CwOrchEnvVars::SerializeJson => "CW_ORCH_SERIALIZE_JSON",
 
-            CwOrchEnvVars::MainMnemonic => "MAIN_MNEMONIC".to_string(),
-            CwOrchEnvVars::TestMnemonic => "TEST_MNEMONIC".to_string(),
-            CwOrchEnvVars::LocalMnemonic => "LOCAL_MNEMONIC".to_string(),
-        }
+            CwOrchEnvVars::MainMnemonic => "MAIN_MNEMONIC",
+            CwOrchEnvVars::TestMnemonic => "TEST_MNEMONIC",
+            CwOrchEnvVars::LocalMnemonic => "LOCAL_MNEMONIC",
+        })
     }
 }

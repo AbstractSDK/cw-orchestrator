@@ -156,7 +156,7 @@ impl DaemonState {
             .ok_or(DaemonError::StdErr(
                 format!(
                     "Your machine doesn't have a home folder. Please specify the {} env variable to use cw-orchestrator", 
-                    CwOrchEnvVars::StateFolder.name()
+                    CwOrchEnvVars::StateFolder
                 )))
     }
 

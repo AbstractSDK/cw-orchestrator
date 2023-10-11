@@ -55,7 +55,7 @@ impl Sender<All> {
         let mnemonic = env_variable.get().unwrap_or_else(|_| {
             panic!(
                 "Wallet mnemonic environment variable {} not set.",
-                env_variable.name()
+                env_variable
             )
         });
 

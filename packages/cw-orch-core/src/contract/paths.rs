@@ -112,12 +112,9 @@ mod artifacts_dir {
     impl ArtifactsDir {
         /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
         pub fn env() -> Self {
-            let dir = CwOrchEnvVars::ArtifactsDir.get().unwrap_or_else(|_| {
-                panic!(
-                    "{} env variable not set",
-                    CwOrchEnvVars::ArtifactsDir.name()
-                )
-            });
+            let dir = CwOrchEnvVars::ArtifactsDir
+                .get()
+                .unwrap_or_else(|_| panic!("{} env variable not set", CwOrchEnvVars::ArtifactsDir));
             Self::new(dir)
         }
 
