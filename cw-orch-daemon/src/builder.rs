@@ -1,4 +1,4 @@
-use crate::{DaemonAsync, DaemonBuilder, log::print_if_disabled_log};
+use crate::{log::print_if_disabled_log, DaemonAsync, DaemonBuilder};
 use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;

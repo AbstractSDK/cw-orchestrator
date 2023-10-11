@@ -16,11 +16,11 @@ pub mod tx_resp;
 // expose these as mods as they can grow
 pub mod keys;
 pub mod live_mock;
+mod log;
 pub mod queriers;
 mod traits;
 pub mod tx_broadcaster;
 pub mod tx_builder;
-mod log;
 pub use self::{
     builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
 };
