@@ -1,6 +1,15 @@
 use std::{env, fmt::Display};
 
 /// This regroups all env variables used by cw-orch-daemon. It allows for easier documentation and env variable management
+/// This is used to import environment variables with safe names (and at a centralized location)
+/// To get the env variable, you can use
+/// ```rust
+/// let env_variable = CwOrchEnvVars::StateFolder.get()?;
+/// ```
+/// You can get the env variable name with :
+/// ```rust
+/// let variable_name = CwOrchEnvVars::StateFolder.to_string();
+/// ```
 pub enum CwOrchEnvVars {
     /// Optional - Absolute Path
     /// Defaults to "~./cw-orchestrator"
