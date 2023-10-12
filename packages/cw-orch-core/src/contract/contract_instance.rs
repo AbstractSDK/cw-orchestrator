@@ -72,7 +72,8 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         let resp = self
             .chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?);
-        log::debug!(target: TRANSACTION_LOGS, "execute response: {:?}", resp);
+        log::info!(target: CONTRACT_LOGS, "Executed {} with address {}", self.id, self.address()?);
+        log::debug!(target: TRANSACTION_LOGS, "Execute response: {:?}", resp);
         resp.map_err(Into::into)
     }
 
@@ -105,7 +106,6 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self.set_address(&contract_address);
 
         log::info!(target: CONTRACT_LOGS, "Instantiated {} with address {}", self.id, contract_address);
-
         log::debug!(target: TRANSACTION_LOGS, "Instantiate response: {:?}", resp);
 
         Ok(resp)
@@ -116,7 +116,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         &self,
         query_msg: &Q,
     ) -> Result<T, CwEnvError> {
-        log::info!(
+        log::debug!(
             target: CONTRACT_LOGS,
             "Querying {} on {}",
             log_serialize_message(query_msg)?,
@@ -126,7 +126,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             .chain
             .query(query_msg, &self.address()?)
             .map_err(Into::into)?;
-        log::debug!(target: CONTRACT_LOGS, "Query response: {:?}", resp);
+        log::debug!(target: CONTRACT_LOGS, "Query response: {:?}",  log_serialize_message(query_msg)?);
         Ok(resp)
     }
 
@@ -143,9 +143,13 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             new_code_id,
             log_serialize_message(migrate_msg)?
         );
-        self.chain
+        let resp = self.chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
-            .map_err(Into::into)
+            .map_err(Into::into)?;
+
+        log::info!(target: CONTRACT_LOGS, "Migrated {} to code-id {}", self.id, new_code_id);
+        log::debug!(target: TRANSACTION_LOGS, "Migrate response: {:?}", resp);
+        Ok(resp)
     }
 
     // State interfaces
