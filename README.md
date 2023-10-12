@@ -210,6 +210,23 @@ impl<Chain: CwEnv> Example<Chain> {
 - Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies. 
 - Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  
 
+## Supported chains
+
+Cw-orchestrator supports the following chains natively : 
+🟥 LocalNet, 🟦 Testnet, 🟩 Mainnet
+
+- Archway 🟦🟩
+- Injective 🟦🟩
+- Juno 🟥🟦🟩
+- Kujira 🟦
+- Migaloo 🟥🟦🟩
+- Neutron 🟦🟩
+- Nibiru 🟦
+- Osmosis 🟥🟦🟩
+- Sei 🟥🟦🟩
+- Terra 🟥🟦🟩
+
+Additional chains can easily be integrated by creating a new [`ChainInfo`](./packages/cw-orch-networks/src/chain_info.rs) structure. This can be done in your script directly. If you have additional time, don't hesitate to open a PR on this repository.
 
 ## Installation
 
