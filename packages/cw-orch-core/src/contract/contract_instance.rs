@@ -1,6 +1,7 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use super::interface_traits::Uploadable;
 use crate::{
+    env::CwOrchEnvVars,
     environment::{CwEnv, IndexResponse, StateInterface, TxResponse},
     error::CwEnvError,
     log::{CONTRACT_LOGS, TRANSACTION_LOGS},
@@ -8,7 +9,7 @@ use crate::{
 
 use cosmwasm_std::{Addr, Coin};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{env, fmt::Debug};
+use std::fmt::Debug;
 
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
@@ -196,7 +197,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 
 /// Helper to serialize objects (JSON or Rust DEBUG)
 fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
-    if env::var("CW_ORCH_SERIALIZE_JSON") == Ok("true".to_string()) {
+    if CwOrchEnvVars::SerializeJson.get() == Ok("true".to_string()) {
         Ok(serde_json::to_string(msg)?)
     } else {
         Ok(format!("{:#?}", msg))

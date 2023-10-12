@@ -32,7 +32,7 @@ use cosmrs::{
 use cosmwasm_std::Addr;
 use cw_orch_core::log::LOCAL_LOGS;
 use secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
+use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -52,10 +52,11 @@ impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
-        let mnemonic = env::var(kind.mnemonic_name()).unwrap_or_else(|_| {
+        let env_variable = kind.mnemonic_env_variable();
+        let mnemonic = env_variable.get().unwrap_or_else(|_| {
             panic!(
                 "Wallet mnemonic environment variable {} not set.",
-                kind.mnemonic_name()
+                env_variable
             )
         });
 

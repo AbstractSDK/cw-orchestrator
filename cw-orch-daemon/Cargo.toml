@@ -62,11 +62,11 @@ chrono = { version = "0.4" }
 base16 = { version = "0.2.1" }
 derive_builder = { version = "0.12.0" }
 ring = { version = "0.16.20" }
+dirs = "5.0.1"
 
 # Injective dependencies
 ethers-signers = { version = "2.0.7", optional = true }
 ethers-core = { version = "2.0.7", optional = true }
-shellexpand = "3.1.0"
 
 # Gzip
 flate2 = { version = "1.0.26" }
