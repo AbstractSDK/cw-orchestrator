@@ -1,39 +1,22 @@
-mod common;
-#[cfg(feature = "node-tests")]
 mod tests {
     /*
         DaemonAsync contract general tests
     */
 
-    use cw_orch_core::{contract::interface_traits::*, environment::TxHandler};
-    use cw_orch_daemon::Daemon;
+    use cw_orch_core::contract::interface_traits::*;
+    use cw_orch_mock::Mock;
     use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
 
     use cosmwasm_std::Addr;
 
     use speculoos::prelude::*;
 
-    use crate::common::Id;
-
     #[test]
-    #[serial_test::serial]
     fn helper_traits() {
-        use cw_orch_networks::networks;
+        let sender = Addr::unchecked("sender");
+        let chain = Mock::new(&sender);
 
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
-            .build()
-            .unwrap();
-
-        let sender = daemon.sender();
-
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
         asserting!("address is not present")
             .that(&contract.address())
@@ -45,7 +28,7 @@ mod tests {
 
         asserting!("latest_is_uploaded is true")
             .that(&contract.latest_is_uploaded().unwrap())
-            .is_true();
+            .is_false(); // This is false, because of how checksum works in cw-multi-test
 
         let init_msg = &InstantiateMsg {};
 
@@ -116,34 +99,17 @@ mod tests {
     // }
 
     #[test]
-    #[serial_test::serial]
     fn cw_orch_interface_traits() {
-        use cw_orch_networks::networks;
+        let sender = Addr::unchecked("sender");
+        let chain = Mock::new(&sender);
 
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
-            .build()
-            .unwrap();
-
-        let sender = daemon.sender();
-
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
         // upload contract
         let upload_res = contract.upload();
         asserting!("upload is successful").that(&upload_res).is_ok();
 
-        let code_id = upload_res.unwrap().logs[0].events[1].attributes[1]
-            .value
-            .clone();
-
-        log::info!("Using code_id {}", code_id);
+        let code_id = contract.code_id().unwrap();
 
         // instantiate contract on chain
         let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), None);
@@ -160,7 +126,7 @@ mod tests {
             &MigrateMsg {
                 t: "success".to_string(),
             },
-            code_id.parse::<u64>().unwrap(),
+            code_id,
         );
         asserting!("migrate is successful")
             .that(&migrate_res)
@@ -168,6 +134,6 @@ mod tests {
 
         asserting!("that upload_if_needed returns None")
             .that(&contract.upload_if_needed().unwrap())
-            .is_none();
+            .is_some(); // This is false, because of how checksum works in cw-multi-test
     }
 }

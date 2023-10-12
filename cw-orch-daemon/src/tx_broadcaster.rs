@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
+use cw_orch_core::log::{TRANSACTION_LOGS, TX_RETRY_LOGS};
 use secp256k1::All;
 
 use crate::{
@@ -79,7 +80,10 @@ impl TxBroadcaster {
 
         // We try and broadcast once
         let mut tx_response = broadcast_helper(&mut tx_builder, wallet).await;
-
+        log::info!(
+            target: TX_RETRY_LOGS,
+            "Awaiting TX inclusion in block..."
+        );
         while tx_retry {
             tx_retry = false;
 
@@ -96,8 +100,9 @@ impl TxBroadcaster {
                     let block_speed = Node::new(wallet.channel())
                         .average_block_speed(None)
                         .await?;
-                    log::info!(
-                        "Retrying broadcasting tx in {} seconds because of {}",
+                    log::warn!(
+                        target: TX_RETRY_LOGS,
+                        "Retrying broadcasting TX in {} seconds because of {}",
                         block_speed,
                         s.reason
                     );
@@ -128,7 +133,7 @@ async fn broadcast_helper(
 ) -> Result<TxResponse, DaemonError> {
     let tx = tx_builder.build(wallet).await?;
     let tx_response = wallet.broadcast_tx(tx).await?;
-    log::debug!("tx broadcast response: {:?}", tx_response);
+    log::debug!(target: TRANSACTION_LOGS, "TX broadcast response: {:?}", tx_response);
 
     assert_broadcast_code_response(tx_response)
 }
