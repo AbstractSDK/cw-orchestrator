@@ -122,7 +122,7 @@ impl TxBuilder {
 
         log::debug!(
             target: TRANSACTION_LOGS,
-            "submitting tx: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
+            "submitting TX: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
             fee,
             account_number,
             sequence

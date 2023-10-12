@@ -59,7 +59,7 @@ pub trait ConditionalMigrate: CwOrchMigrate<Daemon> + ConditionalUpload {
         migrate_msg: &Self::MigrateMsg,
     ) -> Result<Option<TxResponse<Daemon>>, DaemonError> {
         if self.is_running_latest()? {
-            log::info!(target: CONTRACT_LOGS, "{} is already running the latest code", self.id());
+            log::info!(target: CONTRACT_LOGS, "Skipped migration. {} is already running the latest code", self.id());
             Ok(None)
         } else {
             Some(self.migrate(migrate_msg, self.code_id()?))

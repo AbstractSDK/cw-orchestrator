@@ -143,7 +143,8 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             new_code_id,
             log_serialize_message(migrate_msg)?
         );
-        let resp = self.chain
+        let resp = self
+            .chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
             .map_err(Into::into)?;
 

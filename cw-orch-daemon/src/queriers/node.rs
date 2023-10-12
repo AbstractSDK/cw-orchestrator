@@ -303,7 +303,7 @@ impl Node {
                 Ok(tx) => {
                     let resp = tx.into_inner().tx_responses;
                     if retry_on_empty && resp.is_empty() {
-                        log::debug!(target: QUERY_LOGS, "Not TX by events found");
+                        log::debug!(target: QUERY_LOGS, "No TX found with events {:?}", events);
                         log::debug!(target: QUERY_LOGS, "Waiting 10s");
                         tokio::time::sleep(Duration::from_secs(10)).await;
                     } else {

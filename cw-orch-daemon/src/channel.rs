@@ -17,7 +17,7 @@ impl GrpcChannel {
         let mut successful_connections = vec![];
 
         for Grpc { address, .. } in grpc.iter() {
-            log::info!(target: CONNECTIVITY_LOGS, "Trying to connect to endpoint: {}", address);
+            log::debug!(target: CONNECTIVITY_LOGS, "Trying to connect to endpoint: {}", address);
 
             // get grpc endpoint
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
@@ -41,7 +41,7 @@ impl GrpcChannel {
                     continue;
                 };
 
-                log::info!(target: CONNECTIVITY_LOGS, "Attempting to connect with TLS");
+                log::debug!(target: CONNECTIVITY_LOGS, "Attempting to connect with TLS");
 
                 // re attempt to connect
                 let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
