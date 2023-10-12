@@ -1,6 +1,6 @@
 use ibc_chain_registry::chain::ChainData;
 
-use crate::{log::print_if_disabled_log, DaemonAsyncBuilder};
+use crate::DaemonAsyncBuilder;
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -72,8 +72,6 @@ impl DaemonBuilder {
             .ok_or(DaemonError::BuilderMissing("runtime handle".into()))?;
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
-
-        print_if_disabled_log();
 
         Ok(Daemon { rt_handle, daemon })
     }
