@@ -2,6 +2,7 @@ use super::{Contract, WasmPath};
 use crate::{
     environment::{CwEnv, TxHandler, TxResponse, WasmCodeQuerier},
     error::CwEnvError,
+    log::CONTRACT_LOGS,
 };
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
@@ -243,7 +244,7 @@ pub trait ConditionalMigrate<Chain: WasmCodeQuerier>:
         migrate_msg: &Self::MigrateMsg,
     ) -> Result<Option<TxResponse<Chain>>, CwEnvError> {
         if self.is_running_latest()? {
-            log::info!("{} is already running the latest code", self.id());
+            log::info!(target: CONTRACT_LOGS, "Skipped migration. {} is already running the latest code", self.id());
             Ok(None)
         } else {
             Some(self.migrate(migrate_msg, self.code_id()?))
