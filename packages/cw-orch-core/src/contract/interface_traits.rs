@@ -214,7 +214,7 @@ pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
 
         let chain = self.get_chain();
         let on_chain_hash = chain
-            .get_contract_hash(latest_uploaded_code_id)
+            .contract_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
         let local_hash = self.wasm().checksum()?;
         Ok(local_hash == on_chain_hash)
@@ -226,7 +226,7 @@ pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
             return Ok(false);
         };
         let chain = self.get_chain();
-        let info = chain.get_contract_info(self).map_err(Into::into)?;
+        let info = chain.contract_info(self).map_err(Into::into)?;
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }

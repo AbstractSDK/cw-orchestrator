@@ -93,8 +93,10 @@ pub trait TxHandler: ChainState + Clone {
 }
 
 pub trait WasmCodeQuerier: CwEnv {
-    fn get_contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error>;
-    fn get_contract_info<T: CwOrchUpload<Self>>(
+    /// Returns the checksum of provided code_id
+    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error>;
+    /// Returns the code_info structure of the provided contract
+    fn contract_info<T: CwOrchUpload<Self>>(
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;

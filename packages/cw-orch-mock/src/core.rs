@@ -311,14 +311,16 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 }
 
 impl WasmCodeQuerier for Mock {
-    /// Returns whether the checksum of the WASM file matches the checksum of the latest uploaded code for this contract.
-    fn get_contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
+    /// Returns the checksum of provided code_id
+    /// Cw-multi-test implements a checksum based on the code_id (because it wan't access the wasm code)
+    /// So it's not possible to check wether 2 contracts have the same code using the Mock implementation
+    fn contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
         let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
         Ok(code_info.checksum.to_string())
     }
 
-    /// Returns whether the contract is running the latest uploaded code for it
-    fn get_contract_info<T: CwOrchUpload<Self>>(
+    /// Returns the code_info structure of the provided contract
+    fn contract_info<T: CwOrchUpload<Self>>(
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, CwEnvError> {
