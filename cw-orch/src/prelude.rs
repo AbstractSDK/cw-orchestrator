@@ -17,6 +17,8 @@ pub use crate::contract::interface_traits::{
     InstantiableContract, MigratableContract, QueryableContract, Uploadable,
 };
 
+pub use crate::deploy::Deploy;
+
 pub use crate::environment::StateInterface;
 
 // Response trait
