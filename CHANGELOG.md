@@ -7,7 +7,11 @@
 - Added `Deploy` to prelude
 - Add ability to provide custom state in `Deploy::set_contracts_state`
 - Breaking change : remove the `&self` dependency for the `Deploy::deployed_state_file_path` method
-- 
+- Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir. 
+- Exposed the state_dir location
+- Added better env variable management by @Kayanski
+- Added message to enable logging if not enabled
+
 ## v0.16.4 [20th September 2023]
 
 - Added automatically derived docs

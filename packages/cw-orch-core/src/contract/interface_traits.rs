@@ -1,7 +1,8 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{CwEnv, TxHandler},
+    environment::{CwEnv, TxHandler, TxResponse, WasmCodeQuerier},
     error::CwEnvError,
+    log::CONTRACT_LOGS,
 };
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
@@ -194,3 +195,87 @@ pub trait CallAs<Chain: CwEnv>: CwOrchExecute<Chain> + ContractInstance<Chain> +
 }
 
 impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: CwEnv> CallAs<Chain> for T {}
+
+/// Helper methods for conditional uploading of a contract.
+pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
+    /// Only upload the contract if it is not uploaded yet (checksum does not match)
+    fn upload_if_needed(&self) -> Result<Option<TxResponse<Chain>>, CwEnvError> {
+        if self.latest_is_uploaded()? {
+            Ok(None)
+        } else {
+            Some(self.upload()).transpose().map_err(Into::into)
+        }
+    }
+
+    /// Returns whether the checksum of the WASM file matches the checksum of the latest uploaded code for this contract.
+    fn latest_is_uploaded(&self) -> Result<bool, CwEnvError> {
+        let Some(latest_uploaded_code_id) = self.code_id().ok() else {
+            return Ok(false);
+        };
+
+        let chain = self.get_chain();
+        let on_chain_hash = chain
+            .contract_hash(latest_uploaded_code_id)
+            .map_err(Into::into)?;
+        let local_hash = self.wasm().checksum()?;
+        Ok(local_hash == on_chain_hash)
+    }
+
+    /// Returns whether the contract is running the latest uploaded code for it
+    fn is_running_latest(&self) -> Result<bool, CwEnvError> {
+        let Some(latest_uploaded_code_id) = self.code_id().ok() else {
+            return Ok(false);
+        };
+        let chain = self.get_chain();
+        let info = chain.contract_info(self).map_err(Into::into)?;
+        Ok(latest_uploaded_code_id == info.code_id)
+    }
+}
+
+impl<T, Chain: WasmCodeQuerier> ConditionalUpload<Chain> for T where T: CwOrchUpload<Chain> {}
+
+/// Helper methods for conditional migration of a contract.
+pub trait ConditionalMigrate<Chain: WasmCodeQuerier>:
+    CwOrchMigrate<Chain> + ConditionalUpload<Chain>
+{
+    /// Only migrate the contract if it is not on the latest code-id yet
+    fn migrate_if_needed(
+        &self,
+        migrate_msg: &Self::MigrateMsg,
+    ) -> Result<Option<TxResponse<Chain>>, CwEnvError> {
+        if self.is_running_latest()? {
+            log::info!(target: CONTRACT_LOGS, "Skipped migration. {} is already running the latest code", self.id());
+            Ok(None)
+        } else {
+            Some(self.migrate(migrate_msg, self.code_id()?))
+                .transpose()
+                .map_err(Into::into)
+        }
+    }
+    /// Uploads the contract if the local contract hash is different from the latest on-chain code hash.
+    /// Proceeds to migrates the contract if the contract is not running the latest code.
+    fn upload_and_migrate_if_needed(
+        &self,
+        migrate_msg: &Self::MigrateMsg,
+    ) -> Result<Option<Vec<TxResponse<Chain>>>, CwEnvError> {
+        let mut txs = Vec::with_capacity(2);
+
+        if let Some(tx) = self.upload_if_needed()? {
+            txs.push(tx);
+        };
+
+        if let Some(tx) = self.migrate_if_needed(migrate_msg)? {
+            txs.push(tx);
+        };
+
+        if txs.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(txs))
+        }
+    }
+}
+impl<T, Chain: WasmCodeQuerier> ConditionalMigrate<Chain> for T where
+    T: CwOrchMigrate<Chain> + ConditionalUpload<Chain>
+{
+}
