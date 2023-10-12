@@ -2,7 +2,9 @@
 
 Interfaces are virtual wrappers around CosmWasm contracts. They allow you to interact with your contracts in a type-safe way, and provide a convenient way to reason about contract interactions. Interfaces are the core reason why we built cw-orchestrator and we hope that you'll find them as useful as we do.
 
-You can find the code for this example in the [cw-orch counter-contract folder](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+> **Reminder**: You can find the code for this example in the [cw-orch counter-contract folder](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+>
+> If you are a fast or visual learner, you can find a [**Before**-**After**](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a) view of the `cw-orch` integration process in the sample contract. 
 
 ## Setup
 
@@ -34,57 +36,19 @@ interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
 Features (aka. feature flags) are a way to enable or disable parts of your code. In this case, we are including `cw-orch` as a dependency when the `interface` feature is enabled. This is a common pattern for feature flags.
 
 
-    /// We advise using the `artifacts_dir_from_workspace` macro that will help you look inside your `artifacts` directory for compiled wasms
-    /// You can also use the following syntax for manually indicating the location of the wasm file
-    /// We advise using `env!("CARGO_MANIFEST_DIR")` as the start of your path construction
-    /// ```rust 
-    ///     let crate_path = env!("CARGO_MANIFEST_DIR");
-    ///     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
-    ///     WasmPath::new(wasm_path).unwrap()
-    /// ```
-
-
 ## Creating an Interface
 
-Now that we have our dependency set up we can create the interface. `cw-orch` provides two methods to easily create an interface for your contract.
+Now that we have our dependency set up we can create the interface. `cw-orch` provides a powerful `interface` macro that allows you to create an interface for your contract without having to call it at the entry points, as well as the ability to specify the contract's source more easily.
 
-The first is the `interface_entry_point` macro. This macro will generate an interface for your contract by calling it at the entry points of your contract. We'll cover this macro first as it's the easiest to use.
-
-Alternatively you can also use the `interface` macro. This macro is more flexible and allows you to create an interface for your contract without having to call it at the entry points, as well as the ability to specify the contract's source more easily. We'll cover this macro in the end of this section.
-
-### Entry Point Macro
-
-As mentioned this macro is the easiest to use. It will generate an interface for your contract by calling it at the entry points of your contract. Here's an example of how to use it.
-
-In `counter/src/contract.rs`:
-
-```rust,ignore
-{{#include ../../../contracts/counter/src/contract.rs:interface_entry}}
-```
-
-Most of this should look familiar but if you're wondering about the two lines that contain `#[...]` here's what they do:
-
-1.
-    ```rust,ignore
-    {{#include ../../../contracts/counter/src/contract.rs:entry_point_line}}
-    ```
-   This is a CosmWasm macro. It enables the Wasm runtime to call into the function. You can read more about the macro in the [CosmWasm book](https://book.cosmwasm.com/basics/entry-points.html). We only enable this macro when the `export` feature is enabled. This prevents conflicts with other entry points when the contract is a dependency of another contract.
-
-2.
-    ```rust,ignore
-    {{#include ../../../contracts/counter/src/contract.rs:interface_line}}
-    ```
-    This is the cw-orch provided macro. It will generate an interface for your contract by analyzing the messages passed to the entry points. This is possible because the entry point function definitions have strict parameter requirements. With this information the macro can generate a type safe interface for your contract. We only enable this macro when the `interface` feature is enabled.
-
-### Customizable Interface Macro
-
-The second method to create an interface is the `interface` macro. To use it, first create a new file in the `contract/src` directory called `interface.rs`. This is where we will expose our interface.
+To use this macro, first create a new file in the `contract/src` directory called `interface.rs`. This is where we will expose our interface.
 
 In `counter/src/lib.rs`:
 
 ```rust,ignore
 {{#include ../../../contracts/counter/src/lib.rs:custom_interface}}
 ```
+
+This allows importing the `interface.rs` file only when the `interface` feature is enabled on the contract. Again, this is done because we don't want cw-orch dependencies to end up in your resulting `Wasm` contract
 
 Then in `counter/src/interface.rs`:
 
@@ -94,9 +58,33 @@ Then in `counter/src/interface.rs`:
 
 This use of the `interface` macro even allows you to have generic arguments in the message types. Any generics will be added to the interface under a `PhantomData` attribute.
 
+It can be beneficial to re-export the structure in our `lib.rs` file.
+
+In the counter contract we re-export in `lib.rs`;
+
+```rust,ignore
+{{#include ../../../contracts/counter/src/lib.rs:interface_reexport}}
+```
+
+> **NOTE**: You can see that we have used the `artifacts_dir_from_workspace` macro inside the `wasm` trait function. This macro helps you locate the workspace `artifacts` folder. It actually looks for any directory named `artifacts` from the root of the current crate going up. For instance if the project is located in `/path1/path2/counter`, it will look for the artifacts folder inside the following directories in order and return as soon as it finds such a folder : 
+> - `/path1/path2/counter`
+> - `/path1/path2`
+> - `/path1/`
+> - ...
+> 
+> This works for single contracts as well as workspace setups. 
+> If you have a specific setup, you can still specify the path yourself. If you do so, we advise indicating the wasm location from the current crate directory, using something like : 
+>    ```rust 
+>     let crate_path = env!("CARGO_MANIFEST_DIR");
+>     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
+>     WasmPath::new(wasm_path).unwrap()
+>     ```
+    
+
+
 ## Constructor
 
-Both macros implement a `new` function on the interface:
+The `interface` macro implements a `new` function on the interface:
 
 ```rust,ignore
 {{#include ../../../contracts/counter/tests/integration_tests.rs:constructor}}
@@ -104,20 +92,20 @@ Both macros implement a `new` function on the interface:
 
 The constructor takes two arguments:
 
-1. `contract_id`: The unique identifier for this contract. This is used as the key when retrieving address and code_id information for the contract.
-2. `chain`: The CosmWasm supported environment to use when calling the contract. Also includes the default sender information that will be used to call the contract.
+1. `contract_id`: The unique identifier for this contract. This is used as the key when retrieving address and code_id information for the contract. This argument is a `&str`.
+2. `chain`: The CosmWasm supported environment to use when calling the contract. Also includes the default sender information that will be used to call the contract. You can find more information later in the [Integrations](../integrations/index.md) section for how to create this `chain` variable
 
-## Custom Functions
+## Interacting with your contracts
 
-Now you can start implementing custom functions for your interfaces with ensured type safety.
+Now, you are able to interact directly with your contracts with ensured type safety.
 
 The environments that are currently supported are:
 
-1. [cw-multi-test](https://crates.io/crates/cw-multi-test) by using [`Mock`](https://docs.rs/cw-orch/latest/cw_orch/prelude/struct.Mock.html) as the environment.
-2. Blockchain daemons like [junod](https://github.com/CosmosContracts/juno), [osmosisd](https://github.com/osmosis-labs/osmosis), etc. These use the [`Daemon`](https://docs.rs/cw-orch/latest/cw_orch/prelude/struct.Daemon.html) environment.
-3. Chain-backed mock `deps` for unit-testing. This uses the [`MockQuerier`](https://docs.rs/cw-orch/latest/cw_orch/live_mock/struct.MockQuerier.html) that resolves all queries on a real node over gRPC.
+1. [cw-multi-test](https://crates.io/crates/cw-multi-test) by using [`Mock`](../integrations/cw-multi-test.md) as the `chain` variable.
+2. Actual Cosmos SDK nodes for interacting with lives chains (`mainnet`, `testnet`, `local`). Use [`Daemon`](../integrations/daemon.md) as the `chain` variable.
+3. [osmosis-test-tube](https://github.com/osmosis-labs/test-tube) or testing against actual chain binaries. This allows for fast testing with actual on-chain modules. This is particularly useful when testing against chain-specific modules. Use [`OsmosisTestTube`](../integrations/osmosis-test-tube.md) as the `chain` variable.
 
-### Generic function
+### Generic functions
 
 Generic functions can be executed over any environment. Setup functions are a good example of this.
 
@@ -125,29 +113,13 @@ Generic functions can be executed over any environment. Setup functions are a go
 {{#include ../../../contracts/counter/tests/integration_tests.rs:setup}}
 ```
 
-### Daemon-only functions
-
-```rust,ignore
-{{#include ../../../contracts/counter/src/interface.rs:daemon}}
-```
-
-## Entry Point Function Generation
-
-You can access these functions by importing the generated traits from the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. 
-
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros : 
-
-- The function created will have the snake_case name of the variant and will take the same arguments as the variant. 
-- The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. 
-- If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
-- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice).
-
+### Entry Point Function Generation
 
 Contract execution and querying is so common that we felt the need to improve the method of calling them. To do this we created two macros: `ExecuteFns` and `QueryFns`. As their name implies they can be used to automatically generate functions for executing and querying your contract through the interface.
 
-### Execution
+#### Execution
 
-To get started, find the `ExecuteMsg` definition for your contract. In our case it's located in `contracts/counter/src/msg.rs`. Then add the following line to your `ExecuteMsg` enum:
+To get started, find the `ExecuteMsg` definition for your contract. In our case it's located in `counter/src/msg.rs`. Then add the following line to your `ExecuteMsg` enum:
 
 ```rust,ignore
 {{#include ../../../contracts/counter/src/msg.rs:exec_msg}}
@@ -155,12 +127,12 @@ To get started, find the `ExecuteMsg` definition for your contract. In our case 
 
 Again we feature flag the function generation to prevent cw-orchestrator entering as a dependency when building your contract.
 
-The functions are implemented as a trait named `ExecuteMsgFns` which is implemented on any interface that uses this `ExecuteMsg`.
+The functions are implemented as a trait named `ExecuteMsgFns` which is implemented on any interface that uses this `ExecuteMsg` as an entrypoint message.
 
 Using the trait then becomes as simple as:
 
 ```rust,ignore
-// in integration_tests.rs
+    // in integration_tests.rs
 {{#include ../../../contracts/counter/tests/integration_tests.rs:reset}}
 ```
 
@@ -175,7 +147,7 @@ Generating query functions is a similar process but has the added advantage of u
 Using it is just as simple as the execution functions:
 
 ```rust,ignore
-// in integration_tests.rs
+    // in integration_tests.rs
 {{#include ../../../contracts/counter/tests/integration_tests.rs:query}}
 ```
 
@@ -187,85 +159,115 @@ In the counter contract we re-export in `lib.rs`;
 {{#include ../../../contracts/counter/src/lib.rs:fn_re_export}}
 ```
 
-### `impl_into` Attribute
+
+### Additional Remarks on `QueryFns` and `ExecuteFns`
+
+The `QueryFns` and `ExecuteFns` derive macros generate traits that are implemented on any Contract structure (defined by the [`interface` macro](#creating-an-interface)) that have the matching execute and query types. Because of the nature of rust traits, you need to import the traits in your application to use the simplifying syntax. Those traits are named `ExecuteMsgFns` and `QueryMsgFns`.
+
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros : 
+
+- The function created will have the snake_case name of the variant and will take the same arguments as the variant. 
+- The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. 
+- If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
+- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice).
+
+### Additional configuration
+
+#### `payable` Attribute
+
+Let's see an example for executing a message (from a money market for instance).
+
+```rust,ignore
+    money_market.deposit_stable()?;
+```
+
+There's a problem with the above function. The money market only knows how much you deposit into it by looking at the funds you send along with the transaction. Cw-orchestrator doesn't ask for funds by default. However, to allow attaching funds to a transaction, you can add the `#[payable]` attribute on your enum variant like so:
+
+```rust, ignore
+    #[derive(ExecuteFns)]
+    enum ExecuteMsg{
+        UpdateConfig{
+            config_field: String
+        },
+        #[payable]
+        DepositStable{}
+        ...
+    }
+```
+
+Be defining this attribute, you can now use:
+```rust,ignore
+    use cosmwasm_std::coins;
+    money_market.deposit_stable(&coins(456, "ujunox"))?;
+```
+
+#### `fn_name` Attribute
+
+```rust
+#[derive(cw_orch::ExecuteFns)] 
+pub enum ExecuteMsg{
+    Execute{
+        msg: CosmoMsg
+    }
+}
+```
+The following command will error because the `execute` function is reserved for contract execution. This will not even compile actually.
+
+```rust
+money_market.execute(message_to_execute_via_a_proxy)?;
+```
+
+This can happen in numerous cases actually, when using reserved keywords of cw-orch (or even rust). If this happens, you can use the `fn_name` attribute to rename a generated function.
+
+```rust
+#[derive(cw_orch::ExecuteFns)] 
+pub enum ExecuteMsg{
+    #[fn_name("proxy_execute")]
+    Execute{
+        msg: CosmoMsg
+    }
+}
+// This works smoothly !
+money_market.proxy_execute(message_to_execute_via_a_proxy)?;
+```
+
+This is also true for query functions.
+
+#### `impl_into` Attribute
 
 For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
 
 ```rust
-use cw_orch::interface;
-use cw_orch::prelude::*;
-
-// An execute message that is generic.
-#[cosmwasm_schema::cw_serde]
-pub enum GenericExecuteMsg<T> {
-    Generic(T),
-}
-
-// Now the following is possible:
-type ExecuteMsg = GenericExecuteMsg<Foo>;
-
-#[cosmwasm_schema::cw_serde]
-#[derive(cw_orch::ExecuteFns)]
-#[impl_into(ExecuteMsg)]
-pub enum Foo {
-    Bar { a: String },
-}
-
-impl From<Foo> for ExecuteMsg {
-    fn from(msg: Foo) -> Self {
-        ExecuteMsg::Generic(msg)
-    }
-}
-
-#[interface(Empty, ExecuteMsg, Empty, Empty)]
-struct Example<Chain>;
-
-impl<Chain: CwEnv> Example<Chain> {
-    pub fn test_macro(&self) {
-        // function `bar` is available because of the `impl_into` attribute!
-        self.bar("hello".to_string()).unwrap();
-    }
-}
+{{#include ../../../cw-orch/tests/impl_into.rs:impl_into}}
 ```
 
-### `disable_fields_sorting` Attribute
+#### `disable_fields_sorting` Attribute
 
 By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields of each enum member. For instance, 
 
 ```rust 
-use cw_orch::interface;
-use cw_orch::prelude::*;
-
-#[cosmwasm_schema::cw_serde]
-#[derive(cw_orch::ExecuteFns)]
-pub enum ExecuteMsg {
-    Bar { b: String, a: u64 },
-}
+{{#include ../../../contracts/mock_contract/src/msg_tests.rs:ordered_msg_def}}
 ```
  will generate 
  ```rust
- pub fn bar(a: u64, b: String) -> ...{
+ pub fn bar(a: String, b: u64) -> ...{
     ...
  } 
  ```
 You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior : 
 
 ```rust 
+{{#include ../../../contracts/mock_contract/src/msg_tests.rs:unordered_msg_def}}
 
-use cw_orch::interface;
-use cw_orch::prelude::*;
-
-#[cosmwasm_schema::cw_serde]
-#[derive(cw_orch::ExecuteFns)]
-#[disable_fields_sorting]
-pub enum ExecuteMsg {
-    Bar { b: String, a: u64 },
-}
  
- pub fn bar(b: String, a: u64) -> ...{
+ pub fn bar(b: u64, a: String) -> ...{
     ...
  } 
  ```
+ 
+ > **NOTE**: This behavior CAN be dangerous if your struct members have the same type. In that case, if you want to rearrange the order of the members inside the struct definition, you will have to be careful that you respect the orders in which you want to pass them.
+
+
 
 
 ## Learn more
@@ -276,5 +278,5 @@ Learn more about Abstract at [abstract.money](https://abstract.money).
 ## References
 
 - [cw-orchestrator](https://crates.io/crates/cw-orch)
-- [cw-plus-orc](https://crates.io/crates/cw-plus-orc)
-- [Abstract Contract Interfaces](https://crates.io/crates/abstract-cw-orch)
+- [cw-plus-orch](https://github.com/AbstractSDK/cw-plus)
+- [Abstract Contract Interfaces](https://crates.io/crates/abstract-interface)

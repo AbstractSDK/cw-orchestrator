@@ -3,8 +3,8 @@ use std::str::FromStr;
 use cosmwasm_std::{coins, Addr, BlockInfo, Decimal, Timestamp};
 
 use counter_contract::{
-    CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
+    CounterContract,
 };
 use cw_orch::prelude::{CallAs, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Mock};
 

@@ -53,7 +53,7 @@ where
         t: T,
     },
     #[returns(String)]
-    ThirdQuery{
+    ThirdQuery {
         /// test doc-comment
         t: T,
     },
@@ -118,7 +118,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery{ .. } => to_binary("third query passed"),
+        QueryMsg::ThirdQuery { .. } => to_binary("third query passed"),
         QueryMsg::FourthQuery(_, _) => to_binary(&4u64),
     }
 }
@@ -134,31 +134,28 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
     }
 }
 
-
-
 #[cfg(feature = "interface")]
 #[cw_orch::interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockContract;
 
 #[cfg(feature = "interface")]
-impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain>{
-    fn wrapper(&self) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
-        Box::new(cw_orch::prelude::ContractWrapper::new(
-            execute,
-            instantiate,
-            query,
+impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain> {
+    fn wrapper(
+        &self,
+    ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
+        Box::new(
+            cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
+                .with_migrate(migrate),
         )
-        .with_migrate(migrate)
-    )
     }
 
-    fn wasm(&self) -> cw_orch::prelude::WasmPath{
+    fn wasm(&self) -> cw_orch::prelude::WasmPath {
         use cw_orch::prelude::*;
         artifacts_dir_from_workspace!()
-            .find_wasm_path("mock_contract.wasm").unwrap()
+            .find_wasm_path("mock_contract.wasm")
+            .unwrap()
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -178,7 +175,9 @@ mod test {
         contract.upload()?;
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
-        contract.second_message("s".to_string(), &[]).unwrap_err();
+        contract
+            .second_message("s".to_string(), &coins(156, "ujuno"))
+            .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
         contract.fourth_message().unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();

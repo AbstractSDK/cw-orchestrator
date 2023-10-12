@@ -30,6 +30,6 @@ cw-multi-test = { workspace = true }
 counter-contract = { path = ".", features = ["interface"] }
 # Deps for deployment
 dotenv = { version = "0.15.0" }
-env_logger = { version = "0.10.0" }
+pretty_env_logger = { version = "0.5.0" }
 cw-orch = { path = "../../cw-orch", features = ["daemon", "osmosis-test-tube"] }
 anyhow.workspace = true

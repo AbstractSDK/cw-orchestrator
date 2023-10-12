@@ -1,7 +1,7 @@
 use cosmwasm_std::coins;
 use counter_contract::{
-    CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
+    CounterContract,
 };
 
 use cw_orch::prelude::{CallAs, ContractInstance, OsmosisTestTube};

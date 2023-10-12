@@ -11,15 +11,15 @@ cw-orchestrator is an advanced testing and deployment tool for CosmWasm smart-co
 
 ## Features
 
-- **Testing**: cw-orchestrator provides a testing framework that makes it easy to write tests for CosmWasm contracts. It does this by providing a testing environment that mimics the behavior of a CosmWasm blockchain. This allows you to write tests that interact with your contract in the same way that it would be interacted with on a real blockchain. These kinds of tests allow developers to more easily test contract-to-contract interactions without having to deal with the overhead of running a local node. The testing framework also provides a number of utilities that make it easy to write tests for CosmWasm contracts. These utilities include the ability to easily set and query balances, set block height/time and more. Additionally by creating a wrapper interface around a project's deployment developers can share their testing infrastructure with other developers, allowing them to easily test how their contracts interact with the project. The testing framework supported by cw-orchestrator include : 
+- **Testing**: cw-orchestrator provides a testing framework that makes it easy to write tests for CosmWasm contracts. It does this by providing a testing environment that mimics the behavior of a CosmWasm blockchain. This allows you to write tests that interact with your contract in the same way that it would be interacted with on a real blockchain. These kinds of tests allow developers to more easily test contract-to-contract interactions without having to deal with the overhead of running a local node. The testing framework also provides a number of utilities that make it easy to write tests for CosmWasm contracts. These utilities include the ability to easily set and query balances, set block height/time and more. Additionally by creating a wrapper interface around a project's deployment developers can share their testing infrastructure with other developers, allowing them to easily test how their contracts interact with the project. The testing frameworks supported by cw-orchestrator include : 
   - **[Cw-Multi-Test](./integrations/cw-multi-test.md)**
-  - **[Starship](./integrations/starship.md)**
+  - **[Starship](./interchain/integrations/daemon.md#for-testing)**
   - **[Osmosis-test-tube](./integrations/osmosis-test-tube.md)**
 
-- **Deployment**: cw-orchestrator also provides the ability to deploy to real networks. It does this by providing an easy to use interface to a blockchain node that can be used to submit transactions, query state and inspect transaction results.
+- **Deployment + Scripting**: cw-orchestrator also provides the ability to deploy to real networks. It does this by providing an easy to use interface to a blockchain node that can be used to submit transactions, query state and inspect transaction results. Any blockchain transaction can be broadcasted using cw-orchestrator. 
 
 - **Interface Generation**: Interacting with a smart-contract is often verbose, leading to a lot of boilerplate code. cw-orchestrator solves this problem by providing a macro that generates an interface to a contract. This interface can be used to easily interact with a contract and improves the readability of your tests and deployments. Making it easier to write and maintain tests and deployments. Additionally, because this library is written in Rust, any breaking changes to your contract's interface will cause a compile-time error, making it easy to keep your tests and deployments up to date.
 
 ## Getting Started
 
-These docs contain a quick-start and a longer tutorial-style walkthrough.
+These docs contain a [quick-start](./quick_start.md) and a longer [tutorial-style walkthrough](./single_contract/index.md).

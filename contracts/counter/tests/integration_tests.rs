@@ -13,6 +13,62 @@ use cosmwasm_std::Addr;
 const USER: &str = "user";
 const ADMIN: &str = "admin";
 // ANCHOR: integration_test
+
+// ANCHOR: count_test
+#[test]
+fn count() -> anyhow::Result<()> {
+    // Create a sender
+    let sender = Addr::unchecked(ADMIN);
+    // Create a user
+    let user = Addr::unchecked(USER);
+    // Create the mock. This will be our chain object throughout
+    let mock = Mock::new(&sender);
+
+    // Set up the contract (Definition below) ↓↓
+    let contract = setup(mock.clone())?;
+
+    // Increment the count of the contract
+    contract
+        // Set the caller to user
+        .call_as(&user)
+        // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
+        .increment()?;
+
+    // ANCHOR: query
+    // Get the count.
+    use counter_contract::CounterQueryMsgFns;
+    let count1 = contract.get_count()?;
+
+    // or query it manually
+    let count2: GetCountResponse = contract.query(&QueryMsg::GetCount {})?;
+    assert_eq!(count1.count, count2.count);
+    // ANCHOR_END: query
+
+    // Check the count
+    assert_eq!(count1.count, 2);
+    // ANCHOR: reset
+    // Reset
+    use counter_contract::CounterExecuteMsgFns;
+    contract.reset(0)?;
+    // ANCHOR_END: reset
+
+    let count = contract.get_count()?;
+    assert_eq!(count.count, 0);
+
+    // Check negative case
+    let exec_res: Result<cw_multi_test::AppResponse, CwOrchError> =
+        contract.call_as(&user).reset(0);
+
+    let expected_err = ContractError::Unauthorized {};
+    assert_eq!(
+        exec_res.unwrap_err().downcast::<ContractError>()?,
+        expected_err
+    );
+
+    Ok(())
+}
+// ANCHOR_END: count_test
+
 // ANCHOR: setup
 /// Instantiate the contract in any CosmWasm environment
 fn setup<Chain: CwEnv>(chain: Chain) -> anyhow::Result<CounterContract<Chain>> {
@@ -44,60 +100,5 @@ fn setup<Chain: CwEnv>(chain: Chain) -> anyhow::Result<CounterContract<Chain>> {
 }
 // ANCHOR_END: setup
 
-// ANCHOR: count_test
-#[test]
-fn count() -> anyhow::Result<()>{
-    // Create a sender
-    let sender = Addr::unchecked(ADMIN);
-    // Create a user
-    let user = Addr::unchecked(USER);
-    // Create the mock
-    let mock = Mock::new(&sender);
-
-    // Set up the contract
-    let contract = setup(mock.clone())?;
-
-    // Increment the count of the contract
-    contract
-        // Set the caller to user
-        .call_as(&user)
-        // Call the increment function (auto-generated function provided by CounterExecuteMsgFns)
-        .increment()
-        ?;
-
-    // ANCHOR: query
-    // Get the count.
-    use counter_contract::CounterQueryMsgFns;
-    let count1 = contract.get_count()?;
-    // ANCHOR_END: query
-
-    // or query it manually
-    let count2: GetCountResponse = contract.query(&QueryMsg::GetCount {})?;
-
-    assert_eq!(count1, count2);
-
-    // Check the count
-    assert_eq!(count1.count, 2);
-    // ANCHOR: reset
-    // Reset
-    use counter_contract::CounterExecuteMsgFns;
-    contract.reset(0)?;
-
-    let count = contract.get_count()?;
-    assert_eq!(count.count, 0);
-    // ANCHOR_END: reset
-
-    // Check negative case
-    let exec_res = contract.call_as(&user).reset(0);
-
-    let expected_err = ContractError::Unauthorized {};
-    assert_eq!(
-        exec_res.unwrap_err().downcast::<ContractError>()?,
-        expected_err
-    );
-
-    Ok(())
-}
-// ANCHOR_END: count_test
 // ANCHOR_END: integration_test
 // ANCHOR_END: all

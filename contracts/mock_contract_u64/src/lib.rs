@@ -56,7 +56,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg<u64>) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery{ .. } => to_binary("third query passed"),
+        QueryMsg::ThirdQuery { .. } => to_binary("third query passed"),
         QueryMsg::FourthQuery(_, _) => to_binary("fourth query passed"),
     }
 }
@@ -72,27 +72,28 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
     }
 }
 
-
 #[cfg(feature = "interface")]
 #[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg)]
 pub struct MockContract<Chain, T, Q>;
 
 #[cfg(feature = "interface")]
-impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain, u64, u64>{
-    fn wrapper(&self) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
-        Box::new(cw_orch::prelude::ContractWrapper::new(
-            execute,
-            instantiate,
-            query,
+impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
+    for MockContract<Chain, u64, u64>
+{
+    fn wrapper(
+        &self,
+    ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
+        Box::new(
+            cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
+                .with_migrate(migrate),
         )
-        .with_migrate(migrate)
-    )
     }
 
-    fn wasm(&self) -> cw_orch::prelude::WasmPath{
+    fn wasm(&self) -> cw_orch::prelude::WasmPath {
         use cw_orch::prelude::*;
         artifacts_dir_from_workspace!()
-            .find_wasm_path("mock_contract.wasm").unwrap()
+            .find_wasm_path("mock_contract.wasm")
+            .unwrap()
     }
 }
 
@@ -128,7 +129,9 @@ mod test {
         contract.first_query().unwrap();
         contract.second_query(45).unwrap_err();
         contract.third_query(67).unwrap();
-        contract.fourth_query(45u64, "moneys".to_string()).unwrap_err();
+        contract
+            .fourth_query(45u64, "moneys".to_string())
+            .unwrap_err();
 
         Ok(())
     }

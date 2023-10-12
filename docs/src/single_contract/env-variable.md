@@ -1,6 +1,6 @@
 # Environment Variables
 
-cw-orch needs some environment variables to be set in order to function properly when running as an executable.
+cw-orch leverages some environment variables to interact with contracts on actual blockchains. The environment variables are described here. You can find additional information about their usage, default values and types in the [`cw-orch` repo].
 
 **IMPORTANT: Before proceeding, ensure that you add `.env` to your `.gitignore`. We are not responsible for any loss of funds due to leaked mnemonics.**
 

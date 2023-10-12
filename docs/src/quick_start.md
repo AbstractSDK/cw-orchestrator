@@ -1,4 +1,4 @@
-# Quick-Start Guide
+# Quick-Start Guide <!-- omit in toc -->
 
 Get ready to change the way you interact with contracts. The following steps will allow you to write such clean code :  
 ```rust
@@ -10,18 +10,20 @@ In this quick-start guide, we will review the necessary steps in order to integr
 
 > **NOTE**: *Additional content*
 >
->If you're moving quicker than everybody else, we suggest looking at [a before-after review of this example integration](`https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter`).
+>If you're moving quicker than everybody else, we suggest looking at [a before-after review of this example integration](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a). This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
+
 
 ### Summary
-- Integrating a single-contract crate.
-  1. [Dependencies and features](#adding-cw-orch-to-your-cargotoml-file) 
-  2. [Creating a Contract interface](#creating-an-interface) 
-  3. [Simplifying contract calls](#interaction-helpers)
-  4. [Interacting with contracts](#using-the-integration) 
-- [Working with workspaces](#integration-in-a-workspace)
-    1. [Creating an interface crate]
-    2. [Handling dependencies and features]
-- [Full example code with `cw-orch`](`https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter`).
+- [Single Contract Integration](#single-contract-integration)
+  - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
+  - [Creating an Interface](#creating-an-interface)
+  - [Interaction helpers](#interaction-helpers)
+  - [Using the integration](#using-the-integration)
+- [Integration in a workspace](#integration-in-a-workspace)
+  - [Handling dependencies and features](#handling-dependencies-and-features)
+  - [Creating an interface crate](#creating-an-interface-crate)
+  - [Integrating single contracts](#integrating-single-contracts)
+- [More examples and scripts](#more-examples-and-scripts)
 
 
 ## Single Contract Integration

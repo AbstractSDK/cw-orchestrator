@@ -7,7 +7,7 @@ Osmosis Test Tube is a rust-based test framework that allows developers to test 
 In order to use `osmosis-test-tube`, the library needs to be able to compile and install the chain binaries. For that you will need to install a go compiler as well as the clang library. Run the following commands to install both of those libraries.
 
 ### Ubuntu
-1. Install [go](https://go.dev/doc/install)
+1. [Install go](https://go.dev/doc/install)
 2. Install the clang library
 ```bash
     sudo apt install clang
