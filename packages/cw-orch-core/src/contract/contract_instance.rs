@@ -126,7 +126,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             .chain
             .query(query_msg, &self.address()?)
             .map_err(Into::into)?;
-        log::debug!(target: CONTRACT_LOGS, "Query response: {:?}",  log_serialize_message(query_msg)?);
+        log::debug!(target: CONTRACT_LOGS, "Query response: {:?}",  log_serialize_message(&resp)?);
         Ok(resp)
     }
 
