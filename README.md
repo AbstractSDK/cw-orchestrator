@@ -214,7 +214,7 @@ impl<Chain: CwEnv> Example<Chain> {
 ## Supported chains
 
 Cw-orchestrator supports the following chains natively : 
-🟥LocalNet, 🟦Testnet, 🟩Mainnet
+🟥 LocalNet, 🟦 Testnet, 🟩 Mainnet
 
 - Archway 🟦🟩
 - Injective 🟦🟩
