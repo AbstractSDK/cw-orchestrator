@@ -7,6 +7,7 @@
 - Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir. 
 - Exposed the state_dir location
 - Added better env variable management by @Kayanski
+- Added message to enable logging if not enabled
 
 ## v0.16.4 [20th September 2023]
 

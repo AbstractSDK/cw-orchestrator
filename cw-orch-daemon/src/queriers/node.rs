@@ -10,6 +10,7 @@ use cosmrs::{
     tendermint::{Block, Time},
 };
 use cw_orch_core::env::CwOrchEnvVars;
+use cw_orch_core::log::QUERY_LOGS;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -234,14 +235,14 @@ impl Node {
             match client.get_tx(request.clone()).await {
                 Ok(tx) => {
                     let resp = tx.into_inner().tx_response.unwrap();
-                    log::debug!("TX found: {:?}", resp);
+                    log::debug!(target: QUERY_LOGS, "TX found: {:?}", resp);
                     return Ok(resp.into());
                 }
                 Err(err) => {
                     // increase wait time
                     block_speed = (block_speed as f64 * 1.6) as u64;
-                    log::debug!("TX not found with error: {:?}", err);
-                    log::debug!("Waiting {block_speed} seconds");
+                    log::debug!(target: QUERY_LOGS, "TX not found with error: {:?}", err);
+                    log::debug!(target: QUERY_LOGS, "Waiting {block_speed} seconds");
                     tokio::time::sleep(Duration::from_secs(block_speed)).await;
                 }
             }
@@ -303,11 +304,12 @@ impl Node {
                 Ok(tx) => {
                     let resp = tx.into_inner().tx_responses;
                     if retry_on_empty && resp.is_empty() {
-                        log::debug!("Not TX by events found");
-                        log::debug!("Waiting 10s");
+                        log::debug!(target: QUERY_LOGS, "No TX found with events {:?}", events);
+                        log::debug!(target: QUERY_LOGS, "Waiting 10s");
                         tokio::time::sleep(Duration::from_secs(10)).await;
                     } else {
                         log::debug!(
+                            target: QUERY_LOGS,
                             "TX found by events: {:?}",
                             resp.iter().map(|t| t.txhash.clone())
                         );
@@ -315,8 +317,8 @@ impl Node {
                     }
                 }
                 Err(err) => {
-                    log::debug!("TX not found with error: {:?}", err);
-                    log::debug!("Waiting 10s");
+                    log::debug!(target: QUERY_LOGS, "TX not found with error: {:?}", err);
+                    log::debug!(target: QUERY_LOGS, "Waiting 10s");
                     tokio::time::sleep(Duration::from_secs(10)).await;
                 }
             }

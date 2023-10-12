@@ -5,6 +5,7 @@ use cosmwasm_std::Addr;
 use cw_orch_core::{
     env::CwOrchEnvVars,
     environment::{DeployDetails, StateInterface},
+    log::{CONNECTIVITY_LOGS, LOCAL_LOGS},
     CwEnvError,
 };
 use ibc_chain_registry::chain::ChainData;
@@ -43,7 +44,7 @@ impl DaemonState {
             return Err(DaemonError::GRPCListIsEmpty);
         }
 
-        log::info!("Found {} gRPC endpoints", chain_data.apis.grpc.len());
+        log::debug!(target: CONNECTIVITY_LOGS, "Found {} gRPC endpoints", chain_data.apis.grpc.len());
 
         // find working grpc channel
         let grpc_channel =
@@ -71,7 +72,7 @@ impl DaemonState {
         .into_string()
         .unwrap();
 
-        log::info!("{}", json_file_path);
+        log::debug!(target: LOCAL_LOGS, "Using state file : {}", json_file_path);
 
         // if the network we are connecting is a local kind, add it to the fn
         if chain_data.network_type == ChainKind::Local.to_string() {
@@ -112,6 +113,7 @@ impl DaemonState {
         };
 
         log::info!(
+            target: LOCAL_LOGS,
             "Writing daemon state JSON file: {:#?}",
             state.json_file_path
         );

@@ -1,8 +1,11 @@
 //! Transactional traits for execution environments.
 
 use super::{ChainState, IndexResponse};
-use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
-use cosmwasm_std::{Addr, BlockInfo, Coin};
+use crate::{
+    contract::interface_traits::{CwOrchUpload, Uploadable},
+    error::CwEnvError,
+};
+use cosmwasm_std::{Addr, BlockInfo, Coin, ContractInfoResponse};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -87,4 +90,14 @@ pub trait TxHandler: ChainState + Clone {
         chain.set_sender(sender.clone());
         chain
     }
+}
+
+pub trait WasmCodeQuerier: CwEnv {
+    /// Returns the checksum of provided code_id
+    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error>;
+    /// Returns the code_info structure of the provided contract
+    fn contract_info<T: CwOrchUpload<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
 }
