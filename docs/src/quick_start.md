@@ -107,12 +107,14 @@ Find out more about the interaction helpers on [the interface page](./single_con
 
 Now that all the setup is done, you can use your contract in tests, integration-tests or scripts.
 
-Start by importing your crate, with the `interface` feature enabled:
+Start by importing your crate, with the `interface` feature enabled. Depending on your use-case this will be in `[dependencies]` or `[dev-dependencies]`:
+
 ```toml
 counter-contract = { path = "../counter-contract", features = ["interface"] }
 ```
 
 You can now use:
+
 ```rust
 {{#include ../../contracts/counter/examples/deploy.rs:full_counter_example}}
 ```
@@ -120,35 +122,38 @@ You can now use:
 ## Integration in a workspace
 
 In this paragraph, we will use the `cw-plus` repository as an example. You can review:
+
 - [The full integration code](https://github.com/AbstractSDK/cw-plus) with `cw-orch` added
 - [The complete diff](https://github.com/cosmwasm/cw-plus/compare/main...abstractsdk:main) that shows you all integration spots (if you want to go fast)
 
 ### Handling dependencies and features
 
 When using workspaces, you need to do the 2 following actions on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts:
+
 1. Add `cw-orch` as an optional dependency
-2. Add an `interface` feature (allows to make sure `cw-orch` is not compiled into your `wasm` contract)
+2. Add an `interface` feature (ensures `cw-orch` is not compiled into your `wasm` contract)
 
 Refer above to [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file) for more details on how to do that.
 
 For instance, for the `cw20_base` contract, you need to execute those 2 steps on the `cw20-base` contract (where the `QueryMsg` are defined) as well as on the `cw20` package (where the `ExecuteMsg` are defined).
 
-
 ### Creating an interface crate
 
-When using workspace, we advise you to create a new crate inside your workspace for defining your contract interfaces. In order to do that, use: 
+When using workspace, we advise you to create a new crate inside your workspace for defining your contract's interfaces. In order to do that, use:
+
 ```shell
 cargo new interface --lib
 cargo add cw-orch --package interface 
 ```
 
 Add the interface package to your workspace `Cargo.toml` file
+
 ```toml
 [workspace]
 members = ["packages/*", "contracts/*", "interface"]
 ```
 
-Inside this `interface` crate, we advise to integrate all your contracts 1 by 1 in separate files. Here is the structure of the `cw-plus` integration for reference: 
+Inside this `interface` crate, we advise to integrate all your contracts 1 by 1 in separate files. Here is the structure of the `cw-plus` integration for reference:
 
 ```path
 interface (interface collection)
@@ -161,7 +166,7 @@ interface (interface collection)
     └── ..
 ```
 
-When importing your crates to get the messages types, you can use the following command in the interface folder. Don't forget to activate the interface feature to be able to use the cw_orch functionalities. 
+When importing your crates to get the messages types, you can use the following command in the interface folder. Don't forget to activate the interface feature to be able to use the cw_orch functionalities.
 
 ```shell
 cargo add cw20-base --path ../contracts/cw20-base/ --features=interface
@@ -179,5 +184,5 @@ You can find more example interactions on the `counter-contract` example directl
 - Some examples [showcase interacting with live chains](https://github.com/AbstractSDK/cw-orchestrator/blob/main/contracts/counter/examples/deploy.rs).
 - Some other examples show [how to use the library for testing your contracts](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests).
 
-> **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`. 
-> Why not go directly to [environment variables](./single_contract/env-variable.md) ?
+> **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`.
+> Why not go directly to [environment variables](./single_contract/env-variable.md)?
