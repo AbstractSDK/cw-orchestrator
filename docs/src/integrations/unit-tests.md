@@ -6,14 +6,14 @@ Cw-orchestrator provides an additional tool to help you with unit tests with con
 
 The `WasmMockQuerier` (and associated `mock_dependencies` helper function) allow developers to unit-test their contract against on-chain logic. This allows for a mix between unit and integration tests for application that need to rely on on-chain data. This structure works very similarly to `cosmwasm_std::testing::mock_dependencies` but instead of querying for local scripts or data, itv queries the information from an actual running blockchain.
 
-Today, the following modules are supported by this querier : 
+Today, the following modules are supported by this querier: 
 - Wasm
 - Bank
 - Staking (support has not been finalized as of yet)
 
 ## Example
 
-Let's imagine you want to build a lending aggregator. In this kind of application, you want to query the balance in staking tokens that your client has. In order to do that, you may want to use the following syntax inside your contract : 
+Let's imagine you want to build a lending aggregator. In this kind of application, you want to query the balance in staking tokens that your client has. In order to do that, you may want to use the following syntax inside your contract: 
 
 ```rust
 fn query_balance(deps: Deps, client: Addr, lending_contract: Addr) -> Result<BalanceResponse, ContractError>{

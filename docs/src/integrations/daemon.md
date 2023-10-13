@@ -4,7 +4,7 @@ Daemon is an execution environment for interacting with live chains. This allows
 
 ## Quick Start
 
-The `daemon` integration is really straightforward to integrate for developers. Creating a daemon instance goes along the lines of : 
+The `daemon` integration is really straightforward to integrate for developers. Creating a daemon instance goes along the lines of: 
 
 ```rust,ignore
     use cw_orch::prelude::*;
@@ -27,7 +27,7 @@ The `daemon` integration is really straightforward to integrate for developers. 
   <details>
     <summary>Develop if you <strong>know</strong> what that means</summary>
 
-  This handler is used because all the front-facing daemon methods are synchronous. However everything that's happening in the background is asynchronous. This handle is used exclusively to await asynchronous function : 
+  This handler is used because all the front-facing daemon methods are synchronous. However everything that's happening in the background is asynchronous. This handle is used exclusively to await asynchronous function: 
   ```rust,ignore
       runtime.block_on(...)
 
@@ -60,7 +60,7 @@ All contract operations will return an object of type `cw_orch::prelude::CosmTxR
 
 In order to manage your contract deployments cw-orchestrator saves the contract addresses and code ids for each network you're interacting with in a JSON formatted state file. This state file represents all your past. You can customize the path to this state file using the `STATE_FILE` [env variable](../single_contract/env-variable.md). 
 
-When calling the `upload` function on a contract, if the tx is successful, the daemon will get the uploaded code_id and save it to file, like so : 
+When calling the `upload` function on a contract, if the tx is successful, the daemon will get the uploaded code_id and save it to file, like so: 
 
 ```json
 {
@@ -78,7 +78,7 @@ When calling the `upload` function on a contract, if the tx is successful, the d
 In this example: `counter_contract`  corresponds to the `contract_id`variable (the one that you can set in the [contract interface constructor](../single_contract/interfaces.html#constructor)).
 
 
-When calling the `instantiate` function, if the tx is successful, the daemon will get the contract address and save it to file, like so :
+When calling the `instantiate` function, if the tx is successful, the daemon will get the contract address and save it to file, like so:
 ```json 
 {
   "juno": {
@@ -97,7 +97,7 @@ In this example, the `default` keyword corresponds to the deployment namespace. 
 
 ## Additional tools
 
-The `Daemon` environment provides a bunch of tools for you to interact in a much easier way with the blockchain. Here is a non-exhaustive list : 
+The `Daemon` environment provides a bunch of tools for you to interact in a much easier way with the blockchain. Here is a non-exhaustive list: 
 - Send usual transactions:  
   ```rust
 {{#include ../../../cw-orch-daemon/examples/daemon-capabilities.rs:send_tx}}
@@ -123,7 +123,7 @@ The `Daemon` environment provides a bunch of tools for you to interact in a much
 The daemon object can also be used to execute queries to the chains we are interacting with. 
 This opens up a lot more applications to cw-orchestrator as this tools can also be used to manage off-chain applications.
 
-Querying the chain for data using a daemon looks like : 
+Querying the chain for data using a daemon looks like: 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/queries/bank_query.rs:daemon_balance_query}}
 ```

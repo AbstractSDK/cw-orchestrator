@@ -25,7 +25,7 @@ TEST_MNEMONIC="" # Necessary if interacting with a cw-orch-daemon on testnet
 LOCAL_MNEMONIC="" # Necessary if interacting with a cw-orch-daemon locally
 
 
-## Additional configuration variables. These are optional. We show default values here : 
+## Additional configuration variables. These are optional. We show default values here: 
 # Optional - Float. This allows changing the gas buffer applied after tx simulation
 CW_ORCH_GAS_BUFFER = 1.3 
 # Optional - Integer. This changes the number of tx queries before it fails if it doesn't find any result

@@ -27,7 +27,7 @@ Now we're ready to start writing our script.
 
 With the setup done, we can start writing our script. Our initial plan is to deploy the counter contract to the chain. We'll start by writing a main function that will call our deploy function.
 
-We start by creating the chain object for specifying we want to interact with a local juno instance : 
+We start by creating the chain object for specifying we want to interact with a local juno instance: 
 
 ```rust,ignore
 {{#include ../../../contracts/counter/examples/deploy.rs:chain_construction}}

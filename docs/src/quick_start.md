@@ -51,7 +51,7 @@ To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` w
 interface = ["dep:cw-orch"] # Enables cw-orch when the feature is enabled
 ```
 
-> **NOTE**: If you are using `rust-analyzer`, you can add the following two lines in your `settings.json` to make sure the features get taken into account when checking the project :
+> **NOTE**: If you are using `rust-analyzer`, you can add the following two lines in your `settings.json` to make sure the features get taken into account when checking the project:
 >
 >    ```json
 >     "rust-analyzer.cargo.features": "all",
@@ -125,7 +125,7 @@ In this paragraph, we will use the `cw-plus` repository as an example. You can r
 
 ### Handling dependencies and features
 
-When using workspaces, you need to do the 2 following actions on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts :
+When using workspaces, you need to do the 2 following actions on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts:
 1. Add `cw-orch` as an optional dependency
 2. Add an `interface` feature (allows to make sure `cw-orch` is not compiled into your `wasm` contract)
 
@@ -136,7 +136,7 @@ For instance, for the `cw20_base` contract, you need to execute those 2 steps on
 
 ### Creating an interface crate
 
-When using workspace, we advise you to create a new crate inside your workspace for defining your contract interfaces. In order to do that, use : 
+When using workspace, we advise you to create a new crate inside your workspace for defining your contract interfaces. In order to do that, use: 
 ```shell
 cargo new interface --lib
 cargo add cw-orch --package interface 
@@ -148,7 +148,7 @@ Add the interface package to your workspace `Cargo.toml` file
 members = ["packages/*", "contracts/*", "interface"]
 ```
 
-Inside this `interface` crate, we advise to integrate all your contracts 1 by 1 in separate files. Here is the structure of the `cw-plus` integration for reference : 
+Inside this `interface` crate, we advise to integrate all your contracts 1 by 1 in separate files. Here is the structure of the `cw-plus` integration for reference: 
 
 ```path
 interface (interface collection)
@@ -174,7 +174,7 @@ Now that you workspace is setup, you can [integrate with single contracts](#sing
 
 ## More examples and scripts
 
-You can find more example interactions on the `counter-contract` example directly in the `cw-orchestrator` repo :  
+You can find more example interactions on the `counter-contract` example directly in the `cw-orchestrator` repo:  
 
 - Some examples [showcase interacting with live chains](https://github.com/AbstractSDK/cw-orchestrator/blob/main/contracts/counter/examples/deploy.rs).
 - Some other examples show [how to use the library for testing your contracts](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests).

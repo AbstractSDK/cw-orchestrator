@@ -66,14 +66,14 @@ In the counter contract we re-export in `lib.rs`;
 {{#include ../../../contracts/counter/src/lib.rs:interface_reexport}}
 ```
 
-> **NOTE**: You can see that we have used the `artifacts_dir_from_workspace` macro inside the `wasm` trait function. This macro helps you locate the workspace `artifacts` folder. It actually looks for any directory named `artifacts` from the root of the current crate going up. For instance if the project is located in `/path1/path2/counter`, it will look for the artifacts folder inside the following directories in order and return as soon as it finds such a folder : 
+> **NOTE**: You can see that we have used the `artifacts_dir_from_workspace` macro inside the `wasm` trait function. This macro helps you locate the workspace `artifacts` folder. It actually looks for any directory named `artifacts` from the root of the current crate going up. For instance if the project is located in `/path1/path2/counter`, it will look for the artifacts folder inside the following directories in order and return as soon as it finds such a folder: 
 > - `/path1/path2/counter`
 > - `/path1/path2`
 > - `/path1/`
 > - ...
 > 
 > This works for single contracts as well as workspace setups. 
-> If you have a specific setup, you can still specify the path yourself. If you do so, we advise indicating the wasm location from the current crate directory, using something like : 
+> If you have a specific setup, you can still specify the path yourself. If you do so, we advise indicating the wasm location from the current crate directory, using something like: 
 >    ```rust 
 >     let crate_path = env!("CARGO_MANIFEST_DIR");
 >     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
@@ -164,7 +164,7 @@ In the counter contract we re-export in `lib.rs`;
 
 The `QueryFns` and `ExecuteFns` derive macros generate traits that are implemented on any Contract structure (defined by the [`interface` macro](#creating-an-interface)) that have the matching execute and query types. Because of the nature of rust traits, you need to import the traits in your application to use the simplifying syntax. Those traits are named `ExecuteMsgFns` and `QueryMsgFns`.
 
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros : 
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros: 
 
 - The function created will have the snake_case name of the variant and will take the same arguments as the variant. 
 - The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. 
@@ -254,7 +254,7 @@ By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields o
     ...
  } 
  ```
-You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior : 
+You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior: 
 
 ```rust 
 {{#include ../../../contracts/mock_contract/src/msg_tests.rs:unordered_msg_def}}
