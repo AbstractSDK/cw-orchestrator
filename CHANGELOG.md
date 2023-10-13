@@ -4,6 +4,14 @@
 
 - Added possibility to not panic in parse network by @Buckram123
 - Added stargate feature to cw-multi-test
+- Added `Deploy` to prelude
+- Add ability to provide custom state in `Deploy::set_contracts_state`
+- Breaking change : remove the `&self` dependency for the `Deploy::deployed_state_file_path` method
+- Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir. 
+- Exposed the state_dir location
+- Added better env variable management by @Kayanski
+- Added message to enable logging if not enabled
+- Removed unused dependencies
 
 ## v0.16.4 [20th September 2023]
 

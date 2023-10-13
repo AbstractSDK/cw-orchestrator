@@ -5,6 +5,7 @@ use cosmrs::{
     tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
     Any, Coin,
 };
+use cw_orch_core::log::TRANSACTION_LOGS;
 use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
@@ -92,6 +93,7 @@ impl TxBuilder {
         let (tx_fee, gas_limit) =
             if let (Some(fee), Some(gas_limit)) = (self.fee_amount, self.gas_limit) {
                 log::debug!(
+                    target: TRANSACTION_LOGS,
                     "Using pre-defined fee and gas limits: {}, {}",
                     fee,
                     gas_limit
@@ -101,11 +103,11 @@ impl TxBuilder {
                 let sim_gas_used = wallet
                     .calculate_gas(&self.body, sequence, account_number)
                     .await?;
-                log::debug!("Simulated gas needed {:?}", sim_gas_used);
+                log::debug!(target: TRANSACTION_LOGS, "Simulated gas needed {:?}", sim_gas_used);
 
                 let (gas_expected, fee_amount) = wallet.get_fee_from_gas(sim_gas_used)?;
 
-                log::debug!("Calculated fee needed: {:?}", fee_amount);
+                log::debug!(target: TRANSACTION_LOGS, "Calculated fee needed: {:?}", fee_amount);
                 // set the gas limit of self for future txs
                 // there's no way to change the tx_builder body so simulation gas should remain the same as well
                 self.gas_limit = Some(gas_expected);
@@ -116,7 +118,8 @@ impl TxBuilder {
         let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit);
 
         log::debug!(
-            "submitting tx: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
+            target: TRANSACTION_LOGS,
+            "submitting TX: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
             fee,
             account_number,
             sequence
