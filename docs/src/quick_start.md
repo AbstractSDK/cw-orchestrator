@@ -1,22 +1,22 @@
 # Quick-Start Guide <!-- omit in toc -->
 
-Get ready to change the way you interact with contracts. The following steps will allow you to write such clean code :  
+Get ready to change the way you interact with contracts. The following steps will allow you to write clean code such as:
+
 ```rust
-{{#include ../../contracts/counter/examples/deploy.rs:clean}}
-
+{{#include ../../contracts/counter/examples/deploy.rs:clean_example}}
 ```
-In this quick-start guide, we will review the necessary steps in order to integrate `cw-orch` into a simple contract crate. [We review integration of rust-workspaces (multiple contracts) at the end of this page](#integration-in-a-workspace).
 
+In this quick-start guide, we will review the necessary steps in order to integrate `cw-orch` into a simple contract crate. [We review integration of rust-workspaces (multiple contracts) at the end of this page](#integration-in-a-workspace).
 
 > **NOTE**: *Additional content*
 >
 >If you're moving quicker than everybody else, we suggest looking at [a before-after review of this example integration](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a). This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
 
+## Summary
 
-### Summary
 - [Single Contract Integration](#single-contract-integration)
   - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
-  - [Creating an Interface](#creating-an-interface)
+  - [Creating an interface](#creating-an-interface)
   - [Interaction helpers](#interaction-helpers)
   - [Using the integration](#using-the-integration)
 - [Integration in a workspace](#integration-in-a-workspace)
@@ -24,7 +24,6 @@ In this quick-start guide, we will review the necessary steps in order to integr
   - [Creating an interface crate](#creating-an-interface-crate)
   - [Integrating single contracts](#integrating-single-contracts)
 - [More examples and scripts](#more-examples-and-scripts)
-
 
 ## Single Contract Integration
 
@@ -43,51 +42,51 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 cw-orch = {version = "0.16.4", optional = true } # Latest version at time of writing
 ```
 
-Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
+Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature-flag. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract.
 
-To do this include the following in the `Cargo.toml` of the packages where you included `cw-orch` as an optional dependency:
+To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled like so:
 
 ```toml
 [features]
-interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
+interface = ["dep:cw-orch"] # Enables cw-orch when the feature is enabled
 ```
 
-> **NOTE**: If you are using `rust-analyzer`, you can add the following two lines in your `settings.json` to make sure the features get taken into account when checking the project : 
+> **NOTE**: If you are using `rust-analyzer`, you can add the following two lines in your `settings.json` to make sure the features get taken into account when checking the project :
 >
->    ```json 
+>    ```json
 >     "rust-analyzer.cargo.features": "all",
 >     "rust-analyzer.check.features": "all",
 >    ```
 
 ### Creating an Interface
 
-When using a single contract, we advise you to create an `interface.rs` file along your existing contract files. You then need to add the module to your `lib.rs` file. Don't forget the *feature-flag* the file in order to be able to use `cw-orch` inside it
+When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. Don't forget to *feature-flag* the module in order to be able to use `cw-orch` inside it.
+
 ```rust
 {{#include ../../contracts/counter/src/lib.rs:custom_interface}}
 ```
 
-Then, going inside that `interface.rs` file, you can define the interface to your contract for use with `cw-orch` : 
+Then, inside that `interface.rs` file, you can define the interface for your contract:
 
-```rust 
+```rust
 {{#include ../../contracts/counter/src/interface.rs:custom_interface}}
 
 ```
 
-Find out more about the content of the interface creation specifics on [the interface page](./single_contract/interfaces.md#creating-an-interface)
+Learn more about the content of the interface creation specifics on [the interface page](./single_contract/interfaces.md#creating-an-interface)
 
-> **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`) : 
+> **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
 >
 >    ```rust,ignore
 >    #[cfg(feature = "interface")]
 >    pub use crate::interface::CounterContract;
 >    ```
 
-
 ### Interaction helpers
 
-cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
+cw-orchestrator provides a additional macros that simplify contract calls and queries. The macro implements functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
 
-Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions (in `msg.rs` in our example) and add the `ExecuteFns` and `QueryFns` derive macros to them like below.
+Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions (in `msg.rs` in our example) and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
 ```rust,no_run
 {{#include ../../contracts/counter/src/msg.rs:exec_msg}}
@@ -97,7 +96,7 @@ Enabling this functionality is very straightforward. Find your `ExecuteMsg` and 
 
 Find out more about the interaction helpers on [the interface page](./single_contract/interfaces.md#entry-point-function-generation)
 
-> **NOTE**: Again, it can be useful to re-export these traits to simplify usage (in `lib.rs`) : 
+> **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
 >
 >    ```rust,ignore
 >    #[cfg(feature = "interface")]
@@ -108,19 +107,19 @@ Find out more about the interaction helpers on [the interface page](./single_con
 
 Now that all the setup is done, you can use your contract in tests, integration-tests or scripts.
 
-Start by importing your crate, with the `interface` feature enabled : 
+Start by importing your crate, with the `interface` feature enabled:
 ```toml
 counter-contract = { path = "../counter-contract", features = ["interface"] }
 ```
 
-You can now use : 
+You can now use:
 ```rust
 {{#include ../../contracts/counter/examples/deploy.rs:full_counter_example}}
 ```
 
 ## Integration in a workspace
 
-In this paragraph, we will use the `cw-plus` repository as an example. You can review : 
+In this paragraph, we will use the `cw-plus` repository as an example. You can review:
 - [The full integration code](https://github.com/AbstractSDK/cw-plus) with `cw-orch` added
 - [The complete diff](https://github.com/cosmwasm/cw-plus/compare/main...abstractsdk:main) that shows you all integration spots (if you want to go fast)
 

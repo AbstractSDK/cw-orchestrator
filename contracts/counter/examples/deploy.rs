@@ -24,14 +24,15 @@ pub fn main() -> anyhow::Result<()> {
 
     let counter = CounterContract::new("counter_contract", chain);
 
-    // ANCHOR: clean
+    // ANCHOR: clean_example
     counter.upload()?;
     counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
+    
     counter.increment()?;
 
     let count = counter.get_count()?;
     assert_eq!(count.count, 1);
-    // ANCHOR_END: clean
+    // ANCHOR_END: clean_example
     // ANCHOR_END: contract_interaction
 
     Ok(())
