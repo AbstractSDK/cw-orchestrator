@@ -288,7 +288,8 @@ Our abstract workspace structure looks like this:
 └── .env 					// <-- Place your .env file at the root of your workspace
 ```
 
-In the Deploy trait implementation (here in`deploy.rs` file), use this to indicate that `packages/interface/state.json` has your state: 
+In the Deploy trait implementation (here in`deploy.rs` file), use this to indicate that `packages/interface/state.json` has your state:
+
 ```rust
     fn deployed_state_file_path(&self) -> Option<String> {
         let crate_path = env!("CARGO_MANIFEST_DIR");

@@ -1,10 +1,10 @@
 # Daemon
 
-Daemon is an execution environment for interacting with live chains. This allows you deploy/migrate/maintain your contracts on mainnet or even test your deployment on a local chain instances. `Cw-orchestrator Daemon` provides a wide range of tools to interact with live chains. We describe those tools in depth in this page.
+`Daemon` is a CosmWasm execution environment for interacting with CosmosSDK chains. The `Daemon` allows you to deploy/migrate/configure your contracts on main and testnets as well as locally running chain instances. Furthermore it provides a wide range of tools to interact with the chains. We describe those tools in depth in this page.
 
 ## Quick Start
 
-The `daemon` integration is really straightforward to integrate for developers. Creating a daemon instance goes along the lines of: 
+Interacting with the `daemon` is really straightforward. How to creating a daemon instance is shown below:
 
 ```rust,ignore
     use cw_orch::prelude::*;
@@ -12,12 +12,12 @@ The `daemon` integration is really straightforward to integrate for developers. 
 {{#include ../../../cw-orch/examples/daemon_test.rs:daemon_creation}}
 ```
 
-- The `chain` parameter allows you to specify which chain you want to interact with. The chains that are officially supported can be found in the `cw_orch::daemon::networks` namespace. 
-  You can also add additional chains yourself by simply defining a variable of type [`ChainInfo`](https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html) and using it in your script. Don't hesitate to open a PR on the [cw-orchestrator repo](https://github.com/AbstractSDK/cw-orchestrator), if you would like us to include a chain by default. The constants needed for creating the variable can be found in the documentation of the chain you want to connect to or in the [Cosmos Directory](https://cosmos.directory).
+- The `chain` parameter allows you to specify which chain you want to interact with. The chains that are officially supported can be found in the `cw_orch::daemon::networks` module.
+  You can also add additional chains yourself by simply defining a variable of type [`ChainInfo`](https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html) and using it in your script. Don't hesitate to open a PR on the [cw-orchestrator repo](https://github.com/AbstractSDK/cw-orchestrator), if you would like us to include a chain by default. The variables needed for creating the variable can be found in the documentation of the chain you want to connect to or in the [Cosmos Directory](https://cosmos.directory).
 
 - The `handle` parameter is a *tokio runtime handle*. 
   <details>
-    <summary>Develop if you <strong>don't know</strong> what that means</summary>
+    <summary>If you <strong>don't know</strong> what that means</summary>
     
     
   You don't need to know all the intricacies of <a href="https://rust-lang.github.io/async-book/">tokio and rust-async</a> to use daemons. If you don't have time to learn more, you can simply use the snippet above and not touch the runtime creation. However for more advanced `daemon` usage and also for your culture, don't hesitate to learn about those wonderful processes and their management.
@@ -25,7 +25,7 @@ The `daemon` integration is really straightforward to integrate for developers. 
   </details>
 
   <details>
-    <summary>Develop if you <strong>know</strong> what that means</summary>
+    <summary>If you <strong>know</strong> what that means</summary>
 
   This handler is used because all the front-facing daemon methods are synchronous. However everything that's happening in the background is asynchronous. This handle is used exclusively to await asynchronous function: 
   ```rust,ignore
@@ -39,12 +39,11 @@ The `daemon` integration is really straightforward to integrate for developers. 
 
 This simple script actually hides another parameter which is the `LOCAL_MNEMONIC` environment variable. This variable is used when interacting with local chains. See the part dedicated to [Environment Vars](../single_contract/env-variable.md) for more details.
 
-
 > **_NOTE:_** When using `daemon`, you are interacting directly with a live chain. The program won't ask you for your permission at each step of the script. We advise you to test **ALL** your deployments on test chain before deploying to mainnet.
 
 ## Interacting with contracts
 
-You can then use the resulting `Daemon` variable to interact with your [contracts](../single_contract/index.md): 
+You can then use the resulting `Daemon` variable to interact with your [contracts](../single_contract/index.md):
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/daemon_test.rs:daemon_usage}}
@@ -53,14 +52,13 @@ You can then use the resulting `Daemon` variable to interact with your [contract
 All contract operations will return an object of type `cw_orch::prelude::CosmTxResponse`. This represents a successful transaction. Using the txhash of the tx, you can also inspect the operations on a chain explorer.
 
 > **_ADVICE:_** Add `RUST_LOG=INFO` to your environment and use the `env_logger::init()` initializer to get detailed information about your script execution. Cw-orchestrator provides enhanced logging tools for following the deployment and potentially pick up where you left off.
->
-> This environment needs wasm artifacts to deploy the contracts to the chains. Don't forget to compile all your wasm before deploying your contracts !
+> This environment needs wasm artifacts to deploy the contracts to the chains. Don't forget to compile all your wasms before deploying your contracts !
 
 ## State management
 
-In order to manage your contract deployments cw-orchestrator saves the contract addresses and code ids for each network you're interacting with in a JSON formatted state file. This state file represents all your past. You can customize the path to this state file using the `STATE_FILE` [env variable](../single_contract/env-variable.md). 
+In order to manage your contract deployments cw-orchestrator saves the contract addresses and code ids for each network you're interacting with in a JSON formatted state file. This state file represents all your past. You can customize the path to this state file using the `STATE_FILE` [env variable](../single_contract/env-variable.md).
 
-When calling the `upload` function on a contract, if the tx is successful, the daemon will get the uploaded code_id and save it to file, like so: 
+When calling the `upload` function on a contract, if the tx is successful, the daemon will get the uploaded code_id and save it to file, like so:
 
 ```json
 {
@@ -77,9 +75,9 @@ When calling the `upload` function on a contract, if the tx is successful, the d
 
 In this example: `counter_contract`  corresponds to the `contract_id`variable (the one that you can set in the [contract interface constructor](../single_contract/interfaces.html#constructor)).
 
-
 When calling the `instantiate` function, if the tx is successful, the daemon will get the contract address and save it to file, like so:
-```json 
+
+```json
 {
   "juno": {
     "juno-1": {
@@ -93,12 +91,14 @@ When calling the `instantiate` function, if the tx is successful, the daemon wil
   }
 }
 ```
+
 In this example, the `default` keyword corresponds to the deployment namespace. This can be set when building the daemon object (using the `DaemonBuilder::deployment_id` method) in order to separate multiple deployments. For instance for a DEX (decentralized exchange), you can have a single code-id but multiple pool addresses for all your liquidity pools. You would have a `juno-usdc` and a `usdt-usdc` deployment, sharing the same code-ids but different contract instances.
 
 ## Additional tools
 
-The `Daemon` environment provides a bunch of tools for you to interact in a much easier way with the blockchain. Here is a non-exhaustive list: 
-- Send usual transactions:  
+The `Daemon` environment provides a bunch of tools for you to interact in a much easier way with the blockchain. Here is a non-exhaustive list:
+
+- Send usual transactions:
   ```rust
 {{#include ../../../cw-orch-daemon/examples/daemon-capabilities.rs:send_tx}}
   ```
@@ -127,8 +127,6 @@ Querying the chain for data using a daemon looks like:
 ```rust,ignore
 {{#include ../../../cw-orch/examples/queries/bank_query.rs:daemon_balance_query}}
 ```
-
-> **_NOTE:_** This is not usable in contracts. This is only for off-chain querying !
 
 For more information and queries, [visit the daemon querier implementations directly](https://docs.rs/crate/cw-orch/latest/source/src/daemon/queriers.rs)
 

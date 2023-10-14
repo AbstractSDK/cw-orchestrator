@@ -4,16 +4,17 @@ Cw-orchestrator provides an additional tool to help you with unit tests with con
 
 ## Capabilities
 
-The `WasmMockQuerier` (and associated `mock_dependencies` helper function) allow developers to unit-test their contract against on-chain logic. This allows for a mix between unit and integration tests for application that need to rely on on-chain data. This structure works very similarly to `cosmwasm_std::testing::mock_dependencies` but instead of querying for local scripts or data, itv queries the information from an actual running blockchain.
+The `WasmMockQuerier` (and associated `mock_dependencies` helper function) allow developers to unit-test their contract against on-chain logic. This allows for a mix between unit and integration tests for application that need to rely on on-chain data. This structure works very similarly to `cosmwasm_std::testing::mock_dependencies` but instead of querying for local scripts or data, it queries the information from an actual running blockchain.
 
-Today, the following modules are supported by this querier: 
+Today, the following modules are supported by this querier:
+
 - Wasm
 - Bank
 - Staking (support has not been finalized as of yet)
 
 ## Example
 
-Let's imagine you want to build a lending aggregator. In this kind of application, you want to query the balance in staking tokens that your client has. In order to do that, you may want to use the following syntax inside your contract: 
+Let's imagine you want to build a lending aggregator. In this kind of application, you want to query the balance in staking tokens that your client has. In order to do that, you may want to use the following syntax inside your contract:
 
 ```rust
 fn query_balance(deps: Deps, client: Addr, lending_contract: Addr) -> Result<BalanceResponse, ContractError>{
@@ -26,7 +27,7 @@ fn query_balance(deps: Deps, client: Addr, lending_contract: Addr) -> Result<Bal
         })
     }))?;
 }
-``` 
+```
 
 In order to unit-test that logic, you may want to test against actual on-chain data. The following code_snippet will allow you to test this piece of code against actual on-chain code.
 
@@ -40,5 +41,4 @@ fn balance_is_available() -> anyhow::Result<()>{
 }
 ```
 
-Obviously, you need to specify existing on-chain addresses to be able to use the `cw_orch` `mock_dependencies` function. Those dependencies have a very similar behavior to `cosmwasm_std::testing::mock_dependencies`, expect the query response is fetched from on-chain information. 
-
+Obviously, you need to specify existing on-chain addresses to be able to use the `cw_orch` `mock_dependencies` function. Those dependencies have a very similar behavior to `cosmwasm_std::testing::mock_dependencies`, expect the query response is fetched from on-chain information.
