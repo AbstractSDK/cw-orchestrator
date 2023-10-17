@@ -12,6 +12,7 @@ pub extern crate anyhow;
 // prelude
 pub mod prelude;
 
+pub use cw_orch_core::build;
 pub use cw_orch_core::contract;
 pub use cw_orch_core::environment;
 pub use cw_orch_mock as mock;
