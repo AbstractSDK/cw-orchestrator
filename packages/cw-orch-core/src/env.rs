@@ -3,12 +3,12 @@
 //! To get the env variable, you can use
 //! ```rust,no_run
 //! use cw_orch_core::env::CwOrchEnvVars;
-//! let env_variable = CwOrchEnvVars::StateFolder.get().unwrap();
+//! let env_variable = CwOrchEnvVars::StateFolder::parsed().unwrap();
 //! ```
 //! You can get the env variable name with :
 //! ```rust,no_run
 //! use cw_orch_core::env::CwOrchEnvVars;
-//! let variable_name = CwOrchEnvVars::StateFolder.to_string();
+//! let variable_name = CwOrchEnvVars::StateFolder::parsed()to_string();
 //! ```
 
 use std::{
