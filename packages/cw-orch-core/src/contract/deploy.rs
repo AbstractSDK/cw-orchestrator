@@ -115,7 +115,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
             if CwOrchEnvVars::DisableManualInteraction
                 .get()
                 .unwrap_or("false".to_string())
-                .eq("true")
+                .ne("true")
             {
                 println!(
                     "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
