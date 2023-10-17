@@ -1,10 +1,10 @@
 extern crate proc_macro;
-use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
+use crate::helpers::{process_fn_name, process_impl_into, process_sorting, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::{format_ident, quote};
-use syn::{visit_mut::VisitMut, DeriveInput, Fields, Ident};
+use syn::{parse_quote, visit_mut::VisitMut, DeriveInput, Fields, Ident};
 
 fn payable(v: &syn::Variant) -> bool {
     for attr in &v.attrs {
@@ -24,6 +24,8 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let (maybe_into, entrypoint_msg_type, type_generics) =
         process_impl_into(&input.attrs, name, input.generics);
 
+    let is_attributes_sorted = process_sorting(&input.attrs);
+
     let syn::Data::Enum(syn::DataEnum { variants, .. }) = input.data else {
         unimplemented!();
     };
@@ -38,6 +40,13 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
         let is_payable = payable(&variant);
 
+        let variant_doc: syn::Attribute = {
+            let doc = format!("Automatically generated wrapper around {}::{} variant", name, variant_name);
+            parse_quote!(
+                #[doc=#doc]
+            )
+        };
+
         let (maybe_coins_attr, passed_coins) = if is_payable {
             (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
         } else {
@@ -46,7 +55,6 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
         match &mut variant.fields {
             Fields::Unnamed(variant_fields) => {
-                // This is dangerous because of field ordering. Though, if people use like that, they know what to expect anyway
 
                 let mut variant_idents = variant_fields.unnamed.clone();
                 // remove any attributes for use in fn arguments
@@ -68,6 +76,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 });
 
                 quote!(
+                    #variant_doc
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name (
@@ -80,6 +89,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
             Fields::Unit => {
 
                 quote!(
+                    #variant_doc
                     fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
                         <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
@@ -87,8 +97,10 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 )
             }
             Fields::Named(variant_fields) => {
-                // sort fields on field name
-                LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                if is_attributes_sorted{
+                    // sort fields on field name
+                    LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                }
 
                 // parse these fields as arguments to function
                 let mut variant_idents = variant_fields.named.clone();
@@ -100,6 +112,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
                 let variant_attr = variant_idents.iter();
                 quote!(
+                    #variant_doc
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name {
@@ -113,6 +126,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     });
 
     let derived_trait = quote!(
+        /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
         pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics> #where_clause {
             #(#variant_fns)*
         }

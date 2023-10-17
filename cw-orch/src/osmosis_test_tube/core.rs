@@ -1,13 +1,17 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::coin;
+use cw_orch_traits::stargate::Stargate;
+
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use cw_orch_core::environment::WalletBalanceAssertion;
 use cw_orch_core::environment::WalletBalanceAssertionResult;
 use osmosis_test_tube::Bank;
+use osmosis_test_tube::ExecuteResponse;
 use osmosis_test_tube::Gamm;
 use osmosis_test_tube::Module;
+use osmosis_test_tube::Runner;
 use osmosis_test_tube::RunnerError;
 use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
@@ -99,7 +103,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .map(|s| s.into_iter().map(Rc::new).collect())
     }
 
-    /// Creates accounts and sets their balance
+    /// Sends coins a specific address
     pub fn bank_send(
         &self,
         to: String,
@@ -122,7 +126,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         })
     }
 
-    /// Creates accounts and sets their balance
+    /// Creates an osmosis pool (helper)
     pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
         // create balancer pool with basic configuration
         let pool_id = Gamm::new(&*self.app.borrow())
@@ -319,83 +323,21 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
-impl WalletBalanceAssertion for OsmosisTestTube {
-    fn _assert_wallet_balance(
+impl Stargate for OsmosisTestTube {
+    fn commit_any<R: prost::Message + Default>(
         &self,
-        gas: u64,
-    ) -> Result<WalletBalanceAssertionResult, CwOrchError> {
-        let fee = self.sender.fee_setting();
-
-        let fee = match fee {
-            FeeSetting::Auto {
-                gas_price,
-                gas_adjustment,
-            } => coin(
-                (((gas as f64) * gas_adjustment) as u128) * gas_price.amount.u128(),
-                gas_price.denom.clone(),
-            ),
-            FeeSetting::Custom { amount, .. } => amount.clone(),
-        };
-
-        // Will be simplified when the bank trait will exist
-        let balance = Bank::new(&*self.app.borrow())
-            .query_balance(&QueryBalanceRequest {
-                address: self.sender().to_string(),
-                denom: fee.denom.clone(),
-            })
-            .unwrap()
-            .balance
-            .map(|b| coin(b.amount.parse().unwrap(), b.denom))
-            .unwrap_or(coin(0, fee.denom.clone()));
-
-        log::debug!(
-            "Checking balance {} on chain {}, address {}. Expecting {}",
-            balance.amount,
-            "osmosis test tube",
-            self.sender(),
-            fee
-        );
-
-        Ok(WalletBalanceAssertionResult {
-            expected: fee.clone(),
-            current: balance.clone(),
-            assertion: balance.amount >= fee.amount,
-        })
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use cosmwasm_std::coins;
-
-    use super::*;
-
-    #[test]
-    fn wallet_balance_assertion() -> Result<(), CwOrchError> {
-        // We test a simple bank transfer first with an account that has funds, and then with an account that doesn't
-        let mut app = OsmosisTestTube::new(coins(100_000_000_000, "uosmo"));
-        let receiver = app.init_account(coins(1, "uosmos"))?;
-
-        let res = Bank::new(&*app.app.borrow())
-            .send(
-                MsgSend {
-                    from_address: app.sender.address(),
-                    to_address: receiver.address(),
-                    amount: cosmwasm_to_proto_coins(coins(2, "uosmo")),
-                },
-                &app.sender,
-            )
+        msgs: Vec<prost_types::Any>,
+        _memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        let tx_response: ExecuteResponse<R> = self
+            .app
+            .borrow()
+            .execute_multiple_raw(msgs, &self.sender)
             .map_err(map_err)?;
 
-        let gas_used = res.gas_info.gas_used;
-
-        // Now we have a new sender and they don't have enough funds for a transfer
-        app.set_sender(app.init_account(coins(1, "uosmo"))?);
-        assert!(!app._assert_wallet_balance(gas_used).unwrap().assertion);
-
-        app.set_sender(app.init_account(coins(100_000_000_000, "uosmo"))?);
-        assert!(app._assert_wallet_balance(gas_used).unwrap().assertion);
-
-        Ok(())
+        Ok(AppResponse {
+            data: Some(Binary(tx_response.raw_data)),
+            events: tx_response.events,
+        })
     }
 }

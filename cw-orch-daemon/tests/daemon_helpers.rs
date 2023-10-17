@@ -6,7 +6,7 @@ mod tests {
     */
 
     use cw_orch_core::{contract::interface_traits::*, environment::TxHandler};
-    use cw_orch_daemon::{ConditionalMigrate, ConditionalUpload, Daemon};
+    use cw_orch_daemon::Daemon;
     use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
 
     use cosmwasm_std::Addr;

@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = { workspace = true }
+version = "0.16.5"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -24,9 +24,8 @@ node-tests = []
 eth = ["dep:ethers-signers", "dep:ethers-core"]
 [dependencies]
 # Default deps
-cw-orch-contract-derive = { workspace = true }
-cw-orch-fns-derive = { workspace = true }
 cw-orch-core = { workspace = true }
+cw-orch-traits = { workspace = true }
 cw-orch-networks = { workspace = true }
 
 cosmwasm-std = { workspace = true }
@@ -42,6 +41,7 @@ thiserror = { workspace = true }
 sha256 = { workspace = true }
 ibc-relayer-types = { workspace = true }
 prost = { version = "0.11" }
+prost-types = "0.11.9"
 bitcoin = { version = "0.30.0" }
 hex = { version = "0.4.3" }
 ripemd = { version = "0.1.3" }
@@ -58,14 +58,18 @@ eyre = { version = "0.6" }
 cosmrs = { version = "0.14.0", features = ["dev", "cosmwasm", "grpc"] }
 chrono = { version = "0.4" }
 base16 = { version = "0.2.1" }
-derive_builder = { version = "0.12.0" }
-ring = { version = "0.16.20" }
+ring = { version = "0.17.3" }
+dirs = "5.0.1"
 dialoguer = "0.11.0"
+
 
 # Injective dependencies
 ethers-signers = { version = "2.0.7", optional = true }
 ethers-core = { version = "2.0.7", optional = true }
 async-recursion = "1.0.5"
+
+# Gzip
+flate2 = { version = "1.0.26" }
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
@@ -74,15 +78,10 @@ env_logger = "0.10.0"
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cosmwasm-schema = "1.2"
-tokio-test = "0.4.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
-counter-contract = { path = "../contracts/counter", features = ["interface"] }
 mock-contract = { path = "../contracts/mock_contract", features = [
-  "interface",
-] }
-mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
   "interface",
 ] }
 serial_test = "2.0.0"
@@ -90,3 +89,4 @@ serial_test = "2.0.0"
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }
 ethers-core = { version = "2.0.7" }
+tokio-test = "0.4.3"

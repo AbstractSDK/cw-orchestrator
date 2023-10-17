@@ -3,7 +3,6 @@ members = ["cw-orch", "cw-orch-daemon", "packages/*", "contracts/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.15.0"
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
 license = "GPL-3.0-only"
@@ -12,7 +11,11 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 [workspace.dependencies]
 cw-utils = { version = "1.0.1" }
 cosmwasm-std = { version = "1.1" }
-cw-multi-test = { version = "0.16.4" }
+#cw-multi-test = { version = "0.16.4" }
+cw-multi-test = { package = "abstract-cw-multi-test", git = "https://github.com/AbstractSDK/cw-multi-test/", branch = "update/add-ibc-support", version = "0.16.5", features = [
+  "stargate",
+  "cosmwasm_1_3",
+] }
 cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
@@ -21,19 +24,20 @@ osmosis-test-tube = { version = "19.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.15.0" }
-cw-orch-core = { path = "packages/cw-orch-core", version = "0.15.0" }
-cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.15.0" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.16.5" }
+cw-orch-core = { path = "packages/cw-orch-core", version = "0.16.2" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.16.2" }
+cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.16.2" }
 cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.15.0" }
-cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.15.0" }
-cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.15.0" }
+cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.16.1" }
+cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.16.0" }
 thiserror = { version = "1.0.21" }
 sha256 = { version = "1" }
 serde_json = "1.0.79"
 # Test deps
 speculoos = "0.11.0"
 
-ibc-relayer-types = { version = "0.25.0" }
+ibc-relayer-types = { version = "0.25.1" }
 ibc-chain-registry = { version = "0.25.0" }
 
 # Logging

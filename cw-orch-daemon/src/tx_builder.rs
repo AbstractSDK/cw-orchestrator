@@ -2,16 +2,13 @@ use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
     tendermint::chain::Id,
-    tx::{self, Body, Fee, Msg, Raw, SequenceNumber, SignDoc, SignerInfo},
+    tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
     Any, Coin,
 };
+use cw_orch_core::log::TRANSACTION_LOGS;
 use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
-
-const GAS_BUFFER: f64 = 1.3;
-const BUFFER_THRESHOLD: u64 = 200_000;
-const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]
@@ -52,23 +49,31 @@ impl TxBuilder {
     }
 
     /// Builds the body of the tx with a given memo and timeout.
-    pub fn build_body<T: cosmrs::tx::Msg>(
-        msgs: Vec<T>,
-        memo: Option<&str>,
-        timeout: u64,
-    ) -> tx::Body {
-        let msgs = msgs
-            .into_iter()
-            .map(Msg::into_any)
-            .collect::<Result<Vec<Any>, _>>()
-            .unwrap();
-
+    pub fn build_body(msgs: Vec<Any>, memo: Option<&str>, timeout: u64) -> tx::Body {
         tx::Body::new(msgs, memo.unwrap_or_default(), timeout as u32)
     }
 
     pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: u64) -> Fee {
         let fee = Coin::new(amount.into(), denom).unwrap();
         Fee::from_amount_and_gas(fee, gas_limit)
+    }
+
+    /// Builds the raw tx with a given body and fee and signs it.
+    /// Sets the TxBuilder's gas limit to its simulated amount for later use.
+    pub async fn simulate(&self, wallet: &Sender<All>) -> Result<u64, DaemonError> {
+        // get the account number of the wallet
+        let BaseAccount {
+            account_number,
+            sequence,
+            ..
+        } = wallet.base_account().await?;
+
+        // overwrite sequence if set (can be used for concurrent txs)
+        let sequence = self.sequence.unwrap_or(sequence);
+
+        wallet
+            .calculate_gas(&self.body, sequence, account_number)
+            .await
     }
 
     /// Builds the raw tx with a given body and fee and signs it.
@@ -85,45 +90,36 @@ impl TxBuilder {
         let sequence = self.sequence.unwrap_or(sequence);
 
         //
-        let (tx_fee, gas_limit) = if let (Some(fee), Some(gas_limit)) =
-            (self.fee_amount, self.gas_limit)
-        {
-            log::debug!(
-                "Using pre-defined fee and gas limits: {}, {}",
-                fee,
-                gas_limit
-            );
-            (fee, gas_limit)
-        } else {
-            let sim_gas_used = wallet
-                .calculate_gas(&self.body, sequence, account_number)
-                .await?;
-            log::debug!("Simulated gas needed {:?}", sim_gas_used);
-
-            let gas_expected = if sim_gas_used < BUFFER_THRESHOLD {
-                sim_gas_used as f64 * SMALL_GAS_BUFFER
+        let (tx_fee, gas_limit) =
+            if let (Some(fee), Some(gas_limit)) = (self.fee_amount, self.gas_limit) {
+                log::debug!(
+                    target: TRANSACTION_LOGS,
+                    "Using pre-defined fee and gas limits: {}, {}",
+                    fee,
+                    gas_limit
+                );
+                (fee, gas_limit)
             } else {
-                sim_gas_used as f64 * GAS_BUFFER
+                let sim_gas_used = wallet
+                    .calculate_gas(&self.body, sequence, account_number)
+                    .await?;
+                log::debug!(target: TRANSACTION_LOGS, "Simulated gas needed {:?}", sim_gas_used);
+
+                let (gas_expected, fee_amount) = wallet.get_fee_from_gas(sim_gas_used)?;
+
+                log::debug!(target: TRANSACTION_LOGS, "Calculated fee needed: {:?}", fee_amount);
+                // set the gas limit of self for future txs
+                // there's no way to change the tx_builder body so simulation gas should remain the same as well
+                self.gas_limit = Some(gas_expected);
+
+                (fee_amount, gas_expected)
             };
-            let fee_amount = gas_expected
-                * (wallet.daemon_state.chain_data.fees.fee_tokens[0].fixed_min_gas_price + 0.00001);
 
-            log::debug!("Calculated fee needed: {:?}", fee_amount);
-            // set the gas limit of self for future txs
-            // there's no way to change the tx_builder body so simulation gas should remain the same as well
-            self.gas_limit = Some(gas_expected as u64);
-
-            (fee_amount as u128, gas_expected as u64)
-        };
-
-        let fee = Self::build_fee(
-            tx_fee,
-            &wallet.daemon_state.chain_data.fees.fee_tokens[0].denom,
-            gas_limit,
-        );
+        let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit);
 
         log::debug!(
-            "submitting tx: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
+            target: TRANSACTION_LOGS,
+            "submitting TX: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
             fee,
             account_number,
             sequence

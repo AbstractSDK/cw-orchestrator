@@ -1,8 +1,11 @@
 //! Transactional traits for execution environments.
 
 use super::{ChainState, IndexResponse};
-use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
-use cosmwasm_std::{Addr, BlockInfo, Coin};
+use crate::{
+    contract::interface_traits::{CwOrchUpload, Uploadable},
+    error::CwEnvError,
+};
+use cosmwasm_std::{Addr, BlockInfo, Coin, ContractInfoResponse};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -17,7 +20,7 @@ pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 /// Accesses the sender information from the chain object to perform actions.
 pub trait TxHandler: ChainState + Clone {
     /// Response type for transactions on an environment.
-    type Response: IndexResponse + Debug;
+    type Response: IndexResponse + Debug + Send + Clone;
     /// Error type for transactions on an environment.
     type Error: Into<CwEnvError> + Debug;
     /// Source type for uploading to the environment.
@@ -79,4 +82,22 @@ pub trait TxHandler: ChainState + Clone {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
+
+    /// Clones the chain with a different sender.
+    /// Usually used to call a contract as a different sender.
+    fn call_as(&self, sender: &<Self as TxHandler>::Sender) -> Self {
+        let mut chain = self.clone();
+        chain.set_sender(sender.clone());
+        chain
+    }
+}
+
+pub trait WasmCodeQuerier: CwEnv {
+    /// Returns the checksum of provided code_id
+    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error>;
+    /// Returns the code_info structure of the provided contract
+    fn contract_info<T: CwOrchUpload<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
 }
