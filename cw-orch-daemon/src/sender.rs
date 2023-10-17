@@ -32,7 +32,6 @@ use cosmrs::{
 };
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
-use dialoguer::Confirm;
 
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
@@ -208,7 +207,7 @@ impl Sender<All> {
         let expected_fee = coin(fee_amount, self.get_fee_token());
         // During simulation, we also make sure the account has enough balance to submit the transaction
         // This is disabled by an env variable
-        if CwOrchEnvVars::WalletBalanceAssertion.get()? != "false" {
+        if CwOrchEnvVars::DisableWalletBalanceAssertion.get()? != "true" {
             self.assert_wallet_balance(&expected_fee).await?;
         }
 
@@ -352,19 +351,28 @@ impl Sender<All> {
         }
 
         // If there is not enough asset balance, we need to warn the user
-        if Confirm::new()
-            .with_prompt(format!(
-                "Not enough funds on chain {} at address {} to deploy the contract. 
-                    Needed: {}{} but only have: {}.
-                    Press 'y' when the wallet balance has been increased to resume deployment",
-                self.daemon_state.chain_data.chain_id,
-                self.address()?,
-                fee,
-                fee.denom,
-                parsed_balance
-            ))
-            .interact()?
-        {
+        println!(
+            "Not enough funds on chain {} at address {} to deploy the contract. 
+                Needed: {}{} but only have: {}.
+                Press 'y' when the wallet balance has been increased to resume deployment",
+            self.daemon_state.chain_data.chain_id,
+            self.address()?,
+            fee,
+            fee.denom,
+            parsed_balance
+        );
+
+        if CwOrchEnvVars::DisableManualInteraction.get()? == "true" {
+            println!("No Manual Interactions, defaulting to 'no'");
+            return Err(DaemonError::NotEnoughBalance {
+                expected: fee.clone(),
+                current: parsed_balance,
+            });
+        }
+
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input)?;
+        if input.to_lowercase().contains('y') {
             // We retry asserting the balance
             self.assert_wallet_balance(fee).await
         } else {
