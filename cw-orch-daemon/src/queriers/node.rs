@@ -9,21 +9,11 @@ use cosmrs::{
     },
     tendermint::{Block, Time},
 };
-use cw_orch_core::env::CwOrchEnvVars;
 use cw_orch_core::log::QUERY_LOGS;
+use cw_orch_core::CwOrchEnvVars::{self, EnvVar};
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
-
-const MAX_TX_QUERY_RETRIES: usize = 50;
-
-fn get_max_tx_query_retries() -> Result<usize, DaemonError> {
-    if let Ok(retries) = CwOrchEnvVars::MaxTxQueryRetries.get() {
-        Ok(retries.parse()?)
-    } else {
-        Ok(MAX_TX_QUERY_RETRIES)
-    }
-}
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -211,7 +201,7 @@ impl Node {
 
     /// Find TX by hash
     pub async fn find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self.find_tx_with_retries(hash, get_max_tx_query_retries()?)
+        self.find_tx_with_retries(hash, CwOrchEnvVars::MaxTxQueryRetries::parsed()?)
             .await
     }
 
@@ -226,10 +216,7 @@ impl Node {
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
-
-        if let Ok(min_block_speed) = CwOrchEnvVars::MinBlockSpeed.get() {
-            block_speed = block_speed.max(min_block_speed.parse()?);
-        }
+        block_speed = block_speed.max(CwOrchEnvVars::MinBlockSpeed::parsed()?);
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -259,8 +246,14 @@ impl Node {
         page: Option<u64>,
         order_by: Option<OrderBy>,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        self.find_tx_by_events_with_retries(events, page, order_by, false, MAX_TX_QUERY_RETRIES)
-            .await
+        self.find_tx_by_events_with_retries(
+            events,
+            page,
+            order_by,
+            false,
+            CwOrchEnvVars::MaxTxQueryRetries::parsed()?,
+        )
+        .await
     }
 
     /// Find Tx by events
@@ -272,8 +265,14 @@ impl Node {
         page: Option<u64>,
         order_by: Option<OrderBy>,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        self.find_tx_by_events_with_retries(events, page, order_by, true, MAX_TX_QUERY_RETRIES)
-            .await
+        self.find_tx_by_events_with_retries(
+            events,
+            page,
+            order_by,
+            true,
+            CwOrchEnvVars::MaxTxQueryRetries::parsed()?,
+        )
+        .await
     }
 
     /// Find TX by events with  :
@@ -326,7 +325,7 @@ impl Node {
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(
             format!("with events {:?}", events),
-            MAX_TX_QUERY_RETRIES,
+            CwOrchEnvVars::MaxTxQueryRetries::parsed()?,
         ))
     }
 }

@@ -30,7 +30,10 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
+use cw_orch_core::{
+    log::LOCAL_LOGS,
+    CwOrchEnvVars::{self, EnvVar},
+};
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
@@ -56,11 +59,11 @@ impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
-        let env_variable = kind.mnemonic_env_variable();
-        let mnemonic = env_variable.get().unwrap_or_else(|_| {
+        let env_variable_name = kind.mnemonic_env_variable_name();
+        let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
             panic!(
                 "Wallet mnemonic environment variable {} not set.",
-                env_variable
+                env_variable_name
             )
         });
 
@@ -136,8 +139,8 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let gas_expected = if let Ok(gas_buffer) = CwOrchEnvVars::GasBuffer.get() {
-            gas as f64 * gas_buffer.parse::<f64>()?
+        let gas_expected = if let Ok(gas_buffer) = CwOrchEnvVars::GasBuffer::parsed() {
+            gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
         } else {

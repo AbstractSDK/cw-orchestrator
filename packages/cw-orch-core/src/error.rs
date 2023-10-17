@@ -1,5 +1,10 @@
 #![allow(missing_docs)]
 
+use std::{
+    env,
+    num::{ParseFloatError, ParseIntError},
+};
+
 use thiserror::Error;
 
 /// cw-orchestrator error wrapper using thiserror.
@@ -15,6 +20,12 @@ pub enum CwEnvError {
     IOErr(#[from] ::std::io::Error),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
+    #[error(transparent)]
+    EnvvarError(#[from] env::VarError),
+    #[error(transparent)]
+    ParseFloatError(#[from] ParseFloatError),
+    #[error(transparent)]
+    ParseIntError(#[from] ParseIntError),
     #[error("File must be a wasm file")]
     NotWasm,
     #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]

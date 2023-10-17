@@ -2,7 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 
-use cw_orch_core::env::CwOrchEnvVars;
+use cw_orch_core::{
+    CwEnvError,
+    CwOrchEnvVars::{self, EnvVar},
+};
 
 #[allow(clippy::from_over_into)]
 impl Into<RegistryChainInfo> for ChainInfo<'_> {
@@ -83,11 +86,19 @@ pub enum ChainKind {
 
 impl ChainKind {
     /// Get the mnemonic name for the chain kind
-    pub fn mnemonic_env_variable(&self) -> CwOrchEnvVars {
+    pub fn mnemonic_env_variable_name(&self) -> &str {
         match *self {
-            ChainKind::Local => CwOrchEnvVars::LocalMnemonic,
-            ChainKind::Testnet => CwOrchEnvVars::TestMnemonic,
-            ChainKind::Mainnet => CwOrchEnvVars::MainMnemonic,
+            ChainKind::Local => CwOrchEnvVars::LocalMnemonic::ENV_VAR_NAME,
+            ChainKind::Testnet => CwOrchEnvVars::TestMnemonic::ENV_VAR_NAME,
+            ChainKind::Mainnet => CwOrchEnvVars::MainMnemonic::ENV_VAR_NAME,
+        }
+    }
+
+    pub fn mnemonic(&self) -> Result<String, CwEnvError> {
+        match *self {
+            ChainKind::Local => CwOrchEnvVars::LocalMnemonic::parsed(),
+            ChainKind::Testnet => CwOrchEnvVars::TestMnemonic::parsed(),
+            ChainKind::Mainnet => CwOrchEnvVars::MainMnemonic::parsed(),
         }
     }
 }

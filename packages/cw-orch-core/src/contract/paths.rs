@@ -58,8 +58,8 @@ mod wasm_path {
 mod artifacts_dir {
     use super::WasmPath;
     use crate::{
-        build::BuildPostfix, env::CwOrchEnvVars, environment::ChainState, error::CwEnvError,
-        log::LOCAL_LOGS,
+        build::BuildPostfix, env::EnvVar, environment::ChainState, error::CwEnvError,
+        log::LOCAL_LOGS, CwOrchEnvVars,
     };
 
     use std::{env, fs, path::PathBuf};
@@ -115,9 +115,12 @@ mod artifacts_dir {
     impl ArtifactsDir {
         /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
         pub fn env() -> Self {
-            let dir = CwOrchEnvVars::ArtifactsDir
-                .get()
-                .unwrap_or_else(|_| panic!("{} env variable not set", CwOrchEnvVars::ArtifactsDir));
+            let dir = CwOrchEnvVars::ArtifactsDir::parsed().unwrap_or_else(|_| {
+                panic!(
+                    "{} env variable not set",
+                    CwOrchEnvVars::ArtifactsDir::ENV_VAR_NAME
+                )
+            });
             Self::new(dir)
         }
 
