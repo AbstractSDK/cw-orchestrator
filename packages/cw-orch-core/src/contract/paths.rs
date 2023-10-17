@@ -57,7 +57,10 @@ mod wasm_path {
 
 mod artifacts_dir {
     use super::WasmPath;
-    use crate::{build::BuildPostfix, environment::ChainState, error::CwEnvError, env::CwOrchEnvVars, log::LOCAL_LOGS};
+    use crate::{
+        build::BuildPostfix, env::CwOrchEnvVars, environment::ChainState, error::CwEnvError,
+        log::LOCAL_LOGS,
+    };
 
     use std::{env, fs, path::PathBuf};
 
