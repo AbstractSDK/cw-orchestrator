@@ -114,7 +114,6 @@ pub enum DaemonError {
     InsufficientFee(String),
     #[error("Not enough balance, expected {expected}, found {current}")]
     NotEnoughBalance { expected: Coin, current: Coin },
-
 }
 
 impl DaemonError {

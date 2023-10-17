@@ -1,10 +1,11 @@
 use crate::{
     networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
+    queriers,
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
-    }, queriers,
+    },
 };
 
 use super::{
@@ -29,9 +30,9 @@ use cosmrs::{
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId, Any,
 };
-use cosmwasm_std::{Addr, coin, Coin};
-use dialoguer::Confirm;
+use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
+use dialoguer::Confirm;
 
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
@@ -207,7 +208,7 @@ impl Sender<All> {
         let expected_fee = coin(fee_amount, self.get_fee_token());
         // During simulation, we also make sure the account has enough balance to submit the transaction
         // This is disabled by an env variable
-        if CwOrchEnvVars::WalletBalanceAssertion.get()? != "false"{
+        if CwOrchEnvVars::WalletBalanceAssertion.get()? != "false" {
             self.assert_wallet_balance(&expected_fee).await?;
         }
 
@@ -318,11 +319,13 @@ impl Sender<All> {
     /// Allows checking wether the sender has enough funds to pay for the tx before broadcasting it
     #[async_recursion::async_recursion(?Send)]
     async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
-
         let chain_data = self.daemon_state.as_ref().chain_data.clone();
 
         let bank = queriers::Bank::new(self.daemon_state.grpc_channel.clone());
-        let balance = bank.balance(self.address()?, Some(fee.denom.clone())).await?[0].clone();
+        let balance = bank
+            .balance(self.address()?, Some(fee.denom.clone()))
+            .await?[0]
+            .clone();
 
         log::debug!(
             "Checking balance {} on chain {}, address {}. Expecting {}{}",
@@ -334,7 +337,7 @@ impl Sender<All> {
         );
         let parsed_balance = coin(balance.amount.parse()?, balance.denom);
 
-        if parsed_balance.amount >= fee.amount{
+        if parsed_balance.amount >= fee.amount {
             log::debug!("The wallet has enough balance to deploy");
             return Ok(());
         }

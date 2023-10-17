@@ -6,7 +6,7 @@ use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::interface_traits::{CwOrchUpload, Uploadable},
     environment::{ChainState, IndexResponse, StateInterface},
     environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
