@@ -13,5 +13,6 @@ readme = "README.md"
 exclude = [".env"]
 
 [dependencies]
+cw-orch-core = { workspace = true }
 serde = { workspace = true }
 ibc-chain-registry = { workspace = true }

@@ -1,6 +1,9 @@
 # Environment Variables
 
 cw-orch needs some environment variables to be set in order to function properly when running as an executable.
+We review the environment variables here. 
+
+You can find a more up-to-date version of all env variables that are specific to `cw-orch` in the [`cw_orch_core::env` file](https://github.com/AbstractSDK/cw-orchestrator/blob/main/packages/cw-orch-core/src/env.rs).
 
 **IMPORTANT: Before proceeding, ensure that you add `.env` to your `.gitignore`. We are not responsible for any loss of funds due to leaked mnemonics.**
 
