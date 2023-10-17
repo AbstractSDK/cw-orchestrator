@@ -101,7 +101,7 @@ impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
 mod test {
     use super::MockContract as LocalMockContract;
     use super::*;
-    use cosmwasm_std::{Addr, coins};
+    use cosmwasm_std::{coins, Addr};
     use cw_orch::prelude::*;
     use mock_contract::{ExecuteMsgFns, QueryMsgFns};
 

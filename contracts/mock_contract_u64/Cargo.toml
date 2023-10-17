@@ -28,4 +28,4 @@ mock-contract = { path = "../mock_contract", default-features = false, features 
 ] }
 
 [dev-dependencies]
-mock-contract-u64  = { path = ".", features = ["interface"]}
+mock-contract-u64 = { path = ".", features = ["interface"] }
