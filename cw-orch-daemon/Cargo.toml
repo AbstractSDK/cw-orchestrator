@@ -61,9 +61,11 @@ base16 = { version = "0.2.1" }
 ring = { version = "0.17.3" }
 dirs = "5.0.1"
 
+
 # Injective dependencies
 ethers-signers = { version = "2.0.7", optional = true }
 ethers-core = { version = "2.0.7", optional = true }
+async-recursion = "1.0.5"
 
 # Gzip
 flate2 = { version = "1.0.26" }

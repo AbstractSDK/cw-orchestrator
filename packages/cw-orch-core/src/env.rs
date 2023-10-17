@@ -64,8 +64,16 @@ pub enum CwOrchEnvVars {
     /// Mnemonic of the address interacting with a localnet
     LocalMnemonic,
 
-    /// Optional - Boolean
-    /// If equals "true", disables all prompting and defaults execution to a positive outcome
+    /// Optional - boolean
+    /// Defaults to "false"
+    /// Disable wallet balance assertion.
+    /// When balance assertion is enabled, it asserts that the balance of the sender is sufficient before submitting any transactions (during the simulation step)
+    DisableWalletBalanceAssertion,
+
+    /// Optional - boolean
+    /// Defaults to "false"
+    /// Disable manual interactions
+    /// It allows to automate scripting and get rid of prompting
     DisableManualInteraction,
 }
 
@@ -85,6 +93,9 @@ impl Display for CwOrchEnvVars {
             CwOrchEnvVars::MaxTxQueryRetries => "CW_ORCH_MAX_TX_QUERY_RETRIES",
             CwOrchEnvVars::MinBlockSpeed => "CW_ORCH_MIN_BLOCK_SPEED",
             CwOrchEnvVars::SerializeJson => "CW_ORCH_SERIALIZE_JSON",
+            CwOrchEnvVars::DisableWalletBalanceAssertion => {
+                "CW_ORCH_DISABLE_WALLET_BALANCE_ASSERTION"
+            }
             CwOrchEnvVars::DisableManualInteraction => "CW_ORCH_DISABLE_MANUAL_INTERACTION",
 
             CwOrchEnvVars::MainMnemonic => "MAIN_MNEMONIC",
