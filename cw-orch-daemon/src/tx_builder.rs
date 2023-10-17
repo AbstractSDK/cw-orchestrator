@@ -50,7 +50,7 @@ impl TxBuilder {
 
     /// Builds the body of the tx with a given memo and timeout.
     pub fn build_body(msgs: Vec<Any>, memo: Option<&str>, timeout: u64) -> tx::Body {
-        tx::Body::new(msgs, memo.unwrap_or_default(), timeout as u32)
+        tx::Body::new(msgs, memo.unwrap_or_else(|| "Tx committed using cw-orchestrator! ⚙️"), timeout as u32)
     }
 
     pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: u64) -> Fee {
