@@ -12,6 +12,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
+use crate::env::CwOrchEnvVars;
 use crate::environment::CwEnv;
 use crate::environment::StateInterface;
 use crate::CwEnvError;
@@ -111,14 +112,21 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                 .collect()
         } else {
             // There is not deployment file, we make sure the user wants to deploy to multiple chains
-            println!(
-                "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
-                &hash_networks.keys().cloned().collect::<Vec<String>>()
-            );
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input)?;
-            if input.to_lowercase().contains('n') {
-                bail!("Deployment aborted manually");
+            if CwOrchEnvVars::DisableManualInteraction.get()? != "true" {
+                println!(
+                    "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
+                    &hash_networks.keys().cloned().collect::<Vec<String>>()
+                );
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+                if input.to_lowercase().contains('n') {
+                    bail!("Deployment aborted manually");
+                }
+            } else {
+                log::info!(
+                    "Deploying to all the following networks: {:?}",
+                    &hash_networks.keys().cloned().collect::<Vec<String>>()
+                );
             }
 
             hash_networks
