@@ -1,5 +1,6 @@
 use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
+// ANCHOR: nibiru
 pub const NIBIRU_NETWORK: NetworkInfo = NetworkInfo {
     id: "nibiru",
     pub_address_prefix: "nibi",
@@ -16,3 +17,4 @@ pub const NIBIRU_ITN_2: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+// ANCHOR_END: nibiru

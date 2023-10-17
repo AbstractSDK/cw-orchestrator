@@ -28,6 +28,7 @@
   - [Juno](./chains/juno.md)
   - [Kujira](./chains/kujira.md)
   - [Neutron](./chains/neutron.md)
+  - [Nibiru](./chains/nibiru.md)
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
