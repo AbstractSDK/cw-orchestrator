@@ -1,8 +1,14 @@
 //! Introduces the Deploy trait only
+use anyhow::bail;
 use cosmwasm_std::Addr;
 use serde_json::from_reader;
 use serde_json::Value;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::error::Error;
+use std::fs;
 use std::fs::File;
+use std::io::BufReader;
 
 use crate::environment::CwEnv;
 use crate::environment::StateInterface;
@@ -58,9 +64,9 @@ use super::interface_traits::ContractInstance;
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
 pub trait Deploy<Chain: CwEnv>: Sized {
     /// Error type returned by the deploy functions.  
-    type Error: From<CwEnvError>;
+    type Error: Error + From<CwEnvError>;
     /// Data required to deploy the application.
-    type DeployData;
+    type DeployData: Clone;
     /// Stores/uploads the application to the chain.
     fn store_on(chain: Chain) -> Result<Self, Self::Error>;
     /// Deploy the application to the chain. This could include instantiating contracts.
@@ -68,6 +74,89 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error> {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
+    }
+
+    /// Deploys the applications on all chains indicated in `chains`.
+    /// Arguments :
+    ///  - `networks`` is a vector of :
+    ///     - Chain objects
+    ///     - Additional deploy data needed for the deployment of the structure on each platform
+    fn full_deploy(
+        networks: Vec<(Chain, Self::DeployData)>,
+        _gas_needed: Option<u64>,
+        after_deploy_action: Option<fn(&Self) -> anyhow::Result<()>>,
+    ) -> anyhow::Result<HashMap<String, Self>> {
+        let hash_networks: HashMap<String, (Chain, Self::DeployData)> = networks
+            .iter()
+            .map(|(c, d)| Ok::<_, Chain::Error>((c.block_info()?.chain_id, (c.clone(), d.clone()))))
+            .collect::<Result<HashMap<_, _>, _>>()
+            .map_err(Into::into)?;
+
+        // First we check the deployment status. Which chains have been un-succesfully deployed since last time
+        let chains_to_deploy = if let Ok(deployment_left) = read_deployment() {
+            // We check the validity of the deployment_left variable against all our networks
+            for chain in deployment_left.iter() {
+                // If the deployment file contains a chain which is not in the networks variable, the deployment file is considered corrupted
+                if !hash_networks.contains_key(chain) {
+                    bail!("Deployment file is corrupted. Chain {} is indicated but not in the `networks` argument of the `ful_deploy`function", chain)
+                }
+            }
+
+            hash_networks
+                .iter()
+                .filter(|(chain, _)| deployment_left.contains(chain))
+                .map(|(chain_id, (chain, data))| (chain_id.clone(), (chain.clone(), data.clone())))
+                .collect()
+        } else {
+            // There is not deployment file, we make sure the user wants to deploy to multiple chains
+            log::info!(
+                "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
+                &hash_networks.keys().cloned().collect::<Vec<String>>()
+            );
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            if input.to_lowercase().contains('n') {
+                bail!("Deployment aborted manually");
+            }
+
+            hash_networks
+        };
+
+        // We update the deployment file with all the chains we want to use now
+        let mut chains_left: HashSet<_> = chains_to_deploy.keys().cloned().collect();
+        write_deployment(&chains_left)?;
+
+        let mut deployments = HashMap::new();
+
+        for (chain_id, (chain, data)) in chains_to_deploy {
+            // First we check that there is enough funds to deploy the whole application + after_deploy_action
+            // TODO
+
+            let err = match Self::deploy_on(chain, data) {
+                Ok(this_deployment) => {
+                    // We execute the after deployment action if it exists
+                    let after_deploy_action_result =
+                        after_deploy_action.map(|action| action(&this_deployment));
+
+                    match after_deploy_action_result {
+                        None | Some(Ok(_)) => {
+                            // We remove the chain from the deployment file and continue with the next iteration
+                            chains_left.remove(&chain_id);
+                            write_deployment(&chains_left)?;
+                            deployments.insert(chain_id, this_deployment);
+                            continue;
+                        }
+                        Some(Err(e)) => format!("Error in after deployment closure : {e}"),
+                    }
+                }
+                Err(e) => e.to_string(),
+            };
+            log::error!("Deployment failed for chain {chain_id}, You can retry deployment running the `full_deploy` function again. Error log : {err}");
+        }
+
+        // If all deployments have gone through, we delete the deployments file
+
+        Ok(deployments)
     }
 
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
@@ -186,4 +275,28 @@ pub(crate) fn read_json(filename: &String) -> anyhow::Result<Value> {
     let file = File::open(filename)?;
     let json: serde_json::Value = from_reader(file)?;
     Ok(json)
+}
+
+#[allow(dead_code)]
+fn write_deployment(status: &HashSet<String>) -> anyhow::Result<()> {
+    let path = dirs::home_dir()
+        .unwrap()
+        .join(".cw-orchestrator")
+        .join("deployment.json");
+    let vector: Vec<String> = status.iter().cloned().collect();
+    let status_str = serde_json::to_string_pretty(&vector)?;
+    fs::write(path, status_str)?;
+    Ok(())
+}
+
+fn read_deployment() -> anyhow::Result<Vec<String>> {
+    let path = dirs::home_dir()
+        .unwrap()
+        .join(".cw-orchestrator")
+        .join("deployment.json");
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+
+    // Read the JSON contents of the file as a vector of chain ids. If not present use default.
+    Ok(serde_json::from_reader(reader)?)
 }
