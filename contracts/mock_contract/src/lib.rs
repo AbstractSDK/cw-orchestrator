@@ -152,7 +152,7 @@ impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContra
     fn wasm(&self) -> cw_orch::prelude::WasmPath {
         use cw_orch::prelude::*;
         artifacts_dir_from_workspace!()
-            .find_wasm_path("mock_contract.wasm")
+            .find_wasm_path("mock_contract")
             .unwrap()
     }
 }

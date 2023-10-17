@@ -4,7 +4,7 @@ use std::{env, fmt::Display};
 /// This is used to import environment variables with safe names (and at a centralized location)
 /// To get the env variable, you can use
 /// ```rust,no_run
-/// use cw_orch_core::env::CwOrchEnvVars; 
+/// use cw_orch_core::env::CwOrchEnvVars;
 /// let env_variable = CwOrchEnvVars::StateFolder.get().unwrap();
 /// ```
 /// You can get the env variable name with :
