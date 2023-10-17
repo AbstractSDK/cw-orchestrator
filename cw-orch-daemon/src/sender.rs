@@ -316,7 +316,16 @@ impl Sender<All> {
         Ok(commit)
     }
 
-    /// Allows checking wether the sender has enough funds to pay for the tx before broadcasting it
+    /// Allows for checking wether the sender is able to broadcast a transaction that necessitates the provided `gas`
+    pub async fn has_enough_balance_for_gas(&self, gas: u64) -> Result<(), DaemonError> {
+        let (_gas_expected, fee_amount) = self.get_fee_from_gas(gas)?;
+        let fee_denom = self.get_fee_token();
+
+        self.assert_wallet_balance(&coin(fee_amount, fee_denom))
+            .await
+    }
+
+    /// Allows checking wether the sender has more funds than the provided `fee` argument
     #[async_recursion::async_recursion(?Send)]
     async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
         let chain_data = self.daemon_state.as_ref().chain_data.clone();
