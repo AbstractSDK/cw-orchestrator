@@ -27,7 +27,7 @@ pub fn main() -> anyhow::Result<()> {
     // ANCHOR: clean_example
     counter.upload()?;
     counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
-    
+
     counter.increment()?;
 
     let count = counter.get_count()?;

@@ -1,8 +1,5 @@
 // ANCHOR: custom_interface
-use cw_orch::{
-    interface,
-    prelude::*,
-};
+use cw_orch::{interface, prelude::*};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
@@ -30,10 +27,9 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
 }
 // ANCHOR_END: custom_interface
 
-
+use crate::contract::CONTRACT_NAME;
 use cw_orch::anyhow::Result;
 use cw_orch::prelude::queriers::Node;
-use crate::contract::CONTRACT_NAME;
 
 // ANCHOR: daemon
 impl CounterContract<Daemon> {

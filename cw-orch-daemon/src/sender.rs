@@ -30,7 +30,7 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::LOCAL_LOGS, env::CwOrchEnvVars};
+use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
