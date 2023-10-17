@@ -63,6 +63,10 @@ pub enum CwOrchEnvVars {
     /// Mandatory when interacting with a daemon on mainnet
     /// Mnemonic of the address interacting with a localnet
     LocalMnemonic,
+
+    /// Optional - Boolean
+    /// If equals "true", disables all prompting and defaults execution to a positive outcome
+    DisableManualInteraction,
 }
 
 impl CwOrchEnvVars {
@@ -81,6 +85,7 @@ impl Display for CwOrchEnvVars {
             CwOrchEnvVars::MaxTxQueryRetries => "CW_ORCH_MAX_TX_QUERY_RETRIES",
             CwOrchEnvVars::MinBlockSpeed => "CW_ORCH_MIN_BLOCK_SPEED",
             CwOrchEnvVars::SerializeJson => "CW_ORCH_SERIALIZE_JSON",
+            CwOrchEnvVars::DisableManualInteraction => "CW_ORCH_DISABLE_MANUAL_INTERACTION",
 
             CwOrchEnvVars::MainMnemonic => "MAIN_MNEMONIC",
             CwOrchEnvVars::TestMnemonic => "TEST_MNEMONIC",
