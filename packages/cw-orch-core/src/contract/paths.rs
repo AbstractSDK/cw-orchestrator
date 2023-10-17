@@ -195,8 +195,7 @@ mod artifacts_dir {
     }
 
     fn is_default_artifact(file_name: &str, contract_name: &str) -> bool {
-        file_name.ends_with(contract_name)
-            || file_name.ends_with(format!("{}.wasm", contract_name).as_str())
+        file_name.ends_with(format!("{}.wasm", contract_name).as_str())
             || file_name.ends_with(format!("{}-arm64.wasm", contract_name).as_str())
     }
 
