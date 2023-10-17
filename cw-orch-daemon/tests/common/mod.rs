@@ -12,6 +12,8 @@ mod node {
 
     // Config
     const JUNO_IMAGE: &str = "ghcr.io/cosmoscontracts/juno:v12.0.0";
+    #[allow(unused)]
+    pub const STAKE_TOKEN: &str = "ujunox";
 
     // Defaults for env vars
     const CONTAINER_NAME: &str = "juno_node_1";
@@ -85,7 +87,7 @@ mod node {
                 "-p",
                 "9090:9090",
                 "-e",
-                "STAKE_TOKEN=ujunox",
+                "STAKE_TOKEN={STAKE_TOKEN}",
                 "-e",
                 "UNSAFE_CORS=true",
                 image,

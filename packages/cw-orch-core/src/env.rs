@@ -67,7 +67,7 @@ pub enum CwOrchEnvVars {
     /// Optional - boolean
     /// Defaults to "false"
     /// Disable wallet balance assertion.
-    /// When enabled, it asserts that the balance of the sender is sufficient before submitting any transactions (during the simulation step)
+    /// When balance assertion is enabled, it asserts that the balance of the sender is sufficient before submitting any transactions (during the simulation step)
     DisableWalletBalanceAssertion,
 
     /// Optional - boolean
