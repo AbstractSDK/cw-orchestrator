@@ -7,8 +7,10 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
 use std::fs;
+use std::fs::remove_file;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::PathBuf;
 
 use crate::environment::CwEnv;
 use crate::environment::StateInterface;
@@ -155,7 +157,9 @@ pub trait Deploy<Chain: CwEnv>: Sized {
         }
 
         // If all deployments have gone through, we delete the deployments file
-
+        if chains_left.is_empty() {
+            remove_deployment_file()?;
+        }
         Ok(deployments)
     }
 
@@ -277,12 +281,15 @@ pub(crate) fn read_json(filename: &String) -> anyhow::Result<Value> {
     Ok(json)
 }
 
-#[allow(dead_code)]
-fn write_deployment(status: &HashSet<String>) -> anyhow::Result<()> {
-    let path = dirs::home_dir()
+fn deployment_file() -> PathBuf {
+    dirs::home_dir()
         .unwrap()
         .join(".cw-orchestrator")
-        .join("deployment.json");
+        .join("deployment.json")
+}
+
+fn write_deployment(status: &HashSet<String>) -> anyhow::Result<()> {
+    let path = deployment_file();
     let vector: Vec<String> = status.iter().cloned().collect();
     let status_str = serde_json::to_string_pretty(&vector)?;
     fs::write(path, status_str)?;
@@ -290,13 +297,16 @@ fn write_deployment(status: &HashSet<String>) -> anyhow::Result<()> {
 }
 
 fn read_deployment() -> anyhow::Result<Vec<String>> {
-    let path = dirs::home_dir()
-        .unwrap()
-        .join(".cw-orchestrator")
-        .join("deployment.json");
+    let path = deployment_file();
     let file = File::open(path)?;
     let reader = BufReader::new(file);
 
     // Read the JSON contents of the file as a vector of chain ids. If not present use default.
     Ok(serde_json::from_reader(reader)?)
+}
+
+fn remove_deployment_file() -> anyhow::Result<()> {
+    let path = deployment_file();
+    remove_file(path)?;
+    Ok(())
 }
