@@ -3,11 +3,13 @@ use std::{env, fmt::Display};
 /// This regroups all env variables used by cw-orch-daemon. It allows for easier documentation and env variable management
 /// This is used to import environment variables with safe names (and at a centralized location)
 /// To get the env variable, you can use
-/// ```rust
-/// let env_variable = CwOrchEnvVars::StateFolder.get()?;
+/// ```rust,no_run
+/// use cw_orch_core::env::CwOrchEnvVars;
+/// let env_variable = CwOrchEnvVars::StateFolder.get().unwrap();
 /// ```
 /// You can get the env variable name with :
-/// ```rust
+/// ```rust,no_run
+/// use cw_orch_core::env::CwOrchEnvVars;
 /// let variable_name = CwOrchEnvVars::StateFolder.to_string();
 /// ```
 pub enum CwOrchEnvVars {

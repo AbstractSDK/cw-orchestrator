@@ -34,7 +34,7 @@ In order to generate a typed interface to your contract you can either pass the 
 
 Provide your messages to a new struct that's named after your contract.
 
-```rust
+```rust,ignore
 use cw_orch::interface;
 use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
@@ -65,7 +65,7 @@ You now have a contract interface that you can use to interact with your contrac
 
 You can use this interface to deploy and interact with the contract:
 
-```rust
+```rust,ignore
 use cw_orch::interface;
 use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
@@ -127,7 +127,7 @@ The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contr
 
 The `ExecuteFns` macro should only run on the Msg when the "interface" trait is enable. This is ensured by the `interface` feature in the following example:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 
 #[cosmwasm_schema::cw_serde]
@@ -141,8 +141,10 @@ pub enum ExecuteMsg {
     Deposit {}
 }
 ```
+
 The generated functions can then be used for any interface that uses this `ExecuteMsg`.
-```rust
+
+```rust,ignore
 // Define the interface, which is generic over the CosmWasm environment (Chain)
 #[cw_orch::interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1<Chain>;
@@ -165,7 +167,7 @@ The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but 
 
 For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
 
-```rust
+```rust,ignore
 use cw_orch::interface;
 use cw_orch::prelude::*;
 
@@ -207,12 +209,13 @@ impl<Chain: CwEnv> Example<Chain> {
 ### Testing with OsmosisTestTube
 
 [OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise. 
-- Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies. 
+
+- Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
 - Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  
 
 ## Supported chains
 
-Cw-orchestrator supports the following chains natively : 
+Cw-orchestrator supports the following chains natively:
 🟥 LocalNet, 🟦 Testnet, 🟩 Mainnet
 
 - Archway 🟦🟩

@@ -1,7 +1,8 @@
 
 # Installation
 
-Simply run the following command to add cw-orchestrator to your rust crate : 
+Simply run the following command to add cw-orchestrator to your rust crate:
+
 ```bash
 cargo add cw-orch
 ```
@@ -10,13 +11,12 @@ Make sure all the [prerequisites](#prerequisites) are met before building packag
 
 # Prerequisites
 
-Cw-orch relies on external libraries that need additional tools installed on your machine : 
+Cw-orch relies on external libraries that need additional tools installed on your machine:
+
 - Rust
 - OpenSSL
 - Gcc + Clang (optional, only for osmosis-test-tube)
 - Go (optional, only for osmosis-test-tube)
-
-After installing the Prerequisites, 
 
 ## Ubuntu
 
@@ -24,7 +24,7 @@ After installing the Prerequisites,
 
   - Install the [go compiler](https://go.dev/doc/install) for osmosis-test-tube.
 
-  - Other installs in one command : 
+  - Other installs in one command:
     ```bash
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
         sudo apt install build-essential \
@@ -35,7 +35,7 @@ After installing the Prerequisites,
 
 ### Detailed way
 
-Install the following packages : 
+Install the following packages:
 
 1. [The rust toolchain](https://www.rust-lang.org/tools/install)
 2. The gcc compiler.
@@ -60,7 +60,7 @@ Install the following packages :
 
 ### Fast way
 
-  - You can install all prerequisites in one command : 
+  - You can install all prerequisites in one command:
     ```bash
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
         sudo pacman -Sy gcc \
@@ -72,7 +72,7 @@ Install the following packages :
 
 
 ### Detailed way
-Install the following packages : 
+Install the following packages:
 1. [The rust toolchain](https://www.rust-lang.org/tools/install)
 2. The gcc compiler.
     ```bash

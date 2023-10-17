@@ -1,6 +1,6 @@
 use counter_contract::{
-    contract::CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
+    CounterContract,
 };
 use cw_orch::prelude::{
     ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,

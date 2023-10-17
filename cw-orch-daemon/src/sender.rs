@@ -29,13 +29,17 @@ use cosmrs::{
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId, Any,
 };
-use cosmwasm_std::Addr;
-use cw_orch_core::log::LOCAL_LOGS;
+use cosmwasm_std::{coin, Addr, Coin};
+use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
+
+const GAS_BUFFER: f64 = 1.3;
+const BUFFER_THRESHOLD: u64 = 200_000;
+const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Rc<Sender<All>>;
@@ -123,6 +127,32 @@ impl Sender<All> {
         self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 
+    pub(crate) fn get_fee_token(&self) -> String {
+        self.daemon_state.chain_data.fees.fee_tokens[0]
+            .denom
+            .clone()
+    }
+
+    /// Compute the gas fee from the expected gas in the transaction
+    /// Applies a Gas Buffer for including signature verification
+    pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
+        let gas_expected = if let Ok(gas_buffer) = CwOrchEnvVars::GasBuffer.get() {
+            gas as f64 * gas_buffer.parse::<f64>()?
+        } else if gas < BUFFER_THRESHOLD {
+            gas as f64 * SMALL_GAS_BUFFER
+        } else {
+            gas as f64 * GAS_BUFFER
+        };
+        let fee_amount = gas_expected
+            * (self.daemon_state.chain_data.fees.fee_tokens[0]
+                .fixed_min_gas_price
+                .max(self.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price)
+                + 0.00001);
+
+        Ok((gas_expected as u64, fee_amount as u128))
+    }
+
+    /// Computes the gas needed for submitting a transaction
     pub async fn calculate_gas(
         &self,
         tx_body: &tx::Body,
@@ -154,6 +184,26 @@ impl Sender<All> {
         Node::new(self.channel())
             .simulate_tx(tx_raw.to_bytes()?)
             .await
+    }
+
+    /// Simulates the transaction against an actual node
+    /// Returns the gas needed as well as the fee needed for submitting a transaction
+    pub async fn simulate(
+        &self,
+        msgs: Vec<Any>,
+        memo: Option<&str>,
+    ) -> Result<(u64, Coin), DaemonError> {
+        let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
+
+        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
+
+        let tx_builder = TxBuilder::new(tx_body);
+
+        let gas_needed = tx_builder.simulate(self).await?;
+
+        let (gas_for_submission, fee_amount) = self.get_fee_from_gas(gas_needed)?;
+
+        Ok((gas_for_submission, coin(fee_amount, self.get_fee_token())))
     }
 
     pub async fn commit_tx<T: Msg>(
