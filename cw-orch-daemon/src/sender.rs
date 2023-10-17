@@ -1,4 +1,4 @@
-use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE};
+use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE, queriers};
 
 use super::{
     cosmos_modules::{self, auth::BaseAccount},
@@ -22,7 +22,8 @@ use cosmrs::{
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId,
 };
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, coin};
+use dialoguer::Confirm;
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, env, rc::Rc, str::FromStr};
 
@@ -255,7 +256,60 @@ impl Sender<All> {
         let commit = commit.into_inner().tx_response.unwrap();
         Ok(commit)
     }
+
+    /// Allows checking wether the sender has enough funds to pay for the tx before broadcasting it
+    #[async_recursion::async_recursion(?Send)]
+    async fn assert_wallet_balance(&self, gas: u64) -> Result<(), DaemonError> {
+
+        let chain_data = self.daemon_state.as_ref().chain_data.clone();
+
+        let fee_token = chain_data.fees.fee_tokens[0].clone();
+        let fee_amount = (gas as f64 * fee_token.fixed_min_gas_price) as u128;
+        let fee = coin(fee_amount, fee_token.denom);
+
+        let bank = queriers::Bank::new(self.daemon_state.grpc_channel.clone());
+        let balance = bank.balance(self.address()?, Some(fee.denom.clone())).await?[0].clone();
+
+        log::debug!(
+            "Checking balance {} on chain {}, address {}. Expecting {}{}",
+            balance.amount,
+            chain_data.chain_id,
+            self.address()?,
+            fee,
+            fee.denom
+        );
+        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
+
+        if parsed_balance.amount >= fee.amount{
+            log::debug!("The wallet has enough balance to deploy");
+            return Ok(());
+        }
+
+        // If there is not enough asset balance, we need to warn the user
+        if Confirm::new()
+            .with_prompt(format!(
+                "Not enough funds on chain {} at address {} to deploy the contract. 
+                    Needed: {}{} but only have: {}.
+                    Press 'y' when the wallet balance has been increased to resume deployment",
+                self.daemon_state.chain_data.chain_id,
+                self.address()?,
+                fee,
+                fee.denom,
+                parsed_balance
+            ))
+            .interact()?
+        {
+            // We retry asserting the balance
+            self.assert_wallet_balance(gas).await
+        } else {
+            Err(DaemonError::NotEnoughBalance {
+                expected: fee,
+                current: parsed_balance,
+            })
+        }
+    }
 }
+
 
 fn has_insufficient_fee(raw_log: &str) -> bool {
     raw_log.contains("insufficient fees")

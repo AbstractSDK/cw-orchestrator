@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use cosmwasm_std::Coin;
 use thiserror::Error;
 
 /// cw-orchestrator error wrapper using thiserror.
@@ -16,8 +15,6 @@ pub enum CwEnvError {
     IOErr(#[from] ::std::io::Error),
     #[error("JSON Conversion Error")]
     SerdeJson(#[from] ::serde_json::Error),
-    #[error("Not enough balance, expected {expected}, found {current}")]
-    NotEnoughBalance { expected: Coin, current: Coin },
     #[error("File must be a wasm file")]
     NotWasm,
     #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]

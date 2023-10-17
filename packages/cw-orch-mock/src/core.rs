@@ -1,6 +1,6 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{coin, Addr, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
@@ -8,7 +8,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{ChainState, IndexResponse, StateInterface},
-    environment::{TxHandler, WalletBalanceAssertion, WalletBalanceAssertionResult},
+    environment::{TxHandler},
     CwEnvError,
 };
 
@@ -297,20 +297,6 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
         Ok(self.app.borrow().block_info())
-    }
-}
-
-impl WalletBalanceAssertion for Mock {
-    fn _assert_wallet_balance(
-        &self,
-        _gas: u64,
-    ) -> Result<WalletBalanceAssertionResult, CwEnvError> {
-        // cw_multi_test doesn't need any gas to operate, so this always returns a positive result for gas
-        Ok(WalletBalanceAssertionResult {
-            assertion: true,
-            expected: coin(0, "nogas"),
-            current: coin(0, "nogas"),
-        })
     }
 }
 

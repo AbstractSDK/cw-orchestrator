@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use cosmwasm_std::Coin;
 use cw_orch_core::CwEnvError;
 use thiserror::Error;
 
@@ -59,6 +60,8 @@ pub enum DaemonError {
     HexError(#[from] ::hex::FromHexError),
     #[error(transparent)]
     BitCoinBip32(#[from] ::bitcoin::bip32::Error),
+    #[error(transparent)]
+    DialoguerError(#[from] ::dialoguer::Error),
     #[error("83 length-missing SECP256K1 prefix")]
     ConversionSECP256k1,
     #[error("82 length-missing ED25519 prefix")]
@@ -107,6 +110,9 @@ pub enum DaemonError {
     IbcError(String),
     #[error("insufficient fee, check gas price: {0}")]
     InsufficientFee(String),
+    #[error("Not enough balance, expected {expected}, found {current}")]
+    NotEnoughBalance { expected: Coin, current: Coin },
+
 }
 
 impl DaemonError {

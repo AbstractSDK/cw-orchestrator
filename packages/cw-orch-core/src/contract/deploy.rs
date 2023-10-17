@@ -4,8 +4,8 @@ use serde_json::from_reader;
 use serde_json::Value;
 use std::fs::File;
 
+use crate::environment::CwEnv;
 use crate::environment::StateInterface;
-use crate::environment::WalletBalanceAssertion;
 use crate::CwEnvError;
 
 use super::interface_traits::ContractInstance;
@@ -56,15 +56,11 @@ use super::interface_traits::ContractInstance;
 ///
 /// This allows other developers to re-use the application's deployment logic in their own tests.
 /// Allowing them to build on the application's functionality without having to re-implement its deployment.
-pub trait Deploy<Chain: WalletBalanceAssertion>: Sized {
+pub trait Deploy<Chain: CwEnv   >: Sized {
     /// Error type returned by the deploy functions.  
     type Error: From<CwEnvError>;
     /// Data required to deploy the application.
     type DeployData;
-    /// Gas necessary to deploy the whole application
-    /// If you don't want to set this constant, use a zero value here
-    /// This is ONLY used to check if the deployer has enough balance to do the whole deploy operation.
-    const GAS_TO_DEPLOY: u64;
     /// Stores/uploads the application to the chain.
     fn store_on(chain: Chain) -> Result<Self, Self::Error>;
     /// Deploy the application to the chain. This could include instantiating contracts.
@@ -72,19 +68,6 @@ pub trait Deploy<Chain: WalletBalanceAssertion>: Sized {
     fn deploy_on(chain: Chain, data: Self::DeployData) -> Result<Self, Self::Error> {
         // if not implemented, just store the application on the chain
         Self::store_on(chain)
-    }
-
-    /// 1. Checks wether the deploying wallet has enough funds
-    /// 2. Deploys the application
-    fn deploy_on_with_balance_assertion(
-        chain: Chain,
-        data: Self::DeployData,
-    ) -> Result<Self, Self::Error> {
-        // We verify the deploying wallet has enough funds
-        chain.assert_wallet_balance(Self::GAS_TO_DEPLOY)?;
-
-        // if not implemented, just store the application on the chain
-        Self::deploy_on(chain, data)
     }
 
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library

@@ -60,10 +60,12 @@ chrono = { version = "0.4" }
 base16 = { version = "0.2.1" }
 derive_builder = { version = "0.12.0" }
 ring = { version = "0.16.20" }
+dialoguer = "0.11.0"
 
 # Injective dependencies
 ethers-signers = { version = "2.0.7", optional = true }
 ethers-core = { version = "2.0.7", optional = true }
+async-recursion = "1.0.5"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
