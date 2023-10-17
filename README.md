@@ -45,22 +45,6 @@ pub struct Cw20;
 
 The macro will generate a `new` function that takes the contract name and the chain that you want to interact with. You can then use this interface to interact with the contract.
 
-### The `interface_entry_point` Macro
-
-You create a contract interface by adding the `interface_entry_point` macro to your contract endpoints. The name of the generated interface will be the crate name in PascalCase.
-
-```ts
-use cw_orch::interface_entry_point;
-
-#[cw_orch::interface_entry_point]
-fn instantiate(...)
-
-#[cw_orch::interface_entry_point]
-fn execute(...)
-```
-
-You now have a contract interface that you can use to interact with your contract.
-
 ### Usage
 
 You can use this interface to deploy and interact with the contract:
