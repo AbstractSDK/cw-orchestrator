@@ -101,7 +101,7 @@ impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
 mod test {
     use super::MockContract as LocalMockContract;
     use super::*;
-    use cosmwasm_std::coins;
+    use cosmwasm_std::{Addr, coins};
     use cw_orch::prelude::*;
     use mock_contract::{ExecuteMsgFns, QueryMsgFns};
 
@@ -111,7 +111,7 @@ mod test {
         let sender = Addr::unchecked("sender");
         let mock = Mock::new(&sender);
         mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
-        let contract = LocalMockContract::<_, u64, u64>::new("mock-contract", mock.clone());
+        let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
         contract.instantiate(&InstantiateMsg {}, None, None)?;

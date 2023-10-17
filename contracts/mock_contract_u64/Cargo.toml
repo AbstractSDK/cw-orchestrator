@@ -26,3 +26,6 @@ cw-orch = { path = "../../cw-orch", features = ["daemon"], optional = true }
 mock-contract = { path = "../mock_contract", default-features = false, features = [
   "interface",
 ] }
+
+[dev-dependencies]
+mock-contract-u64  = { path = ".", features = ["interface"]}
