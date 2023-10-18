@@ -19,10 +19,16 @@
   - [Unit tests](./integrations/unit-tests.md)
   - [Fork Testing](./integrations/fork-testing.md)
 
+- [IBC](./interchain/index.md)
+  - [Quick Start](./interchain/quick-start.md)
+  - [Integrations](./interchain/integrations/index.md)
+    - [Daemon (Live Chains)](./interchain/integrations/daemon.md)
+    - [Cw Multi Test](./interchain/integrations/mock.md)
+
 - [Workspace](./workspace/index.md)
   - [Structure]()
   - [Project Wrapper]()
-  - [Colloboration]()
+  - [Collaboration]()
 
 - [Supported Chains](./chains/index.md)
   - [Archway](./chains/archway.md)

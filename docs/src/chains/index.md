@@ -1,6 +1,6 @@
 # Supported Chains
 
-Cw-Orchestrator currently has support for the chains in the following subsections.
+cw-orchestrator currently has support for the chains in the following subsections.
 
 ## Support a new CosmWasm Chain
 If you would like to add support for another chain, please feel free to [open a PR](https://github.com/AbstractSDK/cw-orchestrator/compare)!
