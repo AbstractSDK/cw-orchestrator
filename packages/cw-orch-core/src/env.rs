@@ -114,7 +114,7 @@ impl EnvVar for MinBlockSpeed {
     }
 
     fn default() -> Option<Self::EnvVarType> {
-        None
+        Some(1)
     }
 }
 
