@@ -2,12 +2,12 @@
 //! This is used to import environment variables with safe names (and at a centralized location)
 //! To get the env variable, you can use
 //! ```rust,no_run
-//! use cw_orch_core::env::CwOrchEnvVars;
+//! use cw_orch_core::CwOrchEnvVars;
 //! let env_variable = CwOrchEnvVars::StateFolder::parsed().unwrap();
 //! ```
 //! You can get the env variable name with :
 //! ```rust,no_run
-//! use cw_orch_core::env::CwOrchEnvVars;
+//! use cw_orch_core::CwOrchEnvVars;
 //! let variable_name = CwOrchEnvVars::StateFolder::parsed()to_string();
 //! ```
 
