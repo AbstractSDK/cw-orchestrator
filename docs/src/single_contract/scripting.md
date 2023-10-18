@@ -1,6 +1,6 @@
 # Writing and Executing Scripts
 
-Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it on a real blockchain. We'll do this by adding a `examples` folder in [the counter contract](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter) and add our deploy script there.
+Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it on a real blockchain. We'll do this by adding a `examples` folder in [the counter contract](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter) and add our deploy script there. We only provide an overview of how scripting can be done here. Find our more about how to make your scripting dreams come true on the [Daemon page](../integrations/daemon.md).
 
 ## Setup
 

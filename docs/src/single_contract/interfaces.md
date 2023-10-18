@@ -48,13 +48,14 @@ In `counter/src/lib.rs`:
 {{#include ../../../contracts/counter/src/lib.rs:custom_interface}}
 ```
 
-This allows importing the `interface.rs` file only when the `interface` feature is enabled on the contract. Again, this is done because we don't want cw-orch dependencies to end up in your resulting `Wasm` contract
+This allows importing the `interface.rs` file only when the `interface` feature is enabled on the contract. Again, this is done because we don't want cw-orch dependencies to end up in your resulting `Wasm` contract. Using this syntax **won't change anything** to the actual wasm file that you are uploading on-chain if you don't enable this feature by default.
 
 Then in `counter/src/interface.rs`:
 
 ```rust,ignore
 {{#include ../../../contracts/counter/src/interface.rs:custom_interface}}
 ```
+
 
 This use of the `interface` macro even allows you to have generic arguments in the message types. Any generics will be added to the interface under a `PhantomData` attribute.
 
@@ -169,7 +170,7 @@ Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]
 - The function created will have the snake_case name of the variant and will take the same arguments as the variant. 
 - The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. 
 - If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
-- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice).
+- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice even outside of use with `cw-orch`).
 
 ### Additional configuration
 

@@ -12,6 +12,11 @@
   - [Scripting](./single_contract/scripting.md)
   - [Integration Tests](./single_contract/integration-tests.md)
 
+- [Workspace](./workspace/index.md)
+  - [Structure]()
+  - [Project Wrapper]()
+  - [Collaboration]()
+
 - [Integrations](./integrations/index.md)
   - [Daemon (Live Chains)](./integrations/daemon.md)
   - [Cw Multi Test](./integrations/cw-multi-test.md)
@@ -24,11 +29,6 @@
   - [Integrations](./interchain/integrations/index.md)
     - [Daemon (Live Chains)](./interchain/integrations/daemon.md)
     - [Cw Multi Test](./interchain/integrations/mock.md)
-
-- [Workspace](./workspace/index.md)
-  - [Structure]()
-  - [Project Wrapper]()
-  - [Collaboration]()
 
 - [Supported Chains](./chains/index.md)
   - [Archway](./chains/archway.md)
