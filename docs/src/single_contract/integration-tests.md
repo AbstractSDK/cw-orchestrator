@@ -1,6 +1,8 @@
 # Integration Tests
 
-Integration tests are very easy to write with cw-orch. Start by creating a `tests` folder in your contract's dir.
+Integration tests are very easy to write with cw-orch and are 100% compatible with actual on-chain deployment and scripting. 
+
+Start by creating a `tests` folder in your contract's dir.
 
 ```bash
 mkdir counter/tests

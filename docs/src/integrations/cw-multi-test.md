@@ -4,7 +4,7 @@ Cw Multi Test is a rust-based test framework that allows developers to test  for
 
 ## Quick Start
 
-The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages `cw-multi-test` goes along the lines of : 
+The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages `cw-multi-test` goes along the lines of:
 
 ```rust,ignore
     use cw_orch::prelude::*;
@@ -41,7 +41,7 @@ The underlying `cw_multi_test::App` object is however not clonable.
 
 ## Additional tools
 
-The `Mock` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `cw_multi_test::App` object. Here are some examples of those wrappers in context : 
+The `Mock` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `cw_multi_test::App` object. Here are some examples of those wrappers in context:
 
 
 ```rust,ignore
@@ -50,7 +50,7 @@ The `Mock` test environment allows you to change application variables (such as 
 
 ## Additional customization
 
-As we don't provide wrappers around each and every functionality that `cw-multi-test` provides, you can also customize the underlying `cw_multi_test::App`object to your specific needs. In the following example, we create a new validator in the test environment : 
+As we don't provide wrappers around each and every functionality that `cw-multi-test` provides, you can also customize the underlying `cw_multi_test::App`object to your specific needs. In the following example, we create a new validator in the test environment:
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/mock_test.rs:deep_mock_customization}}

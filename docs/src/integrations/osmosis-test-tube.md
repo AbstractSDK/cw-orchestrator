@@ -7,7 +7,8 @@ Osmosis Test Tube is a rust-based test framework that allows developers to test 
 In order to use `osmosis-test-tube`, the library needs to be able to compile and install the chain binaries. For that you will need to install a go compiler as well as the clang library. Run the following commands to install both of those libraries.
 
 ### Ubuntu
-1. Install [go](https://go.dev/doc/install)
+
+1. [Install go](https://go.dev/doc/install)
 2. Install the clang library
 ```bash
     sudo apt install clang
@@ -25,7 +26,7 @@ In order to use `osmosis-test-tube`, the library needs to be able to compile and
 
 ## Quick Start
 
-Creating a test environment in cw-orchestrator that leverages `osmosis-test-tube` goes along the lines of : 
+Creating a test environment in cw-orchestrator that leverages `osmosis-test-tube` goes along the lines of:
 
 ```rust,ignore
     use cw_orch::prelude::*;
@@ -59,7 +60,7 @@ The underlying `osmosis_test_tube::App` object is however not clonable.
 
 ## Additional tools
 
-The `OsmosisTestTube` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `osmosis_test_tube::App` object. Here are some examples of those wrappers in context : 
+The `OsmosisTestTube` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `osmosis_test_tube::App` object. Here are some examples of those wrappers in context:
 
 
 ```rust,ignore
@@ -71,7 +72,7 @@ The `OsmosisTestTube` test environment allows you to change application variable
 
 ## Additional customization
 
-As we don't provide wrappers around each and every functionality that `osmosis_test_tube` provides, you can also customize the underlying `osmosis_test_tube::App` object to your specific needs. In the following example, we increase the block time in the test environment : 
+As we don't provide wrappers around each and every functionality that `osmosis_test_tube` provides, you can also customize the underlying `osmosis_test_tube::App` object to your specific needs. In the following example, we increase the block time in the test environment:
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/osmosis_test_tube.rs:deep_osmosis_test_tube_customization}}

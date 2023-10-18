@@ -1,6 +1,6 @@
 # Environment Variables
 
-cw-orch needs some environment variables to be set in order to function properly when running as an executable.
+cw-orch leverages some environment variables to interact with contracts on actual blockchains. The environment variables are described here. You can find additional information about their usage, default values and types in the [`cw-orch` repo](https://github.com/AbstractSDK/cw-orchestrator/blob/main/packages/cw-orch-core/src/env.rs).
 
 **IMPORTANT: Before proceeding, ensure that you add `.env` to your `.gitignore`. We are not responsible for any loss of funds due to leaked mnemonics.**
 
@@ -25,7 +25,7 @@ TEST_MNEMONIC="" # Necessary if interacting with a cw-orch-daemon on testnet
 LOCAL_MNEMONIC="" # Necessary if interacting with a cw-orch-daemon locally
 
 
-## Additional configuration variables. These are optional. We show default values here : 
+## Additional configuration variables. These are optional. We show default values here: 
 # Optional - Float. This allows changing the gas buffer applied after tx simulation
 CW_ORCH_GAS_BUFFER = 1.3 
 # Optional - Integer. This changes the number of tx queries before it fails if it doesn't find any result

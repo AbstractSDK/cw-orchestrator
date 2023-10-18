@@ -85,7 +85,7 @@ With orchestrator, you know your types **and** you get to use the Rust syntax yo
     dex.swap(CwAsset::Native("ujuno"), CwAsset::Native("uluna"), 3465u128.into())
 ```
 
-In order to be able to interact in this manner with your code, you just need to add : 
+In order to be able to interact in this manner with your code, you just need to add: 
 - `#[derive(cw_orch::ExecuteFns)]` above of your `ExecuteMsg` definitions [You can see an example here](./src/msg.rs)
 - `#[derive(cw_orch::QueryFns)]` above of your `QueryMsg` definitions [You can see an example here](./src/msg.rs)
 
@@ -213,7 +213,7 @@ pub fn test() -> anyhow::Result<()>{
         }
     )?;
 
-    println!("Created new abstract account with manager address : {}", new_account.manager.address()?);
+    println!("Created new abstract account with manager address: {}", new_account.manager.address()?);
     Ok(())
 }
 ```
@@ -226,8 +226,8 @@ To do this for your project you need to verify certain conditions.
 
 Inside the deploy trait functions, you can define multiple methods. The two principle methods are:
 
-- `Deploy::store_on` : for storing all contracts in the bundle on chains (Upload)
-- `Deploy::deploy_on` : One stop function for deploying your bundle on a chain. This usually calls the `store_on` method before instantiating all contracts sequentially
+- `Deploy::store_on`: for storing all contracts in the bundle on chains (Upload)
+- `Deploy::deploy_on`: One stop function for deploying your bundle on a chain. This usually calls the `store_on` method before instantiating all contracts sequentially
 
 After those functions are implemented you can link up the deployment data with your objects. For users to be able to retrieve addresses, they need to come from somewhere. In order for bundle maintainers to allow that, they should implement the `Deploy::load_from`, just like we do at abstract:
 
@@ -261,7 +261,7 @@ You can customize the `Deploy::deployed_state_file_path` and `Deploy::load_from`
 > 
 > We recommend defining this location from the absolute crate path `env!("CARGO_MANIFEST_DIR")` for it to be accessible even when imported from a crate. 
 
-Our abstract workspace structure looks like this : 
+Our abstract workspace structure looks like this: 
 
 ```
 .
@@ -288,7 +288,8 @@ Our abstract workspace structure looks like this :
 └── .env 					// <-- Place your .env file at the root of your workspace
 ```
 
-In the Deploy trait implementation (here in`deploy.rs` file), use this to indicate that `packages/interface/state.json` has your state : 
+In the Deploy trait implementation (here in`deploy.rs` file), use this to indicate that `packages/interface/state.json` has your state:
+
 ```rust
     fn deployed_state_file_path(&self) -> Option<String> {
         let crate_path = env!("CARGO_MANIFEST_DIR");

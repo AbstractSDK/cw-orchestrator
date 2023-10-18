@@ -5,18 +5,22 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
 use cw_orch::prelude::*;
 
+// ANCHOR: unordered_msg_def
 #[cw_serde]
 #[derive(cw_orch::ExecuteFns)]
 #[disable_fields_sorting]
 pub enum ExecuteMsg {
     Test { b: u64, a: String },
 }
+// ANCHOR_END: unordered_msg_def
 
+// ANCHOR: ordered_msg_def
 #[cw_serde]
 #[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsgOrdered {
     Test { b: u64, a: String },
 }
+// ANCHOR_END: ordered_msg_def
 
 #[cw_orch::interface(Empty, ExecuteMsg, Empty, Empty)]
 pub struct TestContract;

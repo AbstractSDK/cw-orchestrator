@@ -53,7 +53,7 @@ fn main() {
         // with `$env:RUST_BACKTRACE=1`.
         // log::debug!("backtrace: {:?}", err.backtrace());
 
-        ::std::process::exit(1);
+       ::std::process::exit(1);
     }
 }
 ```
