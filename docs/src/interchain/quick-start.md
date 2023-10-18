@@ -7,9 +7,9 @@
 In order to interact with your environment using IBC capabilities, you first need to create an interchain structure.
 In this guide, we will create a mock environment for local testing. [↓Click here, if you want to interact with actual nodes](#with-actual-cosmos-sdk-nodes).
 
-
 With mock chains, you can create a mock environment simply by specifying chains ids and sender addresses.
 For this guide, we will create 2 chains, `juno` and `osmosis`, with the same address as sender:  
+
 ```rust
  let sender = Addr::unchecked("sender_for_all_chains");
  let interchain = MockInterchainEnv::new(vec![("juno", &sender), ("osmosis", &sender)]);
@@ -19,9 +19,10 @@ For this guide, we will create 2 chains, `juno` and `osmosis`, with the same add
 
 Now, we will work with interchain accounts (ICA). There is a [simple implementation of the ICA protocol on Github](https://github.com/confio/cw-ibc-demo), and we will use that application with a few simplifications for brevity.
 
-In this protocol, we have 2 smart-contracts that are able to create a connection between them. 
-The `client` will send IBC messages to the `host` that in turn will execute the messages on its chain. 
-Let's first create the contracts :
+In this protocol, we have 2 smart-contracts that are able to create a connection between them.
+The `client` will send IBC messages to the `host` that in turn will execute the messages on its chain.
+Let's first create the contracts:
+
 ```rust
 let juno = interchain.chain("juno")?;
 let osmosis = interchain.chain("osmosis")?;
@@ -33,8 +34,8 @@ client.upload()?;
 host.upload()?;
 client.instantiate(&Empty{}, None, None)?;
 host.instantiate(&Empty{}, None, None)?;
-
 ```
+
 The `Client` and `Host` structures here are [cw-orchestrator Contracts](../single_contract/interfaces.md) with registered ibc endpoints. 
 
 <details>
@@ -76,6 +77,7 @@ impl<Chain: CwEnv> Uploadable for Client<Chain> {
     }
 }
 ```  
+
 </details>
 
 <details>
@@ -123,9 +125,10 @@ impl<Chain: CwEnv> Uploadable for Host<Chain> {
     }
 }
 ```  
+
 </details>
 
-Then, we can create an IBC channel between the two contracts : 
+Then, we can create an IBC channel between the two contracts:
 
 ```rust
 let channel_receipt = interchain.create_contract_channel(&client, &host, None, "simple-ica-v2").await?;
@@ -134,10 +137,10 @@ let channel_receipt = interchain.create_contract_channel(&client, &host, None, "
 let juno_channel = channel.0.get_chain("juno")?.channel.unwrap();
 ```
 
-This step will also await until all the packets sent during channel creation are relayed. In the case of the ICA contracts, a [`{"who_am_i":{}}`](https://github.com/confio/cw-ibc-demo/blob/main/contracts/simple-ica-controller/src/ibc.rs#L54) packet is sent out right after channel creation and allows to identify the calling chain. 
+This step will also await until all the packets sent during channel creation are relayed. In the case of the ICA contracts, a [`{"who_am_i":{}}`](https://github.com/confio/cw-ibc-demo/blob/main/contracts/simple-ica-controller/src/ibc.rs#L54) packet is sent out right after channel creation and allows to identify the calling chain.
 
+Finally, the two contracts can interact like so:
 
-Finally, the two contracts can interact like so :
 ```rust
 /// This broadcasts a transaction on the client
 /// It sends an IBC packet to the host
@@ -150,14 +153,16 @@ let tx_response = client.send_msgs(
 )?;
 ```
 
-Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This is done through : 
+Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This is done through:
+
 ```rust
 let packet_lifetime = interchain.wait_ibc("juno", tx_response).await?;
 ```
 
 After that step, we make sure that the packets were relayed correctly
-```rust 
-// For testing a successful outcome of the first packet sent out in the tx, you can use : 
+
+```rust
+// For testing a successful outcome of the first packet sent out in the tx, you can use: 
 if let IbcPacketOutcome::Success{
     ack,
     ..
@@ -176,15 +181,12 @@ assert_packets_success_decode(packet_lifetime)?;
 
 If it was relayed correctly, we can proceed with our application.
 
-
-With this simple guide, you should be able to test and debug your IBC application in no time. 
+With this simple guide, you should be able to test and debug your IBC application in no time.
 [Learn more about the implementation and details of the IBC-enabled local testing environment](./integrations/mock.md).
-
 
 ## With actual Cosmos SDK Nodes
 
 You can also create an interchain environment that interacts with actual running chains. Keep in mind in that case that this type of environment doesn't allow channel creation. This step will have to be done manually with external tooling. If you're looking to test your application in a full local test setup, please turn to [↓Starship](#with-starship)
-
 
 ```rust
 use cw_orch::prelude::*;
@@ -222,10 +224,10 @@ You can also [learn more about the interchain daemon implementation](./integrati
 
 ## With Starship
 
-You can also create you interchain environment using starship, which allows you to test your application against actual nodes and relayers. This time, an additional setup is necessary. 
-Check out [the official Starship Getting Started guide](https://starship.cosmology.tech/) for more details. 
+You can also create you interchain environment using starship, which allows you to test your application against actual nodes and relayers. This time, an additional setup is necessary.
+Check out [the official Starship Getting Started guide](https://starship.cosmology.tech/) for more details.
 
-Once starship is setup and all the ports forwarded, assuming that starship was run locally, you can execute the following : 
+Once starship is setup and all the ports forwarded, assuming that starship was run locally, you can execute the following:
 
 ```rust
 use cw_orch::prelude::*;
@@ -241,7 +243,7 @@ let starship = Starship::new(rt.handle().to_owned(), None).unwrap();
 let interchain = starship.interchain_env();
 ```
 
-This snippet will identify the local Starship setup and initialize all helpers and information needed for interaction using cw-orchestrator. 
+This snippet will identify the local Starship setup and initialize all helpers and information needed for interaction using cw-orchestrator.
 With this setup, you can now resume this quick-start guide from [↑Interacting with the environment](#interacting-with-the-environment)
 
 You can also [learn more about the interchain daemon implementation](./integrations/daemon.md).
