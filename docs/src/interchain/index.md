@@ -60,11 +60,11 @@ The `MockInterchainEnv` object allows developers to test their application witho
 Built on top of cw-multi-test, this environment replicates the actual on-chain IBC module (channel creation as well as packet relaying). This allows you to test any IBC application that leverages Smart-Contract or Bank-module IBC packets. It is really powerful and **doesn't** rely on **ANY** external tools to work. No node setup, no relayer setup, no cluster setup, everything runs inside your crate. Visit the dedicated [Mock Interchain Env](./integrations/mock.md) page for more details and code snippets.
 
 
-### [Cosmos SDK Node Testing](./integrations/daemon.md#starship)
+### [Cosmos SDK Node Testing](./integrations/daemon.md#for-testing)
 
 The `Starship` object allows developers to test their application against the actual binaries of running chains. If you want to run your application with specific logic, custom messages or modules, this is the preferred way. This is the IBC version of the local chains that you can run locally. It can also spin up relayers and set up connections between your local chains automatically. 
 
-Visit the dedicated [Starship](./integrations/daemon.md#starship) page for more details and code snippets.
+Visit the dedicated [Starship](./integrations/daemon.md#for-testing) page for more details and code snippets.
 
 ### [Cosmos SDK Node Scripting](./integrations/daemon.md#scripting)
 
