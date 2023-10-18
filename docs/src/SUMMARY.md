@@ -16,6 +16,8 @@
 
 - [Workspace](./workspace/index.md)
   - [Setup](./workspace/setup.md)
+  - [Interfaces](./workspace/interfaces.md)
+  - [Entry Point Function Generation](./workspace/entry-points.md)
   - [Project Wrapper](./workspace/deploy.md)
   - [Collaboration](./workspace/collaboration.md)
 

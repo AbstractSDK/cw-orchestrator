@@ -97,9 +97,11 @@ pub enum ExecuteMsg{
     }
 }
 ```
+
 The following command will error because the `execute` function is reserved for contract execution. This will not even compile actually.
 
 ```rust
+// Doesn't compile
 money_market.execute(message_to_execute_via_a_proxy)?;
 ```
 

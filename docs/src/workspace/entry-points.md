@@ -1,0 +1,1 @@
+{{#include ../single_contract/entry-points.md}}

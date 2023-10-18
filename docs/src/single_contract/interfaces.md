@@ -71,6 +71,51 @@ Generic functions can be executed over any environment. Setup functions are a go
 {{#include ../../../contracts/counter/tests/integration_tests.rs:setup}}
 ```
 
+### Entry point function generation
+
+<table>
+<tr>
+<td> Tired of having to use endless schemas?</td>
+<td> Tired of having to redeclare your field names every time you want to declare an struct?</td>
+</tr>
+<tr>
+    <td>
+
+```json
+{
+    "swap": {
+        "offer_asset": {
+            "native":{
+                "denom":"ujuno"
+            }
+        },
+        "ask_asset": {
+            "native":{
+                "denom":"uluna"
+            }
+        },
+        "amount": "3465"
+    }
+}
+```
+
+</td>
+<td>
+
+```rust,ignore
+dex::core::swap::ExecuteMsg::Swap{
+    offer_asset: CwAsset::Native("ujuno"),
+    ask_asset: CwAsset::Native("uluna"),
+    amount: 3465u128.into()
+}
+```
+
+</td>
+</tr>
+</table>
+
+Learn more in the [next section about entry-point functions](./entry-points.md) how to do just that!
+
 ## Learn more
 
 Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#cw-orchestrator` channel.
