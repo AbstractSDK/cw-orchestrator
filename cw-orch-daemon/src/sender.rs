@@ -362,7 +362,7 @@ impl Sender<All> {
             parsed_balance
         );
 
-        if CwOrchEnvVars::DisableManualInteraction.get()? == "true" {
+        if CwOrchEnvVars::DisableManualInteraction.get()? != "true" {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
