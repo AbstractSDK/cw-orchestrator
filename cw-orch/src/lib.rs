@@ -3,7 +3,7 @@
 #![deny(missing_docs)]
 
 // macros
-pub use cw_orch_contract_derive::{interface, interface_entry_point};
+pub use cw_orch_contract_derive::interface;
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 
 /// Re-export anyhow for use in the macros
@@ -12,6 +12,7 @@ pub extern crate anyhow;
 // prelude
 pub mod prelude;
 
+pub use cw_orch_core::build;
 pub use cw_orch_core::contract;
 pub use cw_orch_core::environment;
 pub use cw_orch_mock as mock;

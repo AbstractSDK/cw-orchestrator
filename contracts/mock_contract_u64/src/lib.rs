@@ -4,8 +4,7 @@ use cosmwasm_std::{
     entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
 };
 
-#[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
+#[entry_point]
 pub fn instantiate(
     _deps: DepsMut,
     _env: Env,
@@ -16,7 +15,6 @@ pub fn instantiate(
 }
 
 #[entry_point]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
@@ -54,18 +52,16 @@ pub fn execute(
 }
 
 #[entry_point]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(_deps: Deps, _env: Env, msg: QueryMsg<u64>) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery => to_binary("third query passed"),
+        QueryMsg::ThirdQuery { .. } => to_binary("third query passed"),
         QueryMsg::FourthQuery(_, _) => to_binary("fourth query passed"),
     }
 }
 
 #[entry_point]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response> {
     if msg.t.eq("success") {
         Ok(Response::new())
@@ -73,5 +69,70 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
         Err(StdError::generic_err(
             "migrate endpoint reached but no test implementation",
         ))
+    }
+}
+
+#[cfg(feature = "interface")]
+#[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg)]
+pub struct MockContract<Chain, T, Q>;
+
+#[cfg(feature = "interface")]
+impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
+    for MockContract<Chain, u64, u64>
+{
+    fn wrapper(
+        &self,
+    ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
+        Box::new(
+            cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
+                .with_migrate(migrate),
+        )
+    }
+
+    fn wasm(&self) -> cw_orch::prelude::WasmPath {
+        use cw_orch::prelude::*;
+        artifacts_dir_from_workspace!()
+            .find_wasm_path("mock_contract")
+            .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::MockContract as LocalMockContract;
+    use super::*;
+    use cosmwasm_std::{coins, Addr};
+    use cw_orch::prelude::*;
+    use mock_contract::{ExecuteMsgFns, QueryMsgFns};
+
+    #[test]
+    fn compiles() -> Result<(), CwOrchError> {
+        // We need to check we can still call the execute msgs conveniently
+        let sender = Addr::unchecked("sender");
+        let mock = Mock::new(&sender);
+        mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
+        let contract = LocalMockContract::new("mock-contract", mock.clone());
+
+        contract.upload()?;
+        contract.instantiate(&InstantiateMsg {}, None, None)?;
+        contract.first_message()?;
+        contract.second_message(54, &[]).unwrap_err();
+        contract.third_message(54).unwrap();
+        contract.fourth_message().unwrap();
+        contract.fifth_message(&coins(156, "ujuno")).unwrap();
+        contract.sixth_message(45, "moneys".to_string()).unwrap();
+
+        contract
+            .seventh_message(156u128.into(), "ujuno".to_string(), &coins(156, "ujuno"))
+            .unwrap();
+
+        contract.first_query().unwrap();
+        contract.second_query(45).unwrap_err();
+        contract.third_query(67).unwrap();
+        contract
+            .fourth_query(45u64, "moneys".to_string())
+            .unwrap_err();
+
+        Ok(())
     }
 }

@@ -16,6 +16,8 @@
   - [Daemon (Live Chains)](./integrations/daemon.md)
   - [Cw Multi Test](./integrations/cw-multi-test.md)
   - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
+  - [Unit tests](./integrations/unit-tests.md)
+  - [Fork Testing](./integrations/fork-testing.md)
 
 - [IBC](./interchain/index.md)
   - [Quick Start](./interchain/quick-start.md)
@@ -34,6 +36,7 @@
   - [Juno](./chains/juno.md)
   - [Kujira](./chains/kujira.md)
   - [Neutron](./chains/neutron.md)
+  - [Nibiru](./chains/nibiru.md)
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
