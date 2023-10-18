@@ -154,7 +154,7 @@ mod tests {
 
         contract.increment()?;
 
-        chain.snapshot_testing()?;
+        chain.take_snapshot()?;
 
         Ok(())
     }

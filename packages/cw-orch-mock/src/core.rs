@@ -176,14 +176,15 @@ impl<S: StateInterface> Mock<S> {
         Ok(resp)
     }
 
+    #[cfg(feature = "snapshot-testing")]
     /// This functions allows for making sure the tests are stabilised and changes made to contracts don't have an impact on the internal storage
     /// Usage:
-    /// ```rust
-    /// mock.snapshot_testing();
+    /// ```rust,ignore
+    /// mock.take_snapshot();
     /// ```
     /// Find more details on how snapshot testing works on the official quick-start guide: https://insta.rs/docs/quickstart/
     /// This function will panic if the snapshot is different from the reference snapshot
-    pub fn snapshot_testing(&self) -> Result<(), CwEnvError> {
+    pub fn take_snapshot(&self) -> Result<(), CwEnvError> {
         // We register and test a snapshot for all contracts storage
         let all_contract_addresses = self.state().get_all_addresses()?;
         for (_id, contract_addr) in all_contract_addresses {

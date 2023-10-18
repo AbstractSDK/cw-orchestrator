@@ -1,1 +1,3 @@
 docs/book linguist-generated=true
+*.snap linguist-generated=true
+*.snap.new linguist-generated=true

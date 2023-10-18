@@ -80,7 +80,7 @@ expression: self.app.borrow().dump_wasm_raw(&contract_addr)
     - 116
     - 34
     - 58
-    - 48
+    - 49
     - 44
     - 34
     - 111
