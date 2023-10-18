@@ -7,15 +7,17 @@
 # Tutorials
 
 - [Contract](./single_contract/index.md)
+  - [Setup](./single_contract/setup.md)
   - [Interfaces](./single_contract/interfaces.md)
+  - [Entry Point Function Generation](./single_contract/entry-points.md)
   - [Environment Vars](./single_contract/env-variable.md)
   - [Scripting](./single_contract/scripting.md)
   - [Integration Tests](./single_contract/integration-tests.md)
 
 - [Workspace](./workspace/index.md)
-  - [Structure]()
-  - [Project Wrapper]()
-  - [Collaboration]()
+  - [Setup](./workspace/setup.md)
+  - [Project Wrapper](./workspace/deploy.md)
+  - [Collaboration](./workspace/collaboration.md)
 
 - [Integrations](./integrations/index.md)
   - [Daemon (Live Chains)](./integrations/daemon.md)

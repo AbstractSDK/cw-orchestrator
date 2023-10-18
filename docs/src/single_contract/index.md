@@ -41,6 +41,8 @@ Following this example, the directory structure should eventually look like:
 
 ## Sections
 
+- **[Setup](./setup.md)**
+  - Setup your crate to work with cw-orch
 - **[Interfaces](./interfaces.md)**
   - Define interfaces for your contracts.
 - **[Environment File](./env-variable.md)**
