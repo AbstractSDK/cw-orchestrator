@@ -39,11 +39,8 @@ jobs:
         id: just
         uses: extractions/setup-just@v1
 
-      - name: Install dependencies 🔧
+      - name: Install dependencies 🔧 + Build 🏗️
         run: just install-docs-ci
-
-      - name: Build 🏗️
-        run: just build-docs
 
       - name: Upload artifact
         if: ${{ github.event_name != 'pull_request' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' ) }}
