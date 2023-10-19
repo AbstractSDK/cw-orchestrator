@@ -34,7 +34,7 @@ In the counter contract we re-export in `lib.rs`;
 > This works for single contracts as well as workspace setups.
 > If you have a specific setup, you can still specify the path yourself. If you do so, we advise indicating the wasm location from the current crate directory, using something like:
 >
->    ```rust
+>    ```rust,ignore
 >     let crate_path = env!("CARGO_MANIFEST_DIR");
 >     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
 >     WasmPath::new(wasm_path).unwrap()

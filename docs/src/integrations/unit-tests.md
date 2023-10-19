@@ -16,7 +16,7 @@ Today, the following modules are supported by this querier:
 
 Let's imagine you want to build a lending aggregator. In this kind of application, you want to query the balance in staking tokens that your client has. In order to do that, you may want to use the following syntax inside your contract:
 
-```rust
+```rust,ignore
 fn query_balance(deps: Deps, client: Addr, lending_contract: Addr) -> Result<BalanceResponse, ContractError>{
     let balance: BalanceResponse = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart{
         contract_addr: lending_contract,
@@ -31,7 +31,7 @@ fn query_balance(deps: Deps, client: Addr, lending_contract: Addr) -> Result<Bal
 
 In order to unit-test that logic, you may want to test against actual on-chain data. The following code_snippet will allow you to test this piece of code against actual on-chain code.
 
-```rust
+```rust,ignore
 #[test]
 fn balance_is_available() -> anyhow::Result<()>{
     let deps = cw_orch::prelude::live_mock::mock_dependencies(JUNO_1);

@@ -4,6 +4,7 @@ test:
 install-docs:
   cargo install mdbook
   cargo install mdbook-keeper@0.3.0
+  cargo install mdbook-linkcheck
 
 install-docs-ci:
   mkdir bin
