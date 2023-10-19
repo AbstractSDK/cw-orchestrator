@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## 0.17.0
 
 - Added possibility to not panic in parse network by @Buckram123
 - Added stargate feature to cw-multi-test
