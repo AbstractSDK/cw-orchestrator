@@ -41,11 +41,11 @@ jobs:
         id: just
         uses: extractions/setup-just@v1
 
-      - name: TEST
+      - name: Setup PATH # For using the pre-built mdbook
         run: echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
         
       - name: Install dependencies 🔧
-        run: just install-docs
+        run: just install-docs-fast && just setup-docs
 
       - name: Build 🏗️
         run: just build-docs
