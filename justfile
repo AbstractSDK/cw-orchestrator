@@ -5,6 +5,11 @@ install-docs:
   cargo install mdbook
   cargo install mdbook-keeper@0.3.0
 
+install-docs-ci:
+  mkdir bin
+  curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.35/mdbook-v0.4.35-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+  bin/mdbook build
+
 setup-docs:
   cargo install mdbook-keeper
 

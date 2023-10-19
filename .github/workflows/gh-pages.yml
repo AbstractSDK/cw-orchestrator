@@ -40,7 +40,7 @@ jobs:
         uses: extractions/setup-just@v1
 
       - name: Install dependencies 🔧
-        run: just install-docs
+        run: just install-docs-ci
 
       - name: Build 🏗️
         run: just build-docs
@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload book repository
-          path: './docs/book'
+          path: './docs/book/html'
 
   # Deploy job
   deploy:
