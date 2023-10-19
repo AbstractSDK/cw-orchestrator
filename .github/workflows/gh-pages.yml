@@ -45,7 +45,7 @@ jobs:
         run: echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
         
       - name: Install dependencies 🔧
-        run: just install-docs-ci
+        run: just install-docs
 
       - name: Build 🏗️
         run: just build-docs
