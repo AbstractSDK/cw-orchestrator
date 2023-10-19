@@ -13,8 +13,6 @@ As an example we will create a deployment for the [Abstract smart-contract frame
 The deployment can be represented by a struct containing all the contracts that are uploaded and instantiated when the protocol is deployed.
 
 ```rust,ignore
-
-
 // Our Abstract deployment
 pub struct Abstract<Chain: CwEnv> {
     pub ans_host: AnsHost<Chain>,
@@ -83,7 +81,7 @@ impl<Chain: CwEnv> cw_orch::Deploy<Chain> for Abstract<Chain> {
 
 Now `Abstract` is an application that can be deployed to a mock and real environment with **one** line of code.
 
-```rust
+```rust,ignore
 fn setup_test(mock: Mock) -> Result<(), CwOrchError> {
     let version = "1.0.0".parse().unwrap();
     // Deploy abstract
@@ -93,7 +91,7 @@ fn setup_test(mock: Mock) -> Result<(), CwOrchError> {
 
 And then when setting up your own deployment you can load these applications to access their contracts (for accessing configuration, addresses, ...)
 
-```rust
+```rust,ignore
 impl<Chain: CwEnv> cw_orch::Deploy<Chain> for MyApplication<Chain> {
     /// ...
     fn deploy_on(chain: Chain, _data: Empty) -> Result<Self, CwOrchError> {

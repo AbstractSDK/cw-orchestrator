@@ -9,25 +9,29 @@ This environment allows to interact with actual COSMOS SDK Nodes. Let's see how 
 
 When scripting with `cw-orch-interchain`, developers don't have to create chain `Daemon` objects on their own. You can simply pass chain data to the interchain constructor, and it will create the daemons for you. Like so:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch::tokio::runtime::Runtime;
 use cw_orch::prelude::networks::{LOCAL_JUNO, LOCAL_OSMO};
 use cw_orch_interchain::interchain::{ChannelCreationValidator,DaemonInterchainEnv};
-
-let rt = Runtime::new()?;
-let mut interchain = DaemonInterchainEnv::new(rt.handle(), vec![
-    (LOCAL_JUNO, None),
-    (LOCAL_OSMO, None)
-], &ChannelCreationValidator)?;
+# fn main(){
+    let rt = Runtime::new()?;
+    let mut interchain = DaemonInterchainEnv::new(rt.handle(), vec![
+        (LOCAL_JUNO, None),
+        (LOCAL_OSMO, None)
+    ], &ChannelCreationValidator)?;
+# }
 ```
 
 You can then access individual `Daemon` objects like so:
 
-```rust
+```rust,ignore
+use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::InterchainEnv;
-let local_juno: Daemon = interchain.chain("testing")?;
-let local_osmo: Daemon = interchain.chain("localosmosis")?;
+# fn main(){
+    let local_juno: Daemon = interchain.chain("testing")?;
+    let local_osmo: Daemon = interchain.chain("localosmosis")?;
+#  }
 ```
 
 where the argument of the `chain` method is the chain id of the chain you are interacting with. Note that this environment can't work with chains that have the same `chain_id`. 
@@ -36,7 +40,7 @@ where the argument of the `chain` method is the chain id of the chain you are in
 
 You can also add daemons manually to the `interchain` object:
 
-```rust
+```rust,ignore
 let local_migaloo = DaemonBuilder::default()
     .handle(rt.handle())
     .chain(LOCAL_MIGALOO)
@@ -50,14 +54,17 @@ In some cases (we highly recommand it), you might want to interact with local no
 
 For setup, please refer to [the official Quick Start](https://starship.cosmology.tech/get-started/step-1). When all that is done, the starship adapter that we provide will detect the deployment and create the right `cw-orchestrator` variables and structures for you to interact and test with.
 
-```rust
+```rust,ignore
 use cw_orch_interchain::interchain::{Starship, ChannelCreator};
-let rt = Runtime::new()?;
-let starship = Starship::new(rt.handle().clone(), None)?;
-let interchain = starship.interchain_env();
 
-let _local_juno: Daemon = interchain.chain("juno-1")?;
-let _local_osmo: Daemon = interchain.chain("osmosis-1")?;
+# fn main(){
+    let rt = Runtime::new()?;
+    let starship = Starship::new(rt.handle().clone(), None)?;
+    let interchain = starship.interchain_env();
+
+    let _local_juno: Daemon = interchain.chain("juno-1")?;
+    let _local_osmo: Daemon = interchain.chain("osmosis-1")?;
+# }
 ```
 
 > **NOTE**: The second argument of the `Starship::new` function is the optional URL of the starship deployment. It defaults to `http://localhost:8081`, but you can customize it if it doesn't match your setup. All the starship data, daemons and relayer setup is loaded from that URL.
@@ -74,7 +81,7 @@ All interchain environments are centered around the `follow_packet` function. In
     b. Timeout:
       1. <span style="color:purple">⬤</span> On the `source chain`, it looks for the timeout transaction for that packet. The function logs the transaction hash of the transaction and returns the transaction response corresponding to that transaction. 
 
-If you have followed the usage closely, you see that this function doesn't error when the acknowledgement is an error, has a wrong format or if the packet timeouts. However, the function might error if either of the timeout/successful cycle takes too long. You can customize the wait time in the [cw-orchestrator environment variables](../../single_contract/env-variable.md). 
+If you have followed the usage closely, you see that this function doesn't error when the acknowledgement is an error, has a wrong format or if the packet timeouts. However, the function might error if either of the timeout/successful cycle takes too long. You can customize the wait time in the [cw-orchestrator environment variables](../../contracts/env-variable.md). 
 
 
 The `wait_ibc` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will also not error as long as either a timeout or a successful cycle can be identified before `cw-orchestrator` query function timeouts. This function is recursive as it will also look for packets inside the receive/ack/timeout transactions and also follow their IBC cycle. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete. 

@@ -4,14 +4,13 @@ Archway is a smart contract platform that directly rewards developers for their 
 
 [Archway Website](https://archway.io/)
 
-## Usage
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::ARCHWAY_1`.
-
 ```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/archway.rs:archway}}
+{{#include ../../../packages/cw-orch-networks/src/networks/archway.rs:archway}}
 ```
 
+## Usage
 
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::ARCHWAY_1`.
 ## References
 
 - [Archway Documentation](https://docs.archway.io/)
