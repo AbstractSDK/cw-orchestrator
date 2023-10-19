@@ -8,7 +8,7 @@ install-docs:
 install-docs-ci:
   mkdir bin
   curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.35/mdbook-v0.4.35-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
-  bin/mdbook build
+  export PATH=$PATH:$(pwd)/bin
 
 setup-docs:
   cargo install mdbook-keeper
