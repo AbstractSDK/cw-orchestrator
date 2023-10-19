@@ -14,9 +14,10 @@ In this quick-start guide, we will review the necessary steps in order to integr
 
 ## Summary
 
+- [Summary](#summary)
 - [Single Contract Integration](#single-contract-integration)
   - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
-  - [Creating an interface](#creating-an-interface)
+  - [Creating an Interface](#creating-an-interface)
   - [Interaction helpers](#interaction-helpers)
   - [Using the integration](#using-the-integration)
 - [Integration in a workspace](#integration-in-a-workspace)
@@ -39,7 +40,7 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.16.4", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.17.0", optional = true } # Latest version at time of writing
 ```
 
 Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature-flag. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract.
