@@ -89,7 +89,7 @@ Be defining this attribute, you can now use:
 
 ### `fn_name` Attribute
 
-```rust
+```rust,ignore
 #[derive(cw_orch::ExecuteFns)] 
 pub enum ExecuteMsg{
     Execute{
@@ -107,7 +107,7 @@ money_market.execute(message_to_execute_via_a_proxy)?;
 
 This can happen in numerous cases actually, when using reserved keywords of cw-orch (or even rust). If this happens, you can use the `fn_name` attribute to rename a generated function.
 
-```rust
+```rust,ignore
 #[derive(cw_orch::ExecuteFns)] 
 pub enum ExecuteMsg{
     #[fn_name("proxy_execute")]
@@ -125,7 +125,7 @@ This is also true for query functions.
 
 For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
 
-```rust
+```rust,ignore
 {{#include ../../../cw-orch/tests/impl_into.rs:impl_into}}
 ```
 
@@ -133,13 +133,13 @@ For nested messages (execute and query) you can add an `impl_into` attribute. Th
 
 By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields of each enum member. For instance,
 
-```rust
+```rust,ignore
 {{#include ../../../contracts/mock_contract/src/msg_tests.rs:ordered_msg_def}}
 ```
 
  will generate
 
- ```rust
+ ```rust,ignore
  pub fn bar(a: String, b: u64) -> ...{
     ...
  } 
@@ -147,7 +147,7 @@ By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields o
 
 You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior:
 
-```rust
+```rust,ignore
 {{#include ../../../contracts/mock_contract/src/msg_tests.rs:unordered_msg_def}}
 
  

@@ -2,7 +2,7 @@
 
 Get ready to change the way you interact with contracts. The following steps will allow you to write clean code such as:
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/examples/deploy.rs:clean_example}}
 ```
 
@@ -63,13 +63,13 @@ interface = ["dep:cw-orch"] # Enables cw-orch when the feature is enabled
 
 When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. Don't forget to *feature-flag* the module in order to be able to use `cw-orch` inside it.
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/src/lib.rs:custom_interface}}
 ```
 
 Then, inside that `interface.rs` file, you can define the interface for your contract:
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/src/interface.rs:custom_interface}}
 
 ```
@@ -89,7 +89,7 @@ cw-orchestrator provides a additional macros that simplify contract calls and qu
 
 Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions (in `msg.rs` in our example) and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
-```rust,no_run
+```rust,ignore
 {{#include ../../contracts/counter/src/msg.rs:exec_msg}}
 
 {{#include ../../contracts/counter/src/msg.rs:query_msg}}
@@ -116,7 +116,7 @@ counter-contract = { path = "../counter-contract", features = ["interface"] }
 
 You can now use:
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/examples/deploy.rs:full_counter_example}}
 ```
 

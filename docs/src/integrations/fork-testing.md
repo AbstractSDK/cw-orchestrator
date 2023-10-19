@@ -12,7 +12,7 @@ We leverage the beautiful [`cw-multi-test`](https://github.com/CosmWasm/cw-multi
 
 Setting up the environment is really easy and only requires feeding a `ChainData` object to the struct constructor:
 
-```rust
+```rust,ignore
 use cw_orch::networks::JUNO_1;
 use cw_orch::ForkMock;
 
@@ -47,7 +47,7 @@ Let's take an example for clarity. Say I want to deposit some funds into Anchor 
 
 1. The user needs funds to interact with the protocol. A `fork-helper` allows to increase the balance of an address.
 
-   ```rust
+   ```rust,ignore
     // Sender address. Can also be an actual account with funds.
     // Could also be app.sender() for creating an address automatically.
     let sender = "terra1..."; 
@@ -59,7 +59,7 @@ Let's take an example for clarity. Say I want to deposit some funds into Anchor 
 
 2. The user calls the following `ExecuteMsg` on the actual mainnet Anchor Moneymarket Contract:
 
-    ```rust
+    ```rust,ignore
     let market_addr = Addr::unchecked("terra1..."); // Actual contract address of the Anchor deployment.
     let market = AnchorMarket::new("anchor:money-market", app.clone());
     market.set_address(&market_addr);
@@ -70,7 +70,7 @@ Let's take an example for clarity. Say I want to deposit some funds into Anchor 
 4. Even in the case of multiple chained contract calls, storage is modified accordingly and usable by contracts.
 5. After message execution, queries and states are modified according to the contract execution. After depositing, it is now possible to query your stake or even to withdraw your funds:
 
-    ```rust
+    ```rust,ignore
     let a_currency = "terra1..."; // The contract address for the staking receipt
 
     /// This should give a non-zero value, even if no change occurred on the actual mainnet state
@@ -91,7 +91,7 @@ You use this fork environment as you would use the `Mock` environment, with a fe
 
 1. You can't use human readable addresses, because this environment uses actual APIs and needs to be able to verify addresses. When creating the Mock environment, a sender gets created along and attach automatically to the `ForkMock` instance. If you need additional addresses, you can use:
 
-    ```rust
+    ```rust,ignore
     let new_sender: Addr = fork.init_account();
     ```
 
