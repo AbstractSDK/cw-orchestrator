@@ -6,7 +6,7 @@ This environment allows you to test your IBC application inside your Rust enviro
 
 You can create your interchain environment using the following simple setup script:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::MockInterchainEnv;
 # fn main(){
@@ -19,7 +19,7 @@ use cw_orch_interchain::interchain::MockInterchainEnv;
 
 Behind the scenes, `Mock` objects are created with the specified chain ids. These mock environments can be used on their own to interact with testing environment directly. You can get those objects like so:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::InterchainEnv;
 
@@ -33,7 +33,7 @@ where the argument of the `chain` method is the chain id of the chain you are in
 
 You can also add mocks manually to the `interchain` object, after instantiation:
 
-```rust
+```rust,ignore
 # fn main(){
 #   use cosmwasm_std::Addr;
 #   use cw_orch::prelude::*;
@@ -62,7 +62,7 @@ The `wait_ibc` function is very similar except that instead of following a singl
 
 > **NOTE**: most of the methods on the `interchain` variable presented here are [async methods](https://rust-lang.github.io/async-book/). We recommend reading more about async functions at the point. If you're not working with any async functions, the gist here is:
 >
->    ```rust
+>    ```rust,ignore
 >    interchain.wait_ibc(
 >        &chain_id,
 >        tx_response
@@ -73,7 +73,7 @@ The `wait_ibc` function is very similar except that instead of following a singl
 
 cw-orchestrator also provides tooling for creating channels between mock environments. Here is how you do it:
 
-```rust
+```rust,ignore
     use ibc_relayer_types::core::ics24_host::identifier::PortId;
     let rt = tokio::runtime::Runtime::new()?;
     let src_chain = "juno-1".to_string();

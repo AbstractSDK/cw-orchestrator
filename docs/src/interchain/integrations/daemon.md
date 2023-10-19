@@ -9,7 +9,7 @@ This environment allows to interact with actual COSMOS SDK Nodes. Let's see how 
 
 When scripting with `cw-orch-interchain`, developers don't have to create chain `Daemon` objects on their own. You can simply pass chain data to the interchain constructor, and it will create the daemons for you. Like so:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch::tokio::runtime::Runtime;
 use cw_orch::prelude::networks::{LOCAL_JUNO, LOCAL_OSMO};
@@ -25,7 +25,7 @@ use cw_orch_interchain::interchain::{ChannelCreationValidator,DaemonInterchainEn
 
 You can then access individual `Daemon` objects like so:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::InterchainEnv;
 # fn main(){
@@ -40,7 +40,7 @@ where the argument of the `chain` method is the chain id of the chain you are in
 
 You can also add daemons manually to the `interchain` object:
 
-```rust
+```rust,ignore
 let local_migaloo = DaemonBuilder::default()
     .handle(rt.handle())
     .chain(LOCAL_MIGALOO)
@@ -54,7 +54,7 @@ In some cases (we highly recommand it), you might want to interact with local no
 
 For setup, please refer to [the official Quick Start](https://starship.cosmology.tech/get-started/step-1). When all that is done, the starship adapter that we provide will detect the deployment and create the right `cw-orchestrator` variables and structures for you to interact and test with.
 
-```rust
+```rust,ignore
 use cw_orch_interchain::interchain::{Starship, ChannelCreator};
 
 # fn main(){

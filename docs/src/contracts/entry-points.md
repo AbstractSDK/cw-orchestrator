@@ -68,7 +68,7 @@ Let's see an example for executing a message (from a money market for instance).
 
 There's a problem with the above function. The money market only knows how much you deposit into it by looking at the funds you send along with the transaction. Cw-orchestrator doesn't ask for funds by default. However, to allow attaching funds to a transaction, you can add the `#[payable]` attribute on your enum variant like so:
 
-```rust, ignore
+```rust,ignore
     #[derive(ExecuteFns)]
     enum ExecuteMsg{
         UpdateConfig{
@@ -100,7 +100,7 @@ pub enum ExecuteMsg{
 
 The following command will error because the `execute` function is reserved for contract execution. This will not even compile actually.
 
-```rust
+```rust,ignore
 // Doesn't compile
 money_market.execute(message_to_execute_via_a_proxy)?;
 ```

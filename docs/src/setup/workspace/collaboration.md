@@ -14,7 +14,7 @@ We'll present in this guide how projects can provide this kind of information to
 
 In order for your users to get access to the state of your application (addresses and cods_ids), you need to implement the `deployed_state_file` method on the `Deploy` trait :
 
-```rust
+```rust,ignore
 fn deployed_state_file_path(&self) -> Option<String> {
     let crate_path = env!("CARGO_MANIFEST_DIR");
 
@@ -35,7 +35,7 @@ In this function, you indicate where the deployment file is located. To be able 
 > [Check out the Abstract setup here](https://github.com/AbstractSDK/abstract/).  
 
 Then, in the `load_from` function, we advise using the following implementation:
-```rust
+```rust,ignore
     fn load_from(chain: Chain) -> Result<Self, Self::Error> {
         let mut abstr = Self::new(chain);
         // We set all the contract's default state (addresses, code_ids)
