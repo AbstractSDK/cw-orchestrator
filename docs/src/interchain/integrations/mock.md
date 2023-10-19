@@ -9,19 +9,24 @@ You can create your interchain environment using the following simple setup scri
 ```rust
 use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::MockInterchainEnv;
-
-let sender = Addr::unchecked("sender");
-let mut interchain = MockInterchainEnv::new(
-    vec![("juno-1", &sender), ("osmosis-1", &sender)],
-);
+# fn main(){
+    let sender = Addr::unchecked("sender");
+    let mut interchain = MockInterchainEnv::new(
+        vec![("juno-1", &sender), ("osmosis-1", &sender)],
+    );
+#  }
 ```
 
 Behind the scenes, `Mock` objects are created with the specified chain ids. These mock environments can be used on their own to interact with testing environment directly. You can get those objects like so:
 
 ```rust
+use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::InterchainEnv;
-let local_juno: Daemon = interchain.chain("juno-1")?;
-let local_osmo: Daemon = interchain.chain("osmosis-1")?;
+
+# fn main(){
+    let local_juno: Daemon = interchain.chain("juno-1")?;
+    let local_osmo: Daemon = interchain.chain("osmosis-1")?;
+# }
 ```
 
 where the argument of the `chain` method is the chain id of the chain you are interacting with. Note that this environment can't work with chains that have the same `chain_id`.
@@ -29,8 +34,16 @@ where the argument of the `chain` method is the chain id of the chain you are in
 You can also add mocks manually to the `interchain` object, after instantiation:
 
 ```rust
-let test_migaloo = Mock::new(&sender);
-interchain.add_mocks(vec![test_migaloo]);
+# fn main(){
+#   use cosmwasm_std::Addr;
+#   use cw_orch::prelude::*;
+#   let sender = Addr::unchecked("sender");
+#   let mut interchain = MockInterchainEnv::new(
+#      vec![("juno-1", &sender), ("osmosis-1", &sender)],
+#   );
+    let test_migaloo = Mock::new(&sender);
+    interchain.add_mocks(vec![test_migaloo]);
+# }
 ```
 
 ## General Usage
@@ -50,12 +63,9 @@ The `wait_ibc` function is very similar except that instead of following a singl
 > **NOTE**: most of the methods on the `interchain` variable presented here are [async methods](https://rust-lang.github.io/async-book/). We recommend reading more about async functions at the point. If you're not working with any async functions, the gist here is:
 >
 >    ```rust
->    let runtime = tokio::runtime::Runtime::new()?;
->    runtime.block_on(
->        interchain.wait_ibc(
->            &chain_id,
->            tx_response
->        )
+>    interchain.wait_ibc(
+>        &chain_id,
+>        tx_response
 >    )
 >    ```
 

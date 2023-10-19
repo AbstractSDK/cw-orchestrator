@@ -4,7 +4,7 @@ Interfaces are virtual wrappers around CosmWasm contracts. They allow you to int
 
 > **Reminder**: You can find the code for this example in the [cw-orch counter-contract folder](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
 >
-> If you are a fast or visual learner, you can find a [**Before**-**After**](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a) view of the `cw-orch` integration process in the sample contract. 
+> If you are a fast or visual learner, you can find a [**Before**-**After**](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a) view of the `cw-orch` integration process in the sample contract.
 
 ## Creating an Interface
 
@@ -24,21 +24,21 @@ In the counter contract we re-export in `lib.rs`;
 {{#include ../../../contracts/counter/src/lib.rs:interface_reexport}}
 ```
 
-> **NOTE**: You can see that we have used the `artifacts_dir_from_workspace` macro inside the `wasm` trait function. This macro helps you locate the workspace `artifacts` folder. It actually looks for any directory named `artifacts` from the root of the current crate going up. For instance if the project is located in `/path1/path2/counter`, it will look for the artifacts folder inside the following directories in order and return as soon as it finds such a folder: 
+> **NOTE**: You can see that we have used the `artifacts_dir_from_workspace` macro inside the `wasm` trait function. This macro helps you locate the workspace `artifacts` folder. It actually looks for any directory named `artifacts` from the root of the current crate going up. For instance if the project is located in `/path1/path2/counter`, it will look for the artifacts folder inside the following directories in order and return as soon as it finds such a folder:
+>
 > - `/path1/path2/counter`
 > - `/path1/path2`
 > - `/path1/`
 > - ...
-> 
-> This works for single contracts as well as workspace setups. 
-> If you have a specific setup, you can still specify the path yourself. If you do so, we advise indicating the wasm location from the current crate directory, using something like: 
->    ```rust 
+>
+> This works for single contracts as well as workspace setups.
+> If you have a specific setup, you can still specify the path yourself. If you do so, we advise indicating the wasm location from the current crate directory, using something like:
+>
+>    ```rust
 >     let crate_path = env!("CARGO_MANIFEST_DIR");
 >     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
 >     WasmPath::new(wasm_path).unwrap()
 >     ```
-    
-
 
 ## Constructor
 

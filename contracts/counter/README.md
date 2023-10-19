@@ -82,8 +82,7 @@ After those functions are implemented you can link up the deployment data with y
 
 The `Deploy::set_contracts_state` doesn't need to be re-implemented and it allows to override the daemon state file and use the deployed addresses and code_ids instead. Doing this decouples the local state of the users from the deployed state of the maintainers/project. 
 
-You can customize the `Deploy::deployed_state_file_path` and `Deploy::load_from` methods, be we recommend doing something similar to simplify exporting the state correctly. 
-
+You can customize the `Deploy::deployed_state_file_path` and `Deploy::load_from` methods, be we recommend doing something similar to simplify exporting the state correctly.
 
 > **_NOTE_** You should check out the [Abstract bundle implementation](https://github.com/AbstractSDK/abstract/blob/main/framework/packages/abstract-interface/src/deployment.rs) to understand how to ship a bundle. In abstract, we have a file named `state.json` in the crate root with all the abstract state. We refer to it by referring to the absolute crate path and adding `"state.json"` to it. 
 > 

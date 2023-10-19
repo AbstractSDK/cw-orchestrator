@@ -14,9 +14,10 @@ In this quick-start guide, we will review the necessary steps in order to integr
 
 ## Summary
 
+- [Summary](#summary)
 - [Single Contract Integration](#single-contract-integration)
   - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
-  - [Creating an interface](#creating-an-interface)
+  - [Creating an Interface](#creating-an-interface)
   - [Interaction helpers](#interaction-helpers)
   - [Using the integration](#using-the-integration)
 - [Integration in a workspace](#integration-in-a-workspace)
@@ -32,7 +33,7 @@ In this quick-start guide, we will review the necessary steps in order to integr
 To use cw-orchestrator, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
 
 ```shell
-$ cargo add --optional cw-orch
+cargo add --optional cw-orch
 ```
 
 Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
@@ -73,7 +74,7 @@ Then, inside that `interface.rs` file, you can define the interface for your con
 
 ```
 
-Learn more about the content of the interface creation specifics on [the interface page](./single_contract/interfaces.md#creating-an-interface)
+Learn more about the content of the interface creation specifics on [the interface page](./contracts/interfaces.md#creating-an-interface)
 
 > **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
 >
@@ -94,7 +95,7 @@ Enabling this functionality is very straightforward. Find your `ExecuteMsg` and 
 {{#include ../../contracts/counter/src/msg.rs:query_msg}}
 ```
 
-Find out more about the interaction helpers on [the interface page](./single_contract/interfaces.md#entry-point-function-generation)
+Find out more about the interaction helpers on [the interface page](./contracts/interfaces.md#entry-point-function-generation)
 
 > **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
 >
@@ -185,4 +186,4 @@ You can find more example interactions on the `counter-contract` example directl
 - Some other examples show [how to use the library for testing your contracts](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests).
 
 > **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`.
-> Why not go directly to [environment variables](./single_contract/env-variable.md)?
+> Why not go directly to [environment variables](./contracts/env-variable.md)?

@@ -36,12 +36,14 @@ client.instantiate(&Empty{}, None, None)?;
 host.instantiate(&Empty{}, None, None)?;
 ```
 
-The `Client` and `Host` structures here are [cw-orchestrator Contracts](../single_contract/interfaces.md) with registered ibc endpoints. 
+The `Client` and `Host` structures here are [cw-orchestrator Contracts](../contracts/interfaces.md) with registered ibc endpoints. 
 
 <details>
   <summary><strong>Client contract definition</strong> (Click to get the full code)</summary>
 
 ```rust
+# use cw_orch::prelude::ContractWrapper;
+# use cw_orch::contract::WasmPath;
 #[interface(
     simple_ica_controller::msg::InstantiateMsg,
     simple_ica_controller::msg::ExecuteMsg,

@@ -2,7 +2,7 @@
 
 cw-orchestrator aims at allowing developers to interact with different execution environments with the exact same code base and syntax.
 
-In order to do so, it provides a set of traits and interfaces, e.g. for [contracts](../single_contract/index.md) that can be implemented on execution structures. As of writing this documentation, the following execution environments are supported:
+In order to do so, it provides a set of traits and interfaces, e.g. for [contracts](../contracts/index.md) that can be implemented on execution structures. As of writing this documentation, the following execution environments are supported:
 
 - [Node interaction (grpc)](./daemon.md)
 - [Osmosis Test Tube](./osmosis-test-tube.md)

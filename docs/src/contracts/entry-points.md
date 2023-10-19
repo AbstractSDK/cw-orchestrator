@@ -45,15 +45,14 @@ In the counter contract we re-export in `lib.rs`;
 {{#include ../../../contracts/counter/src/lib.rs:fn_re_export}}
 ```
 
-
 ## Additional Remarks on `QueryFns` and `ExecuteFns`
 
-The `QueryFns` and `ExecuteFns` derive macros generate traits that are implemented on any Contract structure (defined by the [`interface` macro](#creating-an-interface)) that have the matching execute and query types. Because of the nature of rust traits, you need to import the traits in your application to use the simplifying syntax. Those traits are named `ExecuteMsgFns` and `QueryMsgFns`.
+The `QueryFns` and `ExecuteFns` derive macros generate traits that are implemented on any Contract structure (defined by the [`interface` macro](./interfaces.md#creating-an-interface)) that have the matching execute and query types. Because of the nature of rust traits, you need to import the traits in your application to use the simplifying syntax. Those traits are named `ExecuteMsgFns` and `QueryMsgFns`.
 
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros: 
+Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface (e.g. `CounterContract`) through a trait. Here are the main things you need to know about the behavior of those macros:
 
-- The function created will have the snake_case name of the variant and will take the same arguments as the variant. 
-- The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. 
+- The function created will have the snake_case name of the variant and will take the same arguments as the variant.
+- The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature.
 - If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
 - The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice even outside of use with `cw-orch`).
 
@@ -82,6 +81,7 @@ There's a problem with the above function. The money market only knows how much 
 ```
 
 Be defining this attribute, you can now use:
+
 ```rust,ignore
     use cosmwasm_std::coins;
     money_market.deposit_stable(&coins(456, "ujunox"))?;
@@ -131,20 +131,23 @@ For nested messages (execute and query) you can add an `impl_into` attribute. Th
 
 ### `disable_fields_sorting` Attribute
 
-By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields of each enum member. For instance, 
+By default the `ExecuteFns` and `QueryFns` derived traits will sort the fields of each enum member. For instance,
 
-```rust 
+```rust
 {{#include ../../../contracts/mock_contract/src/msg_tests.rs:ordered_msg_def}}
 ```
- will generate 
+
+ will generate
+
  ```rust
  pub fn bar(a: String, b: u64) -> ...{
     ...
  } 
  ```
-You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior: 
 
-```rust 
+You see in this example that the fields of the bar function are sorted lexicographically. We decided to put this behavior as default to prevent potential errors when rearranging the order of enum fields. If you don't want this behavior, you can disable it by using the `disable_fields_sorting` attribute. This is the resulting behavior:
+
+```rust
 {{#include ../../../contracts/mock_contract/src/msg_tests.rs:unordered_msg_def}}
 
  
@@ -152,7 +155,5 @@ You see in this example that the fields of the bar function are sorted lexicogra
     ...
  } 
  ```
- 
+
  > **NOTE**: This behavior CAN be dangerous if your struct members have the same type. In that case, if you want to rearrange the order of the members inside the struct definition, you will have to be careful that you respect the orders in which you want to pass them.
-
-

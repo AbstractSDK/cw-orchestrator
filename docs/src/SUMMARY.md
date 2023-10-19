@@ -4,22 +4,21 @@
 
 - [Quick-start](./quick_start.md)
 
-# Tutorials
+## Tutorials
 
-- [Contract](./single_contract/index.md)
-  - [Setup](./single_contract/setup.md)
-  - [Interfaces](./single_contract/interfaces.md)
-  - [Entry Point Function Generation](./single_contract/entry-points.md)
-  - [Environment Vars](./single_contract/env-variable.md)
-  - [Scripting](./single_contract/scripting.md)
-  - [Integration Tests](./single_contract/integration-tests.md)
+- [Contracts](./contracts/index.md)
+  - [Interfaces](./contracts/interfaces.md)
+  - [Entry Point Function Generation](./contracts/entry-points.md)
+  - [Environment Vars](./contracts/env-variable.md)
+  - [Scripting](./contracts/scripting.md)
+  - [Integration Tests](./contracts/integration-tests.md)
 
-- [Workspace](./workspace/index.md)
-  - [Setup](./workspace/setup.md)
-  - [Interfaces](./workspace/interfaces.md)
-  - [Entry Point Function Generation](./workspace/entry-points.md)
-  - [Project Wrapper](./workspace/deploy.md)
-  - [Collaboration](./workspace/collaboration.md)
+- [Project Setup](./setup/index.md)
+  - [Single Contract](./setup/single-contract.md)
+  - [Workspace](./setup/workspace/index.md)
+    - [Setup](./setup/workspace/setup.md)
+    - [Project Wrapper](./setup/workspace/deploy.md)
+    - [Collaboration](./setup/workspace/collaboration.md)
 
 - [Integrations](./integrations/index.md)
   - [Daemon (Live Chains)](./integrations/daemon.md)
@@ -45,7 +44,7 @@
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
 
-# Extras
+## Extras
 
 - [CI/CD](./ci-cd.md)
 

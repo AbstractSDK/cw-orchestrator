@@ -1,5 +1,6 @@
 # Continuous Integration and Deployment
-One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments. 
+
+One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments.
 
 cw-orchestrator does not *currently* add additional support for actions, but an example using the directory structure of the [cw-orchestrator Github repository](https://github.com/AbstractSDK/cw-orchestrator) can be found below
 
