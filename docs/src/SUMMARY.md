@@ -4,7 +4,7 @@
 
 - [Quick-start](./quick_start.md)
 
-## Tutorials
+# Tutorials
 
 - [Contracts](./contracts/index.md)
   - [Interfaces](./contracts/interfaces.md)
@@ -44,7 +44,7 @@
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
 
-## Extras
+# Extras
 
 - [CI/CD](./ci-cd.md)
 
