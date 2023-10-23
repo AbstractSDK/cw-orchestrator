@@ -19,3 +19,14 @@ pub const VOTA_ASH: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+
+pub const VOTA_TESTNET: ChainInfo = ChainInfo {
+    kind: ChainKind::Testnet,
+    chain_id: "vota-testnet",
+    gas_denom: "peaka",
+    gas_price: 100000000000f64,
+    grpc_urls: &["https://vota-testnet-grpc.dorafactory.org:443"],
+    network_info: DORAVOTA_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
