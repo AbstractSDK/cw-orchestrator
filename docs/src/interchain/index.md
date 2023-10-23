@@ -10,7 +10,7 @@ Here are a few examples of what cw-orchestrator allows:
 Using some simple tools, one can follow the execution of IBC packets through their whole lifetime (*Receive*, *Acknowledge* or *Timeout*).
 This is mostly useful for packet analysis of certain channels, ports or connections.
 
-```rust
+```rust,ignore
 let packet_lifetime = interchain.follow_packet(
     "juno",
     "transfer",
@@ -25,7 +25,7 @@ let packet_lifetime = interchain.follow_packet(
 To further simplify the developer experience and provide simple syntax, cw-orchestrator allows developers to await execution of transactions that create IBC packets.
 This is mostly useful when interacting with existing contracts in a script to simplify the execution pipeline.
 
-```rust
+```rust,ignore
 // We order an ICA controller to burn some funds on juno from akash
 // Upon submitting this transaction successfully, a packet will be sent from akash to juno to trigger the ICA action
 let transaction_response = controller.send_msgs("channel-16", vec![

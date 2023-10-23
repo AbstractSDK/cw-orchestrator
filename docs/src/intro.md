@@ -37,4 +37,4 @@ Interacting with a smart-contract is often verbose, leading to a lot of boilerpl
 
 ## Getting Started
 
-These docs contain a [quick-start](./quick_start.md) and a longer [tutorial-style walkthrough](./single_contract/index.md).
+These docs contain a [quick-start](./quick_start.md) and a longer [tutorial-style walkthrough](./contracts/index.md).

@@ -4,15 +4,15 @@ Injective is a unique blockchain tailored for finance, offering out-of-the-box m
 
 [Visit Injective's Website](https://injective.com/)
 
-## Usage
-To interact with contracts on Injective, first enable the `eth` feature for cw-orchestrator. Injective supports EVM-based addresses, and this will enable their use within cw-orchestrator.
-
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::INJECTIVE_1`.
 ```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/injective.rs:injective}}
+{{#include ../../../packages/cw-orch-networks/src/networks/injective.rs:injective}}
 ```
 
+## Usage
 
+To interact with contracts on Injective, first enable the `eth` feature for cw-orchestrator. Injective supports EVM-based addresses, and this will enable their use within cw-orchestrator.
+
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::INJECTIVE_1`.
 
 ## References
 

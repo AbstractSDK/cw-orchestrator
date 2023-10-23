@@ -4,13 +4,13 @@ The most secure CosmWasm platform in Cosmos, Neutron lets smart-contracts levera
 
 [Visit Neutron's Website](https://neutron.org/)
 
+```rust,ignore
+{{#include ../../../packages/cw-orch-networks/src/networks/neutron.rs:neutron}}
+```
+
 ## Usage
 
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::NEUTRON_1`.
-
-```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/neutron.rs:neutron}}
-```
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::NEUTRON_1`.
 
 ## References
 

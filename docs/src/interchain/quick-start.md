@@ -10,7 +10,7 @@ In this guide, we will create a mock environment for local testing. [↓Click he
 With mock chains, you can create a mock environment simply by specifying chains ids and sender addresses.
 For this guide, we will create 2 chains, `juno` and `osmosis`, with the same address as sender:  
 
-```rust
+```rust,ignore
  let sender = Addr::unchecked("sender_for_all_chains");
  let interchain = MockInterchainEnv::new(vec![("juno", &sender), ("osmosis", &sender)]);
 ```
@@ -23,7 +23,7 @@ In this protocol, we have 2 smart-contracts that are able to create a connection
 The `client` will send IBC messages to the `host` that in turn will execute the messages on its chain.
 Let's first create the contracts:
 
-```rust
+```rust,ignore
 let juno = interchain.chain("juno")?;
 let osmosis = interchain.chain("osmosis")?;
 
@@ -36,12 +36,14 @@ client.instantiate(&Empty{}, None, None)?;
 host.instantiate(&Empty{}, None, None)?;
 ```
 
-The `Client` and `Host` structures here are [cw-orchestrator Contracts](../single_contract/interfaces.md) with registered ibc endpoints. 
+The `Client` and `Host` structures here are [cw-orchestrator Contracts](../contracts/interfaces.md) with registered ibc endpoints. 
 
 <details>
   <summary><strong>Client contract definition</strong> (Click to get the full code)</summary>
 
-```rust
+```rust,ignore
+# use cw_orch::prelude::ContractWrapper;
+# use cw_orch::contract::WasmPath;
 #[interface(
     simple_ica_controller::msg::InstantiateMsg,
     simple_ica_controller::msg::ExecuteMsg,
@@ -83,7 +85,7 @@ impl<Chain: CwEnv> Uploadable for Client<Chain> {
 <details>
   <summary><strong>Host contract definition</strong> (Click to get the full code)</summary>
 
-```rust
+```rust,ignore
 // This is used because the simple_ica_host contract doesn't have an execute endpoint defined 
 pub fn host_execute(_: DepsMut, _: Env, _: MessageInfo, _: Empty) -> StdResult<Response> {
     Err(StdError::generic_err("Execute not implemented for host"))
@@ -130,7 +132,7 @@ impl<Chain: CwEnv> Uploadable for Host<Chain> {
 
 Then, we can create an IBC channel between the two contracts:
 
-```rust
+```rust,ignore
 let channel_receipt = interchain.create_contract_channel(&client, &host, None, "simple-ica-v2").await?;
 
 // After channel creation is complete, we get the channel id, which is necessary for ICA remote execution
@@ -141,7 +143,7 @@ This step will also await until all the packets sent during channel creation are
 
 Finally, the two contracts can interact like so:
 
-```rust
+```rust,ignore
 /// This broadcasts a transaction on the client
 /// It sends an IBC packet to the host
 let tx_response = client.send_msgs(
@@ -155,13 +157,13 @@ let tx_response = client.send_msgs(
 
 Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This is done through:
 
-```rust
+```rust,ignore
 let packet_lifetime = interchain.wait_ibc("juno", tx_response).await?;
 ```
 
 After that step, we make sure that the packets were relayed correctly
 
-```rust
+```rust,ignore
 // For testing a successful outcome of the first packet sent out in the tx, you can use: 
 if let IbcPacketOutcome::Success{
     ack,
@@ -188,7 +190,7 @@ With this simple guide, you should be able to test and debug your IBC applicatio
 
 You can also create an interchain environment that interacts with actual running chains. Keep in mind in that case that this type of environment doesn't allow channel creation. This step will have to be done manually with external tooling. If you're looking to test your application in a full local test setup, please turn to [↓Starship](#with-starship)
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch::tokio;
 
@@ -229,7 +231,7 @@ Check out [the official Starship Getting Started guide](https://starship.cosmolo
 
 Once starship is setup and all the ports forwarded, assuming that starship was run locally, you can execute the following:
 
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch::tokio;
 
