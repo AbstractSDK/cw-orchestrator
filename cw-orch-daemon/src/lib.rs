@@ -14,6 +14,7 @@ pub mod state;
 pub mod sync;
 pub mod tx_resp;
 // expose these as mods as they can grow
+pub mod chain_registry;
 pub mod keys;
 pub mod live_mock;
 mod log;
@@ -24,6 +25,7 @@ pub mod tx_builder;
 pub use self::{
     builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
 };
+pub use chain_registry::parse_network_all;
 pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;
 pub use sender::Wallet;
