@@ -37,13 +37,13 @@ Interacting with the `daemon` is really straightforward. How to creating a daemo
   </details>
 
 
-This simple script actually hides another parameter which is the `LOCAL_MNEMONIC` environment variable. This variable is used when interacting with local chains. See the part dedicated to [Environment Vars](../single_contract/env-variable.md) for more details.
+This simple script actually hides another parameter which is the `LOCAL_MNEMONIC` environment variable. This variable is used when interacting with local chains. See the part dedicated to [Environment Vars](../contracts/env-variable.md) for more details.
 
 > **_NOTE:_** When using `daemon`, you are interacting directly with a live chain. The program won't ask you for your permission at each step of the script. We advise you to test **ALL** your deployments on test chain before deploying to mainnet.
 
 ## Interacting with contracts
 
-You can then use the resulting `Daemon` variable to interact with your [contracts](../single_contract/index.md):
+You can then use the resulting `Daemon` variable to interact with your [contracts](../contracts/index.md):
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/daemon_test.rs:daemon_usage}}
@@ -56,7 +56,7 @@ All contract operations will return an object of type `cw_orch::prelude::CosmTxR
 
 ## State management
 
-In order to manage your contract deployments cw-orchestrator saves the contract addresses and code ids for each network you're interacting with in a JSON formatted state file. This state file represents all your past. You can customize the path to this state file using the `STATE_FILE` [env variable](../single_contract/env-variable.md).
+In order to manage your contract deployments cw-orchestrator saves the contract addresses and code ids for each network you're interacting with in a JSON formatted state file. This state file represents all your past. You can customize the path to this state file using the `STATE_FILE` [env variable](../contracts/env-variable.md).
 
 When calling the `upload` function on a contract, if the tx is successful, the daemon will get the uploaded code_id and save it to file, like so:
 
@@ -73,7 +73,7 @@ When calling the `upload` function on a contract, if the tx is successful, the d
 
 ```
 
-In this example: `counter_contract`  corresponds to the `contract_id`variable (the one that you can set in the [contract interface constructor](../single_contract/interfaces.html#constructor)).
+In this example: `counter_contract`  corresponds to the `contract_id`variable (the one that you can set in the [contract interface constructor](../contracts/interfaces.html#constructor)).
 
 When calling the `instantiate` function, if the tx is successful, the daemon will get the contract address and save it to file, like so:
 

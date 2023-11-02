@@ -4,13 +4,13 @@ Juno stands as the central hub for CosmWasm smart contracts, underpinned by the 
 
 [Visit Juno's Website](https://junonetwork.io/)
 
+```rust,ignore
+{{#include ../../../packages/cw-orch-networks/src/networks/juno.rs:juno}}
+```
+
 ## Usage
 
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::JUNO_1`.
-
-```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/juno.rs:juno}}
-```
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::JUNO_1`.
 
 ## References
 
