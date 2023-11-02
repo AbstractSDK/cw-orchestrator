@@ -43,7 +43,7 @@ The addresses are not handled like in the `cw-multi-test` environment or in mock
 
 ## Interacting with contracts
 
-You can then use the resulting `OsmosisTestTube` variable to interact with your [contracts](../single_contract/index.md): 
+You can then use the resulting `OsmosisTestTube` variable to interact with your [contracts](../contracts/index.md): 
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/osmosis_test_tube.rs:osmosis_test_tube_usage}}
@@ -51,7 +51,7 @@ You can then use the resulting `OsmosisTestTube` variable to interact with your 
 
 When executing contracts in an `osmosis_test_tube` environment, the messages and sub-messages sent along the Response of an endpoint, will be executed as well. This environment mimics the actual on-chain execution by dispatching the messages inside the actual chain binaries.
 
-> This environment uses wasm files compiled from the project. Therefore, you need to compile the WASM artifacts from the project for your osmosis-test-tube integration tests. If you are using the customizable Interface Macro, you will need to have implemented the `wasm` function. [See the dedicated page for more details](../single_contract/interfaces.md#customizable-interface-macro).
+> This environment uses wasm files compiled from the project. Therefore, you need to compile the WASM artifacts from the project for your osmosis-test-tube integration tests. If you are using the customizable Interface Macro, you will need to have implemented the `wasm` function. [See the dedicated page for more details](../contracts/interfaces.md#customizable-interface-macro).
 
 ## Cloning
 

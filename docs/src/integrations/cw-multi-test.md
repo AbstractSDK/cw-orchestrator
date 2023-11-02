@@ -18,7 +18,7 @@ The `cw-multi-test` integration comes at no extra cost for the developer. Creati
 
 ## Interacting with contracts
 
-You can then use the resulting `Mock` variable to interact with your [contracts](../single_contract/index.md): 
+You can then use the resulting `Mock` variable to interact with your [contracts](../contracts/index.md):
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/mock_test.rs:mock_usage}}
@@ -29,7 +29,7 @@ This environment mocks the actual on-chain execution exactly
 
 > This environment uses the actual functions of your contract **without** having to compile them into WASM. When you are calling `upload` with this environment, no wasm files are included in the test environment. This allows for better debugging of your contract code.
 
-> If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../single_contract/interfaces.md#customizable-interface-macro).
+> If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../contracts/interfaces.md#customizable-interface-macro).
 
 
 > **_NOTE:_** Keep in mind that `cw-multi-test` is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.

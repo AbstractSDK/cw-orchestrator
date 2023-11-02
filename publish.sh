@@ -46,5 +46,6 @@ done
 echo "Everything is published!"
 
 VERSION=$(< Cargo.toml grep -m 1 version | sed 's/-/_/g' | grep -o '".*"' | sed 's/"//g');
+git push
 git tag v"$VERSION"
 git push origin v"$VERSION"
