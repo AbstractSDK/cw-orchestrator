@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- Added wallet balance assertions to avoid erroring when the wallet doesn't have enough balance when submitting a daemon transaction
+
 ## 0.17.0
 
 - Added possibility to not panic in parse network by @Buckram123
