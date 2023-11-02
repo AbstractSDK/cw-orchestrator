@@ -7,7 +7,7 @@ mod node {
 
     use ctor::{ctor, dtor};
 
-    use cw_orch_core::CwOrchEnvVars::{self, EnvVar};
+    use cw_orch_core::CwOrchEnvVars;
     use duct::cmd;
 
     // Config
@@ -149,14 +149,7 @@ mod node {
         }
         let image = env::var("JUNO_IMAGE").unwrap();
 
-        let temp_dir = env::temp_dir();
-        let state_file = temp_dir.join("cw_orch_test.json");
-
-        if CwOrchEnvVars::StateFile::parsed().is_err() {
-            env::set_var("STATE_FILE", state_file);
-        }
-
-        if CwOrchEnvVars::LocalMnemonic::parsed().is_err() {
+        if CwOrchEnvVars::load().unwrap().local_mnemonic.is_none() {
             env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
         }
 
@@ -164,11 +157,11 @@ mod node {
         log::info!("Using CONTAINER_NAME: {}", container);
         log::info!(
             "Using STATE_FILE: {}",
-            CwOrchEnvVars::StateFile::parsed().unwrap()
+            CwOrchEnvVars::load().unwrap().state_file.display()
         );
         log::info!(
-            "Using LOCAL_MNEMONIC: {}",
-            CwOrchEnvVars::LocalMnemonic::parsed().unwrap()
+            "Using LOCAL_MNEMONIC: {:?}",
+            CwOrchEnvVars::load().unwrap().local_mnemonic
         );
 
         container::start(&container, &image);

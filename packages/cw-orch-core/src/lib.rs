@@ -1,6 +1,6 @@
 pub mod contract;
 pub mod env;
-pub use env as CwOrchEnvVars;
+pub use env::CwOrchEnvVars;
 pub mod environment;
 
 pub mod build;

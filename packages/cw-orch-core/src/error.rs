@@ -3,6 +3,7 @@
 use std::{
     env,
     num::{ParseFloatError, ParseIntError},
+    str::ParseBoolError,
 };
 
 use thiserror::Error;
@@ -26,6 +27,8 @@ pub enum CwEnvError {
     ParseFloatError(#[from] ParseFloatError),
     #[error(transparent)]
     ParseIntError(#[from] ParseIntError),
+    #[error(transparent)]
+    ParseBoolError(#[from] ParseBoolError),
     #[error("File must be a wasm file")]
     NotWasm,
     #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]
@@ -36,6 +39,8 @@ pub enum CwEnvError {
     AnyError(#[from] ::anyhow::Error),
     #[error("Generic Error {0}")]
     StdErr(String),
+    #[error("Environment varable not defined {0}")]
+    EnvVarNotPresentNamed(String),
 }
 
 impl CwEnvError {

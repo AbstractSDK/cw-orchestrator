@@ -1,7 +1,6 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use super::interface_traits::Uploadable;
 use crate::{
-    env::EnvVar,
     environment::{CwEnv, IndexResponse, StateInterface, TxResponse},
     error::CwEnvError,
     log::{CONTRACT_LOGS, TRANSACTION_LOGS},
@@ -198,7 +197,7 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
 
 /// Helper to serialize objects (JSON or Rust DEBUG)
 fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
-    if CwOrchEnvVars::SerializeJson::parsed()? {
+    if CwOrchEnvVars::load()?.serialize_json {
         Ok(serde_json::to_string(msg)?)
     } else {
         Ok(format!("{:#?}", msg))

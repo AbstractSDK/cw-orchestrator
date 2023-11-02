@@ -30,10 +30,7 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{
-    log::LOCAL_LOGS,
-    CwOrchEnvVars::{self, EnvVar},
-};
+use cw_orch_core::{log::LOCAL_LOGS, CwOrchEnvVars};
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
@@ -139,7 +136,7 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let gas_expected = if let Ok(gas_buffer) = CwOrchEnvVars::GasBuffer::parsed() {
+        let gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
             gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER

@@ -10,7 +10,7 @@ use cosmrs::{
     tendermint::{Block, Time},
 };
 use cw_orch_core::log::QUERY_LOGS;
-use cw_orch_core::CwOrchEnvVars::{self, EnvVar};
+use cw_orch_core::CwOrchEnvVars;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -201,7 +201,7 @@ impl Node {
 
     /// Find TX by hash
     pub async fn find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self.find_tx_with_retries(hash, CwOrchEnvVars::MaxTxQueryRetries::parsed()?)
+        self.find_tx_with_retries(hash, CwOrchEnvVars::load()?.max_tx_query_retries)
             .await
     }
 
@@ -216,7 +216,7 @@ impl Node {
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
-        block_speed = block_speed.max(CwOrchEnvVars::MinBlockSpeed::parsed()?);
+        block_speed = block_speed.max(CwOrchEnvVars::load()?.min_block_speed);
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -251,7 +251,7 @@ impl Node {
             page,
             order_by,
             false,
-            CwOrchEnvVars::MaxTxQueryRetries::parsed()?,
+            CwOrchEnvVars::load()?.max_tx_query_retries,
         )
         .await
     }
@@ -270,7 +270,7 @@ impl Node {
             page,
             order_by,
             true,
-            CwOrchEnvVars::MaxTxQueryRetries::parsed()?,
+            CwOrchEnvVars::load()?.max_tx_query_retries,
         )
         .await
     }
@@ -325,7 +325,7 @@ impl Node {
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(
             format!("with events {:?}", events),
-            CwOrchEnvVars::MaxTxQueryRetries::parsed()?,
+            CwOrchEnvVars::load()?.max_tx_query_retries,
         ))
     }
 }

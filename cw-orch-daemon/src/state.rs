@@ -3,10 +3,10 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
+    env::STATE_FOLDER_ENV_NAME,
     environment::{DeployDetails, StateInterface},
     log::{CONNECTIVITY_LOGS, LOCAL_LOGS},
-    CwEnvError,
-    CwOrchEnvVars::{self, EnvVar},
+    CwEnvError, CwOrchEnvVars,
 };
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
@@ -50,7 +50,7 @@ impl DaemonState {
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
         // check if STATE_FILE en var is configured, default to state.json
-        let env_file_path = PathBuf::from(CwOrchEnvVars::StateFile::parsed()?);
+        let env_file_path = CwOrchEnvVars::load()?.state_file;
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = if env_file_path.is_relative() {
@@ -148,11 +148,11 @@ impl DaemonState {
 
     pub fn state_dir() -> Result<PathBuf, DaemonError> {
         // This function should only error if the home_dir is not set and the `dirs` library is unable to fetch it
-        CwOrchEnvVars::StateFolder::parsed()
-            .map_err(|_| DaemonError::StdErr(
+        CwOrchEnvVars::load()?.state_folder
+            .ok_or( DaemonError::StdErr(
                 format!(
                     "Your machine doesn't have a home folder. Please specify the {} env variable to use cw-orchestrator", 
-                    CwOrchEnvVars::StateFolder::ENV_VAR_NAME
+                    STATE_FOLDER_ENV_NAME
                 )))
     }
 }
