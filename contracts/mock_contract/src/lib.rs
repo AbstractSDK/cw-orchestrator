@@ -5,7 +5,7 @@ mod msg_tests;
 
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
+    to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
 };
 use serde::Serialize;
 
@@ -116,10 +116,10 @@ pub fn execute(
 #[cfg_attr(feature = "export", cosmwasm_std::entry_point)]
 pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::FirstQuery {} => to_binary("first query passed"),
+        QueryMsg::FirstQuery {} => to_json_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery { .. } => to_binary("third query passed"),
-        QueryMsg::FourthQuery(_, _) => to_binary(&4u64),
+        QueryMsg::ThirdQuery { .. } => to_json_binary("third query passed"),
+        QueryMsg::FourthQuery(_, _) => to_json_binary(&4u64),
     }
 }
 

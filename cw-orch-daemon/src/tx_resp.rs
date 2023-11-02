@@ -7,7 +7,7 @@ use super::{
 };
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
-use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, StdError, StdResult};
 use cw_orch_core::environment::IndexResponse;
 use serde::{Deserialize, Serialize};
 
@@ -155,7 +155,7 @@ impl IndexResponse for CosmTxResponse {
         if self.data.is_empty() {
             None
         } else {
-            Some(to_binary(self.data.as_bytes()).unwrap())
+            Some(to_json_binary(self.data.as_bytes()).unwrap())
         }
     }
 

@@ -1,8 +1,8 @@
 #![allow(unused)]
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_binary, Binary, CustomMsg, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response, StdError,
-    StdResult, Uint128,
+    to_json_binary, Binary, CustomMsg, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response,
+    StdError, StdResult, Uint128,
 };
 
 #[cw_serde]
@@ -59,7 +59,7 @@ pub fn execute(
 
 pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::FirstQuery {} => to_binary("first query passed"),
+        QueryMsg::FirstQuery {} => to_json_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
     }
 }

@@ -112,11 +112,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                 .collect()
         } else {
             // There is not deployment file, we make sure the user wants to deploy to multiple chains
-            if CwOrchEnvVars::DisableManualInteraction
-                .get()
-                .unwrap_or("false".to_string())
-                .ne("true")
-            {
+            if !CwOrchEnvVars::load()?.disable_manual_interaction {
                 println!(
                     "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
                     &hash_networks.keys().cloned().collect::<Vec<String>>()
