@@ -84,7 +84,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     ///  - `networks`` is a vector of :
     ///     - Chain objects
     ///     - Additional deploy data needed for the deployment of the structure on each platform
-    fn full_deploy(
+    fn multi_network_deploy(
         networks: Vec<(Chain, Self::DeployData)>,
         _gas_needed: Option<u64>,
         after_deploy_action: Option<fn(&Self) -> anyhow::Result<()>>,
