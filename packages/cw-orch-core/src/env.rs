@@ -1,16 +1,9 @@
 //! This regroups all env variables used by cw-orch-daemon. It allows for easier documentation and env variable management
 //! This is used to import environment variables with safe names (and at a centralized location)
-//! To get the env variable, you can use
+//! To get the env variable parsed value, you can use
 //! ```rust,no_run
 //! use cw_orch_core::CwOrchEnvVars;
-//! use crate::cw_orch_core::env::EnvVar;
-//! let env_variable = CwOrchEnvVars::StateFolder::parsed().unwrap();
-//! ```
-//! You can get the env variable name with :
-//! ```rust,no_run
-//! use cw_orch_core::CwOrchEnvVars;
-//! use crate::cw_orch_core::env::EnvVar;
-//! let variable_name = CwOrchEnvVars::StateFolder::parsed().unwrap();
+//! let env_variable = CwOrchEnvVars::load().unwrap().state_folder;
 //! ```
 
 use std::{env, path::PathBuf, str::FromStr};
