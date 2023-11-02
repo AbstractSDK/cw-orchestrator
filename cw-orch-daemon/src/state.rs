@@ -3,10 +3,10 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
-    env::CwOrchEnvVars,
+    env::STATE_FOLDER_ENV_NAME,
     environment::{DeployDetails, StateInterface},
     log::{CONNECTIVITY_LOGS, LOCAL_LOGS},
-    CwEnvError,
+    CwEnvError, CwOrchEnvVars,
 };
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
@@ -15,7 +15,6 @@ use std::{
     collections::HashMap,
     fs::File,
     path::{Path, PathBuf},
-    str::FromStr,
 };
 use tonic::transport::Channel;
 
@@ -51,11 +50,7 @@ impl DaemonState {
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
         // check if STATE_FILE en var is configured, default to state.json
-        let env_file_path = PathBuf::from(
-            CwOrchEnvVars::StateFile
-                .get()
-                .unwrap_or("state.json".to_string()),
-        );
+        let env_file_path = CwOrchEnvVars::load()?.state_file;
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = if env_file_path.is_relative() {
@@ -151,22 +146,14 @@ impl DaemonState {
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
     }
 
-    fn default_state_dir() -> Result<PathBuf, DaemonError> {
-        // The program panics if the home_dir is not set
-        dirs::home_dir()
-            .map(|home_dir| home_dir.join(".cw-orchestrator"))
-            .ok_or(DaemonError::StdErr(
+    pub fn state_dir() -> Result<PathBuf, DaemonError> {
+        // This function should only error if the home_dir is not set and the `dirs` library is unable to fetch it
+        CwOrchEnvVars::load()?.state_folder
+            .ok_or( DaemonError::StdErr(
                 format!(
                     "Your machine doesn't have a home folder. Please specify the {} env variable to use cw-orchestrator", 
-                    CwOrchEnvVars::StateFolder
+                    STATE_FOLDER_ENV_NAME
                 )))
-    }
-
-    pub fn state_dir() -> Result<PathBuf, DaemonError> {
-        CwOrchEnvVars::StateFolder
-            .get()
-            .map(|s| PathBuf::from_str(&s).unwrap())
-            .or(Self::default_state_dir())
     }
 }
 
