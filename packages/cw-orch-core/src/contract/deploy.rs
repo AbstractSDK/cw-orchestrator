@@ -171,13 +171,14 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     }
 
     /// Sets the custom state file path for exporting the state with the package.
-    // TODO, we might want to enforce the projects to redefine this function ?
+    /// This function needs to be defined by projects. If the project doesn't want to give deployment state with their crate, they can return None here.
     fn deployed_state_file_path() -> Option<String>;
 
     /// Returns all the contracts in this deployment instance
     /// Used to set the contract state (addr and code_id) when importing the package.
     fn get_contracts_mut(&mut self) -> Vec<Box<&mut dyn ContractInstance<Chain>>>;
     /// Load the application from the chain, assuming it has already been deployed.
+    /// In order to leverage the deployed state, don't forget to call `Self::set_contracts_state` after loading the contract objects
     fn load_from(chain: Chain) -> Result<Self, Self::Error>;
 }
 

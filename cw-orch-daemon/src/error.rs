@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use cosmwasm_std::Coin;
 use cw_orch_core::CwEnvError;
 use thiserror::Error;
 
@@ -109,6 +110,8 @@ pub enum DaemonError {
     IbcError(String),
     #[error("insufficient fee, check gas price: {0}")]
     InsufficientFee(String),
+    #[error("Not enough balance, expected {expected}, found {current}")]
+    NotEnoughBalance { expected: Coin, current: Coin },
 }
 
 impl DaemonError {
