@@ -3,6 +3,7 @@
 //! Contains information and helpers for different blockchain networks
 //! See [parse_network] to easily retrieve this static network information
 pub mod archway;
+pub mod doravota;
 pub mod injective;
 pub mod juno;
 pub mod kujira;
@@ -15,6 +16,7 @@ pub mod terra;
 
 pub use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
+pub use doravota::{VOTA_ASH, VOTA_TESTNET};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
 pub use kujira::HARPOON_4;
@@ -24,7 +26,6 @@ pub use nibiru::NIBIRU_ITN_2;
 pub use osmosis::{LOCAL_OSMO, OSMO_5};
 pub use sei::{ATLANTIC_2, LOCAL_SEI, PACIFIC_1, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
-
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///
 /// ## Example

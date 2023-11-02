@@ -4,13 +4,13 @@ Migaloo is a permission-less, open source network for decentralized interoperabl
 
 [Visit Migaloo's Docs](https://docs.migaloo.zone/)
 
+```rust,ignore
+{{#include ../../../packages/cw-orch-networks/src/networks/migaloo.rs:migaloo}}
+```
+
 ## Usage
 
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::MIGALOO_1`.
-
-```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/migaloo.rs:migaloo}}
-```
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::MIGALOO_1`.
 
 ## References
 

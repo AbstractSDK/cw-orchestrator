@@ -4,13 +4,13 @@ Nibiru is a breakthrough smart contract platform providing superior throughput, 
 
 [Nibiru Website](https://nibiru.fi/)
 
-## Usage
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::NIBIRU_ITN_2`.
-
 ```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/nibiru.rs:nibiru}}
+{{#include ../../../packages/cw-orch-networks/src/networks/nibiru.rs:nibiru}}
 ```
 
+## Usage
+
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::NIBIRU_ITN_2`.
 
 ## References
 
