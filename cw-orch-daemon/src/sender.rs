@@ -1,6 +1,7 @@
 use crate::{
     networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
+    queriers,
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
@@ -31,6 +32,7 @@ use cosmrs::{
 };
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
+
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
@@ -202,8 +204,14 @@ impl Sender<All> {
         let gas_needed = tx_builder.simulate(self).await?;
 
         let (gas_for_submission, fee_amount) = self.get_fee_from_gas(gas_needed)?;
+        let expected_fee = coin(fee_amount, self.get_fee_token());
+        // During simulation, we also make sure the account has enough balance to submit the transaction
+        // This is disabled by an env variable
+        if CwOrchEnvVars::DisableWalletBalanceAssertion.get()? != "true" {
+            self.assert_wallet_balance(&expected_fee).await?;
+        }
 
-        Ok((gas_for_submission, coin(fee_amount, self.get_fee_token())))
+        Ok((gas_for_submission, expected_fee))
     }
 
     pub async fn commit_tx<T: Msg>(
@@ -305,5 +313,73 @@ impl Sender<All> {
 
         let commit = commit.into_inner().tx_response.unwrap();
         Ok(commit)
+    }
+
+    /// Allows for checking wether the sender is able to broadcast a transaction that necessitates the provided `gas`
+    pub async fn has_enough_balance_for_gas(&self, gas: u64) -> Result<(), DaemonError> {
+        let (_gas_expected, fee_amount) = self.get_fee_from_gas(gas)?;
+        let fee_denom = self.get_fee_token();
+
+        self.assert_wallet_balance(&coin(fee_amount, fee_denom))
+            .await
+    }
+
+    /// Allows checking wether the sender has more funds than the provided `fee` argument
+    #[async_recursion::async_recursion(?Send)]
+    async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
+        let chain_data = self.daemon_state.as_ref().chain_data.clone();
+
+        let bank = queriers::Bank::new(self.daemon_state.grpc_channel.clone());
+        let balance = bank
+            .balance(self.address()?, Some(fee.denom.clone()))
+            .await?[0]
+            .clone();
+
+        log::debug!(
+            "Checking balance {} on chain {}, address {}. Expecting {}{}",
+            balance.amount,
+            chain_data.chain_id,
+            self.address()?,
+            fee,
+            fee.denom
+        );
+        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
+
+        if parsed_balance.amount >= fee.amount {
+            log::debug!("The wallet has enough balance to deploy");
+            return Ok(());
+        }
+
+        // If there is not enough asset balance, we need to warn the user
+        println!(
+            "Not enough funds on chain {} at address {} to deploy the contract. 
+                Needed: {}{} but only have: {}.
+                Press 'y' when the wallet balance has been increased to resume deployment",
+            self.daemon_state.chain_data.chain_id,
+            self.address()?,
+            fee,
+            fee.denom,
+            parsed_balance
+        );
+
+        if CwOrchEnvVars::DisableManualInteraction.get()? != "true" {
+            println!("No Manual Interactions, defaulting to 'no'");
+            return Err(DaemonError::NotEnoughBalance {
+                expected: fee.clone(),
+                current: parsed_balance,
+            });
+        }
+
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input)?;
+        if input.to_lowercase().contains('y') {
+            // We retry asserting the balance
+            self.assert_wallet_balance(fee).await
+        } else {
+            Err(DaemonError::NotEnoughBalance {
+                expected: fee.clone(),
+                current: parsed_balance,
+            })
+        }
     }
 }
