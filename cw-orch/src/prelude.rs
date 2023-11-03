@@ -57,6 +57,7 @@ pub use crate::daemon::{
     DaemonBuilder,
 };
 
+#[cfg(feature = "daemon")]
 pub use cw_orch_networks::networks;
 
 pub use crate::contract::artifacts_dir_from_workspace;
