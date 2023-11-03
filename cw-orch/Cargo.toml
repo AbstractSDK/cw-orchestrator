@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.17.0"
+version = "0.17.1"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -44,6 +44,7 @@ daemon = [
   # "dep:tonic",
   "dep:cosmrs",
   "dep:cw-orch-daemon",
+  "dep:cw-orch-networks",
 ]
 eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
 osmosis-test-tube = [
@@ -69,7 +70,7 @@ thiserror = { workspace = true }
 
 # Daemon deps
 cw-orch-daemon = { workspace = true, optional = true }
-cw-orch-networks = { workspace = true }
+cw-orch-networks = { workspace = true, optional = true }
 tokio = { version = "1.4", features = ["full"], optional = true }
 cosmrs = { version = "0.14.0", features = [
   "dev",
