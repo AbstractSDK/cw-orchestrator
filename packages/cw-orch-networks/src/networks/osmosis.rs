@@ -9,7 +9,7 @@ pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
 
 pub const OSMOSIS_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
-    chain_id: "osmois-1",
+    chain_id: "osmosis-1",
     gas_denom: "uosmo",
     gas_price: 0.025,
     grpc_urls: &["http://grpc.osmosis.zone:9090"],
