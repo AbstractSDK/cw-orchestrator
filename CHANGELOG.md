@@ -1,6 +1,13 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## 0.18.0
+
+- Added wallet balance assertions to avoid erroring when the wallet doesn't have enough balance when submitting a daemon transaction
+- Added doravota network
+- Corrected Osmosis-1 network
+- Better handling of env variables --> Crate is becoming easier to maintain and document
+
+## 0.17.0
 
 - Added possibility to not panic in parse network by @Buckram123
 - Added stargate feature to cw-multi-test

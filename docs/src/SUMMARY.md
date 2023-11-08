@@ -6,11 +6,19 @@
 
 # Tutorials
 
-- [Contract](./single_contract/index.md)
-  - [Interfaces](./single_contract/interfaces.md)
-  - [Environment Vars](./single_contract/env-variable.md)
-  - [Scripting](./single_contract/scripting.md)
-  - [Integration Tests](./single_contract/integration-tests.md)
+- [Contracts](./contracts/index.md)
+  - [Interfaces](./contracts/interfaces.md)
+  - [Entry Point Function Generation](./contracts/entry-points.md)
+  - [Environment Vars](./contracts/env-variable.md)
+  - [Scripting](./contracts/scripting.md)
+  - [Integration Tests](./contracts/integration-tests.md)
+
+- [Project Setup](./setup/index.md)
+  - [Single Contract](./setup/single-contract.md)
+  - [Workspace](./setup/workspace/index.md)
+    - [Setup](./setup/workspace/setup.md)
+    - [Project Wrapper](./setup/workspace/deploy.md)
+    - [Collaboration](./setup/workspace/collaboration.md)
 
 - [Integrations](./integrations/index.md)
   - [Daemon (Live Chains)](./integrations/daemon.md)
@@ -24,11 +32,6 @@
   - [Integrations](./interchain/integrations/index.md)
     - [Daemon (Live Chains)](./interchain/integrations/daemon.md)
     - [Cw Multi Test](./interchain/integrations/mock.md)
-
-- [Workspace](./workspace/index.md)
-  - [Structure]()
-  - [Project Wrapper]()
-  - [Collaboration]()
 
 - [Supported Chains](./chains/index.md)
   - [Archway](./chains/archway.md)

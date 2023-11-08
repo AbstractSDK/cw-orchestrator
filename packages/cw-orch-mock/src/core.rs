@@ -353,7 +353,7 @@ impl WasmCodeQuerier for Mock {
 #[cfg(test)]
 mod test {
     use cosmwasm_std::{
-        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+        to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
         Uint128,
     };
     use cw_multi_test::ContractWrapper;
@@ -385,7 +385,7 @@ mod test {
 
     fn query(_deps: Deps, _env: Env, msg: cw20_base::msg::QueryMsg) -> StdResult<Binary> {
         match msg {
-            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_binary::<Response>(
+            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_json_binary::<Response>(
                 &Response::default()
                     .add_attribute("address", address)
                     .add_attribute("balance", String::from("0")),

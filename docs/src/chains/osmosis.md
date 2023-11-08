@@ -4,13 +4,13 @@ Osmosis is a cutting-edge decentralized exchange built on the Cosmos network, de
 
 [Visit Osmosis's Website](https://osmosis.zone/)
 
+```rust,ignore
+{{#include ../../../packages/cw-orch-networks/src/networks/osmosis.rs:osmosis}}
+```
+
 ## Usage
 
-See how to setup your main function in the [main function](../single_contract/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::OSMO_5`.
-
-```rust,ignore
-{{#include ../../../cw-orch/src/daemon/networks/osmosis.rs:osmosis}}
-```
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::OSMO_5`.
 
 ## References
 

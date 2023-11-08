@@ -2,7 +2,7 @@
 
 Get ready to change the way you interact with contracts. The following steps will allow you to write clean code such as:
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/examples/deploy.rs:clean_example}}
 ```
 
@@ -14,9 +14,10 @@ In this quick-start guide, we will review the necessary steps in order to integr
 
 ## Summary
 
+- [Summary](#summary)
 - [Single Contract Integration](#single-contract-integration)
   - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
-  - [Creating an interface](#creating-an-interface)
+  - [Creating an Interface](#creating-an-interface)
   - [Interaction helpers](#interaction-helpers)
   - [Using the integration](#using-the-integration)
 - [Integration in a workspace](#integration-in-a-workspace)
@@ -32,14 +33,14 @@ In this quick-start guide, we will review the necessary steps in order to integr
 To use cw-orchestrator, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
 
 ```shell
-$ cargo add --optional cw-orch
+cargo add --optional cw-orch
 ```
 
 Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.16.4", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.17.0", optional = true } # Latest version at time of writing
 ```
 
 Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature-flag. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract.
@@ -62,18 +63,18 @@ interface = ["dep:cw-orch"] # Enables cw-orch when the feature is enabled
 
 When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. Don't forget to *feature-flag* the module in order to be able to use `cw-orch` inside it.
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/src/lib.rs:custom_interface}}
 ```
 
 Then, inside that `interface.rs` file, you can define the interface for your contract:
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/src/interface.rs:custom_interface}}
 
 ```
 
-Learn more about the content of the interface creation specifics on [the interface page](./single_contract/interfaces.md#creating-an-interface)
+Learn more about the content of the interface creation specifics on [the interface page](./contracts/interfaces.md#creating-an-interface)
 
 > **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
 >
@@ -88,13 +89,13 @@ cw-orchestrator provides a additional macros that simplify contract calls and qu
 
 Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions (in `msg.rs` in our example) and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
-```rust,no_run
+```rust,ignore
 {{#include ../../contracts/counter/src/msg.rs:exec_msg}}
 
 {{#include ../../contracts/counter/src/msg.rs:query_msg}}
 ```
 
-Find out more about the interaction helpers on [the interface page](./single_contract/interfaces.md#entry-point-function-generation)
+Find out more about the interaction helpers on [the interface page](./contracts/interfaces.md#entry-point-function-generation)
 
 > **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
 >
@@ -115,7 +116,7 @@ counter-contract = { path = "../counter-contract", features = ["interface"] }
 
 You can now use:
 
-```rust
+```rust,ignore
 {{#include ../../contracts/counter/examples/deploy.rs:full_counter_example}}
 ```
 
@@ -185,4 +186,4 @@ You can find more example interactions on the `counter-contract` example directl
 - Some other examples show [how to use the library for testing your contracts](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests).
 
 > **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`.
-> Why not go directly to [environment variables](./single_contract/env-variable.md)?
+> Why not go directly to [environment variables](./contracts/env-variable.md)?

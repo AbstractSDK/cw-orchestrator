@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = "0.16.5"
+version = "0.18.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -61,9 +61,11 @@ base16 = { version = "0.2.1" }
 ring = { version = "0.17.3" }
 dirs = "5.0.1"
 
+
 # Injective dependencies
 ethers-signers = { version = "2.0.7", optional = true }
 ethers-core = { version = "2.0.7", optional = true }
+async-recursion = "1.0.5"
 
 # Gzip
 flate2 = { version = "1.0.26" }
@@ -72,8 +74,8 @@ flate2 = { version = "1.0.26" }
 cw-orch-daemon = { path = "." }
 uid = "0.1.7"
 env_logger = "0.10.0"
-cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
-cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw20 = { version = "1" }
+cw20-base = { version = "1" }
 cosmwasm-schema = "1.2"
 speculoos = "0.11.0"
 ctor = "0.2.0"

@@ -1,6 +1,7 @@
 use crate::{
     networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
+    queriers,
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
@@ -30,7 +31,8 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{env::CwOrchEnvVars, log::LOCAL_LOGS};
+use cw_orch_core::{log::LOCAL_LOGS, CwOrchEnvVars};
+
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
@@ -56,11 +58,11 @@ impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
-        let env_variable = kind.mnemonic_env_variable();
-        let mnemonic = env_variable.get().unwrap_or_else(|_| {
+        let env_variable_name = kind.mnemonic_env_variable_name();
+        let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
             panic!(
                 "Wallet mnemonic environment variable {} not set.",
-                env_variable
+                env_variable_name
             )
         });
 
@@ -136,8 +138,8 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let gas_expected = if let Ok(gas_buffer) = CwOrchEnvVars::GasBuffer.get() {
-            gas as f64 * gas_buffer.parse::<f64>()?
+        let gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
+            gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
         } else {
@@ -202,8 +204,14 @@ impl Sender<All> {
         let gas_needed = tx_builder.simulate(self).await?;
 
         let (gas_for_submission, fee_amount) = self.get_fee_from_gas(gas_needed)?;
+        let expected_fee = coin(fee_amount, self.get_fee_token());
+        // During simulation, we also make sure the account has enough balance to submit the transaction
+        // This is disabled by an env variable
+        if !CwOrchEnvVars::load()?.disable_wallet_balance_assertion {
+            self.assert_wallet_balance(&expected_fee).await?;
+        }
 
-        Ok((gas_for_submission, coin(fee_amount, self.get_fee_token())))
+        Ok((gas_for_submission, expected_fee))
     }
 
     pub async fn commit_tx<T: Msg>(
@@ -305,5 +313,73 @@ impl Sender<All> {
 
         let commit = commit.into_inner().tx_response.unwrap();
         Ok(commit)
+    }
+
+    /// Allows for checking wether the sender is able to broadcast a transaction that necessitates the provided `gas`
+    pub async fn has_enough_balance_for_gas(&self, gas: u64) -> Result<(), DaemonError> {
+        let (_gas_expected, fee_amount) = self.get_fee_from_gas(gas)?;
+        let fee_denom = self.get_fee_token();
+
+        self.assert_wallet_balance(&coin(fee_amount, fee_denom))
+            .await
+    }
+
+    /// Allows checking wether the sender has more funds than the provided `fee` argument
+    #[async_recursion::async_recursion(?Send)]
+    async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
+        let chain_data = self.daemon_state.as_ref().chain_data.clone();
+
+        let bank = queriers::Bank::new(self.daemon_state.grpc_channel.clone());
+        let balance = bank
+            .balance(self.address()?, Some(fee.denom.clone()))
+            .await?[0]
+            .clone();
+
+        log::debug!(
+            "Checking balance {} on chain {}, address {}. Expecting {}{}",
+            balance.amount,
+            chain_data.chain_id,
+            self.address()?,
+            fee,
+            fee.denom
+        );
+        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
+
+        if parsed_balance.amount >= fee.amount {
+            log::debug!("The wallet has enough balance to deploy");
+            return Ok(());
+        }
+
+        // If there is not enough asset balance, we need to warn the user
+        println!(
+            "Not enough funds on chain {} at address {} to deploy the contract. 
+                Needed: {}{} but only have: {}.
+                Press 'y' when the wallet balance has been increased to resume deployment",
+            self.daemon_state.chain_data.chain_id,
+            self.address()?,
+            fee,
+            fee.denom,
+            parsed_balance
+        );
+
+        if !CwOrchEnvVars::load()?.disable_manual_interaction {
+            println!("No Manual Interactions, defaulting to 'no'");
+            return Err(DaemonError::NotEnoughBalance {
+                expected: fee.clone(),
+                current: parsed_balance,
+            });
+        }
+
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input)?;
+        if input.to_lowercase().contains('y') {
+            // We retry asserting the balance
+            self.assert_wallet_balance(fee).await
+        } else {
+            Err(DaemonError::NotEnoughBalance {
+                expected: fee.clone(),
+                current: parsed_balance,
+            })
+        }
     }
 }
