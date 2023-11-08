@@ -39,6 +39,25 @@ This environment mocks the actual on-chain execution exactly
 When cloning a cw_multi_test environment, you are not cloning the entire environment, but instead you are creating a new `Mock` typed variable with the same underlying `cw_multi_test::App` object reference. This is useful for objects that require to pass the chain as an object rather than by reference.
 The underlying `cw_multi_test::App` object is however not clonable.
 
+## Snapshot testing
+
+`cw-orch` provides snapshot testing capabilities to assist you catching breaking changes to your contracts. The `Mock::take_snapshot` function allows you to dump all the deployed contracts' storage values into [insta.rs](https://insta.rs/docs/quickstart/) that executes snapshot testing. An example application of this feature is to make sure that the storage of your contracts don't change when migrating a contract. Using this tool, you should have a test that looks something like this:
+
+```rust,ignore
+
+#[test]
+fn storage_stays_the_same(){
+    let mock = Mock::new(Addr::unchecked("sender"));
+
+    ... // Upload, instantiate, execute contracts
+
+    // Make sure that the operations have a fixed result
+    mock.take_snapshot()?;
+}
+```
+
+At any point of development, if the storage variables are modified, this test will fail to alert you that you are doing breaking changes to your storage variables. Learn more about this beautiful tool on the [official documentation](https://insta.rs/).
+
 ## Additional tools
 
 The `Mock` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `cw_multi_test::App` object. Here are some examples of those wrappers in context:
