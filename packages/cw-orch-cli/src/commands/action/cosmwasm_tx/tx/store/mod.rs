@@ -4,7 +4,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::commands::transaction::CosmosContext;
+use crate::commands::action::CosmosContext;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]

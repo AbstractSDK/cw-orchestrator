@@ -1,11 +1,11 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
-    prelude::{networks::parse_network, DaemonAsync},
+    prelude::{networks::parse_network, DaemonAsync, IndexResponse},
     tokio::runtime::Runtime,
 };
 
 use crate::{
-    commands::transaction::CosmosContext,
+    commands::action::CosmosContext,
     types::{CliCoins, CliSkippable},
 };
 
@@ -24,12 +24,11 @@ pub struct InstantiateContractCommands {
     msg_type: msg_type::MsgType,
     /// Enter message
     msg: String,
+    /// Label for the contract
+    label: String,
     #[interactive_clap(skip_default_input_arg)]
     /// Admin address of the contract
     admin: CliSkippable<String>,
-    #[interactive_clap(skip_default_input_arg)]
-    /// Label for the contract
-    label: CliSkippable<String>,
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
     coins: CliCoins,
@@ -51,16 +50,6 @@ impl InstantiateContractCommands {
         let val: Option<String> =
             inquire::CustomType::new("Input admin address for the contract".to_string().as_str())
                 .with_help_message("press Esc to skip admin")
-                .prompt_skippable()?;
-        Ok(Some(CliSkippable(val)))
-    }
-
-    fn input_label(
-        _context: &CosmosContext,
-    ) -> color_eyre::eyre::Result<Option<CliSkippable<String>>> {
-        let val: Option<String> =
-            inquire::CustomType::new("Input label for the contract".to_string().as_str())
-                .with_help_message("press Esc to skip label")
                 .prompt_skippable()?;
         Ok(Some(CliSkippable(val)))
     }
@@ -96,11 +85,14 @@ impl InstantiateWasmOutput {
                 sender: daemon.sender.pub_addr()?,
                 admin: scope.admin.clone().0.map(|a| a.parse()).transpose()?,
                 code_id: scope.code_id,
-                label: scope.label.0.clone(),
+                label: Some(scope.label.clone()),
                 msg,
                 funds: coins,
             };
-            let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let address = res.instantiated_contract_address()?;
+
+            println!("Address of the instantiated contract: {address}");
 
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;

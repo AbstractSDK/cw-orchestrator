@@ -23,9 +23,7 @@ pub enum CosmosAction {
 }
 
 impl From<CosmosContext> for () {
-    fn from(_value: CosmosContext) -> Self {
-        ()
-    }
+    fn from(_value: CosmosContext) -> Self {}
 }
 
 #[derive(Clone)]

@@ -4,7 +4,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::{commands::transaction::CosmosContext, types::CliCoins};
+use crate::{commands::action::CosmosContext, types::CliCoins};
 
 use super::super::msg_type;
 

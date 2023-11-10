@@ -1,5 +1,5 @@
+mod action;
 mod keys;
-mod transaction;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
@@ -9,7 +9,7 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 pub enum Commands {
     /// Construct action
     #[strum_discriminants(strum(message = "Construct action"))]
-    Action(transaction::CosmosCommands),
+    Action(action::CosmosCommands),
     /// Add, View or Remove key
     #[strum_discriminants(strum(message = "Manage keys"))]
     Key(keys::KeyCommands),

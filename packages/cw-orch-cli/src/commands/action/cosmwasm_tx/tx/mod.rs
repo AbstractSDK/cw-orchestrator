@@ -1,6 +1,6 @@
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
-use crate::commands::transaction::CosmosContext;
+use crate::commands::action::CosmosContext;
 
 mod execute;
 mod instantiate;

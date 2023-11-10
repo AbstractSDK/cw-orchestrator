@@ -1,5 +1,6 @@
 mod add_key;
 mod remove_key;
+mod show_address;
 mod show_key;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
@@ -23,4 +24,7 @@ pub enum KeyAction {
     /// Remove key from the keyring
     #[strum_discriminants(strum(message = "Remove key from the keyring"))]
     Remove(remove_key::RemoveKeyCommand),
+    /// Show address of the key
+    #[strum_discriminants(strum(message = "Show address of the key"))]
+    ShowAddress(show_address::ShowAddressCommand),
 }

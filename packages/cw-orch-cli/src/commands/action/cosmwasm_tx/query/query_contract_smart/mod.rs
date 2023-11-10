@@ -7,7 +7,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::commands::transaction::CosmosContext;
+use crate::commands::action::CosmosContext;
 
 use super::super::msg_type;
 
