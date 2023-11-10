@@ -55,7 +55,7 @@ fn storage_stays_the_same(){
 }
 ```
 
-At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about thi underlying tool on the [official documentation](https://insta.rs/).
+At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about the underlying tool in the [official documentation](https://insta.rs/).
 
 ## Additional tools
 
