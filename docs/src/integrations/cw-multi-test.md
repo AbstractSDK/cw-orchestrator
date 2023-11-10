@@ -40,22 +40,22 @@ The underlying `cw_multi_test::App` object is however not clonable.
 
 ## Snapshot testing
 
-`cw-orch` provides snapshot testing capabilities to assist you catching breaking changes to your contracts. The `Mock::take_snapshot` function allows you to dump all the deployed contracts' storage values into [insta.rs](https://insta.rs/docs/quickstart/) that executes snapshot testing. An example application of this feature is to make sure that the storage of your contracts don't change when migrating a contract. Using this tool, you should have a test that looks something like this:
+`cw-orch` provides snapshot testing capabilities to assist you catching breaking changes to your contracts. The `Mock::take_storage_snapshot` function allows you to dump all the deployed contracts' storage values into [insta.rs](https://insta.rs/docs/quickstart/) that executes snapshot testing. An example application of this feature is to make sure that the storage of your contracts don't change when migrating a contract. Using this tool, you should have a test that looks something like this:
 
 ```rust,ignore
 
 #[test]
-fn storage_stays_the_same(){
+fn storage_stays_thtake_storage_snapshot
     let mock = Mock::new(Addr::unchecked("sender"));
 
     ... // Upload, instantiate, execute contracts
 
     // Make sure that the operations have a fixed result
-    mock.take_snapshot()?;
+    mock.take_storage_snapshot()?;
 }
 ```
 
-At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about thi underlying tool on the [official documentation](https://insta.rs/).
+At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about the underlying tool in the [official documentation](https://insta.rs/).
 
 ## Additional tools
 

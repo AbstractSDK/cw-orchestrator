@@ -180,15 +180,16 @@ impl<S: StateInterface> Mock<S> {
     /// This functions allows for making sure the tests are stabilised and changes made to contracts don't have an impact on the internal storage
     /// Usage:
     /// ```rust,ignore
-    /// mock.take_snapshot();
+    /// mock.take_storage_snapshot("mock_doc");
     /// ```
+    /// The name you input to the function should be different from all other snapshots in your repository
     /// Find more details on how snapshot testing works on the official quick-start guide: https://insta.rs/docs/quickstart/
     /// This function will panic if the snapshot is different from the reference snapshot
-    pub fn take_snapshot(&self) -> Result<(), CwEnvError> {
+    pub fn take_storage_snapshot(&self, name: &str) -> Result<(), CwEnvError> {
         // We register and test a snapshot for all contracts storage
         let all_contract_addresses = self.state().get_all_addresses()?;
         for (_id, contract_addr) in all_contract_addresses {
-            insta::assert_yaml_snapshot!(self.app.borrow().dump_wasm_raw(&contract_addr));
+            insta::assert_yaml_snapshot!(format!("{}-{}", name, contract_addr.to_string()),self.app.borrow().dump_wasm_raw(&contract_addr));
         }
         Ok(())
     }
