@@ -3,13 +3,19 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
+    env::STATE_FOLDER_ENV_NAME,
     environment::{DeployDetails, StateInterface},
-    CwEnvError,
+    log::{CONNECTIVITY_LOGS, LOCAL_LOGS},
+    CwEnvError, CwOrchEnvVars,
 };
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs::File, path::Path};
+use std::{
+    collections::HashMap,
+    fs::File,
+    path::{Path, PathBuf},
+};
 use tonic::transport::Channel;
 
 /// Stores the chain information and deployment state.
@@ -37,14 +43,31 @@ impl DaemonState {
             return Err(DaemonError::GRPCListIsEmpty);
         }
 
-        log::info!("Found {} gRPC endpoints", chain_data.apis.grpc.len());
+        log::debug!(target: CONNECTIVITY_LOGS, "Found {} gRPC endpoints", chain_data.apis.grpc.len());
 
         // find working grpc channel
         let grpc_channel =
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
         // check if STATE_FILE en var is configured, default to state.json
-        let mut json_file_path = env::var("STATE_FILE").unwrap_or("./state.json".to_string());
+        let env_file_path = CwOrchEnvVars::load()?.state_file;
+
+        // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
+        let mut json_file_path = if env_file_path.is_relative() {
+            let state_folder = Self::state_dir()?;
+
+            // We need to create the default state folder if it doesn't exist
+            std::fs::create_dir_all(state_folder.clone())?;
+
+            state_folder.join(env_file_path)
+        } else {
+            env_file_path
+        }
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+        log::debug!(target: LOCAL_LOGS, "Using state file : {}", json_file_path);
 
         // if the network we are connecting is a local kind, add it to the fn
         if chain_data.network_type == ChainKind::Local.to_string() {
@@ -85,6 +108,7 @@ impl DaemonState {
         };
 
         log::info!(
+            target: LOCAL_LOGS,
             "Writing daemon state JSON file: {:#?}",
             state.json_file_path
         );
@@ -120,6 +144,16 @@ impl DaemonState {
             [contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+    }
+
+    pub fn state_dir() -> Result<PathBuf, DaemonError> {
+        // This function should only error if the home_dir is not set and the `dirs` library is unable to fetch it
+        CwOrchEnvVars::load()?.state_folder
+            .ok_or( DaemonError::StdErr(
+                format!(
+                    "Your machine doesn't have a home folder. Please specify the {} env variable to use cw-orchestrator", 
+                    STATE_FOLDER_ENV_NAME
+                )))
     }
 }
 

@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
 
@@ -13,9 +13,6 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 // ANCHOR: entry_point_line
 #[cfg_attr(feature = "export", entry_point)]
 // ANCHOR_END: entry_point_line
-// ANCHOR: interface_line
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
-// ANCHOR_END: interface_line
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -36,7 +33,6 @@ pub fn instantiate(
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn execute(
     deps: DepsMut,
     _env: Env,
@@ -50,15 +46,13 @@ pub fn execute(
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetCount {} => to_binary(&query::count(deps)?),
+        QueryMsg::GetCount {} => to_json_binary(&query::count(deps)?),
     }
 }
 
 #[cfg_attr(feature = "export", entry_point)]
-#[cfg_attr(feature = "interface", cw_orch::interface_entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     Ok(Response::default().add_attribute("action", "migrate"))
 }
@@ -68,7 +62,7 @@ pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, 
 mod tests {
     use super::*;
     use cosmwasm_std::{
-        coins, from_binary,
+        coins, from_json,
         testing::{mock_dependencies, mock_env, mock_info},
     };
 
@@ -85,7 +79,7 @@ mod tests {
 
         // it worked, let's query the state
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        let value: GetCountResponse = from_binary(&res).unwrap();
+        let value: GetCountResponse = from_json(res).unwrap();
         assert_eq!(17, value.count);
     }
 
@@ -104,7 +98,7 @@ mod tests {
 
         // should increase counter by 1
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        let value: GetCountResponse = from_binary(&res).unwrap();
+        let value: GetCountResponse = from_json(res).unwrap();
         assert_eq!(18, value.count);
     }
 
@@ -132,7 +126,7 @@ mod tests {
 
         // should now be 5
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
-        let value: GetCountResponse = from_binary(&res).unwrap();
+        let value: GetCountResponse = from_json(res).unwrap();
         assert_eq!(5, value.count);
     }
 }

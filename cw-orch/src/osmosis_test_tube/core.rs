@@ -1,11 +1,15 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
+use cw_orch_traits::stargate::Stargate;
+
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
+use osmosis_test_tube::ExecuteResponse;
 use osmosis_test_tube::Gamm;
 use osmosis_test_tube::Module;
+use osmosis_test_tube::Runner;
 use osmosis_test_tube::RunnerError;
 use osmosis_test_tube::SigningAccount;
 use osmosis_test_tube::Wasm;
@@ -13,15 +17,7 @@ use std::str::FromStr;
 
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
-// use osmosis_test_tube::osmosis_std::{
-//     types::cosmos::bank::v1beta1::{
-//         QueryAllBalancesRequest, QueryBalanceRequest, MsgSend
-//     },
-//     cosmwasm_to_proto_coins
-// };
-
-// So we need this fix (not ideal)
-use osmosis_std::{
+use osmosis_test_tube::osmosis_std::{
     cosmwasm_to_proto_coins,
     types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
 };
@@ -104,7 +100,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .map(|s| s.into_iter().map(Rc::new).collect())
     }
 
-    /// Creates accounts and sets their balance
+    /// Sends coins a specific address
     pub fn bank_send(
         &self,
         to: String,
@@ -127,7 +123,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         })
     }
 
-    /// Creates accounts and sets their balance
+    /// Creates an osmosis pool (helper)
     pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
         // create balancer pool with basic configuration
         let pool_id = Gamm::new(&*self.app.borrow())
@@ -320,6 +316,25 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             time: Timestamp::from_nanos(
                 self.app.borrow().get_block_time_nanos().try_into().unwrap(),
             ),
+        })
+    }
+}
+
+impl Stargate for OsmosisTestTube {
+    fn commit_any<R: prost::Message + Default>(
+        &self,
+        msgs: Vec<prost_types::Any>,
+        _memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        let tx_response: ExecuteResponse<R> = self
+            .app
+            .borrow()
+            .execute_multiple_raw(msgs, &self.sender)
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary(tx_response.raw_data)),
+            events: tx_response.events,
         })
     }
 }

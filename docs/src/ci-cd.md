@@ -1,7 +1,8 @@
 # Continuous Integration and Deployment
-One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments. 
 
-cw-orchestrator does not *currently* add additional support for actions, but an example using the directory structure specified in [interfaces](interfaces.md) can be found below:
+One of the tools that can improve your developer productivity drastically is setting up pipelines for your contract deployments.
+
+cw-orchestrator does not *currently* add additional support for actions, but an example using the directory structure of the [cw-orchestrator Github repository](https://github.com/AbstractSDK/cw-orchestrator) can be found below
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -18,8 +19,8 @@ on:
   
 env:
   VERSION_CONTROL_ADDRESS: juno16enwrxhdtsdk8mkkcaj37fgp37wz0r3err4hxfz52lcdyayexnxs4468mu  
-  STATE_FILE: "./daemon_state.json"  
-  ARTIFACTS_DIR: "./target/wasm32-unknown-unknown/release"  
+  STATE_FILE: "./state.json"  # Optional
+  ARTIFACTS_DIR: "./target/wasm32-unknown-unknown/release" # Optional
   SCHEMA_DIR: "./schema"  
   
 jobs:  

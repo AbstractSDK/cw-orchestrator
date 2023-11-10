@@ -24,8 +24,8 @@ use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
-    from_slice, to_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult, QueryRequest,
-    SystemError, SystemResult, Uint128, WasmQuery,
+    from_json, to_json_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
+    QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
 };
 
 use crate::channel::GrpcChannel;
@@ -64,7 +64,7 @@ pub struct WasmMockQuerier {
 impl Querier for WasmMockQuerier {
     fn raw_query(&self, bin_request: &[u8]) -> QuerierResult {
         // MockQuerier doesn't support Custom, so we ignore it completely here
-        let request: QueryRequest<Empty> = match from_slice(bin_request) {
+        let request: QueryRequest<Empty> = match from_json(bin_request) {
             Ok(v) => v,
             Err(e) => {
                 return SystemResult::Err(SystemError::InvalidRequest {
@@ -109,7 +109,7 @@ impl WasmMockQuerier {
                     }
                     _ => SystemResult::Err(SystemError::InvalidRequest {
                         error: QUERIER_ERROR.to_string(),
-                        request: to_binary(&request).unwrap(),
+                        request: to_json_binary(&request).unwrap(),
                     }),
                 }
             }
@@ -121,7 +121,7 @@ impl WasmMockQuerier {
                             .runtime
                             .block_on(querier.balance(address, Some(denom.clone())))
                             .map(|result| {
-                                to_binary(&BalanceResponse {
+                                to_json_binary(&BalanceResponse {
                                     amount: Coin {
                                         amount: Uint128::from_str(&result[0].amount).unwrap(),
                                         denom: result[0].denom.clone(),
@@ -144,13 +144,13 @@ impl WasmMockQuerier {
                                     })
                                     .collect(),
                             })
-                            .map(|query_result| to_binary(&query_result))
+                            .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     _ => SystemResult::Err(SystemError::InvalidRequest {
                         error: QUERIER_ERROR.to_string(),
-                        request: to_binary(&request).unwrap(),
+                        request: to_json_binary(&request).unwrap(),
                     }),
                 }
             }
@@ -164,7 +164,7 @@ impl WasmMockQuerier {
                             .map(|result| BondedDenomResponse {
                                 denom: result.params.unwrap().bond_denom,
                             })
-                            .map(|query_result| to_binary(&query_result))
+                            .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
@@ -187,7 +187,7 @@ impl WasmMockQuerier {
                                     })
                                     .collect(),
                             })
-                            .map(|query_result| to_binary(&query_result))
+                            .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
@@ -196,7 +196,7 @@ impl WasmMockQuerier {
             }
             _ => SystemResult::Err(SystemError::InvalidRequest {
                 error: QUERIER_ERROR.to_string(),
-                request: to_binary(&request).unwrap(),
+                request: to_json_binary(&request).unwrap(),
             }),
         }
     }

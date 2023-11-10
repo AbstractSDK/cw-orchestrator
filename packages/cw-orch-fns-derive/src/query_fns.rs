@@ -1,7 +1,8 @@
 extern crate proc_macro;
-use crate::helpers::{process_fn_name, process_impl_into, LexiographicMatching};
+use crate::helpers::{process_fn_name, process_impl_into, process_sorting, LexiographicMatching};
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::{format_ident, quote};
 use syn::{visit_mut::VisitMut, Fields, Ident, ItemEnum, Type};
 
@@ -28,6 +29,8 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let (maybe_into, entrypoint_msg_type, type_generics) =
         process_impl_into(&input.attrs, name, input.generics);
 
+    let is_attributes_sorted = process_sorting(&input.attrs);
+
     let variants = input.variants;
 
     let variant_fns = variants.into_iter().map( |mut variant|{
@@ -37,12 +40,59 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 format_ident!("{}", process_fn_name(&variant).to_case(Case::Snake));
         variant_func_name.set_span(variant_name.span());
 
+        let variant_doc: syn::Attribute = {
+            let doc = format!("Automatically generated wrapper around {}::{} variant", name, variant_name);
+            syn::parse_quote!(
+                #[doc=#doc]
+            )
+        };
+
         match &mut variant.fields {
-            Fields::Unnamed(_) => panic!("Expected named variant"),
-            Fields::Unit => panic!("Expected named variant"),
+            Fields::Unnamed(variant_fields) => {
+                let mut variant_idents = variant_fields.unnamed.clone();
+
+                // remove attributes from fields
+                variant_idents.iter_mut().for_each(|f| f.attrs = vec![]);
+
+                // Parse these fields as arguments to function
+
+                 // We need to figure out a parameter name for all fields associated to their types
+                // They will be numbered from 0 to n-1
+                let variant_ident_content_names = variant_idents
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)|  Ident::new(&format!("arg{}", i), Span::call_site()));
+
+                let variant_attr = variant_idents.clone().into_iter()
+                    .enumerate()
+                    .map(|(i, mut id)| {
+                    id.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
+                    id
+                });
+
+                quote!(
+                    #variant_doc
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name (#(#variant_ident_content_names,)*);
+                        self.query(&msg #maybe_into)
+                    }
+                )
+            }
+            Fields::Unit => {
+                quote!(
+                    #variant_doc
+                    fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name;
+                        self.query(&msg #maybe_into)
+                    }
+                )
+            },
             Fields::Named(variant_fields) => {
-                // sort fields on field name
-                LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                if is_attributes_sorted{
+                    // sort fields on field name
+                    LexiographicMatching::default().visit_fields_named_mut(variant_fields);
+                }
 
                 // remove attributes from fields
                 variant_fields.named.iter_mut().for_each(|f| f.attrs = vec![]);
@@ -53,20 +103,21 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
                 let variant_attr = variant_fields.iter();
                 quote!(
-                        #[allow(clippy::too_many_arguments)]
-                        fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
-                            let msg = #name::#variant_name {
-                                #(#variant_idents,)*
-                            };
-                            self.query(&msg #maybe_into)
-                        }
-                    )
-                }
+                    #variant_doc
+                    #[allow(clippy::too_many_arguments)]
+                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                        let msg = #name::#variant_name {
+                            #(#variant_idents,)*
+                        };
+                        self.query(&msg #maybe_into)
+                    }
+                )
             }
         }
-    );
+    });
 
     let derived_trait = quote!(
+        /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
         pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics > #where_clause {
             #(#variant_fns)*
         }
@@ -87,6 +138,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
         ));
 
     let derived_trait_impl = quote!(
+        #[automatically_derived]
         impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         #combined_where_clause {}
     );

@@ -57,7 +57,10 @@ mod wasm_path {
 
 mod artifacts_dir {
     use super::WasmPath;
-    use crate::error::CwEnvError;
+    use crate::{
+        build::BuildPostfix, env::ARTIFACTS_DIR_ENV_NAME, environment::ChainState,
+        error::CwEnvError, log::LOCAL_LOGS, CwOrchEnvVars,
+    };
 
     use std::{env, fs, path::PathBuf};
 
@@ -112,7 +115,10 @@ mod artifacts_dir {
     impl ArtifactsDir {
         /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
         pub fn env() -> Self {
-            let dir = env::var("ARTIFACTS_DIR").expect("ARTIFACTS_DIR env variable not set");
+            let dir = CwOrchEnvVars::load()
+                .unwrap()
+                .artifacts_dir
+                .unwrap_or_else(|| panic!("{} env variable not set", ARTIFACTS_DIR_ENV_NAME));
             Self::new(dir)
         }
 
@@ -120,7 +126,7 @@ mod artifacts_dir {
         pub fn auto(start_path: Option<String>) -> Self {
             // We find the artifacts dir automatically from the place that this function was invoked
             let workspace_dir = find_workspace_dir(start_path).join("artifacts");
-            log::debug!("Found artifacts dir at {:?}", workspace_dir);
+            log::debug!(target: LOCAL_LOGS, "Found artifacts dir at {:?}", workspace_dir);
             Self::new(workspace_dir)
         }
 
@@ -142,13 +148,33 @@ mod artifacts_dir {
 
         /// Find a WASM file in the artifacts directory that contains the given name.
         pub fn find_wasm_path(&self, name: &str) -> Result<WasmPath, CwEnvError> {
+            self.find_wasm_path_with_build_postfix(name, <BuildPostfix>::None)
+        }
+
+        /// Find a WASM file in the artifacts directory that contains the given contract name AND build post-fix.
+        /// If a build with the post-fix is not found, the default build will be used.
+        /// If none of the two are found, an error is returned.
+        pub fn find_wasm_path_with_build_postfix<T: ChainState>(
+            &self,
+            name: &str,
+            build_postfix: BuildPostfix<T>,
+        ) -> Result<WasmPath, CwEnvError> {
+            let build_postfix: String = build_postfix.into();
             let path_str = fs::read_dir(self.path())?
                 .find_map(|entry| {
                     let path = entry.ok()?.path();
                     let file_name = path.file_name().unwrap_or_default().to_string_lossy();
-                    if path.is_file()
-                        && path.extension().unwrap_or_default() == "wasm"
-                        && file_name.contains(name)
+                    if !path.is_file() {
+                        return None;
+                    }
+
+                    if (path.extension().unwrap_or_default() == "wasm"
+                        // If a postfix is provided
+                        && !build_postfix.is_empty()
+                        // It needs to be in the the file name as well.
+                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix))
+                        // If not found, check if the default build is present.
+                        || is_default_artifact(&file_name, name)
                     {
                         Some(file_name.into_owned())
                     } else {
@@ -163,5 +189,24 @@ mod artifacts_dir {
                 })?;
             WasmPath::new(self.path().join(path_str))
         }
+    }
+
+    fn is_artifact(file_name: &str, contract_name: &str) -> bool {
+        file_name.contains(contract_name)
+    }
+
+    fn is_default_artifact(file_name: &str, contract_name: &str) -> bool {
+        file_name.ends_with(format!("{}.wasm", contract_name).as_str())
+            || file_name.ends_with(format!("{}-arm64.wasm", contract_name).as_str())
+    }
+
+    fn is_artifact_with_build_postfix(
+        file_name: &str,
+        contract_name: &str,
+        build_postfix: &str,
+    ) -> bool {
+        is_artifact(file_name, contract_name)
+            && (file_name.ends_with(format!("{}.wasm", build_postfix).as_str())
+                || file_name.ends_with(format!("{}-arm64.wasm", build_postfix).as_str()))
     }
 }

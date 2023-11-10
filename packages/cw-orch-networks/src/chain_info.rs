@@ -2,6 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 
+use cw_orch_core::{
+    env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
+    CwEnvError, CwOrchEnvVars,
+};
+
 #[allow(clippy::from_over_into)]
 impl Into<RegistryChainInfo> for ChainInfo<'_> {
     fn into(self) -> RegistryChainInfo {
@@ -81,12 +86,24 @@ pub enum ChainKind {
 
 impl ChainKind {
     /// Get the mnemonic name for the chain kind
-    pub fn mnemonic_name(&self) -> &str {
+    pub fn mnemonic_env_variable_name(&self) -> &str {
         match *self {
-            ChainKind::Local => "LOCAL_MNEMONIC",
-            ChainKind::Testnet => "TEST_MNEMONIC",
-            ChainKind::Mainnet => "MAIN_MNEMONIC",
+            ChainKind::Local => LOCAL_MNEMONIC_ENV_NAME,
+            ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
+            ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
         }
+    }
+
+    pub fn mnemonic(&self) -> Result<String, CwEnvError> {
+        let env_vars = CwOrchEnvVars::load()?;
+        match *self {
+            ChainKind::Local => env_vars.local_mnemonic,
+            ChainKind::Testnet => env_vars.test_mnemonic,
+            ChainKind::Mainnet => env_vars.main_mnemonic,
+        }
+        .ok_or(CwEnvError::EnvVarNotPresentNamed(
+            self.mnemonic_env_variable_name().to_string(),
+        ))
     }
 }
 

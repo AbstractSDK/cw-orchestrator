@@ -9,6 +9,7 @@ use bitcoin::{
     Network,
 };
 use cosmrs::tx::SignerPublicKey;
+use cw_orch_core::log::LOCAL_LOGS;
 use hkd32::mnemonic::{Phrase, Seed};
 use rand_core::OsRng;
 use secp256k1::Secp256k1;
@@ -121,7 +122,7 @@ impl PrivateKey {
 
         let vec_pk = public_key.serialize();
 
-        log::debug!("{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
+        log::debug!(target: LOCAL_LOGS, "{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
 
         let inj_key = InjectivePubKey { key: vec_pk.into() };
 

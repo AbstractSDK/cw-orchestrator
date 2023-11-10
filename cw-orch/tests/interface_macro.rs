@@ -1,6 +1,6 @@
 use cw_orch::{
     environment::{CwEnv, TxHandler},
-    prelude::{ContractWrapper, Uploadable, WasmPath},
+    prelude::{ContractWrapper, Uploadable},
 };
 
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
@@ -13,7 +13,6 @@ use cw_orch::prelude::{
 
 use cosmwasm_std::Addr;
 use cw_orch::interface;
-const MOCK_CONTRACT_WASM: &str = "../artifacts/mock_contract.wasm";
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockContract;

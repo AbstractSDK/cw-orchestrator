@@ -1,29 +1,19 @@
-#![allow(unused)]
 // ANCHOR: custom_interface
-use cw_orch::{
-    anyhow::Result,
-    interface,
-    prelude::{queriers::Node, *},
-};
+use cw_orch::{interface, prelude::*};
 
-use crate::{
-    contract::CONTRACT_NAME,
-    msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
-    CounterContract,
-};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Counter;
+pub struct CounterContract;
 
-impl<Chain: CwEnv> Uploadable for Counter<Chain> {
-    // Return the path to the wasm file
+impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
+    /// Return the path to the wasm file corresponding to the contract
     fn wasm(&self) -> WasmPath {
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}/../artifacts/{}", crate_path, "mock.wasm");
-
-        WasmPath::new(wasm_path).unwrap()
+        artifacts_dir_from_workspace!()
+            .find_wasm_path("counter_contract")
+            .unwrap()
     }
-    // Return a CosmWasm contract wrapper
+    /// Returns a CosmWasm contract wrapper
     fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
@@ -37,8 +27,12 @@ impl<Chain: CwEnv> Uploadable for Counter<Chain> {
 }
 // ANCHOR_END: custom_interface
 
+use crate::contract::CONTRACT_NAME;
+use cw_orch::anyhow::Result;
+use cw_orch::prelude::queriers::Node;
+
 // ANCHOR: daemon
-impl Counter<Daemon> {
+impl CounterContract<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> Result<()> {
         let daemon = self.get_chain();

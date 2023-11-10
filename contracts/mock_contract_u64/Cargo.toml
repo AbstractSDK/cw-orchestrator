@@ -23,4 +23,10 @@ serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
 cosmwasm-schema = "1.2"
 cw-orch = { path = "../../cw-orch", features = ["daemon"], optional = true }
+
 mock-contract = { path = "../mock_contract", default-features = false }
+[dev-dependencies]
+mock-contract = { path = "../mock_contract", default-features = false, features = [
+  "interface",
+] }
+mock-contract-u64 = { path = ".", features = ["interface"] }

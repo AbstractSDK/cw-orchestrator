@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-core"
-version = { workspace = true }
+version = "0.18.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -37,6 +37,7 @@ serde_json = { workspace = true }
 
 # Ethereum deps
 snailquote = { version = "0.3.1", optional = true }
+dirs = "5.0.1"
 
 [dev-dependencies]
 speculoos = { workspace = true }

@@ -1,14 +1,14 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, ContractInfoResponse, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
-    environment::TxHandler,
+    contract::interface_traits::{CwOrchUpload, Uploadable},
     environment::{ChainState, IndexResponse, StateInterface},
+    environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
 
@@ -129,6 +129,16 @@ impl Mock<MockState> {
     /// Create a mock environment with the default mock state.
     pub fn new(sender: &Addr) -> Self {
         Mock::new_custom(sender, MockState::new())
+    }
+
+    pub fn with_chain_id(sender: &Addr, chain_id: &str) -> Self {
+        let chain = Mock::new_custom(sender, MockState::new());
+        chain
+            .app
+            .borrow_mut()
+            .update_block(|b| b.chain_id = chain_id.to_string());
+
+        chain
     }
 }
 
@@ -300,10 +310,33 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 }
 
+impl WasmCodeQuerier for Mock {
+    /// Returns the checksum of provided code_id
+    /// Cw-multi-test implements a checksum based on the code_id (because it wan't access the wasm code)
+    /// So it's not possible to check wether 2 contracts have the same code using the Mock implementation
+    fn contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
+        let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
+        Ok(code_info.checksum.to_string())
+    }
+
+    /// Returns the code_info structure of the provided contract
+    fn contract_info<T: CwOrchUpload<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<ContractInfoResponse, CwEnvError> {
+        let info = self
+            .app
+            .borrow()
+            .wrap()
+            .query_wasm_contract_info(contract.address()?)?;
+        Ok(info)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use cosmwasm_std::{
-        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+        to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
         Uint128,
     };
     use cw_multi_test::ContractWrapper;
@@ -335,7 +368,7 @@ mod test {
 
     fn query(_deps: Deps, _env: Env, msg: cw20_base::msg::QueryMsg) -> StdResult<Binary> {
         match msg {
-            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_binary::<Response>(
+            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_json_binary::<Response>(
                 &Response::default()
                     .add_attribute("address", address)
                     .add_attribute("balance", String::from("0")),
