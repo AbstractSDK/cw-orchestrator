@@ -25,14 +25,13 @@ You can then use the resulting `Mock` variable to interact with your [contracts]
 ```
 
 When executing contracts in a `cw-multi-test` environment, the messages and sub-messages sent along the Response of an endpoint, will be executed as well.
-This environment mocks the actual on-chain execution exactly 
+This environment mocks the actual on-chain execution exactly.
 
-> This environment uses the actual functions of your contract **without** having to compile them into WASM. When you are calling `upload` with this environment, no wasm files are included in the test environment. This allows for better debugging of your contract code.
-
-> If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../contracts/interfaces.md#customizable-interface-macro).
-
-
-> **_NOTE:_** Keep in mind that `cw-multi-test` is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.
+> - This environment uses the actual functions of your contract **without** having to compile them into WASM. When you are calling `upload` with this environment, no wasm files are included in the test environment. This allows for better debugging of your contract code.
+>
+> - If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../contracts/interfaces.md#customizable-interface-macro).
+>
+> - **_NOTE:_** Keep in mind that `cw-multi-test` is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.
 
 ## Cloning
 
@@ -56,12 +55,11 @@ fn storage_stays_the_same(){
 }
 ```
 
-At any point of development, if the storage variables are modified, this test will fail to alert you that you are doing breaking changes to your storage variables. Learn more about this beautiful tool on the [official documentation](https://insta.rs/).
+At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about thi underlying tool on the [official documentation](https://insta.rs/).
 
 ## Additional tools
 
 The `Mock` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `cw_multi_test::App` object. Here are some examples of those wrappers in context:
-
 
 ```rust,ignore
 {{#include ../../../cw-orch/examples/mock_test.rs:mock_customization}}
