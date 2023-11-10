@@ -18,5 +18,5 @@ pub struct QueryCommands {
 pub enum QueryAction {
     /// Query wasm smart
     #[strum_discriminants(strum(message = "Query wasm smart"))]
-    Query(query_contract_smart::QuerySmartCommands),
+    Smart(query_contract_smart::QuerySmartCommands),
 }

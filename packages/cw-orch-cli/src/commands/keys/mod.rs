@@ -17,7 +17,7 @@ pub enum KeyAction {
     /// Add key to the keyring
     #[strum_discriminants(strum(message = "Add key to the keyring"))]
     Add(add_key::AddKeyCommand),
-    /// Show key from keyring
+    /// Show seed from keyring
     #[strum_discriminants(strum(message = "Show key of given id from the keyring"))]
     Show(show_key::ShowKeyCommand),
     /// Remove key from the keyring

@@ -9,7 +9,7 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 pub enum Commands {
     /// Construct action
     #[strum_discriminants(strum(message = "Construct action"))]
-    Tx(transaction::CosmosCommands),
+    Action(transaction::CosmosCommands),
     /// Add, View or Remove key
     #[strum_discriminants(strum(message = "Manage keys"))]
     Key(keys::KeyCommands),
