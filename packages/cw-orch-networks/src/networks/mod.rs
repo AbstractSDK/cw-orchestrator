@@ -43,34 +43,35 @@ pub fn parse_network(net_id: &str) -> ChainInfo {
 }
 
 pub fn parse_network_safe(net_id: &str) -> Result<ChainInfo, String> {
-    let networks = vec![
-        UNI_6,
-        JUNO_1,
-        LOCAL_JUNO,
-        PISCO_1,
-        PHOENIX_1,
-        LOCAL_TERRA,
-        INJECTIVE_888,
-        CONSTANTINE_3,
-        ARCHWAY_1,
-        PION_1,
-        NARWHAL_1,
-        NEUTRON_1,
-        INJECTIVE_1,
-        HARPOON_4,
-        OSMOSIS_1,
-        OSMO_5,
-        LOCAL_OSMO,
-        LOCAL_MIGALOO,
-        LOCAL_NEUTRON,
-        MIGALOO_1,
-        LOCAL_SEI,
-        SEI_DEVNET_3,
-        ATLANTIC_2,
-        PACIFIC_1,
-    ];
-    networks
+    NETWORKS
         .into_iter()
         .find(|net| net.chain_id == net_id)
         .ok_or(format!("Network not found: {}", net_id))
 }
+
+pub const NETWORKS: [ChainInfo<'_>; 24] = [
+    UNI_6,
+    JUNO_1,
+    LOCAL_JUNO,
+    PISCO_1,
+    PHOENIX_1,
+    LOCAL_TERRA,
+    INJECTIVE_888,
+    CONSTANTINE_3,
+    ARCHWAY_1,
+    PION_1,
+    NARWHAL_1,
+    NEUTRON_1,
+    INJECTIVE_1,
+    HARPOON_4,
+    OSMOSIS_1,
+    OSMO_5,
+    LOCAL_OSMO,
+    LOCAL_MIGALOO,
+    LOCAL_NEUTRON,
+    MIGALOO_1,
+    LOCAL_SEI,
+    SEI_DEVNET_3,
+    ATLANTIC_2,
+    PACIFIC_1,
+];
