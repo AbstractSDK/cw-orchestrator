@@ -1,4 +1,5 @@
 mod cosmwasm_tx;
+mod transfer_tx;
 
 use cw_orch::daemon::networks::NETWORKS;
 use inquire::Select;
@@ -23,6 +24,9 @@ pub enum CosmosAction {
     /// Cosmwasm Action
     #[strum_discriminants(strum(message = "Perform CosmWasm action"))]
     Cw(cosmwasm_tx::CwCommands),
+    // /// Transfer Action
+    #[strum_discriminants(strum(message = "Perform Transfer action"))]
+    Transfer(transfer_tx::TransferCommands),
 }
 
 impl CosmosCommands {
