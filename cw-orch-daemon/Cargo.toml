@@ -42,7 +42,6 @@ schemars = "0.8.10"
 log = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tendermint-rpc = { version = "0.34.0", features = ["http-client"] }
 
 # Daemon deps
 sha256 = { workspace = true }
