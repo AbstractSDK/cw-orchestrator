@@ -1,10 +1,12 @@
+use bitcoin::bech32::ToBase32;
 use super::{
     cosmos_modules::{
         abci::{AbciMessageLog, Attribute, StringEvent, TxResponse},
-        tendermint_abci::Event,
+        tendermint_abci::{Event, EventAttribute},
     },
     error::DaemonError,
 };
+use cosmrs::proto::tendermint::v0_34::abci::Event as V034Event;
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 
 use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
@@ -124,7 +126,22 @@ impl From<TxResponse> for CosmTxResponse {
             gas_wanted: tx.gas_wanted as u64,
             gas_used: tx.gas_used as u64,
             timestamp: parse_timestamp(tx.timestamp).unwrap(),
-            events: tx.events,
+            events: tx.events.into_iter().map(|e| {
+                println!("e: {:#?}", e);
+                Event {
+                    r#type: e.r#type,
+                    attributes: e
+                        .attributes
+                        .into_iter()
+                        .map(|a| EventAttribute {
+                            key: String::from_utf8(a.key.clone().to_vec()).unwrap(),
+                            value: String::from_utf8(a.value.clone().to_vec()).unwrap(),
+                            index: false,
+                        })
+                        .collect(),
+                }
+            }
+            ).collect(),
         }
     }
 }

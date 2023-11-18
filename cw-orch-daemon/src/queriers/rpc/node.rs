@@ -11,6 +11,7 @@ use prost::Message;
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
+/// @TODO: all tendermint queries should use the tendermint-rpc explicitly instead of hitting the tendermint node with the typed queries.
 pub struct Node {
     client: HttpClient,
 }
@@ -53,33 +54,18 @@ impl Node {
         Ok(resp.syncing)
     }
 
-    /// Returns latests block information
+    /// Returns latest block information
     pub async fn latest_block(&self) -> Result<Block, DaemonError> {
+        let resp = self.client.latest_block().await?;
 
-        let resp = cosmos_rpc_query!(
-            self,
-            tendermint,
-            "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
-            GetLatestBlockRequest {},
-            GetLatestBlockResponse,
-        );
-
-        Ok(Block::try_from(resp.block.unwrap())?)
+        Ok(resp.block)
     }
 
     /// Returns block information fetched by height
     pub async fn block_by_height(&self, height: u64) -> Result<Block, DaemonError> {
-        let resp = cosmos_rpc_query!(
-            self,
-            tendermint,
-            "/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight",
-            GetBlockByHeightRequest {
-                height: height as i64,
-            },
-            GetBlockByHeightResponse,
-        );
+        let resp = self.client.block(height).await?;
 
-        Ok(Block::try_from(resp.block.unwrap())?)
+        Ok(resp.block)
     }
 
     /// Return the average block time for the last 50 blocks or since inception

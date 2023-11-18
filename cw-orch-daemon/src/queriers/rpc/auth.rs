@@ -5,7 +5,7 @@ use cosmrs::rpc::HttpClient;
 use crate::{queriers::DaemonQuerier, cosmos_rpc_query, DaemonError};
 
 
-/// Queries for Cosmos Bank Module
+/// Queries for Cosmos Auth Module
 pub struct Auth {
     client: HttpClient,
 }
@@ -18,7 +18,7 @@ impl DaemonQuerier for Auth {
 
 impl Auth{
 
-    /// Query spendable balance for address
+    /// Query the account
     pub async fn account(
         &self,
         address: impl Into<String>,

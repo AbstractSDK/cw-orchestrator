@@ -165,6 +165,8 @@ impl Sender<All> {
 
         let tx = tx_builder.build(self).await?;
 
+        log::debug!("raw tx: {:?}", tx);
+
         let mut tx_response = self.broadcast_tx(tx).await?;
 
         log::debug!("tx broadcast response: {:?}", tx_response);

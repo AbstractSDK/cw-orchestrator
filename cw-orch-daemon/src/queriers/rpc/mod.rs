@@ -31,7 +31,8 @@ macro_rules! cosmos_rpc_query {
             Some($type_url.to_string()),
             request.to_bytes()?,
             None,
-            true
+            // Don't request proof, we don't need it
+            false
         ).await?;
         let decoded_response = $request_resp::decode(response.value.as_slice())?;
         ::log::trace!(
