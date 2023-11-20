@@ -12,7 +12,7 @@ pub const LOCAL_WASM: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "testing",
     gas_denom: "ucosm",
-    gas_price: 0.0,
+    gas_price: 0.1,
     grpc_urls: &["http://localhost:9090"],
     rpc_urls: &["http://localhost:26657"],
     network_info: WASM_NETWORK,

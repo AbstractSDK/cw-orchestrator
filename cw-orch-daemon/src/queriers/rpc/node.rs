@@ -1,13 +1,13 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, queriers::{MAX_TX_QUERY_RETRIES, DaemonQuerier}, cosmos_rpc_query};
-
 use cosmrs::{
-    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::GetTxResponse},
-    tendermint::{Block, Time}, rpc::{HttpClient, Client}, tx::MessageExt,
+    proto::cosmos::base::query::v1beta1::PageRequest,
+    rpc::{Client, HttpClient}, tendermint::{Block, Time},
 };
-use prost::Message;
+use cosmrs::tendermint::block::Height;
+use cosmrs::tendermint::node;
 
+use crate::{cosmos_modules, cosmos_rpc_query, error::DaemonError, queriers::{DaemonQuerier, MAX_TX_QUERY_RETRIES}, tx_resp::CosmTxResponse};
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -27,17 +27,11 @@ impl Node {
     /// Returns node info
     pub async fn info(
         &self,
-    ) -> Result<cosmos_modules::tendermint::GetNodeInfoResponse, DaemonError> {
+    ) -> Result<node::Info, DaemonError> {
 
-        let resp = cosmos_rpc_query!(
-            self,
-            tendermint,
-            "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo",
-            GetNodeInfoRequest {},
-            GetNodeInfoResponse,
-        );
+        let stats = self.client.status().await?;
 
-        Ok(resp)
+        Ok(stats.node_info)
     }
 
     /// Queries node syncing
@@ -63,7 +57,7 @@ impl Node {
 
     /// Returns block information fetched by height
     pub async fn block_by_height(&self, height: u64) -> Result<Block, DaemonError> {
-        let resp = self.client.block(height).await?;
+        let resp = self.client.block(Height::try_from(height).unwrap()).await?;
 
         Ok(resp.block)
     }
@@ -160,6 +154,7 @@ impl Node {
 
     /// Simulate TX
     pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
+        log::debug!("Simulating transaction");
 
         // We use this allow deprecated for the tx field of the simulate request (but we set it to None, so that's ok)
         #[allow(deprecated)]
@@ -172,6 +167,8 @@ impl Node {
         );
 
         let gas_used = resp.gas_info.unwrap().gas_used;
+
+        log::debug!("Gas used in simulation: {:?}", gas_used);
         Ok(gas_used)
     }
 
@@ -199,21 +196,17 @@ impl Node {
         retries: usize,
     ) -> Result<CosmTxResponse, DaemonError> {
 
-        let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
-        for _ in 0..retries {
-            let tx_response = self.client.abci_query(
-                Some("/cosmos.tx.v1beta1.Service/GetTx".to_string()), 
-                request.to_bytes()?, 
-                None, 
-                true, 
-            ).await?;
+        let hexed_hash = hex::decode(hash.clone())?.try_into().unwrap();
 
-            match GetTxResponse::decode(tx_response.value.as_slice()) {
+        for _ in 0..retries {
+            let tx_r = self.client.tx(hexed_hash, false).await;
+
+            match tx_r {
                 Ok(tx) => {
                     log::debug!("TX found: {:?}", tx);
-                    return Ok(tx.tx_response.unwrap().into());
+                    return Ok(tx.into());
                 }
                 Err(err) => {
                     // increase wait time

@@ -1,4 +1,12 @@
-use bitcoin::bech32::ToBase32;
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use cosmrs::rpc::endpoint;
+use cosmrs::tendermint::abci::Code;
+use cosmrs::tendermint::Hash;
+use cosmwasm_std::{Binary, StdError, StdResult, to_binary};
+use serde::{Deserialize, Serialize};
+
+use cw_orch_core::environment::IndexResponse;
+
 use super::{
     cosmos_modules::{
         abci::{AbciMessageLog, Attribute, StringEvent, TxResponse},
@@ -6,12 +14,6 @@ use super::{
     },
     error::DaemonError,
 };
-use cosmrs::proto::tendermint::v0_34::abci::Event as V034Event;
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
-
-use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
-use cw_orch_core::environment::IndexResponse;
-use serde::{Deserialize, Serialize};
 
 const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
 const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
@@ -127,7 +129,6 @@ impl From<TxResponse> for CosmTxResponse {
             gas_used: tx.gas_used as u64,
             timestamp: parse_timestamp(tx.timestamp).unwrap(),
             events: tx.events.into_iter().map(|e| {
-                println!("e: {:#?}", e);
                 Event {
                     r#type: e.r#type,
                     attributes: e
@@ -136,6 +137,45 @@ impl From<TxResponse> for CosmTxResponse {
                         .map(|a| EventAttribute {
                             key: String::from_utf8(a.key.clone().to_vec()).unwrap(),
                             value: String::from_utf8(a.value.clone().to_vec()).unwrap(),
+                            index: false,
+                        })
+                        .collect(),
+                }
+            }
+            ).collect(),
+        }
+    }
+}
+
+impl From<endpoint::tx::Response> for CosmTxResponse {
+    fn from(tx: endpoint::tx::Response) -> Self {
+        Self {
+            height: tx.height.value(),
+            txhash: match tx.hash {
+                Hash::None => "".to_string(),
+                Hash::Sha256(x) =>  hex::encode(x),
+            },
+            codespace: tx.tx_result.codespace,
+            code: match tx.tx_result.code {
+                Code::Ok => 0,
+                Code::Err(code) => code.get() as usize,
+            },
+            data: String::from_utf8(tx.tx_result.data.clone().to_vec()).unwrap(),
+            raw_log: tx.tx_result.log,
+            logs: vec![],
+            info: tx.tx_result.info,
+            gas_wanted: tx.tx_result.gas_wanted as u64,
+            gas_used: tx.tx_result.gas_used as u64,
+            timestamp: DateTime::default(),
+            events: tx.tx_result.events.into_iter().map(|e| {
+                Event {
+                    r#type: e.kind,
+                    attributes: e
+                        .attributes
+                        .into_iter()
+                        .map(|a| EventAttribute {
+                            key: a.key,
+                            value: a.value,
                             index: false,
                         })
                         .collect(),
