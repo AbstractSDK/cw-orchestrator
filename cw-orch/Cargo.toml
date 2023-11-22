@@ -53,6 +53,8 @@ osmosis-test-tube = [
   "dep:prost",
   "dep:prost-types",
 ]
+snapshot-testing = ["cw-orch-mock/snapshot-testing"]
+
 
 [dependencies]
 # Default deps

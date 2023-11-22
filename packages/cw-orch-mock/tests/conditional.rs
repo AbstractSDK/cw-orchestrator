@@ -4,7 +4,7 @@ mod tests {
     */
 
     use cw_orch_core::contract::interface_traits::*;
-    use cw_orch_mock::Mock;
+    use cw_orch_mock::{Mock, take_storage_snapshot};
     use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
 
     use cosmwasm_std::Addr;
@@ -154,7 +154,7 @@ mod tests {
 
         contract.increment()?;
 
-        chain.take_storage_snapshot("snapshot_test")?;
+        take_storage_snapshot!(chain, "snapshot_test");
 
         Ok(())
     }
