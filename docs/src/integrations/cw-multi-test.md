@@ -51,7 +51,7 @@ fn storage_stays_thtake_storage_snapshot
     ... // Upload, instantiate, execute contracts
 
     // Make sure that the operations have a fixed result
-    mock.take_storage_snapshot()?;
+    mock.take_storage_snapshot("mock_snapshot")?;
 }
 ```
 
