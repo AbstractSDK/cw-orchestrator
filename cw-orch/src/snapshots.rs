@@ -18,7 +18,11 @@ macro_rules! take_storage_snapshot {
         let all_contract_addresses = $chain.state().get_all_addresses()?;
         for (_id, contract_addr) in all_contract_addresses {
             ::cw_orch::insta::assert_yaml_snapshot!(
-                ::cw_orch::sanitize_filename::sanitize(format!("{}-{}", $name, contract_addr.to_string())),
+                ::cw_orch::sanitize_filename::sanitize(format!(
+                    "{}-{}",
+                    $name,
+                    contract_addr.to_string()
+                )),
                 $chain.app.borrow().dump_wasm_raw(&contract_addr)
             );
         }
