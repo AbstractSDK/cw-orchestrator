@@ -1,5 +1,13 @@
 # cw-orchestrator Changelog
 
+## 0.18.2
+
+- Added Snapshot-Testing
+
+## 0.18.1
+
+- Dix : Added daemon flag on the networks import
+
 ## 0.18.0
 
 - Added wallet balance assertions to avoid erroring when the wallet doesn't have enough balance when submitting a daemon transaction
