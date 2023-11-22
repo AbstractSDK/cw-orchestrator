@@ -63,3 +63,7 @@ pub use cw_orch_networks::networks;
 pub use crate::contract::artifacts_dir_from_workspace;
 
 pub use cw_orch_traits::*;
+
+
+#[cfg(feature="snapshot-testing")]
+pub use crate::take_storage_snapshot;
