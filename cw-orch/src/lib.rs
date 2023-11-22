@@ -44,6 +44,8 @@ pub mod osmosis_test_tube;
 #[cfg(feature = "snapshot-testing")]
 pub mod snapshots;
 
-#[cfg(feature = "snapshot-testing")]
 // Rexporting for the macro to work properly
+#[cfg(feature = "snapshot-testing")]
 pub extern crate insta;
+#[cfg(feature = "snapshot-testing")]
+pub extern crate sanitize_filename;
