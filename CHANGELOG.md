@@ -19,6 +19,7 @@
 - Added better env variable management by @Kayanski
 - Added message to enable logging if not enabled
 - Removed unused dependencies
+- Added snapshot testing in mock env by @Kayanski (feature flagged)
 
 ## v0.16.4 [20th September 2023]
 

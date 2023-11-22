@@ -40,3 +40,12 @@ pub mod daemon;
 mod error;
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
+
+#[cfg(feature = "snapshot-testing")]
+pub mod snapshots;
+
+// Rexporting for the macro to work properly
+#[cfg(feature = "snapshot-testing")]
+pub extern crate insta;
+#[cfg(feature = "snapshot-testing")]
+pub extern crate sanitize_filename;
