@@ -45,7 +45,7 @@ The underlying `cw_multi_test::App` object is however not clonable.
 ```rust,ignore
 
 #[test]
-fn storage_stays_thtake_storage_snapshot
+fn storage_stays_the_same(){
     let mock = Mock::new(Addr::unchecked("sender"));
 
     ... // Upload, instantiate, execute contracts
