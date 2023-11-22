@@ -14,10 +14,10 @@
 macro_rules! take_storage_snapshot {
     ($chain: ident, $name: literal) => {
         // We register and test a snapshot for all contracts storage
-        use ::cw_orch::environment::ChainState as _;
+        use ::cw_orch::environment::{ChainState as _, StateInterface as _};
         let all_contract_addresses = $chain.state().get_all_addresses()?;
         for (_id, contract_addr) in all_contract_addresses {
-            insta::assert_yaml_snapshot!(
+            ::cw_orch::insta::assert_yaml_snapshot!(
                 format!("{}-{}", $name, contract_addr.to_string()),
                 $chain.app.borrow().dump_wasm_raw(&contract_addr)
             );
@@ -28,7 +28,7 @@ macro_rules! take_storage_snapshot {
 #[cfg(test)]
 pub mod tests {
     use cosmwasm_std::Addr;
-    use cw_orch::prelude::*;
+    use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};
 
     #[test]
     fn contract_snapshots() -> anyhow::Result<()> {
