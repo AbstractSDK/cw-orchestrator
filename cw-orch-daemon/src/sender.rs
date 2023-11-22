@@ -138,13 +138,17 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
+        let mut gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
             gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
         } else {
             gas as f64 * GAS_BUFFER
         };
+
+        if let Some(min_gas) = CwOrchEnvVars::load()?.min_gas {
+            gas_expected = (min_gas as f64).max(gas_expected);
+        }
         let fee_amount = gas_expected
             * (self.daemon_state.chain_data.fees.fee_tokens[0]
                 .fixed_min_gas_price
