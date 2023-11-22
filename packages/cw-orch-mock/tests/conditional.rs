@@ -4,7 +4,7 @@ mod tests {
     */
 
     use cw_orch_core::contract::interface_traits::*;
-    use cw_orch_mock::{Mock, take_storage_snapshot};
+    use cw_orch_mock::Mock;
     use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
 
     use cosmwasm_std::Addr;
@@ -135,27 +135,5 @@ mod tests {
         asserting!("that upload_if_needed returns None")
             .that(&contract.upload_if_needed().unwrap())
             .is_some(); // This is false, because of how checksum works in cw-multi-test
-    }
-
-    #[test]
-    fn contract_snapshots() -> anyhow::Result<()> {
-        use counter_contract::CounterExecuteMsgFns;
-        let sender = Addr::unchecked("sender");
-        let chain = Mock::new(&sender);
-
-        let contract =
-            counter_contract::CounterContract::new("test:counter_contract", chain.clone());
-        contract.upload()?;
-        contract.instantiate(
-            &counter_contract::msg::InstantiateMsg { count: 0 },
-            None,
-            None,
-        )?;
-
-        contract.increment()?;
-
-        take_storage_snapshot!(chain, "snapshot_test");
-
-        Ok(())
     }
 }

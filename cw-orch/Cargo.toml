@@ -53,7 +53,7 @@ osmosis-test-tube = [
   "dep:prost",
   "dep:prost-types",
 ]
-snapshot-testing = ["cw-orch-mock/snapshot-testing"]
+snapshot-testing = ["dep:insta"]
 
 
 [dependencies]
@@ -94,8 +94,11 @@ cw-orch-core = { workspace = true }
 cw-orch-traits = { workspace = true }
 cw-orch-mock = { workspace = true }
 
+# Snapshot deps
+insta = { version = "1.34.0", features = ["yaml"], optional = true }
+
 [dev-dependencies]
-cw-orch = { features = ["daemon"], path = "." }
+cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
 env_logger = "0.10.0"
 cosmwasm-schema = "1.2"
 counter-contract = { path = "../contracts/counter", features = ["interface"] }

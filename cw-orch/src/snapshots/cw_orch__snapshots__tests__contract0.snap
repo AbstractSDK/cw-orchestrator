@@ -1,6 +1,6 @@
 ---
-source: packages/cw-orch-mock/src/core.rs
-expression: self.app.borrow().dump_wasm_raw(&contract_addr)
+source: cw-orch/src/snapshots.rs
+expression: chain.app.borrow().dump_wasm_raw(&contract_addr)
 ---
 - - - 99
     - 111

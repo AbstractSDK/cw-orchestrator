@@ -40,3 +40,6 @@ pub mod daemon;
 mod error;
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
+
+#[cfg(feature = "snapshot-testing")]
+pub mod snapshots;
