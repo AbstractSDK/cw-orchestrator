@@ -1,5 +1,6 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
+use cw_orch_core::environment::WasmCodeQuerier;
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
@@ -336,5 +337,18 @@ impl Stargate for OsmosisTestTube {
             data: Some(Binary(tx_response.raw_data)),
             events: tx_response.events,
         })
+    }
+}
+
+impl WasmCodeQuerier for OsmosisTestTube {
+    fn contract_hash(&self, _code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
+        unimplemented!("contract_hash not implemented on osmosis_test_tube")
+    }
+
+    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
+        &self,
+        _contract: &T,
+    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
+        unimplemented!("contract_info not implemented on osmosis_test_tube")
     }
 }
