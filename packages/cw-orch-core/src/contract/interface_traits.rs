@@ -275,7 +275,7 @@ pub trait ConditionalMigrate<Chain: CwEnv>:
         }
     }
 }
-impl<T, Chain: WasmCodeQuerier> ConditionalMigrate<Chain> for T where
+impl<T, Chain: CwEnv> ConditionalMigrate<Chain> for T where
     T: CwOrchMigrate<Chain> + ConditionalUpload<Chain>
 {
 }
