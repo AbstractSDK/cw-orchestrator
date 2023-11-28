@@ -26,16 +26,16 @@ pub fn main() -> anyhow::Result<()> {
 
     // ANCHOR: cosmrs_tx
     let tx_msg = cosmrs::staking::MsgBeginRedelegate {
-        /// Delegator's address.
+        // Delegator's address.
         delegator_address: AccountId::from_str("<my-address>").unwrap(),
 
-        /// Source validator's address.
+        // Source validator's address.
         validator_src_address: AccountId::from_str("<my-least-favorite-validator>").unwrap(),
 
-        /// Destination validator's address.
+        // Destination validator's address.
         validator_dst_address: AccountId::from_str("<my-favorite-validator>").unwrap(),
 
-        /// Amount to UnDelegate
+        // Amount to UnDelegate
         amount: Coin {
             amount: 100_000_000_000_000u128,
             denom: Denom::from_str("ujuno").unwrap(),
