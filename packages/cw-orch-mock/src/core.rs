@@ -1,13 +1,13 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, ContractInfoResponse, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
     contract::interface_traits::{CwOrchUpload, Uploadable},
-    environment::{ChainState, IndexResponse, StateInterface},
+    environment::{BankQuerier, ChainState, IndexResponse, StateInterface},
     environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
@@ -333,11 +333,36 @@ impl WasmCodeQuerier for Mock {
     }
 }
 
+impl BankQuerier for Mock {
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
+        let addr = Addr::unchecked(address.into());
+        if let Some(denom) = denom {
+            Ok(vec![Coin {
+                amount: self.query_balance(&addr, &denom)?,
+                denom,
+            }])
+        } else {
+            self.query_all_balances(&addr)
+        }
+    }
+
+    fn supply_of(
+        &self,
+        denom: impl Into<String>,
+    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
+        Ok(self.app.borrow().wrap().query_supply(denom)?)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use cosmwasm_std::{
-        to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-        Uint128,
+        coins, to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
+        StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
     use serde::Serialize;
@@ -526,5 +551,22 @@ mod test {
         asserting("recipient balances added")
             .that(&balances)
             .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
+    }
+
+    #[test]
+    fn bank_querier_works() -> Result<(), CwEnvError> {
+        let denom = "urandom";
+        let init_coins = coins(45, denom);
+        let sender = Addr::unchecked("sender");
+        let app = Mock::new(&sender);
+        app.set_balance(&sender, init_coins.clone())?;
+        let sender = app.sender.clone();
+        assert_eq!(
+            app.balance(sender.clone(), Some(denom.to_string()))?,
+            init_coins
+        );
+        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+
+        Ok(())
     }
 }

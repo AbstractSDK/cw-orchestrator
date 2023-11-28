@@ -6,6 +6,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DaemonError {
+    #[error(transparent)]
+    CosmwasmStd(#[from] cosmwasm_std::StdError),
     #[error("Reqwest HTTP(s) Error")]
     ReqwestError(#[from] ::reqwest::Error),
     #[error("JSON Conversion Error")]

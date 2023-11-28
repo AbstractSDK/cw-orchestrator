@@ -1,5 +1,6 @@
 use crate::{cosmos_modules, error::DaemonError};
 use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
+use cosmwasm_std::StdError;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -129,4 +130,11 @@ impl Bank {
         );
         Ok(denoms_metadata.metadatas)
     }
+}
+
+pub fn cosmrs_to_cosmwasm_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError> {
+    Ok(cosmwasm_std::Coin {
+        amount: c.amount.parse()?,
+        denom: c.denom,
+    })
 }

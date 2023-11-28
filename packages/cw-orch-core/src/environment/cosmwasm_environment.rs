@@ -101,3 +101,16 @@ pub trait WasmCodeQuerier: CwEnv {
         contract: &T,
     ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
 }
+
+pub trait BankQuerier: TxHandler {
+    /// Query the bank balance of a given address
+    /// If denom is None, returns all balances
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<Coin>, <Self as TxHandler>::Error>;
+
+    /// Query total supply in the bank for a denom
+    fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, <Self as TxHandler>::Error>;
+}
