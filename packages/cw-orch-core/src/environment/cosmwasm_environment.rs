@@ -2,7 +2,7 @@
 
 use super::{ChainState, IndexResponse};
 use crate::{
-    contract::interface_traits::{CwOrchUpload, Uploadable},
+    contract::interface_traits::{ContractInstance, Uploadable},
     error::CwEnvError,
 };
 use cosmwasm_std::{Addr, BlockInfo, Coin, ContractInfoResponse};
@@ -10,8 +10,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + BankQuerier + Clone {}
-impl<T: TxHandler + BankQuerier + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + BankQuerier + WasmCodeQuerier + Clone {}
+impl<T: TxHandler + BankQuerier + WasmCodeQuerier + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -92,11 +92,11 @@ pub trait TxHandler: ChainState + Clone {
     }
 }
 
-pub trait WasmCodeQuerier: CwEnv {
+pub trait WasmCodeQuerier: TxHandler + Clone {
     /// Returns the checksum of provided code_id
     fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error>;
     /// Returns the code_info structure of the provided contract
-    fn contract_info<T: CwOrchUpload<Self>>(
+    fn contract_info<T: ContractInstance<Self>>(
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;

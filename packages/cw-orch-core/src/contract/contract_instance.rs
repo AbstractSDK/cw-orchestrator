@@ -1,7 +1,7 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use super::interface_traits::Uploadable;
 use crate::{
-    environment::{CwEnv, IndexResponse, StateInterface, TxResponse},
+    environment::{IndexResponse, StateInterface, TxHandler, TxResponse},
     error::CwEnvError,
     log::{CONTRACT_LOGS, TRANSACTION_LOGS},
     CwOrchEnvVars,
@@ -14,7 +14,7 @@ use std::fmt::Debug;
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: CwEnv> {
+pub struct Contract<Chain: TxHandler + Clone> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     /// Chain object that handles tx execution and queries.
@@ -26,7 +26,7 @@ pub struct Contract<Chain: CwEnv> {
 }
 
 /// Expose chain and state function to call them on the contract
-impl<Chain: CwEnv + Clone> Contract<Chain> {
+impl<Chain: TxHandler + Clone> Contract<Chain> {
     /// Creates a new contract instance
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {

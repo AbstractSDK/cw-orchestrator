@@ -1,25 +1,21 @@
+use std::str::FromStr;
+
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::coin;
-use cosmwasm_std::StdError;
-use cw_orch_core::environment::BankQuerier;
-use cw_orch_core::environment::BankSetter;
+use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdError};
+
+use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_std::types::cosmos::bank::v1beta1::QuerySupplyOfRequest;
-use osmosis_std::types::cosmos::bank::v1beta1::QuerySupplyOfResponse;
-use osmosis_test_tube::Account;
-use osmosis_test_tube::Bank;
-use osmosis_test_tube::ExecuteResponse;
-use osmosis_test_tube::Gamm;
-use osmosis_test_tube::Module;
-use osmosis_test_tube::Runner;
-use osmosis_test_tube::RunnerError;
-use osmosis_test_tube::SigningAccount;
-use osmosis_test_tube::Wasm;
-use std::str::FromStr;
+use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
+use osmosis_std::types::cosmwasm::wasm::v1::{
+    QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
+};
+use osmosis_test_tube::{
+    Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
+};
 
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
@@ -31,7 +27,6 @@ use osmosis_test_tube::osmosis_std::{
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::Addr;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -409,13 +404,95 @@ impl Stargate for OsmosisTestTube {
     }
 }
 
+impl WasmCodeQuerier for OsmosisTestTube {
+    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
+        let code_info_result: QueryCodeResponse = self
+            .app
+            .borrow()
+            .query(
+                "/cosmwasm.wasm.v1.Query/Code",
+                &QueryCodeRequest { code_id },
+            )
+            .map_err(map_err)?;
+
+        Ok(hex::encode(
+            code_info_result
+                .code_info
+                .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?
+                .data_hash,
+        ))
+    }
+
+    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
+        let result = self
+            .app
+            .borrow()
+            .query::<_, QueryContractInfoResponse>(
+                "/cosmwasm.wasm.v1.Query/ContractInfo",
+                &QueryContractInfoRequest {
+                    address: contract.address()?.to_string(),
+                },
+            )
+            .map_err(map_err)?
+            .contract_info
+            .ok_or(CwOrchError::AddrNotInStore(contract.address()?.to_string()))?;
+
+        let mut contract_info = ContractInfoResponse::default();
+        contract_info.code_id = result.code_id;
+        contract_info.creator = result.creator;
+        contract_info.admin = Some(result.admin);
+
+        contract_info.ibc_port = if result.ibc_port_id.is_empty() {
+            None
+        } else {
+            Some(result.ibc_port_id)
+        };
+
+        Ok(contract_info)
+    }
+}
+
 #[cfg(test)]
-mod tests {
-    use cosmwasm_std::coins;
-    use cw_orch_core::environment::BankQuerier;
+pub mod tests {
+    use cosmwasm_std::{coins, ContractInfoResponse};
+    use cw_orch_core::environment::{BankQuerier, WasmCodeQuerier};
+
     use osmosis_test_tube::Account;
 
     use super::OsmosisTestTube;
+    use counter_contract::{msg::InstantiateMsg, CounterContract};
+    use cw_orch::prelude::*;
+
+    #[test]
+    fn wasm_querier_works() -> anyhow::Result<()> {
+        let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
+
+        let contract = CounterContract::new("counter", app.clone());
+        contract.upload()?;
+        contract.instantiate(
+            &InstantiateMsg { count: 7 },
+            Some(&Addr::unchecked(app.sender.address())),
+            None,
+        )?;
+
+        assert_eq!(
+            contract.wasm().checksum()?,
+            app.contract_hash(contract.code_id()?)?
+        );
+
+        let contract_info = app.contract_info(&contract)?;
+        let mut target_contract_info = ContractInfoResponse::default();
+        target_contract_info.admin = Some(app.sender.address().to_string());
+        target_contract_info.code_id = contract.code_id()?;
+        target_contract_info.creator = app.sender.address().to_string();
+        target_contract_info.ibc_port = None;
+        assert_eq!(contract_info, target_contract_info);
+
+        Ok(())
+    }
 
     #[test]
     fn bank_querier_works() -> anyhow::Result<()> {
@@ -428,7 +505,6 @@ mod tests {
             init_coins
         );
         assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
-
         Ok(())
     }
 }

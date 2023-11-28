@@ -1,6 +1,6 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{CwEnv, TxHandler, TxResponse, WasmCodeQuerier},
+    environment::{CwEnv, TxHandler, TxResponse},
     error::CwEnvError,
     log::CONTRACT_LOGS,
 };
@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 /// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
-pub trait ContractInstance<Chain: CwEnv> {
+pub trait ContractInstance<Chain: TxHandler + Clone> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
@@ -197,7 +197,7 @@ pub trait CallAs<Chain: CwEnv>: CwOrchExecute<Chain> + ContractInstance<Chain> +
 impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: CwEnv> CallAs<Chain> for T {}
 
 /// Helper methods for conditional uploading of a contract.
-pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
+pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Chain>>, CwEnvError> {
         if self.latest_is_uploaded()? {
@@ -232,10 +232,10 @@ pub trait ConditionalUpload<Chain: WasmCodeQuerier>: CwOrchUpload<Chain> {
     }
 }
 
-impl<T, Chain: WasmCodeQuerier> ConditionalUpload<Chain> for T where T: CwOrchUpload<Chain> {}
+impl<T, Chain: CwEnv> ConditionalUpload<Chain> for T where T: CwOrchUpload<Chain> {}
 
 /// Helper methods for conditional migration of a contract.
-pub trait ConditionalMigrate<Chain: WasmCodeQuerier>:
+pub trait ConditionalMigrate<Chain: CwEnv>:
     CwOrchMigrate<Chain> + ConditionalUpload<Chain>
 {
     /// Only migrate the contract if it is not on the latest code-id yet
@@ -275,7 +275,7 @@ pub trait ConditionalMigrate<Chain: WasmCodeQuerier>:
         }
     }
 }
-impl<T, Chain: WasmCodeQuerier> ConditionalMigrate<Chain> for T where
+impl<T, Chain: CwEnv> ConditionalMigrate<Chain> for T where
     T: CwOrchMigrate<Chain> + ConditionalUpload<Chain>
 {
 }
