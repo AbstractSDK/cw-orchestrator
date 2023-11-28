@@ -10,8 +10,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + Clone {}
-impl<T: TxHandler + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + BankQuerier + Clone {}
+impl<T: TxHandler + BankQuerier + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
