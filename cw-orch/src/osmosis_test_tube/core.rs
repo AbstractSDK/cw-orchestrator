@@ -52,7 +52,7 @@ pub use osmosis_test_tube;
 /// use cw_orch::osmosis_test_tube::osmosis_test_tube::Account;
 ///
 /// // Creates an app, creates a sender with an initial balance
-/// let tube: OsmosisTestTube = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
+/// let mut tube: OsmosisTestTube = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 ///
 /// // create an additional account
 /// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
