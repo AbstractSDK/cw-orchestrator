@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `MutCwEnv` for manipulating testing environments.
+- Add `BankQuerier` as trait bound to `CwEnv`.
 - Add `WasmCodeQuerier` as trait bound to `CwEnv`.
 
 ## 0.18.2
@@ -26,7 +28,7 @@
 - Added `Deploy` to prelude
 - Add ability to provide custom state in `Deploy::set_contracts_state`
 - Breaking change: remove the `&self` dependency for the `Deploy::deployed_state_file_path` method
-- Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir. 
+- Using `dirs` instead of `shellexpand` for getting the default cw-orch state dir.
 - Exposed the state_dir location
 - Added better env variable management by @Kayanski
 - Added message to enable logging if not enabled
@@ -68,13 +70,13 @@
 - Added helper to modify the chain id of cw-multi-test (Mock)
 - Added a trait to be able to commit any transaction to chain (Protobuf any type)
 - Added min gas and average gas utilization for computing the tx fee
-- Added Install Readme 
+- Added Install Readme
 - Change the state file default location for relative paths `./` --> `~/.cw-orchestrator`
 - Added env variables for customizing experience
 
 ## v0.15.0
 
-- Add `add_balance` function on the `Mock` type. 
+- Add `add_balance` function on the `Mock` type.
 
 ## v0.10.0
 
