@@ -1,10 +1,15 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
+use cosmwasm_std::ContractInfoResponse;
 use cw_orch_core::environment::WasmCodeQuerier;
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeRequest;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeResponse;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoRequest;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
 use osmosis_test_tube::Account;
 use osmosis_test_tube::Bank;
 use osmosis_test_tube::ExecuteResponse;
@@ -341,14 +346,91 @@ impl Stargate for OsmosisTestTube {
 }
 
 impl WasmCodeQuerier for OsmosisTestTube {
-    fn contract_hash(&self, _code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
-        unimplemented!("contract_hash not implemented on osmosis_test_tube")
+    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
+        let code_info_result: QueryCodeResponse = self
+            .app
+            .borrow()
+            .query(
+                "/cosmwasm.wasm.v1.Query/Code",
+                &QueryCodeRequest { code_id },
+            )
+            .map_err(map_err)?;
+
+        Ok(hex::encode(
+            code_info_result
+                .code_info
+                .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?
+                .data_hash,
+        ))
     }
 
     fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
         &self,
-        _contract: &T,
+        contract: &T,
     ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
-        unimplemented!("contract_info not implemented on osmosis_test_tube")
+        let result = self
+            .app
+            .borrow()
+            .query::<_, QueryContractInfoResponse>(
+                "/cosmwasm.wasm.v1.Query/ContractInfo",
+                &QueryContractInfoRequest {
+                    address: contract.address()?.to_string(),
+                },
+            )
+            .map_err(map_err)?
+            .contract_info
+            .ok_or(CwOrchError::AddrNotInStore(contract.address()?.to_string()))?;
+
+        let mut contract_info = ContractInfoResponse::default();
+        contract_info.code_id = result.code_id;
+        contract_info.creator = result.creator;
+        contract_info.admin = Some(result.admin);
+
+        contract_info.ibc_port = if result.ibc_port_id.is_empty() {
+            None
+        } else {
+            Some(result.ibc_port_id)
+        };
+
+        Ok(contract_info)
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use cosmwasm_std::{coins, ContractInfoResponse};
+    use cw_orch_core::environment::WasmCodeQuerier;
+    use osmosis_test_tube::Account;
+
+    use super::OsmosisTestTube;
+    use counter_contract::{msg::InstantiateMsg, CounterContract};
+    use cw_orch::prelude::*;
+
+    #[test]
+    fn wasm_querier_works() -> anyhow::Result<()> {
+        let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
+
+        let contract = CounterContract::new("counter", app.clone());
+        contract.upload()?;
+        contract.instantiate(
+            &InstantiateMsg { count: 7 },
+            Some(&Addr::unchecked(app.sender.address())),
+            None,
+        )?;
+
+        assert_eq!(
+            contract.wasm().checksum()?,
+            app.contract_hash(contract.code_id()?)?
+        );
+
+        let contract_info = app.contract_info(&contract)?;
+        let mut target_contract_info = ContractInfoResponse::default();
+        target_contract_info.admin = Some(app.sender.address().to_string());
+        target_contract_info.code_id = contract.code_id()?;
+        target_contract_info.creator = app.sender.address().to_string();
+        target_contract_info.ibc_port = None;
+        assert_eq!(contract_info, target_contract_info);
+
+        Ok(())
     }
 }
