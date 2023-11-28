@@ -6,7 +6,7 @@ use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
-    contract::interface_traits::{CwOrchUpload, Uploadable},
+    contract::interface_traits::{ContractInstance, Uploadable},
     environment::{ChainState, IndexResponse, StateInterface},
     environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
@@ -320,7 +320,7 @@ impl WasmCodeQuerier for Mock {
     }
 
     /// Returns the code_info structure of the provided contract
-    fn contract_info<T: CwOrchUpload<Self>>(
+    fn contract_info<T: ContractInstance<Self>>(
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, CwEnvError> {

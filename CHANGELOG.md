@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unreleased
+
+- Add `WasmCodeQuerier` as trait bound to `CwEnv`.
+
 ## 0.18.2
 
 - Added Snapshot-Testing
