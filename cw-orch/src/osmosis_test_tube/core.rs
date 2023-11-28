@@ -3,6 +3,7 @@ use crate::prelude::Uploadable;
 use cosmwasm_std::coin;
 use cosmwasm_std::StdError;
 use cw_orch_core::environment::BankQuerier;
+use cw_orch_core::environment::BankSetter;
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
@@ -82,27 +83,33 @@ fn map_err(e: RunnerError) -> CwOrchError {
 impl<S: StateInterface> OsmosisTestTube<S> {
     /// Creates an account and sets its balance
     pub fn init_account(
-        &self,
+        &mut self,
         amount: Vec<cosmwasm_std::Coin>,
     ) -> Result<Rc<SigningAccount>, CwOrchError> {
-        self.app
+        let account = self
+            .app
             .borrow()
             .init_account(&amount)
             .map_err(map_err)
-            .map(Rc::new)
+            .map(Rc::new)?;
+
+        Ok(account)
     }
 
     /// Creates accounts and sets their balance
     pub fn init_accounts(
-        &self,
+        &mut self,
         amount: Vec<cosmwasm_std::Coin>,
         account_n: u64,
     ) -> Result<Vec<Rc<SigningAccount>>, CwOrchError> {
-        self.app
+        let accounts: Vec<_> = self
+            .app
             .borrow()
             .init_accounts(&amount, account_n)
             .map_err(map_err)
-            .map(|s| s.into_iter().map(Rc::new).collect())
+            .map(|s| s.into_iter().map(Rc::new).collect())?;
+
+        Ok(accounts)
     }
 
     /// Sends coins a specific address
@@ -367,6 +374,19 @@ impl BankQuerier for OsmosisTestTube {
             })
             .transpose()?
             .unwrap_or(coin(0, &denom)))
+    }
+}
+
+impl BankSetter for OsmosisTestTube {
+    /// It's impossible to set the balance of an address directly in OsmosisTestTub
+    /// So for this implementation, we use a weird algorithm
+    fn set_balance(
+        &mut self,
+        _address: &Addr,
+        _amount: Vec<Coin>,
+    ) -> Result<(), <Self as TxHandler>::Error> {
+        // We check the current balance
+        unimplemented!();
     }
 }
 

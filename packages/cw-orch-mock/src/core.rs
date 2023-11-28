@@ -7,7 +7,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
     contract::interface_traits::{CwOrchUpload, Uploadable},
-    environment::{BankQuerier, ChainState, IndexResponse, StateInterface},
+    environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
     environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
@@ -355,6 +355,16 @@ impl BankQuerier for Mock {
         denom: impl Into<String>,
     ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
         Ok(self.app.borrow().wrap().query_supply(denom)?)
+    }
+}
+
+impl BankSetter for Mock {
+    fn set_balance(
+        &mut self,
+        address: &Addr,
+        amount: Vec<Coin>,
+    ) -> Result<(), <Self as TxHandler>::Error> {
+        (*self).set_balance(address, amount)
     }
 }
 

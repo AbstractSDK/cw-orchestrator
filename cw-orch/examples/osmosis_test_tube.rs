@@ -39,7 +39,7 @@ pub fn main() {
 // This is used for documentation only
 // This is actually only used to avoid having the `mut` keyword inside the mock_usage anchor (only necessary for set_sender)
 pub fn customize() {
-    let chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
+    let mut chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 
     let mut contract_counter = CounterContract::new("mock:contract_counter", chain.clone());
 
