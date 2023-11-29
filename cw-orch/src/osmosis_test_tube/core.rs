@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdError};
+use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
 
 use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
 use cw_orch_traits::stargate::Stargate;
@@ -152,7 +152,9 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             })
             .map_err(map_err)?
             .balance
-            .map(|c| Uint128::from_str(&c.amount).unwrap())
+            .map(to_cosmwasm_coin)
+            .transpose()?
+            .map(|c| c.amount)
             .unwrap_or(Uint128::zero());
         Ok(amount)
     }
@@ -170,11 +172,8 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .map_err(map_err)?
             .balances
             .into_iter()
-            .map(|c| Coin {
-                amount: Uint128::from_str(&c.amount).unwrap(),
-                denom: c.denom,
-            })
-            .collect();
+            .map(to_cosmwasm_coin)
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(amount)
     }
 }
@@ -362,10 +361,11 @@ impl BankQuerier for OsmosisTestTube {
         Ok(supply_of_result
             .amount
             .map(|c| {
-                Ok::<_, StdError>(cosmwasm_std::Coin {
-                    amount: c.amount.parse()?,
-                    denom: c.denom,
-                })
+                // Ok::<_, StdError>(cosmwasm_std::Coin {
+                //     amount: c.amount.parse()?,
+                //     denom: c.denom,
+                // })
+                to_cosmwasm_coin(c)
             })
             .transpose()?
             .unwrap_or(coin(0, &denom)))
@@ -453,6 +453,13 @@ impl WasmCodeQuerier for OsmosisTestTube {
 
         Ok(contract_info)
     }
+}
+
+fn to_cosmwasm_coin(c: osmosis_std::types::cosmos::base::v1beta1::Coin) -> StdResult<Coin> {
+    Ok(Coin {
+        amount: Uint128::from_str(&c.amount)?,
+        denom: c.denom,
+    })
 }
 
 #[cfg(test)]
