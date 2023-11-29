@@ -49,7 +49,7 @@ impl RpcChannel {
 
         // we could not get any succesful connections
         if successful_connections.is_empty() {
-            return Err(DaemonError::CannotConnectGRPC);
+            return Err(DaemonError::CannotConnectRPC);
         }
 
         Ok(successful_connections.pop().unwrap())
