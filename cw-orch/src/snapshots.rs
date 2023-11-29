@@ -17,7 +17,7 @@ pub fn parse_storage(storage: Vec<(Vec<u8>, Vec<u8>)>) -> Vec<(String, String)> 
 /// This should ONLY be used when cw_orch is in scope
 /// Usage:
 /// ```rust,ignore
-/// mock.take_storage_snapshot("mock_doc");
+/// take_storage_snapshot!(chain, "mock_doc");
 /// ```
 /// The name you input to the function should be different from all other snapshots in your repository
 /// Find more details on how snapshot testing works on the official quick-start guide: https://insta.rs/docs/quickstart/
