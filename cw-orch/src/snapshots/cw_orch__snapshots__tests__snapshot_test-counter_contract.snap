@@ -1,9 +1,0 @@
----
-source: cw-orch/src/snapshots.rs
-expression: "::cw_orch::snapshots::parse_storage(chain.app.borrow().dump_wasm_raw(&contract_addr))"
----
-- - contract_info
-  - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
-- - state
-  - "{\"count\":1,\"owner\":\"sender\"}"
-
