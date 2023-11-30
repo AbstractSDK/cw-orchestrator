@@ -17,7 +17,7 @@ pub use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
-pub use wasm::{LOCAL_WASM};
+pub use wasm::{LOCAL_WASMD};
 pub use kujira::HARPOON_4;
 pub use migaloo::{LOCAL_MIGALOO, MIGALOO_1, NARWHAL_1};
 pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
