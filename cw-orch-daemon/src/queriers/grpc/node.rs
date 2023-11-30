@@ -1,6 +1,8 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, queriers::MAX_TX_QUERY_RETRIES};
+use crate::{
+    cosmos_modules, error::DaemonError, queriers::MAX_TX_QUERY_RETRIES, tx_resp::CosmTxResponse,
+};
 
 use cosmrs::{
     proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::SimulateResponse},

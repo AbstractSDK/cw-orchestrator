@@ -1,13 +1,19 @@
 use std::{cmp::min, time::Duration};
 
-use cosmrs::{
-    proto::cosmos::base::query::v1beta1::PageRequest,
-    rpc::{Client, HttpClient}, tendermint::{Block, Time},
-};
 use cosmrs::tendermint::block::Height;
 use cosmrs::tendermint::node;
+use cosmrs::{
+    proto::cosmos::base::query::v1beta1::PageRequest,
+    rpc::{Client, HttpClient},
+    tendermint::{Block, Time},
+};
 
-use crate::{cosmos_modules, cosmos_rpc_query, error::DaemonError, queriers::{DaemonQuerier, MAX_TX_QUERY_RETRIES}, tx_resp::CosmTxResponse};
+use crate::{
+    cosmos_modules, cosmos_rpc_query,
+    error::DaemonError,
+    queriers::{DaemonQuerier, MAX_TX_QUERY_RETRIES},
+    tx_resp::CosmTxResponse,
+};
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
@@ -22,13 +28,9 @@ impl DaemonQuerier for Node {
     }
 }
 
-
 impl Node {
     /// Returns node info
-    pub async fn info(
-        &self,
-    ) -> Result<node::Info, DaemonError> {
-
+    pub async fn info(&self) -> Result<node::Info, DaemonError> {
         let stats = self.client.status().await?;
 
         Ok(stats.node_info)
@@ -36,7 +38,6 @@ impl Node {
 
     /// Queries node syncing
     pub async fn syncing(&self) -> Result<bool, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             tendermint,
@@ -104,7 +105,6 @@ impl Node {
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::tendermint::GetLatestValidatorSetResponse, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             tendermint,
@@ -124,12 +124,14 @@ impl Node {
         height: i64,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::tendermint::GetValidatorSetByHeightResponse, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             tendermint,
             "/cosmos.base.tendermint.v1beta1.Service/GetValidatorSetByHeight",
-            GetValidatorSetByHeightRequest { height: height, pagination: pagination },
+            GetValidatorSetByHeightRequest {
+                height: height,
+                pagination: pagination
+            },
             GetValidatorSetByHeightResponse,
         );
 
@@ -162,7 +164,10 @@ impl Node {
             self,
             tx,
             "/cosmos.tx.v1beta1.Service/Simulate",
-            SimulateRequest { tx: None, tx_bytes: tx_bytes },
+            SimulateRequest {
+                tx: None,
+                tx_bytes: tx_bytes
+            },
             SimulateResponse,
         );
 
@@ -195,7 +200,6 @@ impl Node {
         hash: String,
         retries: usize,
     ) -> Result<CosmTxResponse, DaemonError> {
-
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
         let hexed_hash = hex::decode(hash.clone())?.try_into().unwrap();

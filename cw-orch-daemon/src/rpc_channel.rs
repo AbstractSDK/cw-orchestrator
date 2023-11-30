@@ -1,4 +1,4 @@
-use cosmrs::rpc::{HttpClient, Client};
+use cosmrs::rpc::{Client, HttpClient};
 use ibc_chain_registry::chain::Rpc;
 use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 
@@ -22,13 +22,11 @@ impl RpcChannel {
             let client = if maybe_client.is_ok() {
                 maybe_client?
             } else {
-                continue
+                continue;
             };
 
             // get client information for verification down below
-            let node_info = client
-                .status().await?
-                .node_info;  
+            let node_info = client.status().await?.node_info;
 
             // local juno does not return a proper ChainId with epoch format
             if ChainId::is_epoch_format(node_info.network.as_str()) {

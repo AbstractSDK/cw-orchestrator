@@ -19,12 +19,12 @@ pub enum DaemonError {
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]
     AnyError(#[from] ::anyhow::Error),
-    
-    #[cfg(feature="grpc")]
+
+    #[cfg(feature = "grpc")]
     #[error(transparent)]
     Status(#[from] ::tonic::Status),
 
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     #[error(transparent)]
     TransportError(#[from] ::tonic::transport::Error),
 

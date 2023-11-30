@@ -76,7 +76,7 @@ impl TxBuilder {
             gas_limit,
             amount: fee,
             payer: None,
-            granter: None
+            granter: None,
         }
     }
 

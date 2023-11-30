@@ -26,7 +26,6 @@ rpc = ["cosmrs/rpc"]
 grpc = ["cosmrs/grpc", "dep:tonic"]
 
 
-
 [dependencies]
 # Default deps
 cw-orch-contract-derive = { workspace = true }

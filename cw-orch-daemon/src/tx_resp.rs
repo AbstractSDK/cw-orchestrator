@@ -2,7 +2,7 @@ use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use cosmrs::rpc::endpoint;
 use cosmrs::tendermint::abci::Code;
 use cosmrs::tendermint::Hash;
-use cosmwasm_std::{Binary, StdError, StdResult, to_binary};
+use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
 use serde::{Deserialize, Serialize};
 
 use cw_orch_core::environment::IndexResponse;
@@ -128,8 +128,10 @@ impl From<TxResponse> for CosmTxResponse {
             gas_wanted: tx.gas_wanted as u64,
             gas_used: tx.gas_used as u64,
             timestamp: parse_timestamp(tx.timestamp).unwrap(),
-            events: tx.events.into_iter().map(|e| {
-                Event {
+            events: tx
+                .events
+                .into_iter()
+                .map(|e| Event {
                     r#type: e.r#type,
                     attributes: e
                         .attributes
@@ -140,9 +142,8 @@ impl From<TxResponse> for CosmTxResponse {
                             index: false,
                         })
                         .collect(),
-                }
-            }
-            ).collect(),
+                })
+                .collect(),
         }
     }
 }
@@ -153,7 +154,7 @@ impl From<endpoint::tx::Response> for CosmTxResponse {
             height: tx.height.value(),
             txhash: match tx.hash {
                 Hash::None => "".to_string(),
-                Hash::Sha256(x) =>  hex::encode(x),
+                Hash::Sha256(x) => hex::encode(x),
             },
             codespace: tx.tx_result.codespace,
             code: match tx.tx_result.code {
@@ -167,8 +168,11 @@ impl From<endpoint::tx::Response> for CosmTxResponse {
             gas_wanted: tx.tx_result.gas_wanted as u64,
             gas_used: tx.tx_result.gas_used as u64,
             timestamp: DateTime::default(),
-            events: tx.tx_result.events.into_iter().map(|e| {
-                Event {
+            events: tx
+                .tx_result
+                .events
+                .into_iter()
+                .map(|e| Event {
                     r#type: e.kind,
                     attributes: e
                         .attributes
@@ -179,9 +183,8 @@ impl From<endpoint::tx::Response> for CosmTxResponse {
                             index: false,
                         })
                         .collect(),
-                }
-            }
-            ).collect(),
+                })
+                .collect(),
         }
     }
 }

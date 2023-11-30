@@ -3,7 +3,7 @@ use crate::DaemonState;
 use super::{
     builder::DaemonAsyncBuilder,
     error::DaemonError,
-    queriers::{DaemonQuerier, Node, CosmWasm},
+    queriers::{CosmWasm, DaemonQuerier, Node},
     sender::Wallet,
     tx_resp::CosmTxResponse,
 };
@@ -26,7 +26,6 @@ use std::{
     str::{from_utf8, FromStr},
     time::Duration,
 };
-
 
 #[derive(Clone)]
 /**
@@ -73,11 +72,11 @@ impl DaemonAsync {
     }
 
     /// Get the channel configured for this DaemonAsync.
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     pub fn channel(&self) -> tonic::transport::Channel {
         self.state.transport_channel.clone()
     }
-    #[cfg(feature="rpc")]
+    #[cfg(feature = "rpc")]
     pub fn channel(&self) -> cosmrs::rpc::HttpClient {
         self.state.transport_channel.clone()
     }
@@ -148,7 +147,9 @@ impl DaemonAsync {
     ) -> Result<R, DaemonError> {
         let querier = CosmWasm::new(self.channel());
 
-        let resp: Vec<u8> = querier.contract_state(contract_address, serde_json::to_vec(&query_msg)?).await?;
+        let resp: Vec<u8> = querier
+            .contract_state(contract_address, serde_json::to_vec(&query_msg)?)
+            .await?;
 
         Ok(from_str(from_utf8(&resp).unwrap())?)
     }

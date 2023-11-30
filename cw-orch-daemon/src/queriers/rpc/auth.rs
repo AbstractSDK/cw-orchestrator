@@ -2,8 +2,7 @@
 
 use cosmrs::rpc::HttpClient;
 
-use crate::{queriers::DaemonQuerier, cosmos_rpc_query, DaemonError};
-
+use crate::{cosmos_rpc_query, queriers::DaemonQuerier, DaemonError};
 
 /// Queries for Cosmos Auth Module
 pub struct Auth {
@@ -16,18 +15,16 @@ impl DaemonQuerier for Auth {
     }
 }
 
-impl Auth{
-
+impl Auth {
     /// Query the account
-    pub async fn account(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<Vec<u8>, DaemonError> {
+    pub async fn account(&self, address: impl Into<String>) -> Result<Vec<u8>, DaemonError> {
         let resp = cosmos_rpc_query!(
             self,
             auth,
             "/cosmos.auth.v1beta1.Query/Account",
-            QueryAccountRequest { address: address.into() },
+            QueryAccountRequest {
+                address: address.into()
+            },
             QueryAccountResponse,
         );
         Ok(resp.account.unwrap().value)

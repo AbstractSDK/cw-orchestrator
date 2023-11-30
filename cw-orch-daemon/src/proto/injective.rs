@@ -2,7 +2,10 @@
 
 use crate::DaemonError;
 use cosmrs::tx::SignDoc;
-use cosmrs::{proto::traits::{Name, Message}, tx::Raw};
+use cosmrs::{
+    proto::traits::{Message, Name},
+    tx::Raw,
+};
 
 #[cfg(feature = "eth")]
 use crate::keys::private::PrivateKey;

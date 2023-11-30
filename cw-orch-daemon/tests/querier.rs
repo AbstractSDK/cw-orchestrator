@@ -24,8 +24,7 @@ mod queriers {
         AccountId, Denom,
     };
 
-
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     pub async fn build_channel() -> tonic::transport::Channel {
         use ibc_chain_registry::chain::Grpc;
 
@@ -47,7 +46,7 @@ mod queriers {
         channel.unwrap()
     }
 
-    #[cfg(feature="rpc")]
+    #[cfg(feature = "rpc")]
     pub async fn build_channel() -> cosmrs::rpc::HttpClient {
         use ibc_chain_registry::chain::Rpc;
 
