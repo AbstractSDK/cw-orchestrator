@@ -1,8 +1,7 @@
-
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
-//! 
+//!
 #[cfg(all(feature = "rpc", feature = "grpc"))]
 compile_error!("feature \"rpc\" and feature \"grpc\" cannot be enabled at the same time");
 
@@ -25,23 +24,20 @@ pub mod live_mock;
 
 pub mod queriers;
 
-#[cfg(feature="rpc")]
+#[cfg(feature = "rpc")]
 pub mod rpc_channel;
-#[cfg(feature="rpc")]
+#[cfg(feature = "rpc")]
 pub use self::rpc_channel::*;
 
-#[cfg(feature="grpc")]
+#[cfg(feature = "grpc")]
 pub mod grpc_channel;
-#[cfg(feature="grpc")]
+#[cfg(feature = "grpc")]
 pub use self::grpc_channel::*;
-
 
 mod traits;
 pub mod tx_builder;
 
-pub use self::{
-    builder::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
-};
+pub use self::{builder::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*};
 pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;
 pub use sender::Wallet;

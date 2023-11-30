@@ -1,16 +1,23 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, queriers::{MAX_TX_QUERY_RETRIES, DaemonQuerier}, cosmos_rpc_query};
-
+use cosmrs::tendermint::block::Height;
+use cosmrs::tendermint::node;
 use cosmrs::{
-    proto::cosmos::{base::query::v1beta1::PageRequest, tx::v1beta1::GetTxResponse},
-    tendermint::{Block, Time}, rpc::{HttpClient, Client}, tx::MessageExt,
+    proto::cosmos::base::query::v1beta1::PageRequest,
+    rpc::{Client, HttpClient},
+    tendermint::{Block, Time},
 };
-use prost::Message;
 
+use crate::{
+    cosmos_modules, cosmos_rpc_query,
+    error::DaemonError,
+    queriers::{DaemonQuerier, MAX_TX_QUERY_RETRIES},
+    tx_resp::CosmTxResponse,
+};
 
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
+/// @TODO: all tendermint queries should use the tendermint-rpc explicitly instead of hitting the tendermint node with the typed queries.
 pub struct Node {
     client: HttpClient,
 }
@@ -21,27 +28,16 @@ impl DaemonQuerier for Node {
     }
 }
 
-
 impl Node {
     /// Returns node info
-    pub async fn info(
-        &self,
-    ) -> Result<cosmos_modules::tendermint::GetNodeInfoResponse, DaemonError> {
+    pub async fn info(&self) -> Result<node::Info, DaemonError> {
+        let stats = self.client.status().await?;
 
-        let resp = cosmos_rpc_query!(
-            self,
-            tendermint,
-            "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo",
-            GetNodeInfoRequest {},
-            GetNodeInfoResponse,
-        );
-
-        Ok(resp)
+        Ok(stats.node_info)
     }
 
     /// Queries node syncing
     pub async fn syncing(&self) -> Result<bool, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             tendermint,
@@ -53,33 +49,18 @@ impl Node {
         Ok(resp.syncing)
     }
 
-    /// Returns latests block information
+    /// Returns latest block information
     pub async fn latest_block(&self) -> Result<Block, DaemonError> {
+        let resp = self.client.latest_block().await?;
 
-        let resp = cosmos_rpc_query!(
-            self,
-            tendermint,
-            "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
-            GetLatestBlockRequest {},
-            GetLatestBlockResponse,
-        );
-
-        Ok(Block::try_from(resp.block.unwrap())?)
+        Ok(resp.block)
     }
 
     /// Returns block information fetched by height
     pub async fn block_by_height(&self, height: u64) -> Result<Block, DaemonError> {
-        let resp = cosmos_rpc_query!(
-            self,
-            tendermint,
-            "/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight",
-            GetBlockByHeightRequest {
-                height: height as i64,
-            },
-            GetBlockByHeightResponse,
-        );
+        let resp = self.client.block(Height::try_from(height).unwrap()).await?;
 
-        Ok(Block::try_from(resp.block.unwrap())?)
+        Ok(resp.block)
     }
 
     /// Return the average block time for the last 50 blocks or since inception
@@ -124,7 +105,6 @@ impl Node {
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::tendermint::GetLatestValidatorSetResponse, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             tendermint,
@@ -144,12 +124,14 @@ impl Node {
         height: i64,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::tendermint::GetValidatorSetByHeightResponse, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             tendermint,
             "/cosmos.base.tendermint.v1beta1.Service/GetValidatorSetByHeight",
-            GetValidatorSetByHeightRequest { height: height, pagination: pagination },
+            GetValidatorSetByHeightRequest {
+                height: height,
+                pagination: pagination
+            },
             GetValidatorSetByHeightResponse,
         );
 
@@ -174,6 +156,7 @@ impl Node {
 
     /// Simulate TX
     pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
+        log::debug!("Simulating transaction");
 
         // We use this allow deprecated for the tx field of the simulate request (but we set it to None, so that's ok)
         #[allow(deprecated)]
@@ -181,11 +164,16 @@ impl Node {
             self,
             tx,
             "/cosmos.tx.v1beta1.Service/Simulate",
-            SimulateRequest { tx: None, tx_bytes: tx_bytes },
+            SimulateRequest {
+                tx: None,
+                tx_bytes: tx_bytes
+            },
             SimulateResponse,
         );
 
         let gas_used = resp.gas_info.unwrap().gas_used;
+
+        log::debug!("Gas used in simulation: {:?}", gas_used);
         Ok(gas_used)
     }
 
@@ -212,22 +200,17 @@ impl Node {
         hash: String,
         retries: usize,
     ) -> Result<CosmTxResponse, DaemonError> {
-
-        let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self.average_block_speed(Some(0.7)).await?;
 
-        for _ in 0..retries {
-            let tx_response = self.client.abci_query(
-                Some("/cosmos.tx.v1beta1.Service/GetTx".to_string()), 
-                request.to_bytes()?, 
-                None, 
-                true, 
-            ).await?;
+        let hexed_hash = hex::decode(hash.clone())?.try_into().unwrap();
 
-            match GetTxResponse::decode(tx_response.value.as_slice()) {
+        for _ in 0..retries {
+            let tx_r = self.client.tx(hexed_hash, false).await;
+
+            match tx_r {
                 Ok(tx) => {
                     log::debug!("TX found: {:?}", tx);
-                    return Ok(tx.tx_response.unwrap().into());
+                    return Ok(tx.into());
                 }
                 Err(err) => {
                     // increase wait time

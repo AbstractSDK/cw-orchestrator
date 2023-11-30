@@ -1,4 +1,8 @@
-use crate::{networks::ChainKind, proto::injective::ETHEREUM_COIN_TYPE, queriers::{Auth, Tx}};
+use crate::{
+    networks::ChainKind,
+    proto::injective::ETHEREUM_COIN_TYPE,
+    queriers::{Auth, Tx},
+};
 
 use super::{
     cosmos_modules::{self, auth::BaseAccount},
@@ -79,11 +83,11 @@ impl Sender<All> {
         SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
     }
 
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     pub fn channel(&self) -> tonic::transport::Channel {
         self.daemon_state.transport_channel.clone()
     }
-    #[cfg(feature="rpc")]
+    #[cfg(feature = "rpc")]
     pub fn channel(&self) -> cosmrs::rpc::HttpClient {
         self.daemon_state.transport_channel.clone()
     }
@@ -164,6 +168,8 @@ impl Sender<All> {
         // now commit and check the result, if we get an insufficient fee error, we can try again with the proposed fee
 
         let tx = tx_builder.build(self).await?;
+
+        log::trace!("raw tx: {:?}", tx);
 
         let mut tx_response = self.broadcast_tx(tx).await?;
 

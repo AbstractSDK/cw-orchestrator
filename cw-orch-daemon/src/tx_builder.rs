@@ -67,8 +67,17 @@ impl TxBuilder {
     }
 
     pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: u64) -> Fee {
-        let fee = Coin::new(amount.into(), denom).unwrap();
-        Fee::from_amount_and_gas(fee, gas_limit)
+        // Ensure that the fee is not 0, which can be invalid
+        let fee = match amount.into() {
+            0 => vec![],
+            x => vec![Coin::new(x, denom).unwrap()],
+        };
+        Fee {
+            gas_limit,
+            amount: fee,
+            payer: None,
+            granter: None,
+        }
     }
 
     /// Builds the raw tx with a given body and fee and signs it.
@@ -80,6 +89,8 @@ impl TxBuilder {
             sequence,
             ..
         } = wallet.base_account().await?;
+
+        log::trace!("Retrieved base account");
 
         // overwrite sequence if set (can be used for concurrent txs)
         let sequence = self.sequence.unwrap_or(sequence);
@@ -95,6 +106,7 @@ impl TxBuilder {
             );
             (fee, gas_limit)
         } else {
+            log::debug!("Calculating new fee and gas limits");
             let sim_gas_used = wallet
                 .calculate_gas(&self.body, sequence, account_number)
                 .await?;

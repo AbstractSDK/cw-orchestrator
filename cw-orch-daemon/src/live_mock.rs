@@ -2,7 +2,7 @@
 //! It can be used to do chain-backed unit-testing. It can't be used for state-changing operations.
 
 use crate::create_transport_channel;
-use crate::queriers::{DaemonQuerier, Staking, Bank, CosmWasm};
+use crate::queriers::{Bank, CosmWasm, DaemonQuerier, Staking};
 use cosmwasm_std::Addr;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
@@ -52,9 +52,9 @@ pub fn mock_dependencies(
 
 /// Querier struct that fetches queries on-chain directly
 pub struct WasmMockQuerier {
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     channel: tonic::transport::Channel,
-    #[cfg(feature="rpc")]
+    #[cfg(feature = "rpc")]
     channel: cosmrs::rpc::HttpClient,
     runtime: Runtime,
 }
@@ -205,9 +205,7 @@ impl WasmMockQuerier {
     pub fn new(chain: ChainData) -> Self {
         let rt = Runtime::new().unwrap();
 
-        let channel = rt
-            .block_on(create_transport_channel(&chain))
-            .unwrap();
+        let channel = rt.block_on(create_transport_channel(&chain)).unwrap();
 
         WasmMockQuerier {
             channel,

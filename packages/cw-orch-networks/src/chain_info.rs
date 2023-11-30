@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc, Rpc};
+use ibc_chain_registry::chain::{
+    Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc, Rpc,
+};
 
 #[allow(clippy::from_over_into)]
 impl Into<RegistryChainInfo> for ChainInfo<'_> {

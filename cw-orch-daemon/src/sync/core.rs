@@ -61,11 +61,11 @@ impl Daemon {
     }
 
     /// Get the channel configured for this Daemon
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     pub fn channel(&self) -> tonic::transport::Channel {
         self.daemon.state.transport_channel.clone()
     }
-    #[cfg(feature="rpc")]
+    #[cfg(feature = "rpc")]
     pub fn channel(&self) -> cosmrs::rpc::HttpClient {
         self.daemon.state.transport_channel.clone()
     }

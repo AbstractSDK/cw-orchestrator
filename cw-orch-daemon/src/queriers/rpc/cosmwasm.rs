@@ -1,6 +1,5 @@
-use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query, queriers::DaemonQuerier};
+use crate::{cosmos_modules, cosmos_rpc_query, error::DaemonError, queriers::DaemonQuerier};
 use cosmrs::{proto::cosmos::base::query::v1beta1::PageRequest, rpc::HttpClient};
-
 
 /// Querier for the CosmWasm SDK module
 pub struct CosmWasm {
@@ -16,7 +15,6 @@ impl DaemonQuerier for CosmWasm {
 impl CosmWasm {
     /// Query code_id by hash
     pub async fn code_id_hash(&self, code_id: u64) -> Result<String, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
@@ -35,7 +33,6 @@ impl CosmWasm {
         &self,
         address: impl Into<String>,
     ) -> Result<cosmos_modules::cosmwasm::ContractInfo, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
@@ -56,7 +53,6 @@ impl CosmWasm {
         address: impl Into<String>,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::cosmwasm::QueryContractHistoryResponse, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
@@ -77,7 +73,6 @@ impl CosmWasm {
         address: impl Into<String>,
         query_data: Vec<u8>,
     ) -> Result<Vec<u8>, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
@@ -88,7 +83,7 @@ impl CosmWasm {
             },
             QuerySmartContractStateResponse,
         );
-        
+
         Ok(resp.data)
     }
 
@@ -123,13 +118,12 @@ impl CosmWasm {
             QueryCodeRequest { code_id: code_id },
             QueryCodeResponse,
         );
-    
+
         Ok(resp.code_info.unwrap())
     }
 
     /// Query code bytes
     pub async fn code_data(&self, code_id: u64) -> Result<Vec<u8>, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
@@ -137,7 +131,7 @@ impl CosmWasm {
             QueryCodeRequest { code_id: code_id },
             QueryCodeResponse,
         );
-    
+
         Ok(resp.data)
     }
 
@@ -146,12 +140,13 @@ impl CosmWasm {
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::cosmwasm::CodeInfoResponse>, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
             "/cosmwasm.wasm.v1.Query/Codes",
-            QueryCodesRequest { pagination: pagination },
+            QueryCodesRequest {
+                pagination: pagination
+            },
             QueryCodesResponse,
         );
 
@@ -197,7 +192,6 @@ impl CosmWasm {
         address: impl Into<String>,
         query_data: Vec<u8>,
     ) -> Result<cosmos_modules::cosmwasm::QueryRawContractStateResponse, DaemonError> {
-
         let resp = cosmos_rpc_query!(
             self,
             cosmwasm,
@@ -208,7 +202,7 @@ impl CosmWasm {
             },
             QueryRawContractStateResponse,
         );
-        
+
         Ok(resp)
     }
 
