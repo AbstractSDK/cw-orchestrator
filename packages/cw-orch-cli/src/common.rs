@@ -1,6 +1,7 @@
 pub use base64::prelude::BASE64_STANDARD as B64;
 use base64::Engine;
-use inquire::{error::InquireResult, InquireError};
+use cw_orch::daemon::networks::NETWORKS;
+use inquire::{error::InquireResult, InquireError, Select};
 use keyring::Entry;
 
 pub fn entry_for_seed(name: &str) -> keyring::Result<Entry> {
@@ -16,6 +17,23 @@ pub fn seed_phrase_for_id(name: &str) -> color_eyre::Result<String> {
 
 pub fn get_cw_cli_exec_path() -> String {
     std::env::args().next().unwrap()
+}
+
+pub fn select_chain() -> color_eyre::eyre::Result<Option<String>> {
+    let chain_ids: Vec<_> = NETWORKS
+        .iter()
+        .map(|network| {
+            format!(
+                "{} {}({})",
+                network.network_info.id.to_uppercase(),
+                network.kind.to_string().to_uppercase(),
+                network.chain_id
+            )
+        })
+        .collect();
+    let selected = Select::new("Select chain", chain_ids).raw_prompt()?;
+    let chain_id = NETWORKS[selected.index].chain_id.to_owned();
+    Ok(Some(chain_id))
 }
 
 pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {

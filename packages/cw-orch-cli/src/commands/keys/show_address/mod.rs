@@ -1,7 +1,4 @@
-use cw_orch::{
-    prelude::{networks::parse_network, Daemon, TxHandler},
-    tokio::runtime::Runtime,
-};
+use cw_orch::{daemon::DaemonAsync, prelude::networks::parse_network, tokio::runtime::Runtime};
 
 use crate::common::seed_phrase_for_id;
 
@@ -11,7 +8,14 @@ use crate::common::seed_phrase_for_id;
 pub struct ShowAddressCommand {
     /// Id of the key
     name: String,
+    #[interactive_clap(skip_default_input_arg)]
     chain_id: String,
+}
+
+impl ShowAddressCommand {
+    fn input_chain_id(_: &()) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_chain()
+    }
 }
 
 pub struct ShowAddressOutput;
@@ -25,13 +29,17 @@ impl ShowAddressOutput {
         let chain = parse_network(&scope.chain_id);
 
         let rt = Runtime::new()?;
-        let daemon = Daemon::builder()
-            .handle(rt.handle())
-            .chain(chain)
-            .mnemonic(mnemonic)
-            .build()?;
-        let address = daemon.sender();
-        println!("Your address: {address}");
+        // Sync daemon prints extra output,
+        rt.block_on(async {
+            let daemon = DaemonAsync::builder()
+                .chain(chain)
+                .mnemonic(mnemonic)
+                .build()
+                .await?;
+            let address = daemon.sender();
+            println!("Your address: {address}");
+            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+        })?;
         Ok(ShowAddressOutput)
     }
 }
