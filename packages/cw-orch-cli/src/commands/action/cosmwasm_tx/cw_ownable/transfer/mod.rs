@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use cw_orch::{
     daemon::{networks::parse_network, DaemonAsync},
     tokio::runtime::Runtime,
@@ -69,7 +71,7 @@ impl TransferOwnershipOutput {
 
         let rt = Runtime::new()?;
         rt.block_on(async {
-            let daemon = DaemonAsync::builder()
+            let mut daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(sender_seed)
                 .build()
@@ -81,8 +83,23 @@ impl TransferOwnershipOutput {
                 msg,
                 funds: vec![],
             };
+
             let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
 
+            if let Some(seed) = receiver_seed {
+                let receiver_sender =
+                    cw_orch::daemon::sender::Sender::from_mnemonic(&daemon.state, &seed)?;
+                daemon.set_sender(&Rc::new(receiver_sender));
+                let action = cw_ownable::Action::AcceptOwnership {};
+                let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
+                let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
+                    sender: daemon.sender.pub_addr()?,
+                    contract: scope.contract_addr.parse()?,
+                    msg,
+                    funds: vec![],
+                };
+                let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            }
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;
 
