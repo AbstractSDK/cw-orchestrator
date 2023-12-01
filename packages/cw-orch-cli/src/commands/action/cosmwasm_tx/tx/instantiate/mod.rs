@@ -78,6 +78,7 @@ impl InstantiateWasmOutput {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
+                .no_warning()
                 .build()
                 .await?;
 

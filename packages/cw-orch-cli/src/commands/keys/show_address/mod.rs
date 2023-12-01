@@ -29,11 +29,11 @@ impl ShowAddressOutput {
         let chain = parse_network(&scope.chain_id);
 
         let rt = Runtime::new()?;
-        // Sync daemon prints extra output,
         rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(mnemonic)
+                .no_warning()
                 .build()
                 .await?;
             let address = daemon.sender();

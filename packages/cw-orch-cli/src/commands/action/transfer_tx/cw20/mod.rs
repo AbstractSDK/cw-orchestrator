@@ -42,6 +42,7 @@ impl TransferCw20Output {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
+                .no_warning()
                 .build()
                 .await?;
 

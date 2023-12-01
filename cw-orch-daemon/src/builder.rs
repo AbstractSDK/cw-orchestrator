@@ -28,6 +28,8 @@ pub struct DaemonAsyncBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
+    /// Warn in case of disabled log
+    pub(crate) check_if_log_disabled: Option<bool>,
 }
 
 impl DaemonAsyncBuilder {
@@ -53,6 +55,12 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Disables warning disabled logs output
+    pub fn no_warning(&mut self) -> &mut Self {
+        self.check_if_log_disabled = Some(false);
+        self
+    }
+
     /// Build a daemon
     pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
         let chain = self
@@ -74,7 +82,9 @@ impl DaemonAsyncBuilder {
             state,
             sender: Rc::new(sender),
         };
-        print_if_log_disabled();
+        if self.check_if_log_disabled.unwrap_or(true) {
+            print_if_log_disabled();
+        }
         Ok(daemon)
     }
 }
@@ -85,6 +95,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,
+            check_if_log_disabled: value.check_if_log_disabled,
         }
     }
 }

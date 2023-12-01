@@ -35,6 +35,7 @@ impl AcceptOwnershipOutput {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(sender_seed)
+                .no_warning()
                 .build()
                 .await?;
 
