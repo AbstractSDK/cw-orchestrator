@@ -61,7 +61,7 @@ impl TransferOwnershipOutput {
             .new_signer
             .0
             .as_deref()
-            .map(|new_signer| crate::common::seed_phrase_for_id(new_signer))
+            .map(crate::common::seed_phrase_for_id)
             .transpose()?;
         let action = cw_ownable::Action::TransferOwnership {
             new_owner: scope.new_owner.clone(),

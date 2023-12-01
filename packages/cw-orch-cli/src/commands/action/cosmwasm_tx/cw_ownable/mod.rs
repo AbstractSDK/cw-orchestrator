@@ -3,7 +3,9 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use crate::commands::action::CosmosContext;
 
+mod accept;
 mod get;
+mod renounce;
 mod transfer;
 
 // Helper enum to serialize execute
@@ -37,12 +39,12 @@ pub enum CwOwnableAction {
         message = "Propose to transfer contract ownership to another address."
     ))]
     Transfer(transfer::TransferOwnership),
-    // /// Accept pending ownership
-    // #[strum_discriminants(strum(message = "Accept pending ownership."))]
-    // Accept(accept::AcceptOwnership),
+    /// Accept pending ownership
+    #[strum_discriminants(strum(message = "Accept pending ownership."))]
+    Accept(accept::AcceptOwnership),
     // /// Renounce pending ownership
-    // #[strum_discriminants(strum(message = "Renounce pending ownership"))]
-    // Renounce(renounce::RenounceOwnership),
+    #[strum_discriminants(strum(message = "Renounce pending ownership"))]
+    Renounce(renounce::RenounceOwnership),
     /// Get current ownership
     #[strum_discriminants(strum(message = "Get current ownership"))]
     Get(get::GetOwnership),
