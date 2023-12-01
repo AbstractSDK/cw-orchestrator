@@ -1,3 +1,4 @@
+mod cw_ownable;
 pub mod msg_type;
 mod query;
 mod tx;
@@ -24,4 +25,7 @@ pub enum CwAction {
     /// Query
     #[strum_discriminants(strum(message = "Query"))]
     Query(query::QueryCommands),
+    /// CW-Ownable Action
+    #[strum_discriminants(strum(message = "CW-Ownable action"))]
+    CwOwnable(cw_ownable::CwOwnableCommands),
 }

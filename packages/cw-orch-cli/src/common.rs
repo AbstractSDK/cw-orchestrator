@@ -35,3 +35,35 @@ pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {
     }
     Ok(coins)
 }
+
+#[derive(Clone, Copy, strum::EnumIter, strum::EnumString, derive_more::Display)]
+pub enum ExpirationType {
+    AtHeight,
+    AtTime,
+    Never,
+}
+
+impl ExpirationType {
+    const VARIANTS: &'static [ExpirationType] = &[Self::AtHeight, Self::AtTime, Self::Never];
+}
+
+pub fn parse_expiration() -> InquireResult<cw_utils::Expiration> {
+    let locked = inquire::Select::new("Choose expiration type", ExpirationType::VARIANTS.to_vec())
+        .prompt_skippable()?
+        .unwrap_or(ExpirationType::Never);
+
+    let expiration = match locked {
+        ExpirationType::AtHeight => {
+            let block_height = inquire::CustomType::<u64>::new("Input block height").prompt()?;
+            cw_utils::Expiration::AtHeight(block_height)
+        }
+        ExpirationType::AtTime => {
+            let timestamp_nanos =
+                inquire::CustomType::<u64>::new("Input timestamp in nanos").prompt()?;
+            let timestamp = cosmwasm_std::Timestamp::from_nanos(timestamp_nanos);
+            cw_utils::Expiration::AtTime(timestamp)
+        }
+        ExpirationType::Never => cw_utils::Expiration::Never {},
+    };
+    Ok(expiration)
+}
