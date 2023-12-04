@@ -2,7 +2,7 @@
 //! This is included here and not in the mock package because it needs to import traits to work
 
 /// Function helper used to parse storage into readable strings
-pub fn parse_storage(storage: &Vec<(Vec<u8>, Vec<u8>)>) -> Vec<(String, String)> {
+pub fn parse_storage(storage: &[(Vec<u8>, Vec<u8>)]) -> Vec<(String, String)> {
     storage
         .iter()
         .map(|(key, value)| {
