@@ -5,6 +5,8 @@ use super::{BankQuerier, CwEnv, TxHandler};
 use cosmwasm_std::{Addr, Coin};
 use cw_utils::NativeBalance;
 
+pub trait MutCwEnv: BankSetter + CwEnv {}
+
 pub trait BankSetter: BankQuerier {
     fn set_balance(
         &mut self,
@@ -26,5 +28,4 @@ pub trait BankSetter: BankQuerier {
     }
 }
 
-pub trait MutCwEnv: BankSetter + CwEnv {}
 impl<T> MutCwEnv for T where T: BankSetter + CwEnv {}
