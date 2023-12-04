@@ -1,5 +1,6 @@
 #![recursion_limit = "128"]
 
+use syn::{Expr, Token};
 use syn::{__private::TokenStream2, parse_macro_input, Fields, GenericArgument, Item, Path};
 extern crate proc_macro;
 
@@ -11,18 +12,45 @@ use syn::{punctuated::Punctuated, token::Comma};
 
 use syn::parse::{Parse, ParseStream};
 
+mod kw {
+    syn::custom_keyword!(id);
+}
 // This is used to parse the types into a list of types separated by Commas
-struct TypesInput {
+// and default contract id if provided by "id = $expr"
+struct InterfaceInput {
     expressions: Punctuated<Path, Comma>,
+    _kw_id: Option<kw::id>,
+    _eq_token: Option<Token![=]>,
+    default_id: Option<Expr>,
 }
 
 // Implement the `Parse` trait for your input struct
-impl Parse for TypesInput {
+impl Parse for InterfaceInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let expressions = input.parse_terminated(Path::parse)?;
-        Ok(Self { expressions })
+        let mut expressions: Punctuated<Path, Comma> = Punctuated::new();
+
+        while let Ok(path) = input.parse() {
+            expressions.push(path);
+            let _: Option<Token![,]> = input.parse().ok();
+
+            // If we found id = break
+            if input.peek(kw::id) {
+                break;
+            }
+        }
+        // Parse if there is any
+        let kw_id: Option<kw::id> = input.parse()?;
+        let eq_token: Option<Token![=]> = input.parse()?;
+        let default_id: Option<Expr> = input.parse().ok();
+        Ok(Self {
+            expressions,
+            _kw_id: kw_id,
+            _eq_token: eq_token,
+            default_id,
+        })
     }
 }
+
 // Gets the generics associated with a type
 fn get_generics_from_path(p: &Path) -> Punctuated<GenericArgument, Comma> {
     let mut generics = Punctuated::new();
@@ -107,9 +135,10 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let mut item = parse_macro_input!(input as syn::Item);
 
     // Try to parse the attributes to a
-    let attributes = parse_macro_input!(attrs as TypesInput);
+    let attributes = parse_macro_input!(attrs as InterfaceInput);
 
     let types_in_order = attributes.expressions;
+    let default_id = attributes.default_id;
 
     if types_in_order.len() != 4 {
         panic!("Expected four endpoint types (InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg). Use cosmwasm_std::Empty if not implemented.")
@@ -163,19 +192,26 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     let name = cw_orch_struct.ident.clone();
+    let default_num = if let Some(id_path) = default_id {
+        quote!(
+            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+                pub fn new(chain: Chain) -> Self {
+                    Self(
+                        ::cw_orch::contract::Contract::new(#id_path, chain)
+                    , #(#all_phantom_marker_values,)*)
+                }
+            }
+        )
+    } else {
+        quote!()
+    };
     let struct_def = quote!(
             #[derive(
                 ::std::clone::Clone,
             )]
             pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
 
-            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
-                pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
-                    Self(
-                        ::cw_orch::contract::Contract::new(contract_id, chain)
-                    , #(#all_phantom_marker_values,)*)
-                }
-            }
+            #default_num
 
             impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
                 fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {

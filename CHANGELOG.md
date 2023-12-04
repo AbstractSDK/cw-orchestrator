@@ -6,6 +6,7 @@
 - Add `BankQuerier` as trait bound to `CwEnv`.
 - Add `WasmCodeQuerier` as trait bound to `CwEnv`.
 - Changed the snapshot feature for better snapshot readability.
+- Changed behavior for default constructor implementation by macro "interface"
 
 ## 0.18.2
 

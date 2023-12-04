@@ -139,6 +139,13 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
 pub struct MockContract;
 
 #[cfg(feature = "interface")]
+impl<Chain: cw_orch::prelude::CwEnv> MockContract<Chain> {
+    pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+        Self(cw_orch::contract::Contract::new(contract_id, chain))
+    }
+}
+
+#[cfg(feature = "interface")]
 impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain> {
     fn wrapper(
         &self,

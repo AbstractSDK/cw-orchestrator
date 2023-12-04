@@ -3,7 +3,9 @@ use cw_orch::{interface, prelude::*};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub const CONTRACT_ID: &str = "contract_counter";
+
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg, id = CONTRACT_ID)]
 pub struct CounterContract;
 
 impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
@@ -27,7 +29,6 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
 }
 // ANCHOR_END: custom_interface
 
-use crate::contract::CONTRACT_NAME;
 use cw_orch::anyhow::Result;
 use cw_orch::prelude::queriers::Node;
 
@@ -50,7 +51,7 @@ impl CounterContract<Daemon> {
             }
         });
 
-        let contract = CounterContract::new(CONTRACT_NAME, daemon.clone());
+        let contract = CounterContract::new(daemon.clone());
 
         // Upload the contract
         contract.upload().unwrap();
