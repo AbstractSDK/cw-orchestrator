@@ -22,6 +22,7 @@ pub const SERIALIZE_ENV_NAME: &str = "CW_ORCH_SERIALIZE_JSON";
 pub const DISABLE_WALLET_BALANCE_ASSERTION_ENV_NAME: &str =
     "CW_ORCH_DISABLE_WALLET_BALANCE_ASSERTION";
 pub const DISABLE_MANUAL_INTERACTION_ENV_NAME: &str = "CW_ORCH_DISABLE_MANUAL_INTERACTION";
+pub const DISABLE_ENABLE_LOGS_MESSAGE_ENV_NAME: &str = "CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE";
 pub const MAIN_MNEMONIC_ENV_NAME: &str = "MAIN_MNEMONIC";
 pub const TEST_MNEMONIC_ENV_NAME: &str = "TEST_MNEMONIC";
 pub const LOCAL_MNEMONIC_ENV_NAME: &str = "LOCAL_MNEMONIC";
@@ -89,6 +90,12 @@ pub struct CwOrchEnvVars {
     /// Disable manual interactions
     /// It allows to automate scripting and get rid of prompting
     pub disable_manual_interaction: bool,
+
+    /// Optional - boolean
+    /// Defaults to "false"
+    /// Disable the "Enable Logs" message
+    /// It allows forcing cw-orch to not output anything
+    pub disable_logs_message: bool,
 }
 
 impl Default for CwOrchEnvVars {
@@ -106,6 +113,7 @@ impl Default for CwOrchEnvVars {
             local_mnemonic: None,
             disable_wallet_balance_assertion: false,
             disable_manual_interaction: false,
+            disable_logs_message: false,
         }
     }
 }
@@ -141,6 +149,9 @@ impl CwOrchEnvVars {
         }
         if let Ok(str_value) = env::var(DISABLE_MANUAL_INTERACTION_ENV_NAME) {
             env_values.disable_manual_interaction = str_value.parse()?;
+        }
+        if let Ok(str_value) = env::var(DISABLE_ENABLE_LOGS_MESSAGE_ENV_NAME) {
+            env_values.disable_logs_message = str_value.parse()?;
         }
         if let Ok(str_value) = env::var(MAIN_MNEMONIC_ENV_NAME) {
             env_values.main_mnemonic = Some(str_value);
