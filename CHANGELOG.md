@@ -5,6 +5,7 @@
 - Add `MutCwEnv` for manipulating testing environments.
 - Add `BankQuerier` as trait bound to `CwEnv`.
 - Add `WasmCodeQuerier` as trait bound to `CwEnv`.
+- Changed the snapshot feature for better snapshot readability.
 
 ## 0.18.2
 
