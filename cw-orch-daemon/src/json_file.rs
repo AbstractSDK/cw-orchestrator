@@ -1,3 +1,4 @@
+use crate::DaemonError;
 use serde_json::{from_reader, json, Value};
 use std::fs::{File, OpenOptions};
 
@@ -41,9 +42,9 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
     serde_json::to_writer_pretty(File::create(filename).unwrap(), &json).unwrap();
 }
 
-pub fn read(filename: &String) -> Value {
+pub fn read(filename: &String) -> Result<Value, DaemonError> {
     let file =
         File::open(filename).unwrap_or_else(|_| panic!("File should be present at {}", filename));
-    let json: serde_json::Value = from_reader(file).unwrap();
-    json
+    let json: serde_json::Value = from_reader(file)?;
+    Ok(json)
 }

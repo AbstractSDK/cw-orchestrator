@@ -126,24 +126,30 @@ impl DaemonState {
     }
 
     /// Get the state filepath and read it as json
-    fn read_state(&self) -> serde_json::Value {
+    fn read_state(&self) -> Result<serde_json::Value, DaemonError> {
         crate::json_file::read(&self.json_file_path)
     }
 
     /// Retrieve a stateful value using the chainId and networkId
-    pub fn get(&self, key: &str) -> Value {
-        let json = self.read_state();
-        json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key].clone()
+    pub fn get(&self, key: &str) -> Result<Value, DaemonError> {
+        let json = self.read_state()?;
+        Ok(json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key].clone())
     }
 
     /// Set a stateful value using the chainId and networkId
-    pub fn set<T: Serialize>(&self, key: &str, contract_id: &str, value: T) {
-        let mut json = self.read_state();
+    pub fn set<T: Serialize>(
+        &self,
+        key: &str,
+        contract_id: &str,
+        value: T,
+    ) -> Result<(), DaemonError> {
+        let mut json = self.read_state()?;
 
         json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key]
             [contract_id] = json!(value);
 
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json).unwrap();
+        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
+        Ok(())
     }
 
     pub fn state_dir() -> Result<PathBuf, DaemonError> {
@@ -161,7 +167,7 @@ impl StateInterface for DaemonState {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         let value = self
-            .get(&self.deployment_id)
+            .get(&self.deployment_id)?
             .get(contract_id)
             .ok_or_else(|| CwEnvError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
@@ -170,13 +176,14 @@ impl StateInterface for DaemonState {
 
     /// Set address for contract in deployment id in state file
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.set(&self.deployment_id, contract_id, address.as_str());
+        self.set(&self.deployment_id, contract_id, address.as_str())
+            .unwrap();
     }
 
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
-            .get("code_ids")
+            .get("code_ids")?
             .get(contract_id)
             .ok_or_else(|| CwEnvError::CodeIdNotInStore(contract_id.to_owned()))?
             .clone();
@@ -185,13 +192,13 @@ impl StateInterface for DaemonState {
 
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        self.set("code_ids", contract_id, code_id);
+        self.set("code_ids", contract_id, code_id).unwrap();
     }
 
     /// Get all addresses for deployment id from state file
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
         let mut store = HashMap::new();
-        let addresses = self.get(&self.deployment_id);
+        let addresses = self.get(&self.deployment_id)?;
         let value = addresses.as_object().cloned().unwrap_or_default();
         for (id, addr) in value {
             store.insert(id, Addr::unchecked(addr.as_str().unwrap()));
@@ -201,7 +208,7 @@ impl StateInterface for DaemonState {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         let mut store = HashMap::new();
-        let code_ids = self.get("code_ids");
+        let code_ids = self.get("code_ids")?;
         let value = code_ids.as_object().cloned().unwrap_or_default();
         for (id, code_id) in value {
             store.insert(id, code_id.as_u64().unwrap());
