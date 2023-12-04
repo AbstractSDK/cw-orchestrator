@@ -10,8 +10,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + WasmCodeQuerier + Clone {}
-impl<T: TxHandler + WasmCodeQuerier + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + BankQuerier + WasmCodeQuerier + Clone {}
+impl<T: TxHandler + BankQuerier + WasmCodeQuerier + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -100,4 +100,17 @@ pub trait WasmCodeQuerier: TxHandler + Clone {
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
+}
+
+pub trait BankQuerier: TxHandler {
+    /// Query the bank balance of a given address
+    /// If denom is None, returns all balances
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<Coin>, <Self as TxHandler>::Error>;
+
+    /// Query total supply in the bank for a denom
+    fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, <Self as TxHandler>::Error>;
 }

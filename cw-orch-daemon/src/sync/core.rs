@@ -2,7 +2,7 @@ use std::{fmt::Debug, rc::Rc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{DaemonQuerier, Node},
+    queriers::{cosmrs_to_cosmwasm_coins, Bank, DaemonQuerier, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
@@ -10,7 +10,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{ChainState, TxHandler},
+    environment::{BankQuerier, ChainState, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::{de::DeserializeOwned, Serialize};
@@ -201,6 +201,34 @@ impl TxHandler for Daemon {
             time,
             chain_id: block.header.chain_id.to_string(),
         })
+    }
+}
+
+impl BankQuerier for Daemon {
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
+        let bank = Bank::new(self.channel());
+
+        let cosmrs_coins = self.rt_handle.block_on(bank.balance(address, denom))?;
+
+        cosmrs_coins
+            .iter()
+            .map(|c| cosmrs_to_cosmwasm_coins(c.clone()))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(Into::into)
+    }
+
+    fn supply_of(
+        &self,
+        denom: impl Into<String>,
+    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
+        let bank = Bank::new(self.channel());
+
+        let cosmrs_coin = self.rt_handle.block_on(bank.supply_of(denom))?;
+        cosmrs_to_cosmwasm_coins(cosmrs_coin.clone()).map_err(Into::into)
     }
 }
 

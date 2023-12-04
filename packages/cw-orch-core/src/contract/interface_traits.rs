@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 /// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
-pub trait ContractInstance<Chain: CwEnv> {
+pub trait ContractInstance<Chain: TxHandler + Clone> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
