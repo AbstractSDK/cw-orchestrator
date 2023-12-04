@@ -192,12 +192,12 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     let name = cw_orch_struct.ident.clone();
-    let default_num = if let Some(id_path) = default_id {
+    let default_num = if let Some(id_expr) = default_id {
         quote!(
             impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
                 pub fn new(chain: Chain) -> Self {
                     Self(
-                        ::cw_orch::contract::Contract::new(#id_path, chain)
+                        ::cw_orch::contract::Contract::new(#id_expr, chain)
                     , #(#all_phantom_marker_values,)*)
                 }
             }
