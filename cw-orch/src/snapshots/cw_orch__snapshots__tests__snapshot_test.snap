@@ -2,9 +2,9 @@
 source: cw-orch/src/snapshots.rs
 expression: all_storage
 ---
-counter_contract:
-  - - contract_info
-    - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
-  - - state
-    - "{\"count\":1,\"owner\":\"sender\"}"
+- - counter_contract
+  - - - contract_info
+      - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
+    - - state
+      - "{\"count\":1,\"owner\":\"sender\"}"
 

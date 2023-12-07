@@ -29,16 +29,17 @@ macro_rules! take_storage_snapshot {
         // We register and test a snapshot for all contracts storage
         use ::cw_orch::environment::{ChainState as _, StateInterface as _};
         let all_contract_addresses = $chain.state().get_all_addresses()?;
-        let mut all_storage = ::std::collections::HashMap::new();
+        let mut all_storage = vec![];
 
         for (id, contract_addr) in all_contract_addresses {
-            all_storage.insert(
+            all_storage.push((
                 id,
                 ::cw_orch::snapshots::parse_storage(
                     &$chain.app.borrow().dump_wasm_raw(&contract_addr),
                 ),
-            );
+            ));
         }
+        all_storage.sort_by(|(id_a, _), (id_b, _)| id_a.cmp(id_b));
         ::cw_orch::insta::assert_yaml_snapshot!(
             ::cw_orch::sanitize_filename::sanitize(format!("{}", $name)),
             all_storage
