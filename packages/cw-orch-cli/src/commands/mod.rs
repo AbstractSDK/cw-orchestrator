@@ -7,8 +7,8 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 #[strum_discriminants(derive(EnumMessage, EnumIter))]
 /// Select one of the options with up-down arrows and press enter to select action
 pub enum Commands {
-    /// Construct action
-    #[strum_discriminants(strum(message = "Construct action"))]
+    /// Action
+    #[strum_discriminants(strum(message = "Action"))]
     Action(action::CosmosCommands),
     /// Add, View or Remove key
     #[strum_discriminants(strum(message = "Manage keys"))]

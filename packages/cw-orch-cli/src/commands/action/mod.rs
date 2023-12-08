@@ -21,12 +21,13 @@ pub struct CosmosCommands {
 /// Select type of cosmos action
 pub enum CosmosAction {
     /// Cosmwasm Action
-    #[strum_discriminants(strum(message = "Perform CosmWasm action"))]
+    #[strum_discriminants(strum(message = "CosmWasm"))]
     Cw(cosmwasm_tx::CwCommands),
+    // TODO: rename and expand to bank?
     // /// Transfer Action
-    #[strum_discriminants(strum(message = "Perform Transfer action"))]
+    #[strum_discriminants(strum(message = "Transfer"))]
     Transfer(transfer_tx::TransferCommands),
-    /// CW-Ownable
+    /// CW-Ownable Action
     #[strum_discriminants(strum(message = "CW-Ownable"))]
     CwOwnable(cw_ownable::CwOwnableCommands),
 }

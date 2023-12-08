@@ -35,9 +35,7 @@ pub struct CwOwnableCommands {
 /// Select cosmwasm action
 pub enum CwOwnableAction {
     /// Propose to transfer contract ownership to another address
-    #[strum_discriminants(strum(
-        message = "Propose to transfer contract ownership to another address."
-    ))]
+    #[strum_discriminants(strum(message = "Propose ownership to another address."))]
     Transfer(transfer::TransferOwnership),
     /// Accept pending ownership
     #[strum_discriminants(strum(message = "Accept pending ownership."))]
