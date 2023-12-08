@@ -5,7 +5,7 @@ use inquire::{error::InquireResult, InquireError, Select};
 use keyring::Entry;
 
 pub fn entry_for_seed(name: &str) -> keyring::Result<Entry> {
-    Entry::new_with_target("cw-orch", "cw-cli", name)
+    Entry::new("cw-cli", name)
 }
 
 pub fn seed_phrase_for_id(name: &str) -> color_eyre::Result<String> {
