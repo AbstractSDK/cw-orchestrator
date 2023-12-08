@@ -1,6 +1,6 @@
 pub use base64::prelude::BASE64_STANDARD as B64;
 use base64::Engine;
-use cw_orch::daemon::networks::NETWORKS;
+use cw_orch::daemon::networks::SUPPORTED_NETWORKS as NETWORKS;
 use inquire::{error::InquireResult, InquireError, Select};
 use keyring::Entry;
 

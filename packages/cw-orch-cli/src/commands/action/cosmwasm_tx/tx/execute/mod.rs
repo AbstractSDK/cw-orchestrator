@@ -1,7 +1,5 @@
 use color_eyre::eyre::{self, Context};
-use cw_orch::{
-    daemon::networks::parse_network_safe, prelude::DaemonAsync, tokio::runtime::Runtime,
-};
+use cw_orch::{daemon::networks::parse_network, prelude::DaemonAsync, tokio::runtime::Runtime};
 
 use crate::{commands::action::CosmosContext, types::CliCoins};
 
@@ -48,8 +46,7 @@ impl ExecuteWasmOutput {
         previous_context: CosmosContext,
         scope:&<ExecuteContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain =
-            parse_network_safe(&previous_context.chain_id).map_err(|err| eyre::eyre!(err))?;
+        let chain = parse_network(&previous_context.chain_id).map_err(|err| eyre::eyre!(err))?;
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
@@ -59,7 +56,6 @@ impl ExecuteWasmOutput {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
-                .no_warning()
                 .build()
                 .await?;
 

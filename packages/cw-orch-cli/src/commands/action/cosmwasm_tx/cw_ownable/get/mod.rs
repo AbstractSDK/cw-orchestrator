@@ -26,7 +26,7 @@ impl GetOwnershipOutput {
         previous_context: CosmosContext,
         scope:&<GetOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id);
+        let chain = parse_network(&previous_context.chain_id).unwrap();
         let msg = serde_json::to_vec(&ContractQueryMsg::Ownership {})?;
         let chain_data: ChainRegistryData = chain.into();
 

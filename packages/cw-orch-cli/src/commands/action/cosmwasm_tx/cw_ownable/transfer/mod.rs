@@ -55,7 +55,7 @@ impl TransferOwnershipOutput {
         previous_context: CosmosContext,
         scope:&<TransferOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id);
+        let chain = parse_network(&previous_context.chain_id).unwrap();
         let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let receiver_seed = scope
             .new_signer
@@ -74,7 +74,6 @@ impl TransferOwnershipOutput {
             let mut daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(sender_seed)
-                .no_warning()
                 .build()
                 .await?;
 

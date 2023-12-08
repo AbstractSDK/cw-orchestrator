@@ -26,7 +26,7 @@ impl StoreWasmOutput {
         scope:&<StoreContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         // TODO: non-panic parse_network
-        let chain = parse_network(&previous_context.chain_id);
+        let chain = parse_network(&previous_context.chain_id).unwrap();
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let wasm_byte_code = std::fs::read(&scope.wasm_path).wrap_err(format!(
             "Failed to open or read the file: {}",
@@ -38,7 +38,6 @@ impl StoreWasmOutput {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
-                .no_warning()
                 .build()
                 .await?;
 

@@ -40,7 +40,7 @@ impl QueryWasmOutput {
         scope:&<QuerySmartCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         // TODO: non-panic parse_network
-        let chain = parse_network(&previous_context.chain_id);
+        let chain = parse_network(&previous_context.chain_id).unwrap();
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
         let chain_data: ChainRegistryData = chain.into();

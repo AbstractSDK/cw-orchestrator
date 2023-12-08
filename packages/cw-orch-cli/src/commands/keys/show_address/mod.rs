@@ -26,14 +26,13 @@ impl ShowAddressOutput {
         scope:&<ShowAddressCommand as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let mnemonic = seed_phrase_for_id(&scope.name)?;
-        let chain = parse_network(&scope.chain_id);
+        let chain = parse_network(&scope.chain_id).unwrap();
 
         let rt = Runtime::new()?;
         rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(mnemonic)
-                .no_warning()
                 .build()
                 .await?;
             let address = daemon.sender();

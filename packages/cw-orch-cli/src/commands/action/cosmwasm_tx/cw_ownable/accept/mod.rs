@@ -25,7 +25,7 @@ impl AcceptOwnershipOutput {
         previous_context: CosmosContext,
         scope:&<AcceptOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id);
+        let chain = parse_network(&previous_context.chain_id).unwrap();
         let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let action = cw_ownable::Action::AcceptOwnership {};
         let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
@@ -35,7 +35,6 @@ impl AcceptOwnershipOutput {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(sender_seed)
-                .no_warning()
                 .build()
                 .await?;
 

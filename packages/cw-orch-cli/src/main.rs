@@ -10,6 +10,7 @@ pub struct TLCommand {
 }
 
 fn main() -> color_eyre::Result<()> {
+    std::env::set_var("CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE", "true");
     // TODO: add some configuration like default chain/signer/etc
     let cli_args = TLCommand::parse();
 
