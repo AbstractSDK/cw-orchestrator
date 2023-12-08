@@ -1,4 +1,5 @@
 mod cosmwasm_tx;
+mod cw_ownable;
 mod transfer_tx;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
@@ -25,6 +26,9 @@ pub enum CosmosAction {
     // /// Transfer Action
     #[strum_discriminants(strum(message = "Perform Transfer action"))]
     Transfer(transfer_tx::TransferCommands),
+    /// CW-Ownable
+    #[strum_discriminants(strum(message = "CW-Ownable"))]
+    CwOwnable(cw_ownable::CwOwnableCommands),
 }
 
 impl CosmosCommands {
