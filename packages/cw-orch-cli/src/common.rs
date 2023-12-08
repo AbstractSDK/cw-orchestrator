@@ -39,18 +39,24 @@ pub fn select_chain() -> color_eyre::eyre::Result<Option<String>> {
 pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {
     let mut coins = cosmwasm_std::Coins::default();
     loop {
-        let coin = inquire::CustomType::<cosmwasm_std::Coin>::new("Add coin to transaction")
-            .with_placeholder("5ucosm")
+        let coin = inquire::Text::new("Add coin to transaction")
+            .with_placeholder("0ucoin")
             .with_help_message("Press ESC to finish adding coins")
-            .prompt_skippable()?;
-        if let Some(c) = coin {
-            coins
-                .add(c)
-                .map_err(|e| InquireError::Custom(Box::new(e)))?
+            .prompt()?;
+        if !coin.is_empty() {
+            match coin.parse() {
+                Ok(c) => coins
+                    .add(c)
+                    .map_err(|e| InquireError::Custom(Box::new(e)))?,
+                Err(e) => {
+                    println!("Failed to add coin: {e}")
+                }
+            }
         } else {
             break;
         }
     }
+    println!("attached coins: {coins}");
     Ok(coins)
 }
 
