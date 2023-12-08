@@ -25,7 +25,7 @@ pub enum CwAction {
     /// Query
     #[strum_discriminants(strum(message = "Query"))]
     Query(query::QueryCommands),
-    /// CW-Ownable Action
-    #[strum_discriminants(strum(message = "CW-Ownable action"))]
+    /// CW-Ownable
+    #[strum_discriminants(strum(message = "CW-Ownable"))]
     CwOwnable(cw_ownable::CwOwnableCommands),
 }
