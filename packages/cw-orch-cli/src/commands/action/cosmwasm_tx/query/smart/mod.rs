@@ -51,8 +51,6 @@ impl QueryWasmOutput {
                 GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
             let mut client = QueryClient::new(grpc_channel);
 
-            // TODO: support other types of queries
-            // It should be possible to support `Any` on query
             let resp = client
                 .smart_contract_state(QuerySmartContractStateRequest {
                     address: scope.contract_addr.clone(),

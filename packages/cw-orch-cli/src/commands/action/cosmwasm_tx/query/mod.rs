@@ -2,7 +2,8 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use crate::commands::action::CosmosContext;
 
-mod query_contract_smart;
+mod raw;
+mod smart;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(context = CosmosContext)]
@@ -17,6 +18,9 @@ pub struct QueryCommands {
 /// Select cosmwasm action
 pub enum QueryAction {
     /// Query wasm smart
-    #[strum_discriminants(strum(message = "Query wasm smart"))]
-    Smart(query_contract_smart::QuerySmartCommands),
+    #[strum_discriminants(strum(message = "Smart"))]
+    Smart(smart::QuerySmartCommands),
+    /// Query wasm raw state
+    #[strum_discriminants(strum(message = "Raw"))]
+    Raw(raw::QueryRawCommands),
 }
