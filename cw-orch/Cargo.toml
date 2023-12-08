@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.18.1"
+version = "0.18.2"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -53,6 +53,8 @@ osmosis-test-tube = [
   "dep:prost",
   "dep:prost-types",
 ]
+snapshot-testing = ["dep:insta"]
+
 
 [dependencies]
 # Default deps
@@ -92,8 +94,13 @@ cw-orch-core = { workspace = true }
 cw-orch-traits = { workspace = true }
 cw-orch-mock = { workspace = true }
 
+# Snapshot deps
+insta = { version = "1.34.0", features = ["yaml"], optional = true }
+sanitize-filename = "0.5.0"
+hex = "0.4.3"
+
 [dev-dependencies]
-cw-orch = { features = ["daemon"], path = "." }
+cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
 env_logger = "0.10.0"
 cosmwasm-schema = "1.2"
 counter-contract = { path = "../contracts/counter", features = ["interface"] }

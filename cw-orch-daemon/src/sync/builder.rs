@@ -24,8 +24,6 @@ pub struct DaemonBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
-    /// Warn in case of disabled log
-    pub(crate) check_if_log_disabled: Option<bool>,
 }
 
 impl DaemonBuilder {
@@ -66,11 +64,6 @@ impl DaemonBuilder {
         self
     }
 
-    /// Disables warning disabled logs output
-    pub fn no_warning(&mut self) -> &mut Self {
-        self.check_if_log_disabled = Some(false);
-        self
-    }
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
         let rt_handle = self

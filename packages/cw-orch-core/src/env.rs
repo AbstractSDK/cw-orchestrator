@@ -22,6 +22,8 @@ pub const SERIALIZE_ENV_NAME: &str = "CW_ORCH_SERIALIZE_JSON";
 pub const DISABLE_WALLET_BALANCE_ASSERTION_ENV_NAME: &str =
     "CW_ORCH_DISABLE_WALLET_BALANCE_ASSERTION";
 pub const DISABLE_MANUAL_INTERACTION_ENV_NAME: &str = "CW_ORCH_DISABLE_MANUAL_INTERACTION";
+pub const DISABLE_ENABLE_LOGS_MESSAGE_ENV_NAME: &str = "CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE";
+pub const FEE_GRANTER_ENV_NAME: &str = "CW_ORCH_FEE_GRANTER";
 pub const MAIN_MNEMONIC_ENV_NAME: &str = "MAIN_MNEMONIC";
 pub const TEST_MNEMONIC_ENV_NAME: &str = "TEST_MNEMONIC";
 pub const LOCAL_MNEMONIC_ENV_NAME: &str = "LOCAL_MNEMONIC";
@@ -89,6 +91,16 @@ pub struct CwOrchEnvVars {
     /// Disable manual interactions
     /// It allows to automate scripting and get rid of prompting
     pub disable_manual_interaction: bool,
+
+    /// Optional - boolean
+    /// Defaults to "false"
+    /// Disable the "Enable Logs" message
+    /// It allows forcing cw-orch to not output anything
+    pub disable_logs_message: bool,
+    /// Optional - string
+    /// Specify a fee granter for interacting with a chain
+    /// This allows interacting with the blockchain and make another address pay for your fees (if allowed)
+    pub fee_granter: Option<String>,
 }
 
 impl Default for CwOrchEnvVars {
@@ -106,6 +118,8 @@ impl Default for CwOrchEnvVars {
             local_mnemonic: None,
             disable_wallet_balance_assertion: false,
             disable_manual_interaction: false,
+            disable_logs_message: false,
+            fee_granter: None,
         }
     }
 }
@@ -142,6 +156,9 @@ impl CwOrchEnvVars {
         if let Ok(str_value) = env::var(DISABLE_MANUAL_INTERACTION_ENV_NAME) {
             env_values.disable_manual_interaction = str_value.parse()?;
         }
+        if let Ok(str_value) = env::var(DISABLE_ENABLE_LOGS_MESSAGE_ENV_NAME) {
+            env_values.disable_logs_message = str_value.parse()?;
+        }
         if let Ok(str_value) = env::var(MAIN_MNEMONIC_ENV_NAME) {
             env_values.main_mnemonic = Some(str_value);
         }
@@ -150,6 +167,9 @@ impl CwOrchEnvVars {
         }
         if let Ok(str_value) = env::var(LOCAL_MNEMONIC_ENV_NAME) {
             env_values.local_mnemonic = Some(str_value);
+        }
+        if let Ok(str_value) = env::var(FEE_GRANTER_ENV_NAME) {
+            env_values.fee_granter = Some(str_value);
         }
         Ok(env_values)
     }

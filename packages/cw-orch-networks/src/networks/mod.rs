@@ -31,25 +31,20 @@ pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 /// ## Example
 /// ```rust,no_run
 /// use cw_orch_networks::networks::{parse_network, ChainInfo};
-/// let juno_mainnet: ChainInfo = parse_network("juno-1");
+/// let juno_mainnet: ChainInfo = parse_network("juno-1")?;
 /// ```
 /// ---
-/// supported chains are: UNI_6, JUNO_1, LOCAL_JUNO, PISCO_1, PHOENIX_1, LOCAL_TERRA, INJECTIVE_888, CONSTANTINE_1, BARYON_1, INJECTIVE_1, HARPOON_4, OSMO_4, LOCAL_OSMO
-pub fn parse_network(net_id: &str) -> ChainInfo {
-    match parse_network_safe(net_id) {
-        Ok(net) => net,
-        Err(err) => panic!("{}", err),
-    }
-}
+/// supported chains are defined by the `SUPPORT_NETWORKS` variable
 
-pub fn parse_network_safe(net_id: &str) -> Result<ChainInfo, String> {
-    NETWORKS
-        .into_iter()
+pub fn parse_network(net_id: &str) -> Result<ChainInfo, String> {
+    SUPPORTED_NETWORKS
+        .iter()
         .find(|net| net.chain_id == net_id)
+        .cloned()
         .ok_or(format!("Network not found: {}", net_id))
 }
 
-pub const NETWORKS: [ChainInfo<'_>; 24] = [
+pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     UNI_6,
     JUNO_1,
     LOCAL_JUNO,

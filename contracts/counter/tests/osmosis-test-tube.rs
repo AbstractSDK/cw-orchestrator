@@ -46,7 +46,7 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
 #[test]
 fn count() {
     // Create the mock
-    let test_tube = OsmosisTestTube::new(coins(100_000_000_000, "uosmo"));
+    let mut test_tube = OsmosisTestTube::new(coins(100_000_000_000, "uosmo"));
 
     let account = test_tube
         .init_account(coins(100_000_000_000, "uosmo"))

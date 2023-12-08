@@ -52,7 +52,7 @@ mod ibc;
 mod node;
 mod staking;
 
-pub use bank::Bank;
+pub use bank::{cosmrs_to_cosmwasm_coins, Bank};
 pub use cosmwasm::CosmWasm;
 pub use feegrant::Feegrant;
 pub use ibc::Ibc;

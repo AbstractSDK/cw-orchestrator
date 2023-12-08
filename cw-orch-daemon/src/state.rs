@@ -192,9 +192,9 @@ impl StateInterface for DaemonState {
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
         let mut store = HashMap::new();
         let addresses = self.get(&self.deployment_id);
-        let value = addresses.as_object().unwrap();
+        let value = addresses.as_object().cloned().unwrap_or_default();
         for (id, addr) in value {
-            store.insert(id.clone(), Addr::unchecked(addr.as_str().unwrap()));
+            store.insert(id, Addr::unchecked(addr.as_str().unwrap()));
         }
         Ok(store)
     }
@@ -202,9 +202,9 @@ impl StateInterface for DaemonState {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         let mut store = HashMap::new();
         let code_ids = self.get("code_ids");
-        let value = code_ids.as_object().unwrap();
+        let value = code_ids.as_object().cloned().unwrap_or_default();
         for (id, code_id) in value {
-            store.insert(id.clone(), code_id.as_u64().unwrap());
+            store.insert(id, code_id.as_u64().unwrap());
         }
         Ok(store)
     }
