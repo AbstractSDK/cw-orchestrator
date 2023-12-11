@@ -238,7 +238,16 @@ impl Stargate for Daemon {
         msgs: Vec<prost_types::Any>,
         memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
-        self.rt_handle
-            .block_on(self.wallet().commit_tx_any(msgs, memo))
+        self.rt_handle.block_on(
+            self.wallet().commit_tx_any(
+                msgs.iter()
+                    .map(|msg| cosmrs::Any {
+                        type_url: msg.type_url.clone(),
+                        value: msg.value.clone(),
+                    })
+                    .collect(),
+                memo,
+            ),
+        )
     }
 }

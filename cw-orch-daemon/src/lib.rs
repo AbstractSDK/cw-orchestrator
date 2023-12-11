@@ -56,7 +56,7 @@ pub(crate) mod cosmos_modules {
                 connection::v1 as ibc_connection,
             },
         },
-        tendermint::abci as tendermint_abci,
+        tendermint::v0_34::abci as tendermint_abci,
     };
 }
 
