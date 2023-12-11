@@ -74,7 +74,7 @@ impl DaemonAsyncBuilder {
             state,
             sender: Rc::new(sender),
         };
-        print_if_log_disabled();
+        print_if_log_disabled()?;
         Ok(daemon)
     }
 }

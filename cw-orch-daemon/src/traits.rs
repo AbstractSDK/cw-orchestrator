@@ -1,6 +1,6 @@
 use crate::{queriers::CosmWasm, Daemon, DaemonError};
 use cosmwasm_std::ContractInfoResponse;
-use cw_orch_core::{contract::interface_traits::CwOrchUpload, environment::WasmCodeQuerier};
+use cw_orch_core::{contract::interface_traits::ContractInstance, environment::WasmCodeQuerier};
 
 impl WasmCodeQuerier for Daemon {
     /// Returns the checksum of provided code_id
@@ -12,7 +12,7 @@ impl WasmCodeQuerier for Daemon {
     }
 
     /// Returns the code_info structure of the provided contract
-    fn contract_info<T: CwOrchUpload<Self>>(
+    fn contract_info<T: ContractInstance<Self>>(
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, DaemonError> {

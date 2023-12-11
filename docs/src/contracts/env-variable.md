@@ -39,6 +39,8 @@ CW_ORCH_SERIALIZE_JSON = "false"
 CW_ORCH_STATE_FOLDER = "~/.cw-orchestrator"
 # Optional - Integer. This allows setting a minimum of gas used when broadcasting transactions
 CW_ORCH_MIN_GAS = 100000
+# Optional - boolean.  Disable the "Enable Logs" message.
+CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE = "false"
 ```
 
 ## Mnemonics

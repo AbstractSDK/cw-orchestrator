@@ -169,7 +169,7 @@ impl Sender<All> {
             0u8,
             &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
             0,
-        );
+        )?;
 
         let auth_info = SignerInfo {
             public_key: self.private_key.get_signer_public_key(&self.secp),
