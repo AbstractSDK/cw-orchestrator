@@ -21,9 +21,7 @@ pub mod queriers;
 mod traits;
 pub mod tx_broadcaster;
 pub mod tx_builder;
-pub use self::{
-    builder::*, channel::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*,
-};
+pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;
 pub use sender::Wallet;
