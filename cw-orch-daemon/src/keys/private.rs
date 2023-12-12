@@ -11,6 +11,7 @@ use bitcoin::{
 use cosmrs::tx::SignerPublicKey;
 use cw_orch_core::log::LOCAL_LOGS;
 use hkd32::mnemonic::{Phrase, Seed};
+use prost_types::Any;
 use rand_core::OsRng;
 use secp256k1::Secp256k1;
 
@@ -126,7 +127,7 @@ impl PrivateKey {
 
         let inj_key = InjectivePubKey { key: vec_pk.into() };
 
-        inj_key.to_any().unwrap().try_into().unwrap()
+        cosmrs::Any::from_msg(&inj_key).unwrap().try_into().unwrap()
     }
 
     pub fn get_signer_public_key<C: secp256k1::Signing + secp256k1::Context>(

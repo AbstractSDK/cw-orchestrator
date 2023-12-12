@@ -6,6 +6,9 @@
 - Add `BankQuerier` as trait bound to `CwEnv`.
 - Add `WasmCodeQuerier` as trait bound to `CwEnv`.
 - Changed the snapshot feature for better snapshot readability.
+- Updated `cosmrs` to `0.15.0`
+- Updated tonic to `0.10.2`
+- Bumped MSRV to 1.72 because of dependency `cosmrs@0.15.0`
 
 ## 0.18.2
 
