@@ -6,6 +6,8 @@
 - Add `BankQuerier` as trait bound to `CwEnv`.
 - Add `WasmCodeQuerier` as trait bound to `CwEnv`.
 - Changed the snapshot feature for better snapshot readability.
+- Added Readonly flag to the daemon state
+- Added min gas fee environment variable
 
 ## 0.18.2
 
