@@ -75,8 +75,7 @@ impl TxBuilder {
         Ok(fee)
     }
 
-    /// Builds the raw tx with a given body and fee and signs it.
-    /// Sets the TxBuilder's gas limit to its simulated amount for later use.
+    /// Simulates the transaction and returns the necessary gas fee returned by the simulation on a node
     pub async fn simulate(&self, wallet: &Sender<All>) -> Result<u64, DaemonError> {
         // get the account number of the wallet
         let BaseAccount {

@@ -16,6 +16,7 @@ pub const STATE_FOLDER_ENV_NAME: &str = "CW_ORCH_STATE_FOLDER";
 pub const STATE_FILE_ENV_NAME: &str = "STATE_FILE";
 pub const ARTIFACTS_DIR_ENV_NAME: &str = "ARTIFACTS_DIR";
 pub const GAS_BUFFER_ENV_NAME: &str = "CW_ORCH_GAS_BUFFER";
+pub const MIN_GAS_ENV_NAME: &str = "CW_ORCH_MIN_GAS";
 pub const MAX_TX_QUERIES_RETRY_ENV_NAME: &str = "CW_ORCH_MAX_TX_QUERY_RETRIES";
 pub const MIN_BLOCK_SPEED_ENV_NAME: &str = "CW_ORCH_MIN_BLOCK_SPEED";
 pub const SERIALIZE_ENV_NAME: &str = "CW_ORCH_SERIALIZE_JSON";
@@ -49,6 +50,11 @@ pub struct CwOrchEnvVars {
     /// This allows changing the gas buffer applied after tx simulation
     /// If not specified, a more complex algorithm is applied for dealing with small gas fee cases
     pub gas_buffer: Option<f64>,
+
+    /// Optional - Integer
+    /// Defaults to None
+    /// Minimum gas amount. Useful when transaction still won't pass even when setting a high gas_buffer or for mixed transaction scripts
+    pub min_gas: Option<u64>,
 
     /// Optional - Integer
     /// Defaults to [`DEFAULT_TX_QUERY_RETRIES`]
@@ -110,6 +116,7 @@ impl Default for CwOrchEnvVars {
             state_file: PathBuf::from_str("state.json").unwrap(),
             artifacts_dir: None,
             gas_buffer: None,
+            min_gas: None,
             max_tx_query_retries: DEFAULT_TX_QUERY_RETRIES,
             min_block_speed: 1,
             serialize_json: false,
