@@ -114,6 +114,8 @@ pub enum DaemonError {
     InsufficientFee(String),
     #[error("Not enough balance, expected {expected}, found {current}")]
     NotEnoughBalance { expected: Coin, current: Coin },
+    #[error("Can't set the daemon state, it's read-only")]
+    StateReadOnly,
 }
 
 impl DaemonError {
