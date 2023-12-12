@@ -1,4 +1,7 @@
+use std::str::FromStr;
+
 use cosmrs::tx::{ModeInfo, SignMode};
+use cosmrs::AccountId;
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
     tendermint::chain::Id,
@@ -6,6 +9,7 @@ use cosmrs::{
     Any, Coin,
 };
 use cw_orch_core::log::TRANSACTION_LOGS;
+use cw_orch_core::CwOrchEnvVars;
 use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
@@ -57,9 +61,18 @@ impl TxBuilder {
         )
     }
 
-    pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: u64) -> Fee {
+    pub(crate) fn build_fee(
+        amount: impl Into<u128>,
+        denom: &str,
+        gas_limit: u64,
+    ) -> Result<Fee, DaemonError> {
         let fee = Coin::new(amount.into(), denom).unwrap();
-        Fee::from_amount_and_gas(fee, gas_limit)
+        let mut fee = Fee::from_amount_and_gas(fee, gas_limit);
+        fee.granter = CwOrchEnvVars::load()?
+            .fee_granter
+            .map(|g| AccountId::from_str(&g))
+            .transpose()?;
+        Ok(fee)
     }
 
     /// Builds the raw tx with a given body and fee and signs it.
@@ -119,7 +132,7 @@ impl TxBuilder {
                 (fee_amount, gas_expected)
             };
 
-        let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit);
+        let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit)?;
 
         log::debug!(
             target: TRANSACTION_LOGS,

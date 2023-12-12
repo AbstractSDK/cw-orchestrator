@@ -10,7 +10,7 @@ In this quick-start guide, we will review the necessary steps in order to integr
 
 > **NOTE**: *Additional content*
 >
->If you're moving quicker than everybody else, we suggest looking at [a before-after review of this example integration](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a). This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
+>If you're moving quicker than everybody else, we suggest looking at [a before-after review of this example integration](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..main). This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
 
 ## Summary
 

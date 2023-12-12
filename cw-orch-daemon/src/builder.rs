@@ -63,7 +63,7 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let state = Rc::new(DaemonState::new(chain, deployment_id).await?);
+        let state = Rc::new(DaemonState::new(chain, deployment_id, false).await?);
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender = if let Some(mnemonic) = &self.mnemonic {
             Sender::from_mnemonic(&state, mnemonic)?
@@ -74,7 +74,7 @@ impl DaemonAsyncBuilder {
             state,
             sender: Rc::new(sender),
         };
-        print_if_log_disabled();
+        print_if_log_disabled()?;
         Ok(daemon)
     }
 }

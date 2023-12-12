@@ -30,6 +30,8 @@ pub struct DaemonState {
     pub grpc_channel: Channel,
     /// Information about the chain
     pub chain_data: ChainData,
+    /// Flag to set the daemon state readonly and not pollute the env file
+    pub read_only: bool,
 }
 
 impl DaemonState {
@@ -38,6 +40,7 @@ impl DaemonState {
     pub async fn new(
         mut chain_data: ChainData,
         deployment_id: String,
+        read_only: bool,
     ) -> Result<DaemonState, DaemonError> {
         if chain_data.apis.grpc.is_empty() {
             return Err(DaemonError::GRPCListIsEmpty);
@@ -105,21 +108,24 @@ impl DaemonState {
             deployment_id,
             grpc_channel,
             chain_data,
+            read_only,
         };
 
-        log::info!(
-            target: LOCAL_LOGS,
-            "Writing daemon state JSON file: {:#?}",
-            state.json_file_path
-        );
+        if !read_only {
+            log::info!(
+                target: LOCAL_LOGS,
+                "Writing daemon state JSON file: {:#?}",
+                state.json_file_path
+            );
 
-        // write json state file
-        crate::json_file::write(
-            &state.json_file_path,
-            &state.chain_data.chain_id.to_string(),
-            &state.chain_data.chain_name,
-            &state.deployment_id,
-        );
+            // write json state file
+            crate::json_file::write(
+                &state.json_file_path,
+                &state.chain_data.chain_id.to_string(),
+                &state.chain_data.chain_name,
+                &state.deployment_id,
+            );
+        }
 
         // finish
         Ok(state)
@@ -143,6 +149,10 @@ impl DaemonState {
         contract_id: &str,
         value: T,
     ) -> Result<(), DaemonError> {
+        if self.read_only {
+            return Err(DaemonError::StateReadOnly);
+        }
+
         let mut json = self.read_state()?;
 
         json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key]
