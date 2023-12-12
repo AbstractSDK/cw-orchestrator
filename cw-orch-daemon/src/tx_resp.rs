@@ -1,3 +1,5 @@
+use prost::bytes::Bytes;
+
 use super::{
     cosmos_modules::{
         abci::{AbciMessageLog, Attribute, StringEvent, TxResponse},
@@ -15,6 +17,10 @@ const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
 const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
 const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
 const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
+
+fn parse_attribute_bytes(value: &Bytes) -> String {
+    String::from_utf8_lossy(value).to_string()
+}
 
 /// The response from a transaction performed on a blockchain.
 #[derive(Debug, Default, Clone)]
@@ -138,8 +144,8 @@ impl IndexResponse for CosmTxResponse {
 
             for attr in &event.attributes {
                 pattr.push(cosmwasm_std::Attribute {
-                    key: attr.key.clone(),
-                    value: attr.value.clone(),
+                    key: parse_attribute_bytes(&attr.key),
+                    value: parse_attribute_bytes(&attr.value.clone()),
                 })
             }
 
@@ -164,7 +170,7 @@ impl IndexResponse for CosmTxResponse {
             if event.r#type == event_type {
                 for attr in &event.attributes {
                     if attr.key == attr_key {
-                        return Ok(attr.value.clone());
+                        return Ok(parse_attribute_bytes(&attr.value));
                     }
                 }
             }

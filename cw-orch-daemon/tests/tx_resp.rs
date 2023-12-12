@@ -1,4 +1,4 @@
-use cosmrs::proto::tendermint::abci::{Event, EventAttribute};
+use cosmrs::proto::tendermint::v0_34::abci::{Event, EventAttribute};
 use cw_orch_core::environment::IndexResponse;
 use cw_orch_daemon::parse_timestamp;
 use cw_orch_daemon::CosmTxResponse;
@@ -66,8 +66,8 @@ fn tx_resp() {
                 .unwrap()
                 .iter()
                 .map(|attr| EventAttribute {
-                    key: String::from(attr.get("key").unwrap().as_str().unwrap()),
-                    value: String::from(attr.get("value").unwrap().as_str().unwrap()),
+                    key: String::from(attr.get("key").unwrap().as_str().unwrap()).into(),
+                    value: String::from(attr.get("value").unwrap().as_str().unwrap()).into(),
                     index: attr.get("index").unwrap().as_bool().unwrap(),
                 })
                 .collect::<Vec<EventAttribute>>();

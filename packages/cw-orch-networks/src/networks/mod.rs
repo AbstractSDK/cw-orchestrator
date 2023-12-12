@@ -31,7 +31,7 @@ pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 /// ## Example
 /// ```rust,no_run
 /// use cw_orch_networks::networks::{parse_network, ChainInfo};
-/// let juno_mainnet: ChainInfo = parse_network("juno-1")?;
+/// let juno_mainnet: ChainInfo = parse_network("juno-1").unwrap();
 /// ```
 /// ---
 /// supported chains are defined by the `SUPPORT_NETWORKS` variable
