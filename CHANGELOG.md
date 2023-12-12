@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unreleased
+## 0.19.0
 
 - Add `MutCwEnv` for manipulating testing environments.
 - Add `BankQuerier` as trait bound to `CwEnv`.
@@ -18,7 +18,7 @@
 
 ## 0.18.1
 
-- Dix : Added daemon flag on the networks import
+- Fix : Added daemon flag on the networks import
 
 ## 0.18.0
 
