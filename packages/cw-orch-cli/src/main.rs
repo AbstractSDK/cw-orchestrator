@@ -1,6 +1,6 @@
 mod commands;
 mod common;
-mod types;
+pub(crate) mod types;
 use interactive_clap::{ResultFromCli, ToCliArgs};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]

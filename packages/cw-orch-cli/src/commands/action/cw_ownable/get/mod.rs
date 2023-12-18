@@ -1,5 +1,5 @@
 use cw_orch::{
-    daemon::{networks::parse_network, ChainRegistryData, GrpcChannel},
+    daemon::{ChainRegistryData, GrpcChannel},
     tokio::runtime::Runtime,
 };
 
@@ -26,7 +26,7 @@ impl GetOwnershipOutput {
         previous_context: CosmosContext,
         scope:&<GetOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id).unwrap();
+        let chain = previous_context.chain;
         let msg = serde_json::to_vec(&ContractQueryMsg::Ownership {})?;
         let chain_data: ChainRegistryData = chain.into();
 
@@ -36,8 +36,6 @@ impl GetOwnershipOutput {
                 GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
             let mut client = QueryClient::new(grpc_channel);
 
-            // TODO: support other types of queries
-            // It should be possible to support `Any` on query
             let resp = client
                 .smart_contract_state(QuerySmartContractStateRequest {
                     address: scope.contract_addr.clone(),

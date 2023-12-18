@@ -1,9 +1,5 @@
-use color_eyre::eyre;
 use cosmwasm_std::Uint128;
-use cw_orch::{
-    daemon::{networks::parse_network, DaemonAsync},
-    tokio::runtime::Runtime,
-};
+use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
 use super::CosmosContext;
 
@@ -28,7 +24,7 @@ impl TransferCw20Output {
         previous_context: CosmosContext,
         scope: &<Cw20TransferCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id).map_err(|err| eyre::eyre!(err))?;
+        let chain = previous_context.chain;
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let cw20_msg = cw20::Cw20ExecuteMsg::Transfer {
             recipient: scope.to_address.clone(),

@@ -1,5 +1,6 @@
 /// Allow integrating keys and stuff
 pub mod common;
+pub mod types;
 
 mod contract;
 mod daemon;

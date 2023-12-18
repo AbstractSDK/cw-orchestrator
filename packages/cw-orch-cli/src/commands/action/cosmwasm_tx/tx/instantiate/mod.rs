@@ -1,6 +1,6 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
-    prelude::{networks::parse_network, DaemonAsync, IndexResponse},
+    prelude::{DaemonAsync, IndexResponse},
     tokio::runtime::Runtime,
 };
 
@@ -67,8 +67,7 @@ impl InstantiateWasmOutput {
         previous_context: CosmosContext,
         scope:&<InstantiateContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        // TODO: non-panic parse_network
-        let chain = parse_network(&previous_context.chain_id).unwrap();
+        let chain = previous_context.chain;
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;

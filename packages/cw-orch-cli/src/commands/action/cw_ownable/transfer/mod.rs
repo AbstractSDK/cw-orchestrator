@@ -1,9 +1,6 @@
 use std::rc::Rc;
 
-use cw_orch::{
-    daemon::{networks::parse_network, DaemonAsync},
-    tokio::runtime::Runtime,
-};
+use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
 use crate::{
     commands::action::CosmosContext,
@@ -55,7 +52,7 @@ impl TransferOwnershipOutput {
         previous_context: CosmosContext,
         scope:&<TransferOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id).unwrap();
+        let chain = previous_context.chain;
         let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let receiver_seed = scope
             .new_signer

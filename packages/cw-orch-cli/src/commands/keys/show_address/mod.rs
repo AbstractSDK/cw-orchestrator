@@ -1,6 +1,6 @@
-use cw_orch::{daemon::DaemonAsync, prelude::networks::parse_network, tokio::runtime::Runtime};
+use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
-use crate::common::seed_phrase_for_id;
+use crate::{common::seed_phrase_for_id, types::CliLockedChain};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
@@ -9,11 +9,11 @@ pub struct ShowAddressCommand {
     /// Id of the key
     name: String,
     #[interactive_clap(skip_default_input_arg)]
-    chain_id: String,
+    chain_id: CliLockedChain,
 }
 
 impl ShowAddressCommand {
-    fn input_chain_id(_: &()) -> color_eyre::eyre::Result<Option<String>> {
+    fn input_chain_id(_: &()) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
         crate::common::select_chain()
     }
 }
@@ -26,7 +26,7 @@ impl ShowAddressOutput {
         scope:&<ShowAddressCommand as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let mnemonic = seed_phrase_for_id(&scope.name)?;
-        let chain = parse_network(&scope.chain_id).unwrap();
+        let chain = scope.chain_id;
 
         let rt = Runtime::new()?;
         rt.block_on(async {

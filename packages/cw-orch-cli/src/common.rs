@@ -1,3 +1,4 @@
+use crate::types::CliLockedChain;
 pub use base64::prelude::BASE64_STANDARD as B64;
 use base64::Engine;
 use cw_orch::daemon::networks::SUPPORTED_NETWORKS as NETWORKS;
@@ -19,7 +20,7 @@ pub fn get_cw_cli_exec_path() -> String {
     std::env::args().next().unwrap()
 }
 
-pub fn select_chain() -> color_eyre::eyre::Result<Option<String>> {
+pub fn select_chain() -> color_eyre::eyre::Result<Option<CliLockedChain>> {
     let chain_ids: Vec<_> = NETWORKS
         .iter()
         .map(|network| {
@@ -32,8 +33,8 @@ pub fn select_chain() -> color_eyre::eyre::Result<Option<String>> {
         })
         .collect();
     let selected = Select::new("Select chain", chain_ids).raw_prompt()?;
-    let chain_id = NETWORKS[selected.index].chain_id.to_owned();
-    Ok(Some(chain_id))
+    let locked_chain = CliLockedChain::new(selected.index);
+    Ok(Some(locked_chain))
 }
 
 pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {

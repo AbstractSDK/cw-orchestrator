@@ -1,7 +1,6 @@
 use cosmrs::proto::cosmwasm::wasm::v1::{query_client::QueryClient, QueryRawContractStateRequest};
 use cw_orch::{
     daemon::{ChainRegistryData, GrpcChannel},
-    prelude::networks::parse_network,
     tokio::runtime::Runtime,
 };
 
@@ -25,7 +24,7 @@ impl QueryWasmOutput {
         previous_context: CosmosContext,
         scope:&<QueryRawCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = parse_network(&previous_context.chain_id).unwrap();
+        let chain = previous_context.chain;
 
         let chain_data: ChainRegistryData = chain.into();
 

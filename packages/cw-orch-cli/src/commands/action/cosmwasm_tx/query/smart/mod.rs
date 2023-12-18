@@ -3,7 +3,6 @@ use cosmrs::proto::cosmwasm::wasm::v1::{
 };
 use cw_orch::{
     daemon::{ChainRegistryData, GrpcChannel},
-    prelude::networks::parse_network,
     tokio::runtime::Runtime,
 };
 
@@ -39,8 +38,7 @@ impl QueryWasmOutput {
         previous_context: CosmosContext,
         scope:&<QuerySmartCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        // TODO: non-panic parse_network
-        let chain = parse_network(&previous_context.chain_id).unwrap();
+        let chain = previous_context.chain;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
         let chain_data: ChainRegistryData = chain.into();
