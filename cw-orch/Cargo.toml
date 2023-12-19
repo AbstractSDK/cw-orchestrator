@@ -59,6 +59,7 @@ injective-test-tube = [
   "dep:osmosis-std",
   "dep:prost",
   "dep:prost-types",
+  "eth",
 ]
 snapshot-testing = ["dep:insta"]
 
