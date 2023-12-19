@@ -53,6 +53,13 @@ osmosis-test-tube = [
   "dep:prost",
   "dep:prost-types",
 ]
+injective-test-tube = [
+  "dep:injective-test-tube",
+  "dep:injective-std",
+  "dep:osmosis-std",
+  "dep:prost",
+  "dep:prost-types",
+]
 snapshot-testing = ["dep:insta"]
 
 
@@ -98,6 +105,8 @@ cw-orch-mock = { workspace = true }
 insta = { version = "1.34.0", features = ["yaml"], optional = true }
 sanitize-filename = "0.5.0"
 hex = "0.4.3"
+injective-test-tube = { version = "1.1.6", optional = true }
+injective-std = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }

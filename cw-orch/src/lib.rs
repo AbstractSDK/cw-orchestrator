@@ -38,6 +38,8 @@ pub extern crate tokio;
 pub mod daemon;
 
 mod error;
+#[cfg(feature = "injective-test-tube")]
+pub mod injective_test_tube;
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
 
