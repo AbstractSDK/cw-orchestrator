@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## 0.19.1
 
 - Fix: Min gas env variable processing.
 - Fix: Added specific local hash computation possibility
