@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- Fix: Min gas env variable processing.
+
 ## 0.19.0
 
 - Add `MutCwEnv` for manipulating testing environments.
