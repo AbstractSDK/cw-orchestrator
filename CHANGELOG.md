@@ -3,6 +3,7 @@
 ## Unpublished
 
 - Fix: Min gas env variable processing.
+- Fix: Added specific local hash computation possibility
 
 ## 0.19.0
 
