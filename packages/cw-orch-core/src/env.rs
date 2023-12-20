@@ -148,6 +148,9 @@ impl CwOrchEnvVars {
         if let Ok(str_value) = env::var(GAS_BUFFER_ENV_NAME) {
             env_values.gas_buffer = Some(str_value.parse()?);
         }
+        if let Ok(str_value) = env::var(MIN_GAS_ENV_NAME) {
+            env_values.min_gas = Some(str_value.parse()?);
+        }
         if let Ok(str_value) = env::var(MAX_TX_QUERIES_RETRY_ENV_NAME) {
             env_values.max_tx_query_retries = str_value.parse()?;
         }
