@@ -331,6 +331,15 @@ impl WasmCodeQuerier for Mock {
             .query_wasm_contract_info(contract.address()?)?;
         Ok(info)
     }
+
+    fn local_hash<T: Uploadable + ContractInstance<Mock>>(
+        &self,
+        contract: &T,
+    ) -> Result<String, CwEnvError> {
+        // We return the hashed contract-id.
+        // This will cause the logic to never re-upload a contract if it has the same contract-id.
+        Ok(sha256::digest(contract.id().as_bytes()))
+    }
 }
 
 impl BankQuerier for Mock {
