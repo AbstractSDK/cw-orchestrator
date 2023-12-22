@@ -5,6 +5,7 @@ authors = ["Buckram <misha@abstract.money>"]
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Command-line tool for managing Cosmos-based interaction."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
