@@ -1,7 +1,7 @@
 use cosmwasm_std::Empty;
 use counter_contract::CounterContract;
 use cw_orch::{anyhow, prelude::Daemon, tokio::runtime::Runtime};
-use cw_orch_cli::{ContractCli, DaemonFromCli};
+use cw_orch_contract_cli::{ContractCli, DaemonFromCli};
 
 pub fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();

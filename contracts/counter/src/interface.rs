@@ -65,9 +65,9 @@ impl CounterContract<Daemon> {
 // ANCHOR_END: daemon
 
 // ANCHOR: cli
-use cw_orch_cli::OrchCliResult;
+use cw_orch_contract_cli::OrchCliResult;
 
-impl cw_orch_cli::CwCliAddons<Empty> for CounterContract<cw_orch::prelude::Daemon> {
+impl cw_orch_contract_cli::CwCliAddons<Empty> for CounterContract<cw_orch::prelude::Daemon> {
     fn addons(&mut self, _context: Empty) -> OrchCliResult<()>
     where
         Self: cw_orch::prelude::ContractInstance<cw_orch::prelude::Daemon>,

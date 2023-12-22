@@ -13,7 +13,7 @@ pub enum Commands {
     /// Add, View or Remove key
     #[strum_discriminants(strum(message = "🔑Manage keys"))]
     Key(keys::KeyCommands),
-    // TODO: 
+    // TODO:
     // 1) AddressBook
     // 2) Config management
 }

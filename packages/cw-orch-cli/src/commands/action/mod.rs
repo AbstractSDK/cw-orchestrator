@@ -1,6 +1,6 @@
+mod asset;
 mod cosmwasm;
 mod cw_ownable;
-mod asset;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 

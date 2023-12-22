@@ -1,7 +1,8 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
+    daemon::CosmTxResponse,
     prelude::{DaemonAsync, IndexResponse},
-    tokio::runtime::Runtime, daemon::CosmTxResponse,
+    tokio::runtime::Runtime,
 };
 
 use crate::{commands::action::CosmosContext, log::LogOutput};
@@ -33,7 +34,7 @@ impl StoreWasmOutput {
         ))?;
 
         let rt = Runtime::new()?;
-        let resp =  rt.block_on(async {
+        let resp = rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)

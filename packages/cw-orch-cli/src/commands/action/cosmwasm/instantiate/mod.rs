@@ -1,12 +1,14 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
+    daemon::CosmTxResponse,
     prelude::{DaemonAsync, IndexResponse},
-    tokio::runtime::Runtime, daemon::CosmTxResponse,
+    tokio::runtime::Runtime,
 };
 
 use crate::{
     commands::action::CosmosContext,
-    types::{CliCoins, CliSkippable}, log::LogOutput,
+    log::LogOutput,
+    types::{CliCoins, CliSkippable},
 };
 
 use super::msg_type;

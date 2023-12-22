@@ -14,12 +14,11 @@ directories = "5.0.1"
 keyring = "2.0.5"
 cosmrs = { version = "0.15.0", features = ["cosmwasm", "grpc"] }
 rand_core = { version = "0.6", features = ["std"] }
-base64 = { version = "0.21.0" }                                             # TODO: move to workspace
+base64 = { version = "0.21.0" }                                               # TODO: move to workspace
 cosmwasm-std = { version = "1.3" }
 cw-utils = "1.0.3"
-cw-orch = { path = "../../cw-orch", features = ["daemon"] }
-cw-orch-cli-derive = { path = "../cw-orch-cli-derive", version = "0.13.3" }
-cw20 = { workspace = true }
+cw-orch = { path = "../../cw-orch", features = ["daemon"], version = "0.19" }
+cw20 = { version = "1" }
 interactive-clap = "0.2.4"
 interactive-clap-derive = "0.2.4"
 clap = { version = "4.0.18", features = ["derive"] }

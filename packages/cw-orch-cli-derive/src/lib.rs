@@ -69,12 +69,12 @@ fn parse_fn_derive(input: DeriveInput) -> TokenStream {
             });
             quote!(
                 #[automatically_derived]
-                impl ::cw_orch_cli::ParseCwMsg for #name {
-                    fn cw_parse(state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch_cli::OrchCliResult<Self> {
+                impl ::cw_orch_contract_cli::ParseCwMsg for #name {
+                    fn cw_parse(state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch_contract_cli::OrchCliResult<Self> {
                         #enum_of_variant_names
                         #display_for_enum_variant_names
                         let options = vec![#(#enum_variants_ident::#idents),*];
-                        let variant = ::cw_orch_cli::select_msg(options)?;
+                        let variant = ::cw_orch_contract_cli::select_msg(options)?;
                         #(#variants_as_structs)*
                         let msg = match variant {
                             #(#enum_variants_ident::#idents => #idents::cw_parse(state_interface)?.into()),*
@@ -99,12 +99,12 @@ fn impl_parse_for_struct(fields: &Fields, name: &proc_macro2::Ident) -> proc_mac
         let ident = field.ident.clone().unwrap();
         let ty = field.ty.clone();
         let message = format!("{}({})", ident, quote!(#ty));
-        quote!(#ident: ::cw_orch_cli::custom_type_serialize(#message)?)
+        quote!(#ident: ::cw_orch_contract_cli::custom_type_serialize(#message)?)
     });
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl ::cw_orch_cli::ParseCwMsg for #name {
-            fn cw_parse(_state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch_cli::OrchCliResult<Self> {
+        impl ::cw_orch_contract_cli::ParseCwMsg for #name {
+            fn cw_parse(_state_interface: &impl ::cw_orch::state::StateInterface) -> ::cw_orch_contract_cli::OrchCliResult<Self> {
                 Ok(Self {
                     #(#fields),*
                 })

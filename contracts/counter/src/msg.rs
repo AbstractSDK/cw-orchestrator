@@ -4,7 +4,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
+#[cfg_attr(feature = "interface", derive(cw_orch_contract_cli::ParseCwMsg))]
 /// Instantiate method for counter
 pub struct InstantiateMsg {
     /// Initial count
@@ -13,7 +13,7 @@ pub struct InstantiateMsg {
 
 // ANCHOR: exec_msg
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
+#[cfg_attr(feature = "interface", derive(cw_orch_contract_cli::ParseCwMsg))]
 #[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))] // Function generation
 /// Execute methods for counter
 pub enum ExecuteMsg {
@@ -29,7 +29,7 @@ pub enum ExecuteMsg {
 
 // ANCHOR: query_msg
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
+#[cfg_attr(feature = "interface", derive(cw_orch_contract_cli::ParseCwMsg))]
 #[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))] // Function generation
 #[derive(QueryResponses)]
 /// Query methods for counter
@@ -49,7 +49,7 @@ pub struct GetCountResponse {
 // ANCHOR_END: query_msg
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch_cli::ParseCwMsg))]
+#[cfg_attr(feature = "interface", derive(cw_orch_contract_cli::ParseCwMsg))]
 /// Migrate message for count contract
 pub struct MigrateMsg {
     /// Your favorite type of tea

@@ -97,7 +97,7 @@ where
     fn instantiate_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
         let instantiate_msg =
             <Self as InstantiableContract>::InstantiateMsg::cw_parse(state_interface)?;
-        let coins = crate::common::parse_coins()?;
+        let coins = cw_orch_cli::common::parse_coins()?;
 
         let admin = Text::new("Admin addr")
             .with_help_message("Press ESC to not set admin")
@@ -118,7 +118,7 @@ where
     fn execute_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
         let execute_msg = <Self as ExecutableContract>::ExecuteMsg::cw_parse(state_interface)?;
         // TODO: figure out a way to make this only with `payable` attribute
-        let coins = crate::common::parse_coins()?;
+        let coins = cw_orch_cli::common::parse_coins()?;
 
         if helpers::confirm_action("Execute", &execute_msg, Some(&coins.to_vec()))? {
             let res = self.execute(&execute_msg, Some(&coins.to_vec()))?;
