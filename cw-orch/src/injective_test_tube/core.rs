@@ -17,9 +17,6 @@ use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeResponse;
 use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoRequest;
 use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
 
-use injective_std::types::injective::wasmx::v1::{
-    QueryContractRegistrationInfoRequest, QueryContractRegistrationInfoResponse,
-};
 use injective_test_tube::{
     Account, Bank, ExecuteResponse, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
@@ -297,8 +294,8 @@ impl<S: StateInterface> TxHandler for InjectiveTestTube<S> {
         panic!("Migrate not implemented on osmosis test_tube")
     }
 
-    fn wait_blocks(&self, _amount: u64) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
+        self.wait_seconds(amount * 10u64) // Block time is 10s in this test tube
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
@@ -307,7 +304,7 @@ impl<S: StateInterface> TxHandler for InjectiveTestTube<S> {
     }
 
     fn next_block(&self) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+        self.wait_blocks(1)
     }
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
