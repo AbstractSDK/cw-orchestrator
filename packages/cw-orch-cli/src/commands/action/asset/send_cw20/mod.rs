@@ -1,11 +1,16 @@
 use cosmwasm_std::Uint128;
-use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
+use cw_orch::{
+    daemon::{CosmTxResponse, DaemonAsync},
+    tokio::runtime::Runtime,
+};
+
+use crate::log::LogOutput;
 
 use super::CosmosContext;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
-#[interactive_clap(output_context = TransferCw20Output)]
+#[interactive_clap(output_context = SendCw20Output)]
 pub struct Cw20TransferCommands {
     /// Cw20 Address
     cw20_address: String,
@@ -17,9 +22,9 @@ pub struct Cw20TransferCommands {
     signer: String,
 }
 
-pub struct TransferCw20Output;
+pub struct SendCw20Output;
 
-impl TransferCw20Output {
+impl SendCw20Output {
     fn from_previous_context(
         previous_context: CosmosContext,
         scope: &<Cw20TransferCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
@@ -33,7 +38,7 @@ impl TransferCw20Output {
         let msg = serde_json::to_vec(&cw20_msg)?;
         let rt = Runtime::new()?;
 
-        rt.block_on(async {
+        let resp = rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
@@ -46,11 +51,13 @@ impl TransferCw20Output {
                 msg,
                 funds: vec![],
             };
-            let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
 
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
 
-        Ok(TransferCw20Output)
+        resp.log();
+
+        Ok(SendCw20Output)
     }
 }

@@ -1,15 +1,15 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
     prelude::{DaemonAsync, IndexResponse},
-    tokio::runtime::Runtime,
+    tokio::runtime::Runtime, daemon::CosmTxResponse,
 };
 
 use crate::{
     commands::action::CosmosContext,
-    types::{CliCoins, CliSkippable},
+    types::{CliCoins, CliSkippable}, log::LogOutput,
 };
 
-use super::super::msg_type;
+use super::msg_type;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -73,7 +73,7 @@ impl InstantiateWasmOutput {
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
         let rt = Runtime::new()?;
-        rt.block_on(async {
+        let resp = rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
@@ -88,13 +88,13 @@ impl InstantiateWasmOutput {
                 msg,
                 funds: coins,
             };
-            let res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
-            let address = res.instantiated_contract_address()?;
-
-            println!("Address of the instantiated contract: {address}");
-
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
+
+        let address = resp.instantiated_contract_address()?;
+        resp.log();
+        println!("Address of the instantiated contract: {address}");
 
         Ok(InstantiateWasmOutput)
     }

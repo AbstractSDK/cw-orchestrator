@@ -1,5 +1,5 @@
 use cosmrs::proto::cosmwasm::wasm::v1::{
-    query_client::QueryClient, QuerySmartContractStateRequest,
+    query_client::QueryClient, QuerySmartContractStateRequest, QuerySmartContractStateResponse,
 };
 use cw_orch::{
     daemon::{ChainRegistryData, GrpcChannel},
@@ -44,7 +44,7 @@ impl QueryWasmOutput {
         let chain_data: ChainRegistryData = chain.into();
 
         let rt = Runtime::new()?;
-        rt.block_on(async {
+        let resp = rt.block_on(async {
             let grpc_channel =
                 GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
             let mut client = QueryClient::new(grpc_channel);
@@ -55,10 +55,12 @@ impl QueryWasmOutput {
                     query_data: msg,
                 })
                 .await?;
-            let parsed_output: serde_json::Value = serde_json::from_slice(&resp.into_inner().data)?;
-            println!("{}", serde_json::to_string_pretty(&parsed_output)?);
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+            color_eyre::Result::<QuerySmartContractStateResponse, color_eyre::Report>::Ok(
+                resp.into_inner(),
+            )
         })?;
+        let parsed_output: serde_json::Value = serde_json::from_slice(&resp.data)?;
+        println!("{}", serde_json::to_string_pretty(&parsed_output)?);
 
         Ok(QueryWasmOutput)
     }

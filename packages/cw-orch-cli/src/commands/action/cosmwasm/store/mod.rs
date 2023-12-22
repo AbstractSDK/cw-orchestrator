@@ -1,10 +1,10 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
     prelude::{DaemonAsync, IndexResponse},
-    tokio::runtime::Runtime,
+    tokio::runtime::Runtime, daemon::CosmTxResponse,
 };
 
-use crate::commands::action::CosmosContext;
+use crate::{commands::action::CosmosContext, log::LogOutput};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -33,7 +33,7 @@ impl StoreWasmOutput {
         ))?;
 
         let rt = Runtime::new()?;
-        rt.block_on(async {
+        let resp =  rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
@@ -45,16 +45,13 @@ impl StoreWasmOutput {
                 wasm_byte_code,
                 instantiate_permission: None,
             };
-            let result = daemon.sender.commit_tx(vec![exec_msg], None).await?;
-
-            println!("Uploaded: {:?}", result.txhash);
-
-            let code_id = result.uploaded_code_id().unwrap();
-
-            println!("code_id: {code_id}");
-
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
+
+        let code_id = resp.uploaded_code_id().unwrap();
+        resp.log();
+        println!("code_id: {code_id}");
 
         Ok(StoreWasmOutput)
     }

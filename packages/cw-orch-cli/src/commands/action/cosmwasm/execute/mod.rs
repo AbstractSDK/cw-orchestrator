@@ -1,9 +1,10 @@
 use color_eyre::eyre::Context;
-use cw_orch::{prelude::DaemonAsync, tokio::runtime::Runtime};
+use cw_orch::{daemon::CosmTxResponse, prelude::DaemonAsync, tokio::runtime::Runtime};
 
+use crate::log::LogOutput;
 use crate::{commands::action::CosmosContext, types::CliCoins};
 
-use super::super::msg_type;
+use super::msg_type;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -52,7 +53,7 @@ impl ExecuteWasmOutput {
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
         let rt = Runtime::new()?;
-        rt.block_on(async {
+        let resp = rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(seed)
@@ -65,10 +66,12 @@ impl ExecuteWasmOutput {
                 msg,
                 funds: coins,
             };
-            let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
 
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
+
+        resp.log();
 
         Ok(ExecuteWasmOutput)
     }

@@ -16,15 +16,15 @@ pub struct KeyCommands {
 /// Select key action
 pub enum KeyAction {
     /// Add key to the keyring
-    #[strum_discriminants(strum(message = "Add key to the keyring"))]
+    #[strum_discriminants(strum(message = "📝Add key to the keyring"))]
     Add(add_key::AddKeyCommand),
     /// Show seed from keyring
-    #[strum_discriminants(strum(message = "Show key of given id from the keyring"))]
+    #[strum_discriminants(strum(message = "🔐Show key of given id from the keyring"))]
     Show(show_key::ShowKeyCommand),
     /// Remove key from the keyring
-    #[strum_discriminants(strum(message = "Remove key from the keyring"))]
+    #[strum_discriminants(strum(message = "❌Remove key from the keyring"))]
     Remove(remove_key::RemoveKeyCommand),
     /// Show address of the key
-    #[strum_discriminants(strum(message = "Show address of the key"))]
+    #[strum_discriminants(strum(message = "📌Show address of the key"))]
     ShowAddress(show_address::ShowAddressCommand),
 }

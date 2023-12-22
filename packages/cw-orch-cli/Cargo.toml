@@ -12,7 +12,7 @@ repository.workspace = true
 thiserror = { workspace = true }
 directories = "5.0.1"
 keyring = "2.0.5"
-cosmrs = { version = "0.15.0", features = ["cosmwasm"] }
+cosmrs = { version = "0.15.0", features = ["cosmwasm", "grpc"] }
 rand_core = { version = "0.6", features = ["std"] }
 base64 = { version = "0.21.0" }                                             # TODO: move to workspace
 cosmwasm-std = { version = "1.3" }

@@ -1,6 +1,6 @@
-mod cosmwasm_tx;
+mod cosmwasm;
 mod cw_ownable;
-mod transfer_tx;
+mod asset;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
@@ -22,15 +22,14 @@ pub struct CosmosCommands {
 #[interactive_clap(context = CosmosContext)]
 /// Select type of cosmos action
 pub enum CosmosAction {
-    /// Cosmwasm Action
-    #[strum_discriminants(strum(message = "CosmWasm"))]
-    Cw(cosmwasm_tx::CwCommands),
-    // TODO: rename and expand to bank?
-    // /// Transfer Action
-    #[strum_discriminants(strum(message = "Transfer"))]
-    Transfer(transfer_tx::TransferCommands),
+    /// Cosmwasm Action: store, instantiate, execute or query cosmwasm contract
+    #[strum_discriminants(strum(message = "🔮CosmWasm"))]
+    Cw(cosmwasm::CwCommands),
+    /// Asset Action
+    #[strum_discriminants(strum(message = "🏦Asset"))]
+    Asset(asset::AssetCommands),
     /// CW-Ownable Action
-    #[strum_discriminants(strum(message = "CW-Ownable"))]
+    #[strum_discriminants(strum(message = "👑CW-Ownable"))]
     CwOwnable(cw_ownable::CwOwnableCommands),
 }
 

@@ -1,5 +1,6 @@
 mod commands;
 mod common;
+mod log;
 pub(crate) mod types;
 use interactive_clap::{ResultFromCli, ToCliArgs};
 
@@ -10,7 +11,7 @@ pub struct TLCommand {
 }
 
 fn main() -> color_eyre::Result<()> {
-    // We don't want to see logs in stdout during cli
+    // We don't want to see cw-orch logs during cli
     std::env::set_var("CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE", "true");
     // TODO: add some configuration like default chain/signer/etc
     let cli_args = TLCommand::parse();
