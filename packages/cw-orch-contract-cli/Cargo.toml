@@ -13,7 +13,7 @@ cw-orch-cli-derive = { path = "../cw-orch-cli-derive", version = "0.13.3" }
 thiserror = { workspace = true }
 inquire = { version = "0.6" }
 cw-orch = { path = "../../cw-orch", features = ["daemon"], version = "0.19" }
-cw-orch-cli = { path = "../cw-orch-cli" }
+cw-orch-cli = { path = "../../cw-orch-cli" }
 
 strum = { version = "0.24", features = ["derive"] }
 cosmwasm-std = { workspace = true }
