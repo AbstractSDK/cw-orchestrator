@@ -5,7 +5,7 @@ The CosmWasm Orch CLI is a tool designed to facilitate the development, deployme
 # Installation
 
 ## Prerequisites
-It shares same prerequisites as Cw Orch, see [Prerequisites](../../INSTALL.md#prerequisites)
+It shares same prerequisites as Cw Orch, see [Prerequisites](../INSTALL.md#prerequisites)
 
 ## Install the Cosmwasm Orch CLI
 ```bash
