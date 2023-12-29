@@ -24,7 +24,7 @@ pub enum KeyAction {
     /// Remove key from the keyring
     #[strum_discriminants(strum(message = "❌Remove key from the keyring"))]
     Remove(remove_key::RemoveKeyCommand),
-    /// Show address of the key
-    #[strum_discriminants(strum(message = "📌Show address of the key"))]
+    /// Show address
+    #[strum_discriminants(strum(message = "📌Show address"))]
     ShowAddress(show_address::ShowAddressCommand),
 }
