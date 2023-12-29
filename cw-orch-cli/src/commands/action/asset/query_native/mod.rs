@@ -44,30 +44,31 @@ impl QueryNativeOutput {
                 GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
             let mut client = QueryClient::new(grpc_channel);
             if let Some(denom) = denom {
-                let response: tonic::Response<QueryBalanceResponse> = client
+                let response: QueryBalanceResponse = client
                     .balance(QueryBalanceRequest {
                         address: scope.address.clone(),
                         denom: denom.clone(),
                     })
-                    .await?;
-                let balance = response
-                    .into_inner()
-                    .balance
-                    .map(proto_coin_to_std)
-                    .unwrap_or(cosmwasm_std::Coin {
-                        denom,
-                        amount: Default::default(),
-                    });
+                    .await?
+                    .into_inner();
+                let balance =
+                    response
+                        .balance
+                        .map(proto_coin_to_std)
+                        .unwrap_or(cosmwasm_std::Coin {
+                            denom,
+                            amount: Default::default(),
+                        });
                 println!("balance: {balance}")
             } else {
-                let response: tonic::Response<QueryAllBalancesResponse> = client
+                let response: QueryAllBalancesResponse = client
                     .all_balances(QueryAllBalancesRequest {
                         address: scope.address.clone(),
                         pagination: None,
                     })
-                    .await?;
+                    .await?
+                    .into_inner();
                 let balances: Vec<cosmwasm_std::Coin> = response
-                    .into_inner()
                     .balances
                     .into_iter()
                     .map(proto_coin_to_std)
