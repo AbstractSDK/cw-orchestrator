@@ -217,7 +217,7 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
         let on_chain_hash = chain
             .contract_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = self.wasm().checksum()?;
+        let local_hash = chain.local_hash(self)?;
         Ok(local_hash == on_chain_hash)
     }
 

@@ -100,6 +100,14 @@ pub trait WasmCodeQuerier: TxHandler + Clone {
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
+
+    /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
+    fn local_hash<T: Uploadable + ContractInstance<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<String, CwEnvError> {
+        contract.wasm().checksum()
+    }
 }
 
 pub trait BankQuerier: TxHandler {

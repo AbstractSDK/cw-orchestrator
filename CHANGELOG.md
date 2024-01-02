@@ -1,5 +1,10 @@
 # cw-orchestrator Changelog
 
+## 0.19.1
+
+- Fix: Min gas env variable processing.
+- Fix: Added specific local hash computation possibility
+
 ## 0.19.0
 
 - Add `MutCwEnv` for manipulating testing environments.
