@@ -52,7 +52,7 @@ impl std::fmt::Display for MsgTypeDiscriminants {
 
 pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
     let variants = MsgTypeDiscriminants::iter().collect::<Vec<_>>();
-    let selected = Select::new("How would you like to proceed?", variants).prompt()?;
+    let selected = Select::new("Select message format", variants).prompt()?;
     match selected {
         MsgTypeDiscriminants::JsonMsg => Ok(Some(MsgType::JsonMsg)),
         MsgTypeDiscriminants::Base64Msg => Ok(Some(MsgType::Base64Msg)),
