@@ -22,7 +22,7 @@ pub trait TxHandler: ChainState + Clone {
     /// Response type for transactions on an environment.
     type Response: IndexResponse + Debug + Send + Clone;
     /// Error type for transactions on an environment.
-    type Error: Into<CwEnvError> + Debug;
+    type Error: Into<CwEnvError> + Debug + std::error::Error;
     /// Source type for uploading to the environment.
     type ContractSource;
 
