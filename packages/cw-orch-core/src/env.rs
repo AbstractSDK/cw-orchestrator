@@ -12,7 +12,6 @@ use crate::CwEnvError;
 
 const DEFAULT_TX_QUERY_RETRIES: usize = 50;
 
-pub const STATE_FOLDER_ENV_NAME: &str = "CW_ORCH_STATE_FOLDER";
 pub const STATE_FILE_ENV_NAME: &str = "STATE_FILE";
 pub const ARTIFACTS_DIR_ENV_NAME: &str = "ARTIFACTS_DIR";
 pub const GAS_BUFFER_ENV_NAME: &str = "CW_ORCH_GAS_BUFFER";
@@ -34,7 +33,7 @@ pub struct CwOrchEnvVars {
     /// Defaults to "~./cw-orchestrator"
     /// This is the folder in which states of contracts are saved
     /// This is not enforced to be an absolute path but this is highly recommended
-    pub state_folder: Option<PathBuf>,
+    // pub state_folder: Option<PathBuf>,
 
     /// Optional - Path
     /// /// This is the name of the state file
@@ -112,7 +111,6 @@ pub struct CwOrchEnvVars {
 impl Default for CwOrchEnvVars {
     fn default() -> Self {
         CwOrchEnvVars {
-            state_folder: dirs::home_dir().map(|home| home.join(".cw-orchestrator")),
             state_file: PathBuf::from_str("state.json").unwrap(),
             artifacts_dir: None,
             gas_buffer: None,
@@ -136,9 +134,6 @@ impl CwOrchEnvVars {
         let mut env_values = CwOrchEnvVars::default();
 
         // Then we load the values from env
-        if let Ok(str_value) = env::var(STATE_FOLDER_ENV_NAME) {
-            env_values.state_folder = Some(PathBuf::from_str(&str_value).unwrap());
-        }
         if let Ok(str_value) = env::var(STATE_FILE_ENV_NAME) {
             env_values.state_file = PathBuf::from_str(&str_value).unwrap();
         }

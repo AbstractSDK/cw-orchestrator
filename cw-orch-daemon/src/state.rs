@@ -3,7 +3,7 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
-    env::STATE_FOLDER_ENV_NAME,
+    env::STATE_FILE_ENV_NAME,
     environment::{DeployDetails, StateInterface},
     log::{CONNECTIVITY_LOGS, LOCAL_LOGS},
     CwEnvError, CwOrchEnvVars,
@@ -131,7 +131,7 @@ impl DaemonState {
                 let actual_relative_path = env_file_path.strip_prefix("./")?;
                 current_dir.join(actual_relative_path)
             } else {
-                let state_folder = Self::state_dir()?;
+                let state_folder = Self::home_dir()?;
 
                 // We need to create the default state folder if it doesn't exist
                 std::fs::create_dir_all(state_folder.clone())?;
@@ -178,13 +178,14 @@ impl DaemonState {
         Ok(())
     }
 
-    pub fn state_dir() -> Result<PathBuf, DaemonError> {
+    fn home_dir() -> Result<PathBuf, DaemonError> {
         // This function should only error if the home_dir is not set and the `dirs` library is unable to fetch it
-        CwOrchEnvVars::load()?.state_folder
+        dirs::home_dir().map(|home| home.join(".cw-orchestrator"))
             .ok_or( DaemonError::StdErr(
                 format!(
-                    "Your machine doesn't have a home folder. Please specify the {} env variable to use cw-orchestrator", 
-                    STATE_FOLDER_ENV_NAME
+                    "Your machine doesn't have a home folder. You can't use relative path for the state file such as 'state.json'. 
+                    Please use an absolute path ('/home/root/state.json') or a dot-prefixed-relative path ('./state.json') in the {} env variable.",
+                    STATE_FILE_ENV_NAME
                 )))
     }
 }
