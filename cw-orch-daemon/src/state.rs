@@ -3,7 +3,7 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
-    env::STATE_FILE_ENV_NAME,
+    env::default_state_folder,
     environment::{DeployDetails, StateInterface},
     log::{CONNECTIVITY_LOGS, LOCAL_LOGS},
     CwEnvError, CwOrchEnvVars,
@@ -11,11 +11,7 @@ use cw_orch_core::{
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{
-    collections::HashMap,
-    fs::File,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, fs::File, path::Path};
 use tonic::transport::Channel;
 
 /// Stores the chain information and deployment state.
@@ -131,7 +127,7 @@ impl DaemonState {
                 let actual_relative_path = env_file_path.strip_prefix("./")?;
                 current_dir.join(actual_relative_path)
             } else {
-                let state_folder = Self::home_dir()?;
+                let state_folder = default_state_folder()?;
 
                 // We need to create the default state folder if it doesn't exist
                 std::fs::create_dir_all(state_folder.clone())?;
@@ -176,17 +172,6 @@ impl DaemonState {
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
         Ok(())
-    }
-
-    fn home_dir() -> Result<PathBuf, DaemonError> {
-        // This function should only error if the home_dir is not set and the `dirs` library is unable to fetch it
-        dirs::home_dir().map(|home| home.join(".cw-orchestrator"))
-            .ok_or( DaemonError::StdErr(
-                format!(
-                    "Your machine doesn't have a home folder. You can't use relative path for the state file such as 'state.json'. 
-                    Please use an absolute path ('/home/root/state.json') or a dot-prefixed-relative path ('./state.json') in the {} env variable.",
-                    STATE_FILE_ENV_NAME
-                )))
     }
 }
 
