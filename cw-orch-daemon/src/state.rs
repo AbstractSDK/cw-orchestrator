@@ -52,23 +52,8 @@ impl DaemonState {
         let grpc_channel =
             GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
 
-        // check if STATE_FILE en var is configured, default to state.json
-        let env_file_path = CwOrchEnvVars::load()?.state_file;
-
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
-        let mut json_file_path = if env_file_path.is_relative() {
-            let state_folder = Self::state_dir()?;
-
-            // We need to create the default state folder if it doesn't exist
-            std::fs::create_dir_all(state_folder.clone())?;
-
-            state_folder.join(env_file_path)
-        } else {
-            env_file_path
-        }
-        .into_os_string()
-        .into_string()
-        .unwrap();
+        let mut json_file_path = Self::state_file_path()?;
 
         log::debug!(target: LOCAL_LOGS, "Using state file : {}", json_file_path);
 
@@ -131,6 +116,37 @@ impl DaemonState {
         Ok(state)
     }
 
+    fn state_file_path() -> Result<String, DaemonError> {
+        // check if STATE_FILE en var is configured, default to state.json
+        let env_file_path = CwOrchEnvVars::load()?.state_file;
+        let state_file_path = if env_file_path.is_relative() {
+            // If it's relative, we check if it start with "."
+            if env_file_path
+                .components()
+                .map(|comp| comp.as_os_str().to_owned().into_string().unwrap())
+                .next()
+                == Some(".".to_string())
+            {
+                let current_dir = std::env::current_dir()?;
+                let actual_relative_path = env_file_path.strip_prefix("./")?;
+                current_dir.join(actual_relative_path)
+            } else {
+                let state_folder = Self::state_dir()?;
+
+                // We need to create the default state folder if it doesn't exist
+                std::fs::create_dir_all(state_folder.clone())?;
+
+                state_folder.join(env_file_path)
+            }
+        } else {
+            env_file_path
+        }
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+        Ok(state_file_path)
+    }
     /// Get the state filepath and read it as json
     fn read_state(&self) -> Result<serde_json::Value, DaemonError> {
         crate::json_file::read(&self.json_file_path)
@@ -232,5 +248,51 @@ impl StateInterface for DaemonState {
             chain_name: self.chain_data.chain_name.clone(),
             deployment_id: self.deployment_id.clone(),
         }
+    }
+}
+
+#[cfg(test)]
+pub mod test {
+    use std::env;
+
+    use cw_orch_core::env::STATE_FILE_ENV_NAME;
+
+    use crate::DaemonState;
+
+    #[test]
+    fn test_env_variable_state_path() -> anyhow::Result<()> {
+        let absolute_path = "/usr/var/file.json";
+        let relative_path = "folder/file.json";
+        let dotted_relative_path = format!("./{}", relative_path);
+
+        std::env::set_var(STATE_FILE_ENV_NAME, absolute_path);
+        let absolute_state_path = DaemonState::state_file_path()?;
+        assert_eq!(absolute_path.to_string(), absolute_state_path);
+
+        std::env::set_var(STATE_FILE_ENV_NAME, dotted_relative_path);
+        let relative_state_path = DaemonState::state_file_path()?;
+        assert_eq!(
+            env::current_dir()?
+                .join(relative_path)
+                .into_os_string()
+                .into_string()
+                .unwrap(),
+            relative_state_path
+        );
+
+        std::env::set_var(STATE_FILE_ENV_NAME, relative_path);
+        let relative_state_path = DaemonState::state_file_path()?;
+        assert_eq!(
+            dirs::home_dir()
+                .unwrap()
+                .join(".cw-orchestrator")
+                .join(relative_path)
+                .into_os_string()
+                .into_string()
+                .unwrap(),
+            relative_state_path
+        );
+
+        Ok(())
     }
 }

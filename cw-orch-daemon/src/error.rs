@@ -32,6 +32,8 @@ pub enum DaemonError {
     TendermintError(#[from] ::cosmrs::tendermint::Error),
     #[error(transparent)]
     CwEnvError(#[from] ::cw_orch_core::CwEnvError),
+    #[error(transparent)]
+    StripPrefixPath(#[from] std::path::StripPrefixError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
