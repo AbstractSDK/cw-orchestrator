@@ -6,7 +6,7 @@ This tutorial will guide you through creating a `cw-orch` `interface` for your c
 - Write integration tests for your contract.
 - Write executables for interacting with your contract.
 
-In order to ensure that the code snippets shown here are correct we'll be using the counter contract provided in the [`cw-orch` Github repository](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter) as the source for our code-snippets. You can find the contract [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+In order to ensure that the code snippets shown here are correct we'll be using the counter contract provided in the <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter" target="_blank">`cw-orch` Github repository</a> as the source for our code-snippets. You can find the contract <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter" target="_blank">here</a>.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ In order to ensure that the code snippets shown here are correct we'll be using 
 
 - **A gRPC endpoint** (optional): If you want to perform on-chain transaction you will need access to the gRPC endpoint of a node. These are most-often available on port 9090. We provide [chain definitions and constants](../chains/index.md) for some of the more widely used Cosmos Chains. Learn more about this on the [Daemon page](../integrations/daemon.md).
 
-- **A desire to learn** (mandatory): This tutorial will cover the basics of using cw-orchestrator but it won't cover everything. If you want to learn more about the features of cw-orchestrator you can check out the [API Documentation](https://docs.rs/cw-orch/latest/cw_orch/).
+- **A desire to learn** (mandatory): This tutorial will cover the basics of using cw-orchestrator but it won't cover everything. If you want to learn more about the features of cw-orchestrator you can check out the <a href="https://docs.rs/cw-orch/latest/cw_orch/" target="_blank">API Documentation</a>.
 
 ## Setup
 

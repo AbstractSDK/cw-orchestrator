@@ -1,6 +1,6 @@
 # CW Multi Test
 
-Cw Multi Test is a rust-based test framework that allows developers to test  for multi-contract interactions without having to dispatch messages, storage and other variables themselves. With cw-orchestrator, most of the `cw-multi-test` logic is abstracted away, but you can still [learn more about the framework here](https://github.com/CosmWasm/cw-multi-test).
+Cw Multi Test is a rust-based test framework that allows developers to test  for multi-contract interactions without having to dispatch messages, storage and other variables themselves. With cw-orchestrator, most of the `cw-multi-test` logic is abstracted away, but you can still <a href="https://github.com/CosmWasm/cw-multi-test" target="_blank">learn more about the framework here</a>.
 
 ## Quick Start
 
@@ -40,7 +40,7 @@ The underlying `cw_multi_test::App` object is however not clonable.
 
 ## Snapshot testing
 
-`cw-orch` provides snapshot testing capabilities to assist you catching breaking changes to your contracts. The `Mock::take_storage_snapshot` function allows you to dump all the deployed contracts' storage values into [insta.rs](https://insta.rs/docs/quickstart/) that executes snapshot testing. An example application of this feature is to make sure that the storage of your contracts don't change when migrating a contract. Using this tool, you should have a test that looks something like this:
+`cw-orch` provides snapshot testing capabilities to assist you catching breaking changes to your contracts. The `Mock::take_storage_snapshot` function allows you to dump all the deployed contracts' storage values into <a href="https://insta.rs/docs/quickstart/" target="_blank">insta.rs</a> that executes snapshot testing. An example application of this feature is to make sure that the storage of your contracts don't change when migrating a contract. Using this tool, you should have a test that looks something like this:
 
 ```rust,ignore
 
@@ -55,7 +55,7 @@ fn storage_stays_the_same(){
 }
 ```
 
-At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about the underlying tool in the [official documentation](https://insta.rs/).
+At any point of development, if the storage variables are modified, this test will fail and alert you that you are doing breaking changes to your storage variables. Learn more about the underlying tool in the <a href="https://insta.rs/" target="_blank">official documentation</a>.
 
 ## Additional tools
 

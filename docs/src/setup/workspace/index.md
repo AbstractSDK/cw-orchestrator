@@ -2,7 +2,7 @@
 
 In this tutorial, you will learn how to setup cw-orchestrator inside a workspace project. We present here the best practices for setting up an application composed of multiple contracts with the `cw-orch` crate. If you want a short version on how to integrate your contracts, we advise running to our [Quick Start guide](../../quick_start.md).
 
-> **NOTE**: [A rust workspace](https://doc.rust-lang.org/cargo/reference/workspaces.html) is a simple way to have multiple contracts inside the same repository and are especially suited for applications in which multiple contracts communicate with each other.
+> **NOTE**: <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html" target="_blank">A rust workspace</a> is a simple way to have multiple contracts inside the same repository and are especially suited for applications in which multiple contracts communicate with each other.
 
 This tutorial has multiple components:
 
