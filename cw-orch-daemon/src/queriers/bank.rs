@@ -1,6 +1,8 @@
-use crate::{cosmos_modules, error::DaemonError};
+use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use cosmwasm_std::StdError;
+use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -137,4 +139,72 @@ pub fn cosmrs_to_cosmwasm_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError>
         amount: c.amount.parse()?,
         denom: c.denom,
     })
+}
+
+pub fn cosmwasm_to_cosmrs_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError> {
+    Ok(cosmwasm_std::Coin {
+        amount: c.amount.parse()?,
+        denom: c.denom,
+    })
+}
+
+// Now we define traits
+
+pub struct DaemonBankQuerier {
+    channel: Channel,
+    rt_handle: Handle,
+}
+
+impl DaemonBankQuerier {
+    fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: daemon.rt_handle.clone(),
+        }
+    }
+}
+
+impl BankQuerierGetter for Daemon {
+    type Querier = DaemonBankQuerier;
+
+    fn bank_querier(&self) -> Self::Querier {
+        DaemonBankQuerier::new(self)
+    }
+}
+
+impl BankQuerier for DaemonBankQuerier {
+    type Error = DaemonError;
+
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
+        Ok(self
+            .rt_handle
+            .block_on(Bank::new(self.channel.clone()).balance(address, denom))
+            .map(|c| {
+                c.into_iter()
+                    .map(cosmrs_to_cosmwasm_coins)
+                    .collect::<Result<Vec<_>, StdError>>()
+            })??)
+    }
+
+    fn total_supply(&self) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
+        Ok(self
+            .rt_handle
+            .block_on(Bank::new(self.channel.clone()).total_supply())
+            .map(|c| {
+                c.into_iter()
+                    .map(cosmrs_to_cosmwasm_coins)
+                    .collect::<Result<Vec<_>, StdError>>()
+            })??)
+    }
+
+    fn supply_of(&self, denom: impl Into<String>) -> Result<cosmwasm_std::Coin, Self::Error> {
+        Ok(self
+            .rt_handle
+            .block_on(Bank::new(self.channel.clone()).supply_of(denom))
+            .map(cosmrs_to_cosmwasm_coins)??)
+    }
 }

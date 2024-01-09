@@ -1,6 +1,6 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse};
+use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, Daemon};
 
 use cosmrs::{
     proto::cosmos::{
@@ -9,8 +9,10 @@ use cosmrs::{
     },
     tendermint::{Block, Time},
 };
-use cw_orch_core::log::QUERY_LOGS;
-use cw_orch_core::CwOrchEnvVars;
+use cosmwasm_std::BlockInfo;
+use cw_orch_core::{environment::queriers::node::NodeQuerier, CwOrchEnvVars};
+use cw_orch_core::{environment::queriers::node::NodeQuerierGetter, log::QUERY_LOGS};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -190,13 +192,8 @@ impl Node {
     /// Returns all the block info
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
         let block = self.latest_block().await?;
-        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
-        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
-        Ok(cosmwasm_std::BlockInfo {
-            height: block.header.height.value(),
-            time,
-            chain_id: block.header.chain_id.to_string(),
-        })
+
+        block_to_block_info(block)
     }
 
     /// Find TX by hash
@@ -328,4 +325,77 @@ impl Node {
             CwOrchEnvVars::load()?.max_tx_query_retries,
         ))
     }
+}
+
+// Now we define traits
+
+pub struct DaemonNodeQuerier {
+    channel: Channel,
+    rt_handle: Handle,
+}
+
+impl DaemonNodeQuerier {
+    fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: daemon.rt_handle.clone(),
+        }
+    }
+}
+
+impl NodeQuerierGetter for Daemon {
+    type Querier = DaemonNodeQuerier;
+
+    fn node_querier(&self) -> Self::Querier {
+        DaemonNodeQuerier::new(self)
+    }
+}
+
+impl NodeQuerier for DaemonNodeQuerier {
+    type Error = DaemonError;
+
+    type Response = CosmTxResponse;
+
+    fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
+        self.rt_handle
+            .block_on(Node::new(self.channel.clone()).block_info())
+    }
+
+    fn block_by_height(&self, height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
+        let block = self
+            .rt_handle
+            .block_on(Node::new(self.channel.clone()).block_by_height(height))?;
+
+        block_to_block_info(block)
+    }
+
+    fn block_height(&self) -> Result<u64, Self::Error> {
+        self.rt_handle
+            .block_on(Node::new(self.channel.clone()).block_height())
+    }
+
+    fn block_time(&self) -> Result<u128, Self::Error> {
+        self.rt_handle
+            .block_on(Node::new(self.channel.clone()).block_time())
+    }
+
+    fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
+        self.rt_handle
+            .block_on(Node::new(self.channel.clone()).simulate_tx(tx_bytes))
+    }
+
+    fn find_tx(&self, hash: String) -> Result<Self::Response, Self::Error> {
+        self.rt_handle
+            .block_on(Node::new(self.channel.clone()).find_tx(hash))
+    }
+}
+
+fn block_to_block_info(block: Block) -> Result<BlockInfo, DaemonError> {
+    let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
+    let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
+    Ok(cosmwasm_std::BlockInfo {
+        height: block.header.height.value(),
+        time,
+        chain_id: block.header.chain_id.to_string(),
+    })
 }

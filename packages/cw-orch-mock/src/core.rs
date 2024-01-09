@@ -7,7 +7,10 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
-    environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
+    environment::{
+        queriers::bank::{BankQuerier, BankQuerierGetter},
+        BankSetter, ChainState, IndexResponse, StateInterface,
+    },
     environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
@@ -106,13 +109,12 @@ impl<S: StateInterface> Mock<S> {
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
     pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
-        let amount = self
-            .app
-            .borrow()
-            .wrap()
-            .query_balance(address, denom)?
-            .amount;
-        Ok(amount)
+        Ok(self
+            .bank_querier()
+            .balance(address, Some(denom.to_string()))?
+            .first()
+            .map(|c| c.amount)
+            .unwrap_or_default())
     }
 
     /// Fetch all the balances of an address.
@@ -120,8 +122,7 @@ impl<S: StateInterface> Mock<S> {
         &self,
         address: &Addr,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
-        let amount = self.app.borrow().wrap().query_all_balances(address)?;
-        Ok(amount)
+        self.bank_querier().balance(address, None)
     }
 }
 
@@ -342,7 +343,7 @@ impl WasmCodeQuerier for Mock {
     }
 }
 
-impl BankQuerier for Mock {
+impl<S: StateInterface> cw_orch_core::environment::BankQuerier for Mock<S> {
     fn balance(
         &self,
         address: impl Into<String>,
@@ -367,7 +368,7 @@ impl BankQuerier for Mock {
     }
 }
 
-impl BankSetter for Mock {
+impl<S: StateInterface> BankSetter for Mock<S> {
     fn set_balance(
         &mut self,
         address: &Addr,
@@ -384,6 +385,7 @@ mod test {
         StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
+    use cw_orch_core::environment::BankQuerier;
     use serde::Serialize;
     use speculoos::prelude::*;
 

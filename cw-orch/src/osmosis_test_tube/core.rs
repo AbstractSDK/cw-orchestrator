@@ -2,14 +2,14 @@ use std::str::FromStr;
 
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
+use cosmwasm_std::{Addr, ContractInfoResponse, StdResult};
 
-use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
+use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
+use cw_orch_core::environment::{BankSetter, WasmCodeQuerier};
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
 use osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
 };
@@ -20,8 +20,7 @@ use osmosis_test_tube::{
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
 use osmosis_test_tube::osmosis_std::{
-    cosmwasm_to_proto_coins,
-    types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
+    cosmwasm_to_proto_coins, types::cosmos::bank::v1beta1::MsgSend,
 };
 
 use osmosis_test_tube::OsmosisTestApp;
@@ -71,7 +70,7 @@ pub struct OsmosisTestTube<S: StateInterface = MockState> {
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
 
-fn map_err(e: RunnerError) -> CwOrchError {
+pub(crate) fn map_err(e: RunnerError) -> CwOrchError {
     CwOrchError::StdErr(e.to_string())
 }
 
@@ -145,18 +144,10 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
     pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwOrchError> {
-        let amount = Bank::new(&*self.app.borrow())
-            .query_balance(&QueryBalanceRequest {
-                address: address.to_owned(),
-                denom: denom.to_string(),
-            })
-            .map_err(map_err)?
-            .balance
-            .map(to_cosmwasm_coin)
-            .transpose()?
-            .map(|c| c.amount)
-            .unwrap_or(Uint128::zero());
-        Ok(amount)
+        let amount = self
+            .bank_querier()
+            .balance(address, Some(denom.to_string()))?;
+        Ok(amount.first().unwrap().amount)
     }
 
     /// Fetch all the balances of an address.
@@ -164,16 +155,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &self,
         address: &str,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
-        let amount = Bank::new(&*self.app.borrow())
-            .query_all_balances(&QueryAllBalancesRequest {
-                address: address.to_owned(),
-                pagination: None,
-            })
-            .map_err(map_err)?
-            .balances
-            .into_iter()
-            .map(to_cosmwasm_coin)
-            .collect::<Result<Vec<_>, _>>()?;
+        let amount = self.bank_querier().balance(address, None)?;
         Ok(amount)
     }
 }
@@ -326,49 +308,20 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
-impl BankQuerier for OsmosisTestTube {
+impl cw_orch_core::environment::BankQuerier for OsmosisTestTube {
     fn balance(
         &self,
         address: impl Into<String>,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        if let Some(denom) = denom {
-            Ok(vec![Coin {
-                amount: self.query_balance(&address.into(), &denom)?,
-                denom,
-            }])
-        } else {
-            self.query_all_balances(&address.into())
-        }
+        self.bank_querier().balance(address, denom)
     }
 
     fn supply_of(
         &self,
         denom: impl Into<String>,
     ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        let denom: String = denom.into();
-        let supply_of_result: QuerySupplyOfResponse = self
-            .app
-            .borrow()
-            .query(
-                "/cosmos.bank.v1beta1.Query/SupplyOf",
-                &QuerySupplyOfRequest {
-                    denom: denom.clone(),
-                },
-            )
-            .map_err(map_err)?;
-
-        Ok(supply_of_result
-            .amount
-            .map(|c| {
-                // Ok::<_, StdError>(cosmwasm_std::Coin {
-                //     amount: c.amount.parse()?,
-                //     denom: c.denom,
-                // })
-                to_cosmwasm_coin(c)
-            })
-            .transpose()?
-            .unwrap_or(coin(0, &denom)))
+        self.bank_querier().supply_of(denom)
     }
 }
 
@@ -455,7 +408,9 @@ impl WasmCodeQuerier for OsmosisTestTube {
     }
 }
 
-fn to_cosmwasm_coin(c: osmosis_std::types::cosmos::base::v1beta1::Coin) -> StdResult<Coin> {
+pub(crate) fn to_cosmwasm_coin(
+    c: osmosis_std::types::cosmos::base::v1beta1::Coin,
+) -> StdResult<Coin> {
     Ok(Coin {
         amount: Uint128::from_str(&c.amount)?,
         denom: c.denom,

@@ -1,6 +1,6 @@
 //! Transactional traits for execution environments.
 
-use super::{ChainState, IndexResponse};
+use super::{queriers::AllQueriers, ChainState, IndexResponse};
 use crate::{
     contract::interface_traits::{ContractInstance, Uploadable},
     error::CwEnvError,
@@ -10,8 +10,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + BankQuerier + WasmCodeQuerier + Clone {}
-impl<T: TxHandler + BankQuerier + WasmCodeQuerier + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + AllQueriers + BankQuerier + WasmCodeQuerier + Clone {}
+impl<T: TxHandler + AllQueriers + BankQuerier + WasmCodeQuerier + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -34,15 +34,19 @@ pub trait TxHandler: ChainState + Clone {
     /// Sets wallet to sign transactions.
     fn set_sender(&mut self, sender: Self::Sender);
 
+    #[deprecated = "Please use `.node().wait_blocks` from the NodeQueryHandlerGetter trait instead"]
     /// Wait for an amount of blocks.
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
 
+    #[deprecated = "Please use `.node().wait_seconds` from the NodeQueryHandlerGetter trait instead"]
     /// Wait for an amount of seconds.
     fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error>;
 
+    #[deprecated = "Please use `.node().next_block` from the NodeQueryHandlerGetter trait instead"]
     /// Wait for next block.
     fn next_block(&self) -> Result<(), Self::Error>;
 
+    #[deprecated = "Please use `.node().block_info` from the NodeQueryHandlerGetter trait instead"]
     /// Return current block info see [`BlockInfo`].
     fn block_info(&self) -> Result<BlockInfo, Self::Error>;
 
@@ -68,6 +72,7 @@ pub trait TxHandler: ChainState + Clone {
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
 
+    #[deprecated = "Please use `.wasm().query` from the WasmQueryHandlerGetter trait instead"]
     /// Send a QueryMsg to a contract.
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
@@ -111,6 +116,7 @@ pub trait WasmCodeQuerier: TxHandler + Clone {
 }
 
 pub trait BankQuerier: TxHandler {
+    #[deprecated = "Please use .bank().balance from the `BankQuerierGetter` trait"]
     /// Query the bank balance of a given address
     /// If denom is None, returns all balances
     fn balance(
@@ -119,6 +125,7 @@ pub trait BankQuerier: TxHandler {
         denom: Option<String>,
     ) -> Result<Vec<Coin>, <Self as TxHandler>::Error>;
 
+    #[deprecated = "Please use .bank().supply_of from the `BankQuerierGetter` trait"]
     /// Query total supply in the bank for a denom
     fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, <Self as TxHandler>::Error>;
 }

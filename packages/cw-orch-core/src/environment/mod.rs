@@ -1,6 +1,7 @@
 mod cosmwasm_environment;
 mod index_response;
 mod mut_env;
+pub mod queriers;
 mod state;
 
 pub use cosmwasm_environment::{BankQuerier, CwEnv, TxHandler, TxResponse, WasmCodeQuerier};
