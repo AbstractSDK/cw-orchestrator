@@ -26,8 +26,8 @@ pub const JUNO_1: ChainInfo = ChainInfo {
     gas_denom: "ujuno",
     gas_price: 0.0750,
     grpc_urls: &[
-        "https://grpc-juno-ia.cosmosia.notional.ventures",
         "http://juno-grpc.polkachu.com:12690",
+        "https://grpc-juno-ia.cosmosia.notional.ventures",
     ],
     network_info: JUNO_NETWORK,
     lcd_url: None,
