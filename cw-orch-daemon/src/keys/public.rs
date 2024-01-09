@@ -1,6 +1,6 @@
 use crate::DaemonError;
 use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
-use cw_orch_core::log::LOCAL_LOGS;
+use cw_orch_core::log::local_target;
 pub use ed25519_dalek::VerifyingKey as Ed25519;
 use ring::digest::{Context, SHA256};
 use ripemd::{Digest as _, Ripemd160};
@@ -72,7 +72,7 @@ impl PublicKey {
                             source,
                         }
                     })?;
-                    log::debug!(target: LOCAL_LOGS, "{:#?}", hex::encode(&vu8));
+                    log::debug!(target: &local_target(), "{:#?}", hex::encode(&vu8));
                     if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
                         let public_key = PublicKey::public_key_from_pubkey(&vu8)?;
                         let raw = PublicKey::address_from_public_key(&public_key);
@@ -261,7 +261,7 @@ impl PublicKey {
         } else {
             // eprintln!("a_pub_ed_key {}", hex::encode(public_key));
             log::debug!(
-                target: LOCAL_LOGS,
+                target: &local_target(),
                 "address_from_public_ed25519_key public key - {}",
                 hex::encode(public_key)
             );
@@ -283,7 +283,7 @@ impl PublicKey {
             // let address: Vec<u8> = ripe_result.to_vec();
             //     eprintln!("address_from_public_ed_key {}", hex::encode(&address));
             log::debug!(
-                target: LOCAL_LOGS,
+                target: &local_target(),
                 "address_from_public_ed25519_key sha result - {}",
                 hex::encode(&address)
             );
