@@ -117,15 +117,17 @@ impl DaemonState {
         let env_file_path = CwOrchEnvVars::load()?.state_file;
         let state_file_path = if env_file_path.is_relative() {
             // If it's relative, we check if it start with "."
-            if env_file_path
+            let first_path_component = env_file_path
                 .components()
                 .map(|comp| comp.as_os_str().to_owned().into_string().unwrap())
-                .next()
-                == Some(".".to_string())
-            {
+                .next();
+            if first_path_component == Some(".".to_string()) {
                 let current_dir = std::env::current_dir()?;
                 let actual_relative_path = env_file_path.strip_prefix("./")?;
                 current_dir.join(actual_relative_path)
+            } else if first_path_component == Some("..".to_string()) {
+                let current_dir = std::env::current_dir()?;
+                current_dir.join(env_file_path)
             } else {
                 let state_folder = default_state_folder()?;
 
@@ -250,6 +252,7 @@ pub mod test {
         let absolute_path = "/usr/var/file.json";
         let relative_path = "folder/file.json";
         let dotted_relative_path = format!("./{}", relative_path);
+        let parent_and_relative_path = format!("../{}", relative_path);
 
         std::env::set_var(STATE_FILE_ENV_NAME, absolute_path);
         let absolute_state_path = DaemonState::state_file_path()?;
@@ -277,6 +280,18 @@ pub mod test {
                 .into_string()
                 .unwrap(),
             relative_state_path
+        );
+
+        std::env::set_var(STATE_FILE_ENV_NAME, parent_and_relative_path);
+        let parent_and_relative_state_path = DaemonState::state_file_path()?;
+        assert_eq!(
+            env::current_dir()?
+                .join("../")
+                .join(relative_path)
+                .into_os_string()
+                .into_string()
+                .unwrap(),
+            parent_and_relative_state_path
         );
 
         Ok(())
