@@ -1,6 +1,6 @@
 # Environment Variables
 
-cw-orch leverages some environment variables to interact with contracts on actual blockchains. The environment variables are described here. You can find additional information about their usage, default values and types in the [`cw-orch` repo](https://github.com/AbstractSDK/cw-orchestrator/blob/main/packages/cw-orch-core/src/env.rs).
+cw-orch leverages some environment variables to interact with contracts on actual blockchains. The environment variables are described here. You can find additional information about their usage, default values and types in the <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/packages/cw-orch-core/src/env.rs" target="_blank">`cw-orch` repo</a>.
 
 **IMPORTANT: Before proceeding, ensure that you add `.env` to your `.gitignore`. We are not responsible for any loss of funds due to leaked mnemonics.**
 
@@ -46,4 +46,4 @@ CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE = "false"
 
 ## Mnemonics
 
-**Only 24-word mnemonics are supported at this time.** If you're experienced with keychain and private key management we'd really appreciate your help in adding support for other formats. Please reach out to us on [Discord](https://discord.gg/uch3Tq3aym) if you're interested in helping out.
+**Only 24-word mnemonics are supported at this time.** If you're experienced with keychain and private key management we'd really appreciate your help in adding support for other formats. Please reach out to us on <a href="https://discord.gg/uch3Tq3aym" target="_blank">Discord</a> if you're interested in helping out.

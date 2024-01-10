@@ -1,6 +1,6 @@
 # Osmosis Test Tube
 
-Osmosis Test Tube is a rust-based test framework that allows developers to test for multi-contract interactions without having to dispatch messages, storage and other variables themselves. This environment is even closer to the actual on-chain mechanisms than [Cw Multi Test](./cw-multi-test.md), because it runs tests directly on the actual chain binaries. With cw-orchestrator, most of the `osmosis-test-tube` logic is abstracted away, but you can still [learn more about the framework here](https://docs.rs/crate/osmosis-test-tube/latest).
+Osmosis Test Tube is a rust-based test framework that allows developers to test for multi-contract interactions without having to dispatch messages, storage and other variables themselves. This environment is even closer to the actual on-chain mechanisms than [Cw Multi Test](./cw-multi-test.md), because it runs tests directly on the actual chain binaries. With cw-orchestrator, most of the `osmosis-test-tube` logic is abstracted away, but you can still <a href="https://docs.rs/crate/osmosis-test-tube/latest" target="_blank">learn more about the framework here</a>.
 
 ## Prerequesites
 
@@ -8,7 +8,7 @@ In order to use `osmosis-test-tube`, the library needs to be able to compile and
 
 ### Ubuntu
 
-1. [Install go](https://go.dev/doc/install)
+1. <a href="https://go.dev/doc/install" target="_blank">Install go</a>
 2. Install the clang library
 ```bash
     sudo apt install clang

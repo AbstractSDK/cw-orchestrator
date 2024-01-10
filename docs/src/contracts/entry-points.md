@@ -54,7 +54,7 @@ Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]
 - The function created will have the snake_case name of the variant and will take the same arguments as the variant.
 - The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature.
 - If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
-- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the [`cosmwasm_schema::QueryResponses`](https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html) macro implemented (this is good practice even outside of use with `cw-orch`).
+- The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the <a href="https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html" target="_blank">`cosmwasm_schema::QueryResponses`</a> macro implemented (this is good practice even outside of use with `cw-orch`).
 
 ## Additional configuration
 
