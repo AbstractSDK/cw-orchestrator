@@ -12,6 +12,8 @@ use cw_orch_core::{
     CwEnvError,
 };
 
+use crate::AppResponse;
+
 use super::state::MockState;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
@@ -201,7 +203,12 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+        let code_id =
+            self.app
+                .borrow_mut()
+                .store_code(Box::new(crate::contract::MockContractWrapper(
+                    contract.wrapper(),
+                )));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -227,7 +234,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 coins,
             )
             .map_err(From::from)
-            .amp(Into::into)
+            .map(Into::into)
     }
 
     fn instantiate<I: Serialize + Debug>(

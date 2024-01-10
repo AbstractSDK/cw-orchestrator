@@ -4,10 +4,10 @@
 // Export our fork
 pub extern crate cw_multi_test;
 
+pub(crate) mod contract;
 mod core;
 mod response;
 mod state;
-
 pub use self::core::Mock;
 pub use response::AppResponse;
 pub use state::MockState;

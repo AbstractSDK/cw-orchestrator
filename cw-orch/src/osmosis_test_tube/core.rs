@@ -7,8 +7,8 @@ use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
 use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
 use cw_orch_traits::stargate::Stargate;
 
+use super::response::AppResponse;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
-use cw_multi_test::AppResponse;
 use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
 use osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
@@ -16,7 +16,6 @@ use osmosis_std::types::cosmwasm::wasm::v1::{
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
-
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
 use osmosis_test_tube::osmosis_std::{

@@ -16,6 +16,7 @@ cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }
 sha256 = { workspace = true }
+schemars = "0.8.16"
 
 [dev-dependencies]
 speculoos = { workspace = true }

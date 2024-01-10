@@ -33,8 +33,8 @@ impl IndexResponse for AppResponse {
     }
 }
 
-impl From<cw_multi_test::AppResponse> for AppResponse {
-    fn from(value: cw_multi_test::AppResponse) -> Self {
+impl From<crate::mock::cw_multi_test::AppResponse> for AppResponse {
+    fn from(value: crate::mock::cw_multi_test::AppResponse) -> Self {
         AppResponse {
             events: value.events,
             data: value.data,

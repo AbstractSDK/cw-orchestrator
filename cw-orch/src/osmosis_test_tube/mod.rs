@@ -2,5 +2,6 @@
 //! It has an associated state that stores deployment information for easy retrieval and contract interactions.
 
 mod core;
+mod response;
 
 pub use self::core::*;
