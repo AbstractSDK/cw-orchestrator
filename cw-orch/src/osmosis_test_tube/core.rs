@@ -5,10 +5,12 @@ use crate::prelude::Uploadable;
 use cosmwasm_std::{Addr, ContractInfoResponse, StdResult};
 
 use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
-use cw_orch_core::environment::{BankSetter, WasmCodeQuerier};
+use cw_orch_core::environment::queriers::wasm::{WasmQuerier, WasmQuerierGetter};
+use cw_orch_core::environment::queriers::QueryHandler;
+use cw_orch_core::environment::BankSetter;
 use cw_orch_traits::stargate::Stargate;
 
-use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
+use cosmwasm_std::{Binary, Coin, Uint128};
 use cw_multi_test::AppResponse;
 use osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
@@ -268,11 +270,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, CwOrchError> {
-        let query = Wasm::new(&*self.app.borrow())
-            .query(contract_address.as_ref(), query_msg)
-            .map_err(map_err)?;
-
-        Ok(query)
+        QueryHandler::query(self, query_msg, contract_address)
     }
 
     fn migrate<M: Serialize + Debug>(
@@ -284,27 +282,20 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         panic!("Migrate not implemented on osmosis test_tube")
     }
 
-    fn wait_blocks(&self, _amount: u64) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
+        QueryHandler::wait_blocks(self, amount)
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
-        self.app.borrow().increase_time(secs);
-        Ok(())
+        QueryHandler::wait_seconds(self, secs)
     }
 
     fn next_block(&self) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+        QueryHandler::next_block(self)
     }
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
-        Ok(BlockInfo {
-            chain_id: "osmosis-1".to_string(),
-            height: self.app.borrow().get_block_height().try_into().unwrap(),
-            time: Timestamp::from_nanos(
-                self.app.borrow().get_block_time_nanos().try_into().unwrap(),
-            ),
-        })
+        QueryHandler::block_info(self)
     }
 }
 
@@ -322,6 +313,18 @@ impl cw_orch_core::environment::BankQuerier for OsmosisTestTube {
         denom: impl Into<String>,
     ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
         self.bank_querier().supply_of(denom)
+    }
+}
+impl cw_orch_core::environment::WasmCodeQuerier for OsmosisTestTube {
+    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
+        self.wasm_querier().code_id_hash(code_id)
+    }
+
+    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
+        self.wasm_querier().contract_info(contract.address()?)
     }
 }
 
@@ -354,57 +357,6 @@ impl Stargate for OsmosisTestTube {
             data: Some(Binary(tx_response.raw_data)),
             events: tx_response.events,
         })
-    }
-}
-
-impl WasmCodeQuerier for OsmosisTestTube {
-    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
-        let code_info_result: QueryCodeResponse = self
-            .app
-            .borrow()
-            .query(
-                "/cosmwasm.wasm.v1.Query/Code",
-                &QueryCodeRequest { code_id },
-            )
-            .map_err(map_err)?;
-
-        Ok(hex::encode(
-            code_info_result
-                .code_info
-                .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?
-                .data_hash,
-        ))
-    }
-
-    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
-        let result = self
-            .app
-            .borrow()
-            .query::<_, QueryContractInfoResponse>(
-                "/cosmwasm.wasm.v1.Query/ContractInfo",
-                &QueryContractInfoRequest {
-                    address: contract.address()?.to_string(),
-                },
-            )
-            .map_err(map_err)?
-            .contract_info
-            .ok_or(CwOrchError::AddrNotInStore(contract.address()?.to_string()))?;
-
-        let mut contract_info = ContractInfoResponse::default();
-        contract_info.code_id = result.code_id;
-        contract_info.creator = result.creator;
-        contract_info.admin = Some(result.admin);
-
-        contract_info.ibc_port = if result.ibc_port_id.is_empty() {
-            None
-        } else {
-            Some(result.ibc_port_id)
-        };
-
-        Ok(contract_info)
     }
 }
 

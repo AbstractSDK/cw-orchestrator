@@ -44,6 +44,10 @@ fn count() -> anyhow::Result<()> {
     assert_eq!(count1.count, count2.count);
     // ANCHOR_END: query
 
+    // Or get it manually from the chain
+    let count3: GetCountResponse = mock.query(&QueryMsg::GetCount {}, &contract.address()?)?;
+    assert_eq!(count1.count, count3.count);
+
     // Check the count
     assert_eq!(count1.count, 2);
     // ANCHOR: reset

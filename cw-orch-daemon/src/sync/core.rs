@@ -2,7 +2,7 @@ use std::{fmt::Debug, rc::Rc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{cosmrs_to_cosmwasm_coins, Bank, DaemonQuerier, Node},
+    queriers::{DaemonQuerier, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
@@ -10,7 +10,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{BankQuerier, ChainState, TxHandler},
+    environment::{queriers::QueryHandler, ChainState, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::{de::DeserializeOwned, Serialize};
@@ -129,8 +129,7 @@ impl TxHandler for Daemon {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, DaemonError> {
-        self.rt_handle
-            .block_on(self.daemon.query(query_msg, contract_address))
+        QueryHandler::query(self, query_msg, contract_address)
     }
 
     fn migrate<M: Serialize + Debug>(
@@ -144,6 +143,46 @@ impl TxHandler for Daemon {
                 .migrate(migrate_msg, new_code_id, contract_address),
         )
     }
+
+    fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
+        QueryHandler::wait_blocks(self, amount)
+    }
+
+    fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
+        QueryHandler::wait_seconds(self, secs)
+    }
+
+    fn next_block(&self) -> Result<(), DaemonError> {
+        QueryHandler::next_block(self)
+    }
+
+    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
+        QueryHandler::block_info(self)
+    }
+}
+
+impl Stargate for Daemon {
+    fn commit_any<R>(
+        &self,
+        msgs: Vec<prost_types::Any>,
+        memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle.block_on(
+            self.wallet().commit_tx_any(
+                msgs.iter()
+                    .map(|msg| cosmrs::Any {
+                        type_url: msg.type_url.clone(),
+                        value: msg.value.clone(),
+                    })
+                    .collect(),
+                memo,
+            ),
+        )
+    }
+}
+
+impl QueryHandler for Daemon {
+    type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let mut last_height = self
@@ -202,52 +241,16 @@ impl TxHandler for Daemon {
             chain_id: block.header.chain_id.to_string(),
         })
     }
-}
 
-impl BankQuerier for Daemon {
-    fn balance(
+    fn query<
+        Q: serde::Serialize + std::fmt::Debug,
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    >(
         &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        let bank = Bank::new(self.channel());
-
-        let cosmrs_coins = self.rt_handle.block_on(bank.balance(address, denom))?;
-
-        cosmrs_coins
-            .iter()
-            .map(|c| cosmrs_to_cosmwasm_coins(c.clone()))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(Into::into)
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        let bank = Bank::new(self.channel());
-
-        let cosmrs_coin = self.rt_handle.block_on(bank.supply_of(denom))?;
-        cosmrs_to_cosmwasm_coins(cosmrs_coin.clone()).map_err(Into::into)
-    }
-}
-
-impl Stargate for Daemon {
-    fn commit_any<R>(
-        &self,
-        msgs: Vec<prost_types::Any>,
-        memo: Option<&str>,
-    ) -> Result<Self::Response, Self::Error> {
-        self.rt_handle.block_on(
-            self.wallet().commit_tx_any(
-                msgs.iter()
-                    .map(|msg| cosmrs::Any {
-                        type_url: msg.type_url.clone(),
-                        value: msg.value.clone(),
-                    })
-                    .collect(),
-                memo,
-            ),
-        )
+        query_msg: &Q,
+        contract_address: &cosmwasm_std::Addr,
+    ) -> Result<T, Self::Error> {
+        self.rt_handle
+            .block_on(self.daemon.query(query_msg, contract_address))
     }
 }

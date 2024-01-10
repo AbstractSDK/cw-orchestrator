@@ -141,13 +141,6 @@ pub fn cosmrs_to_cosmwasm_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError>
     })
 }
 
-pub fn cosmwasm_to_cosmrs_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError> {
-    Ok(cosmwasm_std::Coin {
-        amount: c.amount.parse()?,
-        denom: c.denom,
-    })
-}
-
 // Now we define traits
 
 pub struct DaemonBankQuerier {

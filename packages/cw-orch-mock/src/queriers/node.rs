@@ -3,7 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use cosmwasm_std::Empty;
 use cw_multi_test::{AppResponse, BasicApp};
 use cw_orch_core::{
-    environment::queriers::node::{NodeQuerier, NodeQuerierGetter},
+    environment::{
+        queriers::node::{NodeQuerier, NodeQuerierGetter},
+        StateInterface,
+    },
     CwEnvError,
 };
 
@@ -14,14 +17,14 @@ pub struct MockNodeQuerier {
 }
 
 impl MockNodeQuerier {
-    fn new(mock: &Mock) -> Self {
+    fn new<S: StateInterface>(mock: &Mock<S>) -> Self {
         Self {
             app: mock.app.clone(),
         }
     }
 }
 
-impl NodeQuerierGetter for Mock {
+impl<S: StateInterface> NodeQuerierGetter for Mock<S> {
     type Querier = MockNodeQuerier;
 
     fn node_querier(&self) -> Self::Querier {

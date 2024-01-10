@@ -1,8 +1,14 @@
 use crate::{queriers::CosmWasm, Daemon, DaemonError};
 use cosmwasm_std::ContractInfoResponse;
-use cw_orch_core::{contract::interface_traits::ContractInstance, environment::WasmCodeQuerier};
+use cw_orch_core::{
+    contract::interface_traits::ContractInstance,
+    environment::{
+        queriers::bank::{BankQuerier, BankQuerierGetter},
+        TxHandler,
+    },
+};
 
-impl WasmCodeQuerier for Daemon {
+impl cw_orch_core::environment::WasmCodeQuerier for Daemon {
     /// Returns the checksum of provided code_id
     fn contract_hash(&self, code_id: u64) -> Result<String, DaemonError> {
         let on_chain_hash = self
@@ -27,5 +33,22 @@ impl WasmCodeQuerier for Daemon {
         contract_info.admin = Some(info.admin);
 
         Ok(contract_info)
+    }
+}
+
+impl cw_orch_core::environment::BankQuerier for Daemon {
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
+        self.bank_querier().balance(address, denom)
+    }
+
+    fn supply_of(
+        &self,
+        denom: impl Into<String>,
+    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
+        self.bank_querier().supply_of(denom)
     }
 }

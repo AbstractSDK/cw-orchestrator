@@ -3,7 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use cosmwasm_std::{BlockInfo, Timestamp};
 use cw_multi_test::AppResponse;
 use cw_orch_core::{
-    environment::queriers::node::{NodeQuerier, NodeQuerierGetter},
+    environment::{
+        queriers::node::{NodeQuerier, NodeQuerierGetter},
+        StateInterface,
+    },
     CwEnvError,
 };
 use osmosis_test_tube::OsmosisTestApp;
@@ -15,14 +18,14 @@ pub struct OsmosisTestTubeNodeQuerier {
 }
 
 impl OsmosisTestTubeNodeQuerier {
-    fn new(mock: &OsmosisTestTube) -> Self {
+    fn new<S: StateInterface>(mock: &OsmosisTestTube<S>) -> Self {
         Self {
             app: mock.app.clone(),
         }
     }
 }
 
-impl NodeQuerierGetter for OsmosisTestTube {
+impl<S: StateInterface> NodeQuerierGetter for OsmosisTestTube<S> {
     type Querier = OsmosisTestTubeNodeQuerier;
 
     fn node_querier(&self) -> Self::Querier {

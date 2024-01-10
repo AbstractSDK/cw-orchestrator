@@ -13,6 +13,7 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 use crate::env::CwOrchEnvVars;
+use crate::environment::queriers::QueryHandler;
 use crate::environment::CwEnv;
 use crate::environment::StateInterface;
 use crate::CwEnvError;
@@ -91,7 +92,12 @@ pub trait Deploy<Chain: CwEnv>: Sized {
     ) -> anyhow::Result<HashMap<String, Self>> {
         let hash_networks: HashMap<String, (Chain, Self::DeployData)> = networks
             .iter()
-            .map(|(c, d)| Ok::<_, Chain::Error>((c.block_info()?.chain_id, (c.clone(), d.clone()))))
+            .map(|(c, d)| {
+                Ok::<_, <Chain as QueryHandler>::Error>((
+                    QueryHandler::block_info(c)?.chain_id,
+                    (c.clone(), d.clone()),
+                ))
+            })
             .collect::<Result<HashMap<_, _>, _>>()
             .map_err(Into::into)?;
 

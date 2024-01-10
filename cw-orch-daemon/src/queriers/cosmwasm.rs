@@ -1,5 +1,8 @@
-use crate::{cosmos_modules, error::DaemonError};
+use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cosmwasm_std::{from_json, to_json_binary, CodeInfoResponse, ContractInfoResponse};
+use cw_orch_core::environment::queriers::wasm::{WasmQuerier, WasmQuerierGetter};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 use super::DaemonQuerier;
@@ -167,5 +170,99 @@ impl CosmWasm {
         use cosmos_modules::cosmwasm::{query_client::*, QueryParamsRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         Ok(client.params(QueryParamsRequest {}).await?.into_inner())
+    }
+}
+
+pub struct DaemonWasmQuerier {
+    channel: Channel,
+    rt_handle: Handle,
+}
+
+impl DaemonWasmQuerier {
+    fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: daemon.rt_handle.clone(),
+        }
+    }
+}
+
+impl WasmQuerierGetter for Daemon {
+    type Querier = DaemonWasmQuerier;
+
+    fn wasm_querier(&self) -> Self::Querier {
+        DaemonWasmQuerier::new(self)
+    }
+}
+
+impl WasmQuerier for DaemonWasmQuerier {
+    type Error = DaemonError;
+
+    fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
+        self.rt_handle
+            .block_on(CosmWasm::new(self.channel.clone()).code_id_hash(code_id))
+    }
+
+    fn contract_info(
+        &self,
+        address: impl Into<String>,
+    ) -> Result<cosmwasm_std::ContractInfoResponse, Self::Error> {
+        let contract_info = self
+            .rt_handle
+            .block_on(CosmWasm::new(self.channel.clone()).contract_info(address))?;
+
+        let mut c = ContractInfoResponse::default();
+        c.code_id = contract_info.code_id;
+        c.creator = contract_info.creator;
+        c.admin = if contract_info.admin.is_empty() {
+            None
+        } else {
+            Some(contract_info.admin)
+        };
+        c.ibc_port = if contract_info.ibc_port_id.is_empty() {
+            None
+        } else {
+            Some(contract_info.ibc_port_id)
+        };
+
+        Ok(c)
+    }
+
+    fn contract_raw_state(
+        &self,
+        address: impl Into<String>,
+        query_data: Vec<u8>,
+    ) -> Result<Vec<u8>, Self::Error> {
+        let response = self.rt_handle.block_on(
+            CosmWasm::new(self.channel.clone()).contract_raw_state(address, query_data),
+        )?;
+
+        Ok(response.data)
+    }
+
+    fn contract_smart_state<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
+        &self,
+        address: impl Into<String>,
+        query_data: &Q,
+    ) -> Result<T, Self::Error> {
+        let response = self.rt_handle.block_on(
+            CosmWasm::new(self.channel.clone())
+                .contract_state(address, to_json_binary(&query_data)?.to_vec()),
+        )?;
+
+        Ok(from_json(response)?)
+    }
+
+    fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
+        let response = self
+            .rt_handle
+            .block_on(CosmWasm::new(self.channel.clone()).code(code_id))?;
+
+        let mut c = CodeInfoResponse::default();
+        c.code_id = code_id;
+        c.creator = response.creator;
+        c.checksum = response.data_hash.into();
+
+        Ok(c)
     }
 }
