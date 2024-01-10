@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Binary, Event, StdError, StdResult};
+use cosmwasm_std::{Addr, Binary, Event, StdResult};
 #[cfg(feature = "eth")]
 use snailquote::unescape;
 
@@ -64,47 +64,5 @@ pub trait IndexResponse {
             )
             .map(|s| unescape(&s).unwrap().parse().unwrap())
         }
-    }
-}
-
-#[cfg(test)]
-mod index_response_test {
-    use cosmwasm_std::{Addr, Event};
-
-    use speculoos::prelude::*;
-
-    use super::IndexResponse;
-
-    const CONTRACT_ADDRESS: &str =
-        "cosmos1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr";
-
-    fn test_events(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("events length is 1")
-            .that(&idxres.events().len())
-            .is_equal_to(2);
-
-        Ok(())
-    }
-
-    fn test_data(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("data is None").that(&idxres.data()).is_none();
-
-        Ok(())
-    }
-
-    fn test_uploaded_code_id(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("uploaded code_id is 1")
-            .that(&idxres.uploaded_code_id()?)
-            .is_equal_to(1u64);
-
-        Ok(())
-    }
-
-    fn test_instantiated_contract_address(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("instantiated contract_address is ")
-            .that(&idxres.instantiated_contract_address()?)
-            .is_equal_to(&Addr::unchecked(CONTRACT_ADDRESS));
-
-        Ok(())
     }
 }

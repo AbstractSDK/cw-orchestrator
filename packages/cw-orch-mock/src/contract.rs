@@ -1,3 +1,4 @@
+use anyhow::Result as AnyResult;
 use cosmwasm_std::{CustomMsg, CustomQuery};
 use cw_multi_test::Contract;
 use cw_orch_core::contract::MockContract;
@@ -19,7 +20,7 @@ where
         env: cosmwasm_std::Env,
         info: cosmwasm_std::MessageInfo,
         msg: Vec<u8>,
-    ) -> cw_multi_test::error::AnyResult<cosmwasm_std::Response<C>> {
+    ) -> AnyResult<cosmwasm_std::Response<C>> {
         self.0.execute(deps, env, info, msg)
     }
 
@@ -29,7 +30,7 @@ where
         env: cosmwasm_std::Env,
         info: cosmwasm_std::MessageInfo,
         msg: Vec<u8>,
-    ) -> cw_multi_test::error::AnyResult<cosmwasm_std::Response<C>> {
+    ) -> AnyResult<cosmwasm_std::Response<C>> {
         self.0.instantiate(deps, env, info, msg)
     }
 
@@ -38,7 +39,7 @@ where
         deps: cosmwasm_std::Deps<Q>,
         env: cosmwasm_std::Env,
         msg: Vec<u8>,
-    ) -> cw_multi_test::error::AnyResult<cosmwasm_std::Binary> {
+    ) -> AnyResult<cosmwasm_std::Binary> {
         self.0.query(deps, env, msg)
     }
 
@@ -47,7 +48,7 @@ where
         deps: cosmwasm_std::DepsMut<Q>,
         env: cosmwasm_std::Env,
         msg: Vec<u8>,
-    ) -> cw_multi_test::error::AnyResult<cosmwasm_std::Response<C>> {
+    ) -> AnyResult<cosmwasm_std::Response<C>> {
         self.0.sudo(deps, env, msg)
     }
 
@@ -56,7 +57,7 @@ where
         deps: cosmwasm_std::DepsMut<Q>,
         env: cosmwasm_std::Env,
         msg: cosmwasm_std::Reply,
-    ) -> cw_multi_test::error::AnyResult<cosmwasm_std::Response<C>> {
+    ) -> AnyResult<cosmwasm_std::Response<C>> {
         self.0.reply(deps, env, msg)
     }
 
@@ -65,7 +66,7 @@ where
         deps: cosmwasm_std::DepsMut<Q>,
         env: cosmwasm_std::Env,
         msg: Vec<u8>,
-    ) -> cw_multi_test::error::AnyResult<cosmwasm_std::Response<C>> {
+    ) -> AnyResult<cosmwasm_std::Response<C>> {
         self.0.migrate(deps, env, msg)
     }
 }

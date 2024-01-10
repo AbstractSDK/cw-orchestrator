@@ -7,7 +7,7 @@ use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
 use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
 use cw_orch_traits::stargate::Stargate;
 
-use super::response::AppResponse;
+use crate::mock::AppResponse;
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
 use osmosis_std::types::cosmwasm::wasm::v1::{

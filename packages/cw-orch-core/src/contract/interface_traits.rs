@@ -1,4 +1,4 @@
-use super::{Contract, WasmPath, contract::MockContract};
+use super::{Contract, MockContract, WasmPath};
 use crate::{
     environment::{CwEnv, TxHandler, TxResponse},
     error::CwEnvError,

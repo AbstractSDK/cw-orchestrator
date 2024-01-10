@@ -17,6 +17,7 @@ cw-utils = { workspace = true }
 serde = { workspace = true }
 sha256 = { workspace = true }
 schemars = "0.8.16"
+anyhow.workspace = true
 
 [dev-dependencies]
 speculoos = { workspace = true }

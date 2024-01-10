@@ -1,12 +1,10 @@
 use anyhow::{anyhow, bail, Error as AnyError, Result as AnyResult};
 use cosmwasm_std::{
-    from_json, Binary, CosmosMsg, CustomQuery, Deps, DepsMut, Empty, Env, MessageInfo,
-    QuerierWrapper, Reply, Response, SubMsg,
+    from_json, Binary, CustomQuery, Deps, DepsMut, Empty, Env, MessageInfo, Reply, Response,
 };
 use serde::de::DeserializeOwned;
 use std::error::Error;
 use std::fmt::{Debug, Display};
-use std::ops::Deref;
 
 use cosmwasm_std::{
     IbcBasicResponse, IbcChannelCloseMsg, IbcChannelConnectMsg, IbcChannelOpenMsg,
