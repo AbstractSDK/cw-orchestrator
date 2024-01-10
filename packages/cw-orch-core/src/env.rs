@@ -35,6 +35,7 @@ pub struct CwOrchEnvVars {
     /// This is the path to the state file
     /// `folder/file.json` will resolve to `~/.cw-orchestrator/folder/file.json`
     /// `./folder/file.json` will resolve `$pwd/folder/file.json`
+    /// `../folder/file.json` will resolve `$pwd/../folder/file.json`
     /// `/usr/var/file.json` will resolve to `/usr/var/file.json`
     /// Defaults to "~./cw-orchestrator/state.json"
     pub state_file: PathBuf,

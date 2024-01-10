@@ -19,6 +19,7 @@ ARTIFACTS_DIR="../artifacts"
 # Sets the location of the state file for your deployments (default: ~./cw-orchestrator/state.json)
 # `folder/file.json` will resolve to `~/.cw-orchestrator/folder/file.json`
 # `./folder/file.json` will resolve `$pwd/folder/file.json`
+# `../folder/file.json` will resolve `$pwd/../folder/file.json`
 # `/usr/var/file.json` will resolve to `/usr/var/file.json`
 STATE_FILE="./my_state.json"
 
