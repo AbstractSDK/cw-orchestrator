@@ -60,6 +60,7 @@ pub trait TxHandler: ChainState + Clone {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, Self::Error>;
+
     /// Send a ExecMsg to a contract.
     fn execute<E: Serialize + Debug>(
         &self,
