@@ -5,7 +5,9 @@
 pub extern crate cw_multi_test;
 
 mod core;
+mod response;
 mod state;
 
 pub use self::core::Mock;
+pub use response::AppResponse;
 pub use state::MockState;

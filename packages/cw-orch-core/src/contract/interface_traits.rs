@@ -5,7 +5,6 @@ use crate::{
     log::CONTRACT_LOGS,
 };
 use cosmwasm_std::{Addr, Coin, Empty};
-use cw_multi_test::Contract as MockContract;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 

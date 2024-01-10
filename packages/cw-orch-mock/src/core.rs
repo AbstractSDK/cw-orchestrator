@@ -1,7 +1,7 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
-use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cw_multi_test::{custom_app, next_block, BasicApp, Contract, Executor};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -227,6 +227,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 coins,
             )
             .map_err(From::from)
+            .amp(Into::into)
     }
 
     fn instantiate<I: Serialize + Debug>(
@@ -282,6 +283,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 new_code_id,
             )
             .map_err(From::from)
+            .map(Into::into)
     }
 
     fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {

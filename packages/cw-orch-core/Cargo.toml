@@ -27,13 +27,11 @@ eth = ["dep:snailquote"]
 thiserror = { workspace = true }
 cosmwasm-std = { workspace = true }
 serde = { workspace = true }
-cw-multi-test = { workspace = true }
 
 log = { workspace = true }
 sha256 = { workspace = true }
 anyhow = { workspace = true }
 serde_json = { workspace = true }
-
 
 # Ethereum deps
 snailquote = { version = "0.3.1", optional = true }
