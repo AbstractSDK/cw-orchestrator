@@ -31,17 +31,10 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{
         cosmos::{
             auth::v1beta1 as auth,
-            authz::v1beta1 as authz,
             bank::v1beta1 as bank,
-            base::{abci::v1beta1 as abci, tendermint::v1beta1 as tendermint, v1beta1 as base},
-            crisis::v1beta1 as crisis,
-            distribution::v1beta1 as distribution,
-            evidence::v1beta1 as evidence,
+            base::{abci::v1beta1 as abci, tendermint::v1beta1 as tendermint},
             feegrant::v1beta1 as feegrant,
             gov::v1beta1 as gov,
-            mint::v1beta1 as mint,
-            params::v1beta1 as params,
-            slashing::v1beta1 as slashing,
             staking::v1beta1 as staking,
             tx::v1beta1 as tx,
             vesting::v1beta1 as vesting,

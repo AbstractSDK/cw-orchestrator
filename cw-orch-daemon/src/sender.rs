@@ -31,7 +31,7 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::LOCAL_LOGS, CwOrchEnvVars};
+use cw_orch_core::{log::local_target, CwOrchEnvVars};
 
 use secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
@@ -84,7 +84,7 @@ impl Sender<All> {
             secp,
         };
         log::info!(
-            target: LOCAL_LOGS,
+            target: &local_target(),
             "Interacting with {} using address: {}",
             daemon_state.chain_data.chain_id,
             sender.pub_addr_str()?
