@@ -15,7 +15,12 @@ RUST_LOG=info
 # Where the contract wasms are located (used by ArtifactsDir::env())
 ARTIFACTS_DIR="../artifacts"
 
-# where to store the state of your deployments (default: ./state.json)
+# Optional - Path. 
+# Sets the location of the state file for your deployments (default: ~./cw-orchestrator/state.json)
+# `folder/file.json` will resolve to `~/.cw-orchestrator/folder/file.json`
+# `./folder/file.json` will resolve `$pwd/folder/file.json`
+# `../folder/file.json` will resolve `$pwd/../folder/file.json`
+# `/usr/var/file.json` will resolve to `/usr/var/file.json`
 STATE_FILE="./my_state.json"
 
 # Mnemonics of the account that will be used to sign transactions
@@ -34,9 +39,6 @@ CW_ORCH_MAX_TX_QUERY_RETRIES = 50
 CW_ORCH_MIN_BLOCK_SPEED = 1 
 # Optional - String. If equals to "true", will serialize the blockchain messages as json (for easy copying) instead of Rust Debug formatting
 CW_ORCH_SERIALIZE_JSON = "false" 
-# Optional - Absolute Path. Sets the directory where the state file will be saved.
-# This is not enforced to be an absolute path but this is highly recommended
-CW_ORCH_STATE_FOLDER = "~/.cw-orchestrator"
 # Optional - Integer. This allows setting a minimum of gas used when broadcasting transactions
 CW_ORCH_MIN_GAS = 100000
 # Optional - boolean.  Disable the "Enable Logs" message.
