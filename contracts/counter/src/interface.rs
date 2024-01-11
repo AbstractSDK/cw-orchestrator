@@ -16,7 +16,7 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
     /// Returns a CosmWasm contract wrapper
     fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
         Box::new(
-            ContractWrapper::new_with_empty(
+            ContractWrapper::new(
                 crate::contract::execute,
                 crate::contract::instantiate,
                 crate::contract::query,

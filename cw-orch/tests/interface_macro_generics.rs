@@ -10,7 +10,7 @@ pub struct MockContract;
 impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
-            ContractWrapper::new_with_empty(
+            ContractWrapper::new(
                 mock_contract_u64::execute,
                 mock_contract_u64::instantiate,
                 mock_contract_u64::query,

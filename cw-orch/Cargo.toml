@@ -63,7 +63,6 @@ cw-orch-fns-derive = { workspace = true }
 
 cosmwasm-std = { workspace = true }
 cw-utils = { workspace = true }
-cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 schemars = "0.8.10"

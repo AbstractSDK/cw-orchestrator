@@ -56,7 +56,7 @@ fn count() -> anyhow::Result<()> {
     assert_eq!(count.count, 0);
 
     // Check negative case
-    let exec_res: Result<cw_multi_test::AppResponse, CwOrchError> =
+    let exec_res: Result<cw_orch::mock::AppResponse, CwOrchError> =
         contract.call_as(&user).reset(0);
 
     let expected_err = ContractError::Unauthorized {};

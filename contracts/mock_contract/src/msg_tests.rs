@@ -61,17 +61,13 @@ pub fn query(_deps: Deps, _env: Env, _msg: Empty) -> StdResult<Binary> {
 
 impl<Chain: CwEnv> Uploadable for TestContract<Chain> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
-        Box::new(ContractWrapper::new_with_empty(execute, instantiate, query))
+        Box::new(ContractWrapper::new(execute, instantiate, query))
     }
 }
 
 impl<Chain: CwEnv> Uploadable for OrderedTestContract<Chain> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
-        Box::new(ContractWrapper::new_with_empty(
-            execute_ordered,
-            instantiate,
-            query,
-        ))
+        Box::new(ContractWrapper::new(execute_ordered, instantiate, query))
     }
 }
 

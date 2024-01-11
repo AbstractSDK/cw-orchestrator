@@ -1,5 +1,4 @@
-use cosmwasm_std::{Addr, Binary, Event, StdError, StdResult};
-use cw_multi_test::AppResponse;
+use cosmwasm_std::{Addr, Binary, Event, StdResult};
 #[cfg(feature = "eth")]
 use snailquote::unescape;
 
@@ -65,102 +64,5 @@ pub trait IndexResponse {
             )
             .map(|s| unescape(&s).unwrap().parse().unwrap())
         }
-    }
-}
-
-impl IndexResponse for AppResponse {
-    fn events(&self) -> Vec<Event> {
-        self.events.clone()
-    }
-
-    fn data(&self) -> Option<Binary> {
-        self.data.clone()
-    }
-
-    fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String> {
-        for event in &self.events {
-            if event.ty == event_type {
-                for attr in &event.attributes {
-                    if attr.key == attr_key {
-                        return Ok(attr.value.clone());
-                    }
-                }
-            }
-        }
-        Err(StdError::generic_err(format!(
-            "missing combination (event: {}, attribute: {})",
-            event_type, attr_key
-        )))
-    }
-}
-
-#[cfg(test)]
-mod index_response_test {
-    use cosmwasm_std::{Addr, Event};
-    use cw_multi_test::AppResponse;
-
-    use speculoos::prelude::*;
-
-    use super::IndexResponse;
-
-    const CONTRACT_ADDRESS: &str =
-        "cosmos1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr";
-
-    fn test_events(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("events length is 1")
-            .that(&idxres.events().len())
-            .is_equal_to(2);
-
-        Ok(())
-    }
-
-    fn test_data(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("data is None").that(&idxres.data()).is_none();
-
-        Ok(())
-    }
-
-    fn test_uploaded_code_id(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("uploaded code_id is 1")
-            .that(&idxres.uploaded_code_id()?)
-            .is_equal_to(1u64);
-
-        Ok(())
-    }
-
-    fn test_instantiated_contract_address(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
-        asserting!("instantiated contract_address is ")
-            .that(&idxres.instantiated_contract_address()?)
-            .is_equal_to(&Addr::unchecked(CONTRACT_ADDRESS));
-
-        Ok(())
-    }
-
-    #[test]
-    fn general() {
-        let idxres = AppResponse {
-            events: vec![
-                Event::new("store_code").add_attribute("code_id", "1"),
-                Event::new("instantiate")
-                    .add_attribute("_contract_address", CONTRACT_ADDRESS.to_owned()),
-            ],
-            data: None,
-        };
-
-        asserting!("test_events is ok")
-            .that(&test_events(&idxres))
-            .is_ok();
-
-        asserting!("test_data is ok")
-            .that(&test_data(&idxres))
-            .is_ok();
-
-        asserting!("test_instantiated_contract_address is ok")
-            .that(&test_instantiated_contract_address(&idxres))
-            .is_ok();
-
-        asserting!("test_uploaded_code_id is ok")
-            .that(&test_uploaded_code_id(&idxres))
-            .is_ok();
     }
 }

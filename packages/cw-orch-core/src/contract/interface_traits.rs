@@ -1,11 +1,10 @@
-use super::{Contract, WasmPath};
+use super::{Contract, MockContract, WasmPath};
 use crate::{
     environment::{CwEnv, TxHandler, TxResponse},
     error::CwEnvError,
     log::contract_target,
 };
 use cosmwasm_std::{Addr, Coin, Empty};
-use cw_multi_test::Contract as MockContract;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 

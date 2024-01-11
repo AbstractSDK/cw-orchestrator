@@ -1,16 +1,21 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
-use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cw_multi_test::{custom_app, next_block, BasicApp, Executor};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
-    contract::interface_traits::{ContractInstance, Uploadable},
+    contract::{
+        interface_traits::{ContractInstance, Uploadable},
+        MockContract,
+    },
     environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
     environment::{TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
+
+use crate::AppResponse;
 
 use super::state::MockState;
 
@@ -161,9 +166,12 @@ impl<S: StateInterface> Mock<S> {
     pub fn upload_custom(
         &self,
         contract_id: &str,
-        wrapper: Box<dyn Contract<Empty, Empty>>,
+        wrapper: Box<dyn MockContract<Empty, Empty>>,
     ) -> Result<AppResponse, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(wrapper);
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_code(Box::new(crate::contract::MockContractWrapper(wrapper)));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -189,7 +197,7 @@ impl<S: StateInterface> ChainState for Mock<S> {
 impl<S: StateInterface> TxHandler for Mock<S> {
     type Response = AppResponse;
     type Error = CwEnvError;
-    type ContractSource = Box<dyn Contract<Empty, Empty>>;
+    type ContractSource = Box<dyn MockContract<Empty, Empty>>;
     type Sender = Addr;
 
     fn sender(&self) -> Addr {
@@ -201,7 +209,12 @@ impl<S: StateInterface> TxHandler for Mock<S> {
     }
 
     fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+        let code_id =
+            self.app
+                .borrow_mut()
+                .store_code(Box::new(crate::contract::MockContractWrapper(
+                    contract.wrapper(),
+                )));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -227,6 +240,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 coins,
             )
             .map_err(From::from)
+            .map(Into::into)
     }
 
     fn instantiate<I: Serialize + Debug>(
@@ -282,6 +296,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 new_code_id,
             )
             .map_err(From::from)
+            .map(Into::into)
     }
 
     fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
@@ -383,7 +398,7 @@ mod test {
         coins, to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
         StdResult, Uint128,
     };
-    use cw_multi_test::ContractWrapper;
+    use cw_orch_core::contract::ContractWrapper;
     use serde::Serialize;
     use speculoos::prelude::*;
 
