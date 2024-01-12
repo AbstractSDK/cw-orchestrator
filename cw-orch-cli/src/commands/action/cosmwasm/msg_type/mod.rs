@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use base64::Engine;
-use color_eyre::eyre::Context;
 use inquire::Select;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage, IntoEnumIterator};
 
@@ -59,14 +58,37 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
     }
 }
 
-pub fn msg_bytes(message: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
+pub fn msg_bytes(mut message: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
     match msg_type {
         MsgType::JsonMsg => {
-            let data_json =
-                serde_json::Value::from_str(&message).wrap_err("Data not in JSON format!")?;
+            let data_json = loop {
+                if let Ok(val) = serde_json::Value::from_str(&message) {
+                    break val;
+                } else {
+                    eprintln!("Data not in JSON format!");
+                    message = inquire::Text::new("Enter message")
+                        // Maybe user need hint
+                        .with_help_message(r#"Valid JSON string (e.g. {"foo": "bar"})"#)
+                        .prompt()?;
+                }
+            };
             Ok(data_json.to_string().into_bytes())
         }
-        MsgType::Base64Msg => Ok(crate::common::B64.decode(&message)?),
+        MsgType::Base64Msg => {
+            let bytes = loop {
+                match crate::common::B64.decode(&message) {
+                    Ok(decoded) => break decoded,
+                    Err(e) => {
+                        eprintln!("Failed to decode base64 string: {e}");
+                        message = inquire::Text::new("Enter message")
+                            // Maybe user need hint
+                            .with_help_message("Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)")
+                            .prompt()?;
+                    }
+                }
+            };
+            Ok(bytes)
+        }
     }
 }
 
