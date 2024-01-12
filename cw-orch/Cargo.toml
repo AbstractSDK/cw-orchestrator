@@ -44,6 +44,11 @@ name = "bank_query"
 path = "examples/queries/bank_query.rs"
 require-features = ["daemon"]
 
+[[example]]
+name = "testnet_queries"
+path = "examples/queries/testnet_queries.rs"
+require-features = ["daemon"]
+
 [features]
 default = []
 # enable the optional dependencies
