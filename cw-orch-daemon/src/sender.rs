@@ -144,13 +144,21 @@ impl Sender<All> {
         Ok(self.pub_addr()?.to_string())
     }
 
+    pub fn message_sender(&self) -> Result<AccountId, DaemonError> {
+        if let Some(sender) = &self.options.authz_granter {
+            Ok(sender.parse()?)
+        } else {
+            self.pub_addr()
+        }
+    }
+
     pub async fn bank_send(
         &self,
         recipient: &str,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let msg_send = MsgSend {
-            from_address: self.pub_addr()?,
+            from_address: self.message_sender()?,
             to_address: AccountId::from_str(recipient)?,
             amount: parse_cw_coins(&coins)?,
         };
@@ -271,7 +279,7 @@ impl Sender<All> {
         let msgs = if self.options.authz_granter.is_some() {
             // We wrap authz messages
             vec![Any {
-                type_url: "cosmos.authz.v1beta1.MsgExec".to_string(),
+                type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
                 value: MsgExec {
                     grantee: self.pub_addr_str()?,
                     msgs,
