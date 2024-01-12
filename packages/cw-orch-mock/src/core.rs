@@ -127,11 +127,11 @@ impl<S: StateInterface> Mock<S> {
 
 impl Mock<MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new(sender: &Addr) -> Self {
+    pub fn new(sender: impl Into<String>) -> Self {
         Mock::new_custom(sender, MockState::new())
     }
 
-    pub fn with_chain_id(sender: &Addr, chain_id: &str) -> Self {
+    pub fn with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
         let chain = Mock::new_custom(sender, MockState::new());
         chain
             .app
@@ -145,12 +145,12 @@ impl Mock<MockState> {
 impl<S: StateInterface> Mock<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
+    pub fn new_custom(sender: impl Into<String>, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(custom_app::<Empty, Empty, _>(|_, _, _| {})));
 
         Self {
-            sender: sender.clone(),
+            sender: Addr::unchecked(sender),
             state,
             app,
         }

@@ -17,12 +17,10 @@ const ADMIN: &str = "admin";
 // ANCHOR: count_test
 #[test]
 fn count() -> anyhow::Result<()> {
-    // Create a sender
-    let sender = Addr::unchecked(ADMIN);
     // Create a user
     let user = Addr::unchecked(USER);
     // Create the mock. This will be our chain object throughout
-    let mock = Mock::new(&sender);
+    let mock = Mock::new(ADMIN);
 
     // Set up the contract (Definition below) ↓↓
     let contract = setup(mock.clone())?;

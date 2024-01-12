@@ -32,10 +32,7 @@ impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
 
 #[test]
 fn test_instantiate() {
-    let contract = MockContract::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
     contract
@@ -45,10 +42,7 @@ fn test_instantiate() {
 
 #[test]
 fn test_execute() {
-    let contract = MockContract::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
     contract
@@ -71,10 +65,7 @@ fn test_execute() {
 
 #[test]
 fn test_query() {
-    let contract = MockContract::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
     contract
