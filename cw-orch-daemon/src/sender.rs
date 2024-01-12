@@ -60,6 +60,7 @@ pub struct Sender<C: Signing + Context> {
 #[non_exhaustive]
 pub struct SenderOptions {
     pub authz_granter: Option<String>,
+    pub index: Option<u32>,
 }
 
 impl Sender<All> {

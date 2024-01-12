@@ -28,8 +28,8 @@ pub struct DaemonAsyncBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
-    /// Authz capability
-    pub(crate) authz_granter: Option<String>,
+    /// Sender specific options
+    pub sender_options: SenderOptions,
 }
 
 impl DaemonAsyncBuilder {
@@ -57,7 +57,13 @@ impl DaemonAsyncBuilder {
 
     /// Specifies wether authz should be used with this daemon
     pub fn with_authz(&mut self, granter: impl ToString) -> &mut Self {
-        self.authz_granter = Some(granter.to_string());
+        self.sender_options.authz_granter = Some(granter.to_string());
+        self
+    }
+
+    /// Specifies the index of the key used for the mnemonic account
+    pub fn with_index(&mut self, index: u32) -> &mut Self {
+        self.sender_options.index = Some(index);
         self
     }
 
@@ -73,9 +79,7 @@ impl DaemonAsyncBuilder {
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
         let state = Rc::new(DaemonState::new(chain, deployment_id, false).await?);
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
-        let sender_options = SenderOptions {
-            authz_granter: self.authz_granter.clone(),
-        };
+        let sender_options = self.sender_options.clone();
         let sender = if let Some(mnemonic) = &self.mnemonic {
             Sender::from_mnemonic_with_options(&state, mnemonic, sender_options)?
         } else {
@@ -96,7 +100,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,
-            authz_granter: value.authz_granter,
+            sender_options: value.sender_options,
         }
     }
 }
