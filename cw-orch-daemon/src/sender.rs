@@ -33,7 +33,7 @@ use cosmrs::{
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{log::local_target, CwOrchEnvVars};
 
-use secp256k1::{All, Context, Secp256k1, Signing};
+use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
