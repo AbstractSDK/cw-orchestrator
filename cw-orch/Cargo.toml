@@ -110,5 +110,4 @@ mock-contract = { path = "../contracts/mock_contract", features = [
 mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
   "interface",
 ] }
-ibc-relayer-types = { workspace = true }
 serde_json = { workspace = true }

@@ -68,7 +68,6 @@ async-recursion = "1.0.5"
 flate2 = { version = "1.0.26" }
 
 [dev-dependencies]
-ibc-relayer-types = { workspace = true }
 cw-orch-daemon = { path = "." }
 uid = "0.1.7"
 env_logger = "0.10.0"
