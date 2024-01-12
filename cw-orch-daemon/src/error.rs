@@ -19,7 +19,7 @@ pub enum DaemonError {
     #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
     #[error(transparent)]
-    Secp256k1(#[from] ::secp256k1::Error),
+    Secp256k1(#[from] bitcoin::secp256k1::Error),
     #[error(transparent)]
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]

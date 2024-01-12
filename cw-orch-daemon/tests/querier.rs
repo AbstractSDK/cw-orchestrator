@@ -8,7 +8,6 @@ mod queriers {
     use cw_orch_daemon::GrpcChannel;
     use cw_orch_networks::networks;
     use ibc_chain_registry::chain::Grpc;
-    use ibc_relayer_types::core::ics24_host::identifier::ChainId;
     use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
     use std::str::FromStr;
@@ -34,9 +33,7 @@ mod queriers {
             provider: None,
         }];
 
-        let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
-
-        let channel = GrpcChannel::connect(&grpcs, &chain).await;
+        let channel = GrpcChannel::connect(&grpcs, network.chain_id).await;
 
         asserting!("channel connection is succesful")
             .that(&channel)
