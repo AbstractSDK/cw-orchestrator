@@ -36,7 +36,7 @@ mod queriers {
 
         let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
 
-        let channel = GrpcChannel::connect(&grpcs, &chain).await;
+        let channel = GrpcChannel::connect(&grpcs, chain.as_str()).await;
 
         asserting!("channel connection is succesful")
             .that(&channel)

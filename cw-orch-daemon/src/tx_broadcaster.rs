@@ -1,8 +1,8 @@
 use std::time::Duration;
 
+use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
-use secp256k1::All;
 
 use crate::{
     queriers::{DaemonQuerier, Node},

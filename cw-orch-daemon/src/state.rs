@@ -46,7 +46,7 @@ impl DaemonState {
 
         // find working grpc channel
         let grpc_channel =
-            GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
+            GrpcChannel::connect(&chain_data.apis.grpc, chain_data.chain_id.as_str()).await?;
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = Self::state_file_path()?;

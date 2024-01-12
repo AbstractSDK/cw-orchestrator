@@ -208,7 +208,10 @@ impl WasmMockQuerier {
         let rt = Runtime::new().unwrap();
 
         let channel = rt
-            .block_on(GrpcChannel::connect(&chain.apis.grpc, &chain.chain_id))
+            .block_on(GrpcChannel::connect(
+                &chain.apis.grpc,
+                chain.chain_id.as_str(),
+            ))
             .unwrap();
 
         WasmMockQuerier {
