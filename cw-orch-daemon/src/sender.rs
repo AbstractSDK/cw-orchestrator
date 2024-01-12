@@ -100,8 +100,13 @@ impl Sender<All> {
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
-        let p_key: PrivateKey =
-            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
+        let p_key: PrivateKey = PrivateKey::from_words(
+            &secp,
+            mnemonic,
+            0,
+            options.index.unwrap_or(0),
+            daemon_state.chain_data.slip44,
+        )?;
 
         let sender = Sender {
             daemon_state: daemon_state.clone(),
