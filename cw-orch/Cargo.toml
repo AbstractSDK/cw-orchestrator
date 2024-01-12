@@ -20,7 +20,11 @@ all-features = true
 name = "mock_test"
 
 [[example]]
-name = "daemon_test"
+name = "local_daemon"
+required-features = ["daemon"]
+
+[[example]]
+name = "testnet_daemon"
 required-features = ["daemon"]
 
 [[example]]
@@ -112,3 +116,4 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
 ] }
 ibc-relayer-types = { workspace = true }
 serde_json = { workspace = true }
+dotenv = "0.15.0"
