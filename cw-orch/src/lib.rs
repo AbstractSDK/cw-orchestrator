@@ -17,7 +17,7 @@ pub use cw_orch_core::contract;
 
 /// Related to execution environents and variables
 pub mod environment {
-    pub use cw_orch_core::env::CwOrchEnvVars;
+    pub use cw_orch_core::env::{default_state_folder, CwOrchEnvVars};
     pub use cw_orch_core::environment::*;
 }
 pub use cw_orch_mock as mock;
