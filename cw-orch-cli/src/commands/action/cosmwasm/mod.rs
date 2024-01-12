@@ -21,15 +21,15 @@ pub struct CwCommands {
 /// Select cosmwasm action
 pub enum CwAction {
     /// Store contract
-    #[strum_discriminants(strum(message = "📤Store"))]
+    #[strum_discriminants(strum(message = "📤 Store"))]
     Store(store::StoreContractCommands),
     /// Instantiate contract
-    #[strum_discriminants(strum(message = "🚀Instantiate"))]
+    #[strum_discriminants(strum(message = "🚀 Instantiate"))]
     Instantiate(instantiate::InstantiateContractCommands),
     /// Execute contract method
-    #[strum_discriminants(strum(message = "⚡Execute"))]
+    #[strum_discriminants(strum(message = "⚡ Execute"))]
     Execute(execute::ExecuteContractCommands),
     /// Query contract
-    #[strum_discriminants(strum(message = "🔍Query"))]
+    #[strum_discriminants(strum(message = "🔍 Query"))]
     Query(query::QueryCommands),
 }

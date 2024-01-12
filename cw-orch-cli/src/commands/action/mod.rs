@@ -23,13 +23,13 @@ pub struct CosmosCommands {
 /// Select type of cosmos action
 pub enum CosmosAction {
     /// Cosmwasm Action: store, instantiate, execute or query cosmwasm contract
-    #[strum_discriminants(strum(message = "🔮CosmWasm"))]
+    #[strum_discriminants(strum(message = "🔮 CosmWasm"))]
     Cw(cosmwasm::CwCommands),
     /// Asset Action
-    #[strum_discriminants(strum(message = "🏦Asset"))]
+    #[strum_discriminants(strum(message = "🏦 Asset"))]
     Asset(asset::AssetCommands),
     /// CW-Ownable Action
-    #[strum_discriminants(strum(message = "👑CW-Ownable"))]
+    #[strum_discriminants(strum(message = "👑 CW-Ownable"))]
     CwOwnable(cw_ownable::CwOwnableCommands),
 }
 

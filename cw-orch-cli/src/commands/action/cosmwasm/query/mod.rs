@@ -18,9 +18,9 @@ pub struct QueryCommands {
 /// Select cosmwasm action
 pub enum QueryAction {
     /// Query wasm smart
-    #[strum_discriminants(strum(message = "🤓Smart"))]
+    #[strum_discriminants(strum(message = "🤓 Smart"))]
     Smart(smart::QuerySmartCommands),
     /// Query wasm raw state
-    #[strum_discriminants(strum(message = "👉Raw"))]
+    #[strum_discriminants(strum(message = "👉 Raw"))]
     Raw(raw::QueryRawCommands),
 }
