@@ -6,7 +6,7 @@ Now that you have your contract interfaces you can export a comprehensive wrappe
 
 The idea is simple. If you can provide an easy way for others to deploy your contracts/application to their environments, then you're making it extremely easy for them to use and build on your application.  
 
-As an example we will create a deployment for the [Abstract smart-contract framework](https://abstract.money/).
+As an example we will create a deployment for the <a href="https://abstract.money/" target="_blank">Abstract smart-contract framework</a>.
 
 ## The deployment
 
