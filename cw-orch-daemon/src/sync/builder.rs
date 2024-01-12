@@ -24,6 +24,8 @@ pub struct DaemonBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
+    /// Authz capability
+    pub(crate) authz_granter: Option<String>,
 }
 
 impl DaemonBuilder {
@@ -61,6 +63,12 @@ impl DaemonBuilder {
     /// Set the mnemonic to use with this chain.
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
         self.mnemonic = Some(mnemonic.to_string());
+        self
+    }
+
+    /// Specifies wether authz should be used with this daemon
+    pub fn with_authz(&mut self, granter: impl ToString) -> &mut Self {
+        self.authz_granter = Some(granter.to_string());
         self
     }
 

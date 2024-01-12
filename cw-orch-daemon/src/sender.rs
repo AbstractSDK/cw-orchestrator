@@ -25,7 +25,7 @@ use crate::{core::parse_cw_coins, keys::private::PrivateKey};
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
-    proto::traits::Message,
+    proto::{cosmos::authz::v1beta1::MsgExec, traits::Message},
     tendermint::chain::Id,
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId, Any,
@@ -48,14 +48,29 @@ pub type Wallet = Rc<Sender<All>>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
+#[derive(Clone)]
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
     pub(crate) daemon_state: Rc<DaemonState>,
+    pub(crate) options: SenderOptions,
+}
+
+#[derive(Default, Clone)]
+#[non_exhaustive]
+pub struct SenderOptions {
+    pub authz_granter: Option<String>,
 }
 
 impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+        Self::new_with_options(daemon_state, SenderOptions::default())
+    }
+
+    pub fn new_with_options(
+        daemon_state: &Rc<DaemonState>,
+        options: SenderOptions,
+    ) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
         let env_variable_name = kind.mnemonic_env_variable_name();
@@ -66,13 +81,22 @@ impl Sender<All> {
             )
         });
 
-        Self::from_mnemonic(daemon_state, &mnemonic)
+        Self::from_mnemonic_with_options(daemon_state, &mnemonic, options)
     }
 
-    /// Construct a new Sender from a mnemonic
+    /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic(
         daemon_state: &Rc<DaemonState>,
         mnemonic: &str,
+    ) -> Result<Sender<All>, DaemonError> {
+        Self::from_mnemonic_with_options(daemon_state, mnemonic, SenderOptions::default())
+    }
+
+    /// Construct a new Sender from a mnemonic with additional options
+    pub fn from_mnemonic_with_options(
+        daemon_state: &Rc<DaemonState>,
+        mnemonic: &str,
+        options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey =
@@ -82,6 +106,7 @@ impl Sender<All> {
             daemon_state: daemon_state.clone(),
             private_key: p_key,
             secp,
+            options,
         };
         log::info!(
             target: &local_target(),
@@ -90,6 +115,10 @@ impl Sender<All> {
             sender.pub_addr_str()?
         );
         Ok(sender)
+    }
+
+    pub fn with_authz(&mut self, granter: impl Into<String>) {
+        self.options.authz_granter = Some(granter.into());
     }
 
     fn cosmos_private_key(&self) -> SigningKey {
@@ -238,6 +267,20 @@ impl Sender<All> {
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new(self.channel()).block_height().await? + 10u64;
+
+        let msgs = if self.options.authz_granter.is_some() {
+            // We wrap authz messages
+            vec![Any {
+                type_url: "cosmos.authz.v1beta1.MsgExec".to_string(),
+                value: MsgExec {
+                    grantee: self.pub_addr_str()?,
+                    msgs,
+                }
+                .encode_to_vec(),
+            }]
+        } else {
+            msgs
+        };
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 

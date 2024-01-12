@@ -1,4 +1,4 @@
-use crate::{log::print_if_log_disabled, DaemonAsync, DaemonBuilder};
+use crate::{log::print_if_log_disabled, sender::SenderOptions, DaemonAsync, DaemonBuilder};
 use std::rc::Rc;
 
 use ibc_chain_registry::chain::ChainData;
@@ -28,6 +28,8 @@ pub struct DaemonAsyncBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
+    /// Authz capability
+    pub(crate) authz_granter: Option<String>,
 }
 
 impl DaemonAsyncBuilder {
@@ -53,6 +55,12 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Specifies wether authz should be used with this daemon
+    pub fn with_authz(&mut self, granter: impl ToString) -> &mut Self {
+        self.authz_granter = Some(granter.to_string());
+        self
+    }
+
     /// Build a daemon
     pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
         let chain = self
@@ -65,10 +73,13 @@ impl DaemonAsyncBuilder {
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
         let state = Rc::new(DaemonState::new(chain, deployment_id, false).await?);
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
+        let sender_options = SenderOptions {
+            authz_granter: self.authz_granter.clone(),
+        };
         let sender = if let Some(mnemonic) = &self.mnemonic {
-            Sender::from_mnemonic(&state, mnemonic)?
+            Sender::from_mnemonic_with_options(&state, mnemonic, sender_options)?
         } else {
-            Sender::new(&state)?
+            Sender::new_with_options(&state, sender_options)?
         };
         let daemon = DaemonAsync {
             state,
@@ -85,6 +96,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             mnemonic: value.mnemonic,
+            authz_granter: value.authz_granter,
         }
     }
 }
