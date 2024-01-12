@@ -18,7 +18,7 @@ cw20 = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 cw20-base = { git = "https://github.com/AbstractSDK/cw-plus.git" }
 
 # Test Tube env deps
-osmosis-test-tube = { version = "19.0.0" }
+osmosis-test-tube = { version = "21.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
@@ -33,8 +33,8 @@ thiserror = { version = "1.0.21" }
 sha256 = { version = "1" }
 serde_json = "1.0.79"
 tonic = { version = "0.10.2" }
-prost-types = "0.11.9"
-prost = "0.11.9"
+prost-types = "0.12.3"
+prost = "0.12.3"
 # Test deps
 speculoos = "0.11.0"
 
