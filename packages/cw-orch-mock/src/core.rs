@@ -370,10 +370,10 @@ impl BankQuerier for Mock {
 impl BankSetter for Mock {
     fn set_balance(
         &mut self,
-        address: &Addr,
+        address: impl Into<String>,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(address, amount)
+        (*self).set_balance(&Addr::unchecked(address), amount)
     }
 }
 
