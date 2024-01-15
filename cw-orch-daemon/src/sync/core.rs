@@ -13,7 +13,7 @@ use cw_orch_core::{
     environment::{queriers::QueryHandler, ChainState, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -124,14 +124,6 @@ impl TxHandler for Daemon {
         )
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        QueryHandler::query(self, query_msg, contract_address)
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -142,22 +134,6 @@ impl TxHandler for Daemon {
             self.daemon
                 .migrate(migrate_msg, new_code_id, contract_address),
         )
-    }
-
-    fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        QueryHandler::wait_blocks(self, amount)
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        QueryHandler::wait_seconds(self, secs)
-    }
-
-    fn next_block(&self) -> Result<(), DaemonError> {
-        QueryHandler::next_block(self)
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        QueryHandler::block_info(self)
     }
 }
 

@@ -4,7 +4,7 @@ use cosmwasm_std::{from_json, to_json_vec, CodeInfoResponse, ContractInfoRespons
 use cw_orch_core::{
     environment::{
         queriers::wasm::{WasmQuerier, WasmQuerierGetter},
-        StateInterface,
+        StateInterface, TxHandler,
     },
     CwEnvError,
 };
@@ -28,7 +28,7 @@ impl OsmosisTestTubeWasmQuerier {
     }
 }
 
-impl<S: StateInterface> WasmQuerierGetter for OsmosisTestTube<S> {
+impl<S: StateInterface> WasmQuerierGetter<<Self as TxHandler>::Error> for OsmosisTestTube<S> {
     type Querier = OsmosisTestTubeWasmQuerier;
 
     fn wasm_querier(&self) -> Self::Querier {

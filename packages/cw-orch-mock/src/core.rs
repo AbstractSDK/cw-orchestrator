@@ -1,19 +1,15 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
+use cosmwasm_std::{Addr, Coin, Empty, Event, Uint128};
 use cw_multi_test::{custom_app, AppResponse, BasicApp, Contract, Executor};
 use cw_utils::NativeBalance;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
 use cw_orch_core::{
-    contract::interface_traits::{ContractInstance, Uploadable},
+    contract::interface_traits::Uploadable,
     environment::TxHandler,
     environment::{
-        queriers::{
-            bank::{BankQuerier, BankQuerierGetter},
-            wasm::{WasmQuerier, WasmQuerierGetter},
-            QueryHandler,
-        },
+        queriers::bank::{BankQuerier, BankQuerierGetter},
         BankSetter, ChainState, IndexResponse, StateInterface,
     },
     CwEnvError,
@@ -260,14 +256,6 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         Ok(resp)
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwEnvError> {
-        QueryHandler::query(self, query_msg, contract_address)
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -283,65 +271,6 @@ impl<S: StateInterface> TxHandler for Mock<S> {
                 new_code_id,
             )
             .map_err(From::from)
-    }
-
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
-        QueryHandler::wait_blocks(self, amount)
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwEnvError> {
-        QueryHandler::wait_seconds(self, secs)
-    }
-
-    fn next_block(&self) -> Result<(), CwEnvError> {
-        QueryHandler::next_block(self)
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
-        QueryHandler::block_info(self)
-    }
-}
-
-impl cw_orch_core::environment::WasmCodeQuerier for Mock {
-    /// Returns the checksum of provided code_id
-    /// Cw-multi-test implements a checksum based on the code_id (because it wan't access the wasm code)
-    /// So it's not possible to check wether 2 contracts have the same code using the Mock implementation
-    fn contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
-        self.wasm_querier().code_id_hash(code_id)
-    }
-
-    /// Returns the code_info structure of the provided contract
-    fn contract_info<T: ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
-        self.wasm_querier().contract_info(contract.address()?)
-    }
-
-    fn local_hash<T: Uploadable + ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<String, CwEnvError> {
-        // We return the hashed contract-id.
-        // This will cause the logic to never re-upload a contract if it has the same contract-id.
-        self.wasm_querier().local_hash(contract)
-    }
-}
-
-impl<S: StateInterface> cw_orch_core::environment::BankQuerier for Mock<S> {
-    fn balance(
-        &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        self.bank_querier().balance(address, denom)
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        self.bank_querier().supply_of(denom)
     }
 }
 
@@ -362,7 +291,7 @@ mod test {
         StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
-    use cw_orch_core::environment::BankQuerier;
+    use cw_orch_core::environment::QueryHandler;
     use serde::Serialize;
     use speculoos::prelude::*;
 
@@ -462,14 +391,14 @@ mod test {
             .that(&exec_res.events[1].attributes[1].value)
             .is_equal_to(&String::from("mint"));
 
-        let query_res = QueryHandler::query::<cw20_base::msg::QueryMsg, Response>(
-            &chain,
-            &cw20_base::msg::QueryMsg::Balance {
-                address: recipient.to_string(),
-            },
-            &contract_address,
-        )
-        .unwrap();
+        let query_res = chain
+            .query::<cw20_base::msg::QueryMsg, Response>(
+                &cw20_base::msg::QueryMsg::Balance {
+                    address: recipient.to_string(),
+                },
+                &contract_address,
+            )
+            .unwrap();
 
         asserting("that query passed on correctly")
             .that(&query_res.attributes[1].value)
@@ -560,10 +489,14 @@ mod test {
         app.set_balance(&sender, init_coins.clone())?;
         let sender = app.sender.clone();
         assert_eq!(
-            app.balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
 
         Ok(())
     }

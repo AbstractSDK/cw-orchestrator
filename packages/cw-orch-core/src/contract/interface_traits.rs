@@ -1,6 +1,6 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{CwEnv, TxHandler, TxResponse},
+    environment::{queriers::wasm::WasmQuerier, CwEnv, QueryHandler, TxHandler, TxResponse},
     error::CwEnvError,
     log::contract_target,
 };
@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 /// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
-pub trait ContractInstance<Chain: TxHandler + Clone> {
+pub trait ContractInstance<Chain: TxHandler + QueryHandler + Clone> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
@@ -215,9 +215,10 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
 
         let chain = self.get_chain();
         let on_chain_hash = chain
-            .contract_hash(latest_uploaded_code_id)
+            .wasm_querier()
+            .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = chain.local_hash(self)?;
+        let local_hash = chain.wasm_querier().local_hash(self)?;
         Ok(local_hash == on_chain_hash)
     }
 
@@ -227,7 +228,10 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             return Ok(false);
         };
         let chain = self.get_chain();
-        let info = chain.contract_info(self).map_err(Into::into)?;
+        let info = chain
+            .wasm_querier()
+            .contract_info(self.address()?)
+            .map_err(Into::into)?;
         Ok(latest_uploaded_code_id == info.code_id)
     }
 }

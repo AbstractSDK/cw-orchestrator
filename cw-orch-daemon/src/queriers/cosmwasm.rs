@@ -187,7 +187,7 @@ impl DaemonWasmQuerier {
     }
 }
 
-impl WasmQuerierGetter for Daemon {
+impl WasmQuerierGetter<DaemonError> for Daemon {
     type Querier = DaemonWasmQuerier;
 
     fn wasm_querier(&self) -> Self::Querier {

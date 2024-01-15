@@ -6,7 +6,7 @@ use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{
         queriers::wasm::{WasmQuerier, WasmQuerierGetter},
-        StateInterface, TxHandler,
+        QueryHandler, StateInterface, TxHandler,
     },
     CwEnvError,
 };
@@ -26,7 +26,7 @@ impl MockWasmQuerier {
     }
 }
 
-impl<S: StateInterface> WasmQuerierGetter for Mock<S> {
+impl<S: StateInterface> WasmQuerierGetter<<Self as TxHandler>::Error> for Mock<S> {
     type Querier = MockWasmQuerier;
 
     fn wasm_querier(&self) -> Self::Querier {
@@ -50,7 +50,7 @@ impl WasmQuerier for MockWasmQuerier {
         Ok(info)
     }
 
-    fn local_hash<Chain: TxHandler, T: Uploadable + ContractInstance<Chain>>(
+    fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
         &self,
         contract: &T,
     ) -> Result<String, CwEnvError> {

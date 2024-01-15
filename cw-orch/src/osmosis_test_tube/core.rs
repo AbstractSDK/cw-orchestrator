@@ -2,19 +2,14 @@ use std::str::FromStr;
 
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{Addr, ContractInfoResponse, StdResult};
+use cosmwasm_std::{Addr, StdResult};
 
 use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
-use cw_orch_core::environment::queriers::wasm::{WasmQuerier, WasmQuerierGetter};
-use cw_orch_core::environment::queriers::QueryHandler;
 use cw_orch_core::environment::BankSetter;
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, Coin, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_std::types::cosmwasm::wasm::v1::{
-    QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
-};
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
@@ -28,7 +23,7 @@ use osmosis_test_tube::osmosis_std::{
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
 use crate::{
     environment::TxHandler,
@@ -265,14 +260,6 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         })
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwOrchError> {
-        QueryHandler::query(self, query_msg, contract_address)
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         _migrate_msg: &M,
@@ -280,51 +267,6 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         _contract_address: &Addr,
     ) -> Result<Self::Response, CwOrchError> {
         panic!("Migrate not implemented on osmosis test_tube")
-    }
-
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
-        QueryHandler::wait_blocks(self, amount)
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
-        QueryHandler::wait_seconds(self, secs)
-    }
-
-    fn next_block(&self) -> Result<(), CwOrchError> {
-        QueryHandler::next_block(self)
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
-        QueryHandler::block_info(self)
-    }
-}
-
-impl cw_orch_core::environment::BankQuerier for OsmosisTestTube {
-    fn balance(
-        &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        self.bank_querier().balance(address, denom)
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        self.bank_querier().supply_of(denom)
-    }
-}
-impl cw_orch_core::environment::WasmCodeQuerier for OsmosisTestTube {
-    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
-        self.wasm_querier().code_id_hash(code_id)
-    }
-
-    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
-        self.wasm_querier().contract_info(contract.address()?)
     }
 }
 
@@ -372,8 +314,8 @@ pub(crate) fn to_cosmwasm_coin(
 #[cfg(test)]
 pub mod tests {
     use cosmwasm_std::{coins, ContractInfoResponse};
-    use cw_orch_core::environment::{BankQuerier, WasmCodeQuerier};
 
+    use cw_orch_core::environment::queriers::{wasm::{WasmQuerier, WasmQuerierGetter}, bank::{BankQuerierGetter, BankQuerier}};
     use osmosis_test_tube::Account;
 
     use super::OsmosisTestTube;
@@ -394,10 +336,10 @@ pub mod tests {
 
         assert_eq!(
             contract.wasm().checksum()?,
-            app.contract_hash(contract.code_id()?)?
+            app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
-        let contract_info = app.contract_info(&contract)?;
+        let contract_info = app.wasm_querier().contract_info(contract.addr_str()?)?;
         let mut target_contract_info = ContractInfoResponse::default();
         target_contract_info.admin = Some(app.sender.address().to_string());
         target_contract_info.code_id = contract.code_id()?;
@@ -415,10 +357,10 @@ pub mod tests {
         let app = OsmosisTestTube::new(init_coins.clone());
         let sender = app.sender.address();
         assert_eq!(
-            app.balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier().balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(app.bank_querier().supply_of(denom.to_string())?, init_coins[0]);
         Ok(())
     }
 }

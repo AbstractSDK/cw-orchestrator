@@ -3,8 +3,8 @@ use cosmwasm_std::Coin;
 use crate::CwEnvError;
 use std::fmt::Debug;
 
-pub trait BankQuerierGetter {
-    type Querier: BankQuerier;
+pub trait BankQuerierGetter<E> {
+    type Querier: BankQuerier<Error = E>;
     fn bank_querier(&self) -> Self::Querier;
 }
 pub trait BankQuerier {

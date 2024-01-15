@@ -3,8 +3,8 @@ use cosmwasm_std::BlockInfo;
 use crate::{environment::IndexResponse, CwEnvError};
 use std::fmt::Debug;
 
-pub trait NodeQuerierGetter {
-    type Querier: NodeQuerier;
+pub trait NodeQuerierGetter<E> {
+    type Querier: NodeQuerier<Error = E>;
     fn node_querier(&self) -> Self::Querier;
 }
 pub trait NodeQuerier {

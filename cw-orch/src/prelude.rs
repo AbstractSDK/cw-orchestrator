@@ -25,7 +25,8 @@ pub use crate::environment::StateInterface;
 pub use crate::environment::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, QueryHandler, TxHandler, TxResponse, WasmCodeQuerier};
+pub use crate::environment::{CwEnv, QueryHandler, TxHandler, TxResponse};
+pub use cw_orch_core::environment::queriers::*;
 
 // Mock for testing
 pub use crate::mock::Mock;

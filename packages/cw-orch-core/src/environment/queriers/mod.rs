@@ -10,7 +10,9 @@ pub mod node;
 pub mod wasm;
 
 /// This trait regroups all querier traits + adds high level interfaces to access some elements faster
-pub trait QueryHandler: NodeQuerierGetter + BankQuerierGetter + WasmQuerierGetter {
+pub trait QueryHandler:
+    NodeQuerierGetter<Self::Error> + BankQuerierGetter<Self::Error> + WasmQuerierGetter<Self::Error>
+{
     type Error: Into<CwEnvError> + Debug;
 
     /// Wait for an amount of blocks.

@@ -8,8 +8,10 @@ use crate::{
 };
 use std::fmt::Debug;
 
-pub trait WasmQuerierGetter {
-    type Querier: WasmQuerier;
+use super::QueryHandler;
+
+pub trait WasmQuerierGetter<E> {
+    type Querier: WasmQuerier<Error = E>;
     fn wasm_querier(&self) -> Self::Querier;
 }
 pub trait WasmQuerier {
@@ -39,7 +41,7 @@ pub trait WasmQuerier {
     fn code(&self, code_id: u64) -> Result<CodeInfoResponse, Self::Error>;
 
     /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
-    fn local_hash<Chain: TxHandler, T: Uploadable + ContractInstance<Chain>>(
+    fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
         &self,
         contract: &T,
     ) -> Result<String, CwEnvError> {

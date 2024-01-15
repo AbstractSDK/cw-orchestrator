@@ -5,7 +5,7 @@ use cw_multi_test::{AppResponse, BasicApp};
 use cw_orch_core::{
     environment::{
         queriers::node::{NodeQuerier, NodeQuerierGetter},
-        StateInterface,
+        StateInterface, TxHandler,
     },
     CwEnvError,
 };
@@ -24,7 +24,7 @@ impl MockNodeQuerier {
     }
 }
 
-impl<S: StateInterface> NodeQuerierGetter for Mock<S> {
+impl<S: StateInterface> NodeQuerierGetter<<Self as TxHandler>::Error> for Mock<S> {
     type Querier = MockNodeQuerier;
 
     fn node_querier(&self) -> Self::Querier {

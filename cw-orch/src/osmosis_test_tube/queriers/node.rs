@@ -5,7 +5,7 @@ use cw_multi_test::AppResponse;
 use cw_orch_core::{
     environment::{
         queriers::node::{NodeQuerier, NodeQuerierGetter},
-        StateInterface,
+        StateInterface, TxHandler,
     },
     CwEnvError,
 };
@@ -25,7 +25,7 @@ impl OsmosisTestTubeNodeQuerier {
     }
 }
 
-impl<S: StateInterface> NodeQuerierGetter for OsmosisTestTube<S> {
+impl<S: StateInterface> NodeQuerierGetter<<Self as TxHandler>::Error> for OsmosisTestTube<S> {
     type Querier = OsmosisTestTubeNodeQuerier;
 
     fn node_querier(&self) -> Self::Querier {

@@ -157,7 +157,7 @@ impl DaemonBankQuerier {
     }
 }
 
-impl BankQuerierGetter for Daemon {
+impl BankQuerierGetter<DaemonError> for Daemon {
     type Querier = DaemonBankQuerier;
 
     fn bank_querier(&self) -> Self::Querier {

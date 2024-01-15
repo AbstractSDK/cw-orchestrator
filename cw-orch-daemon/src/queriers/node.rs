@@ -346,7 +346,7 @@ impl DaemonNodeQuerier {
     }
 }
 
-impl NodeQuerierGetter for Daemon {
+impl NodeQuerierGetter<DaemonError> for Daemon {
     type Querier = DaemonNodeQuerier;
 
     fn node_querier(&self) -> Self::Querier {
