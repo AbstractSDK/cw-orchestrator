@@ -32,7 +32,11 @@ impl AddAddressOutput {
             }
         }
 
-        let new_address = address_book::insert_account_id(chain.chain_info().chain_id, &scope.alias, &scope.address)?;
+        let new_address = address_book::insert_account_id(
+            chain.chain_info().chain_id,
+            &scope.alias,
+            &scope.address,
+        )?;
         println!("Wrote successfully:\n{}:{}", scope.alias, new_address);
         Ok(AddAddressOutput)
     }

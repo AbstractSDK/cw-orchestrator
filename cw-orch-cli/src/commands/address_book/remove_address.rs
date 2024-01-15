@@ -25,8 +25,7 @@ impl RemoveAddressOutput {
         scope: &<RemoveAddress as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let removed =
-            address_book::remove_account_id(chain.chain_info().chain_id, &scope.alias)?;
+        let removed = address_book::remove_account_id(chain.chain_info().chain_id, &scope.alias)?;
 
         match removed {
             Some(val) => println!("removed: {val}"),

@@ -1,6 +1,6 @@
 mod action;
-mod keys;
 mod address_book;
+mod keys;
 
 // TODO: get it upper
 pub use action::CosmosContext;
