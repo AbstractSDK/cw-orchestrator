@@ -30,7 +30,7 @@ pub fn main() {
         panic!("Error: {}", res.err().unwrap());
     };
 
-    let counter = CounterContract::new("local:counter", daemon.clone());
+    let counter = CounterContract::new(daemon.clone());
 
     let upload_res = counter.upload();
     assert!(upload_res.is_ok());

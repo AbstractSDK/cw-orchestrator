@@ -27,18 +27,10 @@ pub fn main() {
         .build()
         .unwrap();
 
-    // We can now create a daemon. This daemon will be used to interact with the chain.
-    let second_daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
-        .handle(runtime.handle()) // handler parameter
-        .build()
-        .unwrap();
-
     // ANCHOR_END: daemon_creation
 
     // ANCHOR: daemon_usage
-    let counter = CounterContract::new("local:counter", daemon.clone());
+    let counter = CounterContract::new(daemon.clone());
 
     let upload_res = counter.upload();
     assert!(upload_res.is_ok());
