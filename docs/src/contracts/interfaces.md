@@ -48,10 +48,20 @@ The `interface` macro implements a `new` function on the interface:
 {{#include ../../../contracts/counter/tests/integration_tests.rs:constructor}}
 ```
 
-The constructor takes two arguments:
+The constructor takes one argument:
 
-1. `contract_id`: The unique identifier for this contract. This is used as the key when retrieving address and code_id information for the contract. This argument is a `&str`.
-2. `chain`: The CosmWasm supported environment to use when calling the contract. Also includes the default sender information that will be used to call the contract. You can find more information later in the [Integrations](../integrations/index.md) section for how to create this `chain` variable
+- `chain`: The CosmWasm supported environment to use when calling the contract. Also includes the default sender information that will be used to call the contract. You can find more information later in the [Integrations](../integrations/index.md) section for how to create this `chain` variable
+
+> **NOTE**: If you prefer working with different contract addresses for the same contract interface, you can use the following syntax in the interface definition : 
+> ```rust,ignore
+>#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+>pub struct CounterContract;
+>```
+>
+>The generated constructor will now take 2 arguments, the `contract_id` and the `chain` : 
+>```rust,ignore
+>let contract = CounterContract::new("specific_counter_contract", chain.clone());
+>```
 
 ## Interacting with your contracts
 
