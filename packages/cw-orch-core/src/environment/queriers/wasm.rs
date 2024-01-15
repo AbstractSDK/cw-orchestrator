@@ -1,4 +1,4 @@
-use cosmwasm_std::{CodeInfoResponse, ContractInfoResponse};
+use cosmwasm_std::{Binary, CodeInfoResponse, ContractInfoResponse};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -47,4 +47,11 @@ pub trait WasmQuerier {
     ) -> Result<String, CwEnvError> {
         contract.wasm().checksum()
     }
+
+    fn instantiate2_addr<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        creator: impl Into<String>,
+        salt: cosmwasm_std::Binary,
+    ) -> Result<String, Self::Error>;
 }

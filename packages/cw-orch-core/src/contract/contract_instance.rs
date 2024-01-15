@@ -8,7 +8,7 @@ use crate::{
 };
 
 use crate::environment::QueryHandler;
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -177,6 +177,8 @@ impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
         msg: &I,
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
+        salt: Binary,
+        fix_msg: bool,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -193,12 +195,14 @@ impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate(
+            .instantiate2(
                 self.code_id()?,
                 msg,
                 Some(&self.id),
                 admin,
                 coins.unwrap_or(&[]),
+                salt,
+                fix_msg,
             )
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;

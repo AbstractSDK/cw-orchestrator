@@ -155,18 +155,19 @@ impl DaemonAsync {
         admin: Option<&Addr>,
         coins: &[Coin],
         salt: Binary,
+        fix_msg: bool,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
 
         let init_msg = MsgInstantiateContract2 {
             code_id,
             label: label.unwrap_or("instantiate_contract").to_string(),
-            admin: admin.map(|a| a.to_string()).unwrap_or("".to_string()),
+            admin: admin.map(Into::into).unwrap_or_default(),
             sender: sender.address()?.to_string(),
             msg: serde_json::to_vec(&init_msg)?,
             funds: proto_parse_cw_coins(coins)?,
             salt: salt.to_vec(),
-            fix_msg: false,
+            fix_msg,
         };
 
         let result = sender

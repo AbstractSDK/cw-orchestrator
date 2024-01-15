@@ -1,6 +1,11 @@
+use std::{io::Read, str::FromStr};
+
 use crate::{cosmos_modules, error::DaemonError, Daemon};
-use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-use cosmwasm_std::{from_json, to_json_binary, CodeInfoResponse, ContractInfoResponse};
+use cosmrs::{proto::cosmos::base::query::v1beta1::PageRequest, AccountId};
+use cosmwasm_std::{
+    from_json, instantiate2_address, to_json_binary, CanonicalAddr, CodeInfoResponse,
+    ContractInfoResponse,
+};
 use cw_orch_core::environment::queriers::wasm::{WasmQuerier, WasmQuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -264,5 +269,22 @@ impl WasmQuerier for DaemonWasmQuerier {
         c.checksum = response.data_hash.into();
 
         Ok(c)
+    }
+
+    fn instantiate2_addr<I: serde::Serialize + std::fmt::Debug>(
+        &self,
+        code_id: u64,
+        creator: impl Into<String>,
+        salt: cosmwasm_std::Binary,
+        fix_msg: bool,
+    ) -> Result<String, Self::Error> {
+        let creator_str = creator.into();
+        let account_id = AccountId::from_str(&creator_str)?;
+        let prefix = account_id.prefix();
+        let canon = account_id.to_bytes();
+        let checksum = self.code_id_hash(code_id)?;
+        let addr = instantiate2_address(checksum.as_bytes(), &CanonicalAddr(canon.into()), &salt)?;
+
+        Ok(AccountId::new(prefix, &addr.0.to_vec())?.to_string())
     }
 }

@@ -2,7 +2,7 @@
 
 use super::{queriers::QueryHandler, ChainState, IndexResponse};
 use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
-use cosmwasm_std::{Addr, Coin, Binary};
+use cosmwasm_std::{Addr, Binary, Coin};
 use serde::Serialize;
 use std::fmt::Debug;
 
@@ -55,6 +55,7 @@ pub trait TxHandler: ChainState + Clone {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
         salt: Binary,
+        fix_msg: bool,
     ) -> Result<Self::Response, Self::Error>;
 
     /// Send a ExecMsg to a contract.

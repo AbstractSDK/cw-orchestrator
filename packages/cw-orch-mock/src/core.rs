@@ -265,6 +265,7 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
         salt: Binary,
+        fix_msg: bool,
     ) -> Result<Self::Response, CwEnvError> {
         let msg = WasmMsg::Instantiate2 {
             admin: admin.map(|a| a.to_string()),
@@ -274,6 +275,10 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             funds: coins.to_vec(),
             salt,
         };
+
+        if fix_msg {
+            log::warn!("Fix msg is not taken into account by cw-multi-test");
+        }
         let app = self
             .app
             .borrow_mut()
