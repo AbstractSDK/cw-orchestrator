@@ -2,9 +2,9 @@
 
 Interfaces are virtual wrappers around CosmWasm contracts. They allow you to interact with your contracts in a type-safe way, and provide a convenient way to reason about contract interactions. Interfaces are the core reason why we built cw-orchestrator and we hope that you'll find them as useful as we do.
 
-> **Reminder**: You can find the code for this example in the [cw-orch counter-contract folder](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
+> **Reminder**: You can find the code for this example in the <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter" target="_blank">cw-orch counter-contract folder</a>.
 >
-> If you are a fast or visual learner, you can find a [**Before**-**After**](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a) view of the `cw-orch` integration process in the sample contract.
+> If you are a fast or visual learner, you can find a <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a" target="_blank">**Before**-**After**</a> view of the `cw-orch` integration process in the sample contract.
 
 ## Creating an Interface
 
@@ -59,9 +59,9 @@ Now, you are able to interact directly with your contracts with ensured type saf
 
 The environments that are currently supported are:
 
-1. [cw-multi-test](https://crates.io/crates/cw-multi-test) by using [`Mock`](../integrations/cw-multi-test.md) as the `chain` variable.
+1. <a href="https://crates.io/crates/cw-multi-test" target="_blank">cw-multi-test</a> by using [`Mock`](../integrations/cw-multi-test.md) as the `chain` variable.
 2. Actual Cosmos SDK nodes for interacting with lives chains (`mainnet`, `testnet`, `local`). Use [`Daemon`](../integrations/daemon.md) as the `chain` variable.
-3. [osmosis-test-tube](https://github.com/osmosis-labs/test-tube) or testing against actual chain binaries. This allows for fast testing with actual on-chain modules. This is particularly useful when testing against chain-specific modules. Use [`OsmosisTestTube`](../integrations/osmosis-test-tube.md) as the `chain` variable.
+3. <a href="https://github.com/osmosis-labs/test-tube" target="_blank">osmosis-test-tube</a> or testing against actual chain binaries. This allows for fast testing with actual on-chain modules. This is particularly useful when testing against chain-specific modules. Use [`OsmosisTestTube`](../integrations/osmosis-test-tube.md) as the `chain` variable.
 
 ### Generic functions
 
@@ -118,11 +118,11 @@ Learn more in the [next section about entry-point functions](./entry-points.md) 
 
 ## Learn more
 
-Got questions? Join the [Abstract Discord](https://discord.gg/vAQVnz3tzj) and ask in the `#cw-orchestrator` channel.
-Learn more about Abstract at [abstract.money](https://abstract.money).
+Got questions? Join the <a href="https://discord.gg/vAQVnz3tzj" target="_blank">Abstract Discord</a> and ask in the `#cw-orchestrator` channel.
+Learn more about Abstract at <a href="https://abstract.money" target="_blank">abstract.money</a>.
 
 ## References
 
-- [cw-orchestrator](https://crates.io/crates/cw-orch)
-- [cw-plus-orch](https://github.com/AbstractSDK/cw-plus)
-- [Abstract Contract Interfaces](https://crates.io/crates/abstract-interface)
+- <a href="https://crates.io/crates/cw-orch" target="_blank">cw-orchestrator</a>
+- <a href="https://github.com/AbstractSDK/cw-plus" target="_blank">cw-plus-orch</a>
+- <a href="https://crates.io/crates/abstract-interface" target="_blank">Abstract Contract Interfaces</a>

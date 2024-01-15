@@ -1,12 +1,16 @@
+use std::str::FromStr;
+
+use bitcoin::secp256k1::All;
 use cosmrs::tx::{ModeInfo, SignMode};
+use cosmrs::AccountId;
 use cosmrs::{
     proto::cosmos::auth::v1beta1::BaseAccount,
     tendermint::chain::Id,
     tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
     Any, Coin,
 };
-use cw_orch_core::log::TRANSACTION_LOGS;
-use secp256k1::All;
+use cw_orch_core::log::transaction_target;
+use cw_orch_core::CwOrchEnvVars;
 
 use super::{sender::Sender, DaemonError};
 
@@ -57,13 +61,21 @@ impl TxBuilder {
         )
     }
 
-    pub(crate) fn build_fee(amount: impl Into<u128>, denom: &str, gas_limit: u64) -> Fee {
+    pub(crate) fn build_fee(
+        amount: impl Into<u128>,
+        denom: &str,
+        gas_limit: u64,
+    ) -> Result<Fee, DaemonError> {
         let fee = Coin::new(amount.into(), denom).unwrap();
-        Fee::from_amount_and_gas(fee, gas_limit)
+        let mut fee = Fee::from_amount_and_gas(fee, gas_limit);
+        fee.granter = CwOrchEnvVars::load()?
+            .fee_granter
+            .map(|g| AccountId::from_str(&g))
+            .transpose()?;
+        Ok(fee)
     }
 
-    /// Builds the raw tx with a given body and fee and signs it.
-    /// Sets the TxBuilder's gas limit to its simulated amount for later use.
+    /// Simulates the transaction and returns the necessary gas fee returned by the simulation on a node
     pub async fn simulate(&self, wallet: &Sender<All>) -> Result<u64, DaemonError> {
         // get the account number of the wallet
         let BaseAccount {
@@ -94,35 +106,36 @@ impl TxBuilder {
         let sequence = self.sequence.unwrap_or(sequence);
 
         //
-        let (tx_fee, gas_limit) =
-            if let (Some(fee), Some(gas_limit)) = (self.fee_amount, self.gas_limit) {
-                log::debug!(
-                    target: TRANSACTION_LOGS,
-                    "Using pre-defined fee and gas limits: {}, {}",
-                    fee,
-                    gas_limit
-                );
-                (fee, gas_limit)
-            } else {
-                let sim_gas_used = wallet
-                    .calculate_gas(&self.body, sequence, account_number)
-                    .await?;
-                log::debug!(target: TRANSACTION_LOGS, "Simulated gas needed {:?}", sim_gas_used);
+        let (tx_fee, gas_limit) = if let (Some(fee), Some(gas_limit)) =
+            (self.fee_amount, self.gas_limit)
+        {
+            log::debug!(
+                target: &transaction_target(),
+                "Using pre-defined fee and gas limits: {}, {}",
+                fee,
+                gas_limit
+            );
+            (fee, gas_limit)
+        } else {
+            let sim_gas_used = wallet
+                .calculate_gas(&self.body, sequence, account_number)
+                .await?;
+            log::debug!(target: &transaction_target(), "Simulated gas needed {:?}", sim_gas_used);
 
-                let (gas_expected, fee_amount) = wallet.get_fee_from_gas(sim_gas_used)?;
+            let (gas_expected, fee_amount) = wallet.get_fee_from_gas(sim_gas_used)?;
 
-                log::debug!(target: TRANSACTION_LOGS, "Calculated fee needed: {:?}", fee_amount);
-                // set the gas limit of self for future txs
-                // there's no way to change the tx_builder body so simulation gas should remain the same as well
-                self.gas_limit = Some(gas_expected);
+            log::debug!(target: &transaction_target(), "Calculated fee needed: {:?}", fee_amount);
+            // set the gas limit of self for future txs
+            // there's no way to change the tx_builder body so simulation gas should remain the same as well
+            self.gas_limit = Some(gas_expected);
 
-                (fee_amount, gas_expected)
-            };
+            (fee_amount, gas_expected)
+        };
 
-        let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit);
+        let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit)?;
 
         log::debug!(
-            target: TRANSACTION_LOGS,
+            target: &transaction_target(),
             "submitting TX: \n fee: {:?}\naccount_nr: {:?}\nsequence: {:?}",
             fee,
             account_number,

@@ -1,6 +1,6 @@
 <!-- add bg image -->
 <div align="center">
-  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/orchestrator_bg2.png", width = "230px"/>
+  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/v1/orchestrator_bg2.png", width = "230px"/>
 
 # cw-orchestrator
 

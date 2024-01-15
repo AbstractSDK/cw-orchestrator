@@ -13,14 +13,14 @@ Interacting with the `daemon` is really straightforward. How to creating a daemo
 ```
 
 - The `chain` parameter allows you to specify which chain you want to interact with. The chains that are officially supported can be found in the `cw_orch::daemon::networks` module.
-  You can also add additional chains yourself by simply defining a variable of type [`ChainInfo`](https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html) and using it in your script. Don't hesitate to open a PR on the [cw-orchestrator repo](https://github.com/AbstractSDK/cw-orchestrator), if you would like us to include a chain by default. The variables needed for creating the variable can be found in the documentation of the chain you want to connect to or in the [Cosmos Directory](https://cosmos.directory).
+  You can also add additional chains yourself by simply defining a variable of type <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html" target="_blank">`ChainInfo`</a> and using it in your script. Don't hesitate to open a PR on the <a href="https://github.com/AbstractSDK/cw-orchestrator" target="_blank">cw-orchestrator repo</a>, if you would like us to include a chain by default. The variables needed for creating the variable can be found in the documentation of the chain you want to connect to or in the <a href="https://cosmos.directory" target="_blank">Cosmos Directory</a>.
 
 - The `handle` parameter is a *tokio runtime handle*. 
   <details>
     <summary>If you <strong>don't know</strong> what that means</summary>
     
     
-  You don't need to know all the intricacies of <a href="https://rust-lang.github.io/async-book/">tokio and rust-async</a> to use daemons. If you don't have time to learn more, you can simply use the snippet above and not touch the runtime creation. However for more advanced `daemon` usage and also for your culture, don't hesitate to learn about those wonderful processes and their management.
+  You don't need to know all the intricacies of <a href="https://rust-lang.github.io/async-book/" target="_blank">tokio and rust-async</a> to use daemons. If you don't have time to learn more, you can simply use the snippet above and not touch the runtime creation. However for more advanced `daemon` usage and also for your culture, don't hesitate to learn about those wonderful processes and their management.
         
   </details>
 
@@ -128,7 +128,7 @@ Querying the chain for data using a daemon looks like:
 {{#include ../../../cw-orch/examples/queries/bank_query.rs:daemon_balance_query}}
 ```
 
-For more information and queries, [visit the daemon querier implementations directly](https://docs.rs/crate/cw-orch/latest/source/src/daemon/queriers.rs)
+For more information and queries, <a href="https://docs.rs/crate/cw-orch/latest/source/src/daemon/queriers.rs" target="_blank">visit the daemon querier implementations directly</a>
 
 
 ## Example of code leveraging Daemon capabilities

@@ -31,9 +31,9 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::LOCAL_LOGS, CwOrchEnvVars};
+use cw_orch_core::{log::local_target, CwOrchEnvVars};
 
-use secp256k1::{All, Context, Secp256k1, Signing};
+use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, rc::Rc, str::FromStr};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
@@ -84,7 +84,7 @@ impl Sender<All> {
             secp,
         };
         log::info!(
-            target: LOCAL_LOGS,
+            target: &local_target(),
             "Interacting with {} using address: {}",
             daemon_state.chain_data.chain_id,
             sender.pub_addr_str()?
@@ -138,13 +138,17 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
+        let mut gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
             gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
         } else {
             gas as f64 * GAS_BUFFER
         };
+
+        if let Some(min_gas) = CwOrchEnvVars::load()?.min_gas {
+            gas_expected = (min_gas as f64).max(gas_expected);
+        }
         let fee_amount = gas_expected
             * (self.daemon_state.chain_data.fees.fee_tokens[0]
                 .fixed_min_gas_price
@@ -165,7 +169,7 @@ impl Sender<All> {
             0u8,
             &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
             0,
-        );
+        )?;
 
         let auth_info = SignerInfo {
             public_key: self.private_key.get_signer_public_key(&self.secp),

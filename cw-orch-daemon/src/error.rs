@@ -19,7 +19,7 @@ pub enum DaemonError {
     #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
     #[error(transparent)]
-    Secp256k1(#[from] ::secp256k1::Error),
+    Secp256k1(#[from] bitcoin::secp256k1::Error),
     #[error(transparent)]
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]
@@ -32,6 +32,8 @@ pub enum DaemonError {
     TendermintError(#[from] ::cosmrs::tendermint::Error),
     #[error(transparent)]
     CwEnvError(#[from] ::cw_orch_core::CwEnvError),
+    #[error(transparent)]
+    StripPrefixPath(#[from] std::path::StripPrefixError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
@@ -114,6 +116,8 @@ pub enum DaemonError {
     InsufficientFee(String),
     #[error("Not enough balance, expected {expected}, found {current}")]
     NotEnoughBalance { expected: Coin, current: Coin },
+    #[error("Can't set the daemon state, it's read-only")]
+    StateReadOnly,
 }
 
 impl DaemonError {

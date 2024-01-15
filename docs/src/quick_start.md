@@ -10,7 +10,7 @@ In this quick-start guide, we will review the necessary steps in order to integr
 
 > **NOTE**: *Additional content*
 >
->If you're moving quicker than everybody else, we suggest looking at [a before-after review of this example integration](https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a). This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
+>If you're moving quicker than everybody else, we suggest looking at <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..main" target="_blank">a before-after review of this example integration</a>. This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
 
 ## Summary
 
@@ -124,8 +124,8 @@ You can now use:
 
 In this paragraph, we will use the `cw-plus` repository as an example. You can review:
 
-- [The full integration code](https://github.com/AbstractSDK/cw-plus) with `cw-orch` added
-- [The complete diff](https://github.com/cosmwasm/cw-plus/compare/main...abstractsdk:main) that shows you all integration spots (if you want to go fast)
+- <a href="https://github.com/AbstractSDK/cw-plus" target="_blank">The full integration code</a> with `cw-orch` added
+- <a href="https://github.com/cosmwasm/cw-plus/compare/main...abstractsdk:main" target="_blank">The complete diff</a> that shows you all integration spots (if you want to go fast)
 
 ### Handling dependencies and features
 
@@ -182,8 +182,8 @@ Now that you workspace is setup, you can [integrate with single contracts](#sing
 
 You can find more example interactions on the `counter-contract` example directly in the `cw-orchestrator` repo:  
 
-- Some examples [showcase interacting with live chains](https://github.com/AbstractSDK/cw-orchestrator/blob/main/contracts/counter/examples/deploy.rs).
-- Some other examples show [how to use the library for testing your contracts](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests).
+- Some examples <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/contracts/counter/examples/deploy.rs" target="_blank">showcase interacting with live chains</a>.
+- Some other examples show <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests" target="_blank">how to use the library for testing your contracts</a>.
 
 > **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`.
 > Why not go directly to [environment variables](./contracts/env-variable.md)?

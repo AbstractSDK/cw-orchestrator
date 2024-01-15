@@ -22,10 +22,10 @@ pub enum ExecuteMsgOrdered {
 }
 // ANCHOR_END: ordered_msg_def
 
-#[cw_orch::interface(Empty, ExecuteMsg, Empty, Empty, id = "test")]
+#[cw_orch::interface(Empty, ExecuteMsg, Empty, Empty)]
 pub struct TestContract;
 
-#[cw_orch::interface(Empty, ExecuteMsgOrdered, Empty, Empty, id = "test-ordered")]
+#[cw_orch::interface(Empty, ExecuteMsgOrdered, Empty, Empty)]
 pub struct OrderedTestContract;
 
 pub fn instantiate(
@@ -82,8 +82,8 @@ mod test {
     pub fn test() -> Result<(), CwOrchError> {
         let chain = Mock::new(&Addr::unchecked("sender"));
 
-        let contract = TestContract::new(chain.clone());
-        let contract_ordered = OrderedTestContract::new(chain.clone());
+        let contract = TestContract::new("test", chain.clone());
+        let contract_ordered = OrderedTestContract::new("test-ordered", chain.clone());
 
         contract.upload()?;
         contract_ordered.upload()?;

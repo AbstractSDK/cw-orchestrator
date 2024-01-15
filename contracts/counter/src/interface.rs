@@ -3,7 +3,7 @@ use cw_orch::{interface, prelude::*};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-pub const CONTRACT_ID: &str = "contract_counter";
+pub const CONTRACT_ID: &str = "counter_contract";
 
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg, id = CONTRACT_ID)]
 pub struct CounterContract;

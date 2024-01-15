@@ -39,8 +39,18 @@ impl Parse for InterfaceInput {
             }
         }
         // Parse if there is any
-        let kw_id: Option<kw::id> = input.parse()?;
-        let eq_token: Option<Token![=]> = input.parse()?;
+        let kw_id: Option<kw::id> = input.parse().map_err(|_| {
+            syn::Error::new(
+                input.span(),
+                "The 5th argument of the macro should be of the format `id=my_contract_id`",
+            )
+        })?;
+        let eq_token: Option<Token![=]> = input.parse().map_err(|_| {
+            syn::Error::new(
+                input.span(),
+                "The 5th argument of the macro should be of the format `id=my_contract_id`",
+            )
+        })?;
         let default_id: Option<Expr> = input.parse().ok();
         Ok(Self {
             expressions,
@@ -203,7 +213,15 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
             }
         )
     } else {
-        quote!()
+        quote!(
+            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+                pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
+                    Self(
+                        ::cw_orch::contract::Contract::new(contract_id, chain)
+                    , #(#all_phantom_marker_values,)*)
+                }
+            }
+        )
     };
     let struct_def = quote!(
             #[derive(

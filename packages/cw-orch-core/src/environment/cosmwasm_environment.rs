@@ -22,7 +22,7 @@ pub trait TxHandler: ChainState + Clone {
     /// Response type for transactions on an environment.
     type Response: IndexResponse + Debug + Send + Clone;
     /// Error type for transactions on an environment.
-    type Error: Into<CwEnvError> + Debug;
+    type Error: Into<CwEnvError> + Debug + std::error::Error;
     /// Source type for uploading to the environment.
     type ContractSource;
 
@@ -60,6 +60,7 @@ pub trait TxHandler: ChainState + Clone {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, Self::Error>;
+
     /// Send a ExecMsg to a contract.
     fn execute<E: Serialize + Debug>(
         &self,
@@ -100,6 +101,14 @@ pub trait WasmCodeQuerier: TxHandler + Clone {
         &self,
         contract: &T,
     ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
+
+    /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
+    fn local_hash<T: Uploadable + ContractInstance<Self>>(
+        &self,
+        contract: &T,
+    ) -> Result<String, CwEnvError> {
+        contract.wasm().checksum()
+    }
 }
 
 pub trait BankQuerier: TxHandler {

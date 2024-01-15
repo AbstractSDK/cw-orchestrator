@@ -1,12 +1,25 @@
 # cw-orchestrator Changelog
 
-## Unreleased
+## Unpublished
+
+- Changed behavior for default constructor implementation by macro "interface"
+
+## 0.19.1
+
+- Fix: Min gas env variable processing.
+- Fix: Added specific local hash computation possibility
+
+## 0.19.0
 
 - Add `MutCwEnv` for manipulating testing environments.
 - Add `BankQuerier` as trait bound to `CwEnv`.
 - Add `WasmCodeQuerier` as trait bound to `CwEnv`.
 - Changed the snapshot feature for better snapshot readability.
-- Changed behavior for default constructor implementation by macro "interface"
+- Added Readonly flag to the daemon state
+- Added min gas fee environment variable
+- Updated `cosmrs` to `0.15.0`
+- Updated tonic to `0.10.2`
+- Bumped MSRV to 1.72 because of dependency `cosmrs@0.15.0`
 
 ## 0.18.2
 
@@ -14,7 +27,7 @@
 
 ## 0.18.1
 
-- Dix : Added daemon flag on the networks import
+- Fix : Added daemon flag on the networks import
 
 ## 0.18.0
 
