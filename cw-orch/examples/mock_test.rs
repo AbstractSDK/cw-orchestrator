@@ -18,7 +18,7 @@ pub fn main() {
     // ANCHOR_END: mock_creation
 
     // ANCHOR: mock_usage
-    let contract_counter = CounterContract::new("mock:contract_counter", mock);
+    let contract_counter = CounterContract::new(mock);
 
     let upload_res = contract_counter.upload();
     upload_res.unwrap();
@@ -41,7 +41,7 @@ pub fn customize() {
 
     let mock = Mock::new(&sender);
 
-    let mut contract_counter = CounterContract::new("mock:contract_counter", mock.clone());
+    let mut contract_counter = CounterContract::new(mock.clone());
 
     // ANCHOR: mock_customization
     let new_sender = Addr::unchecked("entirely-new-sender");
