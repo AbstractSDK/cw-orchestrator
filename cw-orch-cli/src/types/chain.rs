@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use cw_orch::daemon::{networks::SUPPORTED_NETWORKS, ChainRegistryData};
+use cw_orch::daemon::{networks::SUPPORTED_NETWORKS, ChainInfo, ChainRegistryData};
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct CliLockedChain(usize);
@@ -8,6 +8,10 @@ pub struct CliLockedChain(usize);
 impl CliLockedChain {
     pub fn new(index: usize) -> Self {
         CliLockedChain(index)
+    }
+
+    pub fn chain_info<'a>(&self) -> &ChainInfo<'a> {
+        &SUPPORTED_NETWORKS[self.0]
     }
 }
 

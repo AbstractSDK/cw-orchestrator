@@ -8,16 +8,18 @@ use cosmrs::proto::cosmwasm::wasm::v1::{
     query_client::QueryClient, QuerySmartContractStateRequest,
 };
 
+use crate::types::CliAddress;
+
 use super::CosmosContext;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = QueryCw20Output)]
 pub struct QueryCw20Commands {
-    /// Input cw20 address
-    cw20_address: String,
-    /// Address
-    address: String,
+    /// Cw20 Address or alias from address-book
+    cw20_address: CliAddress,
+    /// Address or alias from address-book
+    address: CliAddress,
 }
 
 pub struct QueryCw20Output;
@@ -28,9 +30,11 @@ impl QueryCw20Output {
         scope: &<QueryCw20Commands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let account_id = scope.address.clone().account_id(chain.chain_info())?;
+        let cw20_account_id = scope.cw20_address.clone().account_id(chain.chain_info())?;
         let chain_data: ChainRegistryData = chain.into();
         let msg = serde_json::to_vec(&cw20::Cw20QueryMsg::Balance {
-            address: scope.address.clone(),
+            address: account_id.to_string(),
         })?;
 
         let rt = Runtime::new()?;
@@ -42,7 +46,7 @@ impl QueryCw20Output {
 
             let resp = client
                 .smart_contract_state(QuerySmartContractStateRequest {
-                    address: scope.cw20_address.clone(),
+                    address: cw20_account_id.to_string(),
                     query_data: msg,
                 })
                 .await?;

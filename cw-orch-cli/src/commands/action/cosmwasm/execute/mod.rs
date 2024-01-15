@@ -2,6 +2,7 @@ use color_eyre::eyre::Context;
 use cw_orch::{daemon::CosmTxResponse, prelude::DaemonAsync, tokio::runtime::Runtime};
 
 use crate::log::LogOutput;
+use crate::types::CliAddress;
 use crate::{commands::action::CosmosContext, types::CliCoins};
 
 use super::msg_type;
@@ -11,8 +12,8 @@ use super::msg_type;
 #[interactive_clap(output_context = ExecuteWasmOutput)]
 /// Execute contract method
 pub struct ExecuteContractCommands {
-    /// Contract address
-    contract_addr: String,
+    /// Contract Address or alias from address-book
+    contract_addr: CliAddress,
     #[interactive_clap(value_enum)]
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
@@ -48,6 +49,8 @@ impl ExecuteWasmOutput {
         scope:&<ExecuteContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let contract_account_id = scope.contract_addr.clone().account_id(chain.chain_info())?;
+
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
@@ -62,7 +65,7 @@ impl ExecuteWasmOutput {
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
                 sender: daemon.sender.pub_addr()?,
-                contract: scope.contract_addr.parse()?,
+                contract: contract_account_id,
                 msg,
                 funds: coins,
             };

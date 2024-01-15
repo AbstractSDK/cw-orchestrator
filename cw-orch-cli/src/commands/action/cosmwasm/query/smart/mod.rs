@@ -6,7 +6,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::commands::action::CosmosContext;
+use crate::{commands::action::CosmosContext, types::CliAddress};
 
 use super::super::msg_type;
 
@@ -14,8 +14,8 @@ use super::super::msg_type;
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = QueryWasmOutput)]
 pub struct QuerySmartCommands {
-    /// Contract address
-    contract_addr: String,
+    /// Contract Address or alias from address-book
+    contract: CliAddress,
     #[interactive_clap(value_enum)]
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
@@ -39,6 +39,8 @@ impl QueryWasmOutput {
         scope:&<QuerySmartCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let contract_account_id = scope.contract.clone().account_id(chain.chain_info())?;
+
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
         let chain_data: ChainRegistryData = chain.into();
@@ -51,7 +53,7 @@ impl QueryWasmOutput {
 
             let resp = client
                 .smart_contract_state(QuerySmartContractStateRequest {
-                    address: scope.contract_addr.clone(),
+                    address: contract_account_id.to_string(),
                     query_data: msg,
                 })
                 .await?;

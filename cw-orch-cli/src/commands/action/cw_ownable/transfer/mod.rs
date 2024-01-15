@@ -5,7 +5,7 @@ use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 use crate::{
     commands::action::CosmosContext,
     common::parse_expiration,
-    types::{CliExpiration, CliSkippable},
+    types::{CliAddress, CliExpiration, CliSkippable},
 };
 
 use super::ContractExecuteMsg;
@@ -14,18 +14,17 @@ use super::ContractExecuteMsg;
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = TransferOwnershipOutput)]
 pub struct TransferOwnership {
-    /// Contract address
-    contract_addr: String,
-    /// New owner address
-    new_owner: String,
+    /// Contract Address or alias from address-book
+    contract: CliAddress,
+    /// New owner Address or alias from address-book
+    new_owner: CliAddress,
     /// Expiration
     #[interactive_clap(skip_default_input_arg)]
     expiration: CliExpiration,
     /// Signer id
     // TODO: should be possible to sign it from the seed phrase
     signer: String,
-    /// New owner signer id
-    #[interactive_clap(skip_default_input_arg)]
+    /// New owner signer id, leave empty to skip auto-claim
     new_signer: CliSkippable<String>,
 }
 
@@ -33,15 +32,6 @@ impl TransferOwnership {
     fn input_expiration(_: &CosmosContext) -> color_eyre::eyre::Result<Option<CliExpiration>> {
         let expiration = parse_expiration()?;
         Ok(Some(CliExpiration(expiration)))
-    }
-
-    fn input_new_signer(
-        _: &CosmosContext,
-    ) -> color_eyre::eyre::Result<Option<CliSkippable<String>>> {
-        let new_signer = inquire::Text::new("New signer id")
-            .with_help_message("Press ESC to skip auto-claim")
-            .prompt_skippable()?;
-        Ok(Some(CliSkippable(new_signer)))
     }
 }
 
@@ -53,6 +43,9 @@ impl TransferOwnershipOutput {
         scope:&<TransferOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let contract = scope.contract.clone().account_id(chain.chain_info())?;
+        let new_owner = scope.new_owner.clone().account_id(chain.chain_info())?;
+
         let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let receiver_seed = scope
             .new_signer
@@ -61,7 +54,7 @@ impl TransferOwnershipOutput {
             .map(crate::common::seed_phrase_for_id)
             .transpose()?;
         let action = cw_ownable::Action::TransferOwnership {
-            new_owner: scope.new_owner.clone(),
+            new_owner: new_owner.to_string(),
             expiry: Some(scope.expiration.0),
         };
         let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
@@ -76,12 +69,14 @@ impl TransferOwnershipOutput {
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
                 sender: daemon.sender.pub_addr()?,
-                contract: scope.contract_addr.parse()?,
+                contract: contract.clone(),
                 msg,
                 funds: vec![],
             };
 
             let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+
+            // TODO: logging
 
             if let Some(seed) = receiver_seed {
                 let receiver_sender =
@@ -91,7 +86,7 @@ impl TransferOwnershipOutput {
                 let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
                 let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
                     sender: daemon.sender.pub_addr()?,
-                    contract: scope.contract_addr.parse()?,
+                    contract,
                     msg,
                     funds: vec![],
                 };

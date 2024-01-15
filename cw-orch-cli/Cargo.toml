@@ -11,6 +11,8 @@ description = "Command-line tool for managing Cosmos-based interaction."
 
 [dependencies]
 cw-orch = { path = "../cw-orch", features = ["daemon"], version = "0.19" }
+# TODO: remove when default_state_folder gets exposed in cw-orch
+cw-orch-core = { path = "../packages/cw-orch-core", version = "0.19" }
 
 # Cosmos
 cosmwasm-std = { workspace = true }

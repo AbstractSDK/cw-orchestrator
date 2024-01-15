@@ -6,14 +6,14 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::commands::action::CosmosContext;
+use crate::{commands::action::CosmosContext, types::CliAddress};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = QueryWasmOutput)]
 pub struct QueryRawCommands {
-    /// Contract address
-    contract_addr: String,
+    /// Contract Address or alias from address-book
+    contract: CliAddress,
     // TODO: add base-64 option for binary keys
     /// Enter key
     key: String,
@@ -27,6 +27,7 @@ impl QueryWasmOutput {
         scope:&<QueryRawCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let contract_account_id = scope.contract.clone().account_id(chain.chain_info())?;
 
         let chain_data: ChainRegistryData = chain.into();
 
@@ -38,7 +39,7 @@ impl QueryWasmOutput {
 
             let resp = client
                 .raw_contract_state(QueryRawContractStateRequest {
-                    address: scope.contract_addr.clone(),
+                    address: contract_account_id.to_string(),
                     query_data: scope.key.clone().into_bytes(),
                 })
                 .await?;

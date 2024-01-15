@@ -4,7 +4,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::log::LogOutput;
+use crate::{log::LogOutput, types::CliAddress};
 
 use super::CosmosContext;
 
@@ -12,12 +12,12 @@ use super::CosmosContext;
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = SendCw20Output)]
 pub struct Cw20TransferCommands {
-    /// Cw20 Address
-    cw20_address: String,
+    /// Cw20 Address or alias from address-book
+    cw20_address: CliAddress,
     /// Cw20 Amount
     amount: u128,
-    /// Recipient
-    to_address: String,
+    /// Recipient address or alias from address-book
+    to_address: CliAddress,
     /// Signer id
     signer: String,
 }
@@ -30,9 +30,12 @@ impl SendCw20Output {
         scope: &<Cw20TransferCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let to_address_account_id = scope.to_address.clone().account_id(chain.chain_info())?;
+        let cw20_account_id = scope.cw20_address.clone().account_id(chain.chain_info())?;
+
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let cw20_msg = cw20::Cw20ExecuteMsg::Transfer {
-            recipient: scope.to_address.clone(),
+            recipient: to_address_account_id.to_string(),
             amount: Uint128::new(scope.amount),
         };
         let msg = serde_json::to_vec(&cw20_msg)?;
@@ -47,7 +50,7 @@ impl SendCw20Output {
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
                 sender: daemon.sender.pub_addr()?,
-                contract: scope.cw20_address.parse()?,
+                contract: cw20_account_id,
                 msg,
                 funds: vec![],
             };

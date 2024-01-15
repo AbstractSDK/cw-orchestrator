@@ -4,7 +4,10 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::{log::LogOutput, types::CliCoins};
+use crate::{
+    log::LogOutput,
+    types::{CliAddress, CliCoins},
+};
 
 use super::CosmosContext;
 
@@ -15,8 +18,8 @@ pub struct SendNativeCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
     coins: CliCoins,
-    /// Recipient
-    to_address: String,
+    /// Recipient Address or alias from address-book
+    to_address: CliAddress,
     /// Signer id
     signer: String,
 }
@@ -37,6 +40,8 @@ impl SendNativeOutput {
         scope: &<SendNativeCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let to_address = scope.to_address.clone().account_id(chain.chain_info())?;
+
         let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let coins: Vec<cosmrs::Coin> = (&scope.coins).try_into()?;
 
@@ -51,7 +56,7 @@ impl SendNativeOutput {
 
             let transfer_msg = cosmrs::bank::MsgSend {
                 from_address: daemon.sender.pub_addr()?,
-                to_address: scope.to_address.parse()?,
+                to_address,
                 amount: coins,
             };
             let resp = daemon.sender.commit_tx(vec![transfer_msg], None).await?;

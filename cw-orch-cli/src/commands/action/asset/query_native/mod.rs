@@ -10,7 +10,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::types::CliSkippable;
+use crate::types::{CliAddress, CliSkippable};
 
 use super::CosmosContext;
 
@@ -20,9 +20,8 @@ use super::CosmosContext;
 pub struct QueryNativeCommands {
     /// Input denom or leave empty to query all balances
     denom: CliSkippable<String>,
-    /// Address
-    // TODO: Make it Address-bookable
-    address: String,
+    /// Address or alias from address-book
+    address: CliAddress,
 }
 
 pub struct QueryNativeOutput;
@@ -35,8 +34,9 @@ impl QueryNativeOutput {
         let chain = previous_context.chain;
         let denom = scope.denom.0.clone();
 
-        let chain_data: ChainRegistryData = chain.into();
+        let account_id = scope.address.clone().account_id(chain.chain_info())?;
 
+        let chain_data: ChainRegistryData = chain.into();
         let rt = Runtime::new()?;
 
         rt.block_on(async {
@@ -46,7 +46,7 @@ impl QueryNativeOutput {
             if let Some(denom) = denom {
                 let response: QueryBalanceResponse = client
                     .balance(QueryBalanceRequest {
-                        address: scope.address.clone(),
+                        address: account_id.to_string(),
                         denom: denom.clone(),
                     })
                     .await?
@@ -63,7 +63,7 @@ impl QueryNativeOutput {
             } else {
                 let response: QueryAllBalancesResponse = client
                     .all_balances(QueryAllBalancesRequest {
-                        address: scope.address.clone(),
+                        address: account_id.to_string(),
                         pagination: None,
                     })
                     .await?

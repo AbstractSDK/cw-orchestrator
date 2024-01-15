@@ -1,4 +1,4 @@
-#[derive(Default, PartialEq, Eq, Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct CliSkippable<T>(pub Option<T>);
 
 impl<T: std::fmt::Display> std::fmt::Display for CliSkippable<T> {

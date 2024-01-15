@@ -7,7 +7,7 @@ use cosmrs::proto::cosmwasm::wasm::v1::{
     query_client::QueryClient, QuerySmartContractStateRequest,
 };
 
-use crate::commands::action::CosmosContext;
+use crate::{commands::action::CosmosContext, types::CliAddress};
 
 use super::ContractQueryMsg;
 
@@ -15,8 +15,8 @@ use super::ContractQueryMsg;
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = GetOwnershipOutput)]
 pub struct GetOwnership {
-    /// Contract address
-    contract_addr: String,
+    /// Contract Address or alias from address-book
+    contract: CliAddress,
 }
 
 pub struct GetOwnershipOutput;
@@ -27,6 +27,8 @@ impl GetOwnershipOutput {
         scope:&<GetOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let contract_account_id = scope.contract.clone().account_id(chain.chain_info())?;
+
         let msg = serde_json::to_vec(&ContractQueryMsg::Ownership {})?;
         let chain_data: ChainRegistryData = chain.into();
 
@@ -38,7 +40,7 @@ impl GetOwnershipOutput {
 
             let resp = client
                 .smart_contract_state(QuerySmartContractStateRequest {
-                    address: scope.contract_addr.clone(),
+                    address: contract_account_id.to_string(),
                     query_data: msg,
                 })
                 .await?;

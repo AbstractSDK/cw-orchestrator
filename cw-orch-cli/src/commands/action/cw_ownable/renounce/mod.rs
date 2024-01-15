@@ -1,6 +1,6 @@
 use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
-use crate::commands::action::CosmosContext;
+use crate::{commands::action::CosmosContext, types::CliAddress};
 
 use super::ContractExecuteMsg;
 
@@ -8,8 +8,8 @@ use super::ContractExecuteMsg;
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = RenounceOwnershipOutput)]
 pub struct RenounceOwnership {
-    /// Contract address
-    contract_addr: String,
+    /// Contract Address or alias from address-book
+    contract: CliAddress,
     /// Signer id
     // TODO: should be possible to sign it from the seed phrase
     signer: String,
@@ -23,6 +23,8 @@ impl RenounceOwnershipOutput {
         scope:&<RenounceOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let contract = scope.contract.clone().account_id(chain.chain_info())?;
+
         let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
         let action = cw_ownable::Action::RenounceOwnership {};
         let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
@@ -37,7 +39,7 @@ impl RenounceOwnershipOutput {
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
                 sender: daemon.sender.pub_addr()?,
-                contract: scope.contract_addr.parse()?,
+                contract,
                 msg,
                 funds: vec![],
             };

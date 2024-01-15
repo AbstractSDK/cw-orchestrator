@@ -1,6 +1,9 @@
 mod action;
 mod keys;
 
+// TODO: get it upper
+pub use action::CosmosContext;
+
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 #[derive(Debug, EnumDiscriminants, Clone, interactive_clap::InteractiveClap)]
