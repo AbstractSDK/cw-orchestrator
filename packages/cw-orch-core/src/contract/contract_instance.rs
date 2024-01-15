@@ -171,6 +171,56 @@ impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
         Ok(resp)
     }
 
+    /// Initializes the contract
+    pub fn instantiate2<I: Serialize + Debug>(
+        &self,
+        msg: &I,
+        admin: Option<&Addr>,
+        coins: Option<&[Coin]>,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Instantiate]",
+            self.id,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Instantiate] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
+        let resp = self
+            .chain
+            .instantiate(
+                self.code_id()?,
+                msg,
+                Some(&self.id),
+                admin,
+                coins.unwrap_or(&[]),
+            )
+            .map_err(Into::into)?;
+        let contract_address = resp.instantiated_contract_address()?;
+
+        self.set_address(&contract_address);
+
+        log::info!(
+            target: &&contract_target(),
+            "[{}][Instantiated] {}",
+            self.id,
+            contract_address
+        );
+        log::debug!(
+            target: &&transaction_target(),
+            "[{}][Instantiated] response: {:?}",
+            self.id,
+            resp
+        );
+
+        Ok(resp)
+    }
+
     /// Query the contract
     pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
         &self,
