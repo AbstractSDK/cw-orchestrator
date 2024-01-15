@@ -45,7 +45,7 @@ impl From<CosmosContext> for () {
 
 #[derive(Clone)]
 pub struct CosmosContext {
-    chain: CliLockedChain,
+    pub chain: CliLockedChain,
 }
 
 impl CosmosContext {

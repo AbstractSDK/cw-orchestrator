@@ -1,5 +1,6 @@
 mod action;
 mod keys;
+mod address_book;
 
 // TODO: get it upper
 pub use action::CosmosContext;
@@ -14,9 +15,11 @@ pub enum Commands {
     #[strum_discriminants(strum(message = "🎬 Action"))]
     Action(action::CosmosCommands),
     /// Add, View or Remove key
-    #[strum_discriminants(strum(message = "🔑 Manage keys"))]
+    #[strum_discriminants(strum(message = "🔑 Manage Keys"))]
     Key(keys::KeyCommands),
+    /// Handle Address Book
+    #[strum_discriminants(strum(message = "📖 Manage Address Book"))]
+    AddressBook(address_book::AddressBookCommands),
     // TODO:
-    // 1) AddressBook
-    // 2) Config management
+    // 1) Config management
 }
