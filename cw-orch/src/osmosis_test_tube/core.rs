@@ -315,7 +315,10 @@ pub(crate) fn to_cosmwasm_coin(
 pub mod tests {
     use cosmwasm_std::{coins, ContractInfoResponse};
 
-    use cw_orch_core::environment::queriers::{wasm::{WasmQuerier, WasmQuerierGetter}, bank::{BankQuerierGetter, BankQuerier}};
+    use cw_orch_core::environment::queriers::{
+        bank::{BankQuerier, BankQuerierGetter},
+        wasm::{WasmQuerier, WasmQuerierGetter},
+    };
     use osmosis_test_tube::Account;
 
     use super::OsmosisTestTube;
@@ -357,10 +360,14 @@ pub mod tests {
         let app = OsmosisTestTube::new(init_coins.clone());
         let sender = app.sender.address();
         assert_eq!(
-            app.bank_querier().balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.bank_querier().supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
         Ok(())
     }
 }
