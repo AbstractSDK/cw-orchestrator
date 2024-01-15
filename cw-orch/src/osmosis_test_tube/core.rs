@@ -342,7 +342,7 @@ pub mod tests {
     fn wasm_querier_works() -> anyhow::Result<()> {
         let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
 
-        let contract = CounterContract::new("counter", app.clone());
+        let contract = CounterContract::new(app.clone());
         contract.upload()?;
         contract.instantiate(
             &InstantiateMsg { count: 7 },

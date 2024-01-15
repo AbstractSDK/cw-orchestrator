@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use bitcoin::secp256k1::All;
 use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::AccountId;
 use cosmrs::{
@@ -10,7 +11,6 @@ use cosmrs::{
 };
 use cw_orch_core::log::transaction_target;
 use cw_orch_core::CwOrchEnvVars;
-use secp256k1::All;
 
 use super::{sender::Sender, DaemonError};
 

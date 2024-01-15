@@ -1,6 +1,5 @@
 // ANCHOR: all
 use counter_contract::{
-    contract::CONTRACT_NAME,
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
     ContractError, CounterContract,
 };
@@ -78,7 +77,7 @@ fn count() -> anyhow::Result<()> {
 fn setup<Chain: CwEnv>(chain: Chain) -> anyhow::Result<CounterContract<Chain>> {
     // ANCHOR: constructor
     // Construct the counter interface
-    let contract = CounterContract::new(CONTRACT_NAME, chain.clone());
+    let contract = CounterContract::new(chain.clone());
     // ANCHOR_END: constructor
     let admin = Addr::unchecked(ADMIN);
 
