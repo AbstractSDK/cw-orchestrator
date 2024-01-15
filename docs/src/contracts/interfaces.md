@@ -52,13 +52,15 @@ The constructor takes one argument:
 
 - `chain`: The CosmWasm supported environment to use when calling the contract. Also includes the default sender information that will be used to call the contract. You can find more information later in the [Integrations](../integrations/index.md) section for how to create this `chain` variable
 
-> **NOTE**: If you prefer working with different contract addresses for the same contract interface, you can use the following syntax in the interface definition : 
+> **NOTE**: If you prefer working with different contract addresses for the same contract interface, you can remove the id argument in the `interface` macro:
+>
 > ```rust,ignore
 >#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 >pub struct CounterContract;
 >```
 >
->The generated constructor will now take 2 arguments, the `contract_id` and the `chain` : 
+>The generated constructor will now take 2 arguments, the `contract_id` and the `chain`. This `contract_id` will allow you to specify which contract you want to interact with.
+>
 >```rust,ignore
 >let contract = CounterContract::new("specific_counter_contract", chain.clone());
 >```
