@@ -1,6 +1,10 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, str::FromStr};
 
-use cosmwasm_std::{from_json, to_json_vec, CodeInfoResponse, ContractInfoResponse};
+use cosmrs::AccountId;
+use cosmwasm_std::{
+    from_json, instantiate2_address, to_json_vec, CanonicalAddr, CodeInfoResponse,
+    ContractInfoResponse,
+};
 use cw_orch_core::{
     environment::{
         queriers::wasm::{WasmQuerier, WasmQuerierGetter},
@@ -152,5 +156,23 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         c.checksum = code_info.data_hash.into();
 
         Ok(c)
+    }
+
+    fn instantiate2_addr<I: serde::Serialize + std::fmt::Debug>(
+        &self,
+        code_id: u64,
+        creator: impl Into<String>,
+        salt: cosmwasm_std::Binary,
+    ) -> Result<String, Self::Error> {
+        let checksum = self.code_id_hash(code_id)?;
+
+        let creator_str = creator.into();
+        let account_id = AccountId::from_str(&creator_str).unwrap();
+        let prefix = account_id.prefix();
+        let canon = account_id.to_bytes();
+        let addr =
+            instantiate2_address(checksum.as_bytes(), &CanonicalAddr(canon.into()), &salt).unwrap();
+
+        Ok(AccountId::new(prefix, &addr.0).unwrap().to_string())
     }
 }

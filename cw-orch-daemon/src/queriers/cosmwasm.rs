@@ -1,4 +1,4 @@
-use std::{io::Read, str::FromStr};
+use std::str::FromStr;
 
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::{proto::cosmos::base::query::v1beta1::PageRequest, AccountId};
@@ -276,7 +276,6 @@ impl WasmQuerier for DaemonWasmQuerier {
         code_id: u64,
         creator: impl Into<String>,
         salt: cosmwasm_std::Binary,
-        fix_msg: bool,
     ) -> Result<String, Self::Error> {
         let creator_str = creator.into();
         let account_id = AccountId::from_str(&creator_str)?;
@@ -285,6 +284,6 @@ impl WasmQuerier for DaemonWasmQuerier {
         let checksum = self.code_id_hash(code_id)?;
         let addr = instantiate2_address(checksum.as_bytes(), &CanonicalAddr(canon.into()), &salt)?;
 
-        Ok(AccountId::new(prefix, &addr.0.to_vec())?.to_string())
+        Ok(AccountId::new(prefix, &addr.0)?.to_string())
     }
 }

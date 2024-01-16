@@ -1,4 +1,4 @@
-use cosmwasm_std::{Binary, CodeInfoResponse, ContractInfoResponse};
+use cosmwasm_std::{CodeInfoResponse, ContractInfoResponse};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
