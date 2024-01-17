@@ -1,7 +1,11 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
-use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
+use cosmwasm_std::{testing::MockStorage, Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
+use cw_multi_test::{
+    addons::MockApiBech32, ibc::IbcSimpleModule, next_block, App, AppBuilder, AppResponse,
+    BankKeeper, Contract, DistributionKeeper, Executor, FailingModule, GovFailingModule,
+    StakeKeeper, StargateFailing, WasmKeeper,
+};
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -54,7 +58,22 @@ pub struct Mock<S: StateInterface = MockState> {
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+    pub app: Rc<
+        RefCell<
+            App<
+                BankKeeper,
+                MockApiBech32,
+                MockStorage,
+                FailingModule<Empty, Empty, Empty>,
+                WasmKeeper<Empty, Empty>,
+                StakeKeeper,
+                DistributionKeeper,
+                IbcSimpleModule,
+                GovFailingModule,
+                StargateFailing,
+            >,
+        >,
+    >,
 }
 
 impl<S: StateInterface> Mock<S> {
@@ -128,11 +147,11 @@ impl<S: StateInterface> Mock<S> {
 impl Mock<MockState> {
     /// Create a mock environment with the default mock state.
     pub fn new(sender: &Addr) -> Self {
-        Mock::new_custom(sender, MockState::new())
+        Mock::new_custom(sender, "cosmos", MockState::new())
     }
 
-    pub fn with_chain_id(sender: &Addr, chain_id: &str) -> Self {
-        let chain = Mock::new_custom(sender, MockState::new());
+    pub fn with_chain_info(sender: &Addr, chain_id: &str, prefix: &'static str) -> Self {
+        let chain = Mock::new_custom(sender, prefix, MockState::new());
         chain
             .app
             .borrow_mut()
@@ -145,9 +164,13 @@ impl Mock<MockState> {
 impl<S: StateInterface> Mock<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
+    pub fn new_custom(sender: &Addr, prefix: &'static str, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(custom_app::<Empty, Empty, _>(|_, _, _| {})));
+        let app = Rc::new(RefCell::new(
+            AppBuilder::new_custom()
+                .with_api(MockApiBech32::new(prefix))
+                .build(|_, _, _| {}),
+        ));
 
         Self {
             sender: sender.clone(),
@@ -508,10 +531,11 @@ mod test {
         let recipient = &Addr::unchecked(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
+        let prefix = "osmosis";
 
         let mock_state = MockState::new();
 
-        let chain = Mock::<_>::new_custom(sender, mock_state);
+        let chain = Mock::<_>::new_custom(sender, prefix, mock_state);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
