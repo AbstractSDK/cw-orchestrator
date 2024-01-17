@@ -137,9 +137,7 @@ mod tests {
     impl ChainState for MockHandler {
         type Out = ();
 
-        fn state(&self) -> Self::Out {
-            ()
-        }
+        fn state(&self) -> Self::Out {}
     }
 
     impl TxHandler for MockHandler {
@@ -173,7 +171,10 @@ mod tests {
             unimplemented!()
         }
 
-        fn upload(&self, _contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error> {
+        fn upload(
+            &self,
+            _contract_source: &impl Uploadable,
+        ) -> Result<Self::Response, Self::Error> {
             unimplemented!()
         }
 
