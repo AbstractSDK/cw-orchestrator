@@ -6,12 +6,12 @@ mod tests {
     */
 
     use cosmrs::proto::cosmos::{
-        authz::v1beta1::{GenericAuthorization, MsgGrant, MsgGrantResponse},
+        authz::v1beta1::{GenericAuthorization, MsgGrant, MsgGrantResponse, QueryGrantsResponse},
         bank::v1beta1::MsgSend,
     };
     use cosmwasm_std::coins;
     use cw_orch_core::environment::{BankQuerier, TxHandler};
-    use cw_orch_daemon::Daemon;
+    use cw_orch_daemon::{queriers::Authz, Daemon};
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
     use prost::Message;
@@ -47,6 +47,19 @@ mod tests {
 
         let current_timestamp = daemon.block_info()?.time;
 
+        let grant = cosmrs::proto::cosmos::authz::v1beta1::Grant {
+            authorization: Some(cosmrs::Any {
+                type_url: "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
+                value: GenericAuthorization {
+                    msg: MsgSend::type_url(),
+                }
+                .encode_to_vec(),
+            }),
+            expiration: Some(Timestamp {
+                seconds: (current_timestamp.seconds() + 3600) as i64,
+                nanos: 0,
+            }),
+        };
         // We start by granting authz to an account
         daemon.commit_any::<MsgGrantResponse>(
             vec![Any {
@@ -54,24 +67,21 @@ mod tests {
                 value: MsgGrant {
                     granter: sender.clone(),
                     grantee: grantee.clone(),
-                    grant: Some(cosmrs::proto::cosmos::authz::v1beta1::Grant {
-                        authorization: Some(cosmrs::Any {
-                            type_url: "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
-                            value: GenericAuthorization {
-                                msg: MsgSend::type_url(),
-                            }
-                            .encode_to_vec(),
-                        }),
-                        expiration: Some(Timestamp {
-                            seconds: (current_timestamp.seconds() + 3600) as i64,
-                            nanos: 0,
-                        }),
-                    }),
+                    grant: Some(grant.clone()),
                 }
                 .encode_to_vec(),
             }],
             None,
         )?;
+
+        // Check Query of the grant
+        let authz_querier: Authz = daemon.query_client();
+        let grants: QueryGrantsResponse = runtime.handle().block_on(async {
+            authz_querier
+                .grants(sender.clone(), grantee.clone(), MsgSend::type_url(), None)
+                .await
+        })?;
+        assert_eq!(grants.grants, vec![grant]);
 
         // The we send some funds to the account
         runtime.block_on(
