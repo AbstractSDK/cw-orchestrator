@@ -8,7 +8,7 @@ static LOGS_DISABLED: Once = Once::new();
 
 // Prints a warning if log is disabled for the application
 pub fn print_if_log_disabled() -> Result<(), DaemonError> {
-    LOGS_DISABLED.call_once(|| {    
+    LOGS_DISABLED.call_once(|| {
         // Here we check for logging capabilities.
         if !log::log_enabled!(log::Level::Info) && !CwOrchEnvVars::load().map(|env|env.disable_logs_message).unwrap_or(false){
             println!(
