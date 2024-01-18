@@ -67,7 +67,7 @@ impl DaemonBuilder {
     }
 
     /// Specifies wether authz should be used with this daemon
-    pub fn with_authz(&mut self, granter: impl ToString) -> &mut Self {
+    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
         self.authz_granter = Some(granter.to_string());
         self
     }

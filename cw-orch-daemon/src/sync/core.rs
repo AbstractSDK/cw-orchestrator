@@ -73,10 +73,10 @@ impl Daemon {
     }
 
     // Adds authz capability to the returned Daemon
-    pub fn with_authz(&self, granter: impl ToString) -> Self {
+    pub fn authz_granter(&self, granter: impl ToString) -> Self {
         let mut new_daemon = self.clone();
         let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.with_authz(granter.to_string());
+        new_sender.authz_granter(granter.to_string());
         new_daemon.daemon.sender = Rc::new(new_sender);
         new_daemon
     }

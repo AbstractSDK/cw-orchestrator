@@ -124,7 +124,7 @@ impl Sender<All> {
         Ok(sender)
     }
 
-    pub fn with_authz(&mut self, granter: impl Into<String>) {
+    pub fn authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
     }
 
@@ -151,7 +151,10 @@ impl Sender<All> {
         Ok(self.pub_addr()?.to_string())
     }
 
-    pub fn message_sender(&self) -> Result<AccountId, DaemonError> {
+    /// Returns the actual sender of every message sent.
+    /// If an authz granter is set, returns the authz granter
+    /// Else, returns the address associated with the current private key
+    pub fn msg_sender(&self) -> Result<AccountId, DaemonError> {
         if let Some(sender) = &self.options.authz_granter {
             Ok(sender.parse()?)
         } else {
@@ -165,7 +168,7 @@ impl Sender<All> {
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let msg_send = MsgSend {
-            from_address: self.message_sender()?,
+            from_address: self.msg_sender()?,
             to_address: AccountId::from_str(recipient)?,
             amount: parse_cw_coins(&coins)?,
         };

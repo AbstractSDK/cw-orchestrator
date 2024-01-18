@@ -106,7 +106,7 @@ impl DaemonAsync {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender.message_sender()?,
+            sender: self.sender.msg_sender()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
@@ -132,7 +132,7 @@ impl DaemonAsync {
             code_id,
             label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: self.sender.message_sender()?,
+            sender: self.sender.msg_sender()?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
@@ -169,7 +169,7 @@ impl DaemonAsync {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender.message_sender()?,
+            sender: self.sender.msg_sender()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
@@ -243,7 +243,7 @@ impl DaemonAsync {
         e.write_all(&file_contents)?;
         let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender.message_sender()?,
+            sender: self.sender.msg_sender()?,
             wasm_byte_code,
             instantiate_permission: None,
         };

@@ -2,7 +2,7 @@ mod common;
 #[cfg(feature = "node-tests")]
 mod tests {
     /*
-        DaemonAsync contract general tests
+        Authz tests
     */
 
     use cosmrs::proto::cosmos::{
@@ -38,7 +38,7 @@ mod tests {
         let second_daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
             .handle(runtime.handle())
-            .with_authz(sender.clone())
+            .authz_granter(sender.clone())
             .mnemonic(SECOND_MNEMONIC)
             .build()
             .unwrap();
@@ -82,6 +82,15 @@ mod tests {
                 .await
         })?;
         assert_eq!(grants.grants, vec![grant]);
+        // No grant gives out an error
+        runtime
+            .handle()
+            .block_on(async {
+                authz_querier
+                    .grants(grantee.clone(), sender.clone(), MsgSend::type_url(), None)
+                    .await
+            })
+            .unwrap_err();
 
         // The we send some funds to the account
         runtime.block_on(
