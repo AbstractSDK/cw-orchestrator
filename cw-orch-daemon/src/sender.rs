@@ -62,6 +62,13 @@ pub struct SenderOptions {
     pub authz_granter: Option<String>,
 }
 
+impl SenderOptions {
+    pub fn authz_granter(mut self, granter: &str) -> Self {
+        self.authz_granter = Some(granter.to_string());
+        self
+    }
+}
+
 impl Sender<All> {
     pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         Self::new_with_options(daemon_state, SenderOptions::default())
