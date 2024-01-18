@@ -6,7 +6,10 @@ mod tests {
     */
 
     use cosmrs::proto::cosmos::{
-        authz::v1beta1::{GenericAuthorization, MsgGrant, MsgGrantResponse, QueryGrantsResponse},
+        authz::v1beta1::{
+            GenericAuthorization, GrantAuthorization, MsgGrant, MsgGrantResponse,
+            QueryGranteeGrantsResponse, QueryGranterGrantsResponse, QueryGrantsResponse,
+        },
         bank::v1beta1::MsgSend,
     };
     use cosmwasm_std::coins;
@@ -47,18 +50,20 @@ mod tests {
 
         let current_timestamp = daemon.block_info()?.time;
 
+        let authorization = cosmrs::Any {
+            type_url: "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
+            value: GenericAuthorization {
+                msg: MsgSend::type_url(),
+            }
+            .encode_to_vec(),
+        };
+        let expiration = Timestamp {
+            seconds: (current_timestamp.seconds() + 3600) as i64,
+            nanos: 0,
+        };
         let grant = cosmrs::proto::cosmos::authz::v1beta1::Grant {
-            authorization: Some(cosmrs::Any {
-                type_url: "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
-                value: GenericAuthorization {
-                    msg: MsgSend::type_url(),
-                }
-                .encode_to_vec(),
-            }),
-            expiration: Some(Timestamp {
-                seconds: (current_timestamp.seconds() + 3600) as i64,
-                nanos: 0,
-            }),
+            authorization: Some(authorization.clone()),
+            expiration: Some(expiration.clone()),
         };
         // We start by granting authz to an account
         daemon.commit_any::<MsgGrantResponse>(
@@ -74,7 +79,15 @@ mod tests {
             None,
         )?;
 
-        // Check Query of the grant
+        // Check Queries of the authz
+        let grant_authorization = GrantAuthorization {
+            granter: sender.clone(),
+            grantee: grantee.clone(),
+            authorization: Some(authorization.clone()),
+            expiration: Some(expiration.clone()),
+        };
+
+        // Grants
         let authz_querier: Authz = daemon.query_client();
         let grants: QueryGrantsResponse = runtime.handle().block_on(async {
             authz_querier
@@ -82,6 +95,19 @@ mod tests {
                 .await
         })?;
         assert_eq!(grants.grants, vec![grant]);
+
+        // Grantee grants
+        let grantee_grants: QueryGranteeGrantsResponse = runtime
+            .handle()
+            .block_on(async { authz_querier.grantee_grants(grantee.clone(), None).await })?;
+        assert_eq!(grantee_grants.grants, vec![grant_authorization.clone()]);
+
+        // Granter grants
+        let granter_grants: QueryGranterGrantsResponse = runtime
+            .handle()
+            .block_on(async { authz_querier.granter_grants(sender.clone(), None).await })?;
+        assert_eq!(granter_grants.grants, vec![grant_authorization]);
+
         // No grant gives out an error
         runtime
             .handle()
@@ -91,6 +117,8 @@ mod tests {
                     .await
             })
             .unwrap_err();
+
+        // Check use of grants
 
         // The we send some funds to the account
         runtime.block_on(
