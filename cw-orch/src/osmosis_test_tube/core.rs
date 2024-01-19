@@ -184,7 +184,7 @@ impl OsmosisTestTube<MockState> {
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
     /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
-        Self::new_custom(init_coins, MockState::new())
+        Self::new_custom(init_coins, MockState::new_with_chain_id("osmosis-1"))
     }
 }
 

@@ -13,6 +13,8 @@ pub struct MockState {
     pub code_ids: HashMap<String, u64>,
     /// Deployed contract addresses
     pub addresses: HashMap<String, Addr>,
+    /// Chain id of the mocked chain
+    pub chain_id: String,
 }
 
 impl MockState {
@@ -21,7 +23,25 @@ impl MockState {
         Self {
             addresses: HashMap::new(),
             code_ids: HashMap::new(),
+            chain_id: mock_env().block.chain_id,
         }
+    }
+    /// Creates a new empty mock state
+    pub fn new_with_chain_id(chain_id: &str) -> Self {
+        Self {
+            addresses: HashMap::new(),
+            code_ids: HashMap::new(),
+            chain_id: chain_id.to_string(),
+        }
+    }
+
+    pub fn with_chain_id(mut self, chain_id: &str) -> Self {
+        self.chain_id = chain_id.to_string();
+        self
+    }
+
+    pub fn set_chain_id(&mut self, chain_id: &str) {
+        self.chain_id = chain_id.to_string();
     }
 }
 
@@ -66,8 +86,8 @@ impl StateInterface for MockState {
     }
 
     fn deploy_details(&self) -> DeployDetails {
-        let chain_id: String = mock_env().block.chain_id;
-        let chain_name: String = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
+        let chain_id = self.chain_id.clone();
+        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
         DeployDetails {
             chain_id,
             chain_name,
