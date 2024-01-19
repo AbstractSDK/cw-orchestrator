@@ -60,12 +60,23 @@ pub struct Sender<C: Signing + Context> {
 #[non_exhaustive]
 pub struct SenderOptions {
     pub authz_granter: Option<String>,
+    pub fee_granter: Option<String>,
 }
 
 impl SenderOptions {
-    pub fn authz_granter(mut self, granter: &str) -> Self {
+    pub fn authz_granter(mut self, granter: impl ToString) -> Self {
         self.authz_granter = Some(granter.to_string());
         self
+    }
+    pub fn fee_granter(mut self, granter: impl ToString) -> Self {
+        self.fee_granter = Some(granter.to_string());
+        self
+    }
+    pub fn set_authz_granter(&mut self, granter: impl ToString) {
+        self.authz_granter = Some(granter.to_string());
+    }
+    pub fn set_fee_granter(&mut self, granter: impl ToString) {
+        self.fee_granter = Some(granter.to_string());
     }
 }
 
@@ -126,6 +137,10 @@ impl Sender<All> {
 
     pub fn authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
+    }
+
+    pub fn fee_granter(&mut self, granter: impl Into<String>) {
+        self.options.fee_granter = Some(granter.into());
     }
 
     fn cosmos_private_key(&self) -> SigningKey {
@@ -216,6 +231,7 @@ impl Sender<All> {
             0u8,
             &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
             0,
+            self.options.clone(),
         )?;
 
         let auth_info = SignerInfo {

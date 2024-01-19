@@ -1,6 +1,6 @@
 use ibc_chain_registry::chain::ChainData;
 
-use crate::DaemonAsyncBuilder;
+use crate::{sender::SenderOptions, DaemonAsyncBuilder};
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -24,8 +24,8 @@ pub struct DaemonBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
-    /// Authz capability
-    pub(crate) authz_granter: Option<String>,
+    /// Specify Daemon Sender Options
+    pub(crate) sender_options: SenderOptions,
 }
 
 impl DaemonBuilder {
@@ -68,7 +68,13 @@ impl DaemonBuilder {
 
     /// Specifies wether authz should be used with this daemon
     pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.authz_granter = Some(granter.to_string());
+        self.sender_options.set_authz_granter(granter.to_string());
+        self
+    }
+
+    /// Specifies wether authz should be used with this daemon
+    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_options.set_fee_granter(granter.to_string());
         self
     }
 
