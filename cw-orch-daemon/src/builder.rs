@@ -28,8 +28,8 @@ pub struct DaemonAsyncBuilder {
     pub(crate) deployment_id: Option<String>,
     /// Wallet mnemonic
     pub(crate) mnemonic: Option<String>,
-    /// Sender specific options
-    pub sender_options: SenderOptions,
+    /// Specify Daemon Sender Options
+    pub(crate) sender_options: SenderOptions,
 }
 
 impl DaemonAsyncBuilder {
@@ -55,15 +55,21 @@ impl DaemonAsyncBuilder {
         self
     }
 
-    /// Specifies wether authz should be used with this daemon
-    pub fn with_authz(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_options.authz_granter = Some(granter.to_string());
+    /// Specifies whether authz should be used with this daemon
+    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_options.set_authz_granter(granter);
         self
     }
 
-    /// Specifies the index of the key used for the mnemonic account
-    pub fn with_index(&mut self, index: u32) -> &mut Self {
-        self.sender_options.index = Some(index);
+    /// Specifies whether a fee grant should be used with this daemon
+    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_options.set_fee_granter(granter);
+        self
+    }
+
+    /// Specifies the hd_index of the daemon sender
+    pub fn hd_index(&mut self, index: u32) -> &mut Self {
+        self.sender_options.hd_index = Some(index);
         self
     }
 

@@ -60,7 +60,32 @@ pub struct Sender<C: Signing + Context> {
 #[non_exhaustive]
 pub struct SenderOptions {
     pub authz_granter: Option<String>,
-    pub index: Option<u32>,
+    pub fee_granter: Option<String>,
+    pub hd_index: Option<u32>,
+}
+
+impl SenderOptions {
+    pub fn authz_granter(mut self, granter: impl ToString) -> Self {
+        self.authz_granter = Some(granter.to_string());
+        self
+    }
+    pub fn fee_granter(mut self, granter: impl ToString) -> Self {
+        self.fee_granter = Some(granter.to_string());
+        self
+    }
+    pub fn hd_index(mut self, index: u32) -> Self {
+        self.hd_index = Some(index);
+        self
+    }
+    pub fn set_authz_granter(&mut self, granter: impl ToString) {
+        self.authz_granter = Some(granter.to_string());
+    }
+    pub fn set_fee_granter(&mut self, granter: impl ToString) {
+        self.fee_granter = Some(granter.to_string());
+    }
+    pub fn set_hd_index(&mut self, index: u32) {
+        self.hd_index = Some(index);
+    }
 }
 
 impl Sender<All> {
@@ -104,7 +129,7 @@ impl Sender<All> {
             &secp,
             mnemonic,
             0,
-            options.index.unwrap_or(0),
+            options.hd_index.unwrap_or(0),
             daemon_state.chain_data.slip44,
         )?;
 
@@ -123,8 +148,12 @@ impl Sender<All> {
         Ok(sender)
     }
 
-    pub fn with_authz(&mut self, granter: impl Into<String>) {
+    pub fn authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
+    }
+
+    pub fn fee_granter(&mut self, granter: impl Into<String>) {
+        self.options.fee_granter = Some(granter.into());
     }
 
     fn cosmos_private_key(&self) -> SigningKey {
@@ -150,7 +179,10 @@ impl Sender<All> {
         Ok(self.pub_addr()?.to_string())
     }
 
-    pub fn message_sender(&self) -> Result<AccountId, DaemonError> {
+    /// Returns the actual sender of every message sent.
+    /// If an authz granter is set, returns the authz granter
+    /// Else, returns the address associated with the current private key
+    pub fn msg_sender(&self) -> Result<AccountId, DaemonError> {
         if let Some(sender) = &self.options.authz_granter {
             Ok(sender.parse()?)
         } else {
@@ -164,7 +196,7 @@ impl Sender<All> {
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let msg_send = MsgSend {
-            from_address: self.message_sender()?,
+            from_address: self.msg_sender()?,
             to_address: AccountId::from_str(recipient)?,
             amount: parse_cw_coins(&coins)?,
         };
@@ -212,6 +244,7 @@ impl Sender<All> {
             0u8,
             &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
             0,
+            self.options.clone(),
         )?;
 
         let auth_info = SignerInfo {

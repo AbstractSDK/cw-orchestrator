@@ -21,7 +21,7 @@ mod tests {
         let indexed_daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
             .handle(runtime.handle())
-            .with_index(56)
+            .hd_index(56)
             .build()
             .unwrap();
 
