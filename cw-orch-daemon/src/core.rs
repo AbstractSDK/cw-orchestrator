@@ -57,6 +57,13 @@ use tonic::transport::Channel;
 
     Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
+
+    ## Warning
+
+    This daemon is thread safe and can be used between threads.
+    However, please make sure that you are not trying to broadcast multiple transactions at once when using this Daemon on different threads.
+    If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
+    Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
 pub struct DaemonAsync {
     /// Sender to send transactions to the chain
