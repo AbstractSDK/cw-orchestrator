@@ -11,10 +11,7 @@ use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
 
 use cw_orch_core::{
-    contract::interface_traits::{ContractInstance, Uploadable},
-    environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
-    environment::{TxHandler, WasmCodeQuerier},
-    CwEnvError,
+    contract::interface_traits::{ContractInstance, Uploadable}, environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface}, environment::{TxHandler, WasmCodeQuerier}, log::local_target, CwEnvError
 };
 
 use super::state::MockState;
@@ -183,6 +180,12 @@ impl<S: StateInterface> Mock<S> {
                 .build(|_, _, _| {}),
         ));
         let sender = app.borrow().api().addr_make(&sender.into()).clone();
+
+        log::info!(
+            target: &local_target(),
+            "Interacting with mock chain using address: {}",
+            sender
+        );
 
         Self { sender, state, app }
     }
