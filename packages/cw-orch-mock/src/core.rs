@@ -38,6 +38,11 @@ pub type MockApp = App<
 ///
 /// The state is customizable by implementing the [`StateInterface`] trait on a custom struct and providing it on the custom constructor.
 ///
+/// The addresses used inside this environment are bech32 addresses. For instance, when creating a mock environment
+/// let chain = Mock::new("sender");
+/// the actual sender address can be generated using
+/// let sender_addr = chain.addr_make("sender")
+///
 /// ## Example
 /// ```
 /// # use cosmwasm_std::{Addr, coin, Uint128};
@@ -182,6 +187,9 @@ impl<S: StateInterface> Mock<S> {
         Self { sender, state, app }
     }
 
+    /// Generates a valid bech32 address from any string.
+    /// This is useful if you don't want to specify bech32 valid addresses in your tests.
+    /// Mock::new* functions leverage this function to create a valid bech32 address from an inputed sender string
     pub fn addr_make(&self, addr: impl Into<String>) -> Addr {
         self.app.borrow().api().addr_make(&addr.into())
     }
