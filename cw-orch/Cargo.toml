@@ -30,8 +30,8 @@ required-features = ["daemon"]
 [[example]]
 name = "osmosis_test_tube"
 required-features = ["osmosis-test-tube"]
-[[example]]
 
+[[example]]
 name = "complex_osmosis_test_tube"
 required-features = ["osmosis-test-tube"]
 
