@@ -5,10 +5,9 @@ use cosmwasm_std::{
     Addr, Coin, ContractInfoResponse, Empty, Event, Uint128,
 };
 use cw_multi_test::{
-    addons::{MockAddressGenerator, MockApiBech32},
-    ibc::IbcSimpleModule,
-    next_block, App, AppBuilder, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
-    FailingModule, GovFailingModule, StakeKeeper, StargateFailing, WasmKeeper,
+    ibc::IbcSimpleModule, next_block, App, AppBuilder, AppResponse, BankKeeper, Contract,
+    DistributionKeeper, Executor, FailingModule, GovFailingModule, StakeKeeper, StargateFailing,
+    WasmKeeper,
 };
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
@@ -17,7 +16,6 @@ use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
     environment::{TxHandler, WasmCodeQuerier},
-    log::local_target,
     CwEnvError,
 };
 
@@ -71,7 +69,7 @@ pub type MockApp = App<
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_mock::MockState as CustomState;
 ///
-/// let mock: Mock = Mock::new_custom("sender", "juno", CustomState::new());
+/// let mock: Mock = Mock::new_custom("sender", CustomState::new());
 /// ```
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState> {
@@ -114,7 +112,7 @@ impl<S: StateInterface> Mock<S> {
             .init_modules(|router, _, storage| {
                 router
                     .bank
-                    .init_balance(storage, &addr, new_amount.into_vec())
+                    .init_balance(storage, addr, new_amount.into_vec())
             })
             .map_err(Into::into)
     }
@@ -167,15 +165,11 @@ impl<S: StateInterface> Mock<S> {
 impl Mock<MockState> {
     /// Create a mock environment with the default mock state.
     pub fn new(sender: impl Into<String>) -> Self {
-        Mock::new_custom(sender, "cosmos", MockState::new())
+        Mock::new_custom(sender, MockState::new())
     }
 
-    pub fn with_chain_info(
-        sender: impl Into<String>,
-        chain_id: &str,
-        prefix: &'static str,
-    ) -> Self {
-        let chain = Mock::new_custom(sender, prefix, MockState::new());
+    pub fn with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
+        let chain = Mock::new_custom(sender, MockState::new());
         chain
             .app
             .borrow_mut()
@@ -188,7 +182,7 @@ impl Mock<MockState> {
 impl<S: StateInterface> Mock<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: impl Into<String>, prefix: &'static str, custom_state: S) -> Self {
+    pub fn new_custom(sender: impl Into<String>, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(AppBuilder::new_custom().build(|_, _, _| {})));
 
@@ -416,7 +410,7 @@ impl BankSetter for Mock {
         address: impl Into<String>,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(&Addr::unchecked(address), amount)
+        (*self).set_balance(address, amount)
     }
 }
 
@@ -547,9 +541,8 @@ mod test {
 
     #[test]
     fn custom_mock_env() {
-        let prefix = "osmosis";
         let mock_state = MockState::new();
-        let chain = Mock::<_>::new_custom(SENDER, prefix, mock_state);
+        let chain = Mock::<_>::new_custom(SENDER, mock_state);
 
         let recipient = BALANCE_ADDR;
         let amount = 1000000u128;

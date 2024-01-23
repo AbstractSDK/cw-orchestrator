@@ -7,8 +7,6 @@ use cw_orch_core::contract::interface_traits::CwOrchUpload;
 use cw_orch_core::environment::TxHandler;
 use cw_orch_mock::Mock;
 use cw_utils::parse_instantiate_response_data;
-use cw_utils::MsgInstantiateContractResponse;
-use cw_utils::ParseReplyError;
 use mock_contract::InstantiateMsg;
 use mock_contract::MockContract;
 
@@ -38,7 +36,7 @@ fn instantiate2() -> anyhow::Result<()> {
 
     assert_eq!(
         addr.contract_address,
-        format!("contract{}", HexBinary::from(salt).to_hex())
+        format!("contract/sender/{}", HexBinary::from(salt).to_hex())
     );
 
     Ok(())

@@ -6,5 +6,5 @@ counter_contract:
   - - contract_info
     - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
   - - state
-    - "{\"count\":1,\"owner\":\"cosmos1pgm8hyk0pvphmlvfjc8wsvk4daluz5tgrw6pu5mfpemk74uxnx9qd7nftv\"}"
+    - "{\"count\":1,\"owner\":\"sender\"}"
 
