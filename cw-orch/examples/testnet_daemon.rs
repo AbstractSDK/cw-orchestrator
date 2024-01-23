@@ -34,7 +34,7 @@ pub fn main() {
         .unwrap();
 
     // You create a contract interface to be able to identify what you are interacting with
-    let counter = CounterContract::new("local:counter", daemon.clone());
+    let counter = CounterContract::new(daemon.clone());
 
     // Uploading a contract is very simple
     let upload_res = counter.upload();

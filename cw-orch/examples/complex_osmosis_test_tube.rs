@@ -23,8 +23,7 @@ pub fn main() -> anyhow::Result<()> {
     env_logger::init();
     let chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 
-    let contract_counter =
-        CounterContract::new("osmosis_test_tube:contract_counter", chain.clone());
+    let contract_counter = CounterContract::new(chain.clone());
 
     contract_counter.upload()?;
     contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;

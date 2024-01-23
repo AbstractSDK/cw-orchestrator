@@ -26,7 +26,7 @@ pub async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Uploading a contract is very simple
-    let counter = CounterContract::new("local:counter", Mock::new(&Addr::unchecked("sender")));
+    let counter = CounterContract::new(Mock::new(&Addr::unchecked("sender")));
     let upload_res = daemon.upload(&counter).await;
     assert!(upload_res.is_ok());
 
