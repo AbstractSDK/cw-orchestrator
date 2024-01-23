@@ -13,7 +13,7 @@ pub fn main() {
     // ANCHOR_END: osmosis_test_tube_creation
 
     // ANCHOR: osmosis_test_tube_usage
-    let contract_counter = CounterContract::new("osmosis_test_tube:contract_counter", chain);
+    let contract_counter = CounterContract::new(chain);
 
     let upload_res = contract_counter.upload();
     assert!(upload_res.is_ok());
@@ -41,7 +41,7 @@ pub fn main() {
 pub fn customize() {
     let mut chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 
-    let mut contract_counter = CounterContract::new("mock:contract_counter", chain.clone());
+    let mut contract_counter = CounterContract::new(chain.clone());
 
     // ANCHOR: osmosis_test_tube_customization
     let new_sender = chain.init_account(coins(100_000, "ujunox")).unwrap();

@@ -74,7 +74,7 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
 }
 
 #[cfg(feature = "interface")]
-#[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg)]
+#[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg, id = "mock-contract")]
 pub struct MockContract<Chain, T, Q>;
 
 #[cfg(feature = "interface")]
@@ -112,7 +112,7 @@ mod test {
         let sender = Addr::unchecked("sender");
         let mock = Mock::new(&sender);
         mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
-        let contract = LocalMockContract::new("mock-contract", mock.clone());
+        let contract = LocalMockContract::new(mock.clone());
 
         contract.upload()?;
         contract.instantiate(&InstantiateMsg {}, None, None)?;

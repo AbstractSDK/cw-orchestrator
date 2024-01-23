@@ -57,7 +57,7 @@ pub mod tests {
         use counter_contract::CounterExecuteMsgFns;
         let chain = Mock::new("sender");
 
-        let contract = counter_contract::CounterContract::new("counter_contract", chain.clone());
+        let contract = counter_contract::CounterContract::new(chain.clone());
         contract.upload()?;
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },

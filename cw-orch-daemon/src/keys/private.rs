@@ -4,6 +4,7 @@ use crate::DaemonError;
 #[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;
 use base64::Engine;
+use bitcoin::secp256k1::{self, Secp256k1};
 use bitcoin::{
     bip32::{ExtendedPrivKey, IntoDerivationPath},
     Network,
@@ -13,7 +14,6 @@ use cw_orch_core::log::local_target;
 use hkd32::mnemonic::{Phrase, Seed};
 use prost_types::Any;
 use rand_core::OsRng;
-use secp256k1::Secp256k1;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
