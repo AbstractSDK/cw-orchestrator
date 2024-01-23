@@ -18,6 +18,19 @@ use cw_orch_core::{
 
 use super::state::MockState;
 
+pub type MockApp = App<
+    BankKeeper,
+    MockApiBech32,
+    MockStorage,
+    FailingModule<Empty, Empty, Empty>,
+    WasmKeeper<Empty, Empty>,
+    StakeKeeper,
+    DistributionKeeper,
+    IbcSimpleModule,
+    GovFailingModule,
+    StargateFailing,
+>;
+
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
 ///
 /// Stores a local state with a mapping of contract_id -> code_id/address
@@ -58,22 +71,7 @@ pub struct Mock<S: StateInterface = MockState> {
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<
-        RefCell<
-            App<
-                BankKeeper,
-                MockApiBech32,
-                MockStorage,
-                FailingModule<Empty, Empty, Empty>,
-                WasmKeeper<Empty, Empty>,
-                StakeKeeper,
-                DistributionKeeper,
-                IbcSimpleModule,
-                GovFailingModule,
-                StargateFailing,
-            >,
-        >,
-    >,
+    pub app: Rc<RefCell<MockApp>>,
 }
 
 impl<S: StateInterface> Mock<S> {
