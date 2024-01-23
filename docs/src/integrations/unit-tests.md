@@ -1,6 +1,6 @@
 # Unit Tests
 
-Cw-orchestrator provides an additional tool to help you with unit tests with context. The [`WasmMockQuerier`](https://docs.rs/cw-orch/latest/cw_orch/daemon/live_mock/struct.WasmMockQuerier.html) object allows you to leverage `cw-orch` querying abilities to unit-test your contracts.
+Cw-orchestrator provides an additional tool to help you with unit tests with context. The <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/live_mock/struct.WasmMockQuerier.html" target="_blank">`WasmMockQuerier`</a> object allows you to leverage `cw-orch` querying abilities to unit-test your contracts.
 
 ## Capabilities
 

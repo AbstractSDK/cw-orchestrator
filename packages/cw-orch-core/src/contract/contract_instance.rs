@@ -3,7 +3,7 @@ use super::interface_traits::Uploadable;
 use crate::{
     environment::{IndexResponse, StateInterface, TxHandler, TxResponse},
     error::CwEnvError,
-    log::{CONTRACT_LOGS, TRANSACTION_LOGS},
+    log::{contract_target, transaction_target},
     CwOrchEnvVars,
 };
 
@@ -54,12 +54,27 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
 
     /// Upload a contract given its source
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!(target: CONTRACT_LOGS, "Uploading {}", self.id);
+        log::info!(
+            target: &contract_target(),
+            "[{}][Upload]",
+            self.id,
+        );
+
         let resp = self.chain.upload(source).map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
-        log::info!(target: CONTRACT_LOGS, "Uploaded {} with code id {}", self.id, code_id);
-        log::debug!(target: TRANSACTION_LOGS, "Upload response: {:?}", resp);
+        log::info!(
+            target: &contract_target(),
+            "[{}][Uploaded] code_id {}",
+            self.id,
+            code_id
+        );
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Uploaded] response {:?}",
+            self.id,
+            resp
+        );
         Ok(resp)
     }
 
@@ -69,12 +84,39 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
         msg: &E,
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!(target: CONTRACT_LOGS, "Executing {} on {}", log_serialize_message(msg)?, self.id);
+        log::info!(
+            target: &contract_target(),
+            "[{}][Execute][{}] {}",
+            self.id,
+            self.address()?,
+            get_struct_name(msg)?
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Execute] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
         let resp = self
             .chain
             .execute(msg, coins.unwrap_or(&[]), &self.address()?);
-        log::info!(target: CONTRACT_LOGS, "Executed {} with address {}", self.id, self.address()?);
-        log::debug!(target: TRANSACTION_LOGS, "Execute response: {:?}", resp);
+
+        log::info!(
+            target: &contract_target(),
+            "[{}][Executed][{}] {}",
+            self.id,
+            self.address()?,
+            get_struct_name(msg)?
+        );
+        log::debug!(
+            target: &transaction_target(),
+            "[{}][Executed] response: {:?}",
+            self.id,
+            resp
+        );
+
         resp.map_err(Into::into)
     }
 
@@ -86,8 +128,14 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
         coins: Option<&[Coin]>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
-            target: CONTRACT_LOGS,
-            "Instantiating {} with msg {}",
+            target: &contract_target(),
+            "[{}][Instantiate]",
+            self.id,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Instantiate] {}",
             self.id,
             log_serialize_message(msg)?
         );
@@ -106,8 +154,18 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
 
         self.set_address(&contract_address);
 
-        log::info!(target: CONTRACT_LOGS, "Instantiated {} with address {}", self.id, contract_address);
-        log::debug!(target: TRANSACTION_LOGS, "Instantiate response: {:?}", resp);
+        log::info!(
+            target: &&contract_target(),
+            "[{}][Instantiated] {}",
+            self.id,
+            contract_address
+        );
+        log::debug!(
+            target: &&transaction_target(),
+            "[{}][Instantiated] response: {:?}",
+            self.id,
+            resp
+        );
 
         Ok(resp)
     }
@@ -118,16 +176,25 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
         query_msg: &Q,
     ) -> Result<T, CwEnvError> {
         log::debug!(
-            target: CONTRACT_LOGS,
-            "Querying {} on {}",
-            log_serialize_message(query_msg)?,
-            self.id
+            target: &contract_target(),
+            "[{}][Query][{}] {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(query_msg)?
         );
+
         let resp = self
             .chain
             .query(query_msg, &self.address()?)
             .map_err(Into::into)?;
-        log::debug!(target: CONTRACT_LOGS, "Query response: {:?}",  log_serialize_message(&resp)?);
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Queried][{}] response {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(&resp)?
+        );
         Ok(resp)
     }
 
@@ -138,19 +205,38 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
         new_code_id: u64,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
-            target: CONTRACT_LOGS,
-            "Migrating {:?} to code_id {}, with message {}",
+            target: &contract_target(),
+            "[{}][Migrate][{}]",
+            self.id,
+            self.address()?,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Migrate] code-id: {}, msg: {}",
             self.id,
             new_code_id,
             log_serialize_message(migrate_msg)?
         );
+
         let resp = self
             .chain
             .migrate(migrate_msg, new_code_id, &self.address()?)
             .map_err(Into::into)?;
 
-        log::info!(target: CONTRACT_LOGS, "Migrated {} to code-id {}", self.id, new_code_id);
-        log::debug!(target: TRANSACTION_LOGS, "Migrate response: {:?}", resp);
+        log::info!(
+            target: &contract_target(),
+            "[{}][Migrated][{}] code-id {}",
+            self.id,
+            self.address()?,
+            new_code_id
+        );
+        log::debug!(
+            target: &transaction_target(),
+            "[{}][Migrated] response: {:?}",
+            self.id,
+            resp
+        );
         Ok(resp)
     }
 
@@ -202,4 +288,19 @@ fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvE
     } else {
         Ok(format!("{:#?}", msg))
     }
+}
+
+/// Helper to get the name of a struct
+fn get_struct_name<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
+    let serialized = serde_json::to_value(msg)?;
+    let value = serialized
+        .as_object()
+        .ok_or("Can't get struct name of non object")
+        .unwrap()
+        .into_iter()
+        .next()
+        .ok_or("Can't get struct name of non object")
+        .unwrap();
+
+    Ok(value.0.clone())
 }

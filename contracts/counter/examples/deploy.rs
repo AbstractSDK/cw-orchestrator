@@ -22,7 +22,7 @@ pub fn main() -> anyhow::Result<()> {
 
     // ANCHOR: contract_interaction
 
-    let counter = CounterContract::new("counter_contract", chain);
+    let counter = CounterContract::new(chain);
 
     // ANCHOR: clean_example
     counter.upload()?;

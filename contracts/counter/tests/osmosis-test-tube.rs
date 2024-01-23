@@ -1,7 +1,6 @@
 // ANCHOR: all
 use cosmwasm_std::coins;
 use counter_contract::{
-    contract::CONTRACT_NAME,
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract,
 };
@@ -15,7 +14,7 @@ use cw_orch::prelude::*;
 fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
     // ANCHOR: constructor
     // Construct the counter interface
-    let contract = CounterContract::new(CONTRACT_NAME, chain.clone());
+    let contract = CounterContract::new(chain.clone());
     // ANCHOR_END: constructor
 
     // Upload the contract

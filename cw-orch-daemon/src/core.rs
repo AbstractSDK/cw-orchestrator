@@ -18,7 +18,7 @@ use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{ChainState, IndexResponse},
-    log::TRANSACTION_LOGS,
+    log::transaction_target,
 };
 use flate2::{write, Compression};
 use serde::{de::DeserializeOwned, Serialize};
@@ -112,7 +112,7 @@ impl DaemonAsync {
             funds: parse_cw_coins(coins)?,
         };
         let result = self.sender.commit_tx(vec![exec_msg], None).await?;
-        log::info!(target: TRANSACTION_LOGS, "Execution done: {:?}", result.txhash);
+        log::info!(target: &transaction_target(), "Execution done: {:?}", result.txhash);
 
         Ok(result)
     }
@@ -139,7 +139,7 @@ impl DaemonAsync {
 
         let result = sender.commit_tx(vec![init_msg], None).await?;
 
-        log::info!(target: TRANSACTION_LOGS, "Instantiation done: {:?}", result.txhash);
+        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
         Ok(result)
     }
@@ -236,7 +236,7 @@ impl DaemonAsync {
         let sender = &self.sender;
         let wasm_path = uploadable.wasm();
 
-        log::debug!(target: TRANSACTION_LOGS, "Uploading file at {:?}", wasm_path);
+        log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
         let file_contents = std::fs::read(wasm_path.path())?;
         let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
@@ -250,7 +250,7 @@ impl DaemonAsync {
 
         let result = sender.commit_tx(vec![store_msg], None).await?;
 
-        log::info!(target: TRANSACTION_LOGS, "Uploading done: {:?}", result.txhash);
+        log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 
         let code_id = result.uploaded_code_id().unwrap();
 
