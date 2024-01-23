@@ -8,14 +8,13 @@ use crate::{
 };
 use std::fmt::Debug;
 
-use super::QueryHandler;
+use super::{Querier, QueryHandler};
 
 pub trait WasmQuerierGetter<E> {
     type Querier: WasmQuerier<Error = E>;
     fn wasm_querier(&self) -> Self::Querier;
 }
-pub trait WasmQuerier {
-    type Error: Into<CwEnvError> + Debug;
+pub trait WasmQuerier: Querier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error>;
 
     /// Query contract info

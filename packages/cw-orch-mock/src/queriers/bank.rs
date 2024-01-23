@@ -4,7 +4,7 @@ use cosmwasm_std::{Coin, Empty};
 use cw_multi_test::BasicApp;
 use cw_orch_core::{
     environment::{
-        queriers::bank::{BankQuerier, BankQuerierGetter},
+        queriers::{bank::{BankQuerier}, Querier},
         StateInterface, TxHandler,
     },
     CwEnvError,
@@ -32,9 +32,11 @@ impl<S: StateInterface> BankQuerierGetter<<Self as TxHandler>::Error> for Mock<S
     }
 }
 
-impl BankQuerier for MockBankQuerier {
+impl Querier for MockBankQuerier {
     type Error = CwEnvError;
+}
 
+impl BankQuerier for MockBankQuerier {
     fn balance(
         &self,
         address: impl Into<String>,

@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, BlockInfo};
 use serde::{de::DeserializeOwned, Serialize};
 
-use self::{bank::BankQuerierGetter, node::NodeQuerierGetter, wasm::WasmQuerierGetter};
+use self::{bank::{BankQuerier}, node::{NodeQuerier}, wasm::{WasmQuerier}};
 use crate::CwEnvError;
 use std::fmt::Debug;
 
@@ -11,7 +11,7 @@ pub mod wasm;
 
 /// This trait regroups all querier traits + adds high level interfaces to access some elements faster
 pub trait QueryHandler:
-    NodeQuerierGetter<Self::Error> + BankQuerierGetter<Self::Error> + WasmQuerierGetter<Self::Error>
+    DefaultQueriers
 {
     type Error: Into<CwEnvError> + Debug;
 
@@ -33,4 +33,31 @@ pub trait QueryHandler:
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<T, Self::Error>;
+}
+
+
+pub trait QuerierGetter<Q: Querier> {
+    fn querier(&self) -> Q;
+}
+
+pub trait Querier {
+    type Error: Into<CwEnvError> + Debug;
+}
+
+pub trait DefaultQueriers: QuerierGetter<Self::B> + QuerierGetter<Self::W> + QuerierGetter<Self::N> {
+    type B: BankQuerier;
+    type W: WasmQuerier;
+    type N: NodeQuerier;
+
+    fn bank_querier(&self) -> Self::B {
+        self.querier()
+    }
+
+    fn wasm_querier(&self) -> Self::W {
+        self.querier()
+    }
+
+    fn node_querier(&self) -> Self::N {
+        self.querier()
+    }
 }
