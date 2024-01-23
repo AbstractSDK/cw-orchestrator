@@ -37,9 +37,7 @@ pub fn main() {
 // This is used for documentation only
 // This is actually only used to avoid having the `mut` keyword inside the mock_usage anchor (only necessary for set_sender)
 pub fn customize() {
-    let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
-
-    let mock = Mock::new(&sender);
+    let mock = Mock::new("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
 
     let mut contract_counter = CounterContract::new(mock.clone());
 

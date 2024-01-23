@@ -2,9 +2,10 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{testing::MockStorage, Addr, Coin, ContractInfoResponse, Empty, Event, Uint128};
 use cw_multi_test::{
-    addons::MockApiBech32, ibc::IbcSimpleModule, next_block, App, AppBuilder, AppResponse,
-    BankKeeper, Contract, DistributionKeeper, Executor, FailingModule, GovFailingModule,
-    StakeKeeper, StargateFailing, WasmKeeper,
+    addons::{MockAddressGenerator, MockApiBech32},
+    ibc::IbcSimpleModule,
+    next_block, App, AppBuilder, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
+    FailingModule, GovFailingModule, StakeKeeper, StargateFailing, WasmKeeper,
 };
 use cw_utils::NativeBalance;
 use serde::{de::DeserializeOwned, Serialize};
@@ -41,9 +42,12 @@ pub type MockApp = App<
 /// ```
 /// # use cosmwasm_std::{Addr, coin, Uint128};
 /// use cw_orch_mock::Mock;
+/// use cw_orch_core::environment::TxHandler;
 ///
-/// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new(&sender);
+/// let mock: Mock = Mock::new("sender");
+/// let sender = mock.addr_make("sender");
+/// // You can also use
+/// let sender = mock.sender();
 ///
 /// // set a balance
 /// mock.set_balance(&sender, vec![coin(100u128, "token")]).unwrap();
@@ -61,8 +65,7 @@ pub type MockApp = App<
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_mock::MockState as CustomState;
 ///
-/// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
+/// let mock: Mock = Mock::new_custom("sender", "juno", CustomState::new());
 /// ```
 #[derive(Clone)]
 pub struct Mock<S: StateInterface = MockState> {
@@ -144,11 +147,15 @@ impl<S: StateInterface> Mock<S> {
 
 impl Mock<MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new(sender: &Addr) -> Self {
+    pub fn new(sender: impl Into<String>) -> Self {
         Mock::new_custom(sender, "cosmos", MockState::new())
     }
 
-    pub fn with_chain_info(sender: &Addr, chain_id: &str, prefix: &'static str) -> Self {
+    pub fn with_chain_info(
+        sender: impl Into<String>,
+        chain_id: &str,
+        prefix: &'static str,
+    ) -> Self {
         let chain = Mock::new_custom(sender, prefix, MockState::new());
         chain
             .app
@@ -162,19 +169,21 @@ impl Mock<MockState> {
 impl<S: StateInterface> Mock<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, prefix: &'static str, custom_state: S) -> Self {
+    pub fn new_custom(sender: impl Into<String>, prefix: &'static str, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(
             AppBuilder::new_custom()
                 .with_api(MockApiBech32::new(prefix))
+                .with_wasm(WasmKeeper::new().with_address_generator(MockAddressGenerator))
                 .build(|_, _, _| {}),
         ));
+        let sender = app.borrow().api().addr_make(&sender.into()).clone();
 
-        Self {
-            sender: sender.clone(),
-            state,
-            app,
-        }
+        Self { sender, state, app }
+    }
+
+    pub fn addr_make(&self, addr: impl Into<String>) -> Addr {
+        self.app.borrow().api().addr_make(&addr.into())
     }
 
     /// Upload a custom contract wrapper.
@@ -391,15 +400,16 @@ impl BankQuerier for Mock {
 impl BankSetter for Mock {
     fn set_balance(
         &mut self,
-        address: &Addr,
+        address: impl Into<String>,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(address, amount)
+        (*self).set_balance(&Addr::unchecked(address), amount)
     }
 }
 
 #[cfg(test)]
 mod test {
+
     use cosmwasm_std::{
         coins, to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
         StdResult, Uint128,
@@ -445,12 +455,11 @@ mod test {
 
     #[test]
     fn mock() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let chain = Mock::new(SENDER);
+        let recipient = &chain.addr_make(BALANCE_ADDR);
+        let sender = &chain.addr_make(SENDER);
         let amount = 1000000u128;
         let denom = "uosmo";
-
-        let chain = Mock::new(sender);
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -525,15 +534,13 @@ mod test {
 
     #[test]
     fn custom_mock_env() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let prefix = "osmosis";
+        let mock_state = MockState::new();
+        let chain = Mock::<_>::new_custom(SENDER, prefix, mock_state);
+
+        let recipient = &chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
-        let prefix = "osmosis";
-
-        let mock_state = MockState::new();
-
-        let chain = Mock::<_>::new_custom(sender, prefix, mock_state);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
@@ -573,22 +580,20 @@ mod test {
 
     #[test]
     fn add_balance() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let chain = Mock::new(SENDER);
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
 
-        let chain = Mock::new(sender);
-
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_1)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_1)])
             .unwrap();
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_2)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_2)])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances added")
             .that(&balances)
             .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
@@ -598,8 +603,8 @@ mod test {
     fn bank_querier_works() -> Result<(), CwEnvError> {
         let denom = "urandom";
         let init_coins = coins(45, denom);
-        let sender = Addr::unchecked("sender");
-        let app = Mock::new(&sender);
+        let app = Mock::new("sender");
+        let sender = app.addr_make("sender");
         app.set_balance(&sender, init_coins.clone())?;
         let sender = app.sender.clone();
         assert_eq!(

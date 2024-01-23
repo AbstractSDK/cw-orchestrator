@@ -377,7 +377,7 @@ impl BankSetter for OsmosisTestTube {
     /// So for this implementation, we use a weird algorithm
     fn set_balance(
         &mut self,
-        _address: &Addr,
+        _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         // We check the current balance
