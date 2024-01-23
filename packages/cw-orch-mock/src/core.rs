@@ -385,7 +385,7 @@ impl BankQuerier for Mock {
         address: impl Into<String>,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        let addr = Addr::unchecked(address.into());
+        let addr = address.into();
         if let Some(denom) = denom {
             Ok(vec![Coin {
                 amount: self.query_balance(&addr, &denom)?,
