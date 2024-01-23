@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- Changed behavior for default constructor implementation by macro "interface"
+
 ## 0.19.1
 
 - Fix: Min gas env variable processing.

@@ -275,7 +275,7 @@ impl BankSetter for OsmosisTestTube {
     /// So for this implementation, we use a weird algorithm
     fn set_balance(
         &mut self,
-        _address: &Addr,
+        _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         // We check the current balance
@@ -329,7 +329,7 @@ pub mod tests {
     fn wasm_querier_works() -> anyhow::Result<()> {
         let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
 
-        let contract = CounterContract::new("counter", app.clone());
+        let contract = CounterContract::new(app.clone());
         contract.upload()?;
         contract.instantiate(
             &InstantiateMsg { count: 7 },

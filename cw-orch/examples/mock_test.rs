@@ -18,7 +18,7 @@ pub fn main() {
     // ANCHOR_END: mock_creation
 
     // ANCHOR: mock_usage
-    let contract_counter = CounterContract::new("mock:contract_counter", mock);
+    let contract_counter = CounterContract::new(mock);
 
     let upload_res = contract_counter.upload();
     upload_res.unwrap();
@@ -37,11 +37,9 @@ pub fn main() {
 // This is used for documentation only
 // This is actually only used to avoid having the `mut` keyword inside the mock_usage anchor (only necessary for set_sender)
 pub fn customize() {
-    let sender = Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
+    let mock = Mock::new("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y");
 
-    let mock = Mock::new(&sender);
-
-    let mut contract_counter = CounterContract::new("mock:contract_counter", mock.clone());
+    let mut contract_counter = CounterContract::new(mock.clone());
 
     // ANCHOR: mock_customization
     let new_sender = Addr::unchecked("entirely-new-sender");

@@ -2,6 +2,12 @@
 
 Cw Multi Test is a rust-based test framework that allows developers to test  for multi-contract interactions without having to dispatch messages, storage and other variables themselves. With cw-orchestrator, most of the `cw-multi-test` logic is abstracted away, but you can still <a href="https://github.com/CosmWasm/cw-multi-test" target="_blank">learn more about the framework here</a>.
 
+> **⚠️ Custom-typed contracts**: cw-orch's integration with cw-multi-test is not compatible with custom-typed contracts.
+> 
+> Custom-typed contracts are contracts where the endpoints return `Response<M>` where `M`is not `cosmwasm_std::Empty` OR where the `Deps` and `DepsMut` endpoint arguments have a non `Empty` generic parameter specified. 
+>
+> You can still test and deploy your contracts on actual nodes (testnets, mainnets). To achieve that, don't specify the `wrapper` function in the `Uploadable` trait implementation on your interface. 
+
 ## Quick Start
 
 The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages `cw-multi-test` goes along the lines of:

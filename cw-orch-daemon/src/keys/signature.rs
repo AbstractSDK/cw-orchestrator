@@ -1,10 +1,10 @@
 use crate::DaemonError;
 use base64::engine::{general_purpose::STANDARD, Engine};
+use bitcoin::secp256k1::{Message, Secp256k1};
 use ring::digest::SHA256;
-use secp256k1::{Message, Secp256k1};
 pub struct Signature {}
 impl Signature {
-    pub fn verify<C: secp256k1::Verification + secp256k1::Context>(
+    pub fn verify<C: bitcoin::secp256k1::Verification + bitcoin::secp256k1::Context>(
         secp: &Secp256k1<C>,
         pub_key: &str,
         signature: &str,
@@ -12,10 +12,10 @@ impl Signature {
     ) -> Result<(), DaemonError> {
         let public = STANDARD.decode(pub_key)?;
         let sig = STANDARD.decode(signature)?;
-        let pk = secp256k1::PublicKey::from_slice(public.as_slice())?;
+        let pk = bitcoin::secp256k1::PublicKey::from_slice(public.as_slice())?;
         let sha_result = ring::digest::digest(&SHA256, blob.as_bytes());
         let message: Message = Message::from_slice(&sha_result.as_ref()[0..32])?;
-        let secp_sig = secp256k1::ecdsa::Signature::from_compact(sig.as_slice())?;
+        let secp_sig = bitcoin::secp256k1::ecdsa::Signature::from_compact(sig.as_slice())?;
         secp.verify_ecdsa(&message, &secp_sig, &pk)?;
         Ok(())
     }

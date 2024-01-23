@@ -1,10 +1,10 @@
 use cw_orch::{environment::CwEnv, interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-use cosmwasm_std::{Addr, Event};
+use cosmwasm_std::Event;
 use cw_orch::prelude::Mock;
 
-#[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg)]
+#[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg, id = "test:mock_contract")]
 pub struct MockContract;
 
 impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
@@ -22,10 +22,8 @@ impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
 
 #[test]
 fn test_instantiate() {
-    let contract = MockContract::<_, u64>::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::<_, u64>::new(Mock::new("Ghazshag"));
+
     contract.upload().unwrap();
 
     contract
@@ -35,10 +33,8 @@ fn test_instantiate() {
 
 #[test]
 fn test_execute() {
-    let contract = MockContract::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::new(Mock::new("Ghazshag"));
+
     contract.upload().unwrap();
 
     contract
@@ -67,10 +63,8 @@ fn test_execute() {
 
 #[test]
 fn test_query() {
-    let contract = MockContract::<_, u64>::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::<_, u64>::new(Mock::new("Ghazshag"));
+
     contract.upload().unwrap();
 
     contract
@@ -87,12 +81,12 @@ fn test_query() {
 
 #[test]
 fn test_migrate() {
-    let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::<_, u64>::new("test:mock_contract", Mock::new(&admin));
+    let chain = Mock::new("Ghazshag");
+    let contract = MockContract::<_, u64>::new(chain.clone());
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&admin), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender()), None)
         .unwrap();
 
     contract

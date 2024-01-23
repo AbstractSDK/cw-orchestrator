@@ -20,11 +20,19 @@ all-features = true
 name = "mock_test"
 
 [[example]]
-name = "daemon_test"
+name = "local_daemon"
+required-features = ["daemon"]
+
+[[example]]
+name = "testnet_daemon"
 required-features = ["daemon"]
 
 [[example]]
 name = "osmosis_test_tube"
+required-features = ["osmosis-test-tube"]
+
+[[example]]
+name = "complex_osmosis_test_tube"
 required-features = ["osmosis-test-tube"]
 
 [[example]]
@@ -34,6 +42,11 @@ required-features = ["eth"]
 [[example]]
 name = "bank_query"
 path = "examples/queries/bank_query.rs"
+require-features = ["daemon"]
+
+[[example]]
+name = "testnet_queries"
+path = "examples/queries/testnet_queries.rs"
 require-features = ["daemon"]
 
 [features]
@@ -85,7 +98,7 @@ tonic = { workspace = true, optional = true, features = ["tls", "tls-roots"] }
 
 # Test Tube env deps
 osmosis-test-tube = { workspace = true, optional = true }
-osmosis-std = { version = "=0.19.1", optional = true }
+osmosis-std = { version = "=0.21.0", optional = true }
 prost-types = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
 
@@ -110,5 +123,5 @@ mock-contract = { path = "../contracts/mock_contract", features = [
 mock-contract-u64 = { path = "../contracts/mock_contract_u64", features = [
   "interface",
 ] }
-ibc-relayer-types = { workspace = true }
 serde_json = { workspace = true }
+dotenv = "0.15.0"

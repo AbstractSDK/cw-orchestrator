@@ -50,16 +50,14 @@ macro_rules! take_storage_snapshot {
 
 #[cfg(test)]
 pub mod tests {
-    use cosmwasm_std::Addr;
     use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};
 
     #[test]
     fn contract_snapshots() -> anyhow::Result<()> {
         use counter_contract::CounterExecuteMsgFns;
-        let sender = Addr::unchecked("sender");
-        let chain = Mock::new(&sender);
+        let chain = Mock::new("sender");
 
-        let contract = counter_contract::CounterContract::new("counter_contract", chain.clone());
+        let contract = counter_contract::CounterContract::new(chain.clone());
         contract.upload()?;
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
