@@ -1,4 +1,4 @@
-use std::{fmt::Debug, rc::Rc, time::Duration};
+use std::{fmt::Debug, sync::Arc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
@@ -74,7 +74,7 @@ impl Daemon {
 }
 
 impl ChainState for Daemon {
-    type Out = Rc<DaemonState>;
+    type Out = Arc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
