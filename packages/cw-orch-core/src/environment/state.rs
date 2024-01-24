@@ -120,8 +120,4 @@ impl<S: StateInterface> StateInterface for Arc<S> {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).get_all_code_ids()
     }
-
-    fn deploy_details(&self) -> DeployDetails {
-        (**self).deploy_details()
-    }
 }
