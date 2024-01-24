@@ -187,7 +187,7 @@ impl<S: StateInterface> Mock<S> {
         let app = Rc::new(RefCell::new(AppBuilder::new_custom().build(|_, _, _| {})));
 
         Self {
-            sender: Addr::unchecked(sender.into()),
+            sender: Addr::unchecked(sender),
             state,
             app,
         }
@@ -410,7 +410,7 @@ impl BankSetter for Mock {
         address: impl Into<String>,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(address, amount)
+        (*self).set_balance(&Addr::unchecked(address), amount)
     }
 }
 
