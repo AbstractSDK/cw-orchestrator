@@ -1,4 +1,3 @@
-use cosmwasm_std::Addr;
 use counter_contract::CounterContract;
 use cw_orch_daemon::DaemonAsync;
 use cw_orch_mock::Mock;
@@ -26,7 +25,7 @@ pub async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Uploading a contract is very simple
-    let counter = CounterContract::new(Mock::new(&Addr::unchecked("sender")));
+    let counter = CounterContract::new(Mock::new("sender"));
     let upload_res = daemon.upload(&counter).await;
     assert!(upload_res.is_ok());
 

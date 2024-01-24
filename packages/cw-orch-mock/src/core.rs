@@ -15,7 +15,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
-    environment::{TxHandler, WasmCodeQuerier},
+    environment::{EnvironmentInfo, EnvironmentQuerier, TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
 
@@ -351,6 +351,19 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
         Ok(self.app.borrow().block_info())
+    }
+}
+
+impl<S: StateInterface> EnvironmentQuerier for Mock<S> {
+    fn env_info(&self) -> EnvironmentInfo {
+        let block_info = self.block_info().unwrap();
+        let chain_id = block_info.chain_id.clone();
+        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
+        EnvironmentInfo {
+            chain_id,
+            chain_name,
+            deployment_id: "default".to_string(),
+        }
     }
 }
 
