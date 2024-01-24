@@ -27,6 +27,8 @@ pub struct DaemonAsyncBuilder {
     pub(crate) chain: Option<ChainData>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
+
+    /* Sender related options */
     /// Wallet sender
     /// Will be used in priority when set
     pub(crate) sender: Option<Sender<All>>,

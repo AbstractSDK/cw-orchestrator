@@ -98,6 +98,15 @@ impl DaemonAsync {
         self.sender.address().unwrap()
     }
 
+    pub fn rebuild(&self) -> DaemonAsyncBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.sender).clone())
+            .deployment_id(&self.state().deployment_id);
+        builder
+    }
+
     /// Execute a message on a contract.
     pub async fn execute<E: Serialize>(
         &self,
