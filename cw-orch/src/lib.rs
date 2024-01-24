@@ -14,7 +14,12 @@ pub mod prelude;
 
 pub use cw_orch_core::build;
 pub use cw_orch_core::contract;
-pub use cw_orch_core::environment;
+
+/// Related to execution environents and variables
+pub mod environment {
+    pub use cw_orch_core::env::{default_state_folder, CwOrchEnvVars};
+    pub use cw_orch_core::environment::*;
+}
 pub use cw_orch_mock as mock;
 
 #[deprecated(since = "0.13.4", note = "Deploy trait moved to contract namespace")]

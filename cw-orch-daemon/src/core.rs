@@ -155,7 +155,6 @@ impl DaemonAsync {
         admin: Option<&Addr>,
         coins: &[Coin],
         salt: Binary,
-        fix_msg: bool,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
 
@@ -167,7 +166,7 @@ impl DaemonAsync {
             msg: serde_json::to_vec(&init_msg)?,
             funds: proto_parse_cw_coins(coins)?,
             salt: salt.to_vec(),
-            fix_msg,
+            fix_msg: false,
         };
 
         let result = sender

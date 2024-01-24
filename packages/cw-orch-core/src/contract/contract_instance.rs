@@ -178,7 +178,6 @@ impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
         admin: Option<&Addr>,
         coins: Option<&[Coin]>,
         salt: Binary,
-        fix_msg: bool,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -202,7 +201,6 @@ impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
                 admin,
                 coins.unwrap_or(&[]),
                 salt,
-                fix_msg,
             )
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;

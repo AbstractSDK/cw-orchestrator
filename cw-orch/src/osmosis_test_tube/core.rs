@@ -277,7 +277,6 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         _admin: Option<&Addr>,
         _coins: &[cosmwasm_std::Coin],
         _salt: Binary,
-        _fix_msg: bool,
     ) -> Result<Self::Response, Self::Error> {
         unimplemented!("Osmosis Test Tube doesn't support Instantiate 2 directly");
     }
@@ -288,7 +287,7 @@ impl BankSetter for OsmosisTestTube {
     /// So for this implementation, we use a weird algorithm
     fn set_balance(
         &mut self,
-        _address: &Addr,
+        _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         // We check the current balance

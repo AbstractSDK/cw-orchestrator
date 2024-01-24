@@ -26,3 +26,4 @@ cw20-base = { workspace = true }
 mock-contract = { path = "../../contracts/mock_contract", features = [
   "interface",
 ] }
+anyhow.workspace = true

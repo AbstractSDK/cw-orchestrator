@@ -144,11 +144,10 @@ impl TxHandler for Daemon {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
         salt: cosmwasm_std::Binary,
-        fix_msg: bool,
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle.block_on(
             self.daemon
-                .instantiate2(code_id, init_msg, label, admin, coins, salt, fix_msg),
+                .instantiate2(code_id, init_msg, label, admin, coins, salt),
         )
     }
 }

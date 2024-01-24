@@ -19,7 +19,7 @@ pub trait TxHandler: ChainState + Clone {
     /// Response type for transactions on an environment.
     type Response: IndexResponse + Debug + Send + Clone;
     /// Error type for transactions on an environment.
-    type Error: Into<CwEnvError> + Debug + std::error::Error;
+    type Error: Into<CwEnvError> + Debug + std::error::Error + Send + Sync + 'static;
     /// Source type for uploading to the environment.
     type ContractSource;
 
@@ -55,7 +55,6 @@ pub trait TxHandler: ChainState + Clone {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
         salt: Binary,
-        fix_msg: bool,
     ) -> Result<Self::Response, Self::Error>;
 
     /// Send a ExecMsg to a contract.

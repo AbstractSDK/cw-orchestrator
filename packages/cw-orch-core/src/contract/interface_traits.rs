@@ -4,7 +4,7 @@ use crate::{
     error::CwEnvError,
     log::contract_target,
 };
-use cosmwasm_std::{Addr, Coin, Empty};
+use cosmwasm_std::{Addr, Binary, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -117,6 +117,18 @@ pub trait CwOrchInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstan
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
+    }
+
+    /// Instantiates the contract using instantiate2
+    fn instantiate2(
+        &self,
+        instantiate_msg: &Self::InstantiateMsg,
+        admin: Option<&Addr>,
+        coins: Option<&[Coin]>,
+        salt: Binary,
+    ) -> Result<Chain::Response, CwEnvError> {
+        self.as_instance()
+            .instantiate2(instantiate_msg, admin, coins, salt)
     }
 }
 
