@@ -3,7 +3,6 @@ use std::{fmt::Debug, rc::Rc, time::Duration};
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
     queriers::{cosmrs_to_cosmwasm_coins, Bank, DaemonQuerier, Node},
-    sender::SenderOptions,
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
@@ -73,31 +72,14 @@ impl Daemon {
         self.daemon.sender.clone()
     }
 
-    /// Adds authz capability to the returned Daemon
-    pub fn with_authz_granter(&self, granter: impl ToString) -> Self {
-        let mut new_daemon = self.clone();
-        let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.authz_granter(granter.to_string());
-        new_daemon.daemon.sender = Rc::new(new_sender);
-        new_daemon
-    }
-
-    /// Adds authz capability to the returned Daemon
-    pub fn with_fee_granter(&self, granter: impl ToString) -> Self {
-        let mut new_daemon = self.clone();
-        let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.fee_granter(granter.to_string());
-        new_daemon.daemon.sender = Rc::new(new_sender);
-        new_daemon
-    }
-
-    /// Modifies all the sender options in one go
-    pub fn with_sender_options(&self, options: SenderOptions) -> Self {
-        let mut new_daemon = self.clone();
-        let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.options = options;
-        new_daemon.daemon.sender = Rc::new(new_sender);
-        new_daemon
+    pub fn rebuild(&self) -> DaemonBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.daemon.sender).clone())
+            .handle(&self.rt_handle)
+            .deployment_id(&self.state().deployment_id);
+        builder
     }
 }
 

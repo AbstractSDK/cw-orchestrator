@@ -1,6 +1,7 @@
 use crate::{log::print_if_log_disabled, sender::SenderOptions, DaemonAsync, DaemonBuilder};
 use std::rc::Rc;
 
+use bitcoin::secp256k1::All;
 use ibc_chain_registry::chain::ChainData;
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
@@ -26,8 +27,11 @@ pub struct DaemonAsyncBuilder {
     pub(crate) chain: Option<ChainData>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
-    /// Wallet mnemonic
-    pub(crate) mnemonic: Option<String>,
+
+    /* Sender related options */
+    /// Wallet sender
+    /// Will be used in priority when set
+    pub(crate) sender: Option<Sender<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
 }
@@ -51,7 +55,14 @@ impl DaemonAsyncBuilder {
     ///
     /// Variables: LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-        self.mnemonic = Some(mnemonic.to_string());
+        self.sender_options.mnemonic = Some(mnemonic.to_string());
+        self
+    }
+
+    /// Specifies a sender to use with this chain
+    /// This will be used in priority when set on the builder
+    pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
+        self.sender = Some(wallet);
         self
     }
 
@@ -86,8 +97,9 @@ impl DaemonAsyncBuilder {
         let state = Rc::new(DaemonState::new(chain, deployment_id, false).await?);
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender_options = self.sender_options.clone();
-        let sender = if let Some(mnemonic) = &self.mnemonic {
-            Sender::from_mnemonic_with_options(&state, mnemonic, sender_options)?
+        let sender = if let Some(mut sender) = self.sender.clone() {
+            sender.set_options(self.sender_options.clone());
+            sender
         } else {
             Sender::new_with_options(&state, sender_options)?
         };
@@ -105,8 +117,8 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
         DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
-            mnemonic: value.mnemonic,
             sender_options: value.sender_options,
+            sender: value.sender,
         }
     }
 }
