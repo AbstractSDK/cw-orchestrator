@@ -11,7 +11,6 @@ use cw_orch::prelude::{
     Mock,
 };
 
-use cosmwasm_std::Addr;
 use cw_orch::interface;
 
 #[interface(
@@ -91,12 +90,12 @@ fn test_query() {
 
 #[test]
 fn test_migrate() {
-    let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::new(Mock::new(&admin));
+    let chain = Mock::new("Ghazshag");
+    let contract = MockContract::new(chain.clone());
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&admin), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender()), None)
         .unwrap();
 
     contract

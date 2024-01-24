@@ -34,7 +34,7 @@ use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{log::local_target, CwOrchEnvVars};
 
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, rc::Rc, str::FromStr};
+use std::{convert::TryFrom, str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -44,18 +44,18 @@ const BUFFER_THRESHOLD: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
-pub type Wallet = Rc<Sender<All>>;
+pub type Wallet = Arc<Sender<All>>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
-    pub(crate) daemon_state: Rc<DaemonState>,
+    pub(crate) daemon_state: Arc<DaemonState>,
 }
 
 impl Sender<All> {
-    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+    pub fn new(daemon_state: &Arc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
         let env_variable_name = kind.mnemonic_env_variable_name();
@@ -71,7 +71,7 @@ impl Sender<All> {
 
     /// Construct a new Sender from a mnemonic
     pub fn from_mnemonic(
-        daemon_state: &Rc<DaemonState>,
+        daemon_state: &Arc<DaemonState>,
         mnemonic: &str,
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();

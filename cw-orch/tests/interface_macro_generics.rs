@@ -1,7 +1,7 @@
 use cw_orch::{environment::CwEnv, interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-use cosmwasm_std::{Addr, Event};
+use cosmwasm_std::Event;
 use cw_orch::prelude::Mock;
 
 #[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg, id = "test:mock_contract")]
@@ -81,12 +81,12 @@ fn test_query() {
 
 #[test]
 fn test_migrate() {
-    let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::<_, u64>::new(Mock::new(&admin));
+    let chain = Mock::new("Ghazshag");
+    let contract = MockContract::<_, u64>::new(chain.clone());
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&admin), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender()), None)
         .unwrap();
 
     contract

@@ -1,9 +1,9 @@
+use cw_orch_core::environment::TxHandler;
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, MockContract, QueryMsg};
 
 use cosmwasm_std::Event;
 use cw_orch::prelude::{ContractInstance, CwOrchExecute, CwOrchMigrate, CwOrchQuery};
 
-use cosmwasm_std::Addr;
 use cw_orch::prelude::CwOrchUpload;
 use cw_orch::prelude::{CwOrchInstantiate, Mock};
 
@@ -59,12 +59,13 @@ fn test_query() {
 
 #[test]
 fn test_migrate() {
-    let admin = Addr::unchecked("Ghazshag");
-    let contract = MockContract::new("test:mock_contract", Mock::new(&admin));
+    let admin = "Ghazshag";
+    let chain = Mock::new(admin);
+    let contract = MockContract::new("test:mock_contract", chain.clone());
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&admin), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender()), None)
         .unwrap();
 
     contract
