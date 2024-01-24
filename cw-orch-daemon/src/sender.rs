@@ -61,6 +61,8 @@ pub struct Sender<C: Signing + Context> {
 pub struct SenderOptions {
     pub authz_granter: Option<String>,
     pub fee_granter: Option<String>,
+    /// Wallet mnemonic
+    pub mnemonic: Option<String>,
 }
 
 impl SenderOptions {
@@ -92,33 +94,20 @@ impl Sender<All> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
         // NETWORK_MNEMONIC_GROUP
         let env_variable_name = kind.mnemonic_env_variable_name();
-        let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
-            panic!(
-                "Wallet mnemonic environment variable {} not set.",
-                env_variable_name
-            )
-        });
+        let mnemonic = if let Some(mnemonic) = &options.mnemonic {
+            mnemonic.clone()
+        } else {
+            kind.mnemonic().unwrap_or_else(|_| {
+                panic!(
+                    "Wallet mnemonic environment variable {} not set.",
+                    env_variable_name
+                )
+            })
+        };
 
-        Self::from_mnemonic_with_options(daemon_state, &mnemonic, options)
-    }
-
-    /// Construct a new Sender from a mnemonic with additional options
-    pub fn from_mnemonic(
-        daemon_state: &Rc<DaemonState>,
-        mnemonic: &str,
-    ) -> Result<Sender<All>, DaemonError> {
-        Self::from_mnemonic_with_options(daemon_state, mnemonic, SenderOptions::default())
-    }
-
-    /// Construct a new Sender from a mnemonic with additional options
-    pub fn from_mnemonic_with_options(
-        daemon_state: &Rc<DaemonState>,
-        mnemonic: &str,
-        options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey =
-            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
+            PrivateKey::from_words(&secp, &mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
 
         let sender = Sender {
             daemon_state: daemon_state.clone(),
@@ -135,12 +124,16 @@ impl Sender<All> {
         Ok(sender)
     }
 
-    pub fn authz_granter(&mut self, granter: impl Into<String>) {
+    pub fn set_authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
     }
 
-    pub fn fee_granter(&mut self, granter: impl Into<String>) {
+    pub fn set_fee_granter(&mut self, granter: impl Into<String>) {
         self.options.fee_granter = Some(granter.into());
+    }
+
+    pub fn set_options(&mut self, options: SenderOptions) {
+        self.options = options;
     }
 
     fn cosmos_private_key(&self) -> SigningKey {
