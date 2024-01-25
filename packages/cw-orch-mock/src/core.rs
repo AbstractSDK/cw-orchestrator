@@ -15,7 +15,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
-    environment::{TxHandler, WasmCodeQuerier},
+    environment::{EnvironmentInfo, EnvironmentQuerier, TxHandler, WasmCodeQuerier},
     CwEnvError,
 };
 
@@ -168,7 +168,7 @@ impl Mock<MockState> {
         Mock::new_custom(sender, MockState::new())
     }
 
-    pub fn with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
+    pub fn new_with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
         let chain = Mock::new_custom(sender, MockState::new());
         chain
             .app
@@ -176,6 +176,13 @@ impl Mock<MockState> {
             .update_block(|b| b.chain_id = chain_id.to_string());
 
         chain
+    }
+
+    pub fn with_chain_id(&mut self, chain_id: &str) {
+        self.state.borrow_mut().set_chain_id(chain_id);
+        self.app
+            .borrow_mut()
+            .update_block(|b| b.chain_id = chain_id.to_string());
     }
 }
 
@@ -344,6 +351,19 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 
     fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
         Ok(self.app.borrow().block_info())
+    }
+}
+
+impl<S: StateInterface> EnvironmentQuerier for Mock<S> {
+    fn env_info(&self) -> EnvironmentInfo {
+        let block_info = self.block_info().unwrap();
+        let chain_id = block_info.chain_id.clone();
+        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
+        EnvironmentInfo {
+            chain_id,
+            chain_name,
+            deployment_id: "default".to_string(),
+        }
     }
 }
 

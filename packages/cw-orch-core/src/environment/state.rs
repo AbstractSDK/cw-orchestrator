@@ -32,10 +32,6 @@ pub trait StateInterface: Clone {
 
     /// Get all codes related to this deployment.
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError>;
-
-    /// Get some details used for deployment on the current chain
-    /// This is used for
-    fn deploy_details(&self) -> DeployDetails;
 }
 
 /// Details about the chain and env you are deploying on
@@ -72,10 +68,6 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).borrow().get_all_code_ids()
     }
-
-    fn deploy_details(&self) -> DeployDetails {
-        (**self).borrow().deploy_details()
-    }
 }
 
 impl<S: StateInterface> StateInterface for Rc<S> {
@@ -102,10 +94,6 @@ impl<S: StateInterface> StateInterface for Rc<S> {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).get_all_code_ids()
     }
-
-    fn deploy_details(&self) -> DeployDetails {
-        (**self).deploy_details()
-    }
 }
 
 impl<S: StateInterface> StateInterface for Arc<S> {
@@ -131,9 +119,5 @@ impl<S: StateInterface> StateInterface for Arc<S> {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).get_all_code_ids()
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        (**self).deploy_details()
     }
 }

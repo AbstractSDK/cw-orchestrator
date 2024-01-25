@@ -10,7 +10,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{BankQuerier, ChainState, TxHandler},
+    environment::{BankQuerier, ChainState, EnvironmentInfo, EnvironmentQuerier, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::{de::DeserializeOwned, Serialize};
@@ -249,5 +249,16 @@ impl Stargate for Daemon {
                 memo,
             ),
         )
+    }
+}
+
+impl EnvironmentQuerier for Daemon {
+    fn env_info(&self) -> EnvironmentInfo {
+        let state = &self.daemon.sender.daemon_state;
+        EnvironmentInfo {
+            chain_id: state.chain_data.chain_id.to_string(),
+            chain_name: state.chain_data.chain_name.clone(),
+            deployment_id: state.deployment_id.clone(),
+        }
     }
 }
