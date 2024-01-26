@@ -4,7 +4,7 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 use cosmwasm_std::Addr;
 use cw_orch_core::{
     env::default_state_folder,
-    environment::{DeployDetails, StateInterface},
+    environment::StateInterface,
     log::{connectivity_target, local_target},
     CwEnvError, CwOrchEnvVars,
 };
@@ -46,7 +46,7 @@ impl DaemonState {
 
         // find working grpc channel
         let grpc_channel =
-            GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
+            GrpcChannel::connect(&chain_data.apis.grpc, chain_data.chain_id.as_str()).await?;
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = Self::state_file_path()?;
@@ -228,14 +228,6 @@ impl StateInterface for DaemonState {
             store.insert(id, code_id.as_u64().unwrap());
         }
         Ok(store)
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        DeployDetails {
-            chain_id: self.chain_data.chain_id.to_string(),
-            chain_name: self.chain_data.chain_name.clone(),
-            deployment_id: self.deployment_id.clone(),
-        }
     }
 }
 

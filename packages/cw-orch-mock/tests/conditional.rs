@@ -3,18 +3,17 @@ mod tests {
         DaemonAsync contract general tests
     */
 
-    use cw_orch_core::contract::interface_traits::*;
+    use cosmwasm_std::Addr;
+    use cw_orch_core::{contract::interface_traits::*, environment::TxHandler};
     use cw_orch_mock::Mock;
     use mock_contract::{InstantiateMsg, MigrateMsg, QueryMsg};
-
-    use cosmwasm_std::Addr;
 
     use speculoos::prelude::*;
 
     #[test]
     fn helper_traits() {
-        let sender = Addr::unchecked("sender");
-        let chain = Mock::new(&sender);
+        let sender = "sender";
+        let chain = Mock::new(sender);
 
         let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
@@ -100,8 +99,8 @@ mod tests {
 
     #[test]
     fn cw_orch_interface_traits() {
-        let sender = Addr::unchecked("sender");
-        let chain = Mock::new(&sender);
+        let chain = Mock::new("sender");
+        let sender = chain.sender();
 
         let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
