@@ -8,7 +8,7 @@ pub fn main() -> anyhow::Result<()> {
 
     let rt = Runtime::new()?;
     let chain = Daemon::from_cli(rt.handle())?;
-    let counter = CounterContract::new("counter_contract", chain);
+    let counter = CounterContract::new(chain);
 
     counter.select_action(Empty {})?;
 

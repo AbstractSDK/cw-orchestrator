@@ -1,6 +1,7 @@
-use std::rc::Rc;
-
-use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
+use cw_orch::{
+    daemon::{DaemonAsync, Wallet},
+    tokio::runtime::Runtime,
+};
 
 use crate::{
     commands::action::CosmosContext,
@@ -81,7 +82,7 @@ impl TransferOwnershipOutput {
             if let Some(seed) = receiver_seed {
                 let receiver_sender =
                     cw_orch::daemon::sender::Sender::from_mnemonic(&daemon.state, &seed)?;
-                daemon.set_sender(&Rc::new(receiver_sender));
+                daemon.set_sender(&Wallet::new(receiver_sender));
                 let action = cw_ownable::Action::AcceptOwnership {};
                 let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
                 let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {

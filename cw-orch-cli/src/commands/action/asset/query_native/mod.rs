@@ -41,7 +41,7 @@ impl QueryNativeOutput {
 
         rt.block_on(async {
             let grpc_channel =
-                GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await?;
+                GrpcChannel::connect(&chain_data.apis.grpc, chain_data.chain_id.as_str()).await?;
             let mut client = QueryClient::new(grpc_channel);
             if let Some(denom) = denom {
                 let response: QueryBalanceResponse = client

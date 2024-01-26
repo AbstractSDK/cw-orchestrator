@@ -2,7 +2,7 @@ mod error;
 
 use std::{
     fmt::{Display, Write},
-    rc::Rc,
+    sync::Arc,
 };
 
 pub type OrchCliResult<T> = Result<T, OrchCliError>;
@@ -10,12 +10,12 @@ pub type OrchCliResult<T> = Result<T, OrchCliError>;
 use cosmwasm_std::{Addr, Coin, Empty};
 use cw_orch::{
     daemon::DaemonState,
+    environment::ChainState,
     prelude::{
         ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery,
         CwOrchUpload, Daemon, ExecutableContract, InstantiableContract, MigratableContract,
         QueryableContract,
     },
-    state::ChainState,
 };
 
 use inquire::{error::InquireResult, ui::RenderConfig, Confirm, CustomType, InquireError, Text};
@@ -94,7 +94,7 @@ where
         }
     }
 
-    fn instantiate_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
+    fn instantiate_cli(&self, state_interface: &Arc<DaemonState>) -> OrchCliResult<()> {
         let instantiate_msg =
             <Self as InstantiableContract>::InstantiateMsg::cw_parse(state_interface)?;
         let coins = cw_orch_cli::common::parse_coins()?;
@@ -115,7 +115,7 @@ where
         Ok(())
     }
 
-    fn execute_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
+    fn execute_cli(&self, state_interface: &Arc<DaemonState>) -> OrchCliResult<()> {
         let execute_msg = <Self as ExecutableContract>::ExecuteMsg::cw_parse(state_interface)?;
         // TODO: figure out a way to make this only with `payable` attribute
         let coins = cw_orch_cli::common::parse_coins()?;
@@ -127,7 +127,7 @@ where
         Ok(())
     }
 
-    fn query_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
+    fn query_cli(&self, state_interface: &Arc<DaemonState>) -> OrchCliResult<()> {
         let query_msg = <Self as QueryableContract>::QueryMsg::cw_parse(state_interface)?;
 
         let resp: serde_json::Value = self.query(&query_msg)?;
@@ -135,7 +135,7 @@ where
         Ok(())
     }
 
-    fn migrate_cli(&self, state_interface: &Rc<DaemonState>) -> OrchCliResult<()> {
+    fn migrate_cli(&self, state_interface: &Arc<DaemonState>) -> OrchCliResult<()> {
         let new_code_id = inquire::CustomType::<u64>::new("New code_id").prompt()?;
         let migrate_msg = <Self as MigratableContract>::MigrateMsg::cw_parse(state_interface)?;
 
@@ -151,11 +151,11 @@ pub trait ParseCwMsg
 where
     Self: Sized,
 {
-    fn cw_parse(state: &impl cw_orch::state::StateInterface) -> OrchCliResult<Self>;
+    fn cw_parse(state: &impl cw_orch::environment::StateInterface) -> OrchCliResult<Self>;
 }
 
 impl ParseCwMsg for Empty {
-    fn cw_parse(_state: &impl cw_orch::state::StateInterface) -> OrchCliResult<Self> {
+    fn cw_parse(_state: &impl cw_orch::environment::StateInterface) -> OrchCliResult<Self> {
         Ok(Empty {})
     }
 }
