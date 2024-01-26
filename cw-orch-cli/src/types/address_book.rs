@@ -238,9 +238,13 @@ impl Address {
 pub struct CliAddress(String);
 
 impl FromStr for CliAddress {
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.is_empty() {
+            return Err("Address alias be empty".to_owned());
+        }
+
         Ok(Self(s.to_owned()))
     }
 }
