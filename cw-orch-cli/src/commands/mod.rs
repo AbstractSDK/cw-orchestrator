@@ -9,6 +9,7 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 #[derive(Debug, EnumDiscriminants, Clone, interactive_clap::InteractiveClap)]
 #[strum_discriminants(derive(EnumMessage, EnumIter))]
+#[interactive_clap(disable_back)]
 /// Select one of the options with up-down arrows and press enter to select action
 pub enum Commands {
     /// Select action
