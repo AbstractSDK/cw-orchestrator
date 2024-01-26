@@ -61,8 +61,9 @@ impl QueryWasmOutput {
                 resp.into_inner(),
             )
         })?;
-        let parsed_output: serde_json::Value = serde_json::from_slice(&resp.data)?;
-        println!("{}", serde_json::to_string_pretty(&parsed_output)?);
+        let parsed_output: Option<serde_json::Value> = serde_json::from_slice(&resp.data)?;
+        let output = parsed_output.unwrap_or_default();
+        println!("{}", serde_json::to_string_pretty(&output)?);
 
         Ok(QueryWasmOutput)
     }
