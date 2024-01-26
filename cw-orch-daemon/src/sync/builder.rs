@@ -2,7 +2,7 @@ use bitcoin::secp256k1::All;
 use ibc_chain_registry::chain::ChainData;
 
 use crate::{
-    sender::{Sender, SenderOptions},
+    sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
 
@@ -30,7 +30,7 @@ pub struct DaemonBuilder {
     /* Sender Options */
     /// Wallet sender
     /// Will be used in priority when set
-    pub(crate) sender: Option<Sender<All>>,
+    pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
 }
@@ -69,14 +69,14 @@ impl DaemonBuilder {
 
     /// Set the mnemonic to use with this chain.
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-        self.sender_options.mnemonic = Some(mnemonic.to_string());
+        self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
         self
     }
 
     /// Specifies a sender to use with this chain
     /// This will be used in priority when set on the builder
     pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
-        self.sender = Some(wallet);
+        self.sender = Some(SenderBuilder::Sender(wallet));
         self
     }
 
