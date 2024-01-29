@@ -71,6 +71,18 @@ impl Daemon {
     pub fn wallet(&self) -> Wallet {
         self.daemon.sender.clone()
     }
+
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.daemon.sender).clone())
+            .handle(&self.rt_handle)
+            .deployment_id(&self.state().deployment_id);
+        builder
+    }
 }
 
 impl ChainState for Daemon {

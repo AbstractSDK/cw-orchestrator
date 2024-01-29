@@ -124,6 +124,138 @@ pub trait BankQuerier: TxHandler {
     fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, <Self as TxHandler>::Error>;
 }
 
+// TODO: Perfect test candidate for `trybuild`
+#[cfg(test)]
+mod tests {
+    use cw_multi_test::AppResponse;
+
+    use crate::environment::StateInterface;
+
+    use super::*;
+
+    #[derive(Clone)]
+    struct MockHandler {}
+
+    impl StateInterface for () {
+        fn get_address(&self, _contract_id: &str) -> Result<Addr, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_address(&mut self, _contract_id: &str, _address: &Addr) {
+            unimplemented!()
+        }
+
+        fn get_code_id(&self, _contract_id: &str) -> Result<u64, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_code_id(&mut self, _contract_id: &str, _code_id: u64) {
+            unimplemented!()
+        }
+
+        fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
+            unimplemented!()
+        }
+    }
+
+    impl ChainState for MockHandler {
+        type Out = ();
+
+        fn state(&self) -> Self::Out {}
+    }
+
+    impl TxHandler for MockHandler {
+        type Response = AppResponse;
+
+        type Error = CwEnvError;
+
+        type ContractSource = ();
+
+        type Sender = ();
+
+        fn sender(&self) -> Addr {
+            unimplemented!()
+        }
+
+        fn set_sender(&mut self, _sender: Self::Sender) {}
+
+        fn wait_blocks(&self, _amount: u64) -> Result<(), Self::Error> {
+            Ok(())
+        }
+
+        fn wait_seconds(&self, _secs: u64) -> Result<(), Self::Error> {
+            Ok(())
+        }
+
+        fn next_block(&self) -> Result<(), Self::Error> {
+            Ok(())
+        }
+
+        fn block_info(&self) -> Result<BlockInfo, Self::Error> {
+            unimplemented!()
+        }
+
+        fn upload(
+            &self,
+            _contract_source: &impl Uploadable,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn instantiate<I: Serialize + Debug>(
+            &self,
+            _code_id: u64,
+            _init_msg: &I,
+            _label: Option<&str>,
+            _admin: Option<&Addr>,
+            _coins: &[cosmwasm_std::Coin],
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn execute<E: Serialize + Debug>(
+            &self,
+            _exec_msg: &E,
+            _coins: &[Coin],
+            _contract_address: &Addr,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+            &self,
+            _query_msg: &Q,
+            _contract_address: &Addr,
+        ) -> Result<T, Self::Error> {
+            unimplemented!()
+        }
+
+        fn migrate<M: Serialize + Debug>(
+            &self,
+            _migrate_msg: &M,
+            _new_code_id: u64,
+            _contract_address: &Addr,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+    }
+
+    fn associated_error<T: TxHandler>(t: T) -> anyhow::Result<()> {
+        t.wait_blocks(5)?;
+        Ok(())
+    }
+
+    #[test]
+    fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
+        associated_error(MockHandler {})?;
+        Ok(())
+    }
+}
+
 #[derive(Clone)]
 pub struct EnvironmentInfo {
     pub chain_id: String,
