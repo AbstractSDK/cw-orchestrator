@@ -105,6 +105,8 @@ impl DaemonAsync {
         self.sender.address().unwrap()
     }
 
+    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration. 
+    /// Does not consume the original [`DaemonAsync`].
     pub fn rebuild(&self) -> DaemonAsyncBuilder {
         let mut builder = Self::builder();
         builder

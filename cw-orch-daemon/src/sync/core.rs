@@ -72,6 +72,8 @@ impl Daemon {
         self.daemon.sender.clone()
     }
 
+    /// Returns a new [`DaemonBuilder`] with the current configuration. 
+    /// Does not consume the original [`Daemon`].
     pub fn rebuild(&self) -> DaemonBuilder {
         let mut builder = Self::builder();
         builder

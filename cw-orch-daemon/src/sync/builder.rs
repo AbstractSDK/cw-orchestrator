@@ -86,7 +86,7 @@ impl DaemonBuilder {
         self
     }
 
-    /// Specifies wether authz should be used with this daemon
+    /// Specifies wether feegrant should be used with this daemon
     pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
         self.sender_options.set_fee_granter(granter.to_string());
         self
