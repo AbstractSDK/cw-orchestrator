@@ -9,7 +9,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 pub mod bank;
-pub mod env;
+mod env;
 pub mod node;
 pub mod wasm;
 

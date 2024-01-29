@@ -74,6 +74,7 @@ pub trait TxHandler: ChainState + Clone {
 // TODO: Perfect test candidate for `trybuild`
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::Empty;
     use cw_multi_test::AppResponse;
 
     use crate::environment::StateInterface;
@@ -165,5 +166,16 @@ mod tests {
         ) -> Result<Self::Response, Self::Error> {
             unimplemented!()
         }
+    }
+
+    fn associated_error<T: TxHandler>(t: T) -> anyhow::Result<()> {
+        t.instantiate(0, &Empty {}, None, None, &[])?;
+        Ok(())
+    }
+
+    #[test]
+    fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
+        associated_error(MockHandler {}).unwrap();
+        Ok(())
     }
 }

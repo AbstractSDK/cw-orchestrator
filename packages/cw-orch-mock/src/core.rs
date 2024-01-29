@@ -11,6 +11,7 @@ use cw_multi_test::{
 use cw_utils::NativeBalance;
 use serde::Serialize;
 
+use super::state::MockState;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::TxHandler,
@@ -21,8 +22,6 @@ use cw_orch_core::{
 };
 
 use crate::queriers::bank::MockBankQuerier;
-
-use super::state::MockState;
 
 pub type MockApp = App<
     BankKeeper,

@@ -1,8 +1,6 @@
-use std::str::FromStr;
-
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{Addr, StdResult};
+use cosmwasm_std::Addr;
 
 use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
 use cw_orch_traits::stargate::Stargate;
@@ -303,15 +301,6 @@ impl Stargate for OsmosisTestTube {
             events: tx_response.events,
         })
     }
-}
-
-pub(crate) fn to_cosmwasm_coin(
-    c: osmosis_std::types::cosmos::base::v1beta1::Coin,
-) -> StdResult<Coin> {
-    Ok(Coin {
-        amount: Uint128::from_str(&c.amount)?,
-        denom: c.denom,
-    })
 }
 
 #[cfg(test)]

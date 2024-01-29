@@ -7,10 +7,11 @@ use cw_orch_core::{
     },
     CwEnvError,
 };
+use osmosis_std::try_proto_to_cosmwasm_coins;
 use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
 use osmosis_test_tube::{Bank, Module, OsmosisTestApp, Runner};
 
-use crate::osmosis_test_tube::{map_err, to_cosmwasm_coin, OsmosisTestTube};
+use crate::osmosis_test_tube::{map_err, OsmosisTestTube};
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QueryAllBalancesRequest, QueryBalanceRequest,
 };
@@ -50,7 +51,10 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 })
                 .map_err(map_err)?
                 .balance
-                .map(to_cosmwasm_coin)
+                .map(|c| {
+                    let coins = try_proto_to_cosmwasm_coins(vec![c])?[0].clone();
+                    Ok::<_, CwEnvError>(coins)
+                })
                 .transpose()?
                 .unwrap_or(coin(0, &denom));
             Ok(vec![amount])
@@ -61,11 +65,9 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                     pagination: None,
                 })
                 .map_err(map_err)?
-                .balances
-                .into_iter()
-                .map(to_cosmwasm_coin)
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(amount)
+                .balances;
+
+            Ok(try_proto_to_cosmwasm_coins(amount)?)
         }
     }
 
@@ -89,7 +91,7 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 //     amount: c.amount.parse()?,
                 //     denom: c.denom,
                 // })
-                to_cosmwasm_coin(c)
+                Ok::<_, CwEnvError>(try_proto_to_cosmwasm_coins(vec![c])?[0].clone())
             })
             .transpose()?
             .unwrap_or(coin(0, &denom)))
