@@ -28,8 +28,7 @@ pub struct InstantiateContractCommands {
     msg: String,
     /// Label for the contract
     label: String,
-    #[interactive_clap(skip_default_input_arg)]
-    /// Admin address of the contract
+    /// Admin address of the contract, leave empty to skip admin
     admin: CliSkippable<String>,
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
@@ -44,16 +43,6 @@ impl InstantiateContractCommands {
         _context: &CosmosContext,
     ) -> color_eyre::eyre::Result<Option<msg_type::MsgType>> {
         msg_type::input_msg_type()
-    }
-
-    fn input_admin(
-        _context: &CosmosContext,
-    ) -> color_eyre::eyre::Result<Option<CliSkippable<String>>> {
-        let val: Option<String> =
-            inquire::CustomType::new("Input admin address for the contract".to_string().as_str())
-                .with_help_message("press Esc to skip admin")
-                .prompt_skippable()?;
-        Ok(Some(CliSkippable(val)))
     }
 
     fn input_coins(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<CliCoins>> {

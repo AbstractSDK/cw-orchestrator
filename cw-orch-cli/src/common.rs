@@ -42,7 +42,6 @@ pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {
     loop {
         let coin = inquire::Text::new("Add coin to transaction")
             .with_placeholder("0ucoin")
-            .with_help_message("Press ESC to finish adding coins")
             .prompt()?;
         if !coin.is_empty() {
             match coin.parse() {
