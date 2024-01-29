@@ -8,6 +8,7 @@ use std::fmt::Debug;
 use super::{map_err, OsmosisTestTube};
 
 pub mod bank;
+mod env;
 pub mod node;
 pub mod wasm;
 

@@ -4,7 +4,7 @@ mod mut_env;
 pub mod queriers;
 mod state;
 
-pub use cosmwasm_environment::{CwEnv, TxHandler, TxResponse};
+pub use cosmwasm_environment::{CwEnv, EnvironmentInfo, EnvironmentQuerier, TxHandler, TxResponse};
 pub use index_response::IndexResponse;
 pub use mut_env::{BankSetter, MutCwEnv};
 pub use queriers::QueryHandler;

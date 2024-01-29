@@ -11,17 +11,16 @@ use cw_multi_test::{
 use cw_utils::NativeBalance;
 use serde::Serialize;
 
+use super::state::MockState;
+use cw_orch_core::environment::queriers::bank::BankQuerier;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::TxHandler,
     environment::{
-        queriers::bank::{BankQuerier, BankQuerierGetter},
-        BankSetter, ChainState, IndexResponse, StateInterface,
+        queriers::bank::BankQuerierGetter, BankSetter, ChainState, IndexResponse, StateInterface,
     },
     CwEnvError,
 };
-
-use super::state::MockState;
 
 pub type MockApp = App<
     BankKeeper,
@@ -168,7 +167,7 @@ impl Mock<MockState> {
         Mock::new_custom(sender, MockState::new())
     }
 
-    pub fn with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
+    pub fn new_with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
         let chain = Mock::new_custom(sender, MockState::new());
         chain
             .app
@@ -176,6 +175,13 @@ impl Mock<MockState> {
             .update_block(|b| b.chain_id = chain_id.to_string());
 
         chain
+    }
+
+    pub fn with_chain_id(&mut self, chain_id: &str) {
+        self.state.borrow_mut().set_chain_id(chain_id);
+        self.app
+            .borrow_mut()
+            .update_block(|b| b.chain_id = chain_id.to_string());
     }
 }
 
@@ -187,7 +193,7 @@ impl<S: StateInterface> Mock<S> {
         let app = Rc::new(RefCell::new(AppBuilder::new_custom().build(|_, _, _| {})));
 
         Self {
-            sender: Addr::unchecked(sender.into()),
+            sender: Addr::unchecked(sender),
             state,
             app,
         }

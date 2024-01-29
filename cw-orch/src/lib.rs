@@ -22,20 +22,6 @@ pub mod environment {
 }
 pub use cw_orch_mock as mock;
 
-#[deprecated(since = "0.13.4", note = "Deploy trait moved to contract namespace")]
-/// Used to introduce Deploy trait.
-/// Deprecated since 0.13.4.
-pub mod deploy {
-    pub use cw_orch_core::contract::Deploy;
-}
-
-#[deprecated(since = "0.13.4", note = "State trait moved to environment namespace")]
-/// Used to introduce state traits.
-/// Deprecated since 0.13.4.
-pub mod state {
-    pub use cw_orch_core::environment::{ChainState, DeployDetails, StateInterface};
-}
-
 /// Re-export tokio, the async runtime when using daemons.
 #[cfg(feature = "daemon")]
 pub extern crate tokio;

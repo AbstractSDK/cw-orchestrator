@@ -1,8 +1,6 @@
-use std::str::FromStr;
-
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{Addr, StdResult};
+use cosmwasm_std::Addr;
 
 use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
 use cw_orch_core::environment::BankSetter;
@@ -163,7 +161,7 @@ impl OsmosisTestTube<MockState> {
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
     /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
-        Self::new_custom(init_coins, MockState::new())
+        Self::new_custom(init_coins, MockState::new_with_chain_id("osmosis-1"))
     }
 }
 
@@ -300,15 +298,6 @@ impl Stargate for OsmosisTestTube {
             events: tx_response.events,
         })
     }
-}
-
-pub(crate) fn to_cosmwasm_coin(
-    c: osmosis_std::types::cosmos::base::v1beta1::Coin,
-) -> StdResult<Coin> {
-    Ok(Coin {
-        amount: Uint128::from_str(&c.amount)?,
-        denom: c.denom,
-    })
 }
 
 #[cfg(test)]

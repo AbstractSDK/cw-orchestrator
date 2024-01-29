@@ -17,7 +17,7 @@ pub use crate::contract::interface_traits::{
     InstantiableContract, MigratableContract, QueryableContract, Uploadable,
 };
 
-pub use crate::deploy::Deploy;
+pub use cw_orch_core::contract::Deploy;
 
 pub use crate::environment::StateInterface;
 

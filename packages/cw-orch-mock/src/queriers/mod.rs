@@ -9,7 +9,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 pub mod bank;
-pub mod node;
+pub mod env;
+mod node;
 pub mod wasm;
 
 impl<S: StateInterface> QueryHandler for Mock<S> {
