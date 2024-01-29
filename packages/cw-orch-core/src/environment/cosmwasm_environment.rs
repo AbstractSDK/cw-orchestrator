@@ -146,7 +146,10 @@ mod tests {
             _admin: Option<&Addr>,
             _coins: &[cosmwasm_std::Coin],
         ) -> Result<Self::Response, Self::Error> {
-            unimplemented!()
+            Ok(AppResponse {
+                events: vec![],
+                data: None,
+            })
         }
 
         fn execute<E: Serialize + Debug>(
@@ -175,7 +178,7 @@ mod tests {
 
     #[test]
     fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
-        let _ = associated_error(MockHandler {});
+        associated_error(MockHandler {})?;
         Ok(())
     }
 }
