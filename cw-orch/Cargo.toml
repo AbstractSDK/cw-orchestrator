@@ -42,12 +42,12 @@ required-features = ["eth"]
 [[example]]
 name = "bank_query"
 path = "examples/queries/bank_query.rs"
-require-features = ["daemon"]
+required-features = ["daemon"]
 
 [[example]]
 name = "testnet_queries"
 path = "examples/queries/testnet_queries.rs"
-require-features = ["daemon"]
+required-features = ["daemon"]
 
 [features]
 default = []

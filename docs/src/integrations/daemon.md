@@ -94,6 +94,24 @@ When calling the `instantiate` function, if the tx is successful, the daemon wil
 
 In this example, the `default` keyword corresponds to the deployment namespace. This can be set when building the daemon object (using the `DaemonBuilder::deployment_id` method) in order to separate multiple deployments. For instance for a DEX (decentralized exchange), you can have a single code-id but multiple pool addresses for all your liquidity pools. You would have a `juno-usdc` and a `usdt-usdc` deployment, sharing the same code-ids but different contract instances.
 
+## Configuration
+
+When creating a Daemon, use the `DaemonBuilder` object to set options for the structure.
+Here are the available options and fields you can use in the builder object:
+
+- `chain` (*required*) specifies the chain the `daemon` object will interact with. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.chain" target="_blank">Documentation Link</a>
+- `deployment_id` (*optional*) is used when loading and saving blockchain state (addresses and code-ids). It is useful when you have multiple instances of the same contract on a single chain. It will allow you to keep those multiple instances in the same state file without overriding state.<a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.deployment_id" target="_blank">Documentation Link</a>
+- `handle` (*required*) is the `tokio` runtime handled used to await async functions. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.handle" target="_blank">Documentation Link</a>
+- `mnemonic` (*optional*) is the mnemonic that will be used to create the sender associated with the resulting `Daemon` Object. It is not compatible with the `sender` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>
+- `sender` (*optional*) is the sender that will be uses with the `resulting` Daemon Object. It is not compatible with the `mnemonic` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>()
+- `authz_granter` (*optional*) allows you to use the authz module. If this field is specified, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.authz_granter" target="_blank">Documentation Link</a>
+- `fee_granter` (*optional*) allows you to use the fee-grant module. If this field is specified, the sender will try to pay for transactions using the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/feegrant/" target="_blank">More info on the fee grant module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.fee_granter" target="_blank">Documentation Link</a>
+- `hd_index` (*optional*) allows to set the index of the HD path for the account associated with the `Daemon` object. <a href="https://hub.cosmos.network/main/resources/hd-wallets.html" target="_blank">More info on the derivation path and index</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.hd_index" target="_blank">Documentation Link</a>
+
+> **NOTE**: if none of `sender` or `mnemonic` is specified, [env variables](../contracts/env-variable.md) will be used to construct the sender object.
+
+Keep in mind that those options can't be changed once the `Daemon` object is built, using the `build` function. It is possible to create a new `DaemonBuilder` structure from a `Daemon` object by using the `rebuild` method and specifying the options that you need to change.
+
 ## Additional tools
 
 The `Daemon` environment provides a bunch of tools for you to interact in a much easier way with the blockchain. Here is a non-exhaustive list:
