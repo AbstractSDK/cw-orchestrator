@@ -4,8 +4,9 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{Addr, StdResult};
 
-use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
-use cw_orch_core::environment::BankSetter;
+use cw_orch_core::environment::{
+    BankQuerier, BankSetter, EnvironmentInfo, EnvironmentQuerier, WasmCodeQuerier,
+};
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, Coin, Uint128};
@@ -163,7 +164,7 @@ impl OsmosisTestTube<MockState> {
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
     /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
-        Self::new_custom(init_coins, MockState::new())
+        Self::new_custom(init_coins, MockState::new_with_chain_id("osmosis-1"))
     }
 }
 

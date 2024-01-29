@@ -44,6 +44,7 @@ macro_rules! cosmos_query {
 };
 }
 
+mod authz;
 mod bank;
 mod cosmwasm;
 mod feegrant;
@@ -52,6 +53,7 @@ mod ibc;
 mod node;
 mod staking;
 
+pub use authz::Authz;
 pub use bank::{cosmrs_to_cosmwasm_coins, Bank};
 pub use cosmwasm::CosmWasm;
 pub use feegrant::Feegrant;

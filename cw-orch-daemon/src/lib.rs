@@ -30,6 +30,7 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{
         cosmos::{
             auth::v1beta1 as auth,
+            authz::v1beta1 as authz,
             bank::v1beta1 as bank,
             base::{abci::v1beta1 as abci, tendermint::v1beta1 as tendermint},
             feegrant::v1beta1 as feegrant,

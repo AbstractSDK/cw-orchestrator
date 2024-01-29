@@ -10,7 +10,8 @@ use cosmrs::{
     Any, Coin,
 };
 use cw_orch_core::log::transaction_target;
-use cw_orch_core::CwOrchEnvVars;
+
+use crate::sender::SenderOptions;
 
 use super::{sender::Sender, DaemonError};
 
@@ -65,10 +66,11 @@ impl TxBuilder {
         amount: impl Into<u128>,
         denom: &str,
         gas_limit: u64,
+        sender_options: SenderOptions,
     ) -> Result<Fee, DaemonError> {
         let fee = Coin::new(amount.into(), denom).unwrap();
         let mut fee = Fee::from_amount_and_gas(fee, gas_limit);
-        fee.granter = CwOrchEnvVars::load()?
+        fee.granter = sender_options
             .fee_granter
             .map(|g| AccountId::from_str(&g))
             .transpose()?;
@@ -132,7 +134,12 @@ impl TxBuilder {
             (fee_amount, gas_expected)
         };
 
-        let fee = Self::build_fee(tx_fee, &wallet.get_fee_token(), gas_limit)?;
+        let fee = Self::build_fee(
+            tx_fee,
+            &wallet.get_fee_token(),
+            gas_limit,
+            wallet.options.clone(),
+        )?;
 
         log::debug!(
             target: &transaction_target(),

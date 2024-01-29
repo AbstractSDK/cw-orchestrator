@@ -1,4 +1,4 @@
-use std::{fmt::Debug, rc::Rc, time::Duration};
+use std::{fmt::Debug, sync::Arc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
@@ -71,10 +71,22 @@ impl Daemon {
     pub fn wallet(&self) -> Wallet {
         self.daemon.sender.clone()
     }
+
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.daemon.sender).clone())
+            .handle(&self.rt_handle)
+            .deployment_id(&self.state().deployment_id);
+        builder
+    }
 }
 
 impl ChainState for Daemon {
-    type Out = Rc<DaemonState>;
+    type Out = Arc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
