@@ -10,8 +10,8 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + BankQuerier + WasmCodeQuerier + Clone {}
-impl<T: TxHandler + BankQuerier + WasmCodeQuerier + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + BankQuerier + WasmCodeQuerier + EnvironmentQuerier + Clone {}
+impl<T: TxHandler + BankQuerier + WasmCodeQuerier + EnvironmentQuerier + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -129,10 +129,38 @@ pub trait BankQuerier: TxHandler {
 mod tests {
     use cw_multi_test::AppResponse;
 
+    use crate::environment::StateInterface;
+
     use super::*;
 
     #[derive(Clone)]
     struct MockHandler {}
+
+    impl StateInterface for () {
+        fn get_address(&self, _contract_id: &str) -> Result<Addr, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_address(&mut self, _contract_id: &str, _address: &Addr) {
+            unimplemented!()
+        }
+
+        fn get_code_id(&self, _contract_id: &str) -> Result<u64, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_code_id(&mut self, _contract_id: &str, _code_id: u64) {
+            unimplemented!()
+        }
+
+        fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
+            unimplemented!()
+        }
+    }
 
     impl ChainState for MockHandler {
         type Out = ();
@@ -226,4 +254,16 @@ mod tests {
         associated_error(MockHandler {})?;
         Ok(())
     }
+}
+
+#[derive(Clone)]
+pub struct EnvironmentInfo {
+    pub chain_id: String,
+    pub chain_name: String,
+    pub deployment_id: String,
+}
+
+pub trait EnvironmentQuerier {
+    /// Get some details about the environment.
+    fn env_info(&self) -> EnvironmentInfo;
 }

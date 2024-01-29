@@ -4,7 +4,7 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 use cosmwasm_std::Addr;
 use cw_orch_core::{
     env::default_state_folder,
-    environment::{DeployDetails, StateInterface},
+    environment::StateInterface,
     log::{connectivity_target, local_target},
     CwEnvError, CwOrchEnvVars,
 };
@@ -228,14 +228,6 @@ impl StateInterface for DaemonState {
             store.insert(id, code_id.as_u64().unwrap());
         }
         Ok(store)
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        DeployDetails {
-            chain_id: self.chain_data.chain_id.to_string(),
-            chain_name: self.chain_data.chain_name.clone(),
-            deployment_id: self.deployment_id.clone(),
-        }
     }
 }
 

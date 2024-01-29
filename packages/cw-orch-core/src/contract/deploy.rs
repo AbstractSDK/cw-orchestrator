@@ -14,7 +14,6 @@ use std::path::PathBuf;
 
 use crate::env::CwOrchEnvVars;
 use crate::environment::CwEnv;
-use crate::environment::StateInterface;
 use crate::CwEnvError;
 
 use super::interface_traits::ContractInstance;
@@ -193,14 +192,14 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 
         for contract in all_contracts {
             // We set the code_id and/or address of the contract in question if they are not present already
-            let deploy_details = contract.get_chain().state().deploy_details();
+            let env_info = contract.get_chain().env_info();
             // We load the file
             // We try to get the code_id for the contract
             if contract.code_id().is_err() {
                 let code_id = state
-                    .get(deploy_details.chain_name.clone())
+                    .get(env_info.chain_name.clone())
                     .unwrap_or(&Value::Null)
-                    .get(deploy_details.chain_id.to_string())
+                    .get(env_info.chain_id.to_string())
                     .unwrap_or(&Value::Null)
                     .get("code_ids")
                     .unwrap_or(&Value::Null)
@@ -216,11 +215,11 @@ pub trait Deploy<Chain: CwEnv>: Sized {
             if contract.address().is_err() {
                 // Try and get the code id from file
                 let address = state
-                    .get(deploy_details.chain_name.clone())
+                    .get(env_info.chain_name.clone())
                     .unwrap_or(&Value::Null)
-                    .get(deploy_details.chain_id.to_string())
+                    .get(env_info.chain_id.to_string())
                     .unwrap_or(&Value::Null)
-                    .get(deploy_details.deployment_id)
+                    .get(env_info.deployment_id)
                     .unwrap_or(&Value::Null)
                     .get(contract.id());
 

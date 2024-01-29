@@ -3,7 +3,7 @@ use crate::{
     sender::{SenderBuilder, SenderOptions},
     DaemonAsync, DaemonBuilder,
 };
-use std::rc::Rc;
+use std::sync::Arc;
 
 use bitcoin::secp256k1::All;
 use ibc_chain_registry::chain::ChainData;
@@ -92,7 +92,7 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let state = Rc::new(DaemonState::new(chain, deployment_id, false).await?);
+        let state = Arc::new(DaemonState::new(chain, deployment_id, false).await?);
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender_options = self.sender_options.clone();
 
@@ -110,7 +110,7 @@ impl DaemonAsyncBuilder {
         };
         let daemon = DaemonAsync {
             state,
-            sender: Rc::new(sender),
+            sender: Arc::new(sender),
         };
         print_if_log_disabled()?;
         Ok(daemon)
