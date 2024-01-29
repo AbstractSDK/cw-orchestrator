@@ -63,7 +63,7 @@ pub struct Sender<C: Signing + Context> {
     pub(crate) options: SenderOptions,
 }
 
-/// Options for how txs should be constructed for this sender. 
+/// Options for how txs should be constructed for this sender.
 #[derive(Default, Clone)]
 #[non_exhaustive]
 pub struct SenderOptions {
