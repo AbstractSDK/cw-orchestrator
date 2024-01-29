@@ -430,7 +430,7 @@ impl BankSetter for Mock {
         address: impl Into<String>,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(&Addr::unchecked(address), amount)
+        (*self).set_balance(address, amount)
     }
 }
 
