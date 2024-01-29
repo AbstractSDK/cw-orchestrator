@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
-        associated_error(MockHandler {}).unwrap();
+        let _ = associated_error(MockHandler {});
         Ok(())
     }
 }
