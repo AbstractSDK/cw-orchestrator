@@ -114,7 +114,7 @@ hex = "0.4.3"
 
 [dev-dependencies]
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
-env_logger = "0.10.0"
+env_logger = "0.11.0"
 cosmwasm-schema = "1.2"
 counter-contract = { path = "../contracts/counter", features = ["interface"] }
 mock-contract = { path = "../contracts/mock_contract", features = [
