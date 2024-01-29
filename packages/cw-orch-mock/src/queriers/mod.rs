@@ -2,13 +2,14 @@ use crate::Mock;
 use cosmwasm_std::Addr;
 use cw_multi_test::next_block;
 use cw_orch_core::{
-    environment::{queriers::QueryHandler, StateInterface},
+    environment::{DefaultQueriers, QueryHandler, StateInterface},
     CwEnvError,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 pub mod bank;
+pub mod env;
 pub mod node;
 pub mod wasm;
 
@@ -50,4 +51,10 @@ impl<S: StateInterface> QueryHandler for Mock<S> {
             .query_wasm_smart(contract_address, query_msg)
             .map_err(From::from)
     }
+}
+
+impl<S: StateInterface> DefaultQueriers for Mock<S> {
+    type B = bank::MockBankQuerier;
+    type W = wasm::MockWasmQuerier;
+    type N = node::MockNodeQuerier;
 }

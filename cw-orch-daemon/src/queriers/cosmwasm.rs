@@ -1,7 +1,7 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::{from_json, to_json_binary, CodeInfoResponse, ContractInfoResponse};
-use cw_orch_core::environment::queriers::wasm::{WasmQuerier, WasmQuerierGetter};
+use cw_orch_core::environment::{Querier, QuerierGetter, WasmQuerier};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -187,17 +187,17 @@ impl DaemonWasmQuerier {
     }
 }
 
-impl WasmQuerierGetter<DaemonError> for Daemon {
-    type Querier = DaemonWasmQuerier;
-
-    fn wasm_querier(&self) -> Self::Querier {
+impl QuerierGetter<DaemonWasmQuerier> for Daemon {
+    fn querier(&self) -> DaemonWasmQuerier {
         DaemonWasmQuerier::new(self)
     }
 }
 
-impl WasmQuerier for DaemonWasmQuerier {
+impl Querier for DaemonWasmQuerier {
     type Error = DaemonError;
+}
 
+impl WasmQuerier for DaemonWasmQuerier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
         self.rt_handle
             .block_on(CosmWasm::new(self.channel.clone()).code_id_hash(code_id))

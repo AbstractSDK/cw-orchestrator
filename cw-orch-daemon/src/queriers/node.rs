@@ -11,7 +11,7 @@ use cosmrs::{
 };
 use cosmwasm_std::BlockInfo;
 use cw_orch_core::{
-    environment::queriers::node::{NodeQuerier, NodeQuerierGetter},
+    environment::{NodeQuerier, Querier, QuerierGetter},
     log::query_target,
     CwOrchEnvVars,
 };
@@ -346,17 +346,17 @@ impl DaemonNodeQuerier {
     }
 }
 
-impl NodeQuerierGetter<DaemonError> for Daemon {
-    type Querier = DaemonNodeQuerier;
-
-    fn node_querier(&self) -> Self::Querier {
+impl QuerierGetter<DaemonNodeQuerier> for Daemon {
+    fn querier(&self) -> DaemonNodeQuerier {
         DaemonNodeQuerier::new(self)
     }
 }
 
-impl NodeQuerier for DaemonNodeQuerier {
+impl Querier for DaemonNodeQuerier {
     type Error = DaemonError;
+}
 
+impl NodeQuerier for DaemonNodeQuerier {
     type Response = CosmTxResponse;
 
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {

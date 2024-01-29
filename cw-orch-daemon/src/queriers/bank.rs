@@ -1,7 +1,7 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use cosmwasm_std::StdError;
-use cw_orch_core::environment::queriers::{bank::{BankQuerier}, Querier, QuerierGetter};
+use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -168,7 +168,6 @@ impl QuerierGetter<DaemonBankQuerier> for Daemon {
 }
 
 impl BankQuerier for DaemonBankQuerier {
-
     fn balance(
         &self,
         address: impl Into<String>,

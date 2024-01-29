@@ -2,7 +2,7 @@ use std::{fmt::Debug, sync::Arc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{DaemonQuerier, Node},
+    queriers::{DaemonBankQuerier, DaemonNodeQuerier, DaemonQuerier, DaemonWasmQuerier, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
@@ -10,7 +10,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{queriers::QueryHandler, ChainState, TxHandler},
+    environment::{ChainState, DefaultQueriers, QueryHandler, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::Serialize;
@@ -241,4 +241,10 @@ impl QueryHandler for Daemon {
         self.rt_handle
             .block_on(self.daemon.query(query_msg, contract_address))
     }
+}
+
+impl DefaultQueriers for Daemon {
+    type B = DaemonBankQuerier;
+    type W = DaemonWasmQuerier;
+    type N = DaemonNodeQuerier;
 }

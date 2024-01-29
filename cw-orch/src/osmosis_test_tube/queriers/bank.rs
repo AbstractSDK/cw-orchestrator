@@ -3,8 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use cosmwasm_std::coin;
 use cw_orch_core::{
     environment::{
-        queriers::bank::{BankQuerier, BankQuerierGetter},
-        StateInterface, TxHandler,
+        Querier, StateInterface, {BankQuerier, QuerierGetter},
     },
     CwEnvError,
 };
@@ -15,11 +14,11 @@ use crate::osmosis_test_tube::{map_err, to_cosmwasm_coin, OsmosisTestTube};
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QueryAllBalancesRequest, QueryBalanceRequest,
 };
-pub struct MockBankQuerier {
+pub struct OsmosisTestTubeBankQuerier {
     app: Rc<RefCell<OsmosisTestApp>>,
 }
 
-impl MockBankQuerier {
+impl OsmosisTestTubeBankQuerier {
     fn new<S: StateInterface>(mock: &OsmosisTestTube<S>) -> Self {
         Self {
             app: mock.app.clone(),
@@ -27,17 +26,17 @@ impl MockBankQuerier {
     }
 }
 
-impl<S: StateInterface> BankQuerierGetter<<Self as TxHandler>::Error> for OsmosisTestTube<S> {
-    type Querier = MockBankQuerier;
+impl Querier for OsmosisTestTubeBankQuerier {
+    type Error = CwEnvError;
+}
 
-    fn bank_querier(&self) -> Self::Querier {
-        MockBankQuerier::new(self)
+impl<S: StateInterface> QuerierGetter<OsmosisTestTubeBankQuerier> for OsmosisTestTube<S> {
+    fn querier(&self) -> OsmosisTestTubeBankQuerier {
+        OsmosisTestTubeBankQuerier::new(self)
     }
 }
 
-impl BankQuerier for MockBankQuerier {
-    type Error = CwEnvError;
-
+impl BankQuerier for OsmosisTestTubeBankQuerier {
     fn balance(
         &self,
         address: impl Into<String>,

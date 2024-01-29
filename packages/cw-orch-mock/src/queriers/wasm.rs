@@ -4,10 +4,7 @@ use cosmwasm_std::{to_json_binary, ContractInfoResponse, Empty};
 use cw_multi_test::BasicApp;
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
-    environment::{
-        queriers::wasm::{WasmQuerier, WasmQuerierGetter},
-        QueryHandler, StateInterface, TxHandler,
-    },
+    environment::{Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier},
     CwEnvError,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -26,16 +23,17 @@ impl MockWasmQuerier {
     }
 }
 
-impl<S: StateInterface> WasmQuerierGetter<<Self as TxHandler>::Error> for Mock<S> {
-    type Querier = MockWasmQuerier;
+impl Querier for MockWasmQuerier {
+    type Error = CwEnvError;
+}
 
-    fn wasm_querier(&self) -> Self::Querier {
+impl<S: StateInterface> QuerierGetter<MockWasmQuerier> for Mock<S> {
+    fn querier(&self) -> MockWasmQuerier {
         MockWasmQuerier::new(self)
     }
 }
-impl WasmQuerier for MockWasmQuerier {
-    type Error = CwEnvError;
 
+impl WasmQuerier for MockWasmQuerier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
         let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
         Ok(code_info.checksum.to_string())

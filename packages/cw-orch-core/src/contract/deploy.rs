@@ -13,8 +13,8 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 use crate::env::CwOrchEnvVars;
-use crate::environment::queriers::QueryHandler;
 use crate::environment::CwEnv;
+use crate::environment::QueryHandler;
 use crate::CwEnvError;
 
 use super::interface_traits::ContractInstance;

@@ -3,10 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use cosmwasm_std::Empty;
 use cw_multi_test::{AppResponse, BasicApp};
 use cw_orch_core::{
-    environment::{
-        queriers::node::{NodeQuerier, NodeQuerierGetter},
-        StateInterface, TxHandler,
-    },
+    environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
     CwEnvError,
 };
 
@@ -24,17 +21,18 @@ impl MockNodeQuerier {
     }
 }
 
-impl<S: StateInterface> NodeQuerierGetter<<Self as TxHandler>::Error> for Mock<S> {
-    type Querier = MockNodeQuerier;
+impl Querier for MockNodeQuerier {
+    type Error = CwEnvError;
+}
 
-    fn node_querier(&self) -> Self::Querier {
+impl<S: StateInterface> QuerierGetter<MockNodeQuerier> for Mock<S> {
+    fn querier(&self) -> MockNodeQuerier {
         MockNodeQuerier::new(self)
     }
 }
 
 impl NodeQuerier for MockNodeQuerier {
     type Response = AppResponse;
-    type Error = CwEnvError;
 
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
         Ok(self.app.borrow().block_info())

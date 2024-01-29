@@ -15,11 +15,12 @@ use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::TxHandler,
     environment::{
-        queriers::bank::{BankQuerier},
-        BankSetter, ChainState, IndexResponse, StateInterface,
+        BankQuerier, BankSetter, ChainState, DefaultQueriers, IndexResponse, StateInterface,
     },
     CwEnvError,
 };
+
+use crate::queriers::bank::MockBankQuerier;
 
 use super::state::MockState;
 
@@ -318,6 +319,8 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 }
 
 impl<S: StateInterface> BankSetter for Mock<S> {
+    type T = MockBankQuerier;
+
     fn set_balance(
         &mut self,
         address: impl Into<String>,

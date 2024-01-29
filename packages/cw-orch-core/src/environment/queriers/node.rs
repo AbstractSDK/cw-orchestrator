@@ -1,6 +1,6 @@
 use cosmwasm_std::BlockInfo;
 
-use crate::{environment::IndexResponse, CwEnvError};
+use crate::environment::IndexResponse;
 use std::fmt::Debug;
 
 use super::Querier;

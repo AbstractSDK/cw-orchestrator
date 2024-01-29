@@ -13,7 +13,7 @@ mod tests {
         bank::v1beta1::MsgSend,
     };
     use cosmwasm_std::coins;
-    use cw_orch_core::environment::{BankQuerier, TxHandler};
+    use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler, TxHandler};
     use cw_orch_daemon::{queriers::Authz, Daemon};
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
@@ -138,8 +138,9 @@ mod tests {
 
         // the balance of the grantee whould be 6_000_000 or close
 
-        let grantee_balance =
-            daemon.balance(grantee.clone(), Some(LOCAL_JUNO.gas_denom.to_string()))?;
+        let grantee_balance = daemon
+            .bank_querier()
+            .balance(grantee.clone(), Some(LOCAL_JUNO.gas_denom.to_string()))?;
 
         assert_eq!(grantee_balance.first().unwrap().amount.u128(), 6_000_000);
 

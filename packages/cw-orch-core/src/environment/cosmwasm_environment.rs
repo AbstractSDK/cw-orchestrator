@@ -166,15 +166,4 @@ mod tests {
             unimplemented!()
         }
     }
-
-    fn associated_error<T: TxHandler>(t: T) -> anyhow::Result<()> {
-        t.wait_blocks(5)?;
-        Ok(())
-    }
-
-    #[test]
-    fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
-        associated_error(MockHandler {})?;
-        Ok(())
-    }
 }

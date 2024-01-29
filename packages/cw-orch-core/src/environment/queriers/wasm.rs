@@ -6,7 +6,6 @@ use crate::{
     environment::TxHandler,
     CwEnvError,
 };
-use std::fmt::Debug;
 
 use super::{Querier, QueryHandler};
 
