@@ -25,14 +25,18 @@ pub trait QueryHandler: DefaultQueriers {
     fn next_block(&self) -> Result<(), Self::Error>;
 
     /// Return current block info see [`BlockInfo`].
-    fn block_info(&self) -> Result<BlockInfo, Self::Error>;
+    fn block_info(&self) -> Result<BlockInfo, <Self::N as Querier>::Error> {
+        self.node_querier().latest_block()
+    }
 
     /// Send a QueryMsg to a contract.
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, Self::Error>;
+    ) -> Result<T, <Self::W as Querier>::Error> {
+        self.wasm_querier().smart_query(contract_address, query_msg)
+    }
 }
 
 pub trait QuerierGetter<Q: Querier> {

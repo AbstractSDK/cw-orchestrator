@@ -57,7 +57,7 @@ impl WasmQuerier for MockWasmQuerier {
         Ok(sha256::digest(contract.id().as_bytes()))
     }
 
-    fn contract_raw_state(
+    fn raw_query(
         &self,
         address: impl Into<String>,
         query_data: Vec<u8>,
@@ -74,7 +74,7 @@ impl WasmQuerier for MockWasmQuerier {
             ))?)
     }
 
-    fn contract_smart_state<Q, T>(
+    fn smart_query<Q, T>(
         &self,
         address: impl Into<String>,
         query_data: &Q,

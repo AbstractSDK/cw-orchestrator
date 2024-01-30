@@ -87,7 +87,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         Ok(contract_info)
     }
 
-    fn contract_raw_state(
+    fn raw_query(
         &self,
         address: impl Into<String>,
         query_data: Vec<u8>,
@@ -109,7 +109,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         Ok(result)
     }
 
-    fn contract_smart_state<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
+    fn smart_query<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
         &self,
         address: impl Into<String>,
         query_data: &Q,

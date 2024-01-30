@@ -23,16 +23,16 @@ pub trait WasmQuerier: Querier {
     ) -> Result<ContractInfoResponse, Self::Error>;
 
     /// Query contract state
-    fn contract_raw_state(
+    fn raw_query(
         &self,
         address: impl Into<String>,
-        query_data: Vec<u8>,
+        query_keys: Vec<u8>,
     ) -> Result<Vec<u8>, Self::Error>;
 
-    fn contract_smart_state<Q: Serialize, T: DeserializeOwned>(
+    fn smart_query<Q: Serialize, T: DeserializeOwned>(
         &self,
         address: impl Into<String>,
-        query_data: &Q,
+        query_msg: &Q,
     ) -> Result<T, Self::Error>;
 
     /// Query code

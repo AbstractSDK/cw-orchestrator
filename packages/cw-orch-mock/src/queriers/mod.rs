@@ -36,21 +36,6 @@ impl<S: StateInterface> QueryHandler for Mock<S> {
         self.app.borrow_mut().update_block(next_block);
         Ok(())
     }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
-        Ok(self.app.borrow().block_info())
-    }
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwEnvError> {
-        self.app
-            .borrow()
-            .wrap()
-            .query_wasm_smart(contract_address, query_msg)
-            .map_err(From::from)
-    }
 }
 
 impl<S: StateInterface> DefaultQueriers for Mock<S> {

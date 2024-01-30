@@ -217,30 +217,7 @@ impl QueryHandler for Daemon {
         Ok(())
     }
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().latest_block())?;
-        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
-        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
-        Ok(cosmwasm_std::BlockInfo {
-            height: block.header.height.value(),
-            time,
-            chain_id: block.header.chain_id.to_string(),
-        })
-    }
-
-    fn query<
-        Q: serde::Serialize + std::fmt::Debug,
-        T: serde::Serialize + serde::de::DeserializeOwned,
-    >(
-        &self,
-        query_msg: &Q,
-        contract_address: &cosmwasm_std::Addr,
-    ) -> Result<T, Self::Error> {
-        self.rt_handle
-            .block_on(self.daemon.query(query_msg, contract_address))
-    }
+    
 }
 
 impl DefaultQueriers for Daemon {
