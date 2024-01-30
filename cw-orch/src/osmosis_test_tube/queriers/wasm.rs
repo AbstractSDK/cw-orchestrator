@@ -119,7 +119,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
             .app
             .borrow()
             .query::<_, QuerySmartContractStateResponse>(
-                "/cosmwasm.wasm.v1.Query/RawContractState",
+                "/cosmwasm.wasm.v1.Query/SmartContractState",
                 &QuerySmartContractStateRequest {
                     address: address.clone(),
                     query_data: to_json_vec(query_data)?,
