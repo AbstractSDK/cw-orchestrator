@@ -6,7 +6,6 @@ use crate::{
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
-use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
@@ -216,8 +215,6 @@ impl QueryHandler for Daemon {
         }
         Ok(())
     }
-
-    
 }
 
 impl DefaultQueriers for Daemon {
