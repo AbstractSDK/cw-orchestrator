@@ -7,8 +7,8 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + QueryHandler + EnvironmentQuerier + Clone {}
-impl<T: TxHandler + QueryHandler + EnvironmentQuerier + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + QueryHandler + Clone {}
+impl<T: TxHandler + QueryHandler + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -146,7 +146,10 @@ mod tests {
             _admin: Option<&Addr>,
             _coins: &[cosmwasm_std::Coin],
         ) -> Result<Self::Response, Self::Error> {
-            unimplemented!()
+            Ok(AppResponse {
+                events: vec![],
+                data: None,
+            })
         }
 
         fn execute<E: Serialize + Debug>(
@@ -175,19 +178,7 @@ mod tests {
 
     #[test]
     fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
-        associated_error(MockHandler {}).unwrap();
+        associated_error(MockHandler {})?;
         Ok(())
     }
-}
-
-#[derive(Clone)]
-pub struct EnvironmentInfo {
-    pub chain_id: String,
-    pub chain_name: String,
-    pub deployment_id: String,
-}
-
-pub trait EnvironmentQuerier {
-    /// Get some details about the environment.
-    fn env_info(&self) -> EnvironmentInfo;
 }

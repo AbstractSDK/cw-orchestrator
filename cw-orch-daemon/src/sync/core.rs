@@ -2,17 +2,14 @@ use std::{fmt::Debug, sync::Arc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{DaemonQuerier, Node},
+    queriers::{DaemonBankQuerier, DaemonNodeQuerier, DaemonQuerier, DaemonWasmQuerier, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
-use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{
-        queriers::QueryHandler, ChainState, EnvironmentInfo, EnvironmentQuerier, TxHandler,
-    },
+    environment::{ChainState, DefaultQueriers, QueryHandler, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::Serialize;
@@ -218,40 +215,10 @@ impl QueryHandler for Daemon {
         }
         Ok(())
     }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().latest_block())?;
-        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
-        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
-        Ok(cosmwasm_std::BlockInfo {
-            height: block.header.height.value(),
-            time,
-            chain_id: block.header.chain_id.to_string(),
-        })
-    }
-
-    fn query<
-        Q: serde::Serialize + std::fmt::Debug,
-        T: serde::Serialize + serde::de::DeserializeOwned,
-    >(
-        &self,
-        query_msg: &Q,
-        contract_address: &cosmwasm_std::Addr,
-    ) -> Result<T, Self::Error> {
-        self.rt_handle
-            .block_on(self.daemon.query(query_msg, contract_address))
-    }
 }
 
-impl EnvironmentQuerier for Daemon {
-    fn env_info(&self) -> EnvironmentInfo {
-        let state = &self.daemon.sender.daemon_state;
-        EnvironmentInfo {
-            chain_id: state.chain_data.chain_id.to_string(),
-            chain_name: state.chain_data.chain_name.clone(),
-            deployment_id: state.deployment_id.clone(),
-        }
-    }
+impl DefaultQueriers for Daemon {
+    type B = DaemonBankQuerier;
+    type W = DaemonWasmQuerier;
+    type N = DaemonNodeQuerier;
 }

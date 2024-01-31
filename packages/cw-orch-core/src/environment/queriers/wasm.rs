@@ -6,16 +6,14 @@ use crate::{
     environment::TxHandler,
     CwEnvError,
 };
-use std::fmt::Debug;
 
-use super::QueryHandler;
+use super::{Querier, QueryHandler};
 
 pub trait WasmQuerierGetter<E> {
     type Querier: WasmQuerier<Error = E>;
     fn wasm_querier(&self) -> Self::Querier;
 }
-pub trait WasmQuerier {
-    type Error: Into<CwEnvError> + Debug;
+pub trait WasmQuerier: Querier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error>;
 
     /// Query contract info
@@ -25,16 +23,16 @@ pub trait WasmQuerier {
     ) -> Result<ContractInfoResponse, Self::Error>;
 
     /// Query contract state
-    fn contract_raw_state(
+    fn raw_query(
         &self,
         address: impl Into<String>,
-        query_data: Vec<u8>,
+        query_keys: Vec<u8>,
     ) -> Result<Vec<u8>, Self::Error>;
 
-    fn contract_smart_state<Q: Serialize, T: DeserializeOwned>(
+    fn smart_query<Q: Serialize, T: DeserializeOwned>(
         &self,
         address: impl Into<String>,
-        query_data: &Q,
+        query_msg: &Q,
     ) -> Result<T, Self::Error>;
 
     /// Query code

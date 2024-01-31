@@ -12,15 +12,16 @@ use cw_utils::NativeBalance;
 use serde::Serialize;
 
 use super::state::MockState;
-use cw_orch_core::environment::queriers::bank::BankQuerier;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::TxHandler,
     environment::{
-        queriers::bank::BankQuerierGetter, BankSetter, ChainState, IndexResponse, StateInterface,
+        BankQuerier, BankSetter, ChainState, DefaultQueriers, IndexResponse, StateInterface,
     },
     CwEnvError,
 };
+
+use crate::queriers::bank::MockBankQuerier;
 
 pub type MockApp = App<
     BankKeeper,
@@ -317,6 +318,8 @@ impl<S: StateInterface> TxHandler for Mock<S> {
 }
 
 impl<S: StateInterface> BankSetter for Mock<S> {
+    type T = MockBankQuerier;
+
     fn set_balance(
         &mut self,
         address: impl Into<String>,

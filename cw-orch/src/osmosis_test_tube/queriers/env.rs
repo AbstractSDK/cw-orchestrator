@@ -1,7 +1,10 @@
-use crate::osmosis_test_tube::OsmosisTestTube;
-use cw_orch_core::environment::{EnvironmentInfo, EnvironmentQuerier, QueryHandler};
+use cw_orch_core::environment::{
+    EnvironmentInfo, EnvironmentQuerier, QueryHandler, StateInterface,
+};
 
-impl EnvironmentQuerier for OsmosisTestTube {
+use crate::prelude::OsmosisTestTube;
+
+impl<S: StateInterface> EnvironmentQuerier for OsmosisTestTube<S> {
     fn env_info(&self) -> EnvironmentInfo {
         let block = self.block_info().unwrap();
         let chain_id = block.chain_id;

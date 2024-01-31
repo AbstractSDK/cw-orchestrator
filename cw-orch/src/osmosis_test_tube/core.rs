@@ -2,8 +2,7 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::Addr;
 
-use cw_orch_core::environment::queriers::bank::{BankQuerier, BankQuerierGetter};
-use cw_orch_core::environment::BankSetter;
+use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, Coin, Uint128};
@@ -32,6 +31,8 @@ use crate::{
 use crate::mock::MockState;
 
 pub use osmosis_test_tube;
+
+use super::queriers::bank::OsmosisTestTubeBankQuerier;
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
 ///
@@ -269,6 +270,8 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
 }
 
 impl BankSetter for OsmosisTestTube {
+    type T = OsmosisTestTubeBankQuerier;
+
     /// It's impossible to set the balance of an address directly in OsmosisTestTub
     /// So for this implementation, we use a weird algorithm
     fn set_balance(
@@ -304,10 +307,7 @@ impl Stargate for OsmosisTestTube {
 pub mod tests {
     use cosmwasm_std::{coins, ContractInfoResponse};
 
-    use cw_orch_core::environment::queriers::{
-        bank::{BankQuerier, BankQuerierGetter},
-        wasm::{WasmQuerier, WasmQuerierGetter},
-    };
+    use cw_orch_core::environment::*;
     use osmosis_test_tube::Account;
 
     use super::OsmosisTestTube;

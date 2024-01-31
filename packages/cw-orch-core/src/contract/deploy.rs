@@ -13,8 +13,8 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 use crate::env::CwOrchEnvVars;
-use crate::environment::queriers::QueryHandler;
 use crate::environment::CwEnv;
+use crate::environment::QueryHandler;
 use crate::CwEnvError;
 
 use super::interface_traits::ContractInstance;
@@ -92,13 +92,12 @@ pub trait Deploy<Chain: CwEnv>: Sized {
         let hash_networks: HashMap<String, (Chain, Self::DeployData)> = networks
             .iter()
             .map(|(c, d)| {
-                Ok::<_, <Chain as QueryHandler>::Error>((
-                    QueryHandler::block_info(c)?.chain_id,
+                Ok::<_, CwEnvError>((
+                    QueryHandler::block_info(c).map_err(Into::into)?.chain_id,
                     (c.clone(), d.clone()),
                 ))
             })
-            .collect::<Result<HashMap<_, _>, _>>()
-            .map_err(Into::into)?;
+            .collect::<Result<HashMap<_, _>, _>>()?;
 
         // First we check the deployment status. Which chains have been un-succesfully deployed since last time
         let chains_to_deploy = if let Ok(deployment_left) = read_deployment() {
