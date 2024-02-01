@@ -1,9 +1,8 @@
-use std::{fmt::Debug, rc::Rc, time::Duration};
+use std::{fmt::Debug, sync::Arc, time::Duration};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
     queriers::{cosmrs_to_cosmwasm_coins, Bank, DaemonQuerier, Node},
-    sender::SenderOptions,
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 
@@ -11,7 +10,7 @@ use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{BankQuerier, ChainState, TxHandler},
+    environment::{BankQuerier, ChainState, EnvironmentInfo, EnvironmentQuerier, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::{de::DeserializeOwned, Serialize};
@@ -73,36 +72,21 @@ impl Daemon {
         self.daemon.sender.clone()
     }
 
-    /// Adds authz capability to the returned Daemon
-    pub fn with_authz_granter(&self, granter: impl ToString) -> Self {
-        let mut new_daemon = self.clone();
-        let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.authz_granter(granter.to_string());
-        new_daemon.daemon.sender = Rc::new(new_sender);
-        new_daemon
-    }
-
-    /// Adds authz capability to the returned Daemon
-    pub fn with_fee_granter(&self, granter: impl ToString) -> Self {
-        let mut new_daemon = self.clone();
-        let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.fee_granter(granter.to_string());
-        new_daemon.daemon.sender = Rc::new(new_sender);
-        new_daemon
-    }
-
-    /// Modifies all the sender options in one go
-    pub fn with_sender_options(&self, options: SenderOptions) -> Self {
-        let mut new_daemon = self.clone();
-        let mut new_sender = (*self.daemon.sender).clone();
-        new_sender.options = options;
-        new_daemon.daemon.sender = Rc::new(new_sender);
-        new_daemon
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.daemon.sender).clone())
+            .handle(&self.rt_handle)
+            .deployment_id(&self.state().deployment_id);
+        builder
     }
 }
 
 impl ChainState for Daemon {
-    type Out = Rc<DaemonState>;
+    type Out = Arc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
@@ -277,5 +261,16 @@ impl Stargate for Daemon {
                 memo,
             ),
         )
+    }
+}
+
+impl EnvironmentQuerier for Daemon {
+    fn env_info(&self) -> EnvironmentInfo {
+        let state = &self.daemon.sender.daemon_state;
+        EnvironmentInfo {
+            chain_id: state.chain_data.chain_id.to_string(),
+            chain_name: state.chain_data.chain_name.clone(),
+            deployment_id: state.deployment_id.clone(),
+        }
     }
 }

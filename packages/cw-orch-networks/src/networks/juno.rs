@@ -42,18 +42,3 @@ pub const LOCAL_JUNO: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 // ANCHOR_END: juno
-
-#[deprecated(
-    since = "0.6.1",
-    note = "Uni-5 does not exist anymore. Use Uni-6 instead."
-)]
-pub const UNI_5: ChainInfo = ChainInfo {
-    kind: ChainKind::Testnet,
-    chain_id: "uni-5",
-    gas_denom: "ujunox",
-    gas_price: 0.025,
-    grpc_urls: &["https://juno-testnet-grpc.polkachu.com:12690"],
-    network_info: JUNO_NETWORK,
-    lcd_url: None,
-    fcd_url: None,
-};

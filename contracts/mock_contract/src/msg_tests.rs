@@ -80,7 +80,7 @@ mod test {
     use super::*;
     #[test]
     pub fn test() -> Result<(), CwOrchError> {
-        let chain = Mock::new(&Addr::unchecked("sender"));
+        let chain = Mock::new("sender");
 
         let contract = TestContract::new("test", chain.clone());
         let contract_ordered = OrderedTestContract::new("test-ordered", chain.clone());

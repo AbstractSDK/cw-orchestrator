@@ -1,6 +1,10 @@
-use crate::{log::print_if_log_disabled, sender::SenderOptions, DaemonAsync, DaemonBuilder};
-use std::rc::Rc;
+use crate::{
+    log::print_if_log_disabled, sender::SenderBuilder, sender::SenderOptions, DaemonAsync,
+    DaemonBuilder,
+};
+use std::sync::Arc;
 
+use bitcoin::secp256k1::All;
 use ibc_chain_registry::chain::ChainData;
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
@@ -26,8 +30,11 @@ pub struct DaemonAsyncBuilder {
     pub(crate) chain: Option<ChainData>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
-    /// Wallet mnemonic
-    pub(crate) mnemonic: Option<String>,
+
+    /* Sender related options */
+    /// Wallet sender
+    /// Will be used in priority when set
+    pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
 }
@@ -51,7 +58,14 @@ impl DaemonAsyncBuilder {
     ///
     /// Variables: LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-        self.mnemonic = Some(mnemonic.to_string());
+        self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
+        self
+    }
+
+    /// Specifies a sender to use with this chain
+    /// This will be used in priority when set on the builder
+    pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
+        self.sender = Some(SenderBuilder::Sender(wallet));
         self
     }
 
@@ -77,17 +91,25 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let state = Rc::new(DaemonState::new(chain, deployment_id, false).await?);
+        let state = Arc::new(DaemonState::new(chain, deployment_id, false).await?);
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender_options = self.sender_options.clone();
-        let sender = if let Some(mnemonic) = &self.mnemonic {
-            Sender::from_mnemonic_with_options(&state, mnemonic, sender_options)?
-        } else {
-            Sender::new_with_options(&state, sender_options)?
+
+        let sender = match self.sender.clone() {
+            Some(sender) => match sender {
+                SenderBuilder::Mnemonic(mnemonic) => {
+                    Sender::from_mnemonic_with_options(&state, &mnemonic, sender_options)?
+                }
+                SenderBuilder::Sender(mut sender) => {
+                    sender.set_options(self.sender_options.clone());
+                    sender
+                }
+            },
+            None => Sender::new_with_options(&state, sender_options)?,
         };
         let daemon = DaemonAsync {
             state,
-            sender: Rc::new(sender),
+            sender: Arc::new(sender),
         };
         print_if_log_disabled()?;
         Ok(daemon)
@@ -99,8 +121,8 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
         DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
-            mnemonic: value.mnemonic,
             sender_options: value.sender_options,
+            sender: value.sender,
         }
     }
 }

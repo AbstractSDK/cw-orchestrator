@@ -1,6 +1,10 @@
+use bitcoin::secp256k1::All;
 use ibc_chain_registry::chain::ChainData;
 
-use crate::{sender::SenderOptions, DaemonAsyncBuilder};
+use crate::{
+    sender::{Sender, SenderBuilder, SenderOptions},
+    DaemonAsyncBuilder,
+};
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -22,8 +26,11 @@ pub struct DaemonBuilder {
     pub(crate) handle: Option<tokio::runtime::Handle>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
-    /// Wallet mnemonic
-    pub(crate) mnemonic: Option<String>,
+
+    /* Sender Options */
+    /// Wallet sender
+    /// Will be used in priority when set
+    pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
 }
@@ -62,7 +69,14 @@ impl DaemonBuilder {
 
     /// Set the mnemonic to use with this chain.
     pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-        self.mnemonic = Some(mnemonic.to_string());
+        self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
+        self
+    }
+
+    /// Specifies a sender to use with this chain
+    /// This will be used in priority when set on the builder
+    pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
+        self.sender = Some(SenderBuilder::Sender(wallet));
         self
     }
 
@@ -72,7 +86,7 @@ impl DaemonBuilder {
         self
     }
 
-    /// Specifies wether authz should be used with this daemon
+    /// Specifies wether feegrant should be used with this daemon
     pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
         self.sender_options.set_fee_granter(granter.to_string());
         self

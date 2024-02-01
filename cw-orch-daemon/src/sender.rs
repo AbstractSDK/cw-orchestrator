@@ -34,7 +34,7 @@ use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{log::local_target, CwOrchEnvVars};
 
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, rc::Rc, str::FromStr};
+use std::{convert::TryFrom, str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -43,8 +43,15 @@ const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
+/// This enum allows for choosing which sender type will be constructed in a DaemonBuilder
+#[derive(Clone)]
+pub enum SenderBuilder<C: Signing + Context> {
+    Sender(Sender<C>),
+    Mnemonic(String),
+}
+
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
-pub type Wallet = Rc<Sender<All>>;
+pub type Wallet = Arc<Sender<All>>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
@@ -52,10 +59,11 @@ pub type Wallet = Rc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
-    pub(crate) daemon_state: Rc<DaemonState>,
+    pub(crate) daemon_state: Arc<DaemonState>,
     pub(crate) options: SenderOptions,
 }
 
+/// Options for how txs should be constructed for this sender.
 #[derive(Default, Clone)]
 #[non_exhaustive]
 pub struct SenderOptions {
@@ -81,12 +89,12 @@ impl SenderOptions {
 }
 
 impl Sender<All> {
-    pub fn new(daemon_state: &Rc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+    pub fn new(daemon_state: &Arc<DaemonState>) -> Result<Sender<All>, DaemonError> {
         Self::new_with_options(daemon_state, SenderOptions::default())
     }
 
     pub fn new_with_options(
-        daemon_state: &Rc<DaemonState>,
+        daemon_state: &Arc<DaemonState>,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
         let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
@@ -104,7 +112,7 @@ impl Sender<All> {
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic(
-        daemon_state: &Rc<DaemonState>,
+        daemon_state: &Arc<DaemonState>,
         mnemonic: &str,
     ) -> Result<Sender<All>, DaemonError> {
         Self::from_mnemonic_with_options(daemon_state, mnemonic, SenderOptions::default())
@@ -112,14 +120,13 @@ impl Sender<All> {
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic_with_options(
-        daemon_state: &Rc<DaemonState>,
+        daemon_state: &Arc<DaemonState>,
         mnemonic: &str,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey =
             PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
-
         let sender = Sender {
             daemon_state: daemon_state.clone(),
             private_key: p_key,
@@ -135,12 +142,16 @@ impl Sender<All> {
         Ok(sender)
     }
 
-    pub fn authz_granter(&mut self, granter: impl Into<String>) {
+    pub fn set_authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
     }
 
-    pub fn fee_granter(&mut self, granter: impl Into<String>) {
+    pub fn set_fee_granter(&mut self, granter: impl Into<String>) {
         self.options.fee_granter = Some(granter.into());
+    }
+
+    pub fn set_options(&mut self, options: SenderOptions) {
+        self.options = options;
     }
 
     fn cosmos_private_key(&self) -> SigningKey {

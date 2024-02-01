@@ -26,8 +26,8 @@ use serde_json::from_str;
 use std::{
     fmt::Debug,
     io::Write,
-    rc::Rc,
     str::{from_utf8, FromStr},
+    sync::Arc,
     time::Duration,
 };
 
@@ -57,12 +57,19 @@ use tonic::transport::Channel;
 
     Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
+
+    ## Warning
+
+    This daemon is thread safe and can be used between threads.
+    However, please make sure that you are not trying to broadcast multiple transactions at once when using this Daemon on different threads.
+    If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
+    Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
 pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Rc<DaemonState>,
+    pub state: Arc<DaemonState>,
 }
 
 impl DaemonAsync {
@@ -84,7 +91,7 @@ impl DaemonAsync {
 }
 
 impl ChainState for DaemonAsync {
-    type Out = Rc<DaemonState>;
+    type Out = Arc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.state.clone()
@@ -96,6 +103,17 @@ impl DaemonAsync {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
+    }
+
+    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
+    /// Does not consume the original [`DaemonAsync`].
+    pub fn rebuild(&self) -> DaemonAsyncBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.sender).clone())
+            .deployment_id(&self.state().deployment_id);
+        builder
     }
 
     /// Execute a message on a contract.

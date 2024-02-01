@@ -1,8 +1,5 @@
 use cosmwasm_std::{testing::mock_env, Addr};
-use cw_orch_core::{
-    environment::{DeployDetails, StateInterface},
-    CwEnvError,
-};
+use cw_orch_core::{environment::StateInterface, CwEnvError};
 
 use std::collections::HashMap;
 
@@ -83,16 +80,6 @@ impl StateInterface for MockState {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         Ok(self.code_ids.clone())
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        let chain_id = self.chain_id.clone();
-        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-        DeployDetails {
-            chain_id,
-            chain_name,
-            deployment_id: "default".to_string(),
-        }
     }
 }
 

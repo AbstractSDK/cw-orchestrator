@@ -4,7 +4,9 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
 
-use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
+use cw_orch_core::environment::{
+    BankQuerier, BankSetter, EnvironmentInfo, EnvironmentQuerier, WasmCodeQuerier,
+};
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
@@ -377,7 +379,7 @@ impl BankSetter for OsmosisTestTube {
     /// So for this implementation, we use a weird algorithm
     fn set_balance(
         &mut self,
-        _address: &Addr,
+        _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         // We check the current balance
@@ -452,6 +454,20 @@ impl WasmCodeQuerier for OsmosisTestTube {
         };
 
         Ok(contract_info)
+    }
+}
+
+impl EnvironmentQuerier for OsmosisTestTube {
+    fn env_info(&self) -> EnvironmentInfo {
+        let block = self.block_info().unwrap();
+        let chain_id = block.chain_id;
+        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
+
+        EnvironmentInfo {
+            chain_id,
+            chain_name,
+            deployment_id: "default".to_string(),
+        }
     }
 }
 
