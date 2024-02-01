@@ -4,7 +4,6 @@ mod common;
 pub mod test {
 
     use cosmwasm_std::Binary;
-    use cosmwasm_std::HexBinary;
     use cw_orch_core::contract::interface_traits::ContractInstance;
     use cw_orch_core::contract::interface_traits::CwOrchInstantiate;
     use cw_orch_core::contract::interface_traits::CwOrchUpload;
@@ -30,7 +29,7 @@ pub mod test {
 
         mock_contract.instantiate2(&InstantiateMsg {}, None, None, salt.clone())?;
 
-        let addr = mock_contract.address()?;
+        mock_contract.address()?;
 
         Ok(())
     }
