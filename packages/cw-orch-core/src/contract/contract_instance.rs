@@ -8,7 +8,7 @@ use crate::{
 };
 
 use crate::environment::QueryHandler;
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -149,6 +149,58 @@ impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
                 Some(&self.id),
                 admin,
                 coins.unwrap_or(&[]),
+            )
+            .map_err(Into::into)?;
+        let contract_address = resp.instantiated_contract_address()?;
+
+        self.set_address(&contract_address);
+
+        log::info!(
+            target: &&contract_target(),
+            "[{}][Instantiated] {}",
+            self.id,
+            contract_address
+        );
+        log::debug!(
+            target: &&transaction_target(),
+            "[{}][Instantiated] response: {:?}",
+            self.id,
+            resp
+        );
+
+        Ok(resp)
+    }
+
+    /// Initializes the contract
+    pub fn instantiate2<I: Serialize + Debug>(
+        &self,
+        msg: &I,
+        admin: Option<&Addr>,
+        coins: Option<&[Coin]>,
+        salt: Binary,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Instantiate]",
+            self.id,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Instantiate] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
+        let resp = self
+            .chain
+            .instantiate2(
+                self.code_id()?,
+                msg,
+                Some(&self.id),
+                admin,
+                coins.unwrap_or(&[]),
+                salt,
             )
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;

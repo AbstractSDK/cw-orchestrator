@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use cosmwasm_std::Coin;
+use cosmwasm_std::{Coin, Instantiate2AddressError};
 use cw_orch_core::CwEnvError;
 use thiserror::Error;
 
@@ -118,6 +118,8 @@ pub enum DaemonError {
     NotEnoughBalance { expected: Coin, current: Coin },
     #[error("Can't set the daemon state, it's read-only")]
     StateReadOnly,
+    #[error(transparent)]
+    Instantiate2Error(#[from] Instantiate2AddressError),
 }
 
 impl DaemonError {

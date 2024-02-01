@@ -267,6 +267,18 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     ) -> Result<Self::Response, CwOrchError> {
         panic!("Migrate not implemented on osmosis test_tube")
     }
+
+    fn instantiate2<I: Serialize + Debug>(
+        &self,
+        _code_id: u64,
+        _init_msg: &I,
+        _label: Option<&str>,
+        _admin: Option<&Addr>,
+        _coins: &[cosmwasm_std::Coin],
+        _salt: Binary,
+    ) -> Result<Self::Response, Self::Error> {
+        unimplemented!("Osmosis Test Tube doesn't support Instantiate 2 directly");
+    }
 }
 
 impl BankSetter for OsmosisTestTube {

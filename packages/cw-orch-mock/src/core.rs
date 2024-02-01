@@ -2,7 +2,7 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{
     testing::{MockApi, MockStorage},
-    Addr, Coin, Empty, Event, Uint128,
+    to_json_binary, Addr, Binary, Coin, CosmosMsg, Empty, Event, Uint128, WasmMsg,
 };
 use cw_multi_test::{
     ibc::IbcSimpleModule, App, AppBuilder, AppResponse, BankKeeper, Contract, DistributionKeeper,
@@ -281,20 +281,51 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwEnvError> {
-        let addr = self.app.borrow_mut().instantiate_contract(
+        let msg = WasmMsg::Instantiate {
+            admin: admin.map(|a| a.to_string()),
             code_id,
-            self.sender.clone(),
-            init_msg,
-            coins,
-            label.unwrap_or("contract_init"),
-            admin.map(|a| a.to_string()),
-        )?;
-        // add contract address to events manually
-        let mut event = Event::new("instantiate");
-        event = event.add_attribute("_contract_address", addr);
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+        };
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
         let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
+            events: app.events,
+            data: app.data,
+        };
+        Ok(resp)
+    }
+
+    fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
+    ) -> Result<Self::Response, CwEnvError> {
+        let msg = WasmMsg::Instantiate2 {
+            admin: admin.map(|a| a.to_string()),
+            code_id,
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+            salt,
+        };
+
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
+        let resp = AppResponse {
+            events: app.events,
+            data: app.data,
         };
         Ok(resp)
     }
