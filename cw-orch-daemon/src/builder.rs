@@ -1,4 +1,8 @@
-use crate::{log::print_if_log_disabled, sender::{SenderBuilder, SenderOptions}, DaemonAsync, DaemonBuilder};
+use crate::{
+    log::print_if_log_disabled,
+    sender::{SenderBuilder, SenderOptions},
+    DaemonAsync, DaemonBuilder,
+};
 use std::sync::Arc;
 
 use bitcoin::secp256k1::All;
