@@ -1,11 +1,10 @@
-use std::{fmt::Debug, sync::Arc, time::Duration};
+use std::{fmt::Debug, sync::Arc};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{DaemonBankQuerier, DaemonNodeQuerier, DaemonQuerier, DaemonWasmQuerier, Node},
+    queriers::{DaemonBankQuerier, DaemonNodeQuerier, DaemonWasmQuerier},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
-
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
@@ -53,12 +52,6 @@ impl Daemon {
     /// Get the daemon builder
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
-    }
-
-    /// Perform a query with a given querier
-    /// See [Querier](crate::queriers) for examples.
-    pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
-        self.daemon.query_client()
     }
 
     /// Get the channel configured for this Daemon
@@ -172,47 +165,20 @@ impl QueryHandler for Daemon {
     type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().block_height())?;
-        let end_height = last_height + amount;
+        self.rt_handle.block_on(self.daemon.wait_blocks(amount))?;
 
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query_client::<Node>().block_height())?;
-        }
         Ok(())
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        self.rt_handle
-            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
+        self.rt_handle.block_on(self.daemon.wait_seconds(secs))?;
 
         Ok(())
     }
 
     fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().block_height())?;
-        let end_height = last_height + 1;
+        self.rt_handle.block_on(self.daemon.next_block())?;
 
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query_client::<Node>().block_height())?;
-        }
         Ok(())
     }
 }

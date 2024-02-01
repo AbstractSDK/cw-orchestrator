@@ -5,23 +5,42 @@ use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
-use super::DaemonQuerier;
-
 /// Queries for Cosmos Bank Module
-pub struct Bank {
+/// All the async function are prefixed with `_`
+pub struct DaemonBankQuerier {
     channel: Channel,
+    rt_handle: Option<Handle>,
 }
 
-impl DaemonQuerier for Bank {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl DaemonBankQuerier {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+    pub fn new_async(channel: Channel) -> Self {
+        Self {
+            channel,
+            rt_handle: None,
+        }
     }
 }
 
-impl Bank {
+impl Querier for DaemonBankQuerier {
+    type Error = DaemonError;
+}
+
+impl QuerierGetter<DaemonBankQuerier> for Daemon {
+    fn querier(&self) -> DaemonBankQuerier {
+        DaemonBankQuerier::new(self)
+    }
+}
+
+impl DaemonBankQuerier {
     /// Query the bank balance of a given address
     /// If denom is None, returns all balances
-    pub async fn balance(
+    pub async fn _balance(
         &self,
         address: impl Into<String>,
         denom: Option<String>,
@@ -52,7 +71,7 @@ impl Bank {
     }
 
     /// Query spendable balance for address
-    pub async fn spendable_balances(
+    pub async fn _spendable_balances(
         &self,
         address: impl Into<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
@@ -69,7 +88,7 @@ impl Bank {
     }
 
     /// Query total supply in the bank
-    pub async fn total_supply(&self) -> Result<Vec<Coin>, DaemonError> {
+    pub async fn _total_supply(&self) -> Result<Vec<Coin>, DaemonError> {
         let total_supply: cosmos_modules::bank::QueryTotalSupplyResponse = cosmos_query!(
             self,
             bank,
@@ -80,7 +99,7 @@ impl Bank {
     }
 
     /// Query total supply in the bank for a denom
-    pub async fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, DaemonError> {
+    pub async fn _supply_of(&self, denom: impl Into<String>) -> Result<Coin, DaemonError> {
         let supply_of: cosmos_modules::bank::QuerySupplyOfResponse = cosmos_query!(
             self,
             bank,
@@ -93,14 +112,14 @@ impl Bank {
     }
 
     /// Query params
-    pub async fn params(&self) -> Result<cosmos_modules::bank::Params, DaemonError> {
+    pub async fn _params(&self) -> Result<cosmos_modules::bank::Params, DaemonError> {
         let params: cosmos_modules::bank::QueryParamsResponse =
             cosmos_query!(self, bank, params, QueryParamsRequest {});
         Ok(params.params.unwrap())
     }
 
     /// Query denom metadata
-    pub async fn denom_metadata(
+    pub async fn _denom_metadata(
         &self,
         denom: impl Into<String>,
     ) -> Result<cosmos_modules::bank::Metadata, DaemonError> {
@@ -118,7 +137,7 @@ impl Bank {
     /// Query denoms metadata with pagination
     ///
     /// see [PageRequest] for pagination
-    pub async fn denoms_metadata(
+    pub async fn _denoms_metadata(
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::bank::Metadata>, DaemonError> {
@@ -140,33 +159,6 @@ pub fn cosmrs_to_cosmwasm_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError>
         denom: c.denom,
     })
 }
-
-// Now we define traits
-
-pub struct DaemonBankQuerier {
-    channel: Channel,
-    rt_handle: Handle,
-}
-
-impl DaemonBankQuerier {
-    fn new(daemon: &Daemon) -> Self {
-        Self {
-            channel: daemon.channel(),
-            rt_handle: daemon.rt_handle.clone(),
-        }
-    }
-}
-
-impl Querier for DaemonBankQuerier {
-    type Error = DaemonError;
-}
-
-impl QuerierGetter<DaemonBankQuerier> for Daemon {
-    fn querier(&self) -> DaemonBankQuerier {
-        DaemonBankQuerier::new(self)
-    }
-}
-
 impl BankQuerier for DaemonBankQuerier {
     fn balance(
         &self,
@@ -175,7 +167,9 @@ impl BankQuerier for DaemonBankQuerier {
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         Ok(self
             .rt_handle
-            .block_on(Bank::new(self.channel.clone()).balance(address, denom))
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._balance(address, denom))
             .map(|c| {
                 c.into_iter()
                     .map(cosmrs_to_cosmwasm_coins)
@@ -186,7 +180,9 @@ impl BankQuerier for DaemonBankQuerier {
     fn total_supply(&self) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         Ok(self
             .rt_handle
-            .block_on(Bank::new(self.channel.clone()).total_supply())
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._total_supply())
             .map(|c| {
                 c.into_iter()
                     .map(cosmrs_to_cosmwasm_coins)
@@ -197,7 +193,9 @@ impl BankQuerier for DaemonBankQuerier {
     fn supply_of(&self, denom: impl Into<String>) -> Result<cosmwasm_std::Coin, Self::Error> {
         Ok(self
             .rt_handle
-            .block_on(Bank::new(self.channel.clone()).supply_of(denom))
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._supply_of(denom))
             .map(cosmrs_to_cosmwasm_coins)??)
     }
 }

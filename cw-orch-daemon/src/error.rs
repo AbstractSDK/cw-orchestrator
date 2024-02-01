@@ -118,6 +118,8 @@ pub enum DaemonError {
     NotEnoughBalance { expected: Coin, current: Coin },
     #[error("Can't set the daemon state, it's read-only")]
     StateReadOnly,
+    #[error("You need to pass a runtime to the querier object to do synchronous queries. Use daemon.querier instead")]
+    QuerierNeedRuntime,
 }
 
 impl DaemonError {

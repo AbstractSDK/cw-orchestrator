@@ -1,32 +1,31 @@
 //! Live mock is a mock that uses a live chain to query for data.
 //! It can be used to do chain-backed unit-testing. It can't be used for state-changing operations.
 
-use crate::queriers::Bank;
-use crate::queriers::CosmWasm;
-use crate::queriers::DaemonQuerier;
-use crate::queriers::Staking;
+use crate::queriers::DaemonBankQuerier;
+use crate::queriers::DaemonWasmQuerier;
+use crate::queriers::StakingQuerier;
 use cosmwasm_std::Addr;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
-use cosmwasm_std::Delegation;
-use cosmwasm_std::{AllDelegationsResponse, BondedDenomResponse};
-
 use cosmwasm_std::BankQuery;
 use cosmwasm_std::Binary;
+use cosmwasm_std::Delegation;
 use cosmwasm_std::Empty;
 use cosmwasm_std::StakingQuery;
+use cosmwasm_std::{AllDelegationsResponse, BondedDenomResponse};
+use cw_orch_core::environment::BankQuerier;
 use ibc_chain_registry::chain::ChainData;
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
-
-use std::marker::PhantomData;
-use std::str::FromStr;
 
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::{
     from_json, to_json_binary, Coin, ContractResult, OwnedDeps, Querier, QuerierResult,
     QueryRequest, SystemError, SystemResult, Uint128, WasmQuery,
 };
+use cw_orch_core::environment::WasmQuerier;
+use std::marker::PhantomData;
+use std::str::FromStr;
 
 use crate::channel::GrpcChannel;
 
@@ -83,7 +82,7 @@ impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(x) => {
-                let querier = CosmWasm::new(self.channel.clone());
+                let querier = DaemonWasmQuerier::new_async(self.channel.clone());
                 match x {
                     WasmQuery::Smart { contract_addr, msg } => {
                         // We forward the request to the cosmwasm querier
@@ -91,20 +90,17 @@ impl WasmMockQuerier {
                         let query_result: Result<Binary, _> = self
                             .runtime
                             .block_on(
-                                querier.contract_state(contract_addr.to_string(), msg.to_vec()),
+                                querier._contract_state(contract_addr.to_string(), msg.to_vec()),
                             )
                             .map(|query_result| query_result.into());
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     WasmQuery::Raw { contract_addr, key } => {
-                        // We forward the request to the cosmwasm querier
+                        // We forward the request to the cosmwasm querie
+                        let query_result = querier
+                            .raw_query(contract_addr.to_string(), key.to_vec())
+                            .map(|query_result| query_result.into());
 
-                        let query_result = self
-                            .runtime
-                            .block_on(
-                                querier.contract_raw_state(contract_addr.to_string(), key.to_vec()),
-                            )
-                            .map(|query_result| query_result.data.into());
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     _ => SystemResult::Err(SystemError::InvalidRequest {
@@ -114,36 +110,22 @@ impl WasmMockQuerier {
                 }
             }
             QueryRequest::Bank(x) => {
-                let querier = Bank::new(self.channel.clone());
+                let querier = DaemonBankQuerier::new_async(self.channel.clone());
                 match x {
                     BankQuery::Balance { address, denom } => {
-                        let query_result = self
-                            .runtime
-                            .block_on(querier.balance(address, Some(denom.clone())))
-                            .map(|result| {
+                        let query_result =
+                            querier.balance(address, Some(denom.clone())).map(|result| {
                                 to_json_binary(&BalanceResponse {
-                                    amount: Coin {
-                                        amount: Uint128::from_str(&result[0].amount).unwrap(),
-                                        denom: result[0].denom.clone(),
-                                    },
+                                    amount: result[0].clone(),
                                 })
                                 .unwrap()
                             });
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     BankQuery::AllBalances { address } => {
-                        let query_result = self
-                            .runtime
-                            .block_on(querier.balance(address, None))
-                            .map(|result| AllBalanceResponse {
-                                amount: result
-                                    .into_iter()
-                                    .map(|c| Coin {
-                                        amount: Uint128::from_str(&c.amount).unwrap(),
-                                        denom: c.denom,
-                                    })
-                                    .collect(),
-                            })
+                        let query_result = querier
+                            .balance(address, None)
+                            .map(|result| AllBalanceResponse { amount: result })
                             .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
@@ -155,12 +137,12 @@ impl WasmMockQuerier {
                 }
             }
             QueryRequest::Staking(x) => {
-                let querier = Staking::new(self.channel.clone());
+                let querier = StakingQuerier::new_async(self.channel.clone());
                 match x {
                     StakingQuery::BondedDenom {} => {
                         let query_result = self
                             .runtime
-                            .block_on(querier.params())
+                            .block_on(querier._params())
                             .map(|result| BondedDenomResponse {
                                 denom: result.params.unwrap().bond_denom,
                             })
@@ -173,7 +155,7 @@ impl WasmMockQuerier {
                     StakingQuery::AllDelegations { delegator } => {
                         let query_result = self
                             .runtime
-                            .block_on(querier.delegator_delegations(delegator, None))
+                            .block_on(querier._delegator_delegations(delegator, None))
                             .map(|result| AllDelegationsResponse {
                                 delegations: result
                                     .delegation_responses

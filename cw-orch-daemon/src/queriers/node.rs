@@ -18,23 +18,42 @@ use cw_orch_core::{
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
-use super::DaemonQuerier;
-
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
-pub struct Node {
+/// All the async function are prefixed with `_`
+pub struct DaemonNodeQuerier {
     channel: Channel,
+    rt_handle: Option<Handle>,
 }
 
-impl DaemonQuerier for Node {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl DaemonNodeQuerier {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+    pub fn new_async(channel: Channel) -> Self {
+        Self {
+            channel,
+            rt_handle: None,
+        }
     }
 }
 
-impl Node {
+impl QuerierGetter<DaemonNodeQuerier> for Daemon {
+    fn querier(&self) -> DaemonNodeQuerier {
+        DaemonNodeQuerier::new(self)
+    }
+}
+
+impl Querier for DaemonNodeQuerier {
+    type Error = DaemonError;
+}
+
+impl DaemonNodeQuerier {
     /// Returns node info
-    pub async fn info(
+    pub async fn _info(
         &self,
     ) -> Result<cosmos_modules::tendermint::GetNodeInfoResponse, DaemonError> {
         let mut client =
@@ -49,7 +68,7 @@ impl Node {
     }
 
     /// Queries node syncing
-    pub async fn syncing(&self) -> Result<bool, DaemonError> {
+    pub async fn _syncing(&self) -> Result<bool, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
@@ -62,7 +81,7 @@ impl Node {
     }
 
     /// Returns latests block information
-    pub async fn latest_block(&self) -> Result<Block, DaemonError> {
+    pub async fn _latest_block(&self) -> Result<Block, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
@@ -75,7 +94,7 @@ impl Node {
     }
 
     /// Returns block information fetched by height
-    pub async fn block_by_height(&self, height: u64) -> Result<Block, DaemonError> {
+    pub async fn _block_by_height(&self, height: u64) -> Result<Block, DaemonError> {
         let mut client =
             cosmos_modules::tendermint::service_client::ServiceClient::new(self.channel.clone());
 
@@ -91,16 +110,16 @@ impl Node {
 
     /// Return the average block time for the last 50 blocks or since inception
     /// This is used to estimate the time when a tx will be included in a block
-    pub async fn average_block_speed(&self, multiplier: Option<f32>) -> Result<u64, DaemonError> {
+    pub async fn _average_block_speed(&self, multiplier: Option<f32>) -> Result<u64, DaemonError> {
         // get latest block time and height
-        let mut latest_block = self.latest_block().await?;
+        let mut latest_block = self._latest_block().await?;
         let latest_block_time = latest_block.header.time;
         let mut latest_block_height = latest_block.header.height.value();
 
         while latest_block_height <= 1 {
             // wait to get some blocks
             tokio::time::sleep(Duration::from_secs(1)).await;
-            latest_block = self.latest_block().await?;
+            latest_block = self._latest_block().await?;
             latest_block_height = latest_block.header.height.value();
         }
 
@@ -109,7 +128,7 @@ impl Node {
 
         // get block time for block avg_period blocks ago
         let block_avg_period_ago = self
-            .block_by_height(latest_block_height - avg_period)
+            ._block_by_height(latest_block_height - avg_period)
             .await?;
         let block_avg_period_ago_time = block_avg_period_ago.header.time;
 
@@ -127,7 +146,7 @@ impl Node {
     }
 
     /// Returns latests validator set
-    pub async fn latest_validator_set(
+    pub async fn _latest_validator_set(
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::tendermint::GetLatestValidatorSetResponse, DaemonError> {
@@ -145,7 +164,7 @@ impl Node {
     }
 
     /// Returns latests validator set fetched by height
-    pub async fn validator_set_by_height(
+    pub async fn _validator_set_by_height(
         &self,
         height: i64,
         pagination: Option<PageRequest>,
@@ -164,14 +183,14 @@ impl Node {
     }
 
     /// Returns current block height
-    pub async fn block_height(&self) -> Result<u64, DaemonError> {
-        let block = self.latest_block().await?;
+    pub async fn _block_height(&self) -> Result<u64, DaemonError> {
+        let block = self._latest_block().await?;
         Ok(block.header.height.value())
     }
 
     /// Returns the block timestamp (since unix epoch) in nanos
-    pub async fn block_time(&self) -> Result<u128, DaemonError> {
-        let block = self.latest_block().await?;
+    pub async fn _block_time(&self) -> Result<u128, DaemonError> {
+        let block = self._latest_block().await?;
         Ok(block
             .header
             .time
@@ -180,7 +199,7 @@ impl Node {
     }
 
     /// Simulate TX
-    pub async fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
+    pub async fn _simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, DaemonError> {
         let mut client =
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
         #[allow(deprecated)]
@@ -193,20 +212,20 @@ impl Node {
     }
 
     /// Returns all the block info
-    pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self.latest_block().await?;
+    pub async fn _block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
+        let block = self._latest_block().await?;
 
         block_to_block_info(block)
     }
 
     /// Find TX by hash
-    pub async fn find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self.find_tx_with_retries(hash, CwOrchEnvVars::load()?.max_tx_query_retries)
+    pub async fn _find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
+        self._find_tx_with_retries(hash, CwOrchEnvVars::load()?.max_tx_query_retries)
             .await
     }
 
     /// Find TX by hash with a given amount of retries
-    pub async fn find_tx_with_retries(
+    pub async fn _find_tx_with_retries(
         &self,
         hash: String,
         retries: usize,
@@ -215,7 +234,7 @@ impl Node {
             cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
-        let mut block_speed = self.average_block_speed(Some(0.7)).await?;
+        let mut block_speed = self._average_block_speed(Some(0.7)).await?;
         block_speed = block_speed.max(CwOrchEnvVars::load()?.min_block_speed);
 
         for _ in 0..retries {
@@ -240,13 +259,13 @@ impl Node {
     }
 
     /// Find TX by events
-    pub async fn find_tx_by_events(
+    pub async fn _find_tx_by_events(
         &self,
         events: Vec<String>,
         page: Option<u64>,
         order_by: Option<OrderBy>,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        self.find_tx_by_events_with_retries(
+        self._find_tx_by_events_with_retries(
             events,
             page,
             order_by,
@@ -259,13 +278,13 @@ impl Node {
     /// Find Tx by events
     /// This function will consider that no transactions found is an error
     /// This either returns a non empty vector or errors
-    pub async fn find_some_tx_by_events(
+    pub async fn _find_some_tx_by_events(
         &self,
         events: Vec<String>,
         page: Option<u64>,
         order_by: Option<OrderBy>,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        self.find_tx_by_events_with_retries(
+        self._find_tx_by_events_with_retries(
             events,
             page,
             order_by,
@@ -278,7 +297,7 @@ impl Node {
     /// Find TX by events with  :
     /// 1. Specify if an empty tx object is a valid response
     /// 2. Specify a given amount of retries
-    pub async fn find_tx_by_events_with_retries(
+    pub async fn _find_tx_by_events_with_retries(
         &self,
         events: Vec<String>,
         page: Option<u64>,
@@ -332,64 +351,52 @@ impl Node {
 
 // Now we define traits
 
-pub struct DaemonNodeQuerier {
-    channel: Channel,
-    rt_handle: Handle,
-}
-
-impl DaemonNodeQuerier {
-    fn new(daemon: &Daemon) -> Self {
-        Self {
-            channel: daemon.channel(),
-            rt_handle: daemon.rt_handle.clone(),
-        }
-    }
-}
-
-impl QuerierGetter<DaemonNodeQuerier> for Daemon {
-    fn querier(&self) -> DaemonNodeQuerier {
-        DaemonNodeQuerier::new(self)
-    }
-}
-
-impl Querier for DaemonNodeQuerier {
-    type Error = DaemonError;
-}
-
 impl NodeQuerier for DaemonNodeQuerier {
     type Response = CosmTxResponse;
 
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
         self.rt_handle
-            .block_on(Node::new(self.channel.clone()).block_info())
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._block_info())
     }
 
     fn block_by_height(&self, height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
         let block = self
             .rt_handle
-            .block_on(Node::new(self.channel.clone()).block_by_height(height))?;
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._block_by_height(height))?;
 
         block_to_block_info(block)
     }
 
     fn block_height(&self) -> Result<u64, Self::Error> {
         self.rt_handle
-            .block_on(Node::new(self.channel.clone()).block_height())
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._block_height())
     }
 
     fn block_time(&self) -> Result<u128, Self::Error> {
         self.rt_handle
-            .block_on(Node::new(self.channel.clone()).block_time())
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._block_time())
     }
 
     fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
         self.rt_handle
-            .block_on(Node::new(self.channel.clone()).simulate_tx(tx_bytes))
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._simulate_tx(tx_bytes))
     }
 
     fn find_tx(&self, hash: String) -> Result<Self::Response, Self::Error> {
         self.rt_handle
-            .block_on(Node::new(self.channel.clone()).find_tx(hash))
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._find_tx(hash))
     }
 }
 

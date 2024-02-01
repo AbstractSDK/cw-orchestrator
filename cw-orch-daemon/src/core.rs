@@ -1,12 +1,8 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{queriers::DaemonWasmQuerier, DaemonState};
 
 use super::{
-    builder::DaemonAsyncBuilder,
-    cosmos_modules,
-    error::DaemonError,
-    queriers::{DaemonQuerier, Node},
-    sender::Wallet,
-    tx_resp::CosmTxResponse,
+    builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::DaemonNodeQuerier,
+    sender::Wallet, tx_resp::CosmTxResponse,
 };
 
 use cosmrs::{
@@ -76,12 +72,6 @@ impl DaemonAsync {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
-    }
-
-    /// Perform a query with a given query client.
-    /// See [Querier](crate::queriers) for examples.
-    pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
-        Querier::new(self.sender.channel())
     }
 
     /// Get the channel configured for this DaemonAsync.
@@ -198,12 +188,13 @@ impl DaemonAsync {
 
     /// Wait for a given amount of blocks.
     pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self.query_client::<Node>().block_height().await?;
+        let mut last_height = DaemonNodeQuerier::new_async(self.channel())
+            ._block_height()
+            .await?;
         let end_height = last_height + amount;
 
-        let average_block_speed = self
-            .query_client::<Node>()
-            .average_block_speed(Some(0.9))
+        let average_block_speed = DaemonNodeQuerier::new_async(self.channel())
+            ._average_block_speed(Some(0.9))
             .await?;
 
         let wait_time = average_block_speed * amount;
@@ -217,7 +208,9 @@ impl DaemonAsync {
             tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
-            last_height = self.query_client::<Node>().block_height().await?;
+            last_height = DaemonNodeQuerier::new_async(self.channel())
+                ._block_height()
+                .await?;
         }
         Ok(())
     }
@@ -236,7 +229,9 @@ impl DaemonAsync {
 
     /// Get the current block info.
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self.query_client::<Node>().latest_block().await?;
+        let block = DaemonNodeQuerier::new_async(self.channel())
+            ._latest_block()
+            .await?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
         Ok(cosmwasm_std::BlockInfo {
@@ -273,8 +268,8 @@ impl DaemonAsync {
         let code_id = result.uploaded_code_id().unwrap();
 
         // wait for the node to return the contract information for this upload
-        let wasm = CosmWasm::new(self.channel());
-        while wasm.code(code_id).await.is_err() {
+        let wasm = DaemonWasmQuerier::new_async(self.channel());
+        while wasm._code(code_id).await.is_err() {
             self.next_block().await?;
         }
         Ok(result)

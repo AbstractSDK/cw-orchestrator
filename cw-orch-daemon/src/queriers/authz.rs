@@ -1,24 +1,33 @@
+use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cw_orch_core::environment::{Querier, QuerierGetter};
 use tonic::transport::Channel;
 
-use crate::{cosmos_modules, error::DaemonError};
-
-use super::DaemonQuerier;
-
 /// Queries for Cosmos AuthZ Module
-pub struct Authz {
+/// All the async function are prefixed with `_`
+pub struct AuthzQuerier {
     channel: Channel,
 }
 
-impl DaemonQuerier for Authz {
-    fn new(channel: Channel) -> Self {
+impl AuthzQuerier {
+    pub fn new_async(channel: Channel) -> Self {
         Self { channel }
     }
 }
 
-impl Authz {
+impl Querier for AuthzQuerier {
+    type Error = DaemonError;
+}
+
+impl QuerierGetter<AuthzQuerier> for Daemon {
+    fn querier(&self) -> AuthzQuerier {
+        AuthzQuerier::new_async(self.channel())
+    }
+}
+
+impl AuthzQuerier {
     /// Query Authz Grants from grantee to granter
-    pub async fn grants(
+    pub async fn _grants(
         &self,
         granter: String,
         grantee: String,
@@ -40,7 +49,7 @@ impl Authz {
     }
 
     /// Query Authz Grants of grantee
-    pub async fn grantee_grants(
+    pub async fn _grantee_grants(
         &self,
         grantee: String,
         pagination: Option<PageRequest>,
@@ -59,7 +68,7 @@ impl Authz {
     }
 
     /// Query Authz Grants for granter
-    pub async fn granter_grants(
+    pub async fn _granter_grants(
         &self,
         granter: String,
         pagination: Option<PageRequest>,

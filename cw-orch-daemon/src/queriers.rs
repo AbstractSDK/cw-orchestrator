@@ -54,21 +54,13 @@ mod ibc;
 mod node;
 mod staking;
 
-pub use authz::Authz;
-pub use bank::{cosmrs_to_cosmwasm_coins, Bank, DaemonBankQuerier};
-pub use cosmwasm::{CosmWasm, DaemonWasmQuerier};
-pub use feegrant::Feegrant;
-pub use ibc::Ibc;
-pub use node::{DaemonNodeQuerier, Node};
+pub use authz::AuthzQuerier;
+pub use bank::{cosmrs_to_cosmwasm_coins, DaemonBankQuerier};
+pub use cosmwasm::DaemonWasmQuerier;
+pub use feegrant::FeegrantQuerier;
+pub use ibc::IbcQuerier;
+pub use node::DaemonNodeQuerier;
 
 // this two containt structs that are helpers for the queries
 pub use gov::*;
 pub use staking::*;
-
-use tonic::transport::Channel;
-
-/// Constructor for a querier over a given channel
-pub trait DaemonQuerier {
-    /// Construct an new querier over a given channel
-    fn new(channel: Channel) -> Self;
-}

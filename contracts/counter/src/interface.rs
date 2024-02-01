@@ -1,3 +1,4 @@
+use cw_orch::daemon::queriers::DaemonNodeQuerier;
 // ANCHOR: custom_interface
 use cw_orch::{interface, prelude::*};
 
@@ -30,26 +31,22 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
 // ANCHOR_END: custom_interface
 
 use cw_orch::anyhow::Result;
-use cw_orch::prelude::queriers::Node;
 
 // ANCHOR: daemon
 impl CounterContract<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> Result<()> {
         let daemon = self.get_chain();
-        let rt = daemon.rt_handle.clone();
 
-        rt.block_on(async {
-            // Get the node query client, there are a lot of other clients available.
-            let node = daemon.query_client::<Node>();
-            let mut latest_block = node.latest_block().await.unwrap();
+        // Get the node query client, there are a lot of other clients available.
+        let node: DaemonNodeQuerier = daemon.querier();
+        let mut latest_block = node.latest_block().unwrap();
 
-            while latest_block.header.height.value() < 100 {
-                // wait for the next block
-                daemon.next_block().unwrap();
-                latest_block = node.latest_block().await.unwrap();
-            }
-        });
+        while latest_block.height < 100 {
+            // wait for the next block
+            daemon.next_block().unwrap();
+            latest_block = node.latest_block().unwrap();
+        }
 
         let contract = CounterContract::new(daemon.clone());
 
