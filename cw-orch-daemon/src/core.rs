@@ -7,16 +7,18 @@ use super::{
 
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
+    proto::cosmwasm::wasm::v1::MsgInstantiateContract2,
     tendermint::Time,
-    AccountId, Denom,
+    AccountId, Any, Denom,
 };
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{ChainState, IndexResponse},
     log::transaction_target,
 };
 use flate2::{write, Compression};
+use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
@@ -146,6 +148,44 @@ impl DaemonAsync {
         };
 
         let result = sender.commit_tx(vec![init_msg], None).await?;
+
+        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
+
+        Ok(result)
+    }
+
+    /// Instantiate a contract.
+    pub async fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[Coin],
+        salt: Binary,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let sender = &self.sender;
+
+        let init_msg = MsgInstantiateContract2 {
+            code_id,
+            label: label.unwrap_or("instantiate_contract").to_string(),
+            admin: admin.map(Into::into).unwrap_or_default(),
+            sender: sender.address()?.to_string(),
+            msg: serde_json::to_vec(&init_msg)?,
+            funds: proto_parse_cw_coins(coins)?,
+            salt: salt.to_vec(),
+            fix_msg: false,
+        };
+
+        let result = sender
+            .commit_tx_any(
+                vec![Any {
+                    type_url: "/cosmwasm.wasm.v1.MsgInstantiateContract2".to_string(),
+                    value: init_msg.encode_to_vec(),
+                }],
+                None,
+            )
+            .await?;
 
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
@@ -290,6 +330,20 @@ pub(crate) fn parse_cw_coins(
             Ok(cosmrs::Coin {
                 amount: amount.u128(),
                 denom: Denom::from_str(denom)?,
+            })
+        })
+        .collect::<Result<Vec<_>, DaemonError>>()
+}
+
+pub(crate) fn proto_parse_cw_coins(
+    coins: &[cosmwasm_std::Coin],
+) -> Result<Vec<cosmrs::proto::cosmos::base::v1beta1::Coin>, DaemonError> {
+    coins
+        .iter()
+        .map(|cosmwasm_std::Coin { amount, denom }| {
+            Ok(cosmrs::proto::cosmos::base::v1beta1::Coin {
+                amount: amount.to_string(),
+                denom: denom.clone(),
             })
         })
         .collect::<Result<Vec<_>, DaemonError>>()

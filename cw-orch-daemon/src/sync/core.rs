@@ -139,6 +139,21 @@ impl TxHandler for Daemon {
                 .migrate(migrate_msg, new_code_id, contract_address),
         )
     }
+
+    fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: cosmwasm_std::Binary,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle.block_on(
+            self.daemon
+                .instantiate2(code_id, init_msg, label, admin, coins, salt),
+        )
+    }
 }
 
 impl Stargate for Daemon {

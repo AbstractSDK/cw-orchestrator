@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::{to_json_binary, ContractInfoResponse, Empty};
-use cw_multi_test::BasicApp;
+use cosmwasm_std::{to_json_binary, ContractInfoResponse, Empty, HexBinary};
+use cw_multi_test::{AddressGenerator, BasicApp};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier},
@@ -104,4 +104,15 @@ impl WasmQuerier for MockWasmQuerier {
                 cosmwasm_std::WasmQuery::CodeInfo { code_id },
             ))?)
     }
+
+    fn instantiate2_addr<I: Serialize + std::fmt::Debug>(
+        &self,
+        _code_id: u64,
+        _creator: impl Into<String>,
+        salt: cosmwasm_std::Binary,
+    ) -> Result<String, Self::Error> {
+        Ok(format!("contract{}", HexBinary::from(salt).to_hex()))
+    }
 }
+
+impl AddressGenerator for MockWasmQuerier {}
