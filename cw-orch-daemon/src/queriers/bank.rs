@@ -8,8 +8,8 @@ use tonic::transport::Channel;
 /// Queries for Cosmos Bank Module
 /// All the async function are prefixed with `_`
 pub struct DaemonBankQuerier {
-    channel: Channel,
-    rt_handle: Option<Handle>,
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
 impl DaemonBankQuerier {

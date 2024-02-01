@@ -13,14 +13,14 @@ mod tests {
         bank::v1beta1::MsgSend,
     };
     use cosmwasm_std::coins;
+    use cw_orch_core::environment::QuerierGetter;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler, TxHandler};
-    use cw_orch_daemon::{queriers::Authz, Daemon};
+    use cw_orch_daemon::{queriers::AuthzQuerier, Daemon};
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
     use prost::Message;
     use prost::Name;
     use prost_types::{Any, Timestamp};
-
     pub const SECOND_MNEMONIC: &str ="salute trigger antenna west ignore own dance bounce battle soul girl scan test enroll luggage sorry distance traffic brand keen rich syrup wood repair";
 
     #[test]
@@ -88,10 +88,10 @@ mod tests {
         };
 
         // Grants
-        let authz_querier: Authz = daemon.query_client();
+        let authz_querier: AuthzQuerier = daemon.querier();
         let grants: QueryGrantsResponse = runtime.handle().block_on(async {
             authz_querier
-                .grants(sender.clone(), grantee.clone(), MsgSend::type_url(), None)
+                ._grants(sender.clone(), grantee.clone(), MsgSend::type_url(), None)
                 .await
         })?;
         assert_eq!(grants.grants, vec![grant]);
@@ -99,13 +99,13 @@ mod tests {
         // Grantee grants
         let grantee_grants: QueryGranteeGrantsResponse = runtime
             .handle()
-            .block_on(async { authz_querier.grantee_grants(grantee.clone(), None).await })?;
+            .block_on(async { authz_querier._grantee_grants(grantee.clone(), None).await })?;
         assert_eq!(grantee_grants.grants, vec![grant_authorization.clone()]);
 
         // Granter grants
         let granter_grants: QueryGranterGrantsResponse = runtime
             .handle()
-            .block_on(async { authz_querier.granter_grants(sender.clone(), None).await })?;
+            .block_on(async { authz_querier._granter_grants(sender.clone(), None).await })?;
         assert_eq!(granter_grants.grants, vec![grant_authorization]);
 
         // No grant gives out an error
@@ -113,7 +113,7 @@ mod tests {
             .handle()
             .block_on(async {
                 authz_querier
-                    .grants(grantee.clone(), sender.clone(), MsgSend::type_url(), None)
+                    ._grants(grantee.clone(), sender.clone(), MsgSend::type_url(), None)
                     .await
             })
             .unwrap_err();

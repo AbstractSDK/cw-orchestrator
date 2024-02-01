@@ -22,8 +22,8 @@ use tonic::transport::Channel;
 /// Supports queries for block and tx information
 /// All the async function are prefixed with `_`
 pub struct DaemonNodeQuerier {
-    channel: Channel,
-    rt_handle: Option<Handle>,
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
 impl DaemonNodeQuerier {

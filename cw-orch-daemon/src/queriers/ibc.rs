@@ -16,7 +16,7 @@ use tonic::transport::Channel;
 /// Querier for the Cosmos IBC module
 /// All the async function are prefixed with `_`
 pub struct IbcQuerier {
-    channel: Channel,
+    pub channel: Channel,
 }
 
 impl IbcQuerier {

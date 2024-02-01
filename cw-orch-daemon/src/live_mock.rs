@@ -82,7 +82,10 @@ impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(x) => {
-                let querier = DaemonWasmQuerier::new_async(self.channel.clone());
+                let querier = DaemonWasmQuerier {
+                    channel: self.channel.clone(),
+                    rt_handle: Some(self.runtime.handle().clone()),
+                };
                 match x {
                     WasmQuery::Smart { contract_addr, msg } => {
                         // We forward the request to the cosmwasm querier
@@ -110,7 +113,10 @@ impl WasmMockQuerier {
                 }
             }
             QueryRequest::Bank(x) => {
-                let querier = DaemonBankQuerier::new_async(self.channel.clone());
+                let querier = DaemonBankQuerier {
+                    channel: self.channel.clone(),
+                    rt_handle: Some(self.runtime.handle().clone()),
+                };
                 match x {
                     BankQuery::Balance { address, denom } => {
                         let query_result =

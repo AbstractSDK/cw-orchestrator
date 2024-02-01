@@ -6,7 +6,7 @@ use tonic::transport::Channel;
 /// Querier for the Cosmos Gov module
 /// All the async function are prefixed with `_`
 pub struct GovQuerier {
-    channel: Channel,
+    pub channel: Channel,
 }
 
 impl GovQuerier {

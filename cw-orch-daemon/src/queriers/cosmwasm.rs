@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use super::DaemonQuerier;
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
@@ -15,8 +14,8 @@ use tonic::transport::Channel;
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
 pub struct DaemonWasmQuerier {
-    channel: Channel,
-    rt_handle: Option<Handle>,
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
 impl DaemonWasmQuerier {

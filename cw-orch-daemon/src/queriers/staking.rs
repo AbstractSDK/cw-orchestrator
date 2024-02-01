@@ -6,7 +6,7 @@ use tonic::transport::Channel;
 /// Querier for the Cosmos Staking module
 /// All the async function are prefixed with `_`
 pub struct StakingQuerier {
-    channel: Channel,
+    pub channel: Channel,
 }
 
 impl StakingQuerier {
