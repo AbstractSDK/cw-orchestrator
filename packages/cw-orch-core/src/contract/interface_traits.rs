@@ -1,6 +1,6 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{queriers::wasm::WasmQuerier, CwEnv, QueryHandler, TxHandler, TxResponse},
+    environment::{CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier},
     error::CwEnvError,
     log::contract_target,
 };

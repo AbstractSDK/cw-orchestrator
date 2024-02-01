@@ -44,19 +44,22 @@ macro_rules! cosmos_query {
 };
 }
 
+mod authz;
 mod bank;
 mod cosmwasm;
+mod env;
 mod feegrant;
 mod gov;
 mod ibc;
 mod node;
 mod staking;
 
-pub use bank::{cosmrs_to_cosmwasm_coins, Bank};
-pub use cosmwasm::CosmWasm;
+pub use authz::Authz;
+pub use bank::{cosmrs_to_cosmwasm_coins, Bank, DaemonBankQuerier};
+pub use cosmwasm::{CosmWasm, DaemonWasmQuerier};
 pub use feegrant::Feegrant;
 pub use ibc::Ibc;
-pub use node::Node;
+pub use node::{DaemonNodeQuerier, Node};
 
 // this two containt structs that are helpers for the queries
 pub use gov::*;

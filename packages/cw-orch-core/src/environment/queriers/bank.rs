@@ -1,14 +1,8 @@
 use cosmwasm_std::Coin;
 
-use crate::CwEnvError;
-use std::fmt::Debug;
+use super::Querier;
 
-pub trait BankQuerierGetter<E> {
-    type Querier: BankQuerier<Error = E>;
-    fn bank_querier(&self) -> Self::Querier;
-}
-pub trait BankQuerier {
-    type Error: Into<CwEnvError> + Debug;
+pub trait BankQuerier: Querier {
     /// Query the bank balance of a given address
     /// If denom is None, returns all balances
     fn balance(

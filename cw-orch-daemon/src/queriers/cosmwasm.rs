@@ -1,16 +1,16 @@
 use std::str::FromStr;
 
+use super::DaemonQuerier;
 use crate::{cosmos_modules, error::DaemonError, Daemon};
-use cosmrs::{proto::cosmos::base::query::v1beta1::PageRequest, AccountId};
+use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cosmrs::AccountId;
 use cosmwasm_std::{
     from_json, instantiate2_address, to_json_binary, CanonicalAddr, CodeInfoResponse,
     ContractInfoResponse,
 };
-use cw_orch_core::environment::queriers::wasm::{WasmQuerier, WasmQuerierGetter};
+use cw_orch_core::environment::{Querier, QuerierGetter, WasmQuerier};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
-
-use super::DaemonQuerier;
 
 /// Querier for the CosmWasm SDK module
 pub struct CosmWasm {
@@ -192,17 +192,17 @@ impl DaemonWasmQuerier {
     }
 }
 
-impl WasmQuerierGetter<DaemonError> for Daemon {
-    type Querier = DaemonWasmQuerier;
-
-    fn wasm_querier(&self) -> Self::Querier {
+impl QuerierGetter<DaemonWasmQuerier> for Daemon {
+    fn querier(&self) -> DaemonWasmQuerier {
         DaemonWasmQuerier::new(self)
     }
 }
 
-impl WasmQuerier for DaemonWasmQuerier {
+impl Querier for DaemonWasmQuerier {
     type Error = DaemonError;
+}
 
+impl WasmQuerier for DaemonWasmQuerier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
         self.rt_handle
             .block_on(CosmWasm::new(self.channel.clone()).code_id_hash(code_id))
@@ -233,7 +233,7 @@ impl WasmQuerier for DaemonWasmQuerier {
         Ok(c)
     }
 
-    fn contract_raw_state(
+    fn raw_query(
         &self,
         address: impl Into<String>,
         query_data: Vec<u8>,
@@ -245,7 +245,7 @@ impl WasmQuerier for DaemonWasmQuerier {
         Ok(response.data)
     }
 
-    fn contract_smart_state<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
+    fn smart_query<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
         &self,
         address: impl Into<String>,
         query_data: &Q,

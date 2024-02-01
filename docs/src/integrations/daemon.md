@@ -9,7 +9,7 @@ Interacting with the `daemon` is really straightforward. How to creating a daemo
 ```rust,ignore
     use cw_orch::prelude::*;
     use tokio::runtime::Runtime;
-{{#include ../../../cw-orch/examples/daemon_test.rs:daemon_creation}}
+{{#include ../../../cw-orch/examples/local_daemon.rs:daemon_creation}}
 ```
 
 - The `chain` parameter allows you to specify which chain you want to interact with. The chains that are officially supported can be found in the `cw_orch::daemon::networks` module.
@@ -46,7 +46,7 @@ This simple script actually hides another parameter which is the `LOCAL_MNEMONIC
 You can then use the resulting `Daemon` variable to interact with your [contracts](../contracts/index.md):
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/daemon_test.rs:daemon_usage}}
+{{#include ../../../cw-orch/examples/local_daemon.rs:daemon_usage}}
 ```
 
 All contract operations will return an object of type `cw_orch::prelude::CosmTxResponse`. This represents a successful transaction. Using the txhash of the tx, you can also inspect the operations on a chain explorer.

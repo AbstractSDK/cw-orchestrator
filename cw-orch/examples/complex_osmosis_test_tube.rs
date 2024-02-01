@@ -4,10 +4,7 @@ use counter_contract::{
     CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
 
-use cw_orch::prelude::bank::BankQuerier;
-use cw_orch::prelude::bank::BankQuerierGetter;
-use cw_orch::prelude::{CallAs, ContractInstance, OsmosisTestTube};
-use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchUpload};
+use cw_orch::prelude::*;
 use cw_orch_traits::Stargate;
 use osmosis_std::types::{
     cosmos::base::v1beta1::Coin,

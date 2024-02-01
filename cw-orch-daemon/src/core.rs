@@ -28,8 +28,8 @@ use serde_json::from_str;
 use std::{
     fmt::Debug,
     io::Write,
-    rc::Rc,
     str::{from_utf8, FromStr},
+    sync::Arc,
     time::Duration,
 };
 
@@ -59,12 +59,19 @@ use tonic::transport::Channel;
 
     Different Cosmos SDK modules can be queried through the daemon by calling the [`DaemonAsync::query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
+
+    ## Warning
+
+    This daemon is thread safe and can be used between threads.
+    However, please make sure that you are not trying to broadcast multiple transactions at once when using this Daemon on different threads.
+    If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
+    Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
 pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Rc<DaemonState>,
+    pub state: Arc<DaemonState>,
 }
 
 impl DaemonAsync {
@@ -86,7 +93,7 @@ impl DaemonAsync {
 }
 
 impl ChainState for DaemonAsync {
-    type Out = Rc<DaemonState>;
+    type Out = Arc<DaemonState>;
 
     fn state(&self) -> Self::Out {
         self.state.clone()
@@ -100,6 +107,17 @@ impl DaemonAsync {
         self.sender.address().unwrap()
     }
 
+    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
+    /// Does not consume the original [`DaemonAsync`].
+    pub fn rebuild(&self) -> DaemonAsyncBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.sender).clone())
+            .deployment_id(&self.state().deployment_id);
+        builder
+    }
+
     /// Execute a message on a contract.
     pub async fn execute<E: Serialize>(
         &self,
@@ -108,7 +126,7 @@ impl DaemonAsync {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender.pub_addr()?,
+            sender: self.sender.msg_sender()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
@@ -134,7 +152,7 @@ impl DaemonAsync {
             code_id,
             label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: sender.pub_addr()?,
+            sender: self.sender.msg_sender()?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
@@ -209,7 +227,7 @@ impl DaemonAsync {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender.pub_addr()?,
+            sender: self.sender.msg_sender()?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
@@ -283,7 +301,7 @@ impl DaemonAsync {
         e.write_all(&file_contents)?;
         let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: sender.pub_addr()?,
+            sender: self.sender.msg_sender()?,
             wasm_byte_code,
             instantiate_permission: None,
         };

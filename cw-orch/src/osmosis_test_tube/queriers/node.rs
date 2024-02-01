@@ -3,10 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use cosmwasm_std::{BlockInfo, Timestamp};
 use cw_multi_test::AppResponse;
 use cw_orch_core::{
-    environment::{
-        queriers::node::{NodeQuerier, NodeQuerierGetter},
-        StateInterface, TxHandler,
-    },
+    environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
     CwEnvError,
 };
 use osmosis_test_tube::OsmosisTestApp;
@@ -25,18 +22,18 @@ impl OsmosisTestTubeNodeQuerier {
     }
 }
 
-impl<S: StateInterface> NodeQuerierGetter<<Self as TxHandler>::Error> for OsmosisTestTube<S> {
-    type Querier = OsmosisTestTubeNodeQuerier;
+impl Querier for OsmosisTestTubeNodeQuerier {
+    type Error = CwEnvError;
+}
 
-    fn node_querier(&self) -> Self::Querier {
+impl<S: StateInterface> QuerierGetter<OsmosisTestTubeNodeQuerier> for OsmosisTestTube<S> {
+    fn querier(&self) -> OsmosisTestTubeNodeQuerier {
         OsmosisTestTubeNodeQuerier::new(self)
     }
 }
 
 impl NodeQuerier for OsmosisTestTubeNodeQuerier {
     type Response = AppResponse;
-    type Error = CwEnvError;
-
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
         Ok(BlockInfo {
             chain_id: "osmosis-1".to_string(),

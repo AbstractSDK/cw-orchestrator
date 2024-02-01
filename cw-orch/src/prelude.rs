@@ -17,7 +17,7 @@ pub use crate::contract::interface_traits::{
     InstantiableContract, MigratableContract, QueryableContract, Uploadable,
 };
 
-pub use crate::deploy::Deploy;
+pub use cw_orch_core::contract::Deploy;
 
 pub use crate::environment::StateInterface;
 
@@ -25,8 +25,10 @@ pub use crate::environment::StateInterface;
 pub use crate::environment::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, QueryHandler, TxHandler, TxResponse};
-pub use cw_orch_core::environment::queriers::*;
+pub use crate::environment::{
+    BankQuerier, BankSetter, CwEnv, DefaultQueriers, EnvironmentInfo, EnvironmentQuerier,
+    NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+};
 
 // Mock for testing
 pub use crate::mock::Mock;

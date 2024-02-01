@@ -4,7 +4,7 @@ use crate::{channel::GrpcChannel, networks::ChainKind};
 use cosmwasm_std::Addr;
 use cw_orch_core::{
     env::default_state_folder,
-    environment::{DeployDetails, StateInterface},
+    environment::StateInterface,
     log::{connectivity_target, local_target},
     CwEnvError, CwOrchEnvVars,
 };
@@ -112,7 +112,8 @@ impl DaemonState {
         Ok(state)
     }
 
-    fn state_file_path() -> Result<String, DaemonError> {
+    /// Returns the path of the file where the state of `cw-orchestrator` is stored.
+    pub fn state_file_path() -> Result<String, DaemonError> {
         // check if STATE_FILE en var is configured, default to state.json
         let env_file_path = CwOrchEnvVars::load()?.state_file;
         let state_file_path = if env_file_path.is_relative() {
@@ -228,14 +229,6 @@ impl StateInterface for DaemonState {
             store.insert(id, code_id.as_u64().unwrap());
         }
         Ok(store)
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        DeployDetails {
-            chain_id: self.chain_data.chain_id.to_string(),
-            chain_name: self.chain_data.chain_name.clone(),
-            deployment_id: self.deployment_id.clone(),
-        }
     }
 }
 

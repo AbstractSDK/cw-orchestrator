@@ -6,10 +6,7 @@ use cosmwasm_std::{
     ContractInfoResponse,
 };
 use cw_orch_core::{
-    environment::{
-        queriers::wasm::{WasmQuerier, WasmQuerierGetter},
-        StateInterface, TxHandler,
-    },
+    environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
     CwEnvError,
 };
 use osmosis_test_tube::{OsmosisTestApp, Runner};
@@ -20,6 +17,7 @@ use osmosis_std::types::cosmwasm::wasm::v1::{
     QueryRawContractStateRequest, QueryRawContractStateResponse, QuerySmartContractStateRequest,
     QuerySmartContractStateResponse,
 };
+
 pub struct OsmosisTestTubeWasmQuerier {
     app: Rc<RefCell<OsmosisTestApp>>,
 }
@@ -32,16 +30,17 @@ impl OsmosisTestTubeWasmQuerier {
     }
 }
 
-impl<S: StateInterface> WasmQuerierGetter<<Self as TxHandler>::Error> for OsmosisTestTube<S> {
-    type Querier = OsmosisTestTubeWasmQuerier;
+impl Querier for OsmosisTestTubeWasmQuerier {
+    type Error = CwEnvError;
+}
 
-    fn wasm_querier(&self) -> Self::Querier {
+impl<S: StateInterface> QuerierGetter<OsmosisTestTubeWasmQuerier> for OsmosisTestTube<S> {
+    fn querier(&self) -> OsmosisTestTubeWasmQuerier {
         OsmosisTestTubeWasmQuerier::new(self)
     }
 }
-impl WasmQuerier for OsmosisTestTubeWasmQuerier {
-    type Error = CwEnvError;
 
+impl WasmQuerier for OsmosisTestTubeWasmQuerier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
         let code_info_result: QueryCodeResponse = self
             .app
@@ -92,7 +91,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         Ok(contract_info)
     }
 
-    fn contract_raw_state(
+    fn raw_query(
         &self,
         address: impl Into<String>,
         query_data: Vec<u8>,
@@ -114,7 +113,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         Ok(result)
     }
 
-    fn contract_smart_state<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
+    fn smart_query<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
         &self,
         address: impl Into<String>,
         query_data: &Q,
@@ -124,7 +123,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
             .app
             .borrow()
             .query::<_, QuerySmartContractStateResponse>(
-                "/cosmwasm.wasm.v1.Query/RawContractState",
+                "/cosmwasm.wasm.v1.Query/SmartContractState",
                 &QuerySmartContractStateRequest {
                     address: address.clone(),
                     query_data: to_json_vec(query_data)?,
