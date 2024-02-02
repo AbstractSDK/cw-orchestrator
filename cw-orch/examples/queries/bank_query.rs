@@ -2,7 +2,7 @@ use anyhow::Result as AnyResult;
 use cw_orch::daemon::Daemon;
 use cw_orch::prelude::BankQuerier;
 use cw_orch::prelude::QuerierGetter;
-use cw_orch_daemon::queriers::DaemonBankQuerier;
+use cw_orch_daemon::queriers::Bank;
 use tokio::runtime::Runtime;
 pub fn main() {
     // We start by creating a runtime, which is required for a sync daemon.
@@ -20,7 +20,7 @@ pub fn main() {
 
 pub fn test_queries(daemon: &Daemon) -> AnyResult<()> {
     // ANCHOR: daemon_balance_query
-    let bank_query_client: DaemonBankQuerier = daemon.querier();
+    let bank_query_client: Bank = daemon.querier();
 
     let sender = "valid_sender_addr";
     let balance_result = bank_query_client.balance(sender, None)?;
