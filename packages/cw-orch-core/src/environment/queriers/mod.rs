@@ -25,7 +25,7 @@ pub trait QueryHandler: DefaultQueriers {
     fn next_block(&self) -> Result<(), Self::Error>;
 
     /// Return current block info see [`BlockInfo`].
-    fn block_info(&self) -> Result<BlockInfo, <Self::N as Querier>::Error> {
+    fn block_info(&self) -> Result<BlockInfo, <Self::Node as Querier>::Error> {
         self.node_querier().latest_block()
     }
 
@@ -34,7 +34,7 @@ pub trait QueryHandler: DefaultQueriers {
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, <Self::W as Querier>::Error> {
+    ) -> Result<T, <Self::Wasm as Querier>::Error> {
         self.wasm_querier().smart_query(contract_address, query_msg)
     }
 }
@@ -48,21 +48,24 @@ pub trait Querier {
 }
 
 pub trait DefaultQueriers:
-    QuerierGetter<Self::B> + QuerierGetter<Self::W> + QuerierGetter<Self::N> + EnvironmentQuerier
+    QuerierGetter<Self::Bank>
+    + QuerierGetter<Self::Wasm>
+    + QuerierGetter<Self::Node>
+    + EnvironmentQuerier
 {
-    type B: BankQuerier;
-    type W: WasmQuerier;
-    type N: NodeQuerier;
+    type Bank: BankQuerier;
+    type Wasm: WasmQuerier;
+    type Node: NodeQuerier;
 
-    fn bank_querier(&self) -> Self::B {
+    fn bank_querier(&self) -> Self::Bank {
         self.querier()
     }
 
-    fn wasm_querier(&self) -> Self::W {
+    fn wasm_querier(&self) -> Self::Wasm {
         self.querier()
     }
 
-    fn node_querier(&self) -> Self::N {
+    fn node_querier(&self) -> Self::Node {
         self.querier()
     }
 }
