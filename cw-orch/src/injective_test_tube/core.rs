@@ -358,11 +358,10 @@ impl BankQuerier for InjectiveTestTube {
 }
 
 impl BankSetter for InjectiveTestTube {
-    /// It's impossible to set the balance of an address directly in OsmosisTestTub
-    /// So for this implementation, we use a weird algorithm
+    /// It's impossible to set the balance of an address directly in Test Tube
     fn set_balance(
         &mut self,
-        _address: &Addr,
+        _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         // We check the current balance
