@@ -14,9 +14,9 @@ Setting up the environment is really easy and only requires feeding a `ChainData
 
 ```rust,ignore
 use cw_orch::networks::JUNO_1;
-use cw_orch::ForkMock;
+use cw_orch::CloneTesting;
 
-let app = ForkMock::new(JUNO_1)?;
+let app = CloneTesting::new(JUNO_1)?;
 ```
 
 With this, you are ready to upload, instantiate, migrate and interact with on-chain contracts...
@@ -89,7 +89,7 @@ Let's take an example for clarity. Say I want to deposit some funds into Anchor 
 
 You use this fork environment as you would use the `Mock` environment, with a few subtle changes:
 
-1. You can't use human readable addresses, because this environment uses actual APIs and needs to be able to verify addresses. When creating the Mock environment, a sender gets created along and attach automatically to the `ForkMock` instance. If you need additional addresses, you can use:
+1. You can't use human readable addresses, because this environment uses actual APIs and needs to be able to verify addresses. When creating the Mock environment, a sender gets created along and attach automatically to the `CloneTesting` instance. If you need additional addresses, you can use:
 
     ```rust,ignore
     let new_sender: Addr = fork.init_account();

@@ -1,32 +1,34 @@
-use std::str::FromStr;
+use std::sync::Arc;
 
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
-
-use cw_orch_core::environment::{
-    BankQuerier, BankSetter, EnvironmentInfo, EnvironmentQuerier, WasmCodeQuerier,
-};
-use cw_orch_traits::stargate::Stargate;
-
+use cosmwasm_std::{coin, Addr, ContractInfoResponse};
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
-use osmosis_std::types::cosmwasm::wasm::v1::{
-    QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
+use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
+use cw_orch_traits::stargate::Stargate;
+use injective_std::shim::{cosmwasm_to_proto_coins, try_proto_to_cosmwasm_coins};
+use injective_std::types::cosmos::bank::v1beta1::{
+    MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
 };
-use osmosis_test_tube::{
-    Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
+use injective_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
+use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeRequest;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeResponse;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoRequest;
+use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
+
+use injective_test_tube::{
+    Account, Bank, ExecuteResponse, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
 
-// This should be the way to import stuff.
-// But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
-use osmosis_test_tube::osmosis_std::{
-    cosmwasm_to_proto_coins,
-    types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
-};
+// // This should be the way to import stuff.
+// // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
+// use osmosis_test_tube::osmosis_std::{
+//     cosmwasm_to_proto_coins,
+//
+// };
 
-use osmosis_test_tube::OsmosisTestApp;
+use injective_test_tube::InjectiveTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use serde::{de::DeserializeOwned, Serialize};
@@ -39,9 +41,9 @@ use crate::{
 
 use crate::mock::MockState;
 
-pub use osmosis_test_tube;
+pub use injective_test_tube;
 
-/// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
+/// Wrapper around a osmosis-test-tube [`InjectiveTestApp`](osmosis_test_tube::InjectiveTestApp) backend.
 ///
 /// Stores a local state with a mapping of contract_id -> code_id/address
 ///
@@ -50,11 +52,11 @@ pub use osmosis_test_tube;
 /// ## Example
 /// ```
 /// # use cosmwasm_std::{Addr, coins, Uint128};
-/// use cw_orch::osmosis_test_tube::OsmosisTestTube;
+/// use cw_orch::osmosis_test_tube::InjectiveTestTube;
 /// use cw_orch::osmosis_test_tube::osmosis_test_tube::Account;
 ///
 /// // Creates an app, creates a sender with an initial balance
-/// let mut tube: OsmosisTestTube = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
+/// let mut tube: InjectiveTestTube = InjectiveTestTube::new(coins(1_000_000_000_000, "uosmo"));
 ///
 /// // create an additional account
 /// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
@@ -64,25 +66,25 @@ pub use osmosis_test_tube;
 /// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
-pub struct OsmosisTestTube<S: StateInterface = MockState> {
+pub struct InjectiveTestTube<S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Rc<SigningAccount>,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<RefCell<OsmosisTestApp>>,
+    pub app: Rc<RefCell<InjectiveTestApp>>,
 }
 
 fn map_err(e: RunnerError) -> CwOrchError {
     CwOrchError::StdErr(e.to_string())
 }
 
-impl<S: StateInterface> OsmosisTestTube<S> {
+impl<S: StateInterface> InjectiveTestTube<S> {
     /// Creates an account and sets its balance
     pub fn init_account(
         &mut self,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<Rc<SigningAccount>, CwOrchError> {
+    ) -> Result<<Self as TxHandler>::Sender, CwOrchError> {
         let account = self
             .app
             .borrow()
@@ -98,13 +100,13 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &mut self,
         amount: Vec<cosmwasm_std::Coin>,
         account_n: u64,
-    ) -> Result<Vec<Rc<SigningAccount>>, CwOrchError> {
+    ) -> Result<Vec<Arc<SigningAccount>>, CwOrchError> {
         let accounts: Vec<_> = self
             .app
             .borrow()
             .init_accounts(&amount, account_n)
             .map_err(map_err)
-            .map(|s| s.into_iter().map(Rc::new).collect())?;
+            .map(|s| s.into_iter().map(Arc::new).collect())?;
 
         Ok(accounts)
     }
@@ -132,32 +134,21 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         })
     }
 
-    /// Creates an osmosis pool (helper)
-    pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
-        // create balancer pool with basic configuration
-        let pool_id = Gamm::new(&*self.app.borrow())
-            .create_basic_pool(&liquidity, &self.sender)
-            .unwrap()
-            .data
-            .pool_id;
-
-        Ok(pool_id)
-    }
-
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
     pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwOrchError> {
-        let amount = Bank::new(&*self.app.borrow())
-            .query_balance(&QueryBalanceRequest {
-                address: address.to_owned(),
-                denom: denom.to_string(),
-            })
-            .map_err(map_err)?
-            .balance
-            .map(to_cosmwasm_coin)
-            .transpose()?
-            .map(|c| c.amount)
-            .unwrap_or(Uint128::zero());
+        let amount = try_proto_to_cosmwasm_coins(
+            Bank::new(&*self.app.borrow())
+                .query_balance(&QueryBalanceRequest {
+                    address: address.to_owned(),
+                    denom: denom.to_string(),
+                })
+                .map_err(map_err)?
+                .balance,
+        )?
+        .get(0)
+        .map(|c| c.amount)
+        .unwrap_or(Uint128::zero());
         Ok(amount)
     }
 
@@ -166,36 +157,35 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &self,
         address: &str,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
-        let amount = Bank::new(&*self.app.borrow())
-            .query_all_balances(&QueryAllBalancesRequest {
-                address: address.to_owned(),
-                pagination: None,
-            })
-            .map_err(map_err)?
-            .balances
-            .into_iter()
-            .map(to_cosmwasm_coin)
-            .collect::<Result<Vec<_>, _>>()?;
+        let amount = try_proto_to_cosmwasm_coins(
+            Bank::new(&*self.app.borrow())
+                .query_all_balances(&QueryAllBalancesRequest {
+                    address: address.to_owned(),
+                    pagination: None,
+                })
+                .map_err(map_err)?
+                .balances,
+        )?;
         Ok(amount)
     }
 }
 
-impl OsmosisTestTube<MockState> {
+impl InjectiveTestTube<MockState> {
     /// Create a mock environment with the default mock state.
-    /// init_coins are minted to the sender that is created in the OsmosisTestTube environment
+    /// init_coins are minted to the sender that is created in the InjectiveTestTube environment
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
     /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
-        Self::new_custom(init_coins, MockState::new_with_chain_id("osmosis-1"))
+        Self::new_custom(init_coins, MockState::new())
     }
 }
 
-impl<S: StateInterface> OsmosisTestTube<S> {
+impl<S: StateInterface> InjectiveTestTube<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
     pub fn new_custom(init_coins: Vec<Coin>, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(OsmosisTestApp::new()));
+        let app = Rc::new(RefCell::new(InjectiveTestApp::new()));
 
         let sender = app.borrow().init_account(&init_coins).unwrap();
 
@@ -207,7 +197,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     }
 }
 
-impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
+impl<S: StateInterface> ChainState for InjectiveTestTube<S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -216,7 +206,7 @@ impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
+impl<S: StateInterface> TxHandler for InjectiveTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
@@ -328,7 +318,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
-impl BankQuerier for OsmosisTestTube {
+impl BankQuerier for InjectiveTestTube {
     fn balance(
         &self,
         address: impl Into<String>,
@@ -360,23 +350,15 @@ impl BankQuerier for OsmosisTestTube {
             )
             .map_err(map_err)?;
 
-        Ok(supply_of_result
-            .amount
-            .map(|c| {
-                // Ok::<_, StdError>(cosmwasm_std::Coin {
-                //     amount: c.amount.parse()?,
-                //     denom: c.denom,
-                // })
-                to_cosmwasm_coin(c)
-            })
-            .transpose()?
+        Ok(try_proto_to_cosmwasm_coins(supply_of_result.amount)?
+            .get(0)
+            .cloned()
             .unwrap_or(coin(0, &denom)))
     }
 }
 
-impl BankSetter for OsmosisTestTube {
-    /// It's impossible to set the balance of an address directly in OsmosisTestTub
-    /// So for this implementation, we use a weird algorithm
+impl BankSetter for InjectiveTestTube {
+    /// It's impossible to set the balance of an address directly in Test Tube
     fn set_balance(
         &mut self,
         _address: impl Into<String>,
@@ -387,7 +369,7 @@ impl BankSetter for OsmosisTestTube {
     }
 }
 
-impl Stargate for OsmosisTestTube {
+impl Stargate for InjectiveTestTube {
     fn commit_any<R: prost::Message + Default>(
         &self,
         msgs: Vec<prost_types::Any>,
@@ -405,8 +387,7 @@ impl Stargate for OsmosisTestTube {
         })
     }
 }
-
-impl WasmCodeQuerier for OsmosisTestTube {
+impl WasmCodeQuerier for InjectiveTestTube {
     fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
         let code_info_result: QueryCodeResponse = self
             .app
@@ -457,43 +438,22 @@ impl WasmCodeQuerier for OsmosisTestTube {
     }
 }
 
-impl EnvironmentQuerier for OsmosisTestTube {
-    fn env_info(&self) -> EnvironmentInfo {
-        let block = self.block_info().unwrap();
-        let chain_id = block.chain_id;
-        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-
-        EnvironmentInfo {
-            chain_id,
-            chain_name,
-            deployment_id: "default".to_string(),
-        }
-    }
-}
-
-fn to_cosmwasm_coin(c: osmosis_std::types::cosmos::base::v1beta1::Coin) -> StdResult<Coin> {
-    Ok(Coin {
-        amount: Uint128::from_str(&c.amount)?,
-        denom: c.denom,
-    })
-}
-
 #[cfg(test)]
 pub mod tests {
     use cosmwasm_std::{coins, ContractInfoResponse};
     use cw_orch_core::environment::{BankQuerier, WasmCodeQuerier};
 
-    use osmosis_test_tube::Account;
+    use injective_test_tube::Account;
 
-    use super::OsmosisTestTube;
+    use super::InjectiveTestTube;
     use counter_contract::{msg::InstantiateMsg, CounterContract};
     use cw_orch::prelude::*;
 
     #[test]
     fn wasm_querier_works() -> anyhow::Result<()> {
-        let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
+        let app = InjectiveTestTube::new(coins(100_000_000_000_000, "inj"));
 
-        let contract = CounterContract::new(app.clone());
+        let contract = CounterContract::new("counter", app.clone());
         contract.upload()?;
         contract.instantiate(
             &InstantiateMsg { count: 7 },
@@ -521,7 +481,7 @@ pub mod tests {
     fn bank_querier_works() -> anyhow::Result<()> {
         let denom = "urandom";
         let init_coins = coins(45, denom);
-        let app = OsmosisTestTube::new(init_coins.clone());
+        let app = InjectiveTestTube::new(init_coins.clone());
         let sender = app.sender.address();
         assert_eq!(
             app.balance(sender.clone(), Some(denom.to_string()))?,
