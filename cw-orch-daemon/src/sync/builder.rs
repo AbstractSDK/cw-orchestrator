@@ -29,7 +29,6 @@ pub struct DaemonBuilder {
 
     /* Sender Options */
     /// Wallet sender
-    /// Will be used in priority when set
     pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
@@ -89,6 +88,12 @@ impl DaemonBuilder {
     /// Specifies wether feegrant should be used with this daemon
     pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
         self.sender_options.set_fee_granter(granter.to_string());
+        self
+    }
+
+    /// Specifies the hd_index of the daemon sender
+    pub fn hd_index(&mut self, index: u32) -> &mut Self {
+        self.sender_options.hd_index = Some(index);
         self
     }
 

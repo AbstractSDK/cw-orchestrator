@@ -69,6 +69,7 @@ pub struct Sender<C: Signing + Context> {
 pub struct SenderOptions {
     pub authz_granter: Option<String>,
     pub fee_granter: Option<String>,
+    pub hd_index: Option<u32>,
 }
 
 impl SenderOptions {
@@ -80,11 +81,18 @@ impl SenderOptions {
         self.fee_granter = Some(granter.to_string());
         self
     }
+    pub fn hd_index(mut self, index: u32) -> Self {
+        self.hd_index = Some(index);
+        self
+    }
     pub fn set_authz_granter(&mut self, granter: impl ToString) {
         self.authz_granter = Some(granter.to_string());
     }
     pub fn set_fee_granter(&mut self, granter: impl ToString) {
         self.fee_granter = Some(granter.to_string());
+    }
+    pub fn set_hd_index(&mut self, index: u32) {
+        self.hd_index = Some(index);
     }
 }
 
@@ -125,8 +133,13 @@ impl Sender<All> {
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
         let secp = Secp256k1::new();
-        let p_key: PrivateKey =
-            PrivateKey::from_words(&secp, mnemonic, 0, 0, daemon_state.chain_data.slip44)?;
+        let p_key: PrivateKey = PrivateKey::from_words(
+            &secp,
+            mnemonic,
+            0,
+            options.hd_index.unwrap_or(0),
+            daemon_state.chain_data.slip44,
+        )?;
         let sender = Sender {
             daemon_state: daemon_state.clone(),
             private_key: p_key,
