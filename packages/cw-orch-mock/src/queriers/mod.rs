@@ -37,7 +37,7 @@ impl<S: StateInterface> QueryHandler for Mock<S> {
 }
 
 impl<S: StateInterface> DefaultQueriers for Mock<S> {
-    type B = bank::MockBankQuerier;
-    type W = wasm::MockWasmQuerier;
-    type N = node::MockNodeQuerier;
+    type Bank = bank::MockBankQuerier;
+    type Wasm = wasm::MockWasmQuerier;
+    type Node = node::MockNodeQuerier;
 }

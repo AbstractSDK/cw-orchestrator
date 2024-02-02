@@ -199,7 +199,7 @@ impl QueryHandler for Daemon {
 }
 
 impl DefaultQueriers for Daemon {
-    type B = Bank;
-    type W = CosmWasm;
-    type N = Node;
+    type Bank = Bank;
+    type Wasm = CosmWasm;
+    type Node = Node;
 }
