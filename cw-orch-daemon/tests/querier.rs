@@ -5,7 +5,7 @@ mod queriers {
 
     use cw_orch_core::contract::interface_traits::*;
     use cw_orch_core::environment::TxHandler;
-    use cw_orch_daemon::{queriers::DaemonBankQuerier, GrpcChannel};
+    use cw_orch_daemon::{queriers::Bank, GrpcChannel};
     use cw_orch_networks::networks;
     use ibc_chain_registry::chain::Grpc;
     use mock_contract::InstantiateMsg;
@@ -14,7 +14,7 @@ mod queriers {
 
     use cw_orch_daemon::{
         queriers::StakingBondStatus,
-        queriers::{DaemonNodeQuerier, DaemonWasmQuerier, GovQuerier, IbcQuerier, StakingQuerier},
+        queriers::{CosmWasm, Gov, Ibc, Node, Staking},
         Daemon, DaemonError,
     };
     use tokio::runtime::Runtime;
@@ -50,7 +50,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let ibc = IbcQuerier::new_async(channel);
+        let ibc = Ibc::new_async(channel);
 
         let clients = rt.block_on(ibc._clients());
         asserting!("clients is ok").that(&clients).is_ok();
@@ -64,7 +64,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let staking = StakingQuerier::new_async(channel);
+        let staking = Staking::new_async(channel);
 
         let params = rt.block_on(staking._params());
         asserting!("params is ok").that(&params).is_ok();
@@ -84,7 +84,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let gov = GovQuerier::new_async(channel);
+        let gov = Gov::new_async(channel);
 
         let params = rt.block_on(gov._params("voting"));
         asserting!("params is ok").that(&params).is_ok();
@@ -98,7 +98,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let bank = DaemonBankQuerier::new_async(channel);
+        let bank = Bank::new_async(channel);
 
         let params = rt.block_on(bank._params());
         asserting!("params is ok").that(&params).is_ok();
@@ -138,7 +138,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let cw = DaemonWasmQuerier::new_async(channel);
+        let cw = CosmWasm::new_async(channel);
 
         let params = rt.block_on(cw._params());
         asserting!("params is ok").that(&params).is_ok();
@@ -152,7 +152,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let node = DaemonNodeQuerier::new_async(channel);
+        let node = Node::new_async(channel);
 
         let block_height = rt.block_on(node._block_height());
         asserting!("block_height is ok").that(&block_height).is_ok();
@@ -171,7 +171,7 @@ mod queriers {
 
         let channel = rt.block_on(build_channel());
 
-        let node = DaemonNodeQuerier::new_async(channel);
+        let node = Node::new_async(channel);
 
         let exec_msg = cw20_base::msg::ExecuteMsg::Mint {
             recipient: "terra1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr".into(),
@@ -216,7 +216,7 @@ mod queriers {
 
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
-        let cosm_wasm = DaemonWasmQuerier::new_async(channel);
+        let cosm_wasm = CosmWasm::new_async(channel);
         let daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
             .handle(rt.handle())

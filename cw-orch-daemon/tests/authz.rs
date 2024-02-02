@@ -15,7 +15,7 @@ mod tests {
     use cosmwasm_std::coins;
     use cw_orch_core::environment::QuerierGetter;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler, TxHandler};
-    use cw_orch_daemon::{queriers::AuthzQuerier, Daemon};
+    use cw_orch_daemon::{queriers::Authz, Daemon};
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
     use prost::Message;
@@ -88,7 +88,7 @@ mod tests {
         };
 
         // Grants
-        let authz_querier: AuthzQuerier = daemon.querier();
+        let authz_querier: Authz = daemon.querier();
         let grants: QueryGrantsResponse = runtime.handle().block_on(async {
             authz_querier
                 ._grants(sender.clone(), grantee.clone(), MsgSend::type_url(), None)
