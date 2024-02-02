@@ -9,7 +9,7 @@
 //!
 //! ```no_run
 //! // require the querier you want to use, in this case Node
-//! use cw_orch_daemon::{queriers::Node, DaemonAsync, networks, queriers::DaemonQuerier};
+//! use cw_orch_daemon::{queriers::Node, DaemonAsync, networks};
 //! # tokio_test::block_on(async {
 //! // call the builder and configure it as you need
 //! let daemon = DaemonAsync::builder()
@@ -17,8 +17,8 @@
 //!     .build()
 //!     .await.unwrap();
 //! // now you can use the Node querier:
-//! let node = Node::new(daemon.channel());
-//! let node_info = node.info();
+//! let node = Node::new_async(daemon.channel());
+//! let node_info = node._info().await.unwrap();
 //! # })
 //! ```
 
@@ -54,12 +54,12 @@ mod ibc;
 mod node;
 mod staking;
 
-pub use authz::AuthzQuerier;
-pub use bank::{cosmrs_to_cosmwasm_coins, DaemonBankQuerier};
-pub use cosmwasm::DaemonWasmQuerier;
-pub use feegrant::FeegrantQuerier;
-pub use ibc::IbcQuerier;
-pub use node::DaemonNodeQuerier;
+pub use authz::Authz;
+pub use bank::{cosmrs_to_cosmwasm_coins, Bank};
+pub use cosmwasm::CosmWasm;
+pub use feegrant::FeeGrant;
+pub use ibc::Ibc;
+pub use node::Node;
 
 // this two containt structs that are helpers for the queries
 pub use gov::*;

@@ -13,12 +13,12 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct DaemonWasmQuerier {
+pub struct CosmWasm {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
 }
 
-impl DaemonWasmQuerier {
+impl CosmWasm {
     pub fn new(daemon: &Daemon) -> Self {
         Self {
             channel: daemon.channel(),
@@ -33,17 +33,17 @@ impl DaemonWasmQuerier {
     }
 }
 
-impl QuerierGetter<DaemonWasmQuerier> for Daemon {
-    fn querier(&self) -> DaemonWasmQuerier {
-        DaemonWasmQuerier::new(self)
+impl QuerierGetter<CosmWasm> for Daemon {
+    fn querier(&self) -> CosmWasm {
+        CosmWasm::new(self)
     }
 }
 
-impl Querier for DaemonWasmQuerier {
+impl Querier for CosmWasm {
     type Error = DaemonError;
 }
 
-impl DaemonWasmQuerier {
+impl CosmWasm {
     /// Query code_id by hash
     pub async fn _code_id_hash(&self, code_id: u64) -> Result<String, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -198,7 +198,7 @@ impl DaemonWasmQuerier {
     }
 }
 
-impl WasmQuerier for DaemonWasmQuerier {
+impl WasmQuerier for CosmWasm {
     fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
         self.rt_handle
             .as_ref()

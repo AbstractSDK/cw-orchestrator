@@ -15,27 +15,27 @@ use tonic::transport::Channel;
 
 /// Querier for the Cosmos IBC module
 /// All the async function are prefixed with `_`
-pub struct IbcQuerier {
+pub struct Ibc {
     pub channel: Channel,
 }
 
-impl IbcQuerier {
+impl Ibc {
     pub fn new_async(channel: Channel) -> Self {
         Self { channel }
     }
 }
 
-impl Querier for IbcQuerier {
+impl Querier for Ibc {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<IbcQuerier> for Daemon {
-    fn querier(&self) -> IbcQuerier {
-        IbcQuerier::new_async(self.channel())
+impl QuerierGetter<Ibc> for Daemon {
+    fn querier(&self) -> Ibc {
+        Ibc::new_async(self.channel())
     }
 }
 
-impl IbcQuerier {
+impl Ibc {
     // ### Transfer queries ### //
 
     /// Get the trace of a specific denom

@@ -5,27 +5,27 @@ use tonic::transport::Channel;
 
 /// Queries for Cosmos AuthZ Module
 /// All the async function are prefixed with `_`
-pub struct AuthzQuerier {
-    channel: Channel,
+pub struct Authz {
+    pub channel: Channel,
 }
 
-impl AuthzQuerier {
+impl Authz {
     pub fn new_async(channel: Channel) -> Self {
         Self { channel }
     }
 }
 
-impl Querier for AuthzQuerier {
+impl Querier for Authz {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<AuthzQuerier> for Daemon {
-    fn querier(&self) -> AuthzQuerier {
-        AuthzQuerier::new_async(self.channel())
+impl QuerierGetter<Authz> for Daemon {
+    fn querier(&self) -> Authz {
+        Authz::new_async(self.channel())
     }
 }
 
-impl AuthzQuerier {
+impl Authz {
     /// Query Authz Grants from grantee to granter
     pub async fn _grants(
         &self,

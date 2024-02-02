@@ -5,27 +5,27 @@ use tonic::transport::Channel;
 
 /// Querier for the Cosmos Staking module
 /// All the async function are prefixed with `_`
-pub struct StakingQuerier {
+pub struct Staking {
     pub channel: Channel,
 }
 
-impl StakingQuerier {
+impl Staking {
     pub fn new_async(channel: Channel) -> Self {
         Self { channel }
     }
 }
 
-impl Querier for StakingQuerier {
+impl Querier for Staking {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<StakingQuerier> for Daemon {
-    fn querier(&self) -> StakingQuerier {
-        StakingQuerier::new_async(self.channel())
+impl QuerierGetter<Staking> for Daemon {
+    fn querier(&self) -> Staking {
+        Staking::new_async(self.channel())
     }
 }
 
-impl StakingQuerier {
+impl Staking {
     /// Queries validator info for given validator address
     pub async fn _validator(
         &self,

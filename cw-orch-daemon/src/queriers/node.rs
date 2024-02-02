@@ -21,12 +21,12 @@ use tonic::transport::Channel;
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
 /// All the async function are prefixed with `_`
-pub struct DaemonNodeQuerier {
+pub struct Node {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
 }
 
-impl DaemonNodeQuerier {
+impl Node {
     pub fn new(daemon: &Daemon) -> Self {
         Self {
             channel: daemon.channel(),
@@ -41,17 +41,17 @@ impl DaemonNodeQuerier {
     }
 }
 
-impl QuerierGetter<DaemonNodeQuerier> for Daemon {
-    fn querier(&self) -> DaemonNodeQuerier {
-        DaemonNodeQuerier::new(self)
+impl QuerierGetter<Node> for Daemon {
+    fn querier(&self) -> Node {
+        Node::new(self)
     }
 }
 
-impl Querier for DaemonNodeQuerier {
+impl Querier for Node {
     type Error = DaemonError;
 }
 
-impl DaemonNodeQuerier {
+impl Node {
     /// Returns node info
     pub async fn _info(
         &self,
@@ -351,7 +351,7 @@ impl DaemonNodeQuerier {
 
 // Now we define traits
 
-impl NodeQuerier for DaemonNodeQuerier {
+impl NodeQuerier for Node {
     type Response = CosmTxResponse;
 
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {

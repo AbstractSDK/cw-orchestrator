@@ -1,7 +1,7 @@
 use crate::{
     networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
-    queriers::DaemonBankQuerier,
+    queriers::Bank,
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
@@ -11,7 +11,7 @@ use crate::{
 use super::{
     cosmos_modules::{self, auth::BaseAccount},
     error::DaemonError,
-    queriers::DaemonNodeQuerier,
+    queriers::Node,
     state::DaemonState,
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
@@ -261,7 +261,7 @@ impl Sender<All> {
 
         let tx_raw = self.sign(sign_doc)?;
 
-        DaemonNodeQuerier::new_async(self.channel())
+        Node::new_async(self.channel())
             ._simulate_tx(tx_raw.to_bytes()?)
             .await
     }
@@ -273,10 +273,7 @@ impl Sender<All> {
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<(u64, Coin), DaemonError> {
-        let timeout_height = DaemonNodeQuerier::new_async(self.channel())
-            ._block_height()
-            .await?
-            + 10u64;
+        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
@@ -314,10 +311,7 @@ impl Sender<All> {
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = DaemonNodeQuerier::new_async(self.channel())
-            ._block_height()
-            .await?
-            + 10u64;
+        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
 
         let msgs = if self.options.authz_granter.is_some() {
             // We wrap authz messages
@@ -347,7 +341,7 @@ impl Sender<All> {
             .broadcast(tx_builder, self)
             .await?;
 
-        let resp = DaemonNodeQuerier::new_async(self.channel())
+        let resp = Node::new_async(self.channel())
             ._find_tx(tx_response.txhash)
             .await?;
 
@@ -427,7 +421,7 @@ impl Sender<All> {
     async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
         let chain_data = self.daemon_state.as_ref().chain_data.clone();
 
-        let bank = DaemonBankQuerier::new_async(self.daemon_state.grpc_channel.clone());
+        let bank = Bank::new_async(self.daemon_state.grpc_channel.clone());
         let balance = bank
             ._balance(self.address()?, Some(fee.denom.clone()))
             .await?[0]

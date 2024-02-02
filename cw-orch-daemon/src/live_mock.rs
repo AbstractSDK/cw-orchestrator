@@ -1,9 +1,9 @@
 //! Live mock is a mock that uses a live chain to query for data.
 //! It can be used to do chain-backed unit-testing. It can't be used for state-changing operations.
 
-use crate::queriers::DaemonBankQuerier;
-use crate::queriers::DaemonWasmQuerier;
-use crate::queriers::StakingQuerier;
+use crate::queriers::Bank;
+use crate::queriers::CosmWasm;
+use crate::queriers::Staking;
 use cosmwasm_std::Addr;
 use cosmwasm_std::AllBalanceResponse;
 use cosmwasm_std::BalanceResponse;
@@ -82,7 +82,7 @@ impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
         match &request {
             QueryRequest::Wasm(x) => {
-                let querier = DaemonWasmQuerier {
+                let querier = CosmWasm {
                     channel: self.channel.clone(),
                     rt_handle: Some(self.runtime.handle().clone()),
                 };
@@ -113,7 +113,7 @@ impl WasmMockQuerier {
                 }
             }
             QueryRequest::Bank(x) => {
-                let querier = DaemonBankQuerier {
+                let querier = Bank {
                     channel: self.channel.clone(),
                     rt_handle: Some(self.runtime.handle().clone()),
                 };
@@ -143,7 +143,7 @@ impl WasmMockQuerier {
                 }
             }
             QueryRequest::Staking(x) => {
-                let querier = StakingQuerier::new_async(self.channel.clone());
+                let querier = Staking::new_async(self.channel.clone());
                 match x {
                     StakingQuery::BondedDenom {} => {
                         let query_result = self

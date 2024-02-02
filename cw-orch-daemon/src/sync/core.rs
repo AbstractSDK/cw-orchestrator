@@ -2,7 +2,7 @@ use std::{fmt::Debug, sync::Arc};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{DaemonBankQuerier, DaemonNodeQuerier, DaemonWasmQuerier},
+    queriers::{Bank, CosmWasm, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
 use cosmwasm_std::{Addr, Coin};
@@ -199,7 +199,7 @@ impl QueryHandler for Daemon {
 }
 
 impl DefaultQueriers for Daemon {
-    type B = DaemonBankQuerier;
-    type W = DaemonWasmQuerier;
-    type N = DaemonNodeQuerier;
+    type B = Bank;
+    type W = CosmWasm;
+    type N = Node;
 }

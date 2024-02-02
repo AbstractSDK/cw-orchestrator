@@ -7,12 +7,12 @@ use tonic::transport::Channel;
 
 /// Queries for Cosmos Bank Module
 /// All the async function are prefixed with `_`
-pub struct DaemonBankQuerier {
+pub struct Bank {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
 }
 
-impl DaemonBankQuerier {
+impl Bank {
     pub fn new(daemon: &Daemon) -> Self {
         Self {
             channel: daemon.channel(),
@@ -27,17 +27,17 @@ impl DaemonBankQuerier {
     }
 }
 
-impl Querier for DaemonBankQuerier {
+impl Querier for Bank {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<DaemonBankQuerier> for Daemon {
-    fn querier(&self) -> DaemonBankQuerier {
-        DaemonBankQuerier::new(self)
+impl QuerierGetter<Bank> for Daemon {
+    fn querier(&self) -> Bank {
+        Bank::new(self)
     }
 }
 
-impl DaemonBankQuerier {
+impl Bank {
     /// Query the bank balance of a given address
     /// If denom is None, returns all balances
     pub async fn _balance(
@@ -159,7 +159,7 @@ pub fn cosmrs_to_cosmwasm_coins(c: Coin) -> Result<cosmwasm_std::Coin, StdError>
         denom: c.denom,
     })
 }
-impl BankQuerier for DaemonBankQuerier {
+impl BankQuerier for Bank {
     fn balance(
         &self,
         address: impl Into<String>,

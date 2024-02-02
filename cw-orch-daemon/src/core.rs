@@ -1,7 +1,7 @@
-use crate::{queriers::DaemonWasmQuerier, DaemonState};
+use crate::{queriers::CosmWasm, DaemonState};
 
 use super::{
-    builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::DaemonNodeQuerier,
+    builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
     sender::Wallet, tx_resp::CosmTxResponse,
 };
 
@@ -228,12 +228,10 @@ impl DaemonAsync {
 
     /// Wait for a given amount of blocks.
     pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = DaemonNodeQuerier::new_async(self.channel())
-            ._block_height()
-            .await?;
+        let mut last_height = Node::new_async(self.channel())._block_height().await?;
         let end_height = last_height + amount;
 
-        let average_block_speed = DaemonNodeQuerier::new_async(self.channel())
+        let average_block_speed = Node::new_async(self.channel())
             ._average_block_speed(Some(0.9))
             .await?;
 
@@ -248,9 +246,7 @@ impl DaemonAsync {
             tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
-            last_height = DaemonNodeQuerier::new_async(self.channel())
-                ._block_height()
-                .await?;
+            last_height = Node::new_async(self.channel())._block_height().await?;
         }
         Ok(())
     }
@@ -269,9 +265,7 @@ impl DaemonAsync {
 
     /// Get the current block info.
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = DaemonNodeQuerier::new_async(self.channel())
-            ._latest_block()
-            .await?;
+        let block = Node::new_async(self.channel())._latest_block().await?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
         Ok(cosmwasm_std::BlockInfo {
@@ -308,7 +302,7 @@ impl DaemonAsync {
         let code_id = result.uploaded_code_id().unwrap();
 
         // wait for the node to return the contract information for this upload
-        let wasm = DaemonWasmQuerier::new_async(self.channel());
+        let wasm = CosmWasm::new_async(self.channel());
         while wasm._code(code_id).await.is_err() {
             self.next_block().await?;
         }

@@ -4,7 +4,7 @@ use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
 
-use crate::{queriers::DaemonNodeQuerier, sender::Sender, CosmTxResponse, DaemonError, TxBuilder};
+use crate::{queriers::Node, sender::Sender, CosmTxResponse, DaemonError, TxBuilder};
 
 pub type StrategyAction =
     fn(&mut TxBuilder, &Result<TxResponse, DaemonError>) -> Result<(), DaemonError>;
@@ -93,7 +93,7 @@ impl TxBroadcaster {
                     tx_retry = true;
 
                     // We still await for the next block, to avoid spamming retry when an error occurs
-                    let block_speed = DaemonNodeQuerier::new_async(wallet.channel())
+                    let block_speed = Node::new_async(wallet.channel())
                         ._average_block_speed(None)
                         .await?;
                     log::warn!(

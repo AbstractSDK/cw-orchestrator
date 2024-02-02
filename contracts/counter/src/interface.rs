@@ -1,4 +1,4 @@
-use cw_orch::daemon::queriers::DaemonNodeQuerier;
+use cw_orch::daemon::queriers::Node;
 // ANCHOR: custom_interface
 use cw_orch::{interface, prelude::*};
 
@@ -39,7 +39,7 @@ impl CounterContract<Daemon> {
         let daemon = self.get_chain();
 
         // Get the node query client, there are a lot of other clients available.
-        let node: DaemonNodeQuerier = daemon.querier();
+        let node: Node = daemon.querier();
         let mut latest_block = node.latest_block().unwrap();
 
         while latest_block.height < 100 {

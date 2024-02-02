@@ -5,27 +5,27 @@ use tonic::transport::Channel;
 
 /// Querier for the Cosmos Gov module
 /// All the async function are prefixed with `_`
-pub struct GovQuerier {
+pub struct Gov {
     pub channel: Channel,
 }
 
-impl GovQuerier {
+impl Gov {
     pub fn new_async(channel: Channel) -> Self {
         Self { channel }
     }
 }
 
-impl Querier for GovQuerier {
+impl Querier for Gov {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<GovQuerier> for Daemon {
-    fn querier(&self) -> GovQuerier {
-        GovQuerier::new_async(self.channel())
+impl QuerierGetter<Gov> for Daemon {
+    fn querier(&self) -> Gov {
+        Gov::new_async(self.channel())
     }
 }
 
-impl GovQuerier {
+impl Gov {
     /// Query proposal details by proposal id
     pub async fn _proposal(
         &self,
