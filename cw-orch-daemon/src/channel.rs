@@ -1,9 +1,8 @@
 use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
     service_client::ServiceClient, GetNodeInfoRequest,
 };
-use cw_orch_core::log::CONNECTIVITY_LOGS;
+use cw_orch_core::log::connectivity_target;
 use ibc_chain_registry::chain::Grpc;
-use ibc_relayer_types::core::ics24_host::identifier::ChainId;
 use tonic::transport::{Channel, ClientTlsConfig};
 
 use super::error::DaemonError;
@@ -13,11 +12,11 @@ pub struct GrpcChannel {}
 
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
-    pub async fn connect(grpc: &[Grpc], chain_id: &ChainId) -> Result<Channel, DaemonError> {
+    pub async fn connect(grpc: &[Grpc], chain_id: &str) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 
         for Grpc { address, .. } in grpc.iter() {
-            log::debug!(target: CONNECTIVITY_LOGS, "Trying to connect to endpoint: {}", address);
+            log::debug!(target: &connectivity_target(), "Trying to connect to endpoint: {}", address);
 
             // get grpc endpoint
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
@@ -41,7 +40,7 @@ impl GrpcChannel {
                     continue;
                 };
 
-                log::debug!(target: CONNECTIVITY_LOGS, "Attempting to connect with TLS");
+                log::debug!(target: &connectivity_target(), "Attempting to connect with TLS");
 
                 // re attempt to connect
                 let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
@@ -67,16 +66,14 @@ impl GrpcChannel {
                 .into_inner();
 
             // local juno does not return a proper ChainId with epoch format
-            if ChainId::is_epoch_format(&node_info.default_node_info.as_ref().unwrap().network) {
-                // verify we are connected to the spected network
-                if node_info.default_node_info.as_ref().unwrap().network != chain_id.as_str() {
-                    log::error!(
-                        "Network mismatch: connection:{} != config:{}",
-                        node_info.default_node_info.as_ref().unwrap().network,
-                        chain_id.as_str()
-                    );
-                    continue;
-                }
+            // verify we are connected to the expected network
+            if node_info.default_node_info.as_ref().unwrap().network != chain_id {
+                log::error!(
+                    "Network mismatch: connection:{} != config:{}",
+                    node_info.default_node_info.as_ref().unwrap().network,
+                    chain_id
+                );
+                continue;
             }
 
             // add endpoint to succesful connections

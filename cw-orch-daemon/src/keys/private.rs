@@ -4,16 +4,16 @@ use crate::DaemonError;
 #[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;
 use base64::Engine;
+use bitcoin::secp256k1::{self, Secp256k1};
 use bitcoin::{
     bip32::{ExtendedPrivKey, IntoDerivationPath},
     Network,
 };
 use cosmrs::tx::SignerPublicKey;
-use cw_orch_core::log::LOCAL_LOGS;
+use cw_orch_core::log::local_target;
 use hkd32::mnemonic::{Phrase, Seed};
 use prost_types::Any;
 use rand_core::OsRng;
-use secp256k1::Secp256k1;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
@@ -123,7 +123,7 @@ impl PrivateKey {
 
         let vec_pk = public_key.serialize();
 
-        log::debug!(target: LOCAL_LOGS, "{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
+        log::debug!(target: &local_target(), "{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
 
         let inj_key = InjectivePubKey { key: vec_pk.into() };
 

@@ -17,7 +17,7 @@ For this guide, we will create 2 chains, `juno` and `osmosis`, with the same add
 
 ### Interacting with the environment
 
-Now, we will work with interchain accounts (ICA). There is a [simple implementation of the ICA protocol on Github](https://github.com/confio/cw-ibc-demo), and we will use that application with a few simplifications for brevity.
+Now, we will work with interchain accounts (ICA). There is a <a href="https://github.com/confio/cw-ibc-demo" target="_blank">simple implementation of the ICA protocol on Github</a>, and we will use that application with a few simplifications for brevity.
 
 In this protocol, we have 2 smart-contracts that are able to create a connection between them.
 The `client` will send IBC messages to the `host` that in turn will execute the messages on its chain.
@@ -139,7 +139,7 @@ let channel_receipt = interchain.create_contract_channel(&client, &host, None, "
 let juno_channel = channel.0.get_chain("juno")?.channel.unwrap();
 ```
 
-This step will also await until all the packets sent during channel creation are relayed. In the case of the ICA contracts, a [`{"who_am_i":{}}`](https://github.com/confio/cw-ibc-demo/blob/main/contracts/simple-ica-controller/src/ibc.rs#L54) packet is sent out right after channel creation and allows to identify the calling chain.
+This step will also await until all the packets sent during channel creation are relayed. In the case of the ICA contracts, a <a href="https://github.com/confio/cw-ibc-demo/blob/main/contracts/simple-ica-controller/src/ibc.rs#L54" target="_blank">`{"who_am_i":{}}`</a> packet is sent out right after channel creation and allows to identify the calling chain.
 
 Finally, the two contracts can interact like so:
 
@@ -227,7 +227,7 @@ You can also [learn more about the interchain daemon implementation](./integrati
 ## With Starship
 
 You can also create you interchain environment using starship, which allows you to test your application against actual nodes and relayers. This time, an additional setup is necessary.
-Check out [the official Starship Getting Started guide](https://starship.cosmology.tech/) for more details.
+Check out <a href="https://starship.cosmology.tech/" target="_blank">the official Starship Getting Started guide</a> for more details.
 
 Once starship is setup and all the ports forwarded, assuming that starship was run locally, you can execute the following:
 

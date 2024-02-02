@@ -4,7 +4,9 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
 
-use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
+use cw_orch_core::environment::{
+    BankQuerier, BankSetter, EnvironmentInfo, EnvironmentQuerier, WasmCodeQuerier,
+};
 use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
@@ -184,7 +186,7 @@ impl OsmosisTestTube<MockState> {
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
     /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
-        Self::new_custom(init_coins, MockState::new())
+        Self::new_custom(init_coins, MockState::new_with_chain_id("osmosis-1"))
     }
 }
 
@@ -377,7 +379,7 @@ impl BankSetter for OsmosisTestTube {
     /// So for this implementation, we use a weird algorithm
     fn set_balance(
         &mut self,
-        _address: &Addr,
+        _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         // We check the current balance
@@ -455,6 +457,20 @@ impl WasmCodeQuerier for OsmosisTestTube {
     }
 }
 
+impl EnvironmentQuerier for OsmosisTestTube {
+    fn env_info(&self) -> EnvironmentInfo {
+        let block = self.block_info().unwrap();
+        let chain_id = block.chain_id;
+        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
+
+        EnvironmentInfo {
+            chain_id,
+            chain_name,
+            deployment_id: "default".to_string(),
+        }
+    }
+}
+
 fn to_cosmwasm_coin(c: osmosis_std::types::cosmos::base::v1beta1::Coin) -> StdResult<Coin> {
     Ok(Coin {
         amount: Uint128::from_str(&c.amount)?,
@@ -477,7 +493,7 @@ pub mod tests {
     fn wasm_querier_works() -> anyhow::Result<()> {
         let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
 
-        let contract = CounterContract::new("counter", app.clone());
+        let contract = CounterContract::new(app.clone());
         contract.upload()?;
         contract.instantiate(
             &InstantiateMsg { count: 7 },

@@ -1,16 +1,13 @@
 use mock_contract::{ExecuteMsgFns, InstantiateMsg, MockContract, QueryMsgFns};
 
-use cosmwasm_std::{Addr, Event};
+use cosmwasm_std::Event;
 
 use cw_orch::prelude::CwOrchUpload;
 use cw_orch::prelude::{CwOrchInstantiate, Mock};
 
 #[test]
 fn test_execute() {
-    let contract = MockContract::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
     contract
@@ -30,10 +27,7 @@ fn test_execute() {
 
 #[test]
 fn test_query() {
-    let contract = MockContract::new(
-        "test:mock_contract",
-        Mock::new(&Addr::unchecked("Ghazshag")),
-    );
+    let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
     contract

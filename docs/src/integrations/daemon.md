@@ -9,18 +9,18 @@ Interacting with the `daemon` is really straightforward. How to creating a daemo
 ```rust,ignore
     use cw_orch::prelude::*;
     use tokio::runtime::Runtime;
-{{#include ../../../cw-orch/examples/daemon_test.rs:daemon_creation}}
+{{#include ../../../cw-orch/examples/local_daemon.rs:daemon_creation}}
 ```
 
 - The `chain` parameter allows you to specify which chain you want to interact with. The chains that are officially supported can be found in the `cw_orch::daemon::networks` module.
-  You can also add additional chains yourself by simply defining a variable of type [`ChainInfo`](https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html) and using it in your script. Don't hesitate to open a PR on the [cw-orchestrator repo](https://github.com/AbstractSDK/cw-orchestrator), if you would like us to include a chain by default. The variables needed for creating the variable can be found in the documentation of the chain you want to connect to or in the [Cosmos Directory](https://cosmos.directory).
+  You can also add additional chains yourself by simply defining a variable of type <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html" target="_blank">`ChainInfo`</a> and using it in your script. Don't hesitate to open a PR on the <a href="https://github.com/AbstractSDK/cw-orchestrator" target="_blank">cw-orchestrator repo</a>, if you would like us to include a chain by default. The variables needed for creating the variable can be found in the documentation of the chain you want to connect to or in the <a href="https://cosmos.directory" target="_blank">Cosmos Directory</a>.
 
 - The `handle` parameter is a *tokio runtime handle*. 
   <details>
     <summary>If you <strong>don't know</strong> what that means</summary>
     
     
-  You don't need to know all the intricacies of <a href="https://rust-lang.github.io/async-book/">tokio and rust-async</a> to use daemons. If you don't have time to learn more, you can simply use the snippet above and not touch the runtime creation. However for more advanced `daemon` usage and also for your culture, don't hesitate to learn about those wonderful processes and their management.
+  You don't need to know all the intricacies of <a href="https://rust-lang.github.io/async-book/" target="_blank">tokio and rust-async</a> to use daemons. If you don't have time to learn more, you can simply use the snippet above and not touch the runtime creation. However for more advanced `daemon` usage and also for your culture, don't hesitate to learn about those wonderful processes and their management.
         
   </details>
 
@@ -46,7 +46,7 @@ This simple script actually hides another parameter which is the `LOCAL_MNEMONIC
 You can then use the resulting `Daemon` variable to interact with your [contracts](../contracts/index.md):
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/daemon_test.rs:daemon_usage}}
+{{#include ../../../cw-orch/examples/local_daemon.rs:daemon_usage}}
 ```
 
 All contract operations will return an object of type `cw_orch::prelude::CosmTxResponse`. This represents a successful transaction. Using the txhash of the tx, you can also inspect the operations on a chain explorer.
@@ -94,6 +94,24 @@ When calling the `instantiate` function, if the tx is successful, the daemon wil
 
 In this example, the `default` keyword corresponds to the deployment namespace. This can be set when building the daemon object (using the `DaemonBuilder::deployment_id` method) in order to separate multiple deployments. For instance for a DEX (decentralized exchange), you can have a single code-id but multiple pool addresses for all your liquidity pools. You would have a `juno-usdc` and a `usdt-usdc` deployment, sharing the same code-ids but different contract instances.
 
+## Configuration
+
+When creating a Daemon, use the `DaemonBuilder` object to set options for the structure.
+Here are the available options and fields you can use in the builder object:
+
+- `chain` (*required*) specifies the chain the `daemon` object will interact with. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.chain" target="_blank">Documentation Link</a>
+- `deployment_id` (*optional*) is used when loading and saving blockchain state (addresses and code-ids). It is useful when you have multiple instances of the same contract on a single chain. It will allow you to keep those multiple instances in the same state file without overriding state.<a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.deployment_id" target="_blank">Documentation Link</a>
+- `handle` (*required*) is the `tokio` runtime handled used to await async functions. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.handle" target="_blank">Documentation Link</a>
+- `mnemonic` (*optional*) is the mnemonic that will be used to create the sender associated with the resulting `Daemon` Object. It is not compatible with the `sender` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>
+- `sender` (*optional*) is the sender that will be uses with the `resulting` Daemon Object. It is not compatible with the `mnemonic` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>()
+- `authz_granter` (*optional*) allows you to use the authz module. If this field is specified, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.authz_granter" target="_blank">Documentation Link</a>
+- `fee_granter` (*optional*) allows you to use the fee-grant module. If this field is specified, the sender will try to pay for transactions using the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/feegrant/" target="_blank">More info on the fee grant module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.fee_granter" target="_blank">Documentation Link</a>
+- `hd_index` (*optional*) allows to set the index of the HD path for the account associated with the `Daemon` object. <a href="https://hub.cosmos.network/main/resources/hd-wallets.html" target="_blank">More info on the derivation path and index</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.hd_index" target="_blank">Documentation Link</a>
+
+> **NOTE**: if none of `sender` or `mnemonic` is specified, [env variables](../contracts/env-variable.md) will be used to construct the sender object.
+
+Keep in mind that those options can't be changed once the `Daemon` object is built, using the `build` function. It is possible to create a new `DaemonBuilder` structure from a `Daemon` object by using the `rebuild` method and specifying the options that you need to change.
+
 ## Additional tools
 
 The `Daemon` environment provides a bunch of tools for you to interact in a much easier way with the blockchain. Here is a non-exhaustive list:
@@ -128,7 +146,7 @@ Querying the chain for data using a daemon looks like:
 {{#include ../../../cw-orch/examples/queries/bank_query.rs:daemon_balance_query}}
 ```
 
-For more information and queries, [visit the daemon querier implementations directly](https://docs.rs/crate/cw-orch/latest/source/src/daemon/queriers.rs)
+For more information and queries, <a href="https://docs.rs/crate/cw-orch/latest/source/src/daemon/queriers.rs" target="_blank">visit the daemon querier implementations directly</a>
 
 
 ## Example of code leveraging Daemon capabilities

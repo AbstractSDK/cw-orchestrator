@@ -1,6 +1,5 @@
 // ANCHOR: all
 use counter_contract::{
-    contract::CONTRACT_NAME,
     msg::{GetCountResponse, InstantiateMsg, QueryMsg},
     ContractError, CounterContract,
 };
@@ -17,12 +16,10 @@ const ADMIN: &str = "admin";
 // ANCHOR: count_test
 #[test]
 fn count() -> anyhow::Result<()> {
-    // Create a sender
-    let sender = Addr::unchecked(ADMIN);
     // Create a user
     let user = Addr::unchecked(USER);
     // Create the mock. This will be our chain object throughout
-    let mock = Mock::new(&sender);
+    let mock = Mock::new(ADMIN);
 
     // Set up the contract (Definition below) ↓↓
     let contract = setup(mock.clone())?;
@@ -74,7 +71,7 @@ fn count() -> anyhow::Result<()> {
 fn setup<Chain: CwEnv>(chain: Chain) -> anyhow::Result<CounterContract<Chain>> {
     // ANCHOR: constructor
     // Construct the counter interface
-    let contract = CounterContract::new(CONTRACT_NAME, chain.clone());
+    let contract = CounterContract::new(chain.clone());
     // ANCHOR_END: constructor
     let admin = Addr::unchecked(ADMIN);
 

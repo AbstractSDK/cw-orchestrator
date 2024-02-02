@@ -76,4 +76,4 @@ Visit the dedicated [Daemon Interchain](./integrations/daemon.md#scripting) page
 
 ## Access
 
-The interchain features of cw-orchestrator are not open-source and freely available to all users. [Learn more about pricing on our dedicated page](https://abstract.money/orchestrator).
+The interchain features of cw-orchestrator are not open-source and freely available to all users. <a href="https://abstract.money/orchestrator" target="_blank">Learn more about pricing on our dedicated page</a>.
