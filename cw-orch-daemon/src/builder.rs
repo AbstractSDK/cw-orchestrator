@@ -81,6 +81,12 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Specifies the hd_index of the daemon sender
+    pub fn hd_index(&mut self, index: u32) -> &mut Self {
+        self.sender_options.hd_index = Some(index);
+        self
+    }
+
     /// Build a daemon
     pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
         let chain = self

@@ -25,7 +25,7 @@ eth = ["dep:snailquote"]
 
 [dependencies]
 thiserror = { workspace = true }
-cosmwasm-std = { workspace = true }
+cosmwasm-std.workspace = true
 serde = { workspace = true }
 cw-multi-test = { workspace = true }
 
@@ -39,6 +39,9 @@ serde_json = { workspace = true }
 snailquote = { version = "0.3.1", optional = true }
 dirs = "5.0.1"
 cw-utils.workspace = true
+cosmos-sdk-proto = { version = "0.20.0", default-features = false, features = [
+  "cosmwasm",
+] }
 
 [dev-dependencies]
 speculoos = { workspace = true }

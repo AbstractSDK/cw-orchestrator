@@ -9,7 +9,7 @@
 //!
 //! ```no_run
 //! // require the querier you want to use, in this case Node
-//! use cw_orch_daemon::{queriers::Node, DaemonAsync, networks, queriers::DaemonQuerier};
+//! use cw_orch_daemon::{queriers::Node, DaemonAsync, networks};
 //! # tokio_test::block_on(async {
 //! // call the builder and configure it as you need
 //! let daemon = DaemonAsync::builder()
@@ -17,8 +17,8 @@
 //!     .build()
 //!     .await.unwrap();
 //! // now you can use the Node querier:
-//! let node = Node::new(daemon.channel());
-//! let node_info = node.info();
+//! let node = Node::new_async(daemon.channel());
+//! let node_info = node._info().await.unwrap();
 //! # })
 //! ```
 
@@ -47,6 +47,7 @@ macro_rules! cosmos_query {
 mod authz;
 mod bank;
 mod cosmwasm;
+mod env;
 mod feegrant;
 mod gov;
 mod ibc;
@@ -56,18 +57,10 @@ mod staking;
 pub use authz::Authz;
 pub use bank::{cosmrs_to_cosmwasm_coins, Bank};
 pub use cosmwasm::CosmWasm;
-pub use feegrant::Feegrant;
+pub use feegrant::FeeGrant;
 pub use ibc::Ibc;
 pub use node::Node;
 
 // this two containt structs that are helpers for the queries
 pub use gov::*;
 pub use staking::*;
-
-use tonic::transport::Channel;
-
-/// Constructor for a querier over a given channel
-pub trait DaemonQuerier {
-    /// Construct an new querier over a given channel
-    fn new(channel: Channel) -> Self;
-}

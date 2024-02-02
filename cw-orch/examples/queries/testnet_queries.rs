@@ -1,9 +1,10 @@
 use anyhow::Result as AnyResult;
 use cw_orch::daemon::Daemon;
-use cw_orch::prelude::queriers::Bank;
-use cw_orch_daemon::queriers::{Ibc, Staking};
+use cw_orch::prelude::BankQuerier;
+use cw_orch::prelude::QuerierGetter;
+use cw_orch_daemon::queriers::Ibc;
+use cw_orch_daemon::queriers::{Bank, Staking};
 use tokio::runtime::Runtime;
-
 pub const TEST_MNEMONIC: &str="scare silent genuine cheese monitor industry item cloth pet gather cruise long confirm van lunar tomato scrub silk guide eight truly rural remember swim";
 
 pub fn main() -> AnyResult<()> {
@@ -18,22 +19,22 @@ pub fn main() -> AnyResult<()> {
         .build()?;
 
     // We do an actual bank query on MAINNET
-    let bank_query_client: Bank = daemon.query_client();
+    let bank_query_client: Bank = daemon.querier();
     let sender = "juno185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqc5vwdr";
-    let balance_result = runtime.block_on(bank_query_client.balance(sender, None))?;
+    let balance_result = bank_query_client.balance(sender, None)?;
     println!("Balance of {} : {:?}", sender, balance_result);
 
     // We do an actual Staking query on MAINNET
-    let staking_query_client: Staking = daemon.query_client();
+    let staking_query_client: Staking = daemon.querier();
     let validator = "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn";
-    let validator_result = runtime.block_on(staking_query_client.validator(validator))?;
+    let validator_result = runtime.block_on(staking_query_client._validator(validator))?;
     println!("Validator info of {} : {:?}", sender, validator_result);
 
     // We do an actual IBC query on MAINNET
-    let ibc_query_client: Ibc = daemon.query_client();
+    let ibc_query_client: Ibc = daemon.querier();
     let port_id = "transfer";
     let channel_id = "channel-0";
-    let channel_result = runtime.block_on(ibc_query_client.channel(port_id, channel_id))?;
+    let channel_result = runtime.block_on(ibc_query_client._channel(port_id, channel_id))?;
     println!(
         "Channel info of {port_id}:{channel_id} : {:?}",
         channel_result

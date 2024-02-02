@@ -4,9 +4,7 @@ use counter_contract::{
     CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
 
-use cw_orch::prelude::{CallAs, ContractInstance, OsmosisTestTube};
-use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchUpload};
-use cw_orch_core::environment::BankQuerier;
+use cw_orch::prelude::*;
 use cw_orch_traits::Stargate;
 use osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
@@ -74,6 +72,7 @@ pub fn main() -> anyhow::Result<()> {
     // We verify everything has worked correctly
     assert_eq!(
         chain
+            .bank_querier()
             .balance(contract_counter.address()?, Some(denom.clone()))?
             .first()
             .cloned(),
@@ -81,6 +80,7 @@ pub fn main() -> anyhow::Result<()> {
     );
     assert_eq!(
         chain
+            .bank_querier()
             .balance(sender_addr, Some(denom.clone()))?
             .first()
             .cloned(),

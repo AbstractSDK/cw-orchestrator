@@ -7,14 +7,15 @@ use crate::{
     CwOrchEnvVars,
 };
 
-use cosmwasm_std::{Addr, Coin};
+use crate::environment::QueryHandler;
+use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: TxHandler + Clone> {
+pub struct Contract<Chain: TxHandler + QueryHandler + Clone> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     /// Chain object that handles tx execution and queries.
@@ -26,7 +27,7 @@ pub struct Contract<Chain: TxHandler + Clone> {
 }
 
 /// Expose chain and state function to call them on the contract
-impl<Chain: TxHandler + Clone> Contract<Chain> {
+impl<Chain: TxHandler + QueryHandler + Clone> Contract<Chain> {
     /// Creates a new contract instance
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
@@ -148,6 +149,58 @@ impl<Chain: TxHandler + Clone> Contract<Chain> {
                 Some(&self.id),
                 admin,
                 coins.unwrap_or(&[]),
+            )
+            .map_err(Into::into)?;
+        let contract_address = resp.instantiated_contract_address()?;
+
+        self.set_address(&contract_address);
+
+        log::info!(
+            target: &&contract_target(),
+            "[{}][Instantiated] {}",
+            self.id,
+            contract_address
+        );
+        log::debug!(
+            target: &&transaction_target(),
+            "[{}][Instantiated] response: {:?}",
+            self.id,
+            resp
+        );
+
+        Ok(resp)
+    }
+
+    /// Initializes the contract
+    pub fn instantiate2<I: Serialize + Debug>(
+        &self,
+        msg: &I,
+        admin: Option<&Addr>,
+        coins: Option<&[Coin]>,
+        salt: Binary,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Instantiate]",
+            self.id,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Instantiate] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
+        let resp = self
+            .chain
+            .instantiate2(
+                self.code_id()?,
+                msg,
+                Some(&self.id),
+                admin,
+                coins.unwrap_or(&[]),
+                salt,
             )
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
