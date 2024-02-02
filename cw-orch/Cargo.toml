@@ -65,6 +65,7 @@ osmosis-test-tube = [
   "dep:osmosis-std",
   "dep:prost",
   "dep:prost-types",
+  "dep:cosmrs",
 ]
 snapshot-testing = ["dep:insta"]
 
