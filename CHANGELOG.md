@@ -13,6 +13,7 @@
 - Removed duplicates in disabled logs env
 - Moved DeployDetails to its own trait : `EnvironmentQuerier`
 - Modified gas prices for networks
+- Fixed the artifacts resolution in case of a build postfix
 
 ## 0.19.1
 
