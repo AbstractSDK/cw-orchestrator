@@ -36,7 +36,6 @@ impl QuerierGetter<Staking> for Daemon {
         Staking::new(self)
     }
 }
-
 impl Staking {
     /// Queries validator info for given validator address
     pub async fn _validator(

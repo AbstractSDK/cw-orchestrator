@@ -160,33 +160,40 @@ mod artifacts_dir {
             build_postfix: BuildPostfix<T>,
         ) -> Result<WasmPath, CwEnvError> {
             let build_postfix: String = build_postfix.into();
-            let path_str = fs::read_dir(self.path())?
-                .find_map(|entry| {
-                    let path = entry.ok()?.path();
-                    let file_name = path.file_name().unwrap_or_default().to_string_lossy();
-                    if !path.is_file() {
-                        return None;
-                    }
+            let mut wasm_with_postfix = None;
+            let mut default_wasm = None;
 
-                    if (path.extension().unwrap_or_default() == "wasm"
-                        // If a postfix is provided
-                        && !build_postfix.is_empty()
+            for entry in fs::read_dir(self.path())? {
+                let Ok(entry) = entry else {
+                    continue;
+                };
+                let path = entry.path();
+                let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+                if !path.is_file() {
+                    continue;
+                }
+                if path.extension().unwrap_or_default() == "wasm" {
+                    // If a postfix is provided
+                    if !build_postfix.is_empty()
                         // It needs to be in the the file name as well.
-                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix))
-                        // If not found, check if the default build is present.
-                        || is_default_artifact(&file_name, name)
+                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix)
                     {
-                        Some(file_name.into_owned())
-                    } else {
-                        None
+                        wasm_with_postfix = Some(file_name.into_owned());
+                        break;
                     }
-                })
-                .ok_or_else(|| {
-                    CwEnvError::WasmNotFound(
-                        name.to_owned(),
-                        self.path().to_str().unwrap_or_default().to_owned(),
-                    )
-                })?;
+                    // If not found, check if the default build is present.
+                    else if is_default_artifact(&file_name, name) {
+                        default_wasm = Some(file_name.into_owned())
+                    }
+                }
+            }
+
+            let path_str = wasm_with_postfix.or(default_wasm).ok_or_else(|| {
+                CwEnvError::WasmNotFound(
+                    name.to_owned(),
+                    self.path().to_str().unwrap_or_default().to_owned(),
+                )
+            })?;
             WasmPath::new(self.path().join(path_str))
         }
     }
