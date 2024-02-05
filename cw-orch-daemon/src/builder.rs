@@ -1,7 +1,6 @@
 use crate::{
-    log::print_if_log_disabled,
-    sender::{SenderBuilder, SenderOptions},
-    DaemonAsync, DaemonBuilder,
+    log::print_if_log_disabled, sender::SenderBuilder, sender::SenderOptions, DaemonAsync,
+    DaemonBuilder,
 };
 use std::sync::Arc;
 
