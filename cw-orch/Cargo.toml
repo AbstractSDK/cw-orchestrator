@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.19.2"
+version = "0.19.3"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -94,6 +94,8 @@ sanitize-filename = "0.5.0"
 hex = "0.4.3"
 
 [dev-dependencies]
+speculoos = { workspace = true }
+
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
 env_logger = "0.10.0"
 cosmwasm-schema = "1.2"

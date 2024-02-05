@@ -37,9 +37,9 @@ use crate::{
     error::CwOrchError,
 };
 
-use crate::mock::MockState;
-
 pub use osmosis_test_tube;
+
+use super::OsmosisTestTubeState;
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
 ///
@@ -64,7 +64,7 @@ pub use osmosis_test_tube;
 /// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
-pub struct OsmosisTestTube<S: StateInterface = MockState> {
+pub struct OsmosisTestTube<S: StateInterface = OsmosisTestTubeState> {
     /// Address used for the operations.
     pub sender: Rc<SigningAccount>,
     /// Inner mutable state storage for contract addresses and code-ids
@@ -180,13 +180,13 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     }
 }
 
-impl OsmosisTestTube<MockState> {
+impl OsmosisTestTube<OsmosisTestTubeState> {
     /// Create a mock environment with the default mock state.
     /// init_coins are minted to the sender that is created in the OsmosisTestTube environment
     /// Unlike for mocks, the accounts are created by the struct and not provided by the client
     /// Make sure to use only valid bech32 osmosis addresses, not mock
     pub fn new(init_coins: Vec<Coin>) -> Self {
-        Self::new_custom(init_coins, MockState::new())
+        Self::new_custom(init_coins, OsmosisTestTubeState::new())
     }
 }
 
