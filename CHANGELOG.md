@@ -1,8 +1,18 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## 0.20.0
 
-- Changed behavior for default constructor implementation by macro "interface"
+- Changed behavior for default constructor implementation by macro "interface" --> Added possibility to have a fixed ID
+- Added unified querier interface for all CwEnv
+- Updated multiple dependencies
+- Added authz, fee granter and hd_indec support for the `Daemon` object
+- Remove Fee Granter env variable (now incorporated in code inside the `DaemonBuilder`)
+- Replaces Rc by Arc in DaemonAsync for use in an async distributed environment
+- Added instantiate2 support on CwEnv
+- Removed secp dependency (gotten through the bitcoin dependency)
+- Removed duplicates in disabled logs env
+- Moved DeployDetails to its own trait : `EnvironmentQuerier`
+- Modified gas prices for networks
 
 ## 0.19.1
 
