@@ -36,7 +36,7 @@ impl<S: StateInterface> QuerierGetter<MockWasmQuerier> for Mock<S> {
 impl WasmQuerier for MockWasmQuerier {
     fn code_id_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
         let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
-        Ok(code_info.checksum.to_string())
+        Ok(code_info.checksum.to_hex())
     }
 
     /// Returns the code_info structure of the provided contract
