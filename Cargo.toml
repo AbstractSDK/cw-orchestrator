@@ -18,7 +18,7 @@ cw20 = { package = "abstract-cw20", version = "1.2.2" }
 cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
 
 # Test Tube env deps
-osmosis-test-tube = { version = "21.0.0" }
+osmosis-test-tube = { version = "22.1.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
