@@ -5,10 +5,6 @@ use std::fmt::Debug;
 
 use super::Querier;
 
-pub trait NodeQuerierGetter<E> {
-    type Querier: NodeQuerier<Error = E>;
-    fn node_querier(&self) -> Self::Querier;
-}
 pub trait NodeQuerier: Querier {
     type Response: IndexResponse + Debug + Send + Clone;
 

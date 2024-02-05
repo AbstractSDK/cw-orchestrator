@@ -1,17 +1,29 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cw_orch_core::environment::{Querier, QuerierGetter};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 /// Querier for the Cosmos Gov module
 /// All the async function are prefixed with `_`
 pub struct FeeGrant {
     pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
 impl FeeGrant {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+
     pub fn new_async(channel: Channel) -> Self {
-        Self { channel }
+        Self {
+            channel,
+            rt_handle: None,
+        }
     }
 }
 
@@ -21,7 +33,7 @@ impl Querier for FeeGrant {
 
 impl QuerierGetter<FeeGrant> for Daemon {
     fn querier(&self) -> FeeGrant {
-        FeeGrant::new_async(self.channel())
+        FeeGrant::new(self)
     }
 }
 
