@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.19.1"
+version = "0.19.2"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -47,12 +47,7 @@ daemon = [
   "dep:cw-orch-networks",
 ]
 eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
-osmosis-test-tube = [
-  "dep:osmosis-test-tube",
-  "dep:osmosis-std",
-  "dep:prost",
-  "dep:prost-types",
-]
+osmosis-test-tube = ["dep:osmosis-test-tube", "dep:prost", "dep:prost-types"]
 snapshot-testing = ["dep:insta"]
 
 
@@ -85,7 +80,6 @@ tonic = { workspace = true, optional = true, features = ["tls", "tls-roots"] }
 
 # Test Tube env deps
 osmosis-test-tube = { workspace = true, optional = true }
-osmosis-std = { version = "=0.19.1", optional = true }
 prost-types = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
 

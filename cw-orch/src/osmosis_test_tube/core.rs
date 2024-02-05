@@ -9,8 +9,10 @@ use cw_orch_traits::stargate::Stargate;
 
 use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
 use cw_multi_test::AppResponse;
-use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
-use osmosis_std::types::cosmwasm::wasm::v1::{
+use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
+    QuerySupplyOfRequest, QuerySupplyOfResponse,
+};
+use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
 };
 use osmosis_test_tube::{
@@ -455,7 +457,9 @@ impl WasmCodeQuerier for OsmosisTestTube {
     }
 }
 
-fn to_cosmwasm_coin(c: osmosis_std::types::cosmos::base::v1beta1::Coin) -> StdResult<Coin> {
+fn to_cosmwasm_coin(
+    c: osmosis_test_tube::osmosis_std::types::cosmos::base::v1beta1::Coin,
+) -> StdResult<Coin> {
     Ok(Coin {
         amount: Uint128::from_str(&c.amount)?,
         denom: c.denom,
