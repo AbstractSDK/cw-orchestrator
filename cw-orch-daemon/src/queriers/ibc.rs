@@ -11,17 +11,29 @@ use cosmrs::proto::ibc::{
 };
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use prost::Message;
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 /// Querier for the Cosmos IBC module
 /// All the async function are prefixed with `_`
 pub struct Ibc {
     pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
 impl Ibc {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+
     pub fn new_async(channel: Channel) -> Self {
-        Self { channel }
+        Self {
+            channel,
+            rt_handle: None,
+        }
     }
 }
 
@@ -31,7 +43,7 @@ impl Querier for Ibc {
 
 impl QuerierGetter<Ibc> for Daemon {
     fn querier(&self) -> Ibc {
-        Ibc::new_async(self.channel())
+        Ibc::new(self)
     }
 }
 
