@@ -25,7 +25,10 @@ pub use crate::environment::StateInterface;
 pub use crate::environment::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, TxHandler, TxResponse, WasmCodeQuerier};
+pub use crate::environment::{
+    BankQuerier, BankSetter, CwEnv, DefaultQueriers, EnvironmentInfo, EnvironmentQuerier,
+    NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+};
 
 // Mock for testing
 pub use crate::mock::Mock;

@@ -1,26 +1,24 @@
 use crate::{queriers::CosmWasm, DaemonState};
 
 use super::{
-    builder::DaemonAsyncBuilder,
-    cosmos_modules,
-    error::DaemonError,
-    queriers::{DaemonQuerier, Node},
-    sender::Wallet,
-    tx_resp::CosmTxResponse,
+    builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
+    sender::Wallet, tx_resp::CosmTxResponse,
 };
 
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
+    proto::cosmwasm::wasm::v1::MsgInstantiateContract2,
     tendermint::Time,
-    AccountId, Denom,
+    AccountId, Any, Denom,
 };
-use cosmwasm_std::{Addr, Coin};
+use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{ChainState, IndexResponse},
     log::transaction_target,
 };
 use flate2::{write, Compression};
+use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
@@ -76,12 +74,6 @@ impl DaemonAsync {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
-    }
-
-    /// Perform a query with a given query client.
-    /// See [Querier](crate::queriers) for examples.
-    pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
-        Querier::new(self.sender.channel())
     }
 
     /// Get the channel configured for this DaemonAsync.
@@ -162,6 +154,44 @@ impl DaemonAsync {
         Ok(result)
     }
 
+    /// Instantiate a contract.
+    pub async fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[Coin],
+        salt: Binary,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let sender = &self.sender;
+
+        let init_msg = MsgInstantiateContract2 {
+            code_id,
+            label: label.unwrap_or("instantiate_contract").to_string(),
+            admin: admin.map(Into::into).unwrap_or_default(),
+            sender: sender.address()?.to_string(),
+            msg: serde_json::to_vec(&init_msg)?,
+            funds: proto_parse_cw_coins(coins)?,
+            salt: salt.to_vec(),
+            fix_msg: false,
+        };
+
+        let result = sender
+            .commit_tx_any(
+                vec![Any {
+                    type_url: "/cosmwasm.wasm.v1.MsgInstantiateContract2".to_string(),
+                    value: init_msg.encode_to_vec(),
+                }],
+                None,
+            )
+            .await?;
+
+        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
+
+        Ok(result)
+    }
+
     /// Query a contract.
     pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
@@ -198,12 +228,11 @@ impl DaemonAsync {
 
     /// Wait for a given amount of blocks.
     pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self.query_client::<Node>().block_height().await?;
+        let mut last_height = Node::new_async(self.channel())._block_height().await?;
         let end_height = last_height + amount;
 
-        let average_block_speed = self
-            .query_client::<Node>()
-            .average_block_speed(Some(0.9))
+        let average_block_speed = Node::new_async(self.channel())
+            ._average_block_speed(Some(0.9))
             .await?;
 
         let wait_time = average_block_speed * amount;
@@ -217,7 +246,7 @@ impl DaemonAsync {
             tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
 
             // ping latest block
-            last_height = self.query_client::<Node>().block_height().await?;
+            last_height = Node::new_async(self.channel())._block_height().await?;
         }
         Ok(())
     }
@@ -236,7 +265,7 @@ impl DaemonAsync {
 
     /// Get the current block info.
     pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self.query_client::<Node>().latest_block().await?;
+        let block = Node::new_async(self.channel())._latest_block().await?;
         let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
         let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
         Ok(cosmwasm_std::BlockInfo {
@@ -273,8 +302,8 @@ impl DaemonAsync {
         let code_id = result.uploaded_code_id().unwrap();
 
         // wait for the node to return the contract information for this upload
-        let wasm = CosmWasm::new(self.channel());
-        while wasm.code(code_id).await.is_err() {
+        let wasm = CosmWasm::new_async(self.channel());
+        while wasm._code(code_id).await.is_err() {
             self.next_block().await?;
         }
         Ok(result)
@@ -295,6 +324,20 @@ pub(crate) fn parse_cw_coins(
             Ok(cosmrs::Coin {
                 amount: amount.u128(),
                 denom: Denom::from_str(denom)?,
+            })
+        })
+        .collect::<Result<Vec<_>, DaemonError>>()
+}
+
+pub(crate) fn proto_parse_cw_coins(
+    coins: &[cosmwasm_std::Coin],
+) -> Result<Vec<cosmrs::proto::cosmos::base::v1beta1::Coin>, DaemonError> {
+    coins
+        .iter()
+        .map(|cosmwasm_std::Coin { amount, denom }| {
+            Ok(cosmrs::proto::cosmos::base::v1beta1::Coin {
+                amount: amount.to_string(),
+                denom: denom.clone(),
             })
         })
         .collect::<Result<Vec<_>, DaemonError>>()
