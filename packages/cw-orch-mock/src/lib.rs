@@ -8,5 +8,6 @@ mod core;
 pub mod queriers;
 mod state;
 
-pub use self::core::Mock;
+pub(crate) use self::core::MockBase;
+pub use self::core::{Mock, MockBech32};
 pub use state::MockState;

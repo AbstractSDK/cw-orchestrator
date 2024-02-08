@@ -42,7 +42,7 @@ pub trait WasmQuerier: Querier {
         contract.wasm().checksum()
     }
 
-    fn instantiate2_addr<I: Serialize + std::fmt::Debug>(
+    fn instantiate2_addr(
         &self,
         code_id: u64,
         creator: impl Into<String>,

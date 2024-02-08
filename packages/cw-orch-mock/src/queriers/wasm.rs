@@ -1,7 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::{to_json_binary, ContractInfoResponse, Empty, HexBinary};
-use cw_multi_test::{AddressGenerator, BasicApp};
+use cosmwasm_std::testing::MockApi;
+use cosmwasm_std::{instantiate2_address, Api};
+use cosmwasm_std::{to_json_binary, ContractInfoResponse, HexBinary};
+use cw_multi_test::addons::MockApiBech32;
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier},
@@ -9,34 +11,111 @@ use cw_orch_core::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::Mock;
+use crate::{core::MockApp, MockBase};
 
-pub struct MockWasmQuerier {
-    app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+pub struct MockWasmQuerier<A: Api> {
+    app: Rc<RefCell<MockApp<A>>>,
 }
 
-impl MockWasmQuerier {
-    fn new<S: StateInterface>(mock: &Mock<S>) -> Self {
+impl<A: Api> MockWasmQuerier<A> {
+    fn new<S: StateInterface>(mock: &MockBase<A, S>) -> Self {
         Self {
             app: mock.app.clone(),
         }
     }
 }
 
-impl Querier for MockWasmQuerier {
+impl<A: Api> Querier for MockWasmQuerier<A> {
     type Error = CwEnvError;
 }
 
-impl<S: StateInterface> QuerierGetter<MockWasmQuerier> for Mock<S> {
-    fn querier(&self) -> MockWasmQuerier {
+impl<A: Api, S: StateInterface> QuerierGetter<MockWasmQuerier<A>> for MockBase<A, S> {
+    fn querier(&self) -> MockWasmQuerier<A> {
         MockWasmQuerier::new(self)
     }
 }
 
-impl WasmQuerier for MockWasmQuerier {
+fn code_id_hash<A: Api>(querier: &MockWasmQuerier<A>, code_id: u64) -> Result<String, CwEnvError> {
+    let code_info = querier.app.borrow().wrap().query_wasm_code_info(code_id)?;
+    Ok(code_info.checksum.to_hex())
+}
+
+fn contract_info<A: Api>(
+    querier: &MockWasmQuerier<A>,
+    address: impl Into<String>,
+) -> Result<ContractInfoResponse, CwEnvError> {
+    let info = querier
+        .app
+        .borrow()
+        .wrap()
+        .query_wasm_contract_info(address)?;
+    Ok(info)
+}
+
+fn local_hash<A: Api, Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
+    _querier: &MockWasmQuerier<A>,
+    contract: &T,
+) -> Result<String, CwEnvError> {
+    // We return the hashed contract-id.
+    // This will cause the logic to never re-upload a contract if it has the same contract-id.
+    Ok(sha256::digest(contract.id().as_bytes()))
+}
+
+fn raw_query<A: Api>(
+    querier: &MockWasmQuerier<A>,
+    address: impl Into<String>,
+    query_data: Vec<u8>,
+) -> Result<Vec<u8>, CwEnvError> {
+    Ok(querier
+        .app
+        .borrow()
+        .wrap()
+        .query(&cosmwasm_std::QueryRequest::Wasm(
+            cosmwasm_std::WasmQuery::Raw {
+                contract_addr: address.into(),
+                key: query_data.into(),
+            },
+        ))?)
+}
+
+fn smart_query<A: Api, Q, T>(
+    querier: &MockWasmQuerier<A>,
+    address: impl Into<String>,
+    query_data: &Q,
+) -> Result<T, CwEnvError>
+where
+    T: DeserializeOwned,
+    Q: Serialize,
+{
+    Ok(querier
+        .app
+        .borrow()
+        .wrap()
+        .query(&cosmwasm_std::QueryRequest::Wasm(
+            cosmwasm_std::WasmQuery::Smart {
+                contract_addr: address.into(),
+                msg: to_json_binary(query_data)?,
+            },
+        ))?)
+}
+
+fn code<A: Api>(
+    querier: &MockWasmQuerier<A>,
+    code_id: u64,
+) -> Result<cosmwasm_std::CodeInfoResponse, CwEnvError> {
+    Ok(querier
+        .app
+        .borrow()
+        .wrap()
+        .query(&cosmwasm_std::QueryRequest::Wasm(
+            cosmwasm_std::WasmQuery::CodeInfo { code_id },
+        ))?)
+}
+
+impl WasmQuerier for MockWasmQuerier<MockApi> {
+    /// Returns the hex-encoded checksum of the code.
     fn code_id_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
-        let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
-        Ok(code_info.checksum.to_hex())
+        code_id_hash(self, code_id)
     }
 
     /// Returns the code_info structure of the provided contract
@@ -44,75 +123,105 @@ impl WasmQuerier for MockWasmQuerier {
         &self,
         address: impl Into<String>,
     ) -> Result<ContractInfoResponse, CwEnvError> {
-        let info = self.app.borrow().wrap().query_wasm_contract_info(address)?;
-        Ok(info)
+        contract_info(self, address)
     }
 
     fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
         &self,
         contract: &T,
     ) -> Result<String, CwEnvError> {
-        // We return the hashed contract-id.
-        // This will cause the logic to never re-upload a contract if it has the same contract-id.
-        Ok(sha256::digest(contract.id().as_bytes()))
+        local_hash(self, contract)
     }
 
     fn raw_query(
         &self,
         address: impl Into<String>,
         query_data: Vec<u8>,
-    ) -> Result<Vec<u8>, Self::Error> {
-        Ok(self
-            .app
-            .borrow()
-            .wrap()
-            .query(&cosmwasm_std::QueryRequest::Wasm(
-                cosmwasm_std::WasmQuery::Raw {
-                    contract_addr: address.into(),
-                    key: query_data.into(),
-                },
-            ))?)
+    ) -> Result<Vec<u8>, CwEnvError> {
+        raw_query(self, address, query_data)
     }
 
-    fn smart_query<Q, T>(
-        &self,
-        address: impl Into<String>,
-        query_data: &Q,
-    ) -> Result<T, Self::Error>
+    fn smart_query<Q, T>(&self, address: impl Into<String>, query_data: &Q) -> Result<T, CwEnvError>
     where
         T: DeserializeOwned,
         Q: Serialize,
     {
-        Ok(self
-            .app
-            .borrow()
-            .wrap()
-            .query(&cosmwasm_std::QueryRequest::Wasm(
-                cosmwasm_std::WasmQuery::Smart {
-                    contract_addr: address.into(),
-                    msg: to_json_binary(query_data)?,
-                },
-            ))?)
+        smart_query(self, address, query_data)
     }
 
-    fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
-        Ok(self
-            .app
-            .borrow()
-            .wrap()
-            .query(&cosmwasm_std::QueryRequest::Wasm(
-                cosmwasm_std::WasmQuery::CodeInfo { code_id },
-            ))?)
+    fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, CwEnvError> {
+        code(self, code_id)
     }
 
-    fn instantiate2_addr<I: Serialize + std::fmt::Debug>(
+    fn instantiate2_addr(
         &self,
         _code_id: u64,
-        _creator: impl Into<String>,
+        creator: impl Into<String>,
         salt: cosmwasm_std::Binary,
-    ) -> Result<String, Self::Error> {
-        Ok(format!("contract{}", HexBinary::from(salt).to_hex()))
+    ) -> Result<String, CwEnvError> {
+        Ok(format!(
+            "contract/{}/{}",
+            creator.into(),
+            HexBinary::from(salt).to_hex()
+        ))
     }
 }
 
-impl AddressGenerator for MockWasmQuerier {}
+impl WasmQuerier for MockWasmQuerier<MockApiBech32> {
+    /// Returns the hex-encoded checksum of the code.
+    fn code_id_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
+        code_id_hash(self, code_id)
+    }
+
+    /// Returns the code_info structure of the provided contract
+    fn contract_info(
+        &self,
+        address: impl Into<String>,
+    ) -> Result<ContractInfoResponse, CwEnvError> {
+        contract_info(self, address)
+    }
+
+    fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
+        &self,
+        contract: &T,
+    ) -> Result<String, CwEnvError> {
+        local_hash(self, contract)
+    }
+
+    fn raw_query(
+        &self,
+        address: impl Into<String>,
+        query_data: Vec<u8>,
+    ) -> Result<Vec<u8>, CwEnvError> {
+        raw_query(self, address, query_data)
+    }
+
+    fn smart_query<Q, T>(&self, address: impl Into<String>, query_data: &Q) -> Result<T, CwEnvError>
+    where
+        T: DeserializeOwned,
+        Q: Serialize,
+    {
+        smart_query(self, address, query_data)
+    }
+
+    fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, CwEnvError> {
+        code(self, code_id)
+    }
+
+    fn instantiate2_addr(
+        &self,
+        code_id: u64,
+        creator: impl Into<String>,
+        salt: cosmwasm_std::Binary,
+    ) -> Result<String, CwEnvError> {
+        let checksum = HexBinary::from_hex(&self.code_id_hash(code_id)?)?;
+        let canon_creator = self.app.borrow().api().addr_canonicalize(&creator.into())?;
+        let canonical_addr = instantiate2_address(checksum.as_slice(), &canon_creator, &salt)?;
+        Ok(self
+            .app
+            .borrow()
+            .api()
+            .addr_humanize(&canonical_addr)?
+            .to_string())
+    }
+}

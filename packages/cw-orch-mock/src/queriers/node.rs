@@ -1,37 +1,37 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::Empty;
-use cw_multi_test::{AppResponse, BasicApp};
+use cosmwasm_std::Api;
+use cw_multi_test::AppResponse;
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
     CwEnvError,
 };
 
-use crate::Mock;
+use crate::{core::MockApp, MockBase};
 
-pub struct MockNodeQuerier {
-    app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+pub struct MockNodeQuerier<A: Api> {
+    app: Rc<RefCell<MockApp<A>>>,
 }
 
-impl MockNodeQuerier {
-    fn new<S: StateInterface>(mock: &Mock<S>) -> Self {
+impl<A: Api> MockNodeQuerier<A> {
+    fn new<S: StateInterface>(mock: &MockBase<A, S>) -> Self {
         Self {
             app: mock.app.clone(),
         }
     }
 }
 
-impl Querier for MockNodeQuerier {
+impl<A: Api> Querier for MockNodeQuerier<A> {
     type Error = CwEnvError;
 }
 
-impl<S: StateInterface> QuerierGetter<MockNodeQuerier> for Mock<S> {
-    fn querier(&self) -> MockNodeQuerier {
+impl<A: Api, S: StateInterface> QuerierGetter<MockNodeQuerier<A>> for MockBase<A, S> {
+    fn querier(&self) -> MockNodeQuerier<A> {
         MockNodeQuerier::new(self)
     }
 }
 
-impl NodeQuerier for MockNodeQuerier {
+impl<A: Api> NodeQuerier for MockNodeQuerier<A> {
     type Response = AppResponse;
 
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {

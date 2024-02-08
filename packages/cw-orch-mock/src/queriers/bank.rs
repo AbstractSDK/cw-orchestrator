@@ -1,7 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::{Coin, Empty};
-use cw_multi_test::BasicApp;
+use cosmwasm_std::{Api, Coin};
 use cw_orch_core::{
     environment::{
         QuerierGetter, StateInterface, {BankQuerier, Querier},
@@ -9,31 +8,31 @@ use cw_orch_core::{
     CwEnvError,
 };
 
-use crate::Mock;
+use crate::{core::MockApp, MockBase};
 
-pub struct MockBankQuerier {
-    app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+pub struct MockBankQuerier<A> {
+    app: Rc<RefCell<MockApp<A>>>,
 }
 
-impl MockBankQuerier {
-    fn new<S: StateInterface>(mock: &Mock<S>) -> Self {
+impl<A: Api> MockBankQuerier<A> {
+    fn new<S: StateInterface>(mock: &MockBase<A, S>) -> Self {
         Self {
             app: mock.app.clone(),
         }
     }
 }
 
-impl<S: StateInterface> QuerierGetter<MockBankQuerier> for Mock<S> {
-    fn querier(&self) -> MockBankQuerier {
+impl<A: Api, S: StateInterface> QuerierGetter<MockBankQuerier<A>> for MockBase<A, S> {
+    fn querier(&self) -> MockBankQuerier<A> {
         MockBankQuerier::new(self)
     }
 }
 
-impl Querier for MockBankQuerier {
+impl<A: Api> Querier for MockBankQuerier<A> {
     type Error = CwEnvError;
 }
 
-impl BankQuerier for MockBankQuerier {
+impl<A: Api> BankQuerier for MockBankQuerier<A> {
     fn balance(
         &self,
         address: impl Into<String>,
