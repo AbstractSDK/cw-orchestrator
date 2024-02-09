@@ -1,5 +1,6 @@
 use cw_orch_cli::{commands, common};
 
+use inquire::ui::{Attributes, RenderConfig, StyleSheet};
 use interactive_clap::{ResultFromCli, ToCliArgs};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
@@ -11,6 +12,9 @@ pub struct TLCommand {
 fn main() -> color_eyre::Result<()> {
     // We don't want to see cw-orch logs during cli
     std::env::set_var("CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE", "true");
+    let mut render_config = RenderConfig::default();
+    render_config.prompt = StyleSheet::new().with_attr(Attributes::BOLD);
+    inquire::set_global_render_config(render_config);
     // TODO: add some configuration like default chain/signer/etc
     let cli_args = TLCommand::parse();
 

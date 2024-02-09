@@ -43,8 +43,8 @@ impl std::fmt::Display for MsgType {
 impl std::fmt::Display for MsgTypeDiscriminants {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Self::JsonMsg => write!(f, "json-msg"),
-            Self::Base64Msg => write!(f, "base64-msg"),
+            Self::JsonMsg => write!(f, "Json Msg"),
+            Self::Base64Msg => write!(f, "Base64 Msg"),
         }
     }
 }
