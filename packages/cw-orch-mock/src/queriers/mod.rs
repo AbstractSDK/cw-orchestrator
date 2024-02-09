@@ -1,7 +1,7 @@
 use crate::MockBase;
 
-use cosmwasm_std::{testing::MockApi, Api};
-use cw_multi_test::{addons::MockApiBech32, next_block};
+use cosmwasm_std::Api;
+use cw_multi_test::next_block;
 use cw_orch_core::{
     environment::{DefaultQueriers, QueryHandler, StateInterface},
     CwEnvError,

@@ -1,4 +1,4 @@
-use cosmwasm_std::{testing::MockApi, Api};
+use cosmwasm_std::Api;
 use cw_orch_core::environment::{
     EnvironmentInfo, EnvironmentQuerier, QueryHandler, StateInterface,
 };
