@@ -10,9 +10,7 @@ description = "Command-line tool for managing Cosmos-based interaction."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cw-orch = { path = "../cw-orch", features = ["daemon"], version = "0.19" }
-# TODO: remove when default_state_folder gets exposed in cw-orch
-cw-orch-core = { path = "../packages/cw-orch-core", version = "0.19" }
+cw-orch = { path = "../cw-orch", features = ["daemon"], version = "0.20" }
 
 # Cosmos
 cosmwasm-std = { workspace = true }

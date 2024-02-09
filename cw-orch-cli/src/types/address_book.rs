@@ -13,8 +13,7 @@ use std::{
 };
 
 use cosmrs::AccountId;
-use cw_orch::daemon::ChainInfo;
-use cw_orch_core::env::default_state_folder;
+use cw_orch::{daemon::ChainInfo, environment::default_state_folder};
 use serde_json::{json, Value};
 
 fn cli_path() -> color_eyre::Result<PathBuf> {

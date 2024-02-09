@@ -9,10 +9,10 @@ repository.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cw-orch-cli-derive = { path = "../cw-orch-cli-derive", version = "0.13.3" }
+cw-orch-cli-derive = { path = "../cw-orch-cli-derive" }
 thiserror = { workspace = true }
 inquire = { version = "0.6" }
-cw-orch = { path = "../../cw-orch", features = ["daemon"], version = "0.19" }
+cw-orch = { path = "../../cw-orch", features = ["daemon"] }
 cw-orch-cli = { path = "../../cw-orch-cli" }
 
 strum = { version = "0.24", features = ["derive"] }

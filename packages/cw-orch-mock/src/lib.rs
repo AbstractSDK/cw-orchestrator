@@ -5,6 +5,7 @@
 pub extern crate cw_multi_test;
 
 mod core;
+pub mod queriers;
 mod state;
 
 pub use self::core::Mock;

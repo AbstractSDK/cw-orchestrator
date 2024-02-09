@@ -2,24 +2,26 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{
     testing::{MockApi, MockStorage},
-    Addr, Coin, ContractInfoResponse, Empty, Event, Uint128,
+    to_json_binary, Addr, Binary, Coin, CosmosMsg, Empty, Event, Uint128, WasmMsg,
 };
 use cw_multi_test::{
-    ibc::IbcSimpleModule, next_block, App, AppBuilder, AppResponse, BankKeeper, Contract,
-    DistributionKeeper, Executor, FailingModule, GovFailingModule, StakeKeeper, StargateFailing,
-    WasmKeeper,
+    ibc::IbcSimpleModule, App, AppBuilder, AppResponse, BankKeeper, Contract, DistributionKeeper,
+    Executor, FailingModule, GovFailingModule, StakeKeeper, StargateFailing, WasmKeeper,
 };
 use cw_utils::NativeBalance;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
+use super::state::MockState;
 use cw_orch_core::{
-    contract::interface_traits::{ContractInstance, Uploadable},
-    environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
-    environment::{EnvironmentInfo, EnvironmentQuerier, TxHandler, WasmCodeQuerier},
+    contract::interface_traits::Uploadable,
+    environment::TxHandler,
+    environment::{
+        BankQuerier, BankSetter, ChainState, DefaultQueriers, IndexResponse, StateInterface,
+    },
     CwEnvError,
 };
 
-use super::state::MockState;
+use crate::queriers::bank::MockBankQuerier;
 
 pub type MockApp = App<
     BankKeeper,
@@ -143,13 +145,12 @@ impl<S: StateInterface> Mock<S> {
         address: impl Into<String>,
         denom: &str,
     ) -> Result<Uint128, CwEnvError> {
-        let amount = self
-            .app
-            .borrow()
-            .wrap()
-            .query_balance(address, denom)?
-            .amount;
-        Ok(amount)
+        Ok(self
+            .bank_querier()
+            .balance(address, Some(denom.to_string()))?
+            .first()
+            .map(|c| c.amount)
+            .unwrap_or_default())
     }
 
     /// Fetch all the balances of an address.
@@ -157,8 +158,7 @@ impl<S: StateInterface> Mock<S> {
         &self,
         address: impl Into<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
-        let amount = self.app.borrow().wrap().query_all_balances(address)?;
-        Ok(amount)
+        self.bank_querier().balance(address, None)
     }
 }
 
@@ -281,34 +281,53 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwEnvError> {
-        let addr = self.app.borrow_mut().instantiate_contract(
+        let msg = WasmMsg::Instantiate {
+            admin: admin.map(|a| a.to_string()),
             code_id,
-            self.sender.clone(),
-            init_msg,
-            coins,
-            label.unwrap_or("contract_init"),
-            admin.map(|a| a.to_string()),
-        )?;
-        // add contract address to events manually
-        let mut event = Event::new("instantiate");
-        event = event.add_attribute("_contract_address", addr);
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+        };
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
         let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
+            events: app.events,
+            data: app.data,
         };
         Ok(resp)
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    fn instantiate2<I: Serialize + Debug>(
         &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwEnvError> {
-        self.app
-            .borrow()
-            .wrap()
-            .query_wasm_smart(contract_address, query_msg)
-            .map_err(From::from)
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
+    ) -> Result<Self::Response, CwEnvError> {
+        let msg = WasmMsg::Instantiate2 {
+            admin: admin.map(|a| a.to_string()),
+            code_id,
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+            salt,
+        };
+
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
+        let resp = AppResponse {
+            events: app.events,
+            data: app.data,
+        };
+        Ok(resp)
     }
 
     fn migrate<M: Serialize + Debug>(
@@ -327,110 +346,17 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             )
             .map_err(From::from)
     }
-
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(|b| {
-            b.height += amount;
-            b.time = b.time.plus_seconds(5 * amount);
-        });
-        Ok(())
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(|b| {
-            b.time = b.time.plus_seconds(secs);
-            b.height += secs / 5;
-        });
-        Ok(())
-    }
-
-    fn next_block(&self) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(next_block);
-        Ok(())
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
-        Ok(self.app.borrow().block_info())
-    }
 }
 
-impl<S: StateInterface> EnvironmentQuerier for Mock<S> {
-    fn env_info(&self) -> EnvironmentInfo {
-        let block_info = self.block_info().unwrap();
-        let chain_id = block_info.chain_id.clone();
-        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-        EnvironmentInfo {
-            chain_id,
-            chain_name,
-            deployment_id: "default".to_string(),
-        }
-    }
-}
+impl<S: StateInterface> BankSetter for Mock<S> {
+    type T = MockBankQuerier;
 
-impl WasmCodeQuerier for Mock {
-    /// Returns the checksum of provided code_id
-    /// Cw-multi-test implements a checksum based on the code_id (because it wan't access the wasm code)
-    /// So it's not possible to check wether 2 contracts have the same code using the Mock implementation
-    fn contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
-        let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
-        Ok(code_info.checksum.to_string())
-    }
-
-    /// Returns the code_info structure of the provided contract
-    fn contract_info<T: ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
-        let info = self
-            .app
-            .borrow()
-            .wrap()
-            .query_wasm_contract_info(contract.address()?)?;
-        Ok(info)
-    }
-
-    fn local_hash<T: Uploadable + ContractInstance<Mock>>(
-        &self,
-        contract: &T,
-    ) -> Result<String, CwEnvError> {
-        // We return the hashed contract-id.
-        // This will cause the logic to never re-upload a contract if it has the same contract-id.
-        Ok(sha256::digest(contract.id().as_bytes()))
-    }
-}
-
-impl BankQuerier for Mock {
-    fn balance(
-        &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        let addr = address.into();
-        if let Some(denom) = denom {
-            Ok(vec![Coin {
-                amount: self.query_balance(&addr, &denom)?,
-                denom,
-            }])
-        } else {
-            self.query_all_balances(&addr)
-        }
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        Ok(self.app.borrow().wrap().query_supply(denom)?)
-    }
-}
-
-impl BankSetter for Mock {
     fn set_balance(
         &mut self,
         address: impl Into<String>,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(&Addr::unchecked(address), amount)
+        (*self).set_balance(address, amount)
     }
 }
 
@@ -442,6 +368,7 @@ mod test {
         StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
+    use cw_orch_core::environment::QueryHandler;
     use serde::Serialize;
     use speculoos::prelude::*;
 
@@ -634,10 +561,14 @@ mod test {
         app.set_balance(sender, init_coins.clone())?;
         let sender = app.sender.clone();
         assert_eq!(
-            app.balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
 
         Ok(())
     }

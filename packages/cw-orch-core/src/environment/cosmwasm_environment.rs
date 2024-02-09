@@ -1,17 +1,14 @@
 //! Transactional traits for execution environments.
 
-use super::{ChainState, IndexResponse};
-use crate::{
-    contract::interface_traits::{ContractInstance, Uploadable},
-    error::CwEnvError,
-};
-use cosmwasm_std::{Addr, BlockInfo, Coin, ContractInfoResponse};
-use serde::{de::DeserializeOwned, Serialize};
+use super::{queriers::QueryHandler, ChainState, IndexResponse};
+use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
+use cosmwasm_std::{Addr, Binary, Coin};
+use serde::Serialize;
 use std::fmt::Debug;
 
 /// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + BankQuerier + WasmCodeQuerier + EnvironmentQuerier + Clone {}
-impl<T: TxHandler + BankQuerier + WasmCodeQuerier + EnvironmentQuerier + Clone> CwEnv for T {}
+pub trait CwEnv: TxHandler + QueryHandler + Clone {}
+impl<T: TxHandler + QueryHandler + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -34,18 +31,6 @@ pub trait TxHandler: ChainState + Clone {
     /// Sets wallet to sign transactions.
     fn set_sender(&mut self, sender: Self::Sender);
 
-    /// Wait for an amount of blocks.
-    fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
-
-    /// Wait for an amount of seconds.
-    fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error>;
-
-    /// Wait for next block.
-    fn next_block(&self) -> Result<(), Self::Error>;
-
-    /// Return current block info see [`BlockInfo`].
-    fn block_info(&self) -> Result<BlockInfo, Self::Error>;
-
     // Actions
 
     /// Uploads a contract to the chain.
@@ -61,6 +46,17 @@ pub trait TxHandler: ChainState + Clone {
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, Self::Error>;
 
+    /// Send a Instantiate2Msg to a contract.
+    fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
+    ) -> Result<Self::Response, Self::Error>;
+
     /// Send a ExecMsg to a contract.
     fn execute<E: Serialize + Debug>(
         &self,
@@ -68,13 +64,6 @@ pub trait TxHandler: ChainState + Clone {
         coins: &[Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, Self::Error>;
-
-    /// Send a QueryMsg to a contract.
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, Self::Error>;
 
     /// Send a MigrateMsg to a contract.
     fn migrate<M: Serialize + Debug>(
@@ -93,45 +82,126 @@ pub trait TxHandler: ChainState + Clone {
     }
 }
 
-pub trait WasmCodeQuerier: TxHandler + Clone {
-    /// Returns the checksum of provided code_id
-    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error>;
-    /// Returns the code_info structure of the provided contract
-    fn contract_info<T: ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<ContractInfoResponse, <Self as TxHandler>::Error>;
+// TODO: Perfect test candidate for `trybuild`
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::Empty;
+    use cw_multi_test::AppResponse;
 
-    /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
-    fn local_hash<T: Uploadable + ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<String, CwEnvError> {
-        contract.wasm().checksum()
+    use crate::environment::StateInterface;
+
+    use super::*;
+
+    #[derive(Clone)]
+    struct MockHandler {}
+
+    impl StateInterface for () {
+        fn get_address(&self, _contract_id: &str) -> Result<Addr, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_address(&mut self, _contract_id: &str, _address: &Addr) {
+            unimplemented!()
+        }
+
+        fn get_code_id(&self, _contract_id: &str) -> Result<u64, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_code_id(&mut self, _contract_id: &str, _code_id: u64) {
+            unimplemented!()
+        }
+
+        fn get_all_addresses(&self) -> Result<std::collections::HashMap<String, Addr>, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
+            unimplemented!()
+        }
     }
-}
 
-pub trait BankQuerier: TxHandler {
-    /// Query the bank balance of a given address
-    /// If denom is None, returns all balances
-    fn balance(
-        &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<Coin>, <Self as TxHandler>::Error>;
+    impl ChainState for MockHandler {
+        type Out = ();
 
-    /// Query total supply in the bank for a denom
-    fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, <Self as TxHandler>::Error>;
-}
+        fn state(&self) -> Self::Out {}
+    }
 
-#[derive(Clone)]
-pub struct EnvironmentInfo {
-    pub chain_id: String,
-    pub chain_name: String,
-    pub deployment_id: String,
-}
+    impl TxHandler for MockHandler {
+        type Response = AppResponse;
 
-pub trait EnvironmentQuerier {
-    /// Get some details about the environment.
-    fn env_info(&self) -> EnvironmentInfo;
+        type Error = CwEnvError;
+
+        type ContractSource = ();
+
+        type Sender = ();
+
+        fn sender(&self) -> Addr {
+            unimplemented!()
+        }
+
+        fn set_sender(&mut self, _sender: Self::Sender) {}
+
+        fn upload(
+            &self,
+            _contract_source: &impl Uploadable,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn instantiate<I: Serialize + Debug>(
+            &self,
+            _code_id: u64,
+            _init_msg: &I,
+            _label: Option<&str>,
+            _admin: Option<&Addr>,
+            _coins: &[cosmwasm_std::Coin],
+        ) -> Result<Self::Response, Self::Error> {
+            Ok(AppResponse {
+                events: vec![],
+                data: None,
+            })
+        }
+
+        fn execute<E: Serialize + Debug>(
+            &self,
+            _exec_msg: &E,
+            _coins: &[Coin],
+            _contract_address: &Addr,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn migrate<M: Serialize + Debug>(
+            &self,
+            _migrate_msg: &M,
+            _new_code_id: u64,
+            _contract_address: &Addr,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn instantiate2<I: Serialize + Debug>(
+            &self,
+            _code_id: u64,
+            _init_msg: &I,
+            _label: Option<&str>,
+            _admin: Option<&Addr>,
+            _coins: &[cosmwasm_std::Coin],
+            _salt: Binary,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+    }
+
+    fn associated_error<T: TxHandler>(t: T) -> anyhow::Result<()> {
+        t.instantiate(0, &Empty {}, None, None, &[])?;
+        Ok(())
+    }
+
+    #[test]
+    fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
+        associated_error(MockHandler {})?;
+        Ok(())
+    }
 }

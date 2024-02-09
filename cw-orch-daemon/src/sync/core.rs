@@ -1,19 +1,17 @@
-use std::{fmt::Debug, sync::Arc, time::Duration};
+use std::{fmt::Debug, sync::Arc};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{cosmrs_to_cosmwasm_coins, Bank, DaemonQuerier, Node},
+    queriers::{Bank, CosmWasm, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
 };
-
-use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{BankQuerier, ChainState, EnvironmentInfo, EnvironmentQuerier, TxHandler},
+    environment::{ChainState, DefaultQueriers, QueryHandler, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -56,12 +54,6 @@ impl Daemon {
         DaemonBuilder::default()
     }
 
-    /// Perform a query with a given querier
-    /// See [Querier](crate::queriers) for examples.
-    pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
-        self.daemon.query_client()
-    }
-
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
         self.daemon.state.grpc_channel.clone()
@@ -70,6 +62,18 @@ impl Daemon {
     /// Get the channel configured for this Daemon
     pub fn wallet(&self) -> Wallet {
         self.daemon.sender.clone()
+    }
+
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilder {
+        let mut builder = Self::builder();
+        builder
+            .chain(self.state().chain_data.clone())
+            .sender((*self.daemon.sender).clone())
+            .handle(&self.rt_handle)
+            .deployment_id(&self.state().deployment_id);
+        builder
     }
 }
 
@@ -124,15 +128,6 @@ impl TxHandler for Daemon {
         )
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        self.rt_handle
-            .block_on(self.daemon.query(query_msg, contract_address))
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -145,90 +140,19 @@ impl TxHandler for Daemon {
         )
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().block_height())?;
-        let end_height = last_height + amount;
-
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query_client::<Node>().block_height())?;
-        }
-        Ok(())
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        self.rt_handle
-            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
-
-        Ok(())
-    }
-
-    fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().block_height())?;
-        let end_height = last_height + 1;
-
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query_client::<Node>().block_height())?;
-        }
-        Ok(())
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().latest_block())?;
-        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
-        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
-        Ok(cosmwasm_std::BlockInfo {
-            height: block.header.height.value(),
-            time,
-            chain_id: block.header.chain_id.to_string(),
-        })
-    }
-}
-
-impl BankQuerier for Daemon {
-    fn balance(
+    fn instantiate2<I: Serialize + Debug>(
         &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        let bank = Bank::new(self.channel());
-
-        let cosmrs_coins = self.rt_handle.block_on(bank.balance(address, denom))?;
-
-        cosmrs_coins
-            .iter()
-            .map(|c| cosmrs_to_cosmwasm_coins(c.clone()))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(Into::into)
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        let bank = Bank::new(self.channel());
-
-        let cosmrs_coin = self.rt_handle.block_on(bank.supply_of(denom))?;
-        cosmrs_to_cosmwasm_coins(cosmrs_coin.clone()).map_err(Into::into)
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: cosmwasm_std::Binary,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle.block_on(
+            self.daemon
+                .instantiate2(code_id, init_msg, label, admin, coins, salt),
+        )
     }
 }
 
@@ -252,13 +176,30 @@ impl Stargate for Daemon {
     }
 }
 
-impl EnvironmentQuerier for Daemon {
-    fn env_info(&self) -> EnvironmentInfo {
-        let state = &self.daemon.sender.daemon_state;
-        EnvironmentInfo {
-            chain_id: state.chain_data.chain_id.to_string(),
-            chain_name: state.chain_data.chain_name.clone(),
-            deployment_id: state.deployment_id.clone(),
-        }
+impl QueryHandler for Daemon {
+    type Error = DaemonError;
+
+    fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
+        self.rt_handle.block_on(self.daemon.wait_blocks(amount))?;
+
+        Ok(())
     }
+
+    fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
+        self.rt_handle.block_on(self.daemon.wait_seconds(secs))?;
+
+        Ok(())
+    }
+
+    fn next_block(&self) -> Result<(), DaemonError> {
+        self.rt_handle.block_on(self.daemon.next_block())?;
+
+        Ok(())
+    }
+}
+
+impl DefaultQueriers for Daemon {
+    type Bank = Bank;
+    type Wasm = CosmWasm;
+    type Node = Node;
 }

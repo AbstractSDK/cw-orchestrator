@@ -112,7 +112,8 @@ impl DaemonState {
         Ok(state)
     }
 
-    fn state_file_path() -> Result<String, DaemonError> {
+    /// Returns the path of the file where the state of `cw-orchestrator` is stored.
+    pub fn state_file_path() -> Result<String, DaemonError> {
         // check if STATE_FILE en var is configured, default to state.json
         let env_file_path = CwOrchEnvVars::load()?.state_file;
         let state_file_path = if env_file_path.is_relative() {

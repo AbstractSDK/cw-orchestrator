@@ -18,7 +18,6 @@ pub mod keys;
 pub mod live_mock;
 mod log;
 pub mod queriers;
-mod traits;
 pub mod tx_broadcaster;
 pub mod tx_builder;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
@@ -31,6 +30,7 @@ pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{
         cosmos::{
             auth::v1beta1 as auth,
+            authz::v1beta1 as authz,
             bank::v1beta1 as bank,
             base::{abci::v1beta1 as abci, tendermint::v1beta1 as tendermint},
             feegrant::v1beta1 as feegrant,

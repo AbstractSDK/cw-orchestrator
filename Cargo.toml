@@ -14,21 +14,23 @@ cosmwasm-std = { version = "1.1" }
 cw-multi-test = { package = "abstract-cw-multi-test", version = "0.20.2", features = [
   "cosmwasm_1_4",
 ] }
-cw20 = { package = "abstract-cw20", git = "https://github.com/AbstractSDK/cw-plus.git" }
-cw20-base = { package = "abstract-cw20-base", git = "https://github.com/AbstractSDK/cw-plus.git" }
+cw20 = { package = "abstract-cw20", version = "1.2.2" }
+cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
 
 # Test Tube env deps
 osmosis-test-tube = { version = "21.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.19.0" }
-cw-orch-core = { path = "packages/cw-orch-core", version = "0.19.1" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.19.0" }
-cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.19.1" }
-cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.18.0" }
+
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.20.0" }
+cw-orch-core = { path = "packages/cw-orch-core", version = "0.20.1" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.20.0" }
+cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.20.0" }
+cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.20.0" }
 cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.18.0" }
-cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.19.0" }
+cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.20.0" }
+
 thiserror = { version = "1.0.21" }
 sha256 = { version = "1" }
 serde_json = "1.0.79"

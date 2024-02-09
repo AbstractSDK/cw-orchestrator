@@ -26,7 +26,7 @@ impl FetchAddressesOutput {
         scope: &<FetchAddresses as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let duplicate_strategy = DuplicatesStrategy::Ask;
-        let state_file = cw_orch_core::env::CwOrchEnvVars::load()?.state_file;
+        let state_file = cw_orch::environment::CwOrchEnvVars::load()?.state_file;
 
 
         let chain = previous_context.chain;
