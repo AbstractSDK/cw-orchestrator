@@ -73,8 +73,7 @@ impl ExpirationType {
 
 pub fn parse_expiration() -> InquireResult<cw_utils::Expiration> {
     let locked = inquire::Select::new("Choose expiration type", ExpirationType::VARIANTS.to_vec())
-        .prompt_skippable()?
-        .unwrap_or(ExpirationType::Never);
+        .prompt()?;
 
     let expiration = match locked {
         ExpirationType::AtHeight => {
