@@ -150,7 +150,7 @@ impl FetchAddressesOutput {
                     .with_initial_value(contract_id)
                     .prompt()?,
             };
-            let maybe_address = address_book::get_account_id(chain_id, &alias)?;
+            let mut maybe_address = address_book::get_account_id(chain_id, &alias)?;
 
             if maybe_address.is_some() {
                 // Duplicate happened
@@ -168,10 +168,11 @@ impl FetchAddressesOutput {
 
                 match duplicate_resolve {
                     DuplicateResolve::Rename => {
-                        while address_book::get_account_id(chain_id, &alias)?.is_some() {
+                        while maybe_address.is_some() {
                             alias = inquire::Text::new("Rename contract alias")
                                 .with_initial_value(contract_id)
                                 .prompt()?;
+                            maybe_address = address_book::get_account_id(chain_id, &alias)?
                         }
                     }
                     DuplicateResolve::Skip => continue,
