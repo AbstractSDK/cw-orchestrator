@@ -3,7 +3,6 @@ use std::{cell::RefCell, rc::Rc};
 use cosmwasm_std::testing::MockApi;
 use cosmwasm_std::{instantiate2_address, Api};
 use cosmwasm_std::{to_json_binary, ContractInfoResponse, HexBinary};
-use cw_multi_test::addons::MockApiBech32;
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier},
@@ -164,18 +163,16 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
         const MOCK_ADDR: &str = "cosmos1g0pzl69nr8j7wyxxkzurj808svnrrrxtfl8qqm";
 
         let mock_canonical = MockApi::default().addr_canonicalize(MOCK_ADDR)?;
-        let mock_canonical_bech32 = MockApiBech32::new("cosmos").addr_canonicalize(MOCK_ADDR)?;
+        let mock_humanized = self.app.borrow().api().addr_humanize(&mock_canonical);
 
-        let self_canonical = self.app.borrow().api().addr_canonicalize(MOCK_ADDR)?;
-
-        if self_canonical == mock_canonical {
+        if mock_humanized.is_ok() && mock_humanized.unwrap() == MOCK_ADDR {
             // if regular mock
             Ok(format!(
                 "contract/{}/{}",
                 creator.into(),
                 HexBinary::from(salt).to_hex()
             ))
-        } else if self_canonical == mock_canonical_bech32 {
+        } else {
             // if bech32 mock
             let checksum = HexBinary::from_hex(&self.code_id_hash(code_id)?)?;
             let canon_creator = self.app.borrow().api().addr_canonicalize(&creator.into())?;
@@ -186,10 +183,52 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
                 .api()
                 .addr_humanize(&canonical_addr)?
                 .to_string())
-        } else {
-            Err(CwEnvError::StdErr(
-                "Unsupported mock API for instantiate2_addr".to_string(),
-            ))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::{Binary, Empty, HexBinary, Response, StdError};
+    use cw_multi_test::ContractWrapper;
+    use cw_orch_core::environment::{DefaultQueriers, TxHandler, WasmQuerier};
+
+    use crate::{Mock, MockBech32};
+
+    #[test]
+    fn bech32_instantiate2() -> anyhow::Result<()> {
+        let mock = MockBech32::new_bech32("mock");
+
+        // For this instantiate 2, we need a registered code id
+        mock.upload_custom(
+            "test-contract",
+            Box::new(ContractWrapper::new_with_empty(
+                |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
+                |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
+                |_, _, _: Empty| Ok::<_, StdError>(Binary(b"dummy-response".to_vec())),
+            )),
+        )?;
+
+        mock.wasm_querier()
+            .instantiate2_addr(1, mock.sender(), Binary(b"salt-test".to_vec()))?;
+
+        Ok(())
+    }
+    #[test]
+    fn normal_instantiate2() -> anyhow::Result<()> {
+        let mock = Mock::new("sender");
+
+        let addr = mock.wasm_querier().instantiate2_addr(
+            0,
+            mock.sender(),
+            Binary(b"salt-test".to_vec()),
+        )?;
+
+        assert_eq!(
+            addr,
+            format!("contract/sender/{}", HexBinary::from(b"salt-test").to_hex())
+        );
+
+        Ok(())
     }
 }

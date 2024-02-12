@@ -48,7 +48,7 @@ pub type MockApp<A = MockApi> = App<
 /// use cw_orch_mock::Mock;
 /// use cw_orch_core::environment::TxHandler;
 ///
-/// let mock: Mock = MockBase::new("sender");
+/// let mock: Mock = Mock::new("sender");
 ///
 /// // set a balance
 /// mock.set_balance("sender", vec![coin(100u128, "token")]).unwrap();
@@ -66,7 +66,7 @@ pub type MockApp<A = MockApi> = App<
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_mock::MockState as CustomState;
 ///
-/// let mock: Mock = MockBase::new_custom("sender", CustomState::new());
+/// let mock: Mock = Mock::new_custom("sender", CustomState::new());
 /// ```
 pub struct MockBase<A: Api = MockApi, S: StateInterface = MockState> {
     /// Address used for the operations.
