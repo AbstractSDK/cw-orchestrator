@@ -15,12 +15,12 @@ use crate::{queriers::bank::MockBankQuerier, MockBase, MockBech32, MockState};
 
 impl MockBase<MockApiBech32, MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new_bech32(prefix: &'static str) -> Self {
-        MockBech32::new_custom_bech32(prefix, MockState::new())
+    pub fn new(prefix: &'static str) -> Self {
+        MockBech32::new_custom(prefix, MockState::new())
     }
 
-    pub fn new_bech32_with_chain_id(prefix: &'static str, chain_id: &str) -> Self {
-        let chain = MockBech32::new_custom_bech32(prefix, MockState::new());
+    pub fn new_with_chain_id(prefix: &'static str, chain_id: &str) -> Self {
+        let chain = MockBech32::new_custom(prefix, MockState::new());
         chain
             .app
             .borrow_mut()
@@ -38,14 +38,14 @@ impl<S: StateInterface> MockBase<MockApiBech32, S> {
 
 impl Default for MockBase<MockApiBech32, MockState> {
     fn default() -> Self {
-        MockBase::<MockApiBech32, MockState>::new_custom_bech32("mock", MockState::new())
+        MockBase::<MockApiBech32, MockState>::new_custom("mock", MockState::new())
     }
 }
 
 impl<S: StateInterface> MockBase<MockApiBech32, S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom_bech32(prefix: &'static str, custom_state: S) -> Self {
+    pub fn new_custom(prefix: &'static str, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
         let app = Rc::new(RefCell::new(
             AppBuilder::new_custom()

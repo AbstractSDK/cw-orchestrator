@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn bech32_instantiate2() -> anyhow::Result<()> {
-        let mock = MockBech32::new_bech32("mock");
+        let mock = MockBech32::new("mock");
 
         // For this instantiate 2, we need a registered code id
         mock.upload_custom(

@@ -38,7 +38,7 @@ pub type MockApp<A = MockApi> = App<
 /// The state is customizable by implementing the [`StateInterface`] trait on a custom struct and providing it on the custom constructor.
 ///
 /// The addresses used inside this environment are bech32 addresses. For instance, when creating a mock environment
-/// let chain = MockBase::new("sender");
+/// let chain = Mock::new("sender");
 /// the actual sender address can be generated using
 /// let sender_addr = chain.addr_make("sender")
 ///
@@ -298,7 +298,7 @@ mod test {
     fn mock() {
         let recipient = BALANCE_ADDR;
         let sender = SENDER;
-        let chain = MockBase::new(sender);
+        let chain = Mock::new(sender);
         let amount = 1000000u128;
         let denom = "uosmo";
 
@@ -376,7 +376,7 @@ mod test {
     #[test]
     fn custom_mock_env() {
         let mock_state = MockState::new();
-        let chain = MockBase::<_>::new_custom(SENDER, mock_state);
+        let chain = Mock::new_custom(SENDER, mock_state);
 
         let recipient = BALANCE_ADDR;
         let amount = 1000000u128;
@@ -420,7 +420,7 @@ mod test {
 
     #[test]
     fn add_balance() {
-        let chain = MockBase::new(SENDER);
+        let chain = Mock::new(SENDER);
         let recipient = BALANCE_ADDR;
         let amount = 1000000u128;
         let denom_1 = "uosmo";
@@ -444,7 +444,7 @@ mod test {
         let denom = "urandom";
         let init_coins = coins(45, denom);
         let sender = "sender";
-        let app = MockBase::new(sender);
+        let app = Mock::new(sender);
         app.set_balance(sender, init_coins.clone())?;
         let sender = app.sender.clone();
         assert_eq!(
