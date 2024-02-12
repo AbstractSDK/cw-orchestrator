@@ -150,43 +150,52 @@ impl FetchAddressesOutput {
                     .with_initial_value(contract_id)
                     .prompt()?,
             };
-            let mut maybe_address = address_book::get_account_id(chain_id, &alias)?;
+            let maybe_address = address_book::get_account_id(chain_id, &alias)?;
+            let is_duplicate = maybe_address.is_some();
 
-            if maybe_address.is_some() {
+            if is_duplicate {
                 // Duplicate happened
-                let duplicate_resolve = if let Some(global_resolved) = &duplicate_resolve_global {
+                let duplicate_resolve = match &duplicate_resolve_global {
                     // Check if it's already globally resolved
-                    match global_resolved {
+                    Some(global_resolved) => match global_resolved {
                         DuplicateResolve::SkipAll => DuplicateResolve::Skip,
                         DuplicateResolve::OverrideAll => DuplicateResolve::Override,
                         _ => unreachable!(),
-                    }
-                } else {
-                    // Or input new one
-                    input_duplicate_resolve(&alias)?
+                    },
+                    // Or resolve here
+                    None => input_duplicate_resolve(&alias)?,
                 };
 
                 match duplicate_resolve {
+                    // Skip
+                    DuplicateResolve::Skip => (),
+                    DuplicateResolve::SkipAll => {
+                        duplicate_resolve_global = Some(duplicate_resolve);
+                    }
+                    // Rename
                     DuplicateResolve::Rename => {
-                        while maybe_address.is_some() {
+                        loop {
                             alias = inquire::Text::new("Rename contract alias")
                                 .with_initial_value(contract_id)
                                 .prompt()?;
-                            maybe_address = address_book::get_account_id(chain_id, &alias)?
+                            let is_duplicate =
+                                address_book::get_account_id(chain_id, &alias)?.is_some();
+                            if !is_duplicate {
+                                break;
+                            }
                         }
+                        address_book::insert_account_id(chain_id, &alias, address)?;
                     }
-                    DuplicateResolve::Skip => continue,
-                    DuplicateResolve::SkipAll => {
-                        duplicate_resolve_global = Some(duplicate_resolve);
-                        continue;
+                    // Override
+                    DuplicateResolve::Override => {
+                        address_book::insert_account_id(chain_id, &alias, address)?;
                     }
-                    DuplicateResolve::Override => {}
                     DuplicateResolve::OverrideAll => {
                         duplicate_resolve_global = Some(duplicate_resolve);
+                        address_book::insert_account_id(chain_id, &alias, address)?;
                     }
                 }
             }
-            address_book::insert_account_id(chain_id, &alias, address)?;
         }
         Ok(FetchAddressesOutput)
     }
