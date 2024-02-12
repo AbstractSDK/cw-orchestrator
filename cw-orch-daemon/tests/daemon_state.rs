@@ -1,5 +1,3 @@
-use std::{thread, time::Duration};
-
 use cw_orch_core::env::STATE_FILE_ENV_NAME;
 use cw_orch_daemon::{ChainRegistryData, DaemonState};
 use cw_orch_networks::networks::JUNO_1;
@@ -16,11 +14,17 @@ fn simultaneous_read() {
         .block_on(DaemonState::new(chain_data, "test".to_owned(), false))
         .unwrap();
     daemon_state.set("test", "test", "test").unwrap();
+
+    let mut handles = vec![];
     for _ in 0..25 {
         let daemon_state = daemon_state.clone();
-        std::thread::spawn(move || daemon_state.get("test"));
+        let handle = std::thread::spawn(move || daemon_state.get("test").unwrap());
+        handles.push(handle);
     }
-    thread::sleep(Duration::from_millis(500));
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
 }
 
 #[test]
@@ -34,9 +38,17 @@ fn simultaneous_write() {
         .block_on(DaemonState::new(chain_data, "test".to_owned(), false))
         .unwrap();
 
+    let mut handles = vec![];
     for i in 0..25 {
         let daemon_state = daemon_state.clone();
-        std::thread::spawn(move || daemon_state.set("test", &format!("test{i}"), format!("test-{i}")));
+        let handle = std::thread::spawn(move || {
+            daemon_state
+                .set("test", &format!("test{i}"), format!("test-{i}"))
+                .unwrap();
+        });
+        handles.push(handle);
     }
-    thread::sleep(Duration::from_millis(500));
+    for handle in handles {
+        handle.join().unwrap();
+    }
 }
