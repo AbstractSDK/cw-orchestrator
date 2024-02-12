@@ -4,8 +4,10 @@
 // Export our fork
 pub extern crate cw_multi_test;
 
+mod bech32;
 mod core;
 pub mod queriers;
+mod simple;
 mod state;
 
 pub(crate) use self::core::MockBase;
