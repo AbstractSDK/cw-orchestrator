@@ -189,7 +189,7 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Binary, Empty, HexBinary, Response, StdError};
+    use cosmwasm_std::{Addr, Binary, Empty, HexBinary, Response, StdError};
     use cw_multi_test::ContractWrapper;
     use cw_orch_core::environment::{DefaultQueriers, TxHandler, WasmQuerier};
 
@@ -214,6 +214,30 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn bech32_instantiate2_contract() -> anyhow::Result<()> {
+        let mut mock = MockBech32::new("mock");
+        mock.set_sender(Addr::unchecked(
+            "mock1pgm8hyk0pvphmlvfjc8wsvk4daluz5tgrw6pu5mfpemk74uxnx9qwrtv4f",
+        ));
+
+        // For this instantiate 2, we need a registered code id
+        mock.upload_custom(
+            "test-contract",
+            Box::new(ContractWrapper::new_with_empty(
+                |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
+                |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
+                |_, _, _: Empty| Ok::<_, StdError>(Binary(b"dummy-response".to_vec())),
+            )),
+        )?;
+
+        mock.wasm_querier()
+            .instantiate2_addr(1, mock.sender(), Binary(b"salt-test".to_vec()))?;
+
+        Ok(())
+    }
+
     #[test]
     fn normal_instantiate2() -> anyhow::Result<()> {
         let mock = Mock::new("sender");
