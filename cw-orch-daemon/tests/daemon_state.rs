@@ -21,7 +21,6 @@ fn simultaneous_read() {
         let handle = std::thread::spawn(move || daemon_state.get("test").unwrap());
         handles.push(handle);
     }
-
     for handle in handles {
         handle.join().unwrap();
     }
@@ -48,7 +47,15 @@ fn simultaneous_write() {
         });
         handles.push(handle);
     }
+
+    let mut maybe_err = Ok(());
+    // Finish all handles
     for handle in handles {
-        handle.join().unwrap();
+        let result = handle.join();
+        if result.is_err() {
+            maybe_err = result;
+        }
     }
+    // Error if at least one failed
+    maybe_err.unwrap()
 }
