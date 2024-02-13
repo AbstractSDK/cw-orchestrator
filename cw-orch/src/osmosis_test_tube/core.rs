@@ -284,8 +284,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
 impl BankSetter for OsmosisTestTube {
     type T = OsmosisTestTubeBankQuerier;
 
-    /// It's impossible to set the balance of an address directly in OsmosisTestTub
-    /// So for this implementation, we use a weird algorithm
+    /// It's impossible to set the balance of an address directly in OsmosisTestTube
     fn set_balance(
         &mut self,
         _address: impl Into<String>,

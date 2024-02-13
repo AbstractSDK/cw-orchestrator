@@ -276,7 +276,7 @@ impl WasmQuerier for CosmWasm {
         Ok(c)
     }
 
-    fn instantiate2_addr<I: serde::Serialize + std::fmt::Debug>(
+    fn instantiate2_addr(
         &self,
         code_id: u64,
         creator: impl Into<String>,

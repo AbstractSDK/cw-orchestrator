@@ -36,13 +36,12 @@ pub trait WasmQuerier: Querier {
 
     /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
     fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
-        &self,
         contract: &T,
     ) -> Result<String, CwEnvError> {
         contract.wasm().checksum()
     }
 
-    fn instantiate2_addr<I: Serialize + std::fmt::Debug>(
+    fn instantiate2_addr(
         &self,
         code_id: u64,
         creator: impl Into<String>,

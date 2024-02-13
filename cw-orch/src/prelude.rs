@@ -31,7 +31,7 @@ pub use crate::environment::{
 };
 
 // Mock for testing
-pub use crate::mock::Mock;
+pub use crate::mock::{Mock, MockBech32};
 
 // OsmosisTestTube for testing
 #[cfg(feature = "osmosis-test-tube")]
