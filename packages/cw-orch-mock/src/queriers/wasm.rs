@@ -51,8 +51,7 @@ fn contract_info<A: Api>(
     Ok(info)
 }
 
-fn local_hash<A: Api, Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
-    _querier: &MockWasmQuerier<A>,
+fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
     contract: &T,
 ) -> Result<String, CwEnvError> {
     // We return the hashed contract-id.
@@ -126,10 +125,9 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
     }
 
     fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
-        &self,
         contract: &T,
     ) -> Result<String, CwEnvError> {
-        local_hash(self, contract)
+        local_hash(contract)
     }
 
     fn raw_query(

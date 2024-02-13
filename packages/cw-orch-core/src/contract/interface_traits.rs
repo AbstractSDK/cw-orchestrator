@@ -230,7 +230,7 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             .wasm_querier()
             .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = chain.wasm_querier().local_hash(self)?;
+        let local_hash = Chain::Wasm::local_hash(self)?;
         Ok(local_hash == on_chain_hash)
     }
 
