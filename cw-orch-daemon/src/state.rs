@@ -221,6 +221,14 @@ impl DaemonState {
 
         Ok(())
     }
+
+    /// Forcefully write current json to a file
+    pub fn force_write(&self) -> Result<(), DaemonError> {
+        let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
+        let (_, file_state) = lock.get_mut(&self.json_file_path).unwrap();
+        file_state.force_write();
+        Ok(())
+    }
 }
 
 impl Drop for DaemonState {

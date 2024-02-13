@@ -67,13 +67,18 @@ impl JsonFileState {
     pub fn get_mut(&mut self, chain_id: &str, network_id: &str) -> &mut Value {
         self.json[network_id].get_mut(chain_id).unwrap()
     }
+
+    /// Force write to a file
+    pub fn force_write(&mut self) {
+        self.lock.file.rewind().unwrap();
+        serde_json::to_writer_pretty(&self.lock.file, &self.json).unwrap();
+    }
 }
 
 // Write json when dropping
 impl Drop for JsonFileState {
     fn drop(&mut self) {
-        self.lock.file.rewind().unwrap();
-        serde_json::to_writer_pretty(&self.lock.file, &self.json).unwrap();
+        self.force_write()
     }
 }
 
