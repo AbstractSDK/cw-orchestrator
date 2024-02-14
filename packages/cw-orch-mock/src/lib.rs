@@ -10,8 +10,7 @@ pub mod queriers;
 mod simple;
 mod state;
 
-pub(crate) use self::core::MockBase;
-pub use self::core::{Mock, MockBech32};
+pub use self::core::{Mock, MockBech32, MockBase};
 
 pub type MockApp = self::core::MockApp<MockApi>;
 pub type MockAppBech32 = self::core::MockApp<MockApiBech32>;
