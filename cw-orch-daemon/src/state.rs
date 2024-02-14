@@ -188,6 +188,8 @@ impl DaemonState {
         if let Some((_, j)) = lock.get(&self.json_file_path) {
             Ok(j.state())
         } else {
+            // drop guard if not found, since reading may take a while
+            drop(lock);
             // Or just read it from a file
             crate::json_file::read(&self.json_file_path)
         }
