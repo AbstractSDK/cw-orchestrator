@@ -31,7 +31,7 @@ pub struct DaemonState {
     /// Information about the chain
     pub chain_data: ChainData,
     /// Flag to set the daemon state readonly and not pollute the env file
-    pub read_only: bool,
+    read_only: bool,
 }
 
 impl Clone for DaemonState {
