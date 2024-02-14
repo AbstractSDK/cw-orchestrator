@@ -56,7 +56,7 @@ mod wasm_path {
             let mut wasm = Vec::<u8>::new();
             file.read_to_end(&mut wasm)?;
             let checksum: [u8; 32] = Sha256::digest(wasm).into();
-            Ok(HexBinary::from(checksum))
+            Ok(checksum.into())
         }
     }
 }

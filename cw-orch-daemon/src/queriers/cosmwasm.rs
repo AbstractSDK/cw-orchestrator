@@ -51,7 +51,7 @@ impl CosmWasm {
         let request = QueryCodeRequest { code_id };
         let resp = client.code(request).await?.into_inner();
         let contract_hash = resp.code_info.unwrap().data_hash;
-        Ok(HexBinary::from(contract_hash))
+        Ok(contract_hash.into())
     }
 
     /// Query contract info
