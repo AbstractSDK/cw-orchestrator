@@ -4,9 +4,12 @@ pub use wasm_path::WasmPath;
 
 mod wasm_path {
     use crate::error::CwEnvError;
-    use cosmwasm_std::ensure_eq;
-    use sha256::TrySha256Digest;
-    use std::path::{Path, PathBuf};
+    use cosmwasm_std::{ensure_eq, HexBinary};
+    use sha2::{Digest, Sha256};
+    use std::{
+        io::Read,
+        path::{Path, PathBuf},
+    };
 
     /// Direct path to a `.wasm` file
     /// Stored as `PathBuf` to avoid lifetimes.
@@ -48,9 +51,12 @@ mod wasm_path {
         }
 
         /// Calculate the checksum of the WASM file.
-        pub fn checksum(&self) -> Result<String, CwEnvError> {
-            let checksum = self.path().digest()?;
-            Ok(checksum)
+        pub fn checksum(&self) -> Result<HexBinary, CwEnvError> {
+            let mut file = std::fs::File::open(self.path())?;
+            let mut wasm = Vec::<u8>::new();
+            file.read_to_end(&mut wasm)?;
+            let checksum: [u8; 32] = Sha256::digest(wasm).into();
+            Ok(HexBinary::from(checksum))
         }
     }
 }

@@ -15,7 +15,7 @@ cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }
-sha256 = { workspace = true }
+sha2 = { workspace = true }
 log.workspace = true
 
 [dev-dependencies]

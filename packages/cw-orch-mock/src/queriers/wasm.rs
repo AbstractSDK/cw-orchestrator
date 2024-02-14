@@ -9,6 +9,7 @@ use cw_orch_core::{
     CwEnvError,
 };
 use serde::{de::DeserializeOwned, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::{core::MockApp, MockBase};
 
@@ -34,9 +35,12 @@ impl<A: Api, S: StateInterface> QuerierGetter<MockWasmQuerier<A>> for MockBase<A
     }
 }
 
-fn code_id_hash<A: Api>(querier: &MockWasmQuerier<A>, code_id: u64) -> Result<String, CwEnvError> {
+fn code_id_hash<A: Api>(
+    querier: &MockWasmQuerier<A>,
+    code_id: u64,
+) -> Result<HexBinary, CwEnvError> {
     let code_info = querier.app.borrow().wrap().query_wasm_code_info(code_id)?;
-    Ok(code_info.checksum.to_hex())
+    Ok(code_info.checksum)
 }
 
 fn contract_info<A: Api>(
@@ -53,10 +57,11 @@ fn contract_info<A: Api>(
 
 fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
     contract: &T,
-) -> Result<String, CwEnvError> {
+) -> Result<HexBinary, CwEnvError> {
     // We return the hashed contract-id.
     // This will cause the logic to never re-upload a contract if it has the same contract-id.
-    Ok(sha256::digest(contract.id().as_bytes()))
+    let hash: [u8; 32] = Sha256::digest(contract.id()).into();
+    Ok(hash.into())
 }
 
 fn raw_query<A: Api>(
@@ -112,7 +117,7 @@ fn code<A: Api>(
 
 impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
     /// Returns the hex-encoded checksum of the code.
-    fn code_id_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
+    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, CwEnvError> {
         code_id_hash(self, code_id)
     }
 
@@ -126,7 +131,7 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
 
     fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
         contract: &T,
-    ) -> Result<String, CwEnvError> {
+    ) -> Result<HexBinary, CwEnvError> {
         local_hash(contract)
     }
 
@@ -172,7 +177,7 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
             ))
         } else {
             // if bech32 mock
-            let checksum = HexBinary::from_hex(&self.code_id_hash(code_id)?)?;
+            let checksum = self.code_id_hash(code_id)?;
             let canon_creator = self.app.borrow().api().addr_canonicalize(&creator.into())?;
             let canonical_addr = instantiate2_address(checksum.as_slice(), &canon_creator, &salt)?;
             Ok(self

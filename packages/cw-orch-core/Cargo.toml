@@ -30,7 +30,7 @@ serde = { workspace = true }
 cw-multi-test = { workspace = true }
 
 log = { workspace = true }
-sha256 = { workspace = true }
+sha2 = { workspace = true }
 anyhow = { workspace = true }
 serde_json = { workspace = true }
 
