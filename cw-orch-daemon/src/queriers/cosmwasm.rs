@@ -5,7 +5,7 @@ use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
     from_json, instantiate2_address, to_json_binary, CanonicalAddr, CodeInfoResponse,
-    ContractInfoResponse,
+    ContractInfoResponse, HexBinary,
 };
 use cw_orch_core::environment::{Querier, QuerierGetter, WasmQuerier};
 use tokio::runtime::Handle;
@@ -45,14 +45,13 @@ impl Querier for CosmWasm {
 
 impl CosmWasm {
     /// Query code_id by hash
-    pub async fn _code_id_hash(&self, code_id: u64) -> Result<String, DaemonError> {
+    pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodeRequest { code_id };
         let resp = client.code(request).await?.into_inner();
         let contract_hash = resp.code_info.unwrap().data_hash;
-        let on_chain_hash = base16::encode_lower(&contract_hash);
-        Ok(on_chain_hash)
+        Ok(contract_hash.into())
     }
 
     /// Query contract info
@@ -199,7 +198,7 @@ impl CosmWasm {
 }
 
 impl WasmQuerier for CosmWasm {
-    fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
+    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
             .ok_or(DaemonError::QuerierNeedRuntime)?
@@ -287,7 +286,7 @@ impl WasmQuerier for CosmWasm {
         let prefix = account_id.prefix();
         let canon = account_id.to_bytes();
         let checksum = self.code_id_hash(code_id)?;
-        let addr = instantiate2_address(checksum.as_bytes(), &CanonicalAddr(canon.into()), &salt)?;
+        let addr = instantiate2_address(checksum.as_slice(), &CanonicalAddr(canon.into()), &salt)?;
 
         Ok(AccountId::new(prefix, &addr.0)?.to_string())
     }

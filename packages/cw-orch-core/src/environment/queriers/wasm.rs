@@ -1,4 +1,4 @@
-use cosmwasm_std::{CodeInfoResponse, ContractInfoResponse};
+use cosmwasm_std::{CodeInfoResponse, ContractInfoResponse, HexBinary};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -10,7 +10,7 @@ use crate::{
 use super::{Querier, QueryHandler};
 
 pub trait WasmQuerier: Querier {
-    fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error>;
+    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error>;
 
     /// Query contract info
     fn contract_info(
@@ -37,7 +37,7 @@ pub trait WasmQuerier: Querier {
     /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
     fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
         contract: &T,
-    ) -> Result<String, CwEnvError> {
+    ) -> Result<HexBinary, CwEnvError> {
         contract.wasm().checksum()
     }
 
