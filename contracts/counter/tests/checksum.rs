@@ -17,7 +17,10 @@ fn checksum() {
             if ip.contains("counter_contract.wasm") {
                 let parts: Vec<&str> = ip.split_whitespace().collect();
                 if parts.len() > 1 {
-                    let calculated_hash = CounterContract::new(Mock::new("sender")).wasm().checksum().unwrap();
+                    let calculated_hash = CounterContract::new(Mock::new("sender"))
+                        .wasm()
+                        .checksum()
+                        .unwrap();
                     assert_eq!(parts[0], calculated_hash.to_string());
                     found = true;
                     break;
