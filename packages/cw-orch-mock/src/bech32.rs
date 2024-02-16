@@ -31,7 +31,7 @@ impl MockBase<MockApiBech32, MockState> {
 }
 
 impl<S: StateInterface> MockBase<MockApiBech32, S> {
-    pub fn create_account(&self, account_name: impl Into<String>) -> Addr {
+    pub fn addr_make(&self, account_name: impl Into<String>) -> Addr {
         self.app.borrow().api().addr_make(&account_name.into())
     }
 }
