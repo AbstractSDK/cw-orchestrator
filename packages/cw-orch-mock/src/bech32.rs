@@ -34,6 +34,16 @@ impl<S: StateInterface> MockBase<MockApiBech32, S> {
     pub fn addr_make(&self, account_name: impl Into<String>) -> Addr {
         self.app.borrow().api().addr_make(&account_name.into())
     }
+    pub fn addr_make_with_balance(
+        &self,
+        account_name: impl Into<String>,
+        balance: Vec<Coin>,
+    ) -> Result<Addr, CwEnvError> {
+        let addr = self.app.borrow().api().addr_make(&account_name.into());
+        self.set_balance(&addr, balance)?;
+
+        Ok(addr)
+    }
 }
 
 impl Default for MockBase<MockApiBech32, MockState> {
@@ -137,5 +147,25 @@ impl<S: StateInterface> BankSetter for MockBech32<S> {
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(&Addr::unchecked(address), amount)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use cosmwasm_std::coins;
+
+    use crate::MockBech32;
+    use cw_orch_core::environment::{BankQuerier, DefaultQueriers};
+    #[test]
+    fn addr_make_with_balance() -> anyhow::Result<()> {
+        let mock = MockBech32::new("mock");
+
+        let address = mock.addr_make_with_balance("sender", coins(42765, "ujuno"))?;
+
+        let balance = mock.bank_querier().balance(address, None)?;
+
+        assert_eq!(balance, coins(42765, "ujuno"));
+
+        Ok(())
     }
 }
