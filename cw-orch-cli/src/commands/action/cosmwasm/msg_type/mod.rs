@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use base64::Engine;
+use color_eyre::eyre::Context;
 use inquire::Select;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage, IntoEnumIterator};
 
@@ -58,36 +59,52 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
     }
 }
 
-pub fn msg_bytes(mut message: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
+pub fn input_msg() -> color_eyre::eyre::Result<Option<String>> {
+    let input = inquire::Text::new("Enter message")
+        .with_help_message("Leave input empty for EDITOR input later")
+        .prompt()?;
+    Ok(Some(input))
+}
+
+pub fn msg_bytes(message: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
     match msg_type {
         MsgType::JsonMsg => {
-            let data_json = loop {
-                if let Ok(val) = serde_json::Value::from_str(&message) {
-                    break val;
-                } else {
-                    eprintln!("Data not in JSON format!");
-                    message = inquire::Text::new("Enter message")
-                        // Maybe user need hint
-                        .with_help_message(r#"Valid JSON string (e.g. {"foo": "bar"})"#)
-                        .prompt()?;
-                }
+            let message = match message.is_empty() {
+                false => message,
+                // If message empty - give editor input
+                true => inquire::Editor::new("Enter message")
+                    .with_help_message(r#"Valid JSON string (e.g. {"foo": "bar"})"#)
+                    .with_predefined_text("{}")
+                    .with_file_extension(".json")
+                    .with_validator(|s: &str| match serde_json::Value::from_str(s) {
+                        Ok(_) => Ok(inquire::validator::Validation::Valid),
+                        Err(_) => Ok(inquire::validator::Validation::Invalid(
+                            inquire::validator::ErrorMessage::Custom(
+                                "Message not in JSON format!".to_owned(),
+                            ),
+                        )),
+                    })
+                    .with_formatter(&|s| {
+                        serde_json::to_string(&serde_json::Value::from_str(s).unwrap()).unwrap()
+                    })
+                    .prompt()?,
             };
-            Ok(data_json.to_string().into_bytes())
+            let message_json =
+                serde_json::Value::from_str(&message).wrap_err("Message not in JSON format")?;
+
+            serde_json::to_vec(&message_json).wrap_err("Unexpected error")
         }
         MsgType::Base64Msg => {
-            let bytes = loop {
-                match crate::common::B64.decode(&message) {
-                    Ok(decoded) => break decoded,
-                    Err(e) => {
-                        eprintln!("Failed to decode base64 string: {e}");
-                        message = inquire::Text::new("Enter message")
-                            // Maybe user need hint
-                            .with_help_message("Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)")
-                            .prompt()?;
-                    }
-                }
+            let message = match message.is_empty() {
+                false => message,
+                true => inquire::Editor::new("Enter")
+                    .with_help_message("Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)")
+                    .prompt()?,
             };
-            Ok(bytes)
+
+            crate::common::B64
+                .decode(&message)
+                .wrap_err("Failed to decode base64 string")
         }
     }
 }

@@ -19,25 +19,8 @@ impl AddAddressOutput {
         previous_context: AddresBookContext,
         scope: &<AddAddress as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let chain = previous_context.chain;
-        let maybe_account_id =
-            address_book::get_account_id(chain.chain_info().chain_id, &scope.alias)?;
-
-        if let Some(account_id) = maybe_account_id {
-            let confirmed =
-                inquire::Confirm::new(&format!("Override {}({account_id})?", scope.alias))
-                    .prompt()?;
-            if !confirmed {
-                return Ok(AddAddressOutput);
-            }
-        }
-
-        let new_address = address_book::insert_account_id(
-            chain.chain_info().chain_id,
-            &scope.alias,
-            &scope.address,
-        )?;
-        println!("Wrote successfully:\n{}:{}", scope.alias, new_address);
+        let chain_info = previous_context.chain.chain_info();
+        address_book::try_insert_account_id(chain_info.chain_id, &scope.alias, &scope.address)?;
         Ok(AddAddressOutput)
     }
 }

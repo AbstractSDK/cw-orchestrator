@@ -8,7 +8,7 @@ use cw_orch::{
 use crate::{
     commands::action::CosmosContext,
     log::LogOutput,
-    types::{CliCoins, CliSkippable},
+    types::{address_book, CliCoins, CliSkippable},
 };
 
 use super::msg_type;
@@ -24,6 +24,7 @@ pub struct InstantiateContractCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
     msg_type: msg_type::MsgType,
+    #[interactive_clap(skip_default_input_arg)]
     /// Enter message
     msg: String,
     /// Label for the contract
@@ -43,6 +44,10 @@ impl InstantiateContractCommands {
         _context: &CosmosContext,
     ) -> color_eyre::eyre::Result<Option<msg_type::MsgType>> {
         msg_type::input_msg_type()
+    }
+
+    fn input_msg(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        msg_type::input_msg()
     }
 
     fn input_coins(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<CliCoins>> {
@@ -86,6 +91,22 @@ impl InstantiateWasmOutput {
         let address = resp.instantiated_contract_address()?;
         resp.log();
         println!("Address of the instantiated contract: {address}");
+
+        // Maybe save it in Address Book
+        match inquire::Confirm::new("Would you like to save address in Address Book?").prompt()? {
+            true => {
+                let alias = inquire::Text::new("Input new contract alias")
+                    // Use label as default value
+                    .with_initial_value(&scope.label)
+                    .prompt()?;
+                address_book::try_insert_account_id(
+                    chain.chain_info().chain_id,
+                    &alias,
+                    address.as_str(),
+                )?;
+            }
+            false => (),
+        };
 
         Ok(InstantiateWasmOutput)
     }

@@ -30,8 +30,8 @@ impl QueryCw20Output {
         scope: &<QueryCw20Commands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let account_id = scope.address.clone().account_id(chain.chain_info())?;
         let cw20_account_id = scope.cw20_address.clone().account_id(chain.chain_info())?;
+        let account_id = scope.address.clone().account_id(chain.chain_info())?;
         let chain_data: ChainRegistryData = chain.into();
         let msg = serde_json::to_vec(&cw20::Cw20QueryMsg::Balance {
             address: account_id.to_string(),

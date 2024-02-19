@@ -95,6 +95,26 @@ pub fn insert_account_id(
     Ok(account_id)
 }
 
+pub fn try_insert_account_id(
+    chain_id: &str,
+    alias: &str,
+    address: &str,
+) -> color_eyre::eyre::Result<()> {
+    let maybe_account_id = get_account_id(chain_id, alias)?;
+
+    if let Some(account_id) = maybe_account_id {
+        let confirmed =
+            inquire::Confirm::new(&format!("Override {}({account_id})?", alias)).prompt()?;
+        if confirmed {
+            return Ok(());
+        }
+    }
+
+    let new_address = insert_account_id(chain_id, alias, address)?;
+    println!("Wrote successfully:\n{}:{}", alias, new_address);
+    Ok(())
+}
+
 pub fn remove_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result<Option<Value>> {
     let address_book_file = address_book_path()?;
     // open file pointer set read/write permissions to true
@@ -123,9 +143,6 @@ pub fn remove_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result
     Ok(removed)
 }
 
-// TODO: do we save alias on failed tx?
-// I think yes, assuming only tx was wrong and address got checked already
-// In the worst case user can edit address book
 pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result<AccountId> {
     let address_book_file = address_book_path()?;
     // open file pointer set read/write permissions to true
@@ -167,9 +184,9 @@ pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre:
         let address = inquire::Text::new(&message).prompt()?;
         if let Ok(account_id) = cosmrs::AccountId::from_str(&address) {
             break account_id;
-        } else {
-            eprintln!("Failed to parse bech32 address");
         }
+
+        eprintln!("Failed to parse bech32 address");
     };
 
     json[chain_id][name_alias] = json!(account_id);
@@ -241,7 +258,7 @@ impl FromStr for CliAddress {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
-            return Err("Address alias be empty".to_owned());
+            return Err("Address alias can't be empty".to_owned());
         }
 
         Ok(Self(s.to_owned()))

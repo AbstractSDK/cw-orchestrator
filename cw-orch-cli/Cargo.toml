@@ -32,7 +32,7 @@ color-eyre = { version = "0.6" }
 strum = { version = "0.24", features = ["derive"] }
 derive_more = "0.99"
 shell-words = "1.0.0"
-inquire = { version = "0.6" }
+inquire = { version = "0.6", features = ["editor"] }
 
 # Key management
 keyring = "2.0.5"
