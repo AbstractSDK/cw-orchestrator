@@ -4,9 +4,31 @@ use inquire::ui::{Attributes, RenderConfig, StyleSheet};
 use interactive_clap::{ResultFromCli, ToCliArgs};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
+#[interactive_clap(input_context = ())]
+#[interactive_clap(output_context = VerboseEnableContext)]
 pub struct TLCommand {
     #[interactive_clap(subcommand)]
     top_level: commands::Commands,
+    #[interactive_clap(long)]
+    verbose: bool,
+}
+
+pub struct VerboseEnableContext;
+
+impl VerboseEnableContext {
+    fn from_previous_context(
+        _previous_context: (),
+        scope: &<TLCommand as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
+    ) -> color_eyre::eyre::Result<Self> {
+        if scope.verbose {
+            pretty_env_logger::init()
+        }
+        Ok(Self)
+    }
+}
+
+impl From<VerboseEnableContext> for () {
+    fn from(_value: VerboseEnableContext) -> Self {}
 }
 
 fn main() -> color_eyre::Result<()> {
@@ -19,33 +41,31 @@ fn main() -> color_eyre::Result<()> {
     let cli_args = TLCommand::parse();
 
     let cw_cli_path = common::get_cw_cli_exec_path();
-    loop {
-        let args = <TLCommand as interactive_clap::FromCli>::from_cli(Some(cli_args.clone()), ());
-        match args {
-            interactive_clap::ResultFromCli::Ok(cli_args)
-            | ResultFromCli::Cancel(Some(cli_args)) => {
+    let args = <TLCommand as interactive_clap::FromCli>::from_cli(Some(cli_args.clone()), ());
+
+    match args {
+        interactive_clap::ResultFromCli::Ok(cli_args) | ResultFromCli::Cancel(Some(cli_args)) => {
+            println!(
+                "Your console command: {}",
+                shell_words::join(std::iter::once(cw_cli_path).chain(cli_args.to_cli_args()))
+            );
+            Ok(())
+        }
+        interactive_clap::ResultFromCli::Cancel(None) => {
+            println!("Goodbye!");
+            Ok(())
+        }
+        interactive_clap::ResultFromCli::Back => {
+            unreachable!("TLCommand does not have back option");
+        }
+        interactive_clap::ResultFromCli::Err(cli_args, err) => {
+            if let Some(cli_args) = cli_args {
                 println!(
                     "Your console command: {}",
                     shell_words::join(std::iter::once(cw_cli_path).chain(cli_args.to_cli_args()))
                 );
-                return Ok(());
             }
-            interactive_clap::ResultFromCli::Cancel(None) => {
-                println!("Goodbye!");
-                return Ok(());
-            }
-            interactive_clap::ResultFromCli::Back => {}
-            interactive_clap::ResultFromCli::Err(cli_args, err) => {
-                if let Some(cli_args) = cli_args {
-                    println!(
-                        "Your console command: {}",
-                        shell_words::join(
-                            std::iter::once(cw_cli_path).chain(cli_args.to_cli_args())
-                        )
-                    );
-                }
-                return Err(err);
-            }
+            Err(err)
         }
     }
 }

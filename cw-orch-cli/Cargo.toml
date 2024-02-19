@@ -12,6 +12,9 @@ description = "Command-line tool for managing Cosmos-based interaction."
 [dependencies]
 cw-orch = { path = "../cw-orch", features = ["daemon"], version = "0.20" }
 
+# Logs
+pretty_env_logger = { version = "0.5.0" }
+
 # Cosmos
 cosmwasm-std = { workspace = true }
 cw-utils = "1.0.3"
@@ -25,8 +28,8 @@ serde = { workspace = true }
 base64 = { workspace = true }
 
 # Interactive clap
-interactive-clap = "0.2.4"
-interactive-clap-derive = "0.2.4"
+interactive-clap = "0.2.8"
+interactive-clap-derive = "0.2.8"
 clap = { version = "4.0.18", features = ["derive"] }
 color-eyre = { version = "0.6" }
 strum = { version = "0.24", features = ["derive"] }
