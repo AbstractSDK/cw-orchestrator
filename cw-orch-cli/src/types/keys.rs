@@ -50,7 +50,7 @@ pub fn save_entry_if_required(entry: &str) -> color_eyre::Result<()> {
         // use File::rewind so we don't append data to the file
         // but rather write all (because we have read the data before)
 
-        file.rewind()?;
+        file.set_len(0)?;
         serde_json::to_writer_pretty(file, &entries_set)?;
     }
 
@@ -77,7 +77,7 @@ pub fn remove_entry(entry: &str) -> color_eyre::Result<()> {
         // use File::rewind so we don't append data to the file
         // but rather write all (because we have read the data before)
 
-        file.rewind()?;
+        file.set_len(0)?;
         serde_json::to_writer_pretty(file, &entries_set)?;
     }
 

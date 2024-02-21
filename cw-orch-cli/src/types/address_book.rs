@@ -86,7 +86,7 @@ pub fn insert_account_id(
     // write JSON data
     // use File::rewind so we don't append data to the file
     // but rather write all (because we have read the data before)
-    file.rewind()?;
+    file.set_len(0)?;
     serde_json::to_writer_pretty(file, &json)?;
 
     Ok(account_id)
