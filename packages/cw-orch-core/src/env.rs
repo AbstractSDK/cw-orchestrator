@@ -119,7 +119,7 @@ pub fn default_state_folder() -> Result<PathBuf, StdError> {
 impl Default for CwOrchEnvVars {
     fn default() -> Self {
         CwOrchEnvVars {
-            state_file: default_state_folder().unwrap().join("state.json"),
+            state_file: PathBuf::from_str("state.json").unwrap(),
             artifacts_dir: None,
             gas_buffer: None,
             min_gas: None,
