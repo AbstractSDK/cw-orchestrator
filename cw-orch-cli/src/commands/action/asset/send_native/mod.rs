@@ -6,7 +6,7 @@ use cw_orch::{
 
 use crate::{
     log::LogOutput,
-    types::{CliAddress, CliCoins},
+    types::{keys::seed_phrase_for_id, CliAddress, CliCoins},
 };
 
 use super::CosmosContext;
@@ -20,7 +20,7 @@ pub struct SendNativeCommands {
     coins: CliCoins,
     /// Recipient Address or alias from address-book
     to_address: CliAddress,
-    /// Signer id
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
 }
 
@@ -29,6 +29,10 @@ impl SendNativeCommands {
         crate::common::parse_coins()
             .map(|c| Some(CliCoins(c)))
             .wrap_err("Bad coins input")
+    }
+
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
     }
 }
 
@@ -42,7 +46,7 @@ impl SendNativeOutput {
         let chain = previous_context.chain;
         let to_address = scope.to_address.clone().account_id(chain.chain_info())?;
 
-        let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let coins: Vec<cosmrs::Coin> = (&scope.coins).try_into()?;
 
         let rt = Runtime::new()?;

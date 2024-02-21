@@ -2,6 +2,7 @@ use color_eyre::eyre::Context;
 use cw_orch::{daemon::CosmTxResponse, prelude::DaemonAsync, tokio::runtime::Runtime};
 
 use crate::log::LogOutput;
+use crate::types::keys::seed_phrase_for_id;
 use crate::types::CliAddress;
 use crate::{commands::action::CosmosContext, types::CliCoins};
 
@@ -24,8 +25,7 @@ pub struct ExecuteContractCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
     coins: CliCoins,
-    /// Signer id
-    // TODO: should be possible to sign it from the seed phrase
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
 }
 
@@ -45,6 +45,10 @@ impl ExecuteContractCommands {
             .map(|c| Some(CliCoins(c)))
             .wrap_err("Bad coins input")
     }
+
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
 }
 pub struct ExecuteWasmOutput;
 
@@ -56,7 +60,7 @@ impl ExecuteWasmOutput {
         let chain = previous_context.chain;
         let contract_account_id = scope.contract_addr.clone().account_id(chain.chain_info())?;
 
-        let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 

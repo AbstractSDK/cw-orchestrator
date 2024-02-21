@@ -1,6 +1,6 @@
 use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
-use crate::{commands::action::CosmosContext, types::CliAddress};
+use crate::{commands::action::CosmosContext, types::{keys::seed_phrase_for_id, CliAddress}};
 
 use super::ContractExecuteMsg;
 
@@ -10,9 +10,14 @@ use super::ContractExecuteMsg;
 pub struct AcceptOwnership {
     /// Contract Address or alias from address-book
     contract: CliAddress,
-    /// Signer id
-    // TODO: should be possible to sign it from the seed phrase
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
+}
+
+impl AcceptOwnership {
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
 }
 
 pub struct AcceptOwnershipOutput;
@@ -25,7 +30,7 @@ impl AcceptOwnershipOutput {
         let chain = previous_context.chain;
         let contract = scope.contract.clone().account_id(chain.chain_info())?;
 
-        let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let sender_seed = seed_phrase_for_id(&scope.signer)?;
         let action = cw_ownable::Action::AcceptOwnership {};
         let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
 

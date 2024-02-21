@@ -5,7 +5,7 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::{commands::action::CosmosContext, log::LogOutput};
+use crate::{commands::action::CosmosContext, log::LogOutput, types::keys::seed_phrase_for_id};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -14,9 +14,14 @@ use crate::{commands::action::CosmosContext, log::LogOutput};
 pub struct StoreContractCommands {
     /// Input path to the wasm
     wasm_path: crate::types::PathBuf,
-    /// Signer id
-    // TODO: should be possible to sign it from the seed phrase
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
+}
+
+impl StoreContractCommands {
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
 }
 
 pub struct StoreWasmOutput;
@@ -27,7 +32,7 @@ impl StoreWasmOutput {
         scope:&<StoreContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let wasm_byte_code = std::fs::read(&scope.wasm_path).wrap_err(format!(
             "Failed to open or read the file: {}",
             scope.wasm_path.0.display()

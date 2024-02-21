@@ -8,7 +8,7 @@ use cw_orch::{
 use crate::{
     commands::action::CosmosContext,
     log::LogOutput,
-    types::{address_book, CliCoins, CliSkippable},
+    types::{address_book, keys::seed_phrase_for_id, CliCoins, CliSkippable},
 };
 
 use super::msg_type;
@@ -34,8 +34,7 @@ pub struct InstantiateContractCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
     coins: CliCoins,
-    /// Signer id
-    // TODO: should be possible to sign it from the seed phrase
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
 }
 
@@ -55,6 +54,10 @@ impl InstantiateContractCommands {
             .map(|c| Some(CliCoins(c)))
             .wrap_err("Bad coins input")
     }
+    
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
 }
 pub struct InstantiateWasmOutput;
 
@@ -64,7 +67,7 @@ impl InstantiateWasmOutput {
         scope:&<InstantiateContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 

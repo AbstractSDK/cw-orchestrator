@@ -1,11 +1,17 @@
-use crate::common::seed_phrase_for_id;
+use crate::types::keys::seed_phrase_for_id;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
 #[interactive_clap(output_context = ShowKeyOutput)]
 pub struct ShowKeyCommand {
-    /// Id of the key
+    #[interactive_clap(skip_default_input_arg)]
     name: String,
+}
+
+impl ShowKeyCommand {
+    fn input_name(_: &()) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
 }
 
 pub struct ShowKeyOutput;

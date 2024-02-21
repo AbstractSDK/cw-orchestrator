@@ -1,18 +1,22 @@
 use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
-use crate::{common::seed_phrase_for_id, types::CliLockedChain};
+use crate::{types::keys::seed_phrase_for_id, types::CliLockedChain};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
 #[interactive_clap(output_context = ShowAddressOutput)]
 pub struct ShowAddressCommand {
-    /// Id of the key
+    #[interactive_clap(skip_default_input_arg)]
     name: String,
     #[interactive_clap(skip_default_input_arg)]
     chain_id: CliLockedChain,
 }
 
 impl ShowAddressCommand {
+    fn input_name(_: &()) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
+
     fn input_chain_id(_: &()) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
         crate::common::select_chain()
     }

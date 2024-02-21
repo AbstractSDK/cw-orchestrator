@@ -1,7 +1,9 @@
 pub mod address_book;
 mod chain;
+pub mod cli_subdir;
 mod coins;
 mod expiration;
+pub mod keys;
 mod path_buf;
 mod skippable;
 

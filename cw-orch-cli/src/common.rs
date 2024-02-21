@@ -1,20 +1,7 @@
 use crate::types::CliLockedChain;
 pub use base64::prelude::BASE64_STANDARD as B64;
-use base64::Engine;
 use cw_orch::daemon::networks::SUPPORTED_NETWORKS as NETWORKS;
 use inquire::{error::InquireResult, InquireError, Select};
-use keyring::Entry;
-
-pub fn entry_for_seed(name: &str) -> keyring::Result<Entry> {
-    Entry::new("cw-cli", name)
-}
-
-pub fn seed_phrase_for_id(name: &str) -> color_eyre::Result<String> {
-    let entry = entry_for_seed(name)?;
-    let password = entry.get_password()?;
-    let phrase = String::from_utf8(B64.decode(password)?)?;
-    Ok(phrase)
-}
 
 pub fn get_cw_cli_exec_path() -> String {
     std::env::args().next().unwrap()
@@ -35,6 +22,22 @@ pub fn select_chain() -> color_eyre::eyre::Result<Option<CliLockedChain>> {
     let selected = Select::new("Select chain", chain_ids).raw_prompt()?;
     let locked_chain = CliLockedChain::new(selected.index);
     Ok(Some(locked_chain))
+}
+
+pub fn select_signer() -> color_eyre::eyre::Result<Option<String>> {
+    let entries_set_result = crate::types::keys::read_entries();
+    let signer_id = match entries_set_result {
+        // We have a file access and it has at least one signer
+        Ok(entries_set) if !entries_set.entries.is_empty() => {
+            let options = entries_set.entries.into_iter().collect();
+            Select::new("Select signer id", options)
+                .with_help_message("Use CLI mode to add signer from previous version")
+                .prompt()?
+        }
+        // We don't have access or it's empty
+        _ => inquire::Text::new("Signer id").prompt()?,
+    };
+    Ok(Some(signer_id))
 }
 
 pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {

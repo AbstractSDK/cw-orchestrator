@@ -1,26 +1,22 @@
+use super::cli_subdir::cli_path;
+
 // TODO: Three modes
 // - Only alias (will allow making dropdown for addresses)
 // - Only raw address
 // - Hybrid (current)
 
 const ADDRESS_BOOK_FILENAME: &str = "address_book.json";
-const CLI_FOLDER: &str = "cli";
 
 use std::{
     fs::{File, OpenOptions},
+    io::Seek,
     path::PathBuf,
     str::FromStr,
 };
 
 use cosmrs::AccountId;
-use cw_orch::{daemon::ChainInfo, environment::default_state_folder};
+use cw_orch::daemon::ChainInfo;
 use serde_json::{json, Value};
-
-fn cli_path() -> color_eyre::Result<PathBuf> {
-    let cli_path = default_state_folder()?.join(CLI_FOLDER);
-    std::fs::create_dir_all(cli_path.as_path())?;
-    Ok(cli_path)
-}
 
 fn address_book_path() -> color_eyre::Result<PathBuf> {
     Ok(cli_path()?.join(ADDRESS_BOOK_FILENAME))
@@ -64,7 +60,7 @@ pub fn insert_account_id(
     // open file pointer set read/write permissions to true
     // create it if it does not exists
     // don't truncate it
-    let file = OpenOptions::new()
+    let mut file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
@@ -75,7 +71,7 @@ pub fn insert_account_id(
     let mut json: Value = if file.metadata()?.len().eq(&0) {
         json!({})
     } else {
-        serde_json::from_reader(file)?
+        serde_json::from_reader(&file)?
     };
 
     // check and add chain_id path if it's missing
@@ -88,9 +84,10 @@ pub fn insert_account_id(
     }
 
     // write JSON data
-    // use File::create so we don't append data to the file
+    // use File::rewind so we don't append data to the file
     // but rather write all (because we have read the data before)
-    serde_json::to_writer_pretty(File::create(address_book_file)?, &json).unwrap();
+    file.rewind()?;
+    serde_json::to_writer_pretty(file, &json)?;
 
     Ok(account_id)
 }

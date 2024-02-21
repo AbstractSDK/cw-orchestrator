@@ -6,7 +6,7 @@ use cw_orch::{
 use crate::{
     commands::action::CosmosContext,
     common::parse_expiration,
-    types::{CliAddress, CliExpiration, CliSkippable},
+    types::{keys::seed_phrase_for_id, CliAddress, CliExpiration, CliSkippable},
 };
 
 use super::ContractExecuteMsg;
@@ -22,8 +22,7 @@ pub struct TransferOwnership {
     /// Expiration
     #[interactive_clap(skip_default_input_arg)]
     expiration: CliExpiration,
-    /// Signer id
-    // TODO: should be possible to sign it from the seed phrase
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
     /// New owner signer id, leave empty to skip auto-claim
     new_signer: CliSkippable<String>,
@@ -33,6 +32,10 @@ impl TransferOwnership {
     fn input_expiration(_: &CosmosContext) -> color_eyre::eyre::Result<Option<CliExpiration>> {
         let expiration = parse_expiration()?;
         Ok(Some(CliExpiration(expiration)))
+    }
+
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
     }
 }
 
@@ -47,12 +50,12 @@ impl TransferOwnershipOutput {
         let contract = scope.contract.clone().account_id(chain.chain_info())?;
         let new_owner = scope.new_owner.clone().account_id(chain.chain_info())?;
 
-        let sender_seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let sender_seed = seed_phrase_for_id(&scope.signer)?;
         let receiver_seed = scope
             .new_signer
             .0
             .as_deref()
-            .map(crate::common::seed_phrase_for_id)
+            .map(seed_phrase_for_id)
             .transpose()?;
         let action = cw_ownable::Action::TransferOwnership {
             new_owner: new_owner.to_string(),

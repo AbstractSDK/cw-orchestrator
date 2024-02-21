@@ -4,7 +4,10 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::{log::LogOutput, types::CliAddress};
+use crate::{
+    log::LogOutput,
+    types::{keys::seed_phrase_for_id, CliAddress},
+};
 
 use super::CosmosContext;
 
@@ -18,8 +21,14 @@ pub struct Cw20TransferCommands {
     amount: u128,
     /// Recipient address or alias from address-book
     to_address: CliAddress,
-    /// Signer id
+    #[interactive_clap(skip_default_input_arg)]
     signer: String,
+}
+
+impl Cw20TransferCommands {
+    fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
+        crate::common::select_signer()
+    }
 }
 
 pub struct SendCw20Output;
@@ -33,7 +42,7 @@ impl SendCw20Output {
         let to_address_account_id = scope.to_address.clone().account_id(chain.chain_info())?;
         let cw20_account_id = scope.cw20_address.clone().account_id(chain.chain_info())?;
 
-        let seed = crate::common::seed_phrase_for_id(&scope.signer)?;
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let cw20_msg = cw20::Cw20ExecuteMsg::Transfer {
             recipient: to_address_account_id.to_string(),
             amount: Uint128::new(scope.amount),
