@@ -62,6 +62,8 @@ mod wasm_path {
 }
 
 mod artifacts_dir {
+    const ARM_POSTFIX: &str = "-aarch64";
+
     use super::WasmPath;
     use crate::{
         build::BuildPostfix, env::ARTIFACTS_DIR_ENV_NAME, environment::EnvironmentQuerier,
@@ -166,40 +168,51 @@ mod artifacts_dir {
             build_postfix: BuildPostfix<T>,
         ) -> Result<WasmPath, CwEnvError> {
             let build_postfix: String = build_postfix.into();
-            let mut wasm_with_postfix = None;
-            let mut default_wasm = None;
+            // Found artifacts priority respected
 
-            for entry in fs::read_dir(self.path())? {
-                let Ok(entry) = entry else {
-                    continue;
-                };
+            let mut wasm_with_postfix = None;
+            let mut arm_wasm_with_postfix = None;
+            let mut default_wasm = None;
+            let mut arm_default_wasm = None;
+
+            for entry in fs::read_dir(self.path())?.flatten() {
                 let path = entry.path();
-                let file_name = path.file_name().unwrap_or_default().to_string_lossy();
-                if !path.is_file() {
+                // Skip if not a wasm file
+                if !path.is_file() || path.extension().unwrap_or_default() != "wasm" {
                     continue;
                 }
-                if path.extension().unwrap_or_default() == "wasm" {
-                    // If a postfix is provided
-                    if !build_postfix.is_empty()
-                        // It needs to be in the the file name as well.
-                        && is_artifact_with_build_postfix(&file_name, name, &build_postfix)
-                    {
-                        wasm_with_postfix = Some(file_name.into_owned());
-                        break;
-                    }
-                    // If not found, check if the default build is present.
-                    else if is_default_artifact(&file_name, name) {
-                        default_wasm = Some(file_name.into_owned())
-                    }
+
+                let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+                // Wasm with build postfix, non-ARM
+                if is_artifact_with_build_postfix(&file_name, name, &build_postfix) {
+                    wasm_with_postfix = Some(file_name.into_owned());
+                    // As it's highest priority we just the loop end here
+                    break;
+                }
+
+                // Check other valid filenames
+                if is_arm_artifact_with_build_postfix(&file_name, name, &build_postfix) {
+                    // Wasm with build postfix, ARM
+                    arm_wasm_with_postfix = Some(file_name.into_owned())
+                } else if is_default_artifact(&file_name, name) {
+                    // Wasm without build postfix, non-ARM
+                    default_wasm = Some(file_name.into_owned())
+                } else if is_default_arm_artifact(&file_name, name) {
+                    // Wasm without build postfix, ARM
+                    arm_default_wasm = Some(file_name.into_owned())
                 }
             }
 
-            let path_str = wasm_with_postfix.or(default_wasm).ok_or_else(|| {
-                CwEnvError::WasmNotFound(
-                    name.to_owned(),
-                    self.path().to_str().unwrap_or_default().to_owned(),
-                )
-            })?;
+            let path_str = wasm_with_postfix
+                .or(arm_wasm_with_postfix)
+                .or(default_wasm)
+                .or(arm_default_wasm)
+                .ok_or_else(|| {
+                    CwEnvError::WasmNotFound(
+                        name.to_owned(),
+                        self.path().to_str().unwrap_or_default().to_owned(),
+                    )
+                })?;
             WasmPath::new(self.path().join(path_str))
         }
     }
@@ -209,8 +222,11 @@ mod artifacts_dir {
     }
 
     fn is_default_artifact(file_name: &str, contract_name: &str) -> bool {
-        file_name.ends_with(format!("{}.wasm", contract_name).as_str())
-            || file_name.ends_with(format!("{}-arm64.wasm", contract_name).as_str())
+        file_name.ends_with(format!("{contract_name}.wasm").as_str())
+    }
+
+    fn is_default_arm_artifact(file_name: &str, contract_name: &str) -> bool {
+        file_name.ends_with(format!("{contract_name}{ARM_POSTFIX}.wasm").as_str())
     }
 
     fn is_artifact_with_build_postfix(
@@ -219,7 +235,15 @@ mod artifacts_dir {
         build_postfix: &str,
     ) -> bool {
         is_artifact(file_name, contract_name)
-            && (file_name.ends_with(format!("{}.wasm", build_postfix).as_str())
-                || file_name.ends_with(format!("{}-arm64.wasm", build_postfix).as_str()))
+            && file_name.ends_with(format!("{build_postfix}.wasm").as_str())
+    }
+
+    fn is_arm_artifact_with_build_postfix(
+        file_name: &str,
+        contract_name: &str,
+        build_postfix: &str,
+    ) -> bool {
+        is_artifact(file_name, contract_name)
+            && file_name.ends_with(format!("{build_postfix}{ARM_POSTFIX}.wasm").as_str())
     }
 }
