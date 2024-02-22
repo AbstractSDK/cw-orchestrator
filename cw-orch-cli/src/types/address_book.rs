@@ -9,7 +9,6 @@ const ADDRESS_BOOK_FILENAME: &str = "address_book.json";
 
 use std::{
     fs::{File, OpenOptions},
-    io::Seek,
     path::PathBuf,
     str::FromStr,
 };
@@ -60,7 +59,7 @@ pub fn insert_account_id(
     // open file pointer set read/write permissions to true
     // create it if it does not exists
     // don't truncate it
-    let mut file = OpenOptions::new()
+    let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
@@ -86,8 +85,7 @@ pub fn insert_account_id(
     // write JSON data
     // use File::rewind so we don't append data to the file
     // but rather write all (because we have read the data before)
-    file.set_len(0)?;
-    serde_json::to_writer_pretty(file, &json)?;
+    serde_json::to_writer_pretty(File::create(address_book_file)?, &json)?;
 
     Ok(account_id)
 }

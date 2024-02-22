@@ -138,7 +138,6 @@ impl FetchAddressesOutput {
         let contracts = deployment
             .as_object()
             .ok_or(color_eyre::eyre::eyre!(STATE_FILE_DAMAGED_ERROR))?;
-
         let mut duplicate_resolve_global = None;
         for (contract_id, address) in contracts {
             let address = address
@@ -168,34 +167,32 @@ impl FetchAddressesOutput {
 
                 match duplicate_resolve {
                     // Skip
-                    DuplicateResolve::Skip => (),
+                    DuplicateResolve::Skip => {
+                        continue;
+                    },
                     DuplicateResolve::SkipAll => {
                         duplicate_resolve_global = Some(duplicate_resolve);
+                        continue;
                     }
                     // Rename
-                    DuplicateResolve::Rename => {
-                        loop {
-                            alias = inquire::Text::new("Rename contract alias")
-                                .with_initial_value(contract_id)
-                                .prompt()?;
-                            let is_duplicate =
-                                address_book::get_account_id(chain_id, &alias)?.is_some();
-                            if !is_duplicate {
-                                break;
-                            }
+                    DuplicateResolve::Rename => loop {
+                        alias = inquire::Text::new("Rename contract alias")
+                            .with_initial_value(contract_id)
+                            .prompt()?;
+                        let is_duplicate =
+                            address_book::get_account_id(chain_id, &alias)?.is_some();
+                        if !is_duplicate {
+                            break;
                         }
-                        address_book::insert_account_id(chain_id, &alias, address)?;
-                    }
+                    },
                     // Override
-                    DuplicateResolve::Override => {
-                        address_book::insert_account_id(chain_id, &alias, address)?;
-                    }
+                    DuplicateResolve::Override => {}
                     DuplicateResolve::OverrideAll => {
                         duplicate_resolve_global = Some(duplicate_resolve);
-                        address_book::insert_account_id(chain_id, &alias, address)?;
                     }
                 }
             }
+            address_book::insert_account_id(chain_id, &alias, address)?;
         }
         Ok(FetchAddressesOutput)
     }

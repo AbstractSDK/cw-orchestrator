@@ -3,7 +3,11 @@ use crate::common::B64;
 use base64::Engine;
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, fs::OpenOptions, io::Seek, path::PathBuf};
+use std::{
+    collections::BTreeSet,
+    fs::{File, OpenOptions},
+    path::PathBuf,
+};
 
 use super::cli_subdir::cli_path;
 
@@ -50,8 +54,7 @@ pub fn save_entry_if_required(entry: &str) -> color_eyre::Result<()> {
         // use File::rewind so we don't append data to the file
         // but rather write all (because we have read the data before)
 
-        file.set_len(0)?;
-        serde_json::to_writer_pretty(file, &entries_set)?;
+        serde_json::to_writer_pretty(File::create(entries_list_file)?, &entries_set)?;
     }
 
     Ok(())
@@ -77,13 +80,11 @@ pub fn remove_entry(entry: &str) -> color_eyre::Result<()> {
         // use File::rewind so we don't append data to the file
         // but rather write all (because we have read the data before)
 
-        file.set_len(0)?;
-        serde_json::to_writer_pretty(file, &entries_set)?;
+        serde_json::to_writer_pretty(File::create(entries_list_file)?, &entries_set)?;
     }
 
     Ok(())
 }
-
 
 pub fn entry_for_seed(name: &str) -> keyring::Result<Entry> {
     Entry::new("cw-cli", name)
