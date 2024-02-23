@@ -103,7 +103,7 @@ pub fn msg_bytes(message: String, msg_type: MsgType) -> color_eyre::eyre::Result
             };
 
             crate::common::B64
-                .decode(&message)
+                .decode(message)
                 .wrap_err("Failed to decode base64 string")
         }
     }

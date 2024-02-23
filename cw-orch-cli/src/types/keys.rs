@@ -37,7 +37,7 @@ pub fn read_entries() -> color_eyre::Result<EntriesSet> {
 pub fn save_entry_if_required(entry: &str) -> color_eyre::Result<()> {
     let entries_list_file = entries_list_path()?;
 
-    let mut file = OpenOptions::new()
+    let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
@@ -63,7 +63,7 @@ pub fn save_entry_if_required(entry: &str) -> color_eyre::Result<()> {
 pub fn remove_entry(entry: &str) -> color_eyre::Result<()> {
     let entries_list_file = entries_list_path()?;
 
-    let mut file = OpenOptions::new()
+    let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)

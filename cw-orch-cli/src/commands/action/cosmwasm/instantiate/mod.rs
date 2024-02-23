@@ -54,7 +54,7 @@ impl InstantiateContractCommands {
             .map(|c| Some(CliCoins(c)))
             .wrap_err("Bad coins input")
     }
-    
+
     fn input_signer(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
         crate::common::select_signer()
     }

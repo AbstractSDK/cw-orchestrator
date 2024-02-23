@@ -6,7 +6,7 @@ use strum::IntoEnumIterator;
 
 const STATE_FILE_DAMAGED_ERROR: &str = "State file is corrupted";
 
-use crate::types::{address_book, CliSkippable};
+use crate::types::address_book;
 
 use super::AddresBookContext;
 
@@ -52,8 +52,9 @@ impl FromStr for AliasNameStrategy {
 #[interactive_clap(input_context = AddresBookContext)]
 #[interactive_clap(output_context = FetchAddressesOutput)]
 pub struct FetchAddresses {
-    /// Deployment id, leave empty for default
-    deployment_id: CliSkippable<String>,
+    #[interactive_clap(long = "deployment-id")]
+    #[interactive_clap(skip_interactive_input)]
+    deployment_id: Option<String>,
     #[interactive_clap(value_enum)]
     #[interactive_clap(skip_default_input_arg)]
     /// Alias names strategy
@@ -108,11 +109,7 @@ impl FetchAddressesOutput {
         scope: &<FetchAddresses as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let state_file = cw_orch::daemon::DaemonState::state_file_path()?;
-        let deployment_id = scope
-            .deployment_id
-            .0
-            .as_deref()
-            .unwrap_or(DEFAULT_DEPLOYMENT);
+        let deployment_id = scope.deployment_id.as_deref().unwrap_or(DEFAULT_DEPLOYMENT);
 
         let chain_name = previous_context.chain.chain_info().network_info.id;
         let chain_id = previous_context.chain.chain_info().chain_id;
@@ -169,7 +166,7 @@ impl FetchAddressesOutput {
                     // Skip
                     DuplicateResolve::Skip => {
                         continue;
-                    },
+                    }
                     DuplicateResolve::SkipAll => {
                         duplicate_resolve_global = Some(duplicate_resolve);
                         continue;

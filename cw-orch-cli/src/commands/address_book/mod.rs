@@ -1,7 +1,7 @@
 mod add_address;
+mod fetch_cw_orch;
 mod remove_address;
 mod show_address;
-mod fetch_cw_orch;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
@@ -44,7 +44,7 @@ pub enum KeyAction {
     Remove(remove_address::RemoveAddress),
     /// Fetch addresses from cw-orchestrator state file
     #[strum_discriminants(strum(message = "🧷 Fetch addresses from cw-orchestrator state file"))]
-    Fetch(fetch_cw_orch::FetchAddresses)
+    Fetch(fetch_cw_orch::FetchAddresses),
 }
 
 impl AddresBookContext {

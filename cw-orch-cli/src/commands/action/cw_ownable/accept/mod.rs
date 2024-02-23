@@ -1,6 +1,9 @@
 use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
-use crate::{commands::action::CosmosContext, types::{keys::seed_phrase_for_id, CliAddress}};
+use crate::{
+    commands::action::CosmosContext,
+    types::{keys::seed_phrase_for_id, CliAddress},
+};
 
 use super::ContractExecuteMsg;
 
