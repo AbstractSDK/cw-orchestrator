@@ -67,6 +67,10 @@ async-recursion = "1.0.5"
 # Gzip
 flate2 = { version = "1.0.26" }
 
+# Lock daemon
+file-lock = { version = "2.1.10" }
+once_cell = { version = "1.19.0" }
+
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
 uid = "0.1.7"
