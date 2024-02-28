@@ -39,7 +39,7 @@ jobs:
 
       - name: Setup | Just
         id: just
-        uses: extractions/setup-just@v1
+        uses: extractions/setup-just@v2
 
       - name: Setup PATH # For using the pre-built mdbook
         run: echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
