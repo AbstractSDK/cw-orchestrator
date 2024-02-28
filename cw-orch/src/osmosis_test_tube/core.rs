@@ -5,8 +5,8 @@ use cosmwasm_std::{coin, Addr, Coins};
 use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
 use cw_orch_traits::stargate::Stargate;
 
+use crate::mock::cw_multi_test::AppResponse;
 use cosmwasm_std::{Binary, Coin, Uint128};
-use cw_multi_test::AppResponse;
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };

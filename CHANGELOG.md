@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## 0.21.0
+
+- Updated cw-multi-test to allow for IBC packet timeout
+
 ## 0.20.1
 
 - Fix ARM path derivation for wasm

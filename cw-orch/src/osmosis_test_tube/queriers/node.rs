@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
+use crate::mock::cw_multi_test::AppResponse;
 use cosmwasm_std::{BlockInfo, Timestamp};
-use cw_multi_test::AppResponse;
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
     CwEnvError,
