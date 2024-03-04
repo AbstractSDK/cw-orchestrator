@@ -2,14 +2,16 @@ mod action;
 mod address_book;
 mod keys;
 
-// TODO: get it upper
 pub use action::CosmosContext;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
+use crate::GlobalConfig;
+
 #[derive(Debug, EnumDiscriminants, Clone, interactive_clap::InteractiveClap)]
 #[strum_discriminants(derive(EnumMessage, EnumIter))]
 #[interactive_clap(disable_back)]
+#[interactive_clap(context = GlobalConfig)]
 /// Select one of the options with up-down arrows and press enter to select action
 pub enum Commands {
     /// Select action

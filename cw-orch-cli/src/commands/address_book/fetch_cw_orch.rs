@@ -147,9 +147,9 @@ impl FetchAddressesOutput {
                     .prompt()?,
             };
             let maybe_address = address_book::get_account_id(chain_id, &alias)?;
-            let is_duplicate = maybe_address.is_some();
 
-            if is_duplicate {
+            // Duplicate handle
+            if let Some(current) = maybe_address {
                 // Duplicate happened
                 let duplicate_resolve = match &duplicate_resolve_global {
                     // Check if it's already globally resolved
@@ -159,7 +159,7 @@ impl FetchAddressesOutput {
                         _ => unreachable!(),
                     },
                     // Or resolve here
-                    None => input_duplicate_resolve(&alias)?,
+                    None => input_duplicate_resolve(&alias, &current.to_string(), address)?,
                 };
 
                 match duplicate_resolve {
@@ -195,13 +195,17 @@ impl FetchAddressesOutput {
     }
 }
 
-fn input_duplicate_resolve(original: &str) -> color_eyre::eyre::Result<DuplicateResolve> {
+fn input_duplicate_resolve(
+    original: &str,
+    stored: &str,
+    new: &str,
+) -> color_eyre::eyre::Result<DuplicateResolve> {
     let variants = DuplicateResolveDiscriminants::iter().collect::<Vec<_>>();
     let selected = inquire::Select::new(
-        "A duplicate has occurred, what do you prefer to do?",
+        &format!("A duplicate has occurred, what do you prefer to do?"),
         variants,
     )
-    .with_help_message(original)
+    .with_help_message(&format!("alias: {original} current: {stored} new: {new}"))
     .prompt()?;
     let selected = match selected {
         DuplicateResolveDiscriminants::Rename => DuplicateResolve::Rename,

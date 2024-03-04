@@ -4,10 +4,10 @@ mod cw_ownable;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
-use crate::types::CliLockedChain;
+use crate::{types::CliLockedChain, GlobalConfig};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
-#[interactive_clap(input_context = ())]
+#[interactive_clap(input_context = GlobalConfig)]
 #[interactive_clap(output_context = CosmosContext)]
 pub struct CosmosCommands {
     #[interactive_clap(skip_default_input_arg)]
@@ -34,7 +34,7 @@ pub enum CosmosAction {
 }
 
 impl CosmosCommands {
-    fn input_chain_id(_context: &()) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
+    fn input_chain_id(_context: &GlobalConfig) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
         crate::common::select_chain()
     }
 }
@@ -46,15 +46,17 @@ impl From<CosmosContext> for () {
 #[derive(Clone)]
 pub struct CosmosContext {
     pub chain: CliLockedChain,
+    pub global_config: GlobalConfig,
 }
 
 impl CosmosContext {
     fn from_previous_context(
-        _previous_context: (),
+        previous_context: GlobalConfig,
         scope:&<CosmosCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         Ok(CosmosContext {
             chain: scope.chain_id,
+            global_config: previous_context,
         })
     }
 }

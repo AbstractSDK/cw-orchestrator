@@ -1,41 +1,15 @@
-use cw_orch_cli::{commands, common};
+use cw_orch_cli::{common, TLCommand};
 
 use inquire::ui::{Attributes, RenderConfig, StyleSheet};
 use interactive_clap::{ResultFromCli, ToCliArgs};
 
-#[derive(Debug, Clone, interactive_clap::InteractiveClap)]
-#[interactive_clap(input_context = ())]
-#[interactive_clap(output_context = VerboseEnableContext)]
-pub struct TLCommand {
-    #[interactive_clap(subcommand)]
-    top_level: commands::Commands,
-    #[interactive_clap(long)]
-    verbose: bool,
-}
-
-pub struct VerboseEnableContext;
-
-impl VerboseEnableContext {
-    fn from_previous_context(
-        _previous_context: (),
-        scope: &<TLCommand as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
-    ) -> color_eyre::eyre::Result<Self> {
-        if scope.verbose {
-            pretty_env_logger::init()
-        }
-        Ok(Self)
-    }
-}
-
-impl From<VerboseEnableContext> for () {
-    fn from(_value: VerboseEnableContext) -> Self {}
-}
-
 fn main() -> color_eyre::Result<()> {
     // We don't want to see cw-orch logs during cli
     std::env::set_var("CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE", "true");
-    let mut render_config = RenderConfig::default();
-    render_config.prompt = StyleSheet::new().with_attr(Attributes::BOLD);
+    let render_config = RenderConfig {
+        prompt: StyleSheet::new().with_attr(Attributes::BOLD),
+        ..Default::default()
+    };
     inquire::set_global_render_config(render_config);
     // TODO: add some configuration like default chain/signer/etc
     let cli_args = TLCommand::parse();
