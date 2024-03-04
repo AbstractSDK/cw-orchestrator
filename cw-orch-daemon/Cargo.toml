@@ -47,7 +47,7 @@ ibc-chain-registry = { workspace = true }
 tokio = { version = "1.4", features = ["full"] }
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
 reqwest = { version = "0.11.9" }
-base64 = { version = "0.21.0" }
+base64 = { version = "0.22.0" }
 hkd32 = { version = "0.7.0", features = ["bip39", "mnemonic", "bech32"] }
 rand_core = { version = "0.6.4", default-features = false }
 ed25519-dalek = { version = "2", features = ["serde"] }
