@@ -23,7 +23,11 @@ This function wraps the CLI and appends its executed action to your current shel
 
 ```bash
 cw-orch-cli() {
-  command=$(command cw-orch-cli "$@" | tee /dev/tty | grep 'Your console command' | cut -f2 -d':')
+  command=$(command cw-orch-cli "$@" | tee /dev/tty | grep 'Your console command' | cut -f2- -d':')
+  if [ "$command" != "cw-orch-cli" ]
+  then
+    history -s cw-orch-cli # if you still want to be able `arrow up` to the original command
+  fi
   history -s $command
 }
 ```
