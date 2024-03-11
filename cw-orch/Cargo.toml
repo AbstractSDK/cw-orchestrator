@@ -110,7 +110,7 @@ thiserror = { workspace = true }
 hex = "0.4.3"
 
 # Env deps
-# This packagese will most likely make wasm not compilable
+# This packages will most likely make wasm not compilable
 cw-orch-traits = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
