@@ -10,16 +10,19 @@ pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 pub extern crate anyhow;
 
 // prelude
+#[cfg(not(target_arch = "wasm32"))]
 pub mod prelude;
 
-pub use cw_orch_core::build;
-pub use cw_orch_core::contract;
+#[cfg(not(target_arch = "wasm32"))]
+pub use cw_orch_core::{build, contract};
 
 /// Related to execution environents and variables
+#[cfg(not(target_arch = "wasm32"))]
 pub mod environment {
     pub use cw_orch_core::env::{default_state_folder, CwOrchEnvVars};
     pub use cw_orch_core::environment::*;
 }
+#[cfg(not(target_arch = "wasm32"))]
 pub use cw_orch_mock as mock;
 
 /// Re-export tokio, the async runtime when using daemons.
@@ -28,6 +31,7 @@ pub extern crate tokio;
 #[cfg(feature = "daemon")]
 pub mod daemon;
 
+#[cfg(not(target_arch = "wasm32"))]
 mod error;
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;

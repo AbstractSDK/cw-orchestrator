@@ -102,15 +102,16 @@ osmosis-std = { version = "=0.21.0", optional = true }
 prost-types = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
 
-# Env deps
-cw-orch-core = { workspace = true }
-cw-orch-traits = { workspace = true }
-cw-orch-mock = { workspace = true }
-
 # Snapshot deps
 insta = { version = "1.34.0", features = ["yaml"], optional = true }
 sanitize-filename = "0.5.0"
 hex = "0.4.3"
+
+# Env deps
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cw-orch-traits = { workspace = true }
+cw-orch-core = { workspace = true }
+cw-orch-mock = { workspace = true }
 
 [dev-dependencies]
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
