@@ -67,7 +67,7 @@ osmosis-test-tube = [
   "dep:prost-types",
   "dep:cosmrs",
 ]
-snapshot-testing = ["dep:insta"]
+snapshot-testing = ["dep:insta", "dep:sanitize-filename"]
 
 
 [dependencies]
