@@ -153,8 +153,10 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     );
 
     let expand = quote!(
+        #[cfg(not(target_arch = "wasm32"))]
         #derived_trait
 
+        #[cfg(not(target_arch = "wasm32"))]
         #derived_trait_impl
     );
 

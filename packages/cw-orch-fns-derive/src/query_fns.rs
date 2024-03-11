@@ -144,8 +144,10 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     );
 
     let expand = quote!(
+        #[cfg(not(target_arch = "wasm32"))]
         #derived_trait
 
+        #[cfg(not(target_arch = "wasm32"))]
         #derived_trait_impl
     );
 
