@@ -7,6 +7,7 @@ pub use cw_orch_contract_derive::interface;
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 
 /// Re-export anyhow for use in the macros
+#[cfg(not(target_arch = "wasm32"))]
 pub extern crate anyhow;
 
 // prelude

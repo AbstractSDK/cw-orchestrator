@@ -109,7 +109,7 @@ fn example_test() {
 
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
 
-The `ExecuteFns` macro should only run on the Msg when the "interface" trait is enable. This is ensured by the `interface` feature in the following example:
+The `ExecuteFns` macro would only run on the Msg when compiled for non-wasm target. Optionally you can ensure it by the `interface` feature, like in the following example:
 
 ```rust,ignore
 use cw_orch::prelude::*;
@@ -163,8 +163,8 @@ pub enum GenericExecuteMsg<T> {
 
 // A type that will fill the generic.
 #[cosmwasm_schema::cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
-#[cfg_attr(feature = "interface", impl_into(ExecuteMsg))]
+#[derive(cw_orch::ExecuteFns)]
+#[impl_into(ExecuteMsg)]
 pub enum Foo {
     Bar { a: String },
 }

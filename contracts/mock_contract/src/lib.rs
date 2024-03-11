@@ -13,13 +13,13 @@ use serde::Serialize;
 pub struct InstantiateMsg {}
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
+#[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsg<T = String>
 where
     T: Serialize,
 {
     FirstMessage {},
-    #[cfg_attr(feature = "interface", payable)]
+    #[payable]
     SecondMessage {
         /// test doc-comment
         t: T,
@@ -30,16 +30,15 @@ where
         t: T,
     },
     FourthMessage,
-    #[cfg_attr(feature = "interface", payable)]
+    #[payable]
     FifthMessage,
     SixthMessage(u64, String),
-    #[cfg_attr(feature = "interface", payable)]
+    #[payable]
     SeventhMessage(Uint128, String),
 }
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
-#[derive(QueryResponses)]
+#[derive(cw_orch::QueryFns, QueryResponses)]
 pub enum QueryMsg<T = String>
 where
     T: Serialize,

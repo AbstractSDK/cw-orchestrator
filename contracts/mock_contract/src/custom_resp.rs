@@ -15,14 +15,13 @@ impl CustomQuery for A {}
 pub struct InstantiateMsg {}
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
+#[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsg {
     FirstMessage {},
 }
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
-#[derive(QueryResponses)]
+#[derive(cw_orch::QueryFns, QueryResponses)]
 pub enum QueryMsg {
     #[returns(String)]
     FirstQuery {},
