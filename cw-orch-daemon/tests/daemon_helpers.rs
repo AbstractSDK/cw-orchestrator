@@ -30,7 +30,7 @@ mod tests {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
+        let contract = mock_contract::interface::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),
             daemon.clone(),
         );
@@ -130,7 +130,7 @@ mod tests {
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
+        let contract = mock_contract::interface::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),
             daemon.clone(),
         );
