@@ -72,7 +72,3 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
         ))
     }
 }
-
-#[cfg(feature = "interface")]
-#[cw_orch::interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-struct MockContract;

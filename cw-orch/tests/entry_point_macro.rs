@@ -1,5 +1,5 @@
 use cw_orch_core::environment::TxHandler;
-use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, MockContract, QueryMsg};
+use mock_contract::{interface::MockContract, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
 use cw_orch::prelude::{ContractInstance, CwOrchExecute, CwOrchMigrate, CwOrchQuery};

@@ -23,7 +23,5 @@ speculoos = { workspace = true }
 cw20 = { workspace = true }
 cw20-base = { workspace = true }
 
-mock-contract = { path = "../../contracts/mock_contract", features = [
-  "interface",
-] }
+mock-contract = { path = "../../contracts/mock_contract" }
 anyhow.workspace = true

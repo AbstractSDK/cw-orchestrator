@@ -8,8 +8,8 @@ use cw_orch_core::environment::DefaultQueriers;
 use cw_orch_core::environment::TxHandler;
 use cw_orch_core::environment::WasmQuerier;
 use cw_orch_mock::MockBech32;
+use mock_contract::interface::MockContract;
 use mock_contract::InstantiateMsg;
-use mock_contract::MockContract;
 
 #[test]
 fn instantiate2() -> anyhow::Result<()> {
