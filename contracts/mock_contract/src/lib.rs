@@ -1,6 +1,4 @@
-#[cfg(not(target_arch = "wasm32"))]
 mod custom_resp;
-#[cfg(not(target_arch = "wasm32"))]
 mod msg_tests;
 
 use cosmwasm_schema::{cw_serde, QueryResponses};
