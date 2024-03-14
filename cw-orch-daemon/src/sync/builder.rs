@@ -99,7 +99,10 @@ impl DaemonBuilder {
 
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
-        let rt_handle = self.handle.clone().unwrap_or(RUNTIME.handle().clone());
+        let rt_handle = self
+            .handle
+            .clone()
+            .unwrap_or_else(|| RUNTIME.handle().clone());
 
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
