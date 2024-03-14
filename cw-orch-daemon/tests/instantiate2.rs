@@ -9,8 +9,8 @@ pub mod test {
     use cw_orch_core::contract::interface_traits::CwOrchUpload;
     use cw_orch_daemon::Daemon;
     use cw_orch_networks::networks;
-    use mock_contract::interface::MockContract;
     use mock_contract::InstantiateMsg;
+    use mock_contract::MockContract;
 
     #[test]
     fn instantiate2() -> anyhow::Result<()> {

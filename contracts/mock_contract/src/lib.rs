@@ -131,12 +131,12 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
     }
 }
 
+#[cw_orch::interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
+pub struct MockContract;
+
 #[cfg(not(target_arch = "wasm32"))]
 pub mod interface {
     use super::*;
-
-    #[cw_orch::interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-    pub struct MockContract;
 
     impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain> {
         fn wrapper(
@@ -160,7 +160,7 @@ pub mod interface {
 
 #[cfg(test)]
 mod test {
-    use super::interface::MockContract as LocalMockContract;
+    use super::MockContract as LocalMockContract;
     use super::*;
     use cosmwasm_std::coins;
     use cw_orch::prelude::*;

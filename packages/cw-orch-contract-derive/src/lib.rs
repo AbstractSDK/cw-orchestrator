@@ -230,6 +230,12 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         )]
         pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
 
+        #[cfg(target_arch = "wasm32")]
+        #[derive(
+            ::std::clone::Clone,
+        )]
+        pub struct #name;
+
         #[cfg(not(target_arch = "wasm32"))]
         #default_num
 

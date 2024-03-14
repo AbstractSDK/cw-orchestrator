@@ -15,8 +15,7 @@ mod tests {
         let sender = "sender";
         let chain = Mock::new(sender);
 
-        let contract =
-            mock_contract::interface::MockContract::new("test:mock_contract", chain.clone());
+        let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
         asserting!("address is not present")
             .that(&contract.address())
@@ -103,8 +102,7 @@ mod tests {
         let chain = Mock::new("sender");
         let sender = chain.sender();
 
-        let contract =
-            mock_contract::interface::MockContract::new("test:mock_contract", chain.clone());
+        let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 
         // upload contract
         let upload_res = contract.upload();
