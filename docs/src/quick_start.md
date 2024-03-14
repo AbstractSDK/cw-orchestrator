@@ -76,6 +76,12 @@ Then, inside that `interface.rs` file, you can define the interface for your con
 
 Learn more about the content of the interface creation specifics on [the interface page](./contracts/interfaces.md#creating-an-interface)
 
+> **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
+>
+>    ```rust,ignore
+>    pub use crate::interface::CounterContract;
+>    ```
+
 ### Interaction helpers
 
 cw-orchestrator provides a additional macros that simplify contract calls and queries. The macro implements functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
@@ -89,6 +95,12 @@ Enabling this functionality is very straightforward. Find your `ExecuteMsg` and 
 ```
 
 Find out more about the interaction helpers on [the interface page](./contracts/interfaces.md#entry-point-function-generation)
+
+> **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
+>
+>    ```rust,ignore
+>    pub use crate::msg::{ExecuteMsgFns as CounterExecuteMsgFns, QueryMsgFns as CounterQueryMsgFns};
+>    ```
 
 ### Using the integration
 
