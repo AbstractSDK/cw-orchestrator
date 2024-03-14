@@ -6,16 +6,17 @@
 pub use cw_orch_contract_derive::interface;
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 
-#[cfg(not(target_arch = "wasm32"))]
 // prelude
+#[cfg(not(target_arch = "wasm32"))]
 pub mod prelude;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod error;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "daemon")]
 pub mod daemon;
 
-#[cfg(not(target_arch = "wasm32"))]
-mod error;
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
