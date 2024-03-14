@@ -16,6 +16,7 @@ pub mod daemon;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod error;
+#[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "osmosis-test-tube")]
 pub mod osmosis_test_tube;
 
