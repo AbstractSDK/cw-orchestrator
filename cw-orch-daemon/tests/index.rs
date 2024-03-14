@@ -10,17 +10,13 @@ mod tests {
     fn mnemonic_index() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
 
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
         let daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .build()
             .unwrap();
 
         let indexed_daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .hd_index(56)
             .build()
             .unwrap();

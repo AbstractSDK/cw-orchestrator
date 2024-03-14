@@ -16,7 +16,7 @@ use cw_orch::prelude::networks::{LOCAL_JUNO, LOCAL_OSMO};
 use cw_orch_interchain::interchain::{ChannelCreationValidator,DaemonInterchainEnv};
 # fn main(){
     let rt = Runtime::new()?;
-    let mut interchain = DaemonInterchainEnv::new(rt.handle(), vec![
+    let mut interchain = DaemonInterchainEnv::new(vec![
         (LOCAL_JUNO, None),
         (LOCAL_OSMO, None)
     ], &ChannelCreationValidator)?;
@@ -42,7 +42,6 @@ You can also add daemons manually to the `interchain` object:
 
 ```rust,ignore
 let local_migaloo = DaemonBuilder::default()
-    .handle(rt.handle())
     .chain(LOCAL_MIGALOO)
     .build()?;
 interchain.add_daemons(vec![local_migaloo]);
@@ -59,7 +58,7 @@ use cw_orch_interchain::interchain::{Starship, ChannelCreator};
 
 # fn main(){
     let rt = Runtime::new()?;
-    let starship = Starship::new(rt.handle().clone(), None)?;
+    let starship = Starship::new(None)?;
     let interchain = starship.interchain_env();
 
     let _local_juno: Daemon = interchain.chain("juno-1")?;

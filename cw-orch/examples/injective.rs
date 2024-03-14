@@ -15,14 +15,11 @@ pub fn main() {
     // in async code (e.g. tokio), which enables multi-threaded and non-blocking code.
 
     env_logger::init();
-    // We start by creating a runtime, which is required for a sync daemon.
-    let runtime = Runtime::new().unwrap();
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     let res = Daemon::builder()
         // set the network to use
         .chain(networks::INJECTIVE_888)
-        .handle(runtime.handle())
         .mnemonic(TESTNET_MNEMONIC)
         .build();
 
