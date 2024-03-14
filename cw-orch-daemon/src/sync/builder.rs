@@ -23,6 +23,7 @@ use super::{super::error::DaemonError, core::Daemon};
 pub struct DaemonBuilder {
     // # Required
     pub(crate) chain: Option<ChainData>,
+    pub(crate) handle: Option<tokio::runtime::Handle>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
 
@@ -44,6 +45,24 @@ impl DaemonBuilder {
     /// Defaults to `default`
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
+        self
+    }
+
+    /// Set a custom tokio runtime handle to use for the Daemon
+    ///
+    /// ## Example
+    /// ```no_run
+    /// use cw_orch_daemon::Daemon;
+    /// use tokio::runtime::Runtime;
+    /// let rt = Runtime::new().unwrap();
+    /// let Daemon = Daemon::builder()
+    ///     .handle(rt.handle())
+    ///     // ...
+    ///     .build()
+    ///     .unwrap();
+    /// ```
+    pub fn handle(&mut self, handle: &tokio::runtime::Handle) -> &mut Self {
+        self.handle = Some(handle.clone());
         self
     }
 
@@ -80,7 +99,8 @@ impl DaemonBuilder {
 
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
-        let rt_handle = RUNTIME.handle().clone();
+        let rt_handle = self.handle.clone().unwrap_or(RUNTIME.handle().clone());
+
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
 
