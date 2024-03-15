@@ -41,6 +41,7 @@ pub fn save_entry_if_required(entry: &str) -> color_eyre::Result<()> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(entries_list_file.as_path())?;
     let mut entries_set: EntriesSet = if file.metadata()?.len().eq(&0) {
         Default::default()
@@ -67,6 +68,7 @@ pub fn remove_entry(entry: &str) -> color_eyre::Result<()> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(entries_list_file.as_path())?;
     let mut entries_set: EntriesSet = if file.metadata()?.len().eq(&0) {
         Default::default()
