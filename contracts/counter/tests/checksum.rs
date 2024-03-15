@@ -12,7 +12,7 @@ fn checksum() {
     let lines = io::BufReader::new(file).lines();
     let mut found = false;
 
-    for line in lines.flatten() {
+    for line in lines.map_while(Result::ok) {
         if line.contains("counter_contract.wasm") {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() > 1 {

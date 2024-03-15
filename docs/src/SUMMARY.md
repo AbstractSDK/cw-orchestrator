@@ -44,6 +44,9 @@
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
 
+- [CLI](./cli/index.md)
+  - [Keys](./cli/keys.md)
+
 # Extras
 
 - [CI/CD](./ci-cd.md)
