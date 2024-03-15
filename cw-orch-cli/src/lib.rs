@@ -12,11 +12,11 @@ pub struct TLCommand {
     /// Verbose mode
     #[interactive_clap(short, long, global = true)]
     verbose: bool,
-    /// Merge cw-orch state file in address-book
+    /// Source cw-orch state file with address-book
     #[interactive_clap(short, long, global = true)]
-    merge_cw_orch_state: bool,
+    source_state_file: bool,
     /// Deployment id, that will be used for merging cw_orch_state
-    #[interactive_clap(long = "deployment-id", global = true)]
+    #[interactive_clap(long, global = true)]
     #[interactive_clap(skip_interactive_input)]
     deployment_id: Option<String>,
     #[interactive_clap(subcommand)]
@@ -25,7 +25,7 @@ pub struct TLCommand {
 
 #[derive(Debug, Clone)]
 pub struct GlobalConfig {
-    merge_cw_orch_state: bool,
+    source_state_file: bool,
     deployment_id: String,
 }
 
@@ -38,7 +38,7 @@ impl GlobalConfig {
             pretty_env_logger::init()
         }
         Ok(Self {
-            merge_cw_orch_state: scope.merge_cw_orch_state,
+            source_state_file: scope.source_state_file,
             deployment_id: scope
                 .deployment_id
                 .clone()

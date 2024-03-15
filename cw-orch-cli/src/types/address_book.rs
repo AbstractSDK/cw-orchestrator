@@ -64,8 +64,8 @@ pub fn get_account_id(
     name_alias: &str,
 ) -> color_eyre::Result<Option<AccountId>> {
     let account_id_address_book = get_account_id_address_book(chain, name_alias)?;
-    // If address found in address book or cw-orch state merge disabled - no need to read cw orch state
-    if account_id_address_book.is_some() || !global_config.merge_cw_orch_state {
+    // If address found in address book or cw-orch state sourcing disabled - no need to read cw orch state
+    if account_id_address_book.is_some() || !global_config.source_state_file {
         return Ok(account_id_address_book);
     }
     // Try to load cw orch state contract
@@ -210,7 +210,7 @@ pub fn get_or_prompt_account_id(
         };
     }
     // Try to retrieve from cw-orch state if merging enabled
-    if global_config.merge_cw_orch_state {
+    if global_config.source_state_file {
         let cw_orch_contracts = cw_orch_state_contracts(chain, &global_config.deployment_id)?;
         if let Some(contract) = cw_orch_contracts.get(name_alias) {
             let contract_addr = contract
@@ -249,7 +249,7 @@ pub fn select_alias(
 ) -> color_eyre::eyre::Result<Option<String>> {
     let chain_id = chain_info.chain_id;
 
-    let cw_orch_contracts = if global_config.merge_cw_orch_state {
+    let cw_orch_contracts = if global_config.source_state_file {
         cw_orch_state_contracts(chain_info, &global_config.deployment_id)?
     } else {
         Default::default()

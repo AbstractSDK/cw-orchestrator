@@ -63,7 +63,7 @@ cw-orch-cli action uni-6 cw query raw juno1czkm9gq96zwwncxusgzruvpuex4wjf4ak7lms
 ### Global optional arguments
 
 - `-v` or `--verbose` - enable verbose mode, this will log actions from cw-orch daemon executions that corresponds to your `RUST_LOG` level
-- -m, --merge-cw-orch-state - merge cw-orch state file(`STATE_FILE` [cw-orch env variable]) with address-book (address book have higher priority)
+- `-s` or `--source-state-file` - source cw-orch state file(`STATE_FILE` [cw-orch env variable]) to use together with address-book entries (address book have higher priority)
 - --deployment-id <DEPLOYMENT_ID> - cw-orch state deployment-id, defaults to "default"
 
 [cw-orch env variable]: ../docs/src/contracts/env-variable.md
