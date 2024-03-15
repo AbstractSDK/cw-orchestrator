@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.20.0"
+version = "0.21.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -77,7 +77,6 @@ cw-orch-fns-derive = { workspace = true }
 
 cosmwasm-std = { workspace = true }
 cw-utils = { workspace = true }
-cw-multi-test = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 schemars = "0.8.10"
@@ -115,7 +114,7 @@ hex = "0.4.3"
 
 [dev-dependencies]
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
-env_logger = "0.11.0"
+env_logger = "0.11.2"
 cosmwasm-schema = "1.2"
 counter-contract = { path = "../contracts/counter", features = ["interface"] }
 mock-contract = { path = "../contracts/mock_contract", features = [

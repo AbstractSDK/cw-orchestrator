@@ -24,7 +24,8 @@ pub const SERIALIZE_ENV_NAME: &str = "CW_ORCH_SERIALIZE_JSON";
 pub const DISABLE_WALLET_BALANCE_ASSERTION_ENV_NAME: &str =
     "CW_ORCH_DISABLE_WALLET_BALANCE_ASSERTION";
 pub const DISABLE_MANUAL_INTERACTION_ENV_NAME: &str = "CW_ORCH_DISABLE_MANUAL_INTERACTION";
-pub const DISABLE_ENABLE_LOGS_MESSAGE_ENV_NAME: &str = "CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE";
+pub const DISABLE_LOGS_ACTIVATION_MESSAGE_ENV_NAME: &str =
+    "CW_ORCH_DISABLE_LOGS_ACTIVATION_MESSAGE";
 pub const MAIN_MNEMONIC_ENV_NAME: &str = "MAIN_MNEMONIC";
 pub const TEST_MNEMONIC_ENV_NAME: &str = "TEST_MNEMONIC";
 pub const LOCAL_MNEMONIC_ENV_NAME: &str = "LOCAL_MNEMONIC";
@@ -118,7 +119,7 @@ pub fn default_state_folder() -> Result<PathBuf, StdError> {
 impl Default for CwOrchEnvVars {
     fn default() -> Self {
         CwOrchEnvVars {
-            state_file: default_state_folder().unwrap().join("state.json"),
+            state_file: PathBuf::from_str("state.json").unwrap(),
             artifacts_dir: None,
             gas_buffer: None,
             min_gas: None,
@@ -167,7 +168,7 @@ impl CwOrchEnvVars {
         if let Ok(str_value) = env::var(DISABLE_MANUAL_INTERACTION_ENV_NAME) {
             env_values.disable_manual_interaction = str_value.parse()?;
         }
-        if let Ok(str_value) = env::var(DISABLE_ENABLE_LOGS_MESSAGE_ENV_NAME) {
+        if let Ok(str_value) = env::var(DISABLE_LOGS_ACTIVATION_MESSAGE_ENV_NAME) {
             env_values.disable_logs_message = str_value.parse()?;
         }
         if let Ok(str_value) = env::var(MAIN_MNEMONIC_ENV_NAME) {

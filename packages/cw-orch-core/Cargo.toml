@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-core"
-version = "0.20.1"
+version = "0.21.1"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -30,7 +30,7 @@ serde = { workspace = true }
 cw-multi-test = { workspace = true }
 
 log = { workspace = true }
-sha256 = { workspace = true }
+sha2 = { workspace = true }
 anyhow = { workspace = true }
 serde_json = { workspace = true }
 

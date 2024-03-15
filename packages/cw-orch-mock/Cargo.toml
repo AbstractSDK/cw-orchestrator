@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-mock"
-version = "0.20.1"
+version = "0.21.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,7 +15,7 @@ cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }
-sha256 = { workspace = true }
+sha2 = { workspace = true }
 log.workspace = true
 
 [dev-dependencies]

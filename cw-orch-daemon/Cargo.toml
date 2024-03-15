@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = "0.20.0"
+version = "0.20.2"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -38,7 +38,7 @@ thiserror = { workspace = true }
 
 prost-types = { workspace = true }
 # Daemon deps
-sha256 = { workspace = true }
+sha2 = { workspace = true }
 prost = { version = "0.12.3" }
 bitcoin = { version = "0.30.0" }
 hex = { version = "0.4.3" }
@@ -70,7 +70,7 @@ flate2 = { version = "1.0.26" }
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
 uid = "0.1.7"
-env_logger = "0.11.0"
+env_logger = "0.11.2"
 cw20 = { version = "1" }
 cw20-base = { version = "1" }
 cosmwasm-schema = "1.2"

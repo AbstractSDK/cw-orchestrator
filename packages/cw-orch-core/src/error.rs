@@ -6,6 +6,7 @@ use std::{
     str::ParseBoolError,
 };
 
+use cosmwasm_std::Instantiate2AddressError;
 use thiserror::Error;
 
 /// cw-orchestrator error wrapper using thiserror.
@@ -29,6 +30,8 @@ pub enum CwEnvError {
     ParseIntError(#[from] ParseIntError),
     #[error(transparent)]
     ParseBoolError(#[from] ParseBoolError),
+    #[error(transparent)]
+    Instantiate2AddressError(#[from] Instantiate2AddressError),
     #[error("File must be a wasm file")]
     NotWasm,
     #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]

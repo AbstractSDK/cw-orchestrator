@@ -40,7 +40,7 @@ pub const LOCAL_TERRA: ChainInfo = ChainInfo {
     chain_id: "localterra",
     gas_denom: "uluna",
     gas_price: 0.15,
-    grpc_urls: &["http://65.108.235.46:9090"],
+    grpc_urls: &["http://localhost:9090"],
     network_info: TERRA_NETWORK,
     lcd_url: None,
     fcd_url: None,

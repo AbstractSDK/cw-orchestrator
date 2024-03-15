@@ -1,5 +1,15 @@
 # cw-orchestrator Changelog
 
+## 0.21.0
+
+- Updated cw-multi-test to allow for IBC packet timeout
+
+## 0.20.1
+
+- Fix ARM path derivation for wasm
+- Fix state file path creation on cw-orch-daemon
+- Added addr_make_with_balance
+
 ## 0.20.0
 
 - Changed behavior for default constructor implementation by macro "interface" --> Added possibility to have a fixed ID

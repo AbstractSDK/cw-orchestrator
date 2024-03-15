@@ -1,12 +1,12 @@
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::Addr;
+use cosmwasm_std::{coin, Addr, Coins};
 
 use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
 use cw_orch_traits::stargate::Stargate;
 
+use crate::mock::cw_multi_test::AppResponse;
 use cosmwasm_std::{Binary, Coin, Uint128};
-use cw_multi_test::AppResponse;
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
@@ -281,18 +281,38 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     }
 }
 
+/// Gas Fee token for OmosisTestTube, used in BankSetter
+pub const GAS_TOKEN: &str = "uosmo";
+
 impl BankSetter for OsmosisTestTube {
     type T = OsmosisTestTubeBankQuerier;
 
-    /// It's impossible to set the balance of an address directly in OsmosisTestTub
-    /// So for this implementation, we use a weird algorithm
+    /// It's impossible to set the balance of an address directly in OsmosisTestTube
     fn set_balance(
         &mut self,
         _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        // We check the current balance
         unimplemented!();
+    }
+
+    fn add_balance(
+        &mut self,
+        address: impl Into<String>,
+        amount: Vec<Coin>,
+    ) -> Result<(), <Self as TxHandler>::Error> {
+        let mut all_coins: Coins = amount.clone().try_into().unwrap();
+        let gas_balance = coin(100_000_000_000_000, GAS_TOKEN);
+        all_coins.add(gas_balance).unwrap();
+
+        let new_account = self.init_account(all_coins.into())?;
+
+        self.call_as(&new_account)
+            .bank_send(address.into(), amount)?;
+
+        Ok(())
+
+        // We check the current balance
     }
 }
 
@@ -317,10 +337,12 @@ impl Stargate for OsmosisTestTube {
 
 #[cfg(test)]
 pub mod tests {
-    use cosmwasm_std::{coins, ContractInfoResponse};
+    use cosmwasm_std::{coin, coins, ContractInfoResponse};
 
     use cw_orch_core::environment::*;
     use osmosis_test_tube::Account;
+
+    use crate::osmosis_test_tube::GAS_TOKEN;
 
     use super::OsmosisTestTube;
     use counter_contract::{msg::InstantiateMsg, CounterContract};
@@ -368,6 +390,34 @@ pub mod tests {
         assert_eq!(
             app.bank_querier().supply_of(denom.to_string())?,
             init_coins[0]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn add_balance_works() -> anyhow::Result<()> {
+        let denom = "uosmo";
+        let init_coins = coins(100_000_000_000_000, denom);
+        let mut app = OsmosisTestTube::new(init_coins.clone());
+
+        let account = app.init_account(coins(78, "uweird"))?;
+
+        let amount1 = 139823876u128;
+        let amount2 = 1398212713563876u128;
+        app.add_balance(
+            account.address(),
+            vec![coin(amount1, GAS_TOKEN), coin(amount2, "uother")],
+        )?;
+
+        let balance = app.bank_querier().balance(account.address(), None)?;
+
+        assert_eq!(
+            balance,
+            vec![
+                coin(amount1, GAS_TOKEN),
+                coin(amount2, "uother"),
+                coin(78, "uweird")
+            ]
         );
         Ok(())
     }

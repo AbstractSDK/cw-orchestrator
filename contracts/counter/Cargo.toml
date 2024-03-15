@@ -28,7 +28,6 @@ cw-orch = { path = "../../cw-orch", optional = true, features = ["daemon"] }
 cw-orch-contract-cli = { path = "../../packages/cw-orch-contract-cli", optional = true }
 
 [dev-dependencies]
-cw-multi-test = { workspace = true }
 counter-contract = { path = ".", features = ["interface"] }
 # Deps for deployment
 dotenv = { version = "0.15.0" }
