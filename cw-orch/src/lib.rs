@@ -15,7 +15,7 @@ pub mod prelude;
 pub use cw_orch_core::build;
 pub use cw_orch_core::contract;
 
-/// Related to execution environents and variables
+/// Related to execution environments and variables
 pub mod environment {
     pub use cw_orch_core::env::{default_state_folder, CwOrchEnvVars};
     pub use cw_orch_core::environment::*;
