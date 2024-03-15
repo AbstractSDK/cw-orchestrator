@@ -20,7 +20,7 @@ impl AddAddressOutput {
         scope: &<AddAddress as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain_info = previous_context.chain.chain_info();
-        address_book::try_insert_account_id(chain_info.chain_id, &scope.alias, &scope.address)?;
+        address_book::try_insert_account_id(chain_info, &scope.alias, &scope.address)?;
         Ok(AddAddressOutput)
     }
 }

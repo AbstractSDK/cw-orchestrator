@@ -58,7 +58,10 @@ impl ExecuteWasmOutput {
         scope:&<ExecuteContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let contract_account_id = scope.contract_addr.clone().account_id(chain.chain_info())?;
+        let contract_account_id = scope
+            .contract_addr
+            .clone()
+            .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let seed = seed_phrase_for_id(&scope.signer)?;
         let coins = (&scope.coins).try_into()?;

@@ -5,15 +5,16 @@ mod show_address;
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
-use crate::types::CliLockedChain;
+use crate::{types::CliLockedChain, GlobalConfig};
 
 #[derive(Clone, Debug)]
 pub struct AddresBookContext {
+    pub global_config: GlobalConfig,
     pub chain: CliLockedChain,
 }
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
-#[interactive_clap(input_context = ())]
+#[interactive_clap(input_context = GlobalConfig)]
 #[interactive_clap(output_context = AddresBookContext)]
 pub struct AddressBookCommands {
     #[interactive_clap(skip_default_input_arg)]
@@ -23,7 +24,7 @@ pub struct AddressBookCommands {
 }
 
 impl AddressBookCommands {
-    fn input_chain_id(_context: &()) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
+    fn input_chain_id(_context: &GlobalConfig) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
         crate::common::select_chain()
     }
 }
@@ -49,10 +50,11 @@ pub enum KeyAction {
 
 impl AddresBookContext {
     fn from_previous_context(
-        _previous_context: (),
+        previous_context: GlobalConfig,
         scope:&<AddressBookCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         Ok(AddresBookContext {
+            global_config: previous_context,
             chain: scope.chain_id,
         })
     }

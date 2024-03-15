@@ -102,11 +102,7 @@ impl InstantiateWasmOutput {
                     // Use label as default value
                     .with_initial_value(&scope.label)
                     .prompt()?;
-                address_book::try_insert_account_id(
-                    chain.chain_info().chain_id,
-                    &alias,
-                    address.as_str(),
-                )?;
+                address_book::try_insert_account_id(chain.chain_info(), &alias, address.as_str())?;
             }
             false => (),
         };

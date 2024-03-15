@@ -44,7 +44,10 @@ impl QueryWasmOutput {
         scope:&<QuerySmartCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let contract_account_id = scope.contract.clone().account_id(chain.chain_info())?;
+        let contract_account_id = scope
+            .contract
+            .clone()
+            .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 

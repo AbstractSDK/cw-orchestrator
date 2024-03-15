@@ -34,7 +34,10 @@ impl QueryNativeOutput {
         let chain = previous_context.chain;
         let denom = scope.denom.0.clone();
 
-        let account_id = scope.address.clone().account_id(chain.chain_info())?;
+        let account_id = scope
+            .address
+            .clone()
+            .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let chain_data: ChainRegistryData = chain.into();
         let rt = Runtime::new()?;

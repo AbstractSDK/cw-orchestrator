@@ -3,6 +3,8 @@ pub mod common;
 pub(crate) mod log;
 pub(crate) mod types;
 
+use cw_orch::daemon::DEFAULT_DEPLOYMENT;
+
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
 #[interactive_clap(output_context = GlobalConfig)]
@@ -12,14 +14,19 @@ pub struct TLCommand {
     verbose: bool,
     /// Merge cw-orch state file in address-book
     #[interactive_clap(short, long)]
-    cw_orch_merge_state: bool,
+    merge_cw_orch_state: bool,
+    /// Deployment id, that will be used for merging cw_orch_state
+    #[interactive_clap(long = "deployment-id")]
+    #[interactive_clap(skip_interactive_input)]
+    deployment_id: Option<String>,
     #[interactive_clap(subcommand)]
     top_level: commands::Commands,
 }
 
 #[derive(Debug, Clone)]
 pub struct GlobalConfig {
-    cw_orch_merged_state: bool,
+    merge_cw_orch_state: bool,
+    deployment_id: String,
 }
 
 impl GlobalConfig {
@@ -31,7 +38,11 @@ impl GlobalConfig {
             pretty_env_logger::init()
         }
         Ok(Self {
-            cw_orch_merged_state: scope.cw_orch_merge_state,
+            merge_cw_orch_state: scope.merge_cw_orch_state,
+            deployment_id: scope
+                .deployment_id
+                .clone()
+                .unwrap_or(DEFAULT_DEPLOYMENT.to_owned()),
         })
     }
 }

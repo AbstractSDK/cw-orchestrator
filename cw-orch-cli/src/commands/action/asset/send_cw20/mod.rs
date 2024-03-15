@@ -39,8 +39,14 @@ impl SendCw20Output {
         scope: &<Cw20TransferCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let to_address_account_id = scope.to_address.clone().account_id(chain.chain_info())?;
-        let cw20_account_id = scope.cw20_address.clone().account_id(chain.chain_info())?;
+        let to_address_account_id = scope
+            .to_address
+            .clone()
+            .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let cw20_account_id = scope
+            .cw20_address
+            .clone()
+            .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let seed = seed_phrase_for_id(&scope.signer)?;
         let cw20_msg = cw20::Cw20ExecuteMsg::Transfer {

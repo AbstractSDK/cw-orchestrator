@@ -13,7 +13,7 @@ pub struct ShowAddress {
 
 impl ShowAddress {
     pub fn input_alias(context: &AddresBookContext) -> color_eyre::eyre::Result<Option<String>> {
-        select_alias(context.chain.chain_info().chain_id)
+        select_alias(context.chain.chain_info(), &context.global_config)
     }
 }
 
@@ -25,8 +25,11 @@ impl ShowAddressOutput {
         scope: &<ShowAddress as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let maybe_account_id =
-            address_book::get_account_id(chain.chain_info().chain_id, &scope.alias)?;
+        let maybe_account_id = address_book::get_account_id(
+            chain.chain_info(),
+            &previous_context.global_config,
+            &scope.alias,
+        )?;
 
         match maybe_account_id {
             Some(account_id) => println!("{account_id}"),

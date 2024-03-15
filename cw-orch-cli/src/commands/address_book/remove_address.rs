@@ -13,7 +13,7 @@ pub struct RemoveAddress {
 
 impl RemoveAddress {
     pub fn input_alias(context: &AddresBookContext) -> color_eyre::eyre::Result<Option<String>> {
-        address_book::select_alias(context.chain.chain_info().chain_id)
+        address_book::select_alias(context.chain.chain_info(), &context.global_config)
     }
 }
 

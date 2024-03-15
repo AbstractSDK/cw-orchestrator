@@ -1,3 +1,5 @@
+use crate::GlobalConfig;
+
 use super::cli_subdir::cli_path;
 
 // TODO: Three modes
@@ -6,6 +8,7 @@ use super::cli_subdir::cli_path;
 // - Hybrid (current)
 
 const ADDRESS_BOOK_FILENAME: &str = "address_book.json";
+pub const CW_ORCH_STATE_FILE_DAMAGED_ERROR: &str = "cw-orch state file is corrupted";
 
 use std::{
     fs::{File, OpenOptions},
@@ -13,6 +16,7 @@ use std::{
     str::FromStr,
 };
 
+use color_eyre::eyre::Context;
 use cosmrs::AccountId;
 use cw_orch::daemon::ChainInfo;
 use serde_json::{json, Value};
@@ -21,8 +25,13 @@ fn address_book_path() -> color_eyre::Result<PathBuf> {
     Ok(cli_path()?.join(ADDRESS_BOOK_FILENAME))
 }
 
-pub fn get_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result<Option<AccountId>> {
+/// Get account id only from address-book
+pub fn get_account_id_address_book(
+    chain: &ChainInfo,
+    name_alias: &str,
+) -> color_eyre::Result<Option<AccountId>> {
     let address_book_file = address_book_path()?;
+    let chain_id = chain.chain_id;
     // open file pointer set read permissions to true
     let file_result = OpenOptions::new()
         .read(true)
@@ -43,6 +52,30 @@ pub fn get_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result<Op
                 "Address Book file is damaged. Unable to read address for the [{name_alias}] alias"
             ))
         }
+    } else {
+        Ok(None)
+    }
+}
+
+/// Get account id from both address-book and cw-orch state(if merging enabled)
+pub fn get_account_id(
+    chain: &ChainInfo,
+    global_config: &GlobalConfig,
+    name_alias: &str,
+) -> color_eyre::Result<Option<AccountId>> {
+    let account_id_address_book = get_account_id_address_book(chain, name_alias)?;
+    // If address found in address book or cw-orch state merge disabled - no need to read cw orch state
+    if account_id_address_book.is_some() || !global_config.merge_cw_orch_state {
+        return Ok(account_id_address_book);
+    }
+    // Try to load cw orch state contract
+    let cw_orch_contracts = cw_orch_state_contracts(chain, &global_config.deployment_id)?;
+    if let Some(contract) = cw_orch_contracts.get(name_alias) {
+        let contract_addr = contract
+            .as_str()
+            .ok_or(color_eyre::eyre::eyre!(CW_ORCH_STATE_FILE_DAMAGED_ERROR))?;
+        // Ignore parse error, cw-orch can store non bech32 addresses which CLI does not support
+        Ok(AccountId::from_str(contract_addr).ok())
     } else {
         Ok(None)
     }
@@ -91,11 +124,11 @@ pub fn insert_account_id(
 }
 
 pub fn try_insert_account_id(
-    chain_id: &str,
+    chain: &ChainInfo,
     alias: &str,
     address: &str,
 ) -> color_eyre::eyre::Result<()> {
-    let maybe_account_id = get_account_id(chain_id, alias)?;
+    let maybe_account_id = get_account_id_address_book(chain, alias)?;
 
     if let Some(account_id) = maybe_account_id {
         let confirmed =
@@ -105,7 +138,7 @@ pub fn try_insert_account_id(
         }
     }
 
-    let new_address = insert_account_id(chain_id, alias, address)?;
+    let new_address = insert_account_id(chain.chain_id, alias, address)?;
     println!("Wrote successfully:\n{}:{}", alias, new_address);
     Ok(())
 }
@@ -138,7 +171,11 @@ pub fn remove_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result
     Ok(removed)
 }
 
-pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre::Result<AccountId> {
+pub fn get_or_prompt_account_id(
+    chain: &ChainInfo,
+    global_config: &GlobalConfig,
+    name_alias: &str,
+) -> color_eyre::Result<AccountId> {
     let address_book_file = address_book_path()?;
     // open file pointer set read/write permissions to true
     // create it if it does not exists
@@ -158,12 +195,12 @@ pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre:
     };
 
     // check and add chain_id path if it's missing
-    if json.get(chain_id).is_none() {
-        json[chain_id] = json!({});
+    if json.get(chain.chain_id).is_none() {
+        json[chain.chain_id] = json!({});
     }
 
-    // retrieve existing alias
-    if let Some(address) = json[chain_id].get(name_alias) {
+    // Try to retrieve existing alias
+    if let Some(address) = json[chain.chain_id].get(name_alias) {
         return if let Some(Ok(account_id)) = address.as_str().map(AccountId::from_str) {
             Ok(account_id)
         } else {
@@ -171,6 +208,19 @@ pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre:
                 "Address Book file is damaged. Unable to read address for the [{name_alias}] alias"
             ))
         };
+    }
+    // Try to retrieve from cw-orch state if merging enabled
+    if global_config.merge_cw_orch_state {
+        let cw_orch_contracts = cw_orch_state_contracts(chain, &global_config.deployment_id)?;
+        if let Some(contract) = cw_orch_contracts.get(name_alias) {
+            let contract_addr = contract
+                .as_str()
+                .ok_or(color_eyre::eyre::eyre!(CW_ORCH_STATE_FILE_DAMAGED_ERROR))?;
+            // Ignore parse error, cw-orch can store non bech32 addresses which CLI does not support
+            if let Ok(account_id) = AccountId::from_str(contract_addr) {
+                return Ok(account_id);
+            }
+        }
     }
 
     // add name alias to chain_id path
@@ -184,7 +234,7 @@ pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre:
         eprintln!("Failed to parse bech32 address");
     };
 
-    json[chain_id][name_alias] = json!(account_id);
+    json[chain.chain_id][name_alias] = json!(account_id);
 
     // write JSON data
     // use File::create so we don't append data to the file
@@ -193,7 +243,18 @@ pub fn get_or_prompt_account_id(chain_id: &str, name_alias: &str) -> color_eyre:
     Ok(account_id)
 }
 
-pub fn select_alias(chain_id: &str) -> color_eyre::eyre::Result<Option<String>> {
+pub fn select_alias(
+    chain_info: &ChainInfo,
+    global_config: &GlobalConfig,
+) -> color_eyre::eyre::Result<Option<String>> {
+    let chain_id = chain_info.chain_id;
+
+    let cw_orch_contracts = if global_config.merge_cw_orch_state {
+        cw_orch_state_contracts(chain_info, &global_config.deployment_id)?
+    } else {
+        Default::default()
+    };
+
     let address_book_file = address_book_path()?;
 
     let file = OpenOptions::new()
@@ -209,11 +270,50 @@ pub fn select_alias(chain_id: &str) -> color_eyre::eyre::Result<Option<String>> 
         Some(aliases) => aliases.as_object().unwrap(),
         None => return Err(color_eyre::eyre::eyre!("Aliases for {chain_id} is empty")),
     };
-    let aliases: Vec<&String> = alias_map.keys().collect();
+    let aliases: Vec<_> = alias_map.keys().chain(cw_orch_contracts.keys()).collect();
     let chosen = inquire::Select::new("Select Address Alias", aliases).prompt()?;
     Ok(Some(chosen.to_owned()))
 }
 
+fn read_cw_orch_state() -> color_eyre::Result<Value> {
+    let state_file = cw_orch::daemon::DaemonState::state_file_path()?;
+
+    let file =
+        File::open(&state_file).context(format!("File should be present at {state_file}"))?;
+    let json: Value = serde_json::from_reader(file)?;
+    Ok(json)
+}
+
+pub fn cw_orch_state_contracts(
+    chain: &ChainInfo,
+    deployment_id: &str,
+) -> color_eyre::Result<serde_json::Map<String, Value>> {
+    let chain_name = chain.network_info.id;
+    let chain_id = chain.chain_id;
+
+    let json = read_cw_orch_state()?;
+
+    let Some(chain_state) = json.get(chain_name) else {
+        return Err(color_eyre::eyre::eyre!("State is empty for {chain_name}"));
+    };
+
+    let Some(chain_id_state) = chain_state.get(chain_id) else {
+        return Err(color_eyre::eyre::eyre!(
+            "State is empty for {chain_name}.{chain_id}"
+        ));
+    };
+
+    let Some(deployment) = chain_id_state.get(deployment_id) else {
+        return Err(color_eyre::eyre::eyre!(
+            "State is empty for {chain_name}.{chain_id}.{deployment_id}"
+        ));
+    };
+
+    let contracts = deployment
+        .as_object()
+        .ok_or(color_eyre::eyre::eyre!(CW_ORCH_STATE_FILE_DAMAGED_ERROR))?;
+    Ok(contracts.clone())
+}
 /// Address or alias to the address
 #[derive(Debug, Clone)]
 pub enum Address {
@@ -265,10 +365,14 @@ impl interactive_clap::ToCli for CliAddress {
 }
 
 impl CliAddress {
-    pub fn account_id(self, chain_info: &ChainInfo) -> color_eyre::Result<AccountId> {
+    pub fn account_id(
+        self,
+        chain_info: &ChainInfo,
+        global_config: &GlobalConfig,
+    ) -> color_eyre::Result<AccountId> {
         match Address::new(self.0, chain_info)? {
             Address::Bech32(account_id) => Ok(account_id),
-            Address::Alias(alias) => get_or_prompt_account_id(chain_info.chain_id, &alias),
+            Address::Alias(alias) => get_or_prompt_account_id(chain_info, global_config, &alias),
         }
     }
 }

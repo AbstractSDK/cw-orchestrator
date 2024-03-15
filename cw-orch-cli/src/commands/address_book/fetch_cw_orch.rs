@@ -1,12 +1,8 @@
-use std::{fs::File, str::FromStr};
+use std::str::FromStr;
 
-use cw_orch::daemon::DEFAULT_DEPLOYMENT;
-use serde_json::Value;
 use strum::IntoEnumIterator;
 
-const STATE_FILE_DAMAGED_ERROR: &str = "State file is corrupted";
-
-use crate::types::address_book;
+use crate::types::address_book::{self, cw_orch_state_contracts, CW_ORCH_STATE_FILE_DAMAGED_ERROR};
 
 use super::AddresBookContext;
 
@@ -52,9 +48,6 @@ impl FromStr for AliasNameStrategy {
 #[interactive_clap(input_context = AddresBookContext)]
 #[interactive_clap(output_context = FetchAddressesOutput)]
 pub struct FetchAddresses {
-    #[interactive_clap(long = "deployment-id")]
-    #[interactive_clap(skip_interactive_input)]
-    deployment_id: Option<String>,
     #[interactive_clap(value_enum)]
     #[interactive_clap(skip_default_input_arg)]
     /// Alias names strategy
@@ -108,45 +101,22 @@ impl FetchAddressesOutput {
         previous_context: AddresBookContext,
         scope: &<FetchAddresses as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
-        let state_file = cw_orch::daemon::DaemonState::state_file_path()?;
-        let deployment_id = scope.deployment_id.as_deref().unwrap_or(DEFAULT_DEPLOYMENT);
+        let chain_info = previous_context.chain.chain_info();
+        let contracts =
+            cw_orch_state_contracts(chain_info, &previous_context.global_config.deployment_id)?;
 
-        let chain_name = previous_context.chain.chain_info().network_info.id;
-        let chain_id = previous_context.chain.chain_info().chain_id;
-
-        let json = read(&state_file)?;
-
-        let Some(chain_state) = json.get(chain_name) else {
-            return Err(color_eyre::eyre::eyre!("State is empty for {chain_name}"));
-        };
-
-        let Some(chain_id_state) = chain_state.get(chain_id) else {
-            return Err(color_eyre::eyre::eyre!(
-                "State is empty for {chain_name}.{chain_id}"
-            ));
-        };
-
-        let Some(deployment) = chain_id_state.get(deployment_id) else {
-            return Err(color_eyre::eyre::eyre!(
-                "State is empty for {chain_name}.{chain_id}.{deployment_id}"
-            ));
-        };
-
-        let contracts = deployment
-            .as_object()
-            .ok_or(color_eyre::eyre::eyre!(STATE_FILE_DAMAGED_ERROR))?;
         let mut duplicate_resolve_global = None;
         for (contract_id, address) in contracts {
             let address = address
                 .as_str()
-                .ok_or(color_eyre::eyre::eyre!(STATE_FILE_DAMAGED_ERROR))?;
+                .ok_or(color_eyre::eyre::eyre!(CW_ORCH_STATE_FILE_DAMAGED_ERROR))?;
             let mut alias = match scope.name_strategy {
                 AliasNameStrategy::Keep => contract_id.clone(),
                 AliasNameStrategy::Rename => inquire::Text::new("Input new contract alias")
-                    .with_initial_value(contract_id)
+                    .with_initial_value(&contract_id)
                     .prompt()?,
             };
-            let maybe_address = address_book::get_account_id(chain_id, &alias)?;
+            let maybe_address = address_book::get_account_id_address_book(chain_info, &alias)?;
 
             // Duplicate handle
             if let Some(current) = maybe_address {
@@ -159,7 +129,7 @@ impl FetchAddressesOutput {
                         _ => unreachable!(),
                     },
                     // Or resolve here
-                    None => input_duplicate_resolve(&alias, &current.to_string(), address)?,
+                    None => input_duplicate_resolve(&alias, current.as_ref(), address)?,
                 };
 
                 match duplicate_resolve {
@@ -174,10 +144,11 @@ impl FetchAddressesOutput {
                     // Rename
                     DuplicateResolve::Rename => loop {
                         alias = inquire::Text::new("Rename contract alias")
-                            .with_initial_value(contract_id)
+                            .with_initial_value(&contract_id)
                             .prompt()?;
                         let is_duplicate =
-                            address_book::get_account_id(chain_id, &alias)?.is_some();
+                            address_book::get_account_id_address_book(chain_info, &alias)?
+                                .is_some();
                         if !is_duplicate {
                             break;
                         }
@@ -189,7 +160,7 @@ impl FetchAddressesOutput {
                     }
                 }
             }
-            address_book::insert_account_id(chain_id, &alias, address)?;
+            address_book::insert_account_id(chain_info.chain_id, &alias, address)?;
         }
         Ok(FetchAddressesOutput)
     }
@@ -202,7 +173,7 @@ fn input_duplicate_resolve(
 ) -> color_eyre::eyre::Result<DuplicateResolve> {
     let variants = DuplicateResolveDiscriminants::iter().collect::<Vec<_>>();
     let selected = inquire::Select::new(
-        &format!("A duplicate has occurred, what do you prefer to do?"),
+        "A duplicate has occurred, what do you prefer to do?",
         variants,
     )
     .with_help_message(&format!("alias: {original} current: {stored} new: {new}"))
@@ -215,11 +186,4 @@ fn input_duplicate_resolve(
         DuplicateResolveDiscriminants::OverrideAll => DuplicateResolve::OverrideAll,
     };
     Ok(selected)
-}
-
-pub fn read(filename: &String) -> color_eyre::Result<Value> {
-    let file =
-        File::open(filename).unwrap_or_else(|_| panic!("File should be present at {}", filename));
-    let json: Value = serde_json::from_reader(file)?;
-    Ok(json)
 }
