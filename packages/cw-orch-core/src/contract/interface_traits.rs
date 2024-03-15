@@ -1,6 +1,6 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier},
+    environment::{ChainState, CwEnv, TxHandler, TxResponse, WasmQuerier},
     error::CwEnvError,
     log::contract_target,
 };
@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 /// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
-pub trait ContractInstance<Chain: TxHandler + QueryHandler + Clone> {
+pub trait ContractInstance<Chain: ChainState> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
