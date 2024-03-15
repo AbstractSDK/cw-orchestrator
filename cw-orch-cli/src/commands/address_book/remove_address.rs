@@ -13,7 +13,11 @@ pub struct RemoveAddress {
 
 impl RemoveAddress {
     pub fn input_alias(context: &AddresBookContext) -> color_eyre::eyre::Result<Option<String>> {
-        address_book::select_alias(context.chain.chain_info(), &context.global_config)
+        // Disable state merging, CLI do not remove items from cw-orch state
+        let mut config = context.global_config.clone();
+        config.merge_cw_orch_state = false;
+
+        address_book::select_alias(context.chain.chain_info(), &config)
     }
 }
 
