@@ -16,8 +16,8 @@ pub enum MsgType {
     /// Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)
     Base64Msg,
     /// Read from a file (e.g. file.json)
-    #[strum_discriminants(strum(message = "File message"))]
-    FileMsg,
+    #[strum_discriminants(strum(message = "Read from a file"))]
+    File,
 }
 
 impl interactive_clap::ToCli for MsgType {
@@ -30,7 +30,7 @@ impl std::str::FromStr for MsgType {
         match s {
             "json-msg" => Ok(Self::JsonMsg),
             "base64-msg" => Ok(Self::Base64Msg),
-            "file-msg" => Ok(Self::FileMsg),
+            "file" => Ok(Self::File),
             _ => Err("MsgType: incorrect message type".to_string()),
         }
     }
@@ -41,7 +41,7 @@ impl std::fmt::Display for MsgType {
         match self {
             Self::JsonMsg => write!(f, "json-msg"),
             Self::Base64Msg => write!(f, "base64-msg"),
-            Self::FileMsg => write!(f, "file-msg"),
+            Self::File => write!(f, "file"),
         }
     }
 }
@@ -51,7 +51,7 @@ impl std::fmt::Display for MsgTypeDiscriminants {
         match self {
             Self::JsonMsg => write!(f, "Json Msg"),
             Self::Base64Msg => write!(f, "Base64 Msg"),
-            Self::FileMsg => write!(f, "File Msg"),
+            Self::File => write!(f, "File"),
         }
     }
 }
@@ -62,7 +62,7 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
     match selected {
         MsgTypeDiscriminants::JsonMsg => Ok(Some(MsgType::JsonMsg)),
         MsgTypeDiscriminants::Base64Msg => Ok(Some(MsgType::Base64Msg)),
-        MsgTypeDiscriminants::FileMsg => Ok(Some(MsgType::FileMsg)),
+        MsgTypeDiscriminants::File => Ok(Some(MsgType::File)),
     }
 }
 
@@ -113,7 +113,7 @@ pub fn msg_bytes(message_or_file: String, msg_type: MsgType) -> color_eyre::eyre
                 .decode(message)
                 .wrap_err("Failed to decode base64 string")
         }
-        MsgType::FileMsg => {
+        MsgType::File => {
             let file_path = std::path::PathBuf::from(message_or_file);
             let msg_bytes =
                 std::fs::read(file_path.as_path()).wrap_err("Failed to read a message file")?;
