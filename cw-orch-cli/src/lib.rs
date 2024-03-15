@@ -10,13 +10,13 @@ use cw_orch::daemon::DEFAULT_DEPLOYMENT;
 #[interactive_clap(output_context = GlobalConfig)]
 pub struct TLCommand {
     /// Verbose mode
-    #[interactive_clap(short, long)]
+    #[interactive_clap(short, long, global = true)]
     verbose: bool,
     /// Merge cw-orch state file in address-book
-    #[interactive_clap(short, long)]
+    #[interactive_clap(short, long, global = true)]
     merge_cw_orch_state: bool,
     /// Deployment id, that will be used for merging cw_orch_state
-    #[interactive_clap(long = "deployment-id")]
+    #[interactive_clap(long = "deployment-id", global = true)]
     #[interactive_clap(skip_interactive_input)]
     deployment_id: Option<String>,
     #[interactive_clap(subcommand)]

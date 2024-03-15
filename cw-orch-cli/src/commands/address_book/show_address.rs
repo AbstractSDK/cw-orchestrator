@@ -33,7 +33,7 @@ impl ShowAddressOutput {
 
         match maybe_account_id {
             Some(account_id) => println!("{account_id}"),
-            None => println!("Not found"),
+            None => println!("Address not found"),
         }
 
         Ok(ShowAddressOutput)

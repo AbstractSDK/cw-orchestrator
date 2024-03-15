@@ -267,10 +267,13 @@ pub fn select_alias(
         .as_object()
         .ok_or(color_eyre::eyre::eyre!("Address Book file is damaged."))?;
     let alias_map = match chain_map.get(chain_id) {
-        Some(aliases) => aliases.as_object().unwrap(),
-        None => return Err(color_eyre::eyre::eyre!("Aliases for {chain_id} is empty")),
+        Some(aliases) => aliases.as_object().unwrap().clone(),
+        None => Default::default(),
     };
     let aliases: Vec<_> = alias_map.keys().chain(cw_orch_contracts.keys()).collect();
+    if aliases.is_empty() {
+        return Err(color_eyre::eyre::eyre!("Aliases for {chain_id} is empty"));
+    }
     let chosen = inquire::Select::new("Select Address Alias", aliases).prompt()?;
     Ok(Some(chosen.to_owned()))
 }
