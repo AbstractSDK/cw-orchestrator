@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unreleased
+
+- Bumped MSRV to 1.74 because of dependency `clap_derive@4.5.3`
+
 ## 0.21.0
 
 - Updated cw-multi-test to allow for IBC packet timeout
