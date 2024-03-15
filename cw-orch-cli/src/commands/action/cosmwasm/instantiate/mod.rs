@@ -46,7 +46,7 @@ impl InstantiateContractCommands {
     }
 
     fn input_msg(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
-        msg_type::input_msg()
+        msg_type::input_msg_or_filename()
     }
 
     fn input_coins(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<CliCoins>> {
