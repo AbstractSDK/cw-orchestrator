@@ -35,7 +35,7 @@ fn main() -> color_eyre::Result<()> {
         interactive_clap::ResultFromCli::Err(cli_args, err) => {
             if let Some(cli_args) = cli_args {
                 println!(
-                    "Your console command: {}",
+                    "\nYour console command: {}",
                     shell_words::join(std::iter::once(cw_cli_path).chain(cli_args.to_cli_args()))
                 );
             }
