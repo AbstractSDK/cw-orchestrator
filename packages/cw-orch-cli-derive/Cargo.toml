@@ -1,0 +1,18 @@
+[package]
+name = "cw-orch-cli-derive"
+version = "0.13.3"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Derive macro for generating cli interface."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1"
+syn = { version = "1", features = ["full", "extra-traits", "visit-mut"] }
+convert_case = "0.6.0"
+interactive-clap = "0.2.4"
