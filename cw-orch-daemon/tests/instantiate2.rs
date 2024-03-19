@@ -14,11 +14,8 @@ pub mod test {
 
     #[test]
     fn instantiate2() -> anyhow::Result<()> {
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
         let app = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .build()
             .unwrap();
 
