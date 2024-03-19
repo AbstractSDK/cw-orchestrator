@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## Unreleased
+
+- Allow cw-orch wasm compilation without features
+
 ## 0.21.0
 
 - Updated cw-multi-test to allow for IBC packet timeout
