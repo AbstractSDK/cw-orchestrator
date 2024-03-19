@@ -4,6 +4,12 @@
 
 - Allow cw-orch wasm compilation without features
 
+## 0.21.1
+
+- Remove mandatory runtimes when building Daemon
+- Allow cw-orch to compile for a wasm target without adding features
+- Changed GRPC url for Local Terra
+
 ## 0.21.0
 
 - Updated cw-multi-test to allow for IBC packet timeout
