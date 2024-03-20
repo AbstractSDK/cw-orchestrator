@@ -23,7 +23,7 @@ osmosis-test-tube = { version = "21.0.0" }
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.20.3" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.21.0" }
 cw-orch-core = { path = "packages/cw-orch-core", version = "0.21.1" }
 cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.21.0" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.21.0" }
