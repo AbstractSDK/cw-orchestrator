@@ -3,15 +3,10 @@ use cw_orch::daemon::Daemon;
 use cw_orch::prelude::BankQuerier;
 use cw_orch::prelude::QuerierGetter;
 use cw_orch_daemon::queriers::Bank;
-use tokio::runtime::Runtime;
 pub fn main() {
-    // We start by creating a runtime, which is required for a sync daemon.
-    let runtime = Runtime::new().unwrap();
-
     // We can now create a daemon. This daemon will be used to interact with the chain.
     let daemon = Daemon::builder()
         .chain(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
-        .handle(runtime.handle()) // handler parameter
         .build()
         .unwrap();
 
