@@ -12,7 +12,7 @@ use cw_orch_core::{
 use osmosis_test_tube::{OsmosisTestApp, Runner};
 
 use crate::osmosis_test_tube::{map_err, OsmosisTestTube};
-use osmosis_std::types::cosmwasm::wasm::v1::{
+use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
     QueryRawContractStateRequest, QueryRawContractStateResponse, QuerySmartContractStateRequest,
     QuerySmartContractStateResponse,
