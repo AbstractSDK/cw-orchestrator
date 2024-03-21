@@ -1,6 +1,6 @@
 // ANCHOR: full_counter_example
 use counter_contract::{
-    msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, AsyncCounterQueryMsgFns,
+    msg::InstantiateMsg, AsyncCounterQueryMsgFns, CounterContract, CounterExecuteMsgFns,
 };
 use cw_orch::{anyhow, prelude::*, tokio};
 use tokio::runtime::Runtime;
@@ -15,9 +15,7 @@ pub async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::UNI_6;
-    let chain = DaemonAsyncBuilder::default()
-        .chain(network)
-        .build().await?;
+    let chain = DaemonAsyncBuilder::default().chain(network).build().await?;
     // ANCHOR_END: chain_construction
 
     // ANCHOR: contract_interaction

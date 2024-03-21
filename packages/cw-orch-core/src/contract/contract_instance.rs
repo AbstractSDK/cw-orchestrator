@@ -1,7 +1,9 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use super::interface_traits::Uploadable;
 use crate::{
-    environment::{ChainState, IndexResponse, StateInterface, TxHandler, TxResponse},
+    environment::{
+        AsyncWasmQuerier, ChainState, IndexResponse, StateInterface, TxHandler, TxResponse,
+    },
     error::CwEnvError,
     log::{contract_target, transaction_target},
     CwOrchEnvVars,
@@ -110,6 +112,37 @@ impl<Chain: QueryHandler + ChainState> Contract<Chain> {
         let resp = self
             .chain
             .query(query_msg, &self.address()?)
+            .map_err(Into::into)?;
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Queried][{}] response {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(&resp)?
+        );
+        Ok(resp)
+    }
+}
+
+impl<Chain: AsyncWasmQuerier + ChainState> Contract<Chain> {
+    /// Query the contract
+    pub async fn async_query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, CwEnvError> {
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Query][{}] {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(query_msg)?
+        );
+
+        let resp = self
+            .chain
+            .smart_query(&self.address()?, query_msg)
+            .await
             .map_err(Into::into)?;
 
         log::debug!(

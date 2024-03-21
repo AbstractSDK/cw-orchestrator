@@ -11,7 +11,7 @@ pub use queriers::{
     bank::BankQuerier,
     env::{EnvironmentInfo, EnvironmentQuerier},
     node::NodeQuerier,
-    wasm::WasmQuerier,
+    wasm::{AsyncWasmQuerier, WasmQuerier},
     DefaultQueriers, Querier, QuerierGetter, QueryHandler,
 };
 pub use state::{ChainState, StateInterface};

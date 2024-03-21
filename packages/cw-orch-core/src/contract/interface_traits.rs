@@ -1,6 +1,6 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{ChainState, CwEnv, TxHandler, TxResponse, WasmQuerier},
+    environment::{AsyncWasmQuerier, ChainState, CwEnv, TxHandler, TxResponse, WasmQuerier},
     error::CwEnvError,
     log::contract_target,
 };
@@ -149,6 +149,24 @@ pub trait CwOrchQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain>
 }
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchQuery<Chain> for T {}
+
+/// Smart contract query entry point.
+pub trait AsyncCwOrchQuery<Chain: AsyncWasmQuerier + ChainState>:
+    QueryableContract + ContractInstance<Chain>
+{
+    /// Query the contract.
+    async fn async_query<G: Serialize + DeserializeOwned + Debug>(
+        &self,
+        query_msg: &Self::QueryMsg,
+    ) -> Result<G, CwEnvError> {
+        self.as_instance().async_query(query_msg).await
+    }
+}
+
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: AsyncWasmQuerier + ChainState>
+    AsyncCwOrchQuery<Chain> for T
+{
+}
 
 /// Smart contract migrate entry point.
 pub trait CwOrchMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {

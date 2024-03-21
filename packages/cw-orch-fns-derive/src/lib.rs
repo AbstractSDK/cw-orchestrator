@@ -25,5 +25,12 @@ pub fn cw_orch_execute(input: TokenStream) -> TokenStream {
 )]
 pub fn cw_orch_query(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as ItemEnum);
-    query_fns::query_fns_derive(ast)
+    let sync_tokens = query_fns::query_fns_derive(ast.clone());
+    let async_tokens = query_fns::async_query_fns_derive(ast);
+
+    let tokens = quote::quote! {
+        #sync_tokens
+        #async_tokens
+    };
+    tokens.into()
 }
