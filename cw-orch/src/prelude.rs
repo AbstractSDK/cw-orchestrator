@@ -12,8 +12,8 @@
 
 // Contract traits
 pub use crate::contract::interface_traits::{
-    CallAs, ConditionalMigrate, ConditionalUpload, ContractInstance, CwOrchExecute,
-    CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload, ExecutableContract,
+    AsyncCwOrchQuery, CallAs, ConditionalMigrate, ConditionalUpload, ContractInstance,
+    CwOrchExecute, CwOrchInstantiate, CwOrchMigrate, CwOrchQuery, CwOrchUpload, ExecutableContract,
     InstantiableContract, MigratableContract, QueryableContract, Uploadable,
 };
 

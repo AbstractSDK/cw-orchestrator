@@ -1,6 +1,6 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier},
+    environment::{AsyncWasmQuerier, ChainState, CwEnv, TxHandler, TxResponse, WasmQuerier},
     error::CwEnvError,
     log::contract_target,
 };
@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 /// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
-pub trait ContractInstance<Chain: TxHandler + QueryHandler + Clone> {
+pub trait ContractInstance<Chain: ChainState> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
@@ -149,6 +149,24 @@ pub trait CwOrchQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain>
 }
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchQuery<Chain> for T {}
+
+/// Smart contract query entry point.
+pub trait AsyncCwOrchQuery<Chain: AsyncWasmQuerier + ChainState>:
+    QueryableContract + ContractInstance<Chain>
+{
+    /// Query the contract.
+    async fn async_query<G: Serialize + DeserializeOwned + Debug>(
+        &self,
+        query_msg: &Self::QueryMsg,
+    ) -> Result<G, CwEnvError> {
+        self.as_instance().async_query(query_msg).await
+    }
+}
+
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: AsyncWasmQuerier + ChainState>
+    AsyncCwOrchQuery<Chain> for T
+{
+}
 
 /// Smart contract migrate entry point.
 pub trait CwOrchMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {

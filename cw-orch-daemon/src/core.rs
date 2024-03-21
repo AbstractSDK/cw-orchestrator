@@ -14,7 +14,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{ChainState, IndexResponse},
+    environment::{AsyncWasmQuerier, ChainState, IndexResponse, Querier},
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -127,6 +127,23 @@ impl DaemonAsync {
         Ok(result)
     }
 
+    /// Query a contract.
+    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: &Q,
+        contract_address: &Addr,
+    ) -> Result<T, DaemonError> {
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
+        let resp = client
+            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                address: contract_address.to_string(),
+                query_data: serde_json::to_vec(&query_msg)?,
+            })
+            .await?;
+
+        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
+    }
+
     /// Instantiate a contract.
     pub async fn instantiate<I: Serialize + Debug>(
         &self,
@@ -190,23 +207,6 @@ impl DaemonAsync {
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
         Ok(result)
-    }
-
-    /// Query a contract.
-    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
-        let resp = client
-            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-                address: contract_address.to_string(),
-                query_data: serde_json::to_vec(&query_msg)?,
-            })
-            .await?;
-
-        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
     /// Migration a contract.
@@ -312,6 +312,29 @@ impl DaemonAsync {
     /// Set the sender to use with this DaemonAsync to be the given wallet
     pub fn set_sender(&mut self, sender: &Wallet) {
         self.sender = sender.clone();
+    }
+}
+
+impl Querier for DaemonAsync {
+    type Error = DaemonError;
+}
+
+impl AsyncWasmQuerier for DaemonAsync {
+    /// Query a contract.
+    async fn smart_query<Q: Serialize, T: DeserializeOwned>(
+        &self,
+        address: impl Into<String>,
+        query_msg: &Q,
+    ) -> Result<T, DaemonError> {
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
+        let resp = client
+            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                address: address.into(),
+                query_data: serde_json::to_vec(&query_msg)?,
+            })
+            .await?;
+
+        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 }
 

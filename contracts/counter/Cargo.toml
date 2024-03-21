@@ -9,6 +9,10 @@ exclude = [".env"]
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[example]]
+name = "async"
+required-features = ["interface"]
+
 [features]
 default = ["export"]
 export = []

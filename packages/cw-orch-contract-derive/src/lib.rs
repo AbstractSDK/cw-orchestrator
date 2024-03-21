@@ -123,7 +123,7 @@ The interface can be linked to its source code by implementing the `Uploadable` 
 ```ignore
 use cw_orch::prelude::*;
 
-impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+impl <Chain> Uploadable for Cw20<Chain> {
     fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
@@ -204,7 +204,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let name = cw_orch_struct.ident.clone();
     let default_num = if let Some(id_expr) = default_id {
         quote!(
-            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+            impl <Chain, #all_generics> #name<Chain, #all_generics> {
                 pub fn new(chain: Chain) -> Self {
                     Self(
                         ::cw_orch::contract::Contract::new(#id_expr, chain)
@@ -214,7 +214,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         )
     } else {
         quote!(
-            impl <Chain: ::cw_orch::prelude::CwEnv, #all_generics> #name<Chain, #all_generics> {
+            impl <Chain, #all_generics> #name<Chain, #all_generics> {
                 pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
                     Self(
                         ::cw_orch::contract::Contract::new(contract_id, chain)
@@ -228,7 +228,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         #[derive(
             ::std::clone::Clone,
         )]
-        pub struct #name<Chain: ::cw_orch::prelude::CwEnv, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
+        pub struct #name<Chain, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
 
         #[cfg(target_arch = "wasm32")]
         #[derive(
@@ -240,7 +240,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         #default_num
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
+        impl<Chain: ::cw_orch::environment::ChainState, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
             fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
                 &self.0
             }
@@ -250,22 +250,19 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         }
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
-            type InstantiateMsg = #init;
-        }
-
-        #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::ExecutableContract for #name<Chain, #all_generics> #all_debug_serialize {
-            type ExecuteMsg = #exec;
-        }
-
-        #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain, #all_generics> ::cw_orch::prelude::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type QueryMsg = #query;
         }
-
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain: ::cw_orch::prelude::CwEnv, #all_generics> ::cw_orch::prelude::MigratableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain, #all_generics> ::cw_orch::prelude::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
+            type InstantiateMsg = #init;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        impl<Chain, #all_generics> ::cw_orch::prelude::ExecutableContract for #name<Chain, #all_generics> #all_debug_serialize {
+            type ExecuteMsg = #exec;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        impl<Chain, #all_generics> ::cw_orch::prelude::MigratableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type MigrateMsg = #migrate;
         }
     );
