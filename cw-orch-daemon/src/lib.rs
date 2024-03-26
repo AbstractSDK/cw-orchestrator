@@ -20,6 +20,7 @@ mod log;
 pub mod queriers;
 pub mod tx_broadcaster;
 pub mod tx_builder;
+pub mod service;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;
