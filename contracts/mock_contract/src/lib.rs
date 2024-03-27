@@ -1,6 +1,4 @@
 mod custom_resp;
-
-#[cfg(feature = "interface")]
 mod msg_tests;
 
 use cosmwasm_schema::{cw_serde, QueryResponses};
@@ -13,13 +11,13 @@ use serde::Serialize;
 pub struct InstantiateMsg {}
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
+#[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsg<T = String>
 where
     T: Serialize,
 {
     FirstMessage {},
-    #[cfg_attr(feature = "interface", payable)]
+    #[payable]
     SecondMessage {
         /// test doc-comment
         t: T,
@@ -30,16 +28,15 @@ where
         t: T,
     },
     FourthMessage,
-    #[cfg_attr(feature = "interface", payable)]
+    #[payable]
     FifthMessage,
     SixthMessage(u64, String),
-    #[cfg_attr(feature = "interface", payable)]
+    #[payable]
     SeventhMessage(Uint128, String),
 }
 
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
-#[derive(QueryResponses)]
+#[derive(cw_orch::QueryFns, QueryResponses)]
 pub enum QueryMsg<T = String>
 where
     T: Serialize,
@@ -134,26 +131,30 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
     }
 }
 
-#[cfg(feature = "interface")]
 #[cw_orch::interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
 pub struct MockContract;
 
-#[cfg(feature = "interface")]
-impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain> {
-    fn wrapper(
-        &self,
-    ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
-        Box::new(
-            cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
-                .with_migrate(migrate),
-        )
-    }
+#[cfg(not(target_arch = "wasm32"))]
+pub mod interface {
+    use super::*;
 
-    fn wasm(&self) -> cw_orch::prelude::WasmPath {
-        use cw_orch::prelude::*;
-        artifacts_dir_from_workspace!()
-            .find_wasm_path("mock_contract")
-            .unwrap()
+    impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain> {
+        fn wrapper(
+            &self,
+        ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>>
+        {
+            Box::new(
+                cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
+                    .with_migrate(migrate),
+            )
+        }
+
+        fn wasm(&self) -> cw_orch::prelude::WasmPath {
+            use cw_orch::prelude::*;
+            artifacts_dir_from_workspace!()
+                .find_wasm_path("mock_contract")
+                .unwrap()
+        }
     }
 }
 
