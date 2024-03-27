@@ -28,7 +28,7 @@ Generating query functions is a similar process but has the added advantage of u
 {{#include ../../../contracts/counter/src/msg.rs:query_msg}}
 ```
 
-Keep in mind that you **NEED** to derive the `cosmwasm_schema::QueryResponses` trait on your QueryMsgs for the `QueryFns` macro to compile. 
+Keep in mind that you **NEED** to derive the `cosmwasm_schema::QueryResponses` trait on your QueryMsgs for the `QueryFns` macro to compile.
 
 Using it is just as simple as the execution functions:
 

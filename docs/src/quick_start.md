@@ -21,7 +21,7 @@ In this quick-start guide, we will review the necessary steps in order to integr
   - [Interaction helpers](#interaction-helpers)
   - [Using the integration](#using-the-integration)
 - [Integration in a workspace](#integration-in-a-workspace)
-  - [Handling dependencies and features](#handling-dependencies-and-features)
+  - [Handling dependencies](#handling-dependencies)
   - [Creating an interface crate](#creating-an-interface-crate)
   - [Integrating single contracts](#integrating-single-contracts)
 - [More examples and scripts](#more-examples-and-scripts)
@@ -114,7 +114,7 @@ In this paragraph, we will use the `cw-plus` repository as an example. You can r
 - <a href="https://github.com/AbstractSDK/cw-plus" target="_blank">The full integration code</a> with `cw-orch` added
 - <a href="https://github.com/cosmwasm/cw-plus/compare/main...abstractsdk:main" target="_blank">The complete diff</a> that shows you all integration spots (if you want to go fast)
 
-### Handling dependencies and features
+### Handling dependencies
 
 When using workspaces, you need to add `cw-orch` as a dependency on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts.
 You then add the `#[derive(ExecuteFns)]` and `#[derive(QueryFns)]` macros to those messages. 

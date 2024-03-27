@@ -2,49 +2,33 @@
 
 You can find the code for this example in the <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter" target="_blank">cw-orch counter-contract folder</a>.
 
-If you are a fast or visual learner, you can find a <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a" target="_blank">**Before**-**After**</a> view of the `cw-orch` integration process in the sample contract. 
+If you are a fast or visual learner, you can find a <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a" target="_blank">**Before**-**After**</a> view of the `cw-orch` integration process in the sample contract.
 
 ## Dependency
 
 Before we can create an interface we need to add cw-orch to the contract's `Cargo.toml` file. In `counter` run:
 
 ```shell
-$ cargo add --optional cw-orch
-> Adding cw-orch v0.16.0 to optional dependencies.
+$ cargo add cw-orch
+> Adding cw-orch v0.16.0 to dependencies.
 ```
 
 or add it manually to the `counter/Cargo.toml` file:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.16.0", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.21.0" } # Latest version at time of writing
 ```
 
-We add `cw-orch` as an optional dependency to ensure that it is not included in the wasm artifact of the contract. This way there are no trust assumptions made about the code added by `cw-orch`, making it safe to use for production contracts.
-
-## Feature
-
-However, we will need a way to enable the dependency when we want to use it. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
-
-You can do this by including the following in the `counter/Cargo.toml`:
-
-```toml
-[features]
-interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
-```
-
-Features (aka. feature flags) are a way to enable or disable parts of your code. In this case, we are including `cw-orch` as a dependency when the `interface` feature is enabled. This is a common pattern for feature flags.
-
+Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract. Learn more about this behavior in the section about [Wasm Compilation](../contracts/wasm-compilation.md).
 
 ## Crate Structure
 
-Now that we have our dependency set up, we can create the files that will contain our interface. We will create that interface in an `interface.rs` file inside the crate (`counter/src/interface.rs`). Then, we need to include that file inside our project. However, that file will contain multiple `cw-orch` imports that we don't want to have in our final contract wasm. In order to prevent that, we will import our `interface.rs` file and feature-flag it like so, in `counter/src/lib.rs`:
+Now that we have our dependency set up, we can create the files that will contain our interface. We will create that interface in an `interface.rs` file inside the crate (`counter/src/interface.rs`). Then, we need to include that file inside our project. However, that file will contain multiple `cw-orch` elements that are not exposed when compiling your WASM. In order to prevent errors when compiling for Wasm, we will import our `interface.rs` file and target-flag it like so, in `counter/src/lib.rs`:
 
 ```rust,ignore
 {{#include ../../../contracts/counter/src/lib.rs:custom_interface}}
 ```
-
-> **NOTE**: Agains, this `interface` feature is very important to make sure that creating interfaces **won't change anything** to the actual wasm file that you are uploading on-chain.
 
 In the next section, we will learn how to define the interface to be able to interact with an actual contract inside this `interface.rs` file.
 
