@@ -33,35 +33,21 @@ In this quick-start guide, we will review the necessary steps in order to integr
 To use cw-orchestrator, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
 
 ```shell
-cargo add --optional cw-orch
+cargo add cw-orch
 ```
 
 Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.17.0", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.21.0" } # Latest version at time of writing
 ```
 
-Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature-flag. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract.
-
-To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled like so:
-
-```toml
-[features]
-interface = ["dep:cw-orch"] # Enables cw-orch when the feature is enabled
-```
-
-> **NOTE**: If you are using `rust-analyzer`, you can add the following two lines in your `settings.json` to make sure the features get taken into account when checking the project:
->
->    ```json
->     "rust-analyzer.cargo.features": "all",
->     "rust-analyzer.check.features": "all",
->    ```
+> **NOTE**: Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract. Learn more about this behavior in the section about [Wasm Compilation](contracts/wasm-compilation.md)
 
 ### Creating an Interface
 
-When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. Don't forget to *feature-flag* the module in order to be able to use `cw-orch` inside it.
+When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. This file should not be included inside you final wasm. In order to do that, you need to add `#[cfg(not(target_arch = "wasm32"))]` when importing the file.
 
 ```rust,ignore
 {{#include ../../contracts/counter/src/lib.rs:custom_interface}}
@@ -79,7 +65,7 @@ Learn more about the content of the interface creation specifics on [the interfa
 > **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
 >
 >    ```rust,ignore
->    #[cfg(feature = "interface")]
+>    #[cfg(not(target_arch = "wasm32"))]
 >    pub use crate::interface::CounterContract;
 >    ```
 
@@ -95,12 +81,13 @@ Enabling this functionality is very straightforward. Find your `ExecuteMsg` and 
 {{#include ../../contracts/counter/src/msg.rs:query_msg}}
 ```
 
+Make sure to derive the `#[derive(cosmwasm_schema::QueryResponses)]` macro on your query messages !
+
 Find out more about the interaction helpers on [the interface page](./contracts/interfaces.md#entry-point-function-generation)
 
 > **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
 >
 >    ```rust,ignore
->    #[cfg(feature = "interface")]
 >    pub use crate::msg::{ExecuteMsgFns as CounterExecuteMsgFns, QueryMsgFns as CounterQueryMsgFns};
 >    ```
 
@@ -108,10 +95,10 @@ Find out more about the interaction helpers on [the interface page](./contracts/
 
 Now that all the setup is done, you can use your contract in tests, integration-tests or scripts.
 
-Start by importing your crate, with the `interface` feature enabled. Depending on your use-case this will be in `[dependencies]` or `[dev-dependencies]`:
+Start by importing your crate, in your `[dev-dependencies]` for instance:
 
 ```toml
-counter-contract = { path = "../counter-contract", features = ["interface"] }
+counter-contract = { path = "../counter-contract"}
 ```
 
 You can now use:
@@ -129,10 +116,8 @@ In this paragraph, we will use the `cw-plus` repository as an example. You can r
 
 ### Handling dependencies and features
 
-When using workspaces, you need to do the 2 following actions on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts:
-
-1. Add `cw-orch` as an optional dependency
-2. Add an `interface` feature (ensures `cw-orch` is not compiled into your `wasm` contract)
+When using workspaces, you need to add `cw-orch` as a dependency on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts.
+You then add the `#[derive(ExecuteFns)]` and `#[derive(QueryFns)]` macros to those messages. 
 
 Refer above to [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file) for more details on how to do that.
 
@@ -167,11 +152,11 @@ interface (interface collection)
     └── ..
 ```
 
-When importing your crates to get the messages types, you can use the following command in the interface folder. Don't forget to activate the interface feature to be able to use the cw_orch functionalities.
+When importing your crates to get the messages types, you can use the following command in the interface folder.
 
 ```shell
-cargo add cw20-base --path ../contracts/cw20-base/ --features=interface
-cargo add cw20 --path ../packages/cw20 --features=interface
+cargo add cw20-base --path ../contracts/cw20-base/
+cargo add cw20 --path ../packages/cw20
 ```
 
 ### Integrating single contracts
