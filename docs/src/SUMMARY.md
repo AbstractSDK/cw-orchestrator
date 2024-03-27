@@ -43,6 +43,7 @@
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
+  - [Rollkit](./chains/rollkit.md)
 
 # Extras
 
