@@ -40,7 +40,7 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.21.0" } # Latest version at time of writing
+cw-orch = {version = "0.21.2" } # Latest version at time of writing
 ```
 
 > **NOTE**: Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract. Learn more about this behavior in the section about [Wasm Compilation](contracts/wasm-compilation.md)
