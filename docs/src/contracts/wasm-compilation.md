@@ -8,7 +8,7 @@ In case you use one of the cw-orch features inside you smart-contract, the compi
 
 Importing `cw-orch` as a dependency in your smart contract is not a problem. We have built this library such that every feature that cw-orch imports, uses or exposes is not included when compiled for Wasm. This means that you are safe to use any cw-orch feature when developing your application, creating interfaces, exporting features, because none of it will land in your contract.
 
-In order to make sure you don't stumble into wasm comilation errors, you can find in the next section the guidelines we advise to follow.
+In order to make sure you don't encounter wasm compilation errors, you should follow the guidelines outlined in the next section.
 
 ## Guidelines
 
