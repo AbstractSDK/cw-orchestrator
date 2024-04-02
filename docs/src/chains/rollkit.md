@@ -12,6 +12,15 @@ Rollkit is the open modular framework for sovereign rollups. Their mission is to
 
 See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::ROLLKIT_1`.
 
+## Compatibility
+
+This integration has been tested using the CosmWasm setup with Rollkit. The following versions were used:
+
+- Mocha testnet node: `celestia/v0.15.0.beta.1`
+- Rollup node: `wasmd/v0.50.0` (which opens up port 9290 locally)
+
+Please contact us on [Discord](http://discord.gg/uch3Tq3aym) if you have any issues.
+
 ## References
 
 - [Rollkit Documentation](https://rollkit.dev/learn/intro)
