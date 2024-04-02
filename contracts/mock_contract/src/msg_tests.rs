@@ -3,7 +3,6 @@
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
-use cw_orch::prelude::*;
 
 // ANCHOR: unordered_msg_def
 #[cw_serde]
@@ -58,26 +57,32 @@ pub fn execute_ordered(
 pub fn query(_deps: Deps, _env: Env, _msg: Empty) -> StdResult<Binary> {
     Ok(vec![].into())
 }
+#[cfg(not(target_arch = "wasm32"))]
+mod interface {
+    use super::*;
+    use cw_orch::prelude::*;
 
-impl<Chain: CwEnv> Uploadable for TestContract<Chain> {
-    fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
-        Box::new(ContractWrapper::new_with_empty(execute, instantiate, query))
+    impl<Chain: CwEnv> Uploadable for TestContract<Chain> {
+        fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+            Box::new(ContractWrapper::new_with_empty(execute, instantiate, query))
+        }
     }
-}
 
-impl<Chain: CwEnv> Uploadable for OrderedTestContract<Chain> {
-    fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
-        Box::new(ContractWrapper::new_with_empty(
-            execute_ordered,
-            instantiate,
-            query,
-        ))
+    impl<Chain: CwEnv> Uploadable for OrderedTestContract<Chain> {
+        fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+            Box::new(ContractWrapper::new_with_empty(
+                execute_ordered,
+                instantiate,
+                query,
+            ))
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    use cw_orch::prelude::*;
     #[test]
     pub fn test() -> Result<(), CwOrchError> {
         let chain = Mock::new("sender");

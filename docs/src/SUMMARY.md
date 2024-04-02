@@ -12,6 +12,7 @@
   - [Environment Vars](./contracts/env-variable.md)
   - [Scripting](./contracts/scripting.md)
   - [Integration Tests](./contracts/integration-tests.md)
+  - [Wasm Compilation](./contracts/wasm-compilation.md)
 
 - [Project Setup](./setup/index.md)
   - [Single Contract](./setup/single-contract.md)

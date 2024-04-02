@@ -20,11 +20,8 @@ mod tests {
     fn helper_traits() {
         use cw_orch_networks::networks;
 
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
         let daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .build()
             .unwrap();
 
@@ -102,7 +99,6 @@ mod tests {
 
     //     let daemon = Daemon::builder()
     //         .chain(chain)
-    //         .handle(runtime.handle())
     //         .mnemonic("tide genuine angle mass fall promote blind skull swim army maximum add peasant fringe uncle october female crisp voyage blind extend jeans give wrap")
     //         .build()
     //         .unwrap();
@@ -120,11 +116,8 @@ mod tests {
     fn cw_orch_interface_traits() {
         use cw_orch_networks::networks;
 
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
         let daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .build()
             .unwrap();
 

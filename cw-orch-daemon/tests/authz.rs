@@ -28,11 +28,8 @@ mod tests {
     fn authz() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
 
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
         let daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .build()
             .unwrap();
 
@@ -40,11 +37,12 @@ mod tests {
 
         let second_daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
-            .handle(runtime.handle())
             .authz_granter(sender.clone())
             .mnemonic(SECOND_MNEMONIC)
             .build()
             .unwrap();
+
+        let runtime = daemon.rt_handle.clone();
 
         let grantee = second_daemon.sender().to_string();
 
@@ -89,7 +87,7 @@ mod tests {
 
         // Grants
         let authz_querier: Authz = daemon.querier();
-        let grants: QueryGrantsResponse = runtime.handle().block_on(async {
+        let grants: QueryGrantsResponse = runtime.block_on(async {
             authz_querier
                 ._grants(sender.clone(), grantee.clone(), MsgSend::type_url(), None)
                 .await
@@ -98,19 +96,16 @@ mod tests {
 
         // Grantee grants
         let grantee_grants: QueryGranteeGrantsResponse = runtime
-            .handle()
             .block_on(async { authz_querier._grantee_grants(grantee.clone(), None).await })?;
         assert_eq!(grantee_grants.grants, vec![grant_authorization.clone()]);
 
         // Granter grants
         let granter_grants: QueryGranterGrantsResponse = runtime
-            .handle()
             .block_on(async { authz_querier._granter_grants(sender.clone(), None).await })?;
         assert_eq!(granter_grants.grants, vec![grant_authorization]);
 
         // No grant gives out an error
         runtime
-            .handle()
             .block_on(async {
                 authz_querier
                     ._grants(grantee.clone(), sender.clone(), MsgSend::type_url(), None)

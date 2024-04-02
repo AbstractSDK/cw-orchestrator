@@ -12,7 +12,7 @@ pub struct InstantiateMsg {
 
 // ANCHOR: exec_msg
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))] // Function generation
+#[derive(cw_orch::ExecuteFns)] // Function generation
 /// Execute methods for counter
 pub enum ExecuteMsg {
     /// Increment count by one
@@ -27,7 +27,7 @@ pub enum ExecuteMsg {
 
 // ANCHOR: query_msg
 #[cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))] // Function generation
+#[derive(cw_orch::QueryFns)] // Function generation
 #[derive(QueryResponses)]
 /// Query methods for counter
 pub enum QueryMsg {
