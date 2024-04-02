@@ -14,7 +14,7 @@ See how to setup your main function in the [main function](../contracts/scriptin
 
 ## Compatibility
 
-This integration has been tested using the CosmWasm setup with Rollkit. The following versions were used:
+This integration has been tested using the [Rollkit Setup with CosmWasm](https://rollkit.dev/tutorials/cosmwasm). The following versions were used:
 
 - Mocha testnet node: `celestia/v0.15.0.beta.1`
 - Rollup node: `wasmd/v0.50.0` (which opens up port 9290 locally)
