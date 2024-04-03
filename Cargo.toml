@@ -11,7 +11,7 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 [workspace.dependencies]
 cw-utils = { version = "1.0.1" }
 cosmwasm-std = { version = "1.1" }
-cw-multi-test = { package = "abstract-cw-multi-test", version = "0.20.2", features = [
+cw-multi-test = { package = "abstract-cw-multi-test", version = "0.21.0", features = [
   "cosmwasm_1_4",
 ] }
 cw20 = { package = "abstract-cw20", version = "1.2.2" }
@@ -23,10 +23,10 @@ osmosis-test-tube = { version = "22.1.0" }
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.20.0" }
-cw-orch-core = { path = "packages/cw-orch-core", version = "0.20.1" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.20.0" }
-cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.20.0" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.21.0" }
+cw-orch-core = { path = "packages/cw-orch-core", version = "0.21.1" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.21.0" }
+cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.21.0" }
 cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.20.0" }
 cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.18.0" }
 cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.20.0" }

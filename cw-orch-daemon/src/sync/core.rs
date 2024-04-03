@@ -29,7 +29,6 @@ use tonic::transport::Channel;
     let rt = Runtime::new().unwrap();
     let daemon: Daemon = Daemon::builder()
         .chain(networks::JUNO_1)
-        .handle(rt.handle())
         .build()
         .unwrap();
     ```
@@ -71,7 +70,6 @@ impl Daemon {
         builder
             .chain(self.state().chain_data.clone())
             .sender((*self.daemon.sender).clone())
-            .handle(&self.rt_handle)
             .deployment_id(&self.state().deployment_id);
         builder
     }

@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = "0.20.1"
+version = "0.21.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -66,6 +66,7 @@ async-recursion = "1.0.5"
 
 # Gzip
 flate2 = { version = "1.0.26" }
+lazy_static = "1.4.0"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

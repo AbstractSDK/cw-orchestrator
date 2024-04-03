@@ -1,11 +1,20 @@
 use crate::DaemonError;
 use serde_json::{from_reader, json, Value};
-use std::fs::{File, OpenOptions};
+use std::{
+    fs::{File, OpenOptions},
+    path::PathBuf,
+    str::FromStr,
+};
 
 pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_id: &String) {
     // open file pointer set read/write permissions to true
     // create it if it does not exists
     // dont truncate it
+    // Create the directory if they do not exist
+    let file_buf = PathBuf::from_str(filename).unwrap();
+    if let Some(parent) = file_buf.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
 
     let file = OpenOptions::new()
         .create(true)

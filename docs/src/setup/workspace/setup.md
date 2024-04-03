@@ -17,8 +17,6 @@ Then, going into this crate, we need to add `cw-orch` as a dependency:
 cargo add cw-orch --package interface 
 ```
 
-`cw-orch` here is not optional, because this `interface` crate is not a contract and will never be included in a contract.
-
 ## Individual contract interface
 
 Now inside this crate, you can add the interfaces to all your contracts individually. A sane way to do so is to create a new file (also called module) for each contract. For instance, <a href="https://github.com/AbstractSDK/cw-plus/tree/main/packages/interface" target="_blank">the `interface` folder in the `cw-plus` repository</a> has the following structure:
@@ -38,7 +36,7 @@ Now inside this crate, you can add the interfaces to all your contracts individu
     └── lib.rs
 ```
 
-Inside each file, you can define your contract interface. You can find the tutorial for that in the dedicated.
+Inside each file, you can define your contract interface. You can find the tutorial for that in the dedicated [Interfaces page](../../contracts/interfaces.md).
 
 ## Scripts
 

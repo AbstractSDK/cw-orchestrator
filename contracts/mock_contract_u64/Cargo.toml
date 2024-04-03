@@ -13,7 +13,6 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = ["export"]
 export = []
-interface = ["dep:cw-orch"]
 
 [dependencies]
 cosmwasm-std = { workspace = true }
@@ -22,11 +21,6 @@ schemars = "0.8.10"
 serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
 cosmwasm-schema = "1.2"
-cw-orch = { path = "../../cw-orch", features = ["daemon"], optional = true }
+cw-orch = { path = "../../cw-orch" }
 
-mock-contract = { path = "../mock_contract", default-features = false }
-[dev-dependencies]
-mock-contract = { path = "../mock_contract", default-features = false, features = [
-  "interface",
-] }
-mock-contract-u64 = { path = ".", features = ["interface"] }
+mock-contract = { path = "../mock_contract" }

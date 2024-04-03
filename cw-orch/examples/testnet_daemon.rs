@@ -6,7 +6,6 @@ use cw_orch::prelude::{
     ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
     TxHandler,
 };
-use tokio::runtime::Runtime;
 
 /// In order to use this script, you need to set the following env variables
 /// RUST_LOG (recommended value `info`) to see the app logs
@@ -21,15 +20,11 @@ pub fn main() {
     // Remember to set the `RUST_LOG` env variable to be able to see the execution
     env_logger::init();
 
-    // We start by creating a runtime, which is required for a sync daemon.
-    let runtime = Runtime::new().unwrap();
-
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
     let daemon = Daemon::builder()
         // set the network to use
         .chain(cw_orch::daemon::networks::UNI_6)
-        .handle(runtime.handle())
         .build()
         .unwrap();
 
