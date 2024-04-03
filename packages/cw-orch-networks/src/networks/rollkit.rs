@@ -7,7 +7,7 @@ pub const ROLLKIT_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118u32,
 };
 
-pub const ROLLKIT_1: ChainInfo = ChainInfo {
+pub const LOCAL_ROLLKIT: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "celeswasm",
     gas_denom: "uwasm",

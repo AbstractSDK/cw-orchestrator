@@ -10,7 +10,7 @@ Rollkit is the open modular framework for sovereign rollups. Their mission is to
 
 ## Usage
 
-See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::ROLLKIT_1`.
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::LOCAL_ROLLKIT`.
 
 ## Compatibility
 
