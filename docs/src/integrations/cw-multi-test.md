@@ -46,9 +46,9 @@ The underlying `cw_multi_test::App` object is however not clonable.
 
 ## Bech32
 
-When testing your smart contracts, you may need to use valid bech32 addresses instead of any strings. For instance when using `instantiate2` functionalities or cross-chain applications. `cw-orch`'s `cw-multi-test` integration allows this behavior using the `MockBech32` struct. This structure has the same features as the above described `Mock` with the following differences:
+When testing your smart contracts, you may need to use valid bech32 addresses instead of arbitrary strings. Notably Bech32 addresses are a requirment whenever `instantiate2` is used in your codebase. Therefore `cw-orch` allows this behavior using the `MockBech32` struct. This structure has the same features as the above described `Mock` with the following differences:
 
-- The constructor now takes the bech32 prefix instead of the sender. Under the hood, the environment creates an address to be the sender of the transactions:
+- The constructor now takes the bech32 prefix instead of the sender. Under the hood, the environment creates an address that will be used as the default sender for actions executed on that environment:
 
   ```rust,ignore
   let mock = MockBech32::new("<chain-prefix>");
@@ -56,9 +56,11 @@ When testing your smart contracts, you may need to use valid bech32 addresses in
   let mock = MockBech32::new("juno");
   // With chain id: 
   let mock = MockBech32::new_with_chain_id("juno", "juno-1");
+  // Default sender address for this env
+  let sender = mock.sender();
   ```
 
-- To facilitate the creation of valid bech32 addresses, we have added an `addr_make` function. This function uses its string argument to create a new address. That way you can create a new address without having to care about bech32 encoding/decoding yourself:
+- To facilitate the creation of additional valid bech32 addresses, we have added an `addr_make` function. This function uses its string argument to create a new address. That way you can create a new address without having to care about bech32 encoding/decoding yourself:
 
    ```rust,ignore
     let named_sender = mock.addr_make("sender");
