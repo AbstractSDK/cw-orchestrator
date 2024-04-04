@@ -1,6 +1,6 @@
 # Writing and Executing Scripts
 
-Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it on a real blockchain. We'll do this by adding a `examples` folder in <a href="https://abstract.money" target="_blank">Abstract</a>[the counter contract](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter) and add our deploy script there. We only provide an overview of how scripting can be done here. Find our more about how to make your scripting dreams come true on the [Daemon page](../integrations/daemon.md).
+Now that we have the interface written for our contract, we can start writing scripts to deploy and interact with it on a real blockchain. We'll do this by adding a `examples` folder in <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter" target="_blank">the counter contract</a> and add our deploy script there. We only provide an overview of how scripting can be done here. Find our more about how to make your scripting dreams come true on the [Daemon page](../integrations/daemon.md).
 
 ## Setup
 
@@ -11,14 +11,13 @@ mkdir counter/examples
 touch counter/examples/deploy.rs
 ```
 
-Then we want to add the required dependencies to the `dev-dependencies` section of our `Cargo.toml` file. We'll need `dotenv` to load our environment variables and `pretty_env_logger` to log to stdout. We're using `examples` instead of `bin` because setting a feature on an optional dependency is not supported.
+Then we want to add the required dependencies to the `dev-dependencies` section of our `Cargo.toml` file. We'll need `dotenv` to load our environment variables and `pretty_env_logger` to log to stdout.
 
 ```toml
 [dev-dependencies]
 # Deps for deployment
 dotenv = { version = "0.15.0" } # Enables loading of .env files
 pretty_env_logger = { version = "0.5.0" } # Enables logging to stdout and prettifies it
-counter-contract = { path = ".", features = ["interface"] } # Allows to activate the `interface` feature for examples and tests 
 ```
 
 Now we're ready to start writing our script.

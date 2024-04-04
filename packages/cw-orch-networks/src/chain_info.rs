@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
@@ -107,14 +109,14 @@ impl ChainKind {
     }
 }
 
-impl ToString for ChainKind {
-    fn to_string(&self) -> String {
-        match *self {
+impl Display for ChainKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match *self {
             ChainKind::Local => "local",
             ChainKind::Testnet => "testnet",
             ChainKind::Mainnet => "mainnet",
-        }
-        .into()
+        };
+        write!(f, "{}", str)
     }
 }
 
