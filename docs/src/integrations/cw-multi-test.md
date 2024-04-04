@@ -63,7 +63,7 @@ When testing your smart contracts, you may need to use valid bech32 addresses in
    ```rust,ignore
     let named_sender = mock.addr_make("sender");
     /// This creates a new address with some funds inside of it
-    let rich_sender = mock.addr_make("sender_with_funds", coins(100_000_000_000_000, "ujuno"));
+    let rich_sender = mock.addr_make_with_balance("sender_with_funds", coins(100_000_000_000_000, "ujuno"));
    ```
 
 ## Snapshot testing
