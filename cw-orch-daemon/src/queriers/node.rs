@@ -240,9 +240,9 @@ impl Node {
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
                 Ok(tx) => {
-                    let resp = tx.into_inner().tx_response.unwrap();
+                    let resp = tx.into_inner().tx_response.unwrap().into();
                     log::debug!(target: &query_target(), "TX found: {:?}", resp);
-                    return Ok(resp.into());
+                    return Ok(resp);
                 }
                 Err(err) => {
                     // increase wait time
