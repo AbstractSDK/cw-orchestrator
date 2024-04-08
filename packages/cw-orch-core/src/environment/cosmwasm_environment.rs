@@ -85,10 +85,10 @@ pub trait TxHandler: ChainState + Clone {
 // TODO: Perfect test candidate for `trybuild`
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Empty;
+    use cosmwasm_std::{Empty, Querier};
     use cw_multi_test::AppResponse;
 
-    use crate::environment::StateInterface;
+    use crate::environment::{BankQuerier, QuerierGetter, StateInterface, WasmQuerier};
 
     use super::*;
 
@@ -198,7 +198,6 @@ mod tests {
         t.instantiate(0, &Empty {}, None, None, &[])?;
         Ok(())
     }
-
     #[test]
     fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
         associated_error(MockHandler {})?;

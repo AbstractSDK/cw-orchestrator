@@ -69,3 +69,161 @@ pub trait DefaultQueriers:
         self.querier()
     }
 }
+
+#[cfg(test)]
+pub mod test {
+    use cosmwasm_std::{Binary, Coin};
+    use serde::Serialize;
+
+    use crate::{
+        environment::{DefaultQueriers, EnvironmentQuerier, IndexResponse, NodeQuerier},
+        CwEnvError,
+    };
+
+    use super::{bank::BankQuerier, wasm::WasmQuerier, QuerierGetter, QueryHandler};
+
+    impl crate::environment::queriers::Querier for MockQuerier {
+        type Error = CwEnvError;
+    }
+
+    #[derive(Clone)]
+    struct MockHandler {}
+
+    impl BankQuerier for MockQuerier {
+        fn balance(
+            &self,
+            address: impl Into<String>,
+            denom: Option<String>,
+        ) -> Result<Vec<Coin>, Self::Error> {
+            // Returns an empty balance
+            Ok(vec![])
+        }
+
+        fn total_supply(&self) -> Result<Vec<Coin>, Self::Error> {
+            unimplemented!()
+        }
+
+        fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, Self::Error> {
+            unimplemented!()
+        }
+    }
+    impl WasmQuerier for MockQuerier {
+        fn code_id_hash(&self, code_id: u64) -> Result<cosmwasm_std::HexBinary, Self::Error> {
+            unimplemented!()
+        }
+
+        fn contract_info(
+            &self,
+            address: impl Into<String>,
+        ) -> Result<cosmwasm_std::ContractInfoResponse, Self::Error> {
+            unimplemented!()
+        }
+
+        fn raw_query(
+            &self,
+            address: impl Into<String>,
+            query_keys: Vec<u8>,
+        ) -> Result<Vec<u8>, Self::Error> {
+            unimplemented!()
+        }
+
+        fn smart_query<Q: Serialize, T: serde::de::DeserializeOwned>(
+            &self,
+            address: impl Into<String>,
+            query_msg: &Q,
+        ) -> Result<T, Self::Error> {
+            unimplemented!()
+        }
+
+        fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
+            unimplemented!()
+        }
+
+        fn instantiate2_addr(
+            &self,
+            code_id: u64,
+            creator: impl Into<String>,
+            salt: cosmwasm_std::Binary,
+        ) -> Result<String, Self::Error> {
+            unimplemented!()
+        }
+    }
+
+    impl NodeQuerier for MockQuerier {
+        type Response = MockQuerier;
+
+        fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
+            unimplemented!()
+        }
+
+        fn block_by_height(&self, height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
+            unimplemented!()
+        }
+
+        fn block_height(&self) -> Result<u64, Self::Error> {
+            unimplemented!()
+        }
+
+        fn block_time(&self) -> Result<u128, Self::Error> {
+            unimplemented!()
+        }
+
+        fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
+            unimplemented!()
+        }
+
+        fn find_tx(&self, hash: String) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct MockQuerier {}
+
+    impl IndexResponse for MockQuerier {
+        fn events(&self) -> Vec<cosmwasm_std::Event> {
+            unimplemented!()
+        }
+
+        fn event_attr_value(
+            &self,
+            event_type: &str,
+            attr_key: &str,
+        ) -> cosmwasm_std::StdResult<String> {
+            unimplemented!()
+        }
+
+        fn data(&self) -> Option<Binary> {
+            unimplemented!()
+        }
+    }
+
+    impl QuerierGetter<MockQuerier> for MockHandler {
+        fn querier(&self) -> MockQuerier {
+            MockQuerier {}
+        }
+    }
+
+    impl EnvironmentQuerier for MockHandler {
+        fn env_info(&self) -> crate::environment::EnvironmentInfo {
+            unimplemented!()
+        }
+    }
+
+    impl DefaultQueriers for MockHandler {
+        type Bank = MockQuerier;
+        type Wasm = MockQuerier;
+        type Node = MockQuerier;
+    }
+
+    fn associated_querier_error<T: QueryHandler>(t: T) -> anyhow::Result<()> {
+        t.bank_querier().balance("anyone".to_string(), None)?;
+        Ok(())
+    }
+
+    #[test]
+    fn query_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
+        associated_querier_error(MockHandler {})?;
+        Ok(())
+    }
+}
