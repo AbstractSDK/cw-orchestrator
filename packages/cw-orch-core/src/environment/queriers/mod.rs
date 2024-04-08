@@ -13,7 +13,7 @@ pub mod wasm;
 /// This trait acts as the high-level trait bound for supported queries on a `CwEnv` environment.
 /// It also implements some high-level functionality to make it easy to access.
 pub trait QueryHandler: DefaultQueriers {
-    type Error: Into<CwEnvError> + Debug;
+    type Error: Into<CwEnvError> + Debug + std::error::Error + Send + Sync + 'static;
 
     /// Wait for an amount of blocks.
     fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error>;
@@ -44,7 +44,7 @@ pub trait QuerierGetter<Q: Querier> {
 }
 
 pub trait Querier {
-    type Error: Into<CwEnvError> + Debug;
+    type Error: Into<CwEnvError> + Debug + std::error::Error + Send + Sync + 'static;
 }
 
 pub trait DefaultQueriers:
@@ -216,8 +216,25 @@ pub mod test {
         type Node = MockQuerier;
     }
 
+    impl QueryHandler for MockHandler {
+        type Error = CwEnvError;
+
+        fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error> {
+            Ok(())
+        }
+
+        fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error> {
+            unimplemented!()
+        }
+
+        fn next_block(&self) -> Result<(), Self::Error> {
+            unimplemented!()
+        }
+    }
+
     fn associated_querier_error<T: QueryHandler>(t: T) -> anyhow::Result<()> {
         t.bank_querier().balance("anyone".to_string(), None)?;
+        t.wait_blocks(7)?;
         Ok(())
     }
 
