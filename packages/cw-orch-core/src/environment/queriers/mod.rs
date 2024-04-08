@@ -92,8 +92,8 @@ pub mod test {
     impl BankQuerier for MockQuerier {
         fn balance(
             &self,
-            address: impl Into<String>,
-            denom: Option<String>,
+            _address: impl Into<String>,
+            _denom: Option<String>,
         ) -> Result<Vec<Coin>, Self::Error> {
             // Returns an empty balance
             Ok(vec![])
@@ -103,47 +103,47 @@ pub mod test {
             unimplemented!()
         }
 
-        fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, Self::Error> {
+        fn supply_of(&self, _denom: impl Into<String>) -> Result<Coin, Self::Error> {
             unimplemented!()
         }
     }
     impl WasmQuerier for MockQuerier {
-        fn code_id_hash(&self, code_id: u64) -> Result<cosmwasm_std::HexBinary, Self::Error> {
+        fn code_id_hash(&self, _code_id: u64) -> Result<cosmwasm_std::HexBinary, Self::Error> {
             unimplemented!()
         }
 
         fn contract_info(
             &self,
-            address: impl Into<String>,
+            _address: impl Into<String>,
         ) -> Result<cosmwasm_std::ContractInfoResponse, Self::Error> {
             unimplemented!()
         }
 
         fn raw_query(
             &self,
-            address: impl Into<String>,
-            query_keys: Vec<u8>,
+            _address: impl Into<String>,
+            _query_keys: Vec<u8>,
         ) -> Result<Vec<u8>, Self::Error> {
             unimplemented!()
         }
 
         fn smart_query<Q: Serialize, T: serde::de::DeserializeOwned>(
             &self,
-            address: impl Into<String>,
-            query_msg: &Q,
+            _address: impl Into<String>,
+            _query_msg: &Q,
         ) -> Result<T, Self::Error> {
             unimplemented!()
         }
 
-        fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
+        fn code(&self, _code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
             unimplemented!()
         }
 
         fn instantiate2_addr(
             &self,
-            code_id: u64,
-            creator: impl Into<String>,
-            salt: cosmwasm_std::Binary,
+            _code_id: u64,
+            _creator: impl Into<String>,
+            _salt: cosmwasm_std::Binary,
         ) -> Result<String, Self::Error> {
             unimplemented!()
         }
@@ -156,7 +156,7 @@ pub mod test {
             unimplemented!()
         }
 
-        fn block_by_height(&self, height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
+        fn block_by_height(&self, _height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
             unimplemented!()
         }
 
@@ -168,11 +168,11 @@ pub mod test {
             unimplemented!()
         }
 
-        fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
+        fn simulate_tx(&self, _tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
             unimplemented!()
         }
 
-        fn find_tx(&self, hash: String) -> Result<Self::Response, Self::Error> {
+        fn find_tx(&self, _hash: String) -> Result<Self::Response, Self::Error> {
             unimplemented!()
         }
     }
@@ -187,8 +187,8 @@ pub mod test {
 
         fn event_attr_value(
             &self,
-            event_type: &str,
-            attr_key: &str,
+            _event_type: &str,
+            _attr_key: &str,
         ) -> cosmwasm_std::StdResult<String> {
             unimplemented!()
         }
@@ -219,11 +219,11 @@ pub mod test {
     impl QueryHandler for MockHandler {
         type Error = CwEnvError;
 
-        fn wait_blocks(&self, amount: u64) -> Result<(), Self::Error> {
+        fn wait_blocks(&self, _amount: u64) -> Result<(), Self::Error> {
             Ok(())
         }
 
-        fn wait_seconds(&self, secs: u64) -> Result<(), Self::Error> {
+        fn wait_seconds(&self, _secs: u64) -> Result<(), Self::Error> {
             unimplemented!()
         }
 
