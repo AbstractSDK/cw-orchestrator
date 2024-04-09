@@ -17,8 +17,10 @@ cw-multi-test = { package = "abstract-cw-multi-test", version = "0.21.0", featur
 cw20 = { package = "abstract-cw20", version = "1.2.2" }
 cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
 
-# Test Tube env deps
-osmosis-test-tube = { version = "22.1.0" }
+# Test Tube env deps. We use git dependencies because the crates.io version recompiles every time
+# osmosis-test-tube = { version = "22.1.0" }
+osmosis-test-tube = { git = "https://github.com/osmosis-labs/test-tube", rev = "b93272906a0e3e2ec4b5e2681647f801b456e976" }
+
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
