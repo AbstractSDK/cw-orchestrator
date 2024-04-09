@@ -128,7 +128,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics> #where_clause {
+        pub trait #bname<Chain: ::cw_orch::prelude::TxHandler, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics> #where_clause {
             #(#variant_fns)*
         }
 
@@ -155,7 +155,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::cw_orch::prelude::TxHandler, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         #combined_where_clause {}
     );
 

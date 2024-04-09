@@ -86,7 +86,7 @@ pub mod tests {
     )]
     pub struct CounterContractWithId;
 
-    impl<Chain: CwEnv> Uploadable for CounterContractWithId<Chain> {
+    impl<Chain> Uploadable for CounterContractWithId<Chain> {
         /// Return the path to the wasm file corresponding to the contract
         fn wasm(&self) -> WasmPath {
             unimplemented!()

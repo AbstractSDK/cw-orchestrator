@@ -54,7 +54,7 @@ use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
 
 // Implement the Uploadable trait so it can be uploaded to the mock. 
-impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+impl <Chain> Uploadable for Cw20<Chain> {
     fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
@@ -132,7 +132,7 @@ The generated functions can then be used for any interface that uses this `Execu
 #[cw_orch::interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1<Chain>;
 
-impl<Chain: CwEnv> Cw1<Chain> {
+impl<Chain> Cw1<Chain> {
     pub fn test_macro(&self) {
         // Enjoy the nice API! 
         self.freeze().unwrap();
