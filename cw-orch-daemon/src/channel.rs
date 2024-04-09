@@ -101,7 +101,7 @@ mod tests {
     #[tokio::test]
     async fn no_connection() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
-        let grpcs = &vec!["https://127.0.0.1:99999"];
+        let grpcs = &["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
         let build_res = DaemonAsync::builder()
