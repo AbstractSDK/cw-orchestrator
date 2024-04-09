@@ -1,3 +1,4 @@
+use cw_orch::daemon::queriers::Node;
 // ANCHOR: custom_interface
 use cw_orch::{interface, prelude::*};
 
@@ -5,10 +6,13 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 pub const CONTRACT_ID: &str = "counter_contract";
 
+// ANCHOR: interface_macro
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg, id = CONTRACT_ID)]
 pub struct CounterContract;
+// ANCHOR_END: interface_macro
 
-impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
+// ANCHOR: uploadable_impl
+impl<Chain> Uploadable for CounterContract<Chain> {
     /// Return the path to the wasm file corresponding to the contract
     fn wasm(&self) -> WasmPath {
         artifacts_dir_from_workspace!()
@@ -27,29 +31,26 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
         )
     }
 }
+// ANCHOR_END: uploadable_impl
 // ANCHOR_END: custom_interface
 
 use cw_orch::anyhow::Result;
-use cw_orch::prelude::queriers::Node;
 
 // ANCHOR: daemon
 impl CounterContract<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> Result<()> {
         let daemon = self.get_chain();
-        let rt = daemon.rt_handle.clone();
 
-        rt.block_on(async {
-            // Get the node query client, there are a lot of other clients available.
-            let node = daemon.query_client::<Node>();
-            let mut latest_block = node.latest_block().await.unwrap();
+        // Get the node query client, there are a lot of other clients available.
+        let node: Node = daemon.querier();
+        let mut latest_block = node.latest_block().unwrap();
 
-            while latest_block.header.height.value() < 100 {
-                // wait for the next block
-                daemon.next_block().unwrap();
-                latest_block = node.latest_block().await.unwrap();
-            }
-        });
+        while latest_block.height < 100 {
+            // wait for the next block
+            daemon.next_block().unwrap();
+            latest_block = node.latest_block().unwrap();
+        }
 
         let contract = CounterContract::new(daemon.clone());
 

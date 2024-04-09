@@ -18,7 +18,6 @@ pub mod keys;
 pub mod live_mock;
 mod log;
 pub mod queriers;
-mod traits;
 pub mod tx_broadcaster;
 pub mod tx_builder;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
@@ -54,3 +53,7 @@ pub(crate) mod cosmos_modules {
 
 /// Re-export trait and data required to fetch daemon data from chain-registry
 pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
+
+lazy_static::lazy_static! {
+    pub static ref RUNTIME: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
+}

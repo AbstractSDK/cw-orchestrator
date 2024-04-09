@@ -5,22 +5,18 @@ use cosmwasm_std::coins;
 // ANCHOR: full_counter_example
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
-use tokio::runtime::Runtime;
 
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
 
-    let rt = Runtime::new()?;
     let network = networks::LOCAL_JUNO;
-    let daemon = DaemonBuilder::default()
-        .handle(rt.handle())
-        .chain(network)
-        .build()?;
+    let daemon = DaemonBuilder::default().chain(network).build()?;
 
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
     let wallet = daemon.wallet();
+    let rt = daemon.rt_handle;
     rt.block_on(wallet.bank_send("<address-of-my-sister>", coins(345, "ujunox")))?;
     // ANCHOR_END: send_tx
 

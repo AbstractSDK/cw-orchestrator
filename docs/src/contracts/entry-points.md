@@ -11,8 +11,6 @@ To get started, find the `ExecuteMsg` definition for your contract. In our case 
 {{#include ../../../contracts/counter/src/msg.rs:exec_msg}}
 ```
 
-Again we feature flag the function generation to prevent cw-orchestrator entering as a dependency when building your contract.
-
 The functions are implemented as a trait named `ExecuteMsgFns` which is implemented on any interface that uses this `ExecuteMsg` as an entrypoint message.
 
 Using the trait then becomes as simple as:
@@ -29,6 +27,8 @@ Generating query functions is a similar process but has the added advantage of u
 ```rust,ignore
 {{#include ../../../contracts/counter/src/msg.rs:query_msg}}
 ```
+
+Keep in mind that you **NEED** to derive the `cosmwasm_schema::QueryResponses` trait on your QueryMsgs for the `QueryFns` macro to compile.
 
 Using it is just as simple as the execution functions:
 

@@ -1,8 +1,39 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## Unreleased
 
-- Changed behavior for default constructor implementation by macro "interface"
+- Allow cw-orch wasm compilation without features
+
+## 0.21.1
+
+- Remove mandatory runtimes when building Daemon
+- Allow cw-orch to compile for a wasm target without adding features
+- Changed GRPC url for Local Terra
+
+## 0.21.0
+
+- Updated cw-multi-test to allow for IBC packet timeout
+
+## 0.20.1
+
+- Fix ARM path derivation for wasm
+- Fix state file path creation on cw-orch-daemon
+- Added addr_make_with_balance
+
+## 0.20.0
+
+- Changed behavior for default constructor implementation by macro "interface" --> Added possibility to have a fixed ID
+- Added unified querier interface for all CwEnv
+- Updated multiple dependencies
+- Added authz, fee granter and hd_indec support for the `Daemon` object
+- Remove Fee Granter env variable (now incorporated in code inside the `DaemonBuilder`)
+- Replaces Rc by Arc in DaemonAsync for use in an async distributed environment
+- Added instantiate2 support on CwEnv
+- Removed secp dependency (gotten through the bitcoin dependency)
+- Removed duplicates in disabled logs env
+- Moved DeployDetails to its own trait : `EnvironmentQuerier`
+- Modified gas prices for networks
+- Fixed the artifacts resolution in case of a build postfix
 
 ## 0.19.1
 

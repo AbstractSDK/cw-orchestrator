@@ -2,28 +2,24 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{
     testing::{MockApi, MockStorage},
-    Addr, Coin, ContractInfoResponse, Empty, Event, Uint128,
+    to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
 };
 use cw_multi_test::{
-    ibc::IbcSimpleModule, next_block, App, AppBuilder, AppResponse, BankKeeper, Contract,
-    DistributionKeeper, Executor, FailingModule, GovFailingModule, StakeKeeper, StargateFailing,
-    WasmKeeper,
+    ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
 };
-use cw_utils::NativeBalance;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
+use super::state::MockState;
 use cw_orch_core::{
-    contract::interface_traits::{ContractInstance, Uploadable},
-    environment::{BankQuerier, BankSetter, ChainState, IndexResponse, StateInterface},
-    environment::{EnvironmentInfo, EnvironmentQuerier, TxHandler, WasmCodeQuerier},
+    contract::interface_traits::Uploadable,
+    environment::{ChainState, IndexResponse, StateInterface, TxHandler},
     CwEnvError,
 };
 
-use super::state::MockState;
-
-pub type MockApp = App<
+pub type MockApp<A = MockApi> = App<
     BankKeeper,
-    MockApi,
+    A,
     MockStorage,
     FailingModule<Empty, Empty, Empty>,
     WasmKeeper<Empty, Empty>,
@@ -31,7 +27,7 @@ pub type MockApp = App<
     DistributionKeeper,
     IbcSimpleModule,
     GovFailingModule,
-    StargateFailing,
+    StargateFailingModule,
 >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
@@ -71,113 +67,29 @@ pub type MockApp = App<
 ///
 /// let mock: Mock = Mock::new_custom("sender", CustomState::new());
 /// ```
-#[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState> {
+pub struct MockBase<A: Api = MockApi, S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Addr,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<RefCell<MockApp>>,
+    pub app: Rc<RefCell<MockApp<A>>>,
 }
 
-impl<S: StateInterface> Mock<S> {
-    /// Set the bank balance of an address.
-    pub fn set_balance(
-        &self,
-        address: impl Into<String>,
-        amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwEnvError> {
-        self.app
-            .borrow_mut()
-            .init_modules(|router, _, storage| {
-                router
-                    .bank
-                    .init_balance(storage, &Addr::unchecked(address.into()), amount)
-            })
-            .map_err(Into::into)
-    }
+pub type Mock<S = MockState> = MockBase<MockApi, S>;
+pub type MockBech32<S = MockState> = MockBase<MockApiBech32, S>;
 
-    /// Adds the bank balance of an address.
-    pub fn add_balance(
-        &self,
-        address: impl Into<String>,
-        amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwEnvError> {
-        let addr = &Addr::unchecked(address.into());
-        let b = self.query_all_balances(addr.clone())?;
-        let new_amount = NativeBalance(b) + NativeBalance(amount);
-        self.app
-            .borrow_mut()
-            .init_modules(|router, _, storage| {
-                router
-                    .bank
-                    .init_balance(storage, addr, new_amount.into_vec())
-            })
-            .map_err(Into::into)
-    }
-
-    /// Set the balance for multiple coins at once.
-    pub fn set_balances(
-        &self,
-        balances: &[(impl Into<String> + Clone, &[cosmwasm_std::Coin])],
-    ) -> Result<(), CwEnvError> {
-        self.app
-            .borrow_mut()
-            .init_modules(|router, _, storage| -> Result<(), CwEnvError> {
-                for (addr, coins) in balances {
-                    router.bank.init_balance(
-                        storage,
-                        &Addr::unchecked(addr.clone()),
-                        coins.to_vec(),
-                    )?;
-                }
-                Ok(())
-            })
-    }
-
-    /// Query the (bank) balance of a native token for and address.
-    /// Returns the amount of the native token.
-    pub fn query_balance(
-        &self,
-        address: impl Into<String>,
-        denom: &str,
-    ) -> Result<Uint128, CwEnvError> {
-        let amount = self
-            .app
-            .borrow()
-            .wrap()
-            .query_balance(address, denom)?
-            .amount;
-        Ok(amount)
-    }
-
-    /// Fetch all the balances of an address.
-    pub fn query_all_balances(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
-        let amount = self.app.borrow().wrap().query_all_balances(address)?;
-        Ok(amount)
+impl<A: Api, S: StateInterface> Clone for MockBase<A, S> {
+    fn clone(&self) -> Self {
+        Self {
+            sender: self.sender.clone(),
+            state: self.state.clone(),
+            app: self.app.clone(),
+        }
     }
 }
 
-impl Mock<MockState> {
-    /// Create a mock environment with the default mock state.
-    pub fn new(sender: impl Into<String>) -> Self {
-        Mock::new_custom(sender, MockState::new())
-    }
-
-    pub fn new_with_chain_id(sender: impl Into<String>, chain_id: &str) -> Self {
-        let chain = Mock::new_custom(sender, MockState::new());
-        chain
-            .app
-            .borrow_mut()
-            .update_block(|b| b.chain_id = chain_id.to_string());
-
-        chain
-    }
-
+impl<A: Api> MockBase<A, MockState> {
     pub fn with_chain_id(&mut self, chain_id: &str) {
         self.state.borrow_mut().set_chain_id(chain_id);
         self.app
@@ -186,20 +98,7 @@ impl Mock<MockState> {
     }
 }
 
-impl<S: StateInterface> Mock<S> {
-    /// Create a mock environment with a custom mock state.
-    /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: impl Into<String>, custom_state: S) -> Self {
-        let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(AppBuilder::new_custom().build(|_, _, _| {})));
-
-        Self {
-            sender: Addr::unchecked(sender),
-            state,
-            app,
-        }
-    }
-
+impl<A: Api, S: StateInterface> MockBase<A, S> {
     /// Upload a custom contract wrapper.
     /// Support for this is limited.
     pub fn upload_custom(
@@ -220,8 +119,7 @@ impl<S: StateInterface> Mock<S> {
         Ok(resp)
     }
 }
-
-impl<S: StateInterface> ChainState for Mock<S> {
+impl<A: Api, S: StateInterface> ChainState for MockBase<A, S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -230,7 +128,7 @@ impl<S: StateInterface> ChainState for Mock<S> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for Mock<S> {
+impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     type Response = AppResponse;
     type Error = CwEnvError;
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
@@ -281,34 +179,53 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwEnvError> {
-        let addr = self.app.borrow_mut().instantiate_contract(
+        let msg = WasmMsg::Instantiate {
+            admin: admin.map(|a| a.to_string()),
             code_id,
-            self.sender.clone(),
-            init_msg,
-            coins,
-            label.unwrap_or("contract_init"),
-            admin.map(|a| a.to_string()),
-        )?;
-        // add contract address to events manually
-        let mut event = Event::new("instantiate");
-        event = event.add_attribute("_contract_address", addr);
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+        };
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
         let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
+            events: app.events,
+            data: app.data,
         };
         Ok(resp)
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    fn instantiate2<I: Serialize + Debug>(
         &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwEnvError> {
-        self.app
-            .borrow()
-            .wrap()
-            .query_wasm_smart(contract_address, query_msg)
-            .map_err(From::from)
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
+    ) -> Result<Self::Response, CwEnvError> {
+        let msg = WasmMsg::Instantiate2 {
+            admin: admin.map(|a| a.to_string()),
+            code_id,
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+            salt,
+        };
+
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
+        let resp = AppResponse {
+            events: app.events,
+            data: app.data,
+        };
+        Ok(resp)
     }
 
     fn migrate<M: Serialize + Debug>(
@@ -327,111 +244,6 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             )
             .map_err(From::from)
     }
-
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(|b| {
-            b.height += amount;
-            b.time = b.time.plus_seconds(5 * amount);
-        });
-        Ok(())
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(|b| {
-            b.time = b.time.plus_seconds(secs);
-            b.height += secs / 5;
-        });
-        Ok(())
-    }
-
-    fn next_block(&self) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(next_block);
-        Ok(())
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
-        Ok(self.app.borrow().block_info())
-    }
-}
-
-impl<S: StateInterface> EnvironmentQuerier for Mock<S> {
-    fn env_info(&self) -> EnvironmentInfo {
-        let block_info = self.block_info().unwrap();
-        let chain_id = block_info.chain_id.clone();
-        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-        EnvironmentInfo {
-            chain_id,
-            chain_name,
-            deployment_id: "default".to_string(),
-        }
-    }
-}
-
-impl WasmCodeQuerier for Mock {
-    /// Returns the checksum of provided code_id
-    /// Cw-multi-test implements a checksum based on the code_id (because it wan't access the wasm code)
-    /// So it's not possible to check wether 2 contracts have the same code using the Mock implementation
-    fn contract_hash(&self, code_id: u64) -> Result<String, CwEnvError> {
-        let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
-        Ok(code_info.checksum.to_string())
-    }
-
-    /// Returns the code_info structure of the provided contract
-    fn contract_info<T: ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
-        let info = self
-            .app
-            .borrow()
-            .wrap()
-            .query_wasm_contract_info(contract.address()?)?;
-        Ok(info)
-    }
-
-    fn local_hash<T: Uploadable + ContractInstance<Mock>>(
-        &self,
-        contract: &T,
-    ) -> Result<String, CwEnvError> {
-        // We return the hashed contract-id.
-        // This will cause the logic to never re-upload a contract if it has the same contract-id.
-        Ok(sha256::digest(contract.id().as_bytes()))
-    }
-}
-
-impl BankQuerier for Mock {
-    fn balance(
-        &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        let addr = address.into();
-        if let Some(denom) = denom {
-            Ok(vec![Coin {
-                amount: self.query_balance(&addr, &denom)?,
-                denom,
-            }])
-        } else {
-            self.query_all_balances(&addr)
-        }
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        Ok(self.app.borrow().wrap().query_supply(denom)?)
-    }
-}
-
-impl BankSetter for Mock {
-    fn set_balance(
-        &mut self,
-        address: impl Into<String>,
-        amount: Vec<Coin>,
-    ) -> Result<(), <Self as TxHandler>::Error> {
-        (*self).set_balance(address, amount)
-    }
 }
 
 #[cfg(test)]
@@ -442,6 +254,7 @@ mod test {
         StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
+    use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler};
     use serde::Serialize;
     use speculoos::prelude::*;
 
@@ -562,7 +375,7 @@ mod test {
     #[test]
     fn custom_mock_env() {
         let mock_state = MockState::new();
-        let chain = Mock::<_>::new_custom(SENDER, mock_state);
+        let chain = Mock::new_custom(SENDER, mock_state);
 
         let recipient = BALANCE_ADDR;
         let amount = 1000000u128;
@@ -634,10 +447,14 @@ mod test {
         app.set_balance(sender, init_coins.clone())?;
         let sender = app.sender.clone();
         assert_eq!(
-            app.balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
 
         Ok(())
     }

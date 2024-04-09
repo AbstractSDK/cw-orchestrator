@@ -34,16 +34,6 @@ pub trait StateInterface: Clone {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError>;
 }
 
-/// Details about the chain and env you are deploying on
-pub struct DeployDetails {
-    /// E.g. juno-2
-    pub chain_id: String,
-    /// E.g. juno
-    pub chain_name: String,
-    /// E.g. default
-    pub deployment_id: String,
-}
-
 impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         (**self).borrow().get_address(contract_id)

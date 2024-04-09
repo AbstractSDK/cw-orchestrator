@@ -1,20 +1,12 @@
-use std::str::FromStr;
-
 use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{coin, Addr, ContractInfoResponse, StdResult};
+use cosmwasm_std::{coin, Addr, Coins};
 
-use cw_orch_core::environment::{
-    BankQuerier, BankSetter, EnvironmentInfo, EnvironmentQuerier, WasmCodeQuerier,
-};
+use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
 use cw_orch_traits::stargate::Stargate;
 
-use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
-use cw_multi_test::AppResponse;
-use osmosis_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
-use osmosis_std::types::cosmwasm::wasm::v1::{
-    QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
-};
+use crate::mock::cw_multi_test::AppResponse;
+use cosmwasm_std::{Binary, Coin, Uint128};
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
@@ -22,14 +14,13 @@ use osmosis_test_tube::{
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
 use osmosis_test_tube::osmosis_std::{
-    cosmwasm_to_proto_coins,
-    types::cosmos::bank::v1beta1::{MsgSend, QueryAllBalancesRequest, QueryBalanceRequest},
+    cosmwasm_to_proto_coins, types::cosmos::bank::v1beta1::MsgSend,
 };
 
 use osmosis_test_tube::OsmosisTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
 use crate::{
     environment::TxHandler,
@@ -40,6 +31,8 @@ use crate::{
 use crate::mock::MockState;
 
 pub use osmosis_test_tube;
+
+use super::queriers::bank::OsmosisTestTubeBankQuerier;
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
 ///
@@ -73,7 +66,7 @@ pub struct OsmosisTestTube<S: StateInterface = MockState> {
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
 
-fn map_err(e: RunnerError) -> CwOrchError {
+pub(crate) fn map_err(e: RunnerError) -> CwOrchError {
     CwOrchError::StdErr(e.to_string())
 }
 
@@ -147,18 +140,10 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
     pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwOrchError> {
-        let amount = Bank::new(&*self.app.borrow())
-            .query_balance(&QueryBalanceRequest {
-                address: address.to_owned(),
-                denom: denom.to_string(),
-            })
-            .map_err(map_err)?
-            .balance
-            .map(to_cosmwasm_coin)
-            .transpose()?
-            .map(|c| c.amount)
-            .unwrap_or(Uint128::zero());
-        Ok(amount)
+        let amount = self
+            .bank_querier()
+            .balance(address, Some(denom.to_string()))?;
+        Ok(amount.first().unwrap().amount)
     }
 
     /// Fetch all the balances of an address.
@@ -166,16 +151,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &self,
         address: &str,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
-        let amount = Bank::new(&*self.app.borrow())
-            .query_all_balances(&QueryAllBalancesRequest {
-                address: address.to_owned(),
-                pagination: None,
-            })
-            .map_err(map_err)?
-            .balances
-            .into_iter()
-            .map(to_cosmwasm_coin)
-            .collect::<Result<Vec<_>, _>>()?;
+        let amount = self.bank_querier().balance(address, None)?;
         Ok(amount)
     }
 }
@@ -283,18 +259,6 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         })
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwOrchError> {
-        let query = Wasm::new(&*self.app.borrow())
-            .query(contract_address.as_ref(), query_msg)
-            .map_err(map_err)?;
-
-        Ok(query)
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         _migrate_msg: &M,
@@ -304,86 +268,51 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         panic!("Migrate not implemented on osmosis test_tube")
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
-        self.wait_seconds(amount * 10u64) // Block time is 10s in this test tube
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
-        self.app.borrow().increase_time(secs);
-        Ok(())
-    }
-
-    fn next_block(&self) -> Result<(), CwOrchError> {
-        self.wait_blocks(1)
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
-        Ok(BlockInfo {
-            chain_id: "osmosis-1".to_string(),
-            height: self.app.borrow().get_block_height().try_into().unwrap(),
-            time: Timestamp::from_nanos(
-                self.app.borrow().get_block_time_nanos().try_into().unwrap(),
-            ),
-        })
+    fn instantiate2<I: Serialize + Debug>(
+        &self,
+        _code_id: u64,
+        _init_msg: &I,
+        _label: Option<&str>,
+        _admin: Option<&Addr>,
+        _coins: &[cosmwasm_std::Coin],
+        _salt: Binary,
+    ) -> Result<Self::Response, Self::Error> {
+        unimplemented!("Osmosis Test Tube doesn't support Instantiate 2 directly");
     }
 }
 
-impl BankQuerier for OsmosisTestTube {
-    fn balance(
-        &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        if let Some(denom) = denom {
-            Ok(vec![Coin {
-                amount: self.query_balance(&address.into(), &denom)?,
-                denom,
-            }])
-        } else {
-            self.query_all_balances(&address.into())
-        }
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        let denom: String = denom.into();
-        let supply_of_result: QuerySupplyOfResponse = self
-            .app
-            .borrow()
-            .query(
-                "/cosmos.bank.v1beta1.Query/SupplyOf",
-                &QuerySupplyOfRequest {
-                    denom: denom.clone(),
-                },
-            )
-            .map_err(map_err)?;
-
-        Ok(supply_of_result
-            .amount
-            .map(|c| {
-                // Ok::<_, StdError>(cosmwasm_std::Coin {
-                //     amount: c.amount.parse()?,
-                //     denom: c.denom,
-                // })
-                to_cosmwasm_coin(c)
-            })
-            .transpose()?
-            .unwrap_or(coin(0, &denom)))
-    }
-}
+/// Gas Fee token for OmosisTestTube, used in BankSetter
+pub const GAS_TOKEN: &str = "uosmo";
 
 impl BankSetter for OsmosisTestTube {
-    /// It's impossible to set the balance of an address directly in OsmosisTestTub
-    /// So for this implementation, we use a weird algorithm
+    type T = OsmosisTestTubeBankQuerier;
+
+    /// It's impossible to set the balance of an address directly in OsmosisTestTube
     fn set_balance(
         &mut self,
         _address: impl Into<String>,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        // We check the current balance
         unimplemented!();
+    }
+
+    fn add_balance(
+        &mut self,
+        address: impl Into<String>,
+        amount: Vec<Coin>,
+    ) -> Result<(), <Self as TxHandler>::Error> {
+        let mut all_coins: Coins = amount.clone().try_into().unwrap();
+        let gas_balance = coin(100_000_000_000_000, GAS_TOKEN);
+        all_coins.add(gas_balance).unwrap();
+
+        let new_account = self.init_account(all_coins.into())?;
+
+        self.call_as(&new_account)
+            .bank_send(address.into(), amount)?;
+
+        Ok(())
+
+        // We check the current balance
     }
 }
 
@@ -406,84 +335,14 @@ impl Stargate for OsmosisTestTube {
     }
 }
 
-impl WasmCodeQuerier for OsmosisTestTube {
-    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
-        let code_info_result: QueryCodeResponse = self
-            .app
-            .borrow()
-            .query(
-                "/cosmwasm.wasm.v1.Query/Code",
-                &QueryCodeRequest { code_id },
-            )
-            .map_err(map_err)?;
-
-        Ok(hex::encode(
-            code_info_result
-                .code_info
-                .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?
-                .data_hash,
-        ))
-    }
-
-    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
-        let result = self
-            .app
-            .borrow()
-            .query::<_, QueryContractInfoResponse>(
-                "/cosmwasm.wasm.v1.Query/ContractInfo",
-                &QueryContractInfoRequest {
-                    address: contract.address()?.to_string(),
-                },
-            )
-            .map_err(map_err)?
-            .contract_info
-            .ok_or(CwOrchError::AddrNotInStore(contract.address()?.to_string()))?;
-
-        let mut contract_info = ContractInfoResponse::default();
-        contract_info.code_id = result.code_id;
-        contract_info.creator = result.creator;
-        contract_info.admin = Some(result.admin);
-
-        contract_info.ibc_port = if result.ibc_port_id.is_empty() {
-            None
-        } else {
-            Some(result.ibc_port_id)
-        };
-
-        Ok(contract_info)
-    }
-}
-
-impl EnvironmentQuerier for OsmosisTestTube {
-    fn env_info(&self) -> EnvironmentInfo {
-        let block = self.block_info().unwrap();
-        let chain_id = block.chain_id;
-        let chain_name = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-
-        EnvironmentInfo {
-            chain_id,
-            chain_name,
-            deployment_id: "default".to_string(),
-        }
-    }
-}
-
-fn to_cosmwasm_coin(c: osmosis_std::types::cosmos::base::v1beta1::Coin) -> StdResult<Coin> {
-    Ok(Coin {
-        amount: Uint128::from_str(&c.amount)?,
-        denom: c.denom,
-    })
-}
-
 #[cfg(test)]
 pub mod tests {
-    use cosmwasm_std::{coins, ContractInfoResponse};
-    use cw_orch_core::environment::{BankQuerier, WasmCodeQuerier};
+    use cosmwasm_std::{coin, coins, ContractInfoResponse};
 
+    use cw_orch_core::environment::*;
     use osmosis_test_tube::Account;
+
+    use crate::osmosis_test_tube::GAS_TOKEN;
 
     use super::OsmosisTestTube;
     use counter_contract::{msg::InstantiateMsg, CounterContract};
@@ -503,10 +362,10 @@ pub mod tests {
 
         assert_eq!(
             contract.wasm().checksum()?,
-            app.contract_hash(contract.code_id()?)?
+            app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
-        let contract_info = app.contract_info(&contract)?;
+        let contract_info = app.wasm_querier().contract_info(contract.addr_str()?)?;
         let mut target_contract_info = ContractInfoResponse::default();
         target_contract_info.admin = Some(app.sender.address().to_string());
         target_contract_info.code_id = contract.code_id()?;
@@ -524,10 +383,42 @@ pub mod tests {
         let app = OsmosisTestTube::new(init_coins.clone());
         let sender = app.sender.address();
         assert_eq!(
-            app.balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn add_balance_works() -> anyhow::Result<()> {
+        let denom = "uosmo";
+        let init_coins = coins(100_000_000_000_000, denom);
+        let mut app = OsmosisTestTube::new(init_coins.clone());
+
+        let account = app.init_account(coins(78, "uweird"))?;
+
+        let amount1 = 139823876u128;
+        let amount2 = 1398212713563876u128;
+        app.add_balance(
+            account.address(),
+            vec![coin(amount1, GAS_TOKEN), coin(amount2, "uother")],
+        )?;
+
+        let balance = app.bank_querier().balance(account.address(), None)?;
+
+        assert_eq!(
+            balance,
+            vec![
+                coin(amount1, GAS_TOKEN),
+                coin(amount2, "uother"),
+                coin(78, "uweird")
+            ]
+        );
         Ok(())
     }
 }

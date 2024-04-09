@@ -1,10 +1,10 @@
-use bitcoin::secp256k1::All;
-use ibc_chain_registry::chain::ChainData;
-
+use crate::RUNTIME;
 use crate::{
     sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
+use bitcoin::secp256k1::All;
+use ibc_chain_registry::chain::ChainData;
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -48,7 +48,7 @@ impl DaemonBuilder {
         self
     }
 
-    /// Set the tokio runtime handle to use for the Daemon
+    /// Set a custom tokio runtime handle to use for the Daemon
     ///
     /// ## Example
     /// ```no_run
@@ -102,7 +102,8 @@ impl DaemonBuilder {
         let rt_handle = self
             .handle
             .clone()
-            .ok_or(DaemonError::BuilderMissing("runtime handle".into()))?;
+            .unwrap_or_else(|| RUNTIME.handle().clone());
+
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
 

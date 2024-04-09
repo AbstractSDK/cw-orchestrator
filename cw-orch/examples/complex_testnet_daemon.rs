@@ -3,13 +3,9 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
-};
-use cw_orch_core::environment::BankQuerier;
+use cw_orch::prelude::*;
 use cw_orch_traits::Stargate;
-use osmosis_std::types::{
+use osmosis_test_tube::osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
     osmosis::tokenfactory::v1beta1::{
         MsgCreateDenom, MsgCreateDenomResponse, MsgMint, MsgMintResponse,
@@ -17,7 +13,6 @@ use osmosis_std::types::{
 };
 use prost::Message;
 use prost_types::Any;
-use tokio::runtime::Runtime;
 
 pub const SUBDENOM: &str = "complex-test";
 
@@ -34,15 +29,11 @@ pub fn main() {
     // Remember to set the `RUST_LOG` env variable to be able to see the execution
     env_logger::init();
 
-    // We start by creating a runtime, which is required for a sync daemon.
-    let runtime = Runtime::new().unwrap();
-
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
     let daemon = Daemon::builder()
         // set the network to use
         .chain(cw_orch::daemon::networks::UNI_6)
-        .handle(runtime.handle())
         .build()
         .unwrap();
 
@@ -110,7 +101,8 @@ pub fn main() {
         .unwrap();
     // We send some funds to the counter contract
     let contract_addr = counter.addr_str().unwrap();
-    runtime
+    daemon
+        .rt_handle
         .block_on(
             daemon
                 .daemon
@@ -120,7 +112,10 @@ pub fn main() {
         .unwrap();
     // We verify they have received their funds
     assert_eq!(
-        daemon.balance(contract_addr, Some(denom.clone())).unwrap(),
+        daemon
+            .bank_querier()
+            .balance(contract_addr, Some(denom.clone()))
+            .unwrap(),
         coins(50_000, denom.clone())
     );
 }

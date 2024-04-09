@@ -41,6 +41,10 @@ fn count() -> anyhow::Result<()> {
     assert_eq!(count1.count, count2.count);
     // ANCHOR_END: query
 
+    // Or get it manually from the chain
+    let count3: GetCountResponse = mock.query(&QueryMsg::GetCount {}, &contract.address()?)?;
+    assert_eq!(count1.count, count3.count);
+
     // Check the count
     assert_eq!(count1.count, 2);
     // ANCHOR: reset
@@ -53,7 +57,7 @@ fn count() -> anyhow::Result<()> {
     assert_eq!(count.count, 0);
 
     // Check negative case
-    let exec_res: Result<cw_multi_test::AppResponse, CwOrchError> =
+    let exec_res: Result<cw_orch::mock::cw_multi_test::AppResponse, CwOrchError> =
         contract.call_as(&user).reset(0);
 
     let expected_err = ContractError::Unauthorized {};

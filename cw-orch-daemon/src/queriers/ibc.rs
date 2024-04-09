@@ -1,5 +1,4 @@
-use super::DaemonQuerier;
-use crate::{cosmos_modules, error::DaemonError};
+use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmos_modules::ibc_channel;
 use cosmrs::proto::ibc::{
     applications::transfer::v1::{DenomTrace, QueryDenomHashResponse, QueryDenomTraceResponse},
@@ -10,17 +9,41 @@ use cosmrs::proto::ibc::{
     },
     lightclients::tendermint::v1::ClientState,
 };
+use cw_orch_core::environment::{Querier, QuerierGetter};
 use prost::Message;
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 /// Querier for the Cosmos IBC module
+/// All the async function are prefixed with `_`
 pub struct Ibc {
-    channel: Channel,
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
-impl DaemonQuerier for Ibc {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl Ibc {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+
+    pub fn new_async(channel: Channel) -> Self {
+        Self {
+            channel,
+            rt_handle: None,
+        }
+    }
+}
+
+impl Querier for Ibc {
+    type Error = DaemonError;
+}
+
+impl QuerierGetter<Ibc> for Daemon {
+    fn querier(&self) -> Ibc {
+        Ibc::new(self)
     }
 }
 
@@ -28,7 +51,7 @@ impl Ibc {
     // ### Transfer queries ### //
 
     /// Get the trace of a specific denom
-    pub async fn denom_trace(&self, hash: String) -> Result<DenomTrace, DaemonError> {
+    pub async fn _denom_trace(&self, hash: String) -> Result<DenomTrace, DaemonError> {
         let denom_trace: QueryDenomTraceResponse = cosmos_query!(
             self,
             ibc_transfer,
@@ -39,7 +62,7 @@ impl Ibc {
     }
 
     /// Get the hash of a specific denom from its trace
-    pub async fn denom_hash(&self, trace: String) -> Result<String, DaemonError> {
+    pub async fn _denom_hash(&self, trace: String) -> Result<String, DaemonError> {
         let denom_hash: QueryDenomHashResponse = cosmos_query!(
             self,
             ibc_transfer,
@@ -52,7 +75,7 @@ impl Ibc {
     // ### Client queries ###
 
     /// Get all the IBC clients for this daemon
-    pub async fn clients(&self) -> Result<Vec<IdentifiedClientState>, DaemonError> {
+    pub async fn _clients(&self) -> Result<Vec<IdentifiedClientState>, DaemonError> {
         let ibc_clients: QueryClientStatesResponse = cosmos_query!(
             self,
             ibc_client,
@@ -63,7 +86,7 @@ impl Ibc {
     }
 
     /// Get the state of a specific IBC client
-    pub async fn client_state(
+    pub async fn _client_state(
         &self,
         client_id: impl ToString,
         // Add the necessary parameters here
@@ -80,7 +103,7 @@ impl Ibc {
     }
 
     /// Get the consensus state of a specific IBC client
-    pub async fn consensus_states(
+    pub async fn _consensus_states(
         &self,
         client_id: impl ToString,
     ) -> Result<cosmos_modules::ibc_client::QueryConsensusStatesResponse, DaemonError> {
@@ -98,7 +121,7 @@ impl Ibc {
     }
 
     /// Get the consensus status of a specific IBC client
-    pub async fn client_status(
+    pub async fn _client_status(
         &self,
         client_id: impl ToString,
         // Add the necessary parameters here
@@ -115,7 +138,7 @@ impl Ibc {
     }
 
     /// Get the ibc client parameters
-    pub async fn client_params(
+    pub async fn _client_params(
         &self,
     ) -> Result<cosmos_modules::ibc_client::QueryClientParamsResponse, DaemonError> {
         let response: cosmos_modules::ibc_client::QueryClientParamsResponse =
@@ -126,7 +149,7 @@ impl Ibc {
     // ### Connection queries ###
 
     /// Query the IBC connections for a specific chain
-    pub async fn connections(&self) -> Result<Vec<IdentifiedConnection>, DaemonError> {
+    pub async fn _connections(&self) -> Result<Vec<IdentifiedConnection>, DaemonError> {
         use cosmos_modules::ibc_connection::QueryConnectionsResponse;
 
         let ibc_connections: QueryConnectionsResponse = cosmos_query!(
@@ -139,11 +162,11 @@ impl Ibc {
     }
 
     /// Search for open connections with a specific chain.
-    pub async fn open_connections(
+    pub async fn _open_connections(
         &self,
         client_chain_id: impl ToString,
     ) -> Result<Vec<IdentifiedConnection>, DaemonError> {
-        let connections = self.connections().await?;
+        let connections = self._connections().await?;
         let mut open_connections = Vec::new();
         for connection in connections {
             if connection.state() == State::Open {
@@ -154,7 +177,7 @@ impl Ibc {
         // now search for the connections that use a client with the correct chain ids
         let mut filtered_connections = Vec::new();
         for connection in open_connections {
-            let client_state = self.connection_client(&connection.id).await?;
+            let client_state = self._connection_client(&connection.id).await?;
             if client_state.chain_id == client_chain_id.to_string() {
                 filtered_connections.push(connection);
             }
@@ -164,7 +187,7 @@ impl Ibc {
     }
 
     // Get the information about a specific connection
-    pub async fn connection_end(
+    pub async fn _connection_end(
         &self,
         connection_id: impl Into<String>,
     ) -> Result<Option<ConnectionEnd>, DaemonError> {
@@ -184,7 +207,7 @@ impl Ibc {
     }
 
     /// Get all the connections for this client
-    pub async fn client_connections(
+    pub async fn _client_connections(
         &self,
         client_id: impl Into<String>,
     ) -> Result<Vec<String>, DaemonError> {
@@ -204,7 +227,7 @@ impl Ibc {
     }
 
     /// Get the (tendermint) client state for a specific connection
-    pub async fn connection_client(
+    pub async fn _connection_client(
         &self,
         connection_id: impl Into<String>,
     ) -> Result<ClientState, DaemonError> {
@@ -237,7 +260,7 @@ impl Ibc {
     // ### Channel queries ###
 
     /// Get the channel for a specific port and channel id
-    pub async fn channel(
+    pub async fn _channel(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -263,7 +286,7 @@ impl Ibc {
     }
 
     /// Get all the channels for a specific connection
-    pub async fn connection_channels(
+    pub async fn _connection_channels(
         &self,
         connection_id: impl Into<String>,
     ) -> Result<Vec<ibc_channel::IdentifiedChannel>, DaemonError> {
@@ -284,7 +307,7 @@ impl Ibc {
     }
 
     /// Get the client state for a specific channel and port
-    pub async fn channel_client_state(
+    pub async fn _channel_client_state(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -316,7 +339,7 @@ impl Ibc {
     // Commitment
 
     /// Get all the packet commitments for a specific channel and port
-    pub async fn packet_commitments(
+    pub async fn _packet_commitments(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -340,7 +363,7 @@ impl Ibc {
     }
 
     /// Get the packet commitment for a specific channel, port and sequence
-    pub async fn packet_commitment(
+    pub async fn _packet_commitment(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -365,7 +388,7 @@ impl Ibc {
     // Receipt
 
     /// Returns if the packet is received on the connected chain.
-    pub async fn packet_receipt(
+    pub async fn _packet_receipt(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -390,7 +413,7 @@ impl Ibc {
     // Acknowledgement
 
     /// Get all the packet acknowledgements for a specific channel, port and commitment sequences
-    pub async fn packet_acknowledgements(
+    pub async fn _packet_acknowledgements(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -416,7 +439,7 @@ impl Ibc {
     }
 
     /// Get the packet acknowledgement for a specific channel, port and sequence
-    pub async fn packet_acknowledgement(
+    pub async fn _packet_acknowledgement(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -440,7 +463,7 @@ impl Ibc {
 
     /// No acknowledgement exists on receiving chain for the given packet commitment sequence on sending chain.
     /// Returns the packet sequences that have not yet been received.
-    pub async fn unreceived_packets(
+    pub async fn _unreceived_packets(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -467,7 +490,7 @@ impl Ibc {
     /// Returns the acknowledgement sequences that have not yet been received.
     /// Given a list of acknowledgement sequences from counterparty, determine if an ack on the counterparty chain has been received on the executing chain.
     /// Returns the list of acknowledgement sequences that have not yet been received.
-    pub async fn unreceived_acks(
+    pub async fn _unreceived_acks(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,
@@ -492,7 +515,7 @@ impl Ibc {
     /// Returns the acknowledgement sequences that have not yet been received.
     /// Given a list of acknowledgement sequences from counterparty, determine if an ack on the counterparty chain has been received on the executing chain.
     /// Returns the list of acknowledgement sequences that have not yet been received.
-    pub async fn next_sequence_receive(
+    pub async fn _next_sequence_receive(
         &self,
         port_id: impl Into<String>,
         channel_id: impl Into<String>,

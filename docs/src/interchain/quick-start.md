@@ -52,7 +52,7 @@ The `Client` and `Host` structures here are [cw-orchestrator Contracts](../contr
 )]
 struct Client;
 
-impl<Chain: CwEnv> Uploadable for Client<Chain> {
+impl<Chain> Uploadable for Client<Chain> {
     // No wasm needed for this example
     // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
     fn wasm(&self) -> WasmPath {
@@ -99,7 +99,7 @@ pub fn host_execute(_: DepsMut, _: Env, _: MessageInfo, _: Empty) -> StdResult<R
 )]
 struct Host;
 
-impl<Chain: CwEnv> Uploadable for Host<Chain> {
+impl<Chain> Uploadable for Host<Chain> {
     // No wasm needed for this example
     // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
     fn wasm(&self) -> WasmPath {
@@ -200,14 +200,12 @@ let rt = tokio::runtime::Runtime::new().unwrap();
 // We create the daemons ourselves to interact with actual running chains (testnet here)
 let juno = Daemon::builder()
         .chain(cw_orch::daemon::networks::UNI_6)
-        .handle(rt.handle())
         .build()
         .unwrap(); 
 
 // We create the daemons ourselves to interact with actual running chains (testnet here)
 let osmosis = Daemon::builder()
         .chain(cw_orch::daemon::networks::OSMO_5)
-        .handle(rt.handle())
         .build()
         .unwrap();
 
@@ -239,7 +237,7 @@ use cw_orch::tokio;
 let rt = tokio::runtime::Runtime::new().unwrap();
 
 // This is the starship adapter
-let starship = Starship::new(rt.handle().to_owned(), None).unwrap();
+let starship = Starship::new(None).unwrap();
 
 // You have now an interchain environment that you can use in your application
 let interchain = starship.interchain_env();

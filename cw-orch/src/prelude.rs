@@ -25,10 +25,13 @@ pub use crate::environment::StateInterface;
 pub use crate::environment::IndexResponse;
 
 // Environment
-pub use crate::environment::{CwEnv, TxHandler, TxResponse, WasmCodeQuerier};
+pub use crate::environment::{
+    BankQuerier, BankSetter, CwEnv, DefaultQueriers, EnvironmentInfo, EnvironmentQuerier,
+    NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+};
 
 // Mock for testing
-pub use crate::mock::Mock;
+pub use crate::mock::{Mock, MockBech32};
 
 // OsmosisTestTube for testing
 #[cfg(feature = "osmosis-test-tube")]
@@ -41,8 +44,8 @@ pub use crate::error::CwOrchError;
 pub use crate::contract::{ArtifactsDir, WasmPath};
 
 // re-export as it is used in the public API
+pub use crate::mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
 pub use cosmwasm_std::{Addr, Coin, Empty};
-pub use cw_multi_test::{Contract as MockContract, ContractWrapper};
 
 // builder, core type, networks mod, queriers mod, traits
 #[cfg(feature = "daemon")]

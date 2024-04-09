@@ -1,37 +1,21 @@
 use std::sync::Arc;
 
 use crate::contract::WasmPath;
+use crate::mock::cw_multi_test::AppResponse;
 use crate::prelude::Uploadable;
-use cosmwasm_std::{coin, Addr, ContractInfoResponse};
-use cosmwasm_std::{Binary, BlockInfo, Coin, Timestamp, Uint128};
-use cw_multi_test::AppResponse;
-use cw_orch_core::environment::{BankQuerier, BankSetter, WasmCodeQuerier};
-use cw_orch_traits::stargate::Stargate;
+use cosmwasm_std::Addr;
+use cosmwasm_std::{Binary, Coin, Uint128};
 use injective_std::shim::{cosmwasm_to_proto_coins, try_proto_to_cosmwasm_coins};
 use injective_std::types::cosmos::bank::v1beta1::{
     MsgSend, QueryAllBalancesRequest, QueryBalanceRequest,
 };
-use injective_std::types::cosmos::bank::v1beta1::{QuerySupplyOfRequest, QuerySupplyOfResponse};
-use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeRequest;
-use osmosis_std::types::cosmwasm::wasm::v1::QueryCodeResponse;
-use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoRequest;
-use osmosis_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
 
-use injective_test_tube::{
-    Account, Bank, ExecuteResponse, Module, Runner, RunnerError, SigningAccount, Wasm,
-};
-
-// // This should be the way to import stuff.
-// // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
-// use osmosis_test_tube::osmosis_std::{
-//     cosmwasm_to_proto_coins,
-//
-// };
+use injective_test_tube::{Account, Bank, Module, RunnerError, SigningAccount, Wasm};
 
 use injective_test_tube::InjectiveTestApp;
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
 use crate::{
     environment::TxHandler,
@@ -43,7 +27,7 @@ use crate::mock::MockState;
 
 pub use injective_test_tube;
 
-/// Wrapper around a osmosis-test-tube [`InjectiveTestApp`](osmosis_test_tube::InjectiveTestApp) backend.
+/// Wrapper around a injective-test-tube [`InjectiveTestApp`](injective_test_tube::InjectiveTestApp) backend.
 ///
 /// Stores a local state with a mapping of contract_id -> code_id/address
 ///
@@ -52,8 +36,8 @@ pub use injective_test_tube;
 /// ## Example
 /// ```
 /// # use cosmwasm_std::{Addr, coins, Uint128};
-/// use cw_orch::osmosis_test_tube::InjectiveTestTube;
-/// use cw_orch::osmosis_test_tube::osmosis_test_tube::Account;
+/// use cw_orch::injective_test_tube::InjectiveTestTube;
+/// use cw_orch::injective_test_tube::injective_test_tube::Account;
 ///
 /// // Creates an app, creates a sender with an initial balance
 /// let mut tube: InjectiveTestTube = InjectiveTestTube::new(coins(1_000_000_000_000, "uosmo"));
@@ -75,7 +59,8 @@ pub struct InjectiveTestTube<S: StateInterface = MockState> {
     pub app: Rc<RefCell<InjectiveTestApp>>,
 }
 
-fn map_err(e: RunnerError) -> CwOrchError {
+/// Maps runner error error to OrchError
+pub fn map_err(e: RunnerError) -> CwOrchError {
     CwOrchError::StdErr(e.to_string())
 }
 
@@ -146,7 +131,7 @@ impl<S: StateInterface> InjectiveTestTube<S> {
                 .map_err(map_err)?
                 .balance,
         )?
-        .get(0)
+        .first()
         .map(|c| c.amount)
         .unwrap_or(Uint128::zero());
         Ok(amount)
@@ -273,18 +258,6 @@ impl<S: StateInterface> TxHandler for InjectiveTestTube<S> {
         })
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwOrchError> {
-        let query = Wasm::new(&*self.app.borrow())
-            .query(contract_address.as_ref(), query_msg)
-            .map_err(map_err)?;
-
-        Ok(query)
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         _migrate_msg: &M,
@@ -294,154 +267,23 @@ impl<S: StateInterface> TxHandler for InjectiveTestTube<S> {
         panic!("Migrate not implemented on osmosis test_tube")
     }
 
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
-        self.wait_seconds(amount * 10u64) // Block time is 10s in this test tube
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
-        self.app.borrow().increase_time(secs);
-        Ok(())
-    }
-
-    fn next_block(&self) -> Result<(), CwOrchError> {
-        self.wait_blocks(1)
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwOrchError> {
-        Ok(BlockInfo {
-            chain_id: "osmosis-1".to_string(),
-            height: self.app.borrow().get_block_height().try_into().unwrap(),
-            time: Timestamp::from_nanos(
-                self.app.borrow().get_block_time_nanos().try_into().unwrap(),
-            ),
-        })
-    }
-}
-
-impl BankQuerier for InjectiveTestTube {
-    fn balance(
+    fn instantiate2<I: Serialize + Debug>(
         &self,
-        address: impl Into<String>,
-        denom: Option<String>,
-    ) -> Result<Vec<cosmwasm_std::Coin>, <Self as TxHandler>::Error> {
-        if let Some(denom) = denom {
-            Ok(vec![Coin {
-                amount: self.query_balance(&address.into(), &denom)?,
-                denom,
-            }])
-        } else {
-            self.query_all_balances(&address.into())
-        }
-    }
-
-    fn supply_of(
-        &self,
-        denom: impl Into<String>,
-    ) -> Result<cosmwasm_std::Coin, <Self as TxHandler>::Error> {
-        let denom: String = denom.into();
-        let supply_of_result: QuerySupplyOfResponse = self
-            .app
-            .borrow()
-            .query(
-                "/cosmos.bank.v1beta1.Query/SupplyOf",
-                &QuerySupplyOfRequest {
-                    denom: denom.clone(),
-                },
-            )
-            .map_err(map_err)?;
-
-        Ok(try_proto_to_cosmwasm_coins(supply_of_result.amount)?
-            .get(0)
-            .cloned()
-            .unwrap_or(coin(0, &denom)))
-    }
-}
-
-impl BankSetter for InjectiveTestTube {
-    /// It's impossible to set the balance of an address directly in Test Tube
-    fn set_balance(
-        &mut self,
-        _address: impl Into<String>,
-        _amount: Vec<Coin>,
-    ) -> Result<(), <Self as TxHandler>::Error> {
-        // We check the current balance
-        unimplemented!();
-    }
-}
-
-impl Stargate for InjectiveTestTube {
-    fn commit_any<R: prost::Message + Default>(
-        &self,
-        msgs: Vec<prost_types::Any>,
-        _memo: Option<&str>,
+        _code_id: u64,
+        _init_msg: &I,
+        _label: Option<&str>,
+        _admin: Option<&Addr>,
+        _coins: &[cosmwasm_std::Coin],
+        _salt: Binary,
     ) -> Result<Self::Response, Self::Error> {
-        let tx_response: ExecuteResponse<R> = self
-            .app
-            .borrow()
-            .execute_multiple_raw(msgs, &self.sender)
-            .map_err(map_err)?;
-
-        Ok(AppResponse {
-            data: Some(Binary(tx_response.raw_data)),
-            events: tx_response.events,
-        })
-    }
-}
-impl WasmCodeQuerier for InjectiveTestTube {
-    fn contract_hash(&self, code_id: u64) -> Result<String, <Self as TxHandler>::Error> {
-        let code_info_result: QueryCodeResponse = self
-            .app
-            .borrow()
-            .query(
-                "/cosmwasm.wasm.v1.Query/Code",
-                &QueryCodeRequest { code_id },
-            )
-            .map_err(map_err)?;
-
-        Ok(hex::encode(
-            code_info_result
-                .code_info
-                .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?
-                .data_hash,
-        ))
-    }
-
-    fn contract_info<T: cw_orch_core::contract::interface_traits::ContractInstance<Self>>(
-        &self,
-        contract: &T,
-    ) -> Result<cosmwasm_std::ContractInfoResponse, <Self as TxHandler>::Error> {
-        let result = self
-            .app
-            .borrow()
-            .query::<_, QueryContractInfoResponse>(
-                "/cosmwasm.wasm.v1.Query/ContractInfo",
-                &QueryContractInfoRequest {
-                    address: contract.address()?.to_string(),
-                },
-            )
-            .map_err(map_err)?
-            .contract_info
-            .ok_or(CwOrchError::AddrNotInStore(contract.address()?.to_string()))?;
-
-        let mut contract_info = ContractInfoResponse::default();
-        contract_info.code_id = result.code_id;
-        contract_info.creator = result.creator;
-        contract_info.admin = Some(result.admin);
-
-        contract_info.ibc_port = if result.ibc_port_id.is_empty() {
-            None
-        } else {
-            Some(result.ibc_port_id)
-        };
-
-        Ok(contract_info)
+        unimplemented!("Injective Test Tube doesn't support Instantiate 2 directly");
     }
 }
 
 #[cfg(test)]
 pub mod tests {
     use cosmwasm_std::{coins, ContractInfoResponse};
-    use cw_orch_core::environment::{BankQuerier, WasmCodeQuerier};
+    use cw_orch_core::environment::BankQuerier;
 
     use injective_test_tube::Account;
 
@@ -453,7 +295,7 @@ pub mod tests {
     fn wasm_querier_works() -> anyhow::Result<()> {
         let app = InjectiveTestTube::new(coins(100_000_000_000_000, "inj"));
 
-        let contract = CounterContract::new("counter", app.clone());
+        let contract = CounterContract::new(app.clone());
         contract.upload()?;
         contract.instantiate(
             &InstantiateMsg { count: 7 },
@@ -463,10 +305,10 @@ pub mod tests {
 
         assert_eq!(
             contract.wasm().checksum()?,
-            app.contract_hash(contract.code_id()?)?
+            app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
-        let contract_info = app.contract_info(&contract)?;
+        let contract_info = app.wasm_querier().contract_info(contract.address()?)?;
         let mut target_contract_info = ContractInfoResponse::default();
         target_contract_info.admin = Some(app.sender.address().to_string());
         target_contract_info.code_id = contract.code_id()?;
@@ -484,10 +326,14 @@ pub mod tests {
         let app = InjectiveTestTube::new(init_coins.clone());
         let sender = app.sender.address();
         assert_eq!(
-            app.balance(sender.clone(), Some(denom.to_string()))?,
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
             init_coins
         );
-        assert_eq!(app.supply_of(denom.to_string())?, init_coins[0]);
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
         Ok(())
     }
 }

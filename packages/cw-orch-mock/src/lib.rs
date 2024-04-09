@@ -4,8 +4,17 @@
 // Export our fork
 pub extern crate cw_multi_test;
 
+mod bech32;
 mod core;
+pub mod queriers;
+mod simple;
 mod state;
 
-pub use self::core::Mock;
+pub use self::core::{Mock, MockBase, MockBech32};
+
+pub type MockApp = self::core::MockApp<MockApi>;
+pub type MockAppBech32 = self::core::MockApp<MockApiBech32>;
+
+use cosmwasm_std::testing::MockApi;
+use cw_multi_test::MockApiBech32;
 pub use state::MockState;
