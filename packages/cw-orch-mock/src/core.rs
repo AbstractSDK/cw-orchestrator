@@ -5,9 +5,8 @@ use cosmwasm_std::{
     to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
 };
 use cw_multi_test::{
-    addons::MockApiBech32, ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract,
-    DistributionKeeper, Executor, FailingModule, GovFailingModule, StakeKeeper, StargateFailing,
-    WasmKeeper,
+    ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
 };
 use serde::Serialize;
 
@@ -28,7 +27,7 @@ pub type MockApp<A = MockApi> = App<
     DistributionKeeper,
     IbcSimpleModule,
     GovFailingModule,
-    StargateFailing,
+    StargateFailingModule,
 >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.

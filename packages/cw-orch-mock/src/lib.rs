@@ -16,5 +16,5 @@ pub type MockApp = self::core::MockApp<MockApi>;
 pub type MockAppBech32 = self::core::MockApp<MockApiBech32>;
 
 use cosmwasm_std::testing::MockApi;
-use cw_multi_test::addons::MockApiBech32;
+use cw_multi_test::MockApiBech32;
 pub use state::MockState;
