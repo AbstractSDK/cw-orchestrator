@@ -53,10 +53,7 @@ pub mod tests {
     use crate::mock::cw_multi_test::ContractWrapper;
     use cosmwasm_std::Empty;
     use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};
-    use cw_orch_core::{
-        contract::{interface_traits::Uploadable, WasmPath},
-        environment::CwEnv,
-    };
+    use cw_orch_core::contract::{interface_traits::Uploadable, WasmPath};
 
     #[test]
     fn contract_snapshots() -> anyhow::Result<()> {

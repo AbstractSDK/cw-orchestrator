@@ -1,4 +1,4 @@
-use cw_orch::{environment::CwEnv, interface, prelude::*};
+use cw_orch::{interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;

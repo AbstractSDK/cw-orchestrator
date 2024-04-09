@@ -1,5 +1,5 @@
 use cw_orch::{
-    environment::{CwEnv, TxHandler},
+    environment::TxHandler,
     prelude::{ContractWrapper, Uploadable},
 };
 
