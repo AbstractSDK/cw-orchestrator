@@ -67,6 +67,7 @@ async-recursion = "1.0.5"
 # Gzip
 flate2 = { version = "1.0.26" }
 lazy_static = "1.4.0"
+fs4 = "0.8.2"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

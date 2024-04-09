@@ -1,7 +1,10 @@
 use crate::DaemonError;
+use fs4::FileExt;
 use serde_json::{from_reader, json, Value};
 use std::{
-    fs::{File, OpenOptions},
+    fs::File,
+    fs::OpenOptions,
+    io::{Seek, SeekFrom, Write},
     path::PathBuf,
     str::FromStr,
 };
@@ -16,20 +19,14 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
         let _ = std::fs::create_dir_all(parent);
     }
 
-    let file = OpenOptions::new()
-        .create(true)
-        .read(true)
-        .write(true)
-        .truncate(false)
-        .open(filename.clone())
-        .unwrap();
+    let mut file = get_write_lock(filename);
 
     // return empty json object if file is empty
     // return file content if not
     let mut json: Value = if file.metadata().unwrap().len().eq(&0) {
         json!({})
     } else {
-        from_reader(file).unwrap()
+        from_reader(&file).unwrap()
     };
 
     // check and add network_id path if it's missing
@@ -45,15 +42,43 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
         });
     }
 
+    write_to_file(&mut file, json);
+
+    file.unlock().unwrap()
+}
+
+pub fn write_to_file(lock: &mut File, json: Value) {
     // write JSON data
-    // use File::create so we dont append data to the file
+    // use set_len(0), so we don't happend data to the file
     // but rather write all (because we have read the data before)
-    serde_json::to_writer_pretty(File::create(filename).unwrap(), &json).unwrap();
+    lock.set_len(0).unwrap();
+    lock.seek(SeekFrom::Start(0)).unwrap(); // Seek to the beginning of the file
+    serde_json::to_writer_pretty(lock, &json).unwrap();
 }
 
 pub fn read(filename: &String) -> Result<Value, DaemonError> {
-    let file =
-        File::open(filename).unwrap_or_else(|_| panic!("File should be present at {}", filename));
+    let file = OpenOptions::new().read(true).open(filename)?;
+
+    let value = read_file(&file)?;
+    file.unlock().unwrap();
+    Ok(value)
+}
+
+pub fn read_file(file: &File) -> Result<Value, DaemonError> {
     let json: serde_json::Value = from_reader(file)?;
+    file.lock_exclusive().unwrap();
     Ok(json)
+}
+
+pub fn get_write_lock(filename: &String) -> File {
+    let file = OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .truncate(false)
+        .open(filename)
+        .unwrap();
+
+    file.lock_exclusive().unwrap();
+    file
 }

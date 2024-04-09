@@ -1,5 +1,9 @@
 use super::error::DaemonError;
-use crate::{channel::GrpcChannel, networks::ChainKind};
+use crate::{
+    channel::GrpcChannel,
+    json_file::{get_write_lock, read_file, write_to_file},
+    networks::ChainKind,
+};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
@@ -8,10 +12,11 @@ use cw_orch_core::{
     log::{connectivity_target, local_target},
     CwEnvError, CwOrchEnvVars,
 };
+use fs4::FileExt;
 use ibc_chain_registry::chain::ChainData;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, fs::File, path::Path};
+use std::{collections::HashMap, path::Path};
 use tonic::transport::Channel;
 
 /// Stores the chain information and deployment state.
@@ -167,13 +172,16 @@ impl DaemonState {
         if self.read_only {
             return Err(DaemonError::StateReadOnly);
         }
+        let mut filelock = get_write_lock(&self.json_file_path);
 
-        let mut json = self.read_state()?;
+        let mut json = read_file(&filelock)?;
 
         json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key]
             [contract_id] = json!(value);
 
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
+        write_to_file(&mut filelock, json);
+        filelock.unlock().unwrap();
+
         Ok(())
     }
 }
