@@ -174,13 +174,13 @@ impl DaemonState {
         }
         let mut filelock = get_write_lock(&self.json_file_path);
 
-        let mut json = read_file(&filelock)?;
+        let mut json = read_file(&filelock.file)?;
 
         json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key]
             [contract_id] = json!(value);
 
-        write_to_file(&mut filelock, json);
-        filelock.unlock().unwrap();
+        write_to_file(&mut filelock.file, json);
+        filelock.file.unlock().unwrap();
 
         Ok(())
     }

@@ -68,6 +68,7 @@ async-recursion = "1.0.5"
 flate2 = { version = "1.0.26" }
 lazy_static = "1.4.0"
 fs4 = "0.8.2"
+file-lock = "2.1.11"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

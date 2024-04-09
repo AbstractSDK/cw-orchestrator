@@ -1,10 +1,10 @@
 use crate::DaemonError;
+use file_lock::{FileLock, FileOptions};
 use fs4::FileExt;
 use serde_json::{from_reader, json, Value};
 use std::{
     fs::File,
-    fs::OpenOptions,
-    io::{Seek, SeekFrom, Write},
+    io::{Seek, SeekFrom},
     path::PathBuf,
     str::FromStr,
 };
@@ -19,14 +19,14 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
         let _ = std::fs::create_dir_all(parent);
     }
 
-    let mut file = get_write_lock(filename);
+    let mut filelock = get_write_lock(filename);
 
     // return empty json object if file is empty
     // return file content if not
-    let mut json: Value = if file.metadata().unwrap().len().eq(&0) {
+    let mut json: Value = if filelock.file.metadata().unwrap().len().eq(&0) {
         json!({})
     } else {
-        from_reader(&file).unwrap()
+        from_reader(&filelock.file).unwrap()
     };
 
     // check and add network_id path if it's missing
@@ -42,9 +42,9 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
         });
     }
 
-    write_to_file(&mut file, json);
+    write_to_file(&mut filelock.file, json);
 
-    file.unlock().unwrap()
+    filelock.file.unlock().unwrap()
 }
 
 pub fn write_to_file(lock: &mut File, json: Value) {
@@ -57,28 +57,45 @@ pub fn write_to_file(lock: &mut File, json: Value) {
 }
 
 pub fn read(filename: &String) -> Result<Value, DaemonError> {
-    let file = OpenOptions::new().read(true).open(filename)?;
+    let filelock = get_read_lock(filename);
 
-    let value = read_file(&file)?;
-    file.unlock().unwrap();
+    let value = read_file(&filelock.file)?;
+    filelock.file.unlock().unwrap();
     Ok(value)
 }
 
 pub fn read_file(file: &File) -> Result<Value, DaemonError> {
     let json: serde_json::Value = from_reader(file)?;
-    file.lock_exclusive().unwrap();
     Ok(json)
 }
 
-pub fn get_write_lock(filename: &String) -> File {
-    let file = OpenOptions::new()
+pub fn get_read_lock(filename: &String) -> FileLock {
+    let options = FileOptions::new().read(true);
+
+    // We lock for other processes
+    let filelock = match FileLock::lock(filename, true, options) {
+        Ok(lock) => lock,
+        Err(err) => panic!("Error getting write lock: {}", err),
+    };
+    filelock.file.lock_exclusive().unwrap();
+    filelock
+}
+
+pub fn get_write_lock(filename: &String) -> FileLock {
+    let options = FileOptions::new()
         .create(true)
         .read(true)
         .write(true)
-        .truncate(false)
-        .open(filename)
-        .unwrap();
+        .truncate(false);
 
-    file.lock_exclusive().unwrap();
-    file
+    // We lock for other processes
+    let filelock = match FileLock::lock(filename, true, options) {
+        Ok(lock) => lock,
+        Err(err) => panic!("Error getting write lock: {}", err),
+    };
+
+    // We lock for the current process
+    filelock.file.lock_exclusive().unwrap();
+
+    filelock
 }
