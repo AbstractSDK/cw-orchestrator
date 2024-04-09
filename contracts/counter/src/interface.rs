@@ -12,7 +12,7 @@ pub struct CounterContract;
 // ANCHOR_END: interface_macro
 
 // ANCHOR: uploadable_impl
-impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
+impl<Chain> Uploadable for CounterContract<Chain> {
     /// Return the path to the wasm file corresponding to the contract
     fn wasm(&self) -> WasmPath {
         artifacts_dir_from_workspace!()

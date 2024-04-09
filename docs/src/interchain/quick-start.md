@@ -52,7 +52,7 @@ The `Client` and `Host` structures here are [cw-orchestrator Contracts](../contr
 )]
 struct Client;
 
-impl<Chain: CwEnv> Uploadable for Client<Chain> {
+impl<Chain> Uploadable for Client<Chain> {
     // No wasm needed for this example
     // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
     fn wasm(&self) -> WasmPath {
@@ -99,7 +99,7 @@ pub fn host_execute(_: DepsMut, _: Env, _: MessageInfo, _: Empty) -> StdResult<R
 )]
 struct Host;
 
-impl<Chain: CwEnv> Uploadable for Host<Chain> {
+impl<Chain> Uploadable for Host<Chain> {
     // No wasm needed for this example
     // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
     fn wasm(&self) -> WasmPath {

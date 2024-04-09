@@ -1,5 +1,5 @@
 use cw_orch::{
-    environment::{CwEnv, TxHandler},
+    environment::TxHandler,
     prelude::{ContractWrapper, Uploadable},
 };
 
@@ -22,7 +22,7 @@ use cw_orch::interface;
 )]
 pub struct MockContract;
 
-impl<Chain: CwEnv> Uploadable for MockContract<Chain> {
+impl<Chain> Uploadable for MockContract<Chain> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(

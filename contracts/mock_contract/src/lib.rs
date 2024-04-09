@@ -138,7 +138,7 @@ pub struct MockContract;
 pub mod interface {
     use super::*;
 
-    impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable for MockContract<Chain> {
+    impl<Chain> cw_orch::prelude::Uploadable for MockContract<Chain> {
         fn wrapper(
             &self,
         ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>>

@@ -62,13 +62,13 @@ mod interface {
     use super::*;
     use cw_orch::prelude::*;
 
-    impl<Chain: CwEnv> Uploadable for TestContract<Chain> {
+    impl<Chain> Uploadable for TestContract<Chain> {
         fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
             Box::new(ContractWrapper::new_with_empty(execute, instantiate, query))
         }
     }
 
-    impl<Chain: CwEnv> Uploadable for OrderedTestContract<Chain> {
+    impl<Chain> Uploadable for OrderedTestContract<Chain> {
         fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
             Box::new(ContractWrapper::new_with_empty(
                 execute_ordered,
