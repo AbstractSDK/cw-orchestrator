@@ -42,7 +42,7 @@ impl ShowAddressOutput {
                 let runtime = Runtime::new()?;
                 let _ = runtime.block_on(show_addr_explorer(
                     chain.chain_info().network_info.id.to_owned(),
-                    &account_id.to_string(),
+                    account_id.as_ref(),
                 ));
             }
             None => println!("Address not found"),

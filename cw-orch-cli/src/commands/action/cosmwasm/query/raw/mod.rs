@@ -6,7 +6,13 @@ use cw_orch::{
     tokio::runtime::Runtime,
 };
 
-use crate::{commands::action::CosmosContext, types::CliAddress};
+use crate::{
+    commands::action::{
+        cosmwasm::msg_type::{self, key_bytes, KeyType},
+        CosmosContext,
+    },
+    types::CliAddress,
+};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -14,9 +20,17 @@ use crate::{commands::action::CosmosContext, types::CliAddress};
 pub struct QueryRawCommands {
     /// Contract Address or alias from address-book
     contract: CliAddress,
-    // TODO: add base-64 option for binary keys
+    /// Enter key type
+    #[interactive_clap(skip_default_input_arg)]
+    key_type: KeyType,
     /// Enter key
     key: String,
+}
+
+impl QueryRawCommands {
+    fn input_key_type(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<KeyType>> {
+        msg_type::input_key_type()
+    }
 }
 
 pub struct QueryWasmOutput;
@@ -33,6 +47,7 @@ impl QueryWasmOutput {
             .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let chain_data: ChainRegistryData = chain.into();
+        let query_data = key_bytes(scope.key.clone(), scope.key_type)?;
 
         let rt = Runtime::new()?;
         // TODO: replace by no-signer daemon
@@ -44,7 +59,7 @@ impl QueryWasmOutput {
             let resp = client
                 .raw_contract_state(QueryRawContractStateRequest {
                     address: contract_account_id.to_string(),
-                    query_data: scope.key.clone().into_bytes(),
+                    query_data,
                 })
                 .await?;
 

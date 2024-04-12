@@ -44,6 +44,7 @@ pub fn parse_coins() -> InquireResult<cosmwasm_std::Coins> {
     let mut coins = cosmwasm_std::Coins::default();
     loop {
         let coin = inquire::Text::new("Add coin to transaction")
+            .with_help_message("Leave empty to stop adding coins")
             .with_placeholder("0ucoin")
             .prompt()?;
         if !coin.is_empty() {
@@ -98,7 +99,7 @@ pub async fn show_addr_explorer(chain_name: String, addr: &str) -> color_eyre::e
     let Explorers { explorers } = Explorers::fetch(chain_name, None).await?;
     for explorer in explorers {
         if let Some(tx_page) = explorer.account_page {
-            let url = tx_page.replace("${accountAddress}", &addr);
+            let url = tx_page.replace("${accountAddress}", addr);
             println!("Explorer: {url}");
             break;
         }

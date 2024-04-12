@@ -69,15 +69,8 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
         MsgTypeDiscriminants::JsonMsg => Ok(Some(MsgType::JsonMsg)),
         MsgTypeDiscriminants::Base64Msg => Ok(Some(MsgType::Base64Msg)),
         MsgTypeDiscriminants::File => Ok(Some(MsgType::File)),
-        MsgTypeDiscriminants::Editor => Ok(Some(MsgType::File)),
+        MsgTypeDiscriminants::Editor => Ok(Some(MsgType::Editor)),
     }
-}
-
-pub fn input_msg_or_filename() -> color_eyre::eyre::Result<Option<String>> {
-    let input = inquire::Text::new("Enter message or filename")
-        .with_help_message("Leave non-file message input empty for EDITOR input later")
-        .prompt()?;
-    Ok(Some(input))
 }
 
 pub fn msg_bytes(message_or_file: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
@@ -88,18 +81,9 @@ pub fn msg_bytes(message_or_file: String, msg_type: MsgType) -> color_eyre::eyre
 
             serde_json::to_vec(&message_json).wrap_err("Unexpected error")
         }
-        MsgType::Base64Msg => {
-            let message = match message_or_file.is_empty() {
-                false => message_or_file,
-                true => inquire::Editor::new("Enter")
-                    .with_help_message("Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)")
-                    .prompt()?,
-            };
-
-            crate::common::B64
-                .decode(message)
-                .wrap_err("Failed to decode base64 string")
-        }
+        MsgType::Base64Msg => crate::common::B64
+            .decode(message_or_file)
+            .wrap_err("Failed to decode base64 string"),
         MsgType::File => {
             let file_path = std::path::PathBuf::from(message_or_file);
             let msg_bytes =
@@ -107,12 +91,80 @@ pub fn msg_bytes(message_or_file: String, msg_type: MsgType) -> color_eyre::eyre
             Ok(msg_bytes)
         }
         MsgType::Editor => {
-            let message = inquire::Editor::new("Enter message")
-                .with_predefined_text("{}")
-                .with_file_extension(".json")
-                .prompt()?;
+            let mut prompt = inquire::Editor::new("Enter message");
+            if message_or_file.is_empty() {
+                prompt = prompt
+                    .with_predefined_text("{}")
+                    .with_file_extension(".json");
+            } else {
+                prompt = prompt.with_file_extension(&message_or_file)
+            };
+            let message = prompt.prompt()?;
             Ok(message.into_bytes())
         }
+    }
+}
+
+#[derive(Debug, EnumDiscriminants, Clone, Copy, clap::ValueEnum)]
+#[strum_discriminants(derive(EnumMessage, EnumIter))]
+/// How do you want to pass the key arguments?
+pub enum KeyType {
+    #[strum_discriminants(strum(message = "Raw string"))]
+    /// Raw string (e.g. contract_info)
+    Raw,
+    #[strum_discriminants(strum(message = "base64 message"))]
+    /// Base64-encoded string (e.g. Y29udHJhY3QtaW5mbw==)
+    Base64,
+}
+
+impl interactive_clap::ToCli for KeyType {
+    type CliVariant = KeyType;
+}
+
+impl std::str::FromStr for KeyType {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "raw" => Ok(Self::Raw),
+            "base64" => Ok(Self::Base64),
+            _ => Err("KeyType: incorrect key type".to_string()),
+        }
+    }
+}
+
+impl std::fmt::Display for KeyType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Raw => write!(f, "raw"),
+            Self::Base64 => write!(f, "base64"),
+        }
+    }
+}
+
+impl std::fmt::Display for KeyTypeDiscriminants {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Raw => write!(f, "Raw"),
+            Self::Base64 => write!(f, "Base64"),
+        }
+    }
+}
+
+pub fn input_key_type() -> color_eyre::eyre::Result<Option<KeyType>> {
+    let variants = KeyTypeDiscriminants::iter().collect::<Vec<_>>();
+    let selected = Select::new("Select key format", variants).prompt()?;
+    match selected {
+        KeyTypeDiscriminants::Raw => Ok(Some(KeyType::Raw)),
+        KeyTypeDiscriminants::Base64 => Ok(Some(KeyType::Base64)),
+    }
+}
+
+pub fn key_bytes(key: String, key_type: KeyType) -> color_eyre::eyre::Result<Vec<u8>> {
+    match key_type {
+        KeyType::Raw => Ok(key.into_bytes()),
+        KeyType::Base64 => crate::common::B64
+            .decode(key)
+            .wrap_err("Failed to decode base64 string"),
     }
 }
 

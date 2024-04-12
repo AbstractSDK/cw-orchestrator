@@ -19,8 +19,7 @@ pub struct ExecuteContractCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
     msg_type: msg_type::MsgType,
-    #[interactive_clap(skip_default_input_arg)]
-    /// Enter message
+    /// Enter message or filename
     msg: String,
     #[interactive_clap(skip_default_input_arg)]
     /// Input coins
@@ -34,10 +33,6 @@ impl ExecuteContractCommands {
         _context: &CosmosContext,
     ) -> color_eyre::eyre::Result<Option<msg_type::MsgType>> {
         msg_type::input_msg_type()
-    }
-
-    fn input_msg(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
-        msg_type::input_msg_or_filename()
     }
 
     fn input_coins(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<CliCoins>> {

@@ -20,8 +20,7 @@ pub struct QuerySmartCommands {
     #[interactive_clap(skip_default_input_arg)]
     /// How do you want to pass the message arguments?
     msg_type: msg_type::MsgType,
-    #[interactive_clap(skip_default_input_arg)]
-    /// Enter message
+    /// Enter message or filename
     msg: String,
 }
 
@@ -30,10 +29,6 @@ impl QuerySmartCommands {
         _context: &CosmosContext,
     ) -> color_eyre::eyre::Result<Option<msg_type::MsgType>> {
         msg_type::input_msg_type()
-    }
-
-    fn input_msg(_context: &CosmosContext) -> color_eyre::eyre::Result<Option<String>> {
-        msg_type::input_msg_or_filename()
     }
 }
 pub struct QueryWasmOutput;
