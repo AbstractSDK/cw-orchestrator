@@ -27,9 +27,13 @@ fn entries_list_path() -> color_eyre::Result<PathBuf> {
 pub fn read_entries() -> color_eyre::Result<EntriesSet> {
     let entries_list_file = entries_list_path()?;
 
-    let file = OpenOptions::new()
+    let maybe_file = OpenOptions::new()
         .read(true)
-        .open(entries_list_file.as_path())?;
+        .open(entries_list_file.as_path());
+    // In case no file return empty
+    let Ok(file) = maybe_file else {
+        return Ok(Default::default());
+    };
     let entries_set: EntriesSet = serde_json::from_reader(file)?;
     Ok(entries_set)
 }

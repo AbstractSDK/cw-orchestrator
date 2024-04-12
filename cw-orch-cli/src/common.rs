@@ -1,6 +1,6 @@
-use crate::types::CliLockedChain;
+use crate::{fetch::explorers::Explorers, types::CliLockedChain};
 pub use base64::prelude::BASE64_STANDARD as B64;
-use cw_orch::daemon::networks::SUPPORTED_NETWORKS as NETWORKS;
+use cw_orch::daemon::{networks::SUPPORTED_NETWORKS as NETWORKS, Fetchable};
 use inquire::{error::InquireResult, InquireError, Select};
 
 pub fn get_cw_cli_exec_path() -> String {
@@ -92,4 +92,16 @@ pub fn parse_expiration() -> InquireResult<cw_utils::Expiration> {
         ExpirationType::Never => cw_utils::Expiration::Never {},
     };
     Ok(expiration)
+}
+
+pub async fn show_addr_explorer(chain_name: String, addr: &str) -> color_eyre::eyre::Result<()> {
+    let Explorers { explorers } = Explorers::fetch(chain_name, None).await?;
+    for explorer in explorers {
+        if let Some(tx_page) = explorer.account_page {
+            let url = tx_page.replace("${accountAddress}", &addr);
+            println!("Explorer: {url}");
+            break;
+        }
+    }
+    Ok(())
 }

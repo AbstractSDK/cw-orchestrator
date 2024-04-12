@@ -4,7 +4,9 @@ use std::path::PathBuf;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
-pub struct Explorers(pub Vec<Explorer>);
+pub struct Explorers {
+    pub explorers: Vec<Explorer>,
+}
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(default)]

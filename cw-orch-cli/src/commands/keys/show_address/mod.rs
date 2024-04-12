@@ -1,6 +1,9 @@
 use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
 
-use crate::{types::keys::seed_phrase_for_id, types::CliLockedChain};
+use crate::{
+    common::show_addr_explorer,
+    types::{keys::seed_phrase_for_id, CliLockedChain},
+};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
@@ -41,6 +44,11 @@ impl ShowAddressOutput {
                 .await?;
             let address = daemon.sender();
             println!("Your address: {address}");
+            let _ = show_addr_explorer(
+                chain.chain_info().network_info.id.to_owned(),
+                address.as_str(),
+            )
+            .await;
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;
         Ok(ShowAddressOutput)

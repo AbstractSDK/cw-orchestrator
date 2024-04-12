@@ -3,17 +3,41 @@ use cosmrs::bip32;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use crate::common::B64;
-use crate::types::keys::{entry_for_seed, save_entry_if_required};
+use crate::types::keys::{entry_for_seed, read_entries, save_entry_if_required};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
 #[interactive_clap(output_context = AddKeyContext)]
 pub struct AddKeyCommand {
-    // TODO: add checker for repetition
+    #[interactive_clap(skip_default_input_arg)]
     /// Id of they key
     name: String,
     #[interactive_clap(subcommand)]
     key_actions: AddKeyActions,
+}
+
+impl AddKeyCommand {
+    fn input_name(_context: &()) -> color_eyre::eyre::Result<Option<String>> {
+        let entries = read_entries()?;
+        let name = inquire::Text::new("Id of they key")
+            .with_validator(move |s: &str| {
+                if s.is_empty() {
+                    return Ok(inquire::validator::Validation::Invalid(
+                        inquire::validator::ErrorMessage::Custom(
+                            "Empty key not allowed".to_owned(),
+                        ),
+                    ));
+                };
+                if entries.entries.contains(s) {
+                    return Ok(inquire::validator::Validation::Invalid(
+                        inquire::validator::ErrorMessage::Custom("Key already exist".to_owned()),
+                    ));
+                };
+                Ok(inquire::validator::Validation::Valid)
+            })
+            .prompt()?;
+        Ok(Some(name))
+    }
 }
 
 #[derive(Debug, EnumDiscriminants, Clone, interactive_clap::InteractiveClap)]
@@ -68,6 +92,7 @@ impl AddKeyOutput {
         let password = B64.encode(mnemonic.phrase().as_bytes());
         entry.set_password(&password)?;
         save_entry_if_required(&name)?;
+        println!("New key \"{name}\" added");
         Ok(AddKeyOutput)
     }
 }

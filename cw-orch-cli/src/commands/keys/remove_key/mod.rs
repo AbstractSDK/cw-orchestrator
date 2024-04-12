@@ -24,6 +24,7 @@ impl RemoveKeyOutput {
         let entry = entry_for_seed(&scope.name)?;
         entry.delete_password()?;
         crate::types::keys::remove_entry(&scope.name)?;
+        println!("Key \"{}\" got removed", scope.name);
         Ok(RemoveKeyOutput)
     }
 }

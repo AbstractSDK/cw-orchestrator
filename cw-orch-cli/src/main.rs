@@ -5,7 +5,7 @@ use interactive_clap::{ResultFromCli, ToCliArgs};
 
 fn main() -> color_eyre::Result<()> {
     // We don't want to see cw-orch logs during cli
-    std::env::set_var("CW_ORCH_DISABLE_ENABLE_LOGS_MESSAGE", "true");
+    std::env::set_var("CW_ORCH_DISABLE_LOGS_ACTIVATION_MESSAGE", "true");
     let render_config = RenderConfig {
         prompt: StyleSheet::new().with_attr(Attributes::BOLD),
         ..Default::default()

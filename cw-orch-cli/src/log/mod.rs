@@ -16,14 +16,14 @@ impl LogOutput for CosmTxResponse {
         if let ChainKind::Mainnet = chain_info.kind {
             let log_explorer_url = || -> cw_orch::anyhow::Result<()> {
                 let rt = Runtime::new()?;
-                let Explorers(explorers) = rt.block_on(Explorers::fetch(
+                let Explorers { explorers } = rt.block_on(Explorers::fetch(
                     chain_info.network_info.id.to_owned(),
                     None,
                 ))?;
                 for explorer in explorers {
                     if let Some(tx_page) = explorer.tx_page {
                         let url = tx_page.replace("${txHash}", &self.txhash);
-                        println!("{url}");
+                        println!("Explorer: {url}");
                         break;
                     }
                 }

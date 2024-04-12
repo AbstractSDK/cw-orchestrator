@@ -1,4 +1,9 @@
-use crate::types::address_book::{self, select_alias};
+use cw_orch::tokio::runtime::Runtime;
+
+use crate::{
+    common::show_addr_explorer,
+    types::address_book::{self, select_alias},
+};
 
 use super::AddresBookContext;
 
@@ -32,7 +37,14 @@ impl ShowAddressOutput {
         )?;
 
         match maybe_account_id {
-            Some(account_id) => println!("{account_id}"),
+            Some(account_id) => {
+                println!("{account_id}");
+                let runtime = Runtime::new()?;
+                let _ = runtime.block_on(show_addr_explorer(
+                    chain.chain_info().network_info.id.to_owned(),
+                    &account_id.to_string(),
+                ));
+            }
             None => println!("Address not found"),
         }
 

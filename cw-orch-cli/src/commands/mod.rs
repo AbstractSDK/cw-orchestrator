@@ -18,10 +18,10 @@ pub enum Commands {
     #[strum_discriminants(strum(message = "🎬 Action"))]
     Action(action::CosmosCommands),
     /// Add, View or Remove key
-    #[strum_discriminants(strum(message = "🔑 Manage Keys"))]
+    #[strum_discriminants(strum(message = "🔑 Keys"))]
     Key(keys::KeyCommands),
     /// Handle Address Book
-    #[strum_discriminants(strum(message = "📖 Manage Address Book"))]
+    #[strum_discriminants(strum(message = "📖 Address Book"))]
     AddressBook(address_book::AddressBookCommands),
     // TODO:
     // 1) Config management
