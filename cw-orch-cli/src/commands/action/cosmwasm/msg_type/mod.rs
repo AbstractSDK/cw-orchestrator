@@ -15,9 +15,12 @@ pub enum MsgType {
     #[strum_discriminants(strum(message = "base64 message"))]
     /// Base64-encoded string (e.g. eyJmb28iOiJiYXIifQ==)
     Base64Msg,
-    /// Read from a file (e.g. file.json)
     #[strum_discriminants(strum(message = "Read from a file"))]
+    /// Read from a file (e.g. file.json)
     File,
+    #[strum_discriminants(strum(message = "Use your editor"))]
+    /// Open editor (uses EDITOR env variable) to input message
+    Editor,
 }
 
 impl interactive_clap::ToCli for MsgType {
@@ -31,6 +34,7 @@ impl std::str::FromStr for MsgType {
             "json-msg" => Ok(Self::JsonMsg),
             "base64-msg" => Ok(Self::Base64Msg),
             "file" => Ok(Self::File),
+            "editor" => Ok(Self::Editor),
             _ => Err("MsgType: incorrect message type".to_string()),
         }
     }
@@ -42,6 +46,7 @@ impl std::fmt::Display for MsgType {
             Self::JsonMsg => write!(f, "json-msg"),
             Self::Base64Msg => write!(f, "base64-msg"),
             Self::File => write!(f, "file"),
+            Self::Editor => write!(f, "editor"),
         }
     }
 }
@@ -52,6 +57,7 @@ impl std::fmt::Display for MsgTypeDiscriminants {
             Self::JsonMsg => write!(f, "Json Msg"),
             Self::Base64Msg => write!(f, "Base64 Msg"),
             Self::File => write!(f, "File"),
+            Self::Editor => write!(f, "Editor"),
         }
     }
 }
@@ -63,6 +69,7 @@ pub fn input_msg_type() -> color_eyre::eyre::Result<Option<MsgType>> {
         MsgTypeDiscriminants::JsonMsg => Ok(Some(MsgType::JsonMsg)),
         MsgTypeDiscriminants::Base64Msg => Ok(Some(MsgType::Base64Msg)),
         MsgTypeDiscriminants::File => Ok(Some(MsgType::File)),
+        MsgTypeDiscriminants::Editor => Ok(Some(MsgType::File)),
     }
 }
 
@@ -76,28 +83,8 @@ pub fn input_msg_or_filename() -> color_eyre::eyre::Result<Option<String>> {
 pub fn msg_bytes(message_or_file: String, msg_type: MsgType) -> color_eyre::eyre::Result<Vec<u8>> {
     match msg_type {
         MsgType::JsonMsg => {
-            let message = match message_or_file.is_empty() {
-                false => message_or_file,
-                // If message empty - give editor input
-                true => inquire::Editor::new("Enter message")
-                    .with_help_message(r#"Valid JSON string (e.g. {"foo": "bar"})"#)
-                    .with_predefined_text("{}")
-                    .with_file_extension(".json")
-                    .with_validator(|s: &str| match serde_json::Value::from_str(s) {
-                        Ok(_) => Ok(inquire::validator::Validation::Valid),
-                        Err(_) => Ok(inquire::validator::Validation::Invalid(
-                            inquire::validator::ErrorMessage::Custom(
-                                "Message not in JSON format!".to_owned(),
-                            ),
-                        )),
-                    })
-                    .with_formatter(&|s| {
-                        serde_json::to_string(&serde_json::Value::from_str(s).unwrap()).unwrap()
-                    })
-                    .prompt()?,
-            };
-            let message_json =
-                serde_json::Value::from_str(&message).wrap_err("Message not in JSON format")?;
+            let message_json = serde_json::Value::from_str(&message_or_file)
+                .wrap_err("Message not in JSON format")?;
 
             serde_json::to_vec(&message_json).wrap_err("Unexpected error")
         }
@@ -118,6 +105,13 @@ pub fn msg_bytes(message_or_file: String, msg_type: MsgType) -> color_eyre::eyre
             let msg_bytes =
                 std::fs::read(file_path.as_path()).wrap_err("Failed to read a message file")?;
             Ok(msg_bytes)
+        }
+        MsgType::Editor => {
+            let message = inquire::Editor::new("Enter message")
+                .with_predefined_text("{}")
+                .with_file_extension(".json")
+                .prompt()?;
+            Ok(message.into_bytes())
         }
     }
 }

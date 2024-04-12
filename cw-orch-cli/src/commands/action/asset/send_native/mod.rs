@@ -66,12 +66,12 @@ impl SendNativeOutput {
                 to_address,
                 amount: coins,
             };
-            let resp = daemon.sender.commit_tx(vec![transfer_msg], None).await?;
 
+            let resp = daemon.sender.commit_tx(vec![transfer_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
 
-        resp.log();
+        resp.log(chain.chain_info());
 
         Ok(SendNativeOutput)
     }

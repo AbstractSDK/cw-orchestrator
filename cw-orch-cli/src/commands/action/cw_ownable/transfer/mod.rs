@@ -6,6 +6,7 @@ use cw_orch::{
 use crate::{
     commands::action::CosmosContext,
     common::parse_expiration,
+    log::LogOutput,
     types::{keys::seed_phrase_for_id, CliAddress, CliExpiration, CliSkippable},
 };
 
@@ -84,9 +85,10 @@ impl TransferOwnershipOutput {
                 funds: vec![],
             };
 
-            let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
 
-            // TODO: logging
+            resp.log(chain.chain_info());
+            println!("Successfully transferred ownership, waiting for approval by {new_owner}",);
 
             if let Some(seed) = receiver_seed {
                 let receiver_sender =
@@ -100,7 +102,9 @@ impl TransferOwnershipOutput {
                     msg,
                     funds: vec![],
                 };
-                let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+                let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+                resp.log(chain.chain_info());
+                println!("{new_owner} successfully accepted ownership");
             }
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;

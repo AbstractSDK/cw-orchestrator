@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod common;
+pub(crate) mod fetch;
 pub(crate) mod log;
 pub(crate) mod types;
 

@@ -35,6 +35,7 @@ impl QueryWasmOutput {
         let chain_data: ChainRegistryData = chain.into();
 
         let rt = Runtime::new()?;
+        // TODO: replace by no-signer daemon
         let resp = rt.block_on(async {
             let grpc_channel =
                 GrpcChannel::connect(&chain_data.apis.grpc, chain_data.chain_id.as_str()).await?;

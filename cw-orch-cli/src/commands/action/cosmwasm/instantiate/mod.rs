@@ -87,12 +87,13 @@ impl InstantiateWasmOutput {
                 msg,
                 funds: coins,
             };
+
             let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
+        resp.log(chain.chain_info());
 
         let address = resp.instantiated_contract_address()?;
-        resp.log();
         println!("Address of the instantiated contract: {address}");
 
         // Maybe save it in Address Book

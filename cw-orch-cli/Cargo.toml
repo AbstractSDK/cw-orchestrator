@@ -14,6 +14,7 @@ cw-orch = { path = "../cw-orch", features = ["daemon"], version = "0.21" }
 
 # Logs
 pretty_env_logger = { version = "0.5.0" }
+async-trait = { version = "0.1" }
 
 # Cosmos
 cosmwasm-std = { workspace = true }

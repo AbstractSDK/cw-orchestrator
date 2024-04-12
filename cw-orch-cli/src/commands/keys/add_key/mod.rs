@@ -3,7 +3,7 @@ use cosmrs::bip32;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use crate::common::B64;
-use crate::types::keys::entry_for_seed;
+use crate::types::keys::{entry_for_seed, save_entry_if_required};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = ())]
@@ -67,6 +67,7 @@ impl AddKeyOutput {
         let entry = entry_for_seed(&name)?;
         let password = B64.encode(mnemonic.phrase().as_bytes());
         entry.set_password(&password)?;
+        save_entry_if_required(&name)?;
         Ok(AddKeyOutput)
     }
 }

@@ -1,7 +1,11 @@
-use cw_orch::{daemon::DaemonAsync, tokio::runtime::Runtime};
+use cw_orch::{
+    daemon::{CosmTxResponse, DaemonAsync},
+    tokio::runtime::Runtime,
+};
 
 use crate::{
     commands::action::CosmosContext,
+    log::LogOutput,
     types::{keys::seed_phrase_for_id, CliAddress},
 };
 
@@ -41,7 +45,7 @@ impl RenounceOwnershipOutput {
         let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
 
         let rt = Runtime::new()?;
-        rt.block_on(async {
+        let resp = rt.block_on(async {
             let daemon = DaemonAsync::builder()
                 .chain(chain)
                 .mnemonic(sender_seed)
@@ -55,10 +59,10 @@ impl RenounceOwnershipOutput {
                 funds: vec![],
             };
 
-            let _res = daemon.sender.commit_tx(vec![exec_msg], None).await?;
-
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
+        resp.log(chain.chain_info());
 
         Ok(RenounceOwnershipOutput)
     }

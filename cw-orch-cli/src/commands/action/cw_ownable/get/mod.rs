@@ -35,6 +35,7 @@ impl GetOwnershipOutput {
         let msg = serde_json::to_vec(&ContractQueryMsg::Ownership {})?;
         let chain_data: ChainRegistryData = chain.into();
 
+        // TODO: replace by no-signer daemon
         let rt = Runtime::new()?;
         rt.block_on(async {
             let grpc_channel =

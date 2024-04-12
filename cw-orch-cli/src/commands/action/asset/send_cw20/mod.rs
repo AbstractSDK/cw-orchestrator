@@ -69,12 +69,12 @@ impl SendCw20Output {
                 msg,
                 funds: vec![],
             };
-            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
 
+            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
 
-        resp.log();
+        resp.log(chain.chain_info());
 
         Ok(SendCw20Output)
     }

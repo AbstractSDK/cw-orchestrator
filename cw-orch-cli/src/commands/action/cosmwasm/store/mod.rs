@@ -51,12 +51,13 @@ impl StoreWasmOutput {
                 wasm_byte_code,
                 instantiate_permission: None,
             };
+
             let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
+        resp.log(chain.chain_info());
 
         let code_id = resp.uploaded_code_id().unwrap();
-        resp.log();
         println!("code_id: {code_id}");
 
         Ok(StoreWasmOutput)
