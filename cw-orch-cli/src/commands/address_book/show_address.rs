@@ -41,7 +41,7 @@ impl ShowAddressOutput {
                 println!("{account_id}");
                 let runtime = Runtime::new()?;
                 let _ = runtime.block_on(show_addr_explorer(
-                    chain.chain_info().network_info.id.to_owned(),
+                    chain.chain_info().clone(),
                     account_id.as_ref(),
                 ));
             }

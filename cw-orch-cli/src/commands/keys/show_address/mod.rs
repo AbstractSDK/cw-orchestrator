@@ -44,11 +44,7 @@ impl ShowAddressOutput {
                 .await?;
             let address = daemon.sender();
             println!("Your address: {address}");
-            let _ = show_addr_explorer(
-                chain.chain_info().network_info.id.to_owned(),
-                address.as_str(),
-            )
-            .await;
+            let _ = show_addr_explorer(chain.chain_info().clone(), address.as_str()).await;
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;
         Ok(ShowAddressOutput)
