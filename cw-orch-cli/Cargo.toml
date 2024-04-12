@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-cli"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Buckram <misha@abstract.money>"]
 edition.workspace = true
 license.workspace = true
