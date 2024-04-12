@@ -57,7 +57,7 @@ You can utilize the non-interactive mode for scripting, automated operations, an
 Example:
 
 ```bash
-cw-orch-cli action uni-6 cw query raw juno1czkm9gq96zwwncxusgzruvpuex4wjf4ak7lms6q698938k529q3shmfl90 contract_info
+cw-orch-cli action uni-6 cw query raw juno1czkm9gq96zwwncxusgzruvpuex4wjf4ak7lms6q698938k529q3shmfl90 raw contract_info
 ```
 
 ### Global optional arguments
