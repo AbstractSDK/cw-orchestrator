@@ -62,7 +62,6 @@ daemon = [
 eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
 osmosis-test-tube = [
   "dep:osmosis-test-tube",
-  "dep:osmosis-std",
   "dep:prost",
   "dep:prost-types",
   "dep:cosmrs",
@@ -91,7 +90,6 @@ tonic = { workspace = true, optional = true, features = ["tls", "tls-roots"] }
 
 # Test Tube env deps
 osmosis-test-tube = { workspace = true, optional = true }
-osmosis-std = { version = "=0.21.0", optional = true }
 prost-types = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
 

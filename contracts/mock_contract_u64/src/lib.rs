@@ -80,9 +80,7 @@ pub mod interface {
     #[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg, id = "mock-contract")]
     pub struct MockContract<Chain, T, Q>;
 
-    impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
-        for MockContract<Chain, u64, u64>
-    {
+    impl<Chain> cw_orch::prelude::Uploadable for MockContract<Chain, u64, u64> {
         fn wrapper(
             &self,
         ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>>

@@ -1,6 +1,6 @@
 # Wasm Compilation
 
-`cw-orch` was designed to help you test, deply, script and maintaint your application. None of its features include in-contract operations. cw-orch interfaces, macros and helpers can't be used inside a wasm smart contract.
+`cw-orch` was designed to help you test, deploy, script and maintain your application. None of its features include in-contract operations. cw-orch interfaces, macros and helpers can't be used inside a wasm smart contract.
 
 In case you use one of the cw-orch features inside you smart-contract, the compilation will send an error anyway, so that we are **SURE** you are not using un-intended features inside your contract.
 
@@ -14,11 +14,11 @@ In order to make sure you don't encounter wasm compilation errors, you should fo
 
 ### Imports
 
-Import cw-orch without a worry, this won't include unnecessary dependencies and bloat your smart-contract. Be careful of the features you import `cw-orch` with because they might increase your compile time (especially `daemon` and `osmosis-test-tube`). 
+Import cw-orch without a worry, this won't include unnecessary dependencies and bloat your smart-contract. Be careful of the features you import `cw-orch` with because they might increase your compile time (especially `daemon` and `osmosis-test-tube`).
 
 ### Interface
 
-The interface macro itself compiles to Wasm to empty traits. So this macro can be used anywhere in your contract. This **IS** smart-contract safe: 
+The interface macro itself compiles to Wasm to empty traits. So this macro can be used anywhere in your contract. This **IS** smart-contract safe:
 
 ```rust,ignore
 {{#include ../../../contracts/counter/src/interface.rs:interface_macro}}

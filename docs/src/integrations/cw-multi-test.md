@@ -44,6 +44,30 @@ This environment mocks the actual on-chain execution exactly.
 When cloning a cw_multi_test environment, you are not cloning the entire environment, but instead you are creating a new `Mock` typed variable with the same underlying `cw_multi_test::App` object reference. This is useful for objects that require to pass the chain as an object rather than by reference.
 The underlying `cw_multi_test::App` object is however not clonable.
 
+## Bech32
+
+When testing your smart contracts, you may need to use valid bech32 addresses instead of arbitrary strings. Notably Bech32 addresses are a requirment whenever `instantiate2` is used in your codebase. Therefore `cw-orch` allows this behavior using the `MockBech32` struct. This structure has the same features as the above described `Mock` with the following differences:
+
+- The constructor now takes the bech32 prefix instead of the sender. Under the hood, the environment creates an address that will be used as the default sender for actions executed on that environment:
+
+  ```rust,ignore
+  let mock = MockBech32::new("<chain-prefix>");
+  // For instance: 
+  let mock = MockBech32::new("juno");
+  // With chain id: 
+  let mock = MockBech32::new_with_chain_id("juno", "juno-1");
+  // Default sender address for this env
+  let sender = mock.sender();
+  ```
+
+- To facilitate the creation of additional valid bech32 addresses, we have added an `addr_make` function. This function uses its string argument to create a new address. That way you can create a new address without having to care about bech32 encoding/decoding yourself:
+
+   ```rust,ignore
+    let named_sender = mock.addr_make("sender");
+    /// This creates a new address with some funds inside of it
+    let rich_sender = mock.addr_make_with_balance("sender_with_funds", coins(100_000_000_000_000, "ujuno"));
+   ```
+
 ## Snapshot testing
 
 `cw-orch` provides snapshot testing capabilities to assist you catching breaking changes to your contracts. The `Mock::take_storage_snapshot` function allows you to dump all the deployed contracts' storage values into <a href="https://insta.rs/docs/quickstart/" target="_blank">insta.rs</a> that executes snapshot testing. An example application of this feature is to make sure that the storage of your contracts don't change when migrating a contract. Using this tool, you should have a test that looks something like this:

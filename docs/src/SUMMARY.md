@@ -9,10 +9,10 @@
 - [Contracts](./contracts/index.md)
   - [Interfaces](./contracts/interfaces.md)
   - [Entry Point Function Generation](./contracts/entry-points.md)
+  - [Wasm Compilation](./contracts/wasm-compilation.md)
+  - [Integration Tests](./contracts/integration-tests.md)
   - [Environment Vars](./contracts/env-variable.md)
   - [Scripting](./contracts/scripting.md)
-  - [Integration Tests](./contracts/integration-tests.md)
-  - [Wasm Compilation](./contracts/wasm-compilation.md)
 
 - [Project Setup](./setup/index.md)
   - [Single Contract](./setup/single-contract.md)
@@ -44,6 +44,7 @@
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
+  - [Rollkit](./chains/rollkit.md)
 
 - [CLI](./cli/index.md)
   - [Keys](./cli/keys.md)

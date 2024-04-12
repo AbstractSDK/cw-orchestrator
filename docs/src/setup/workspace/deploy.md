@@ -14,7 +14,7 @@ The deployment can be represented by a struct containing all the contracts that 
 
 ```rust,ignore
 // Our Abstract deployment
-pub struct Abstract<Chain: CwEnv> {
+pub struct Abstract<Chain> {
     pub ans_host: AnsHost<Chain>,
     pub version_control: VersionControl<Chain>,
 }

@@ -198,7 +198,6 @@ mod tests {
         t.instantiate(0, &Empty {}, None, None, &[])?;
         Ok(())
     }
-
     #[test]
     fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
         associated_error(MockHandler {})?;
