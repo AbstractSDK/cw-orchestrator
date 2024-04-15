@@ -118,15 +118,21 @@ impl DaemonBuilder {
             .clone()
             .unwrap_or_else(|| RUNTIME.handle().clone());
 
-        let mut chain = self.chain.clone().unwrap();
+        let mut chain = self
+            .chain
+            .clone()
+            .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
 
         // Override gas fee
         override_fee(&mut chain, self.gas_denom.clone(), self.gas_fee);
         // Override grpc_url
         override_grpc_url(&mut chain, self.additional_grpc_url.clone());
 
+        let mut builder = self.clone();
+        builder.chain = Some(chain);
+
         // build the underlying daemon
-        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
+        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build())?;
 
         Ok(Daemon { rt_handle, daemon })
     }
@@ -149,18 +155,128 @@ fn override_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64
         })
         .or(selected_fee)
         .unwrap();
+
     fee.denom = fee_denom;
-    chain.fees.fee_tokens.insert(0, fee);
+    chain.fees.fee_tokens = vec![fee];
 }
 
 fn override_grpc_url(chain: &mut ChainData, grpc_url: Option<String>) {
     if let Some(grpc_url) = grpc_url {
-        chain.apis.grpc.insert(
-            0,
-            Grpc {
-                address: grpc_url,
-                ..Default::default()
-            },
+        chain.apis.grpc = vec![Grpc {
+            address: grpc_url,
+            ..Default::default()
+        }];
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use cw_orch_networks::networks::OSMOSIS_1;
+
+    use crate::DaemonBuilder;
+    pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
+
+    #[test]
+    #[serial_test::serial]
+    fn grpc_override() {
+        let mut chain = OSMOSIS_1;
+        chain.grpc_urls = &[];
+        let daemon = DaemonBuilder::default()
+            .chain(chain)
+            .mnemonic(DUMMY_MNEMONIC)
+            .add_grpc_url(OSMOSIS_1.grpc_urls[0])
+            .build()
+            .unwrap();
+
+        assert_eq!(daemon.daemon.state.chain_data.apis.grpc.len(), 1);
+        assert_eq!(
+            daemon.daemon.state.chain_data.apis.grpc[0].address,
+            OSMOSIS_1.grpc_urls[0].to_string(),
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn fee_amount_override() {
+        let fee_amount = 1.3238763;
+        let daemon = DaemonBuilder::default()
+            .chain(OSMOSIS_1)
+            .mnemonic(DUMMY_MNEMONIC)
+            .gas(None, Some(fee_amount))
+            .build()
+            .unwrap();
+        println!("chain {:?}", daemon.daemon.state.chain_data);
+
+        assert_eq!(daemon.daemon.state.chain_data.fees.fee_tokens.len(), 1);
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].fixed_min_gas_price,
+            fee_amount
+        );
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].low_gas_price,
+            fee_amount
+        );
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].average_gas_price,
+            fee_amount
+        );
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].high_gas_price,
+            fee_amount
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn fee_denom_override() {
+        let token = "my_token";
+        let daemon = DaemonBuilder::default()
+            .chain(OSMOSIS_1)
+            .mnemonic(DUMMY_MNEMONIC)
+            .gas(Some(token), None)
+            .build()
+            .unwrap();
+
+        assert_eq!(daemon.daemon.state.chain_data.fees.fee_tokens.len(), 1);
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].denom,
+            token.to_string()
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn fee_override() {
+        let fee_amount = 1.3238763;
+        let token = "my_token";
+        let daemon = DaemonBuilder::default()
+            .chain(OSMOSIS_1)
+            .mnemonic(DUMMY_MNEMONIC)
+            .gas(Some(token), Some(fee_amount))
+            .build()
+            .unwrap();
+
+        assert_eq!(daemon.daemon.state.chain_data.fees.fee_tokens.len(), 1);
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].denom,
+            token.to_string()
+        );
+
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].fixed_min_gas_price,
+            fee_amount
+        );
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].low_gas_price,
+            fee_amount
+        );
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].average_gas_price,
+            fee_amount
+        );
+        assert_eq!(
+            daemon.daemon.state.chain_data.fees.fee_tokens[0].high_gas_price,
+            fee_amount
         );
     }
 }
