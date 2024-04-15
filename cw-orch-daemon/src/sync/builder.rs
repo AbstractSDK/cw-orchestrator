@@ -4,7 +4,7 @@ use crate::{
     DaemonAsyncBuilder,
 };
 use bitcoin::secp256k1::All;
-use ibc_chain_registry::chain::ChainData;
+use ibc_chain_registry::chain::{ChainData, FeeToken, Grpc};
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -23,9 +23,12 @@ use super::{super::error::DaemonError, core::Daemon};
 pub struct DaemonBuilder {
     // # Required
     pub(crate) chain: Option<ChainData>,
-    pub(crate) handle: Option<tokio::runtime::Handle>,
     // # Optional
+    pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
+    pub(crate) additional_grpc_url: Option<String>,
+    pub(crate) gas_denom: Option<String>,
+    pub(crate) gas_fee: Option<f64>,
 
     /* Sender Options */
     /// Wallet sender
@@ -97,6 +100,17 @@ impl DaemonBuilder {
         self
     }
 
+    pub fn add_grpc_url(&mut self, url: &str) -> &mut Self {
+        self.additional_grpc_url = Some(url.to_string());
+        self
+    }
+
+    pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
+        self.gas_denom = gas_denom.map(ToString::to_string);
+        self.gas_fee = gas_fee.map(Into::into);
+        self
+    }
+
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
         let rt_handle = self
@@ -104,9 +118,49 @@ impl DaemonBuilder {
             .clone()
             .unwrap_or_else(|| RUNTIME.handle().clone());
 
+        let mut chain = self.chain.clone().unwrap();
+
+        // Override gas fee
+        override_fee(&mut chain, self.gas_denom.clone(), self.gas_fee);
+        // Override grpc_url
+        override_grpc_url(&mut chain, self.additional_grpc_url.clone());
+
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(self.clone()).build())?;
 
         Ok(Daemon { rt_handle, daemon })
+    }
+}
+
+fn override_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64>) {
+    let selected_fee = chain.fees.fee_tokens.first().cloned();
+    let fee_denom = denom
+        .clone()
+        .or(selected_fee.clone().map(|s| s.denom))
+        .unwrap();
+
+    let mut fee = amount
+        .map(|fee| FeeToken {
+            denom: fee_denom.clone(),
+            fixed_min_gas_price: fee,
+            low_gas_price: fee,
+            average_gas_price: fee,
+            high_gas_price: fee,
+        })
+        .or(selected_fee)
+        .unwrap();
+    fee.denom = fee_denom;
+    chain.fees.fee_tokens.insert(0, fee);
+}
+
+fn override_grpc_url(chain: &mut ChainData, grpc_url: Option<String>) {
+    if let Some(grpc_url) = grpc_url {
+        chain.apis.grpc.insert(
+            0,
+            Grpc {
+                address: grpc_url,
+                ..Default::default()
+            },
+        );
     }
 }
