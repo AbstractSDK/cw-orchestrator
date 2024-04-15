@@ -28,6 +28,8 @@ pub use osmosis::{LOCAL_OSMO, OSMOSIS_1, OSMO_5};
 pub use rollkit::LOCAL_ROLLKIT;
 pub use sei::{ATLANTIC_2, LOCAL_SEI, PACIFIC_1, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
+
+use self::nibiru::CATACLYSM_1;
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///
 /// ## Example
@@ -71,4 +73,5 @@ pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     SEI_DEVNET_3,
     ATLANTIC_2,
     PACIFIC_1,
+    CATACLYSM_1,
 ];

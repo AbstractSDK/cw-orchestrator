@@ -10,6 +10,7 @@ pub const MIGALOO_NETWORK: NetworkInfo = NetworkInfo {
 pub const LOCAL_MIGALOO: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "migaloo-chain",
+    chain_name: "local_migaloo",
     gas_denom: "uwhale",
     gas_price: 0.1,
     grpc_urls: &["http://localhost:9090"],
@@ -22,6 +23,7 @@ pub const LOCAL_MIGALOO: ChainInfo = ChainInfo {
 pub const NARWHAL_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "narwhal-1",
+    chain_name: "migalootestnet",
     gas_denom: "uwhale",
     gas_price: 0.1,
     grpc_urls: &["migaloo-testnet-grpc.polkachu.com:20790"],
@@ -34,6 +36,7 @@ pub const NARWHAL_1: ChainInfo = ChainInfo {
 pub const MIGALOO_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "migaloo-1",
+    chain_name: "migaloo",
     gas_denom: "uwhale",
     gas_price: 0.1,
     grpc_urls: &["migaloo-grpc.polkachu.com:20790"],

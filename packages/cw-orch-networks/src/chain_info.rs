@@ -13,7 +13,11 @@ use cw_orch_core::{
 impl Into<RegistryChainInfo> for ChainInfo<'_> {
     fn into(self) -> RegistryChainInfo {
         RegistryChainInfo {
-            chain_name: self.network_info.id.to_string(),
+            chain_name: match self.kind {
+                ChainKind::Local => self.chain_name.to_string(),
+                ChainKind::Mainnet => self.chain_name.to_string(),
+                ChainKind::Testnet => format!("testnets/{}", self.chain_name),
+            },
             chain_id: self.chain_id.to_string().into(),
             bech32_prefix: self.network_info.pub_address_prefix.into(),
             fees: FeeTokens {
@@ -47,6 +51,8 @@ impl Into<RegistryChainInfo> for ChainInfo<'_> {
 pub struct ChainInfo<'a> {
     /// Identifier for the network ex. columbus-2
     pub chain_id: &'a str,
+    /// Name of the network ex. terra
+    pub chain_name: &'a str,
     /// Max gas and denom info
     // #[serde(with = "cosm_denom_format")]
     pub gas_denom: &'a str,

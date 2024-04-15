@@ -10,6 +10,7 @@ pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
 pub const LOCAL_SEI: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "sei-chain",
+    chain_name: "localsei",
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://localhost:9090"],
@@ -21,6 +22,7 @@ pub const LOCAL_SEI: ChainInfo = ChainInfo {
 pub const SEI_DEVNET_3: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "sei-devnet-3",
+    chain_name: "seitestnet",
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://sei_devnet-testnet-grpc.polkachu.com:11990"],
@@ -32,6 +34,7 @@ pub const SEI_DEVNET_3: ChainInfo = ChainInfo {
 pub const ATLANTIC_2: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "atlantic-2",
+    chain_name: "seitestnet2",
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://sei-testnet-grpc.polkachu.com:11990"],
@@ -43,6 +46,7 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
 pub const PACIFIC_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "pacific-1",
+    chain_name: "sei",
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://sei-grpc.polkachu.com:11990"],

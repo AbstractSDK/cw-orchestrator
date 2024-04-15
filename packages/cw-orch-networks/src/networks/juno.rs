@@ -12,6 +12,7 @@ pub const JUNO_NETWORK: NetworkInfo = NetworkInfo {
 pub const UNI_6: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "uni-6",
+    chain_name: "junotestnet",
     gas_denom: "ujunox",
     gas_price: 0.025,
     grpc_urls: &["http://juno-testnet-grpc.polkachu.com:12690"],
@@ -23,6 +24,7 @@ pub const UNI_6: ChainInfo = ChainInfo {
 pub const JUNO_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "juno-1",
+    chain_name: "juno",
     gas_denom: "ujuno",
     gas_price: 0.0750,
     grpc_urls: &["http://juno-grpc.polkachu.com:12690"],
@@ -34,6 +36,7 @@ pub const JUNO_1: ChainInfo = ChainInfo {
 pub const LOCAL_JUNO: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "testing",
+    chain_name: "localjuno",
     gas_denom: "ujunox",
     gas_price: 0.0,
     grpc_urls: &["http://localhost:9090"],

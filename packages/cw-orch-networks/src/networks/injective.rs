@@ -13,6 +13,7 @@ pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {
 pub const INJECTIVE_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "injective-1",
+    chain_name: "injective",
     gas_denom: "inj",
     gas_price: 500_000_000.0,
     grpc_urls: &["https://sentry.chain.grpc.injective.network:443"],
@@ -26,6 +27,7 @@ pub const INJECTIVE_1: ChainInfo = ChainInfo {
 pub const INJECTIVE_888: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "injective-888",
+    chain_name: "injectivetestnet",
     gas_denom: "inj",
     gas_price: 500_000_000.0,
     grpc_urls: &["https://k8s.testnet.chain.grpc.injective.network:443"],

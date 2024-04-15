@@ -10,6 +10,7 @@ pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
 pub const HARPOON_4: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "harpoon-4",
+    chain_name: "kujiratestnet",
     gas_denom: "ukuji",
     gas_price: 0.025,
     grpc_urls: &["http://kujira-testnet-grpc.polkachu.com:11890"],

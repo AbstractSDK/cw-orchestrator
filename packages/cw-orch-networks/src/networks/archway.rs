@@ -12,6 +12,7 @@ pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
 pub const CONSTANTINE_3: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "constantine-3",
+    chain_name: "archwaytestnet",
     gas_denom: "aconst",
     gas_price: 1000000000000.0,
     grpc_urls: &["https://grpc.constantine.archway.tech:443"],
@@ -25,6 +26,7 @@ pub const CONSTANTINE_3: ChainInfo = ChainInfo {
 pub const ARCHWAY_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "archway-1",
+    chain_name: "archway",
     gas_denom: "aarch",
     gas_price: 1000000000000.0,
     grpc_urls: &["https://grpc.mainnet.archway.io:443"],

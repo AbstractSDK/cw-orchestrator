@@ -12,6 +12,7 @@ pub const DORAVOTA_NETWORK: NetworkInfo = NetworkInfo {
 pub const VOTA_ASH: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "vota-ash",
+    chain_name: "doravota",
     gas_denom: "peaka",
     gas_price: 100000000000f64,
     grpc_urls: &["https://vota-grpc.dorafactory.org:443"],
@@ -22,7 +23,8 @@ pub const VOTA_ASH: ChainInfo = ChainInfo {
 
 pub const VOTA_TESTNET: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
-    chain_id: "vota-testnet",
+    chain_id: "vota-vk",
+    chain_name: "doravotatestnet2",
     gas_denom: "peaka",
     gas_price: 100000000000f64,
     grpc_urls: &["https://vota-testnet-grpc.dorafactory.org:443"],

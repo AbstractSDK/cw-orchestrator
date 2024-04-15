@@ -11,6 +11,7 @@ pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
 pub const PION_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "pion-1",
+    chain_name: "neutrontestnet",
     gas_denom: "untrn",
     gas_price: 0.075,
     grpc_urls: &["http://grpc-palvus.pion-1.ntrn.tech:80"],
@@ -23,6 +24,7 @@ pub const PION_1: ChainInfo = ChainInfo {
 pub const NEUTRON_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "neutron-1",
+    chain_name: "neutron",
     gas_denom: "untrn",
     gas_price: 0.075,
     grpc_urls: &["http://grpc-kralum.neutron-1.neutron.org:80"],
@@ -34,6 +36,7 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
 pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "test-1",
+    chain_name: "local_neutron",
     gas_denom: "untrn",
     gas_price: 0.0025,
     grpc_urls: &["http://localhost:8090"],

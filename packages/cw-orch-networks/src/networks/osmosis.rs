@@ -10,6 +10,7 @@ pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
 pub const OSMOSIS_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "osmosis-1",
+    chain_name: "osmosis",
     gas_denom: "uosmo",
     gas_price: 0.025,
     grpc_urls: &["https://grpc.osmosis.zone:443"],
@@ -21,6 +22,7 @@ pub const OSMOSIS_1: ChainInfo = ChainInfo {
 pub const OSMO_5: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "osmo-test-5",
+    chain_name: "osmosistestnet",
     gas_denom: "uosmo",
     gas_price: 0.025,
     grpc_urls: &["https://grpc.osmotest5.osmosis.zone:443"],
@@ -32,6 +34,7 @@ pub const OSMO_5: ChainInfo = ChainInfo {
 pub const LOCAL_OSMO: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "localosmosis",
+    chain_name: "localosmosis",
     gas_denom: "uosmo",
     gas_price: 0.0026,
     grpc_urls: &["http://65.108.235.46:9094"],
