@@ -12,7 +12,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-use crate::env::CwOrchEnvVars;
+use crate::env::CoreEnvVars;
 use crate::environment::CwEnv;
 use crate::environment::QueryHandler;
 use crate::CwEnvError;
@@ -116,7 +116,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                 .collect()
         } else {
             // There is not deployment file, we make sure the user wants to deploy to multiple chains
-            if !CwOrchEnvVars::load()?.disable_manual_interaction {
+            if !CoreEnvVars::load()?.disable_manual_interaction {
                 println!(
                     "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
                     &hash_networks.keys().cloned().collect::<Vec<String>>()

@@ -6,6 +6,7 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
+    DaemonEnvVars,
 };
 
 use super::{
@@ -31,7 +32,7 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::local_target, CwOrchEnvVars};
+use cw_orch_core::{log::local_target, CoreEnvVars};
 
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
 use std::{convert::TryFrom, str::FromStr, sync::Arc};
@@ -224,7 +225,7 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let mut gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
+        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::load()?.gas_buffer {
             gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
@@ -232,7 +233,7 @@ impl Sender<All> {
             gas as f64 * GAS_BUFFER
         };
 
-        if let Some(min_gas) = CwOrchEnvVars::load()?.min_gas {
+        if let Some(min_gas) = DaemonEnvVars::load()?.min_gas {
             gas_expected = (min_gas as f64).max(gas_expected);
         }
         let fee_amount = gas_expected
@@ -298,7 +299,7 @@ impl Sender<All> {
         let expected_fee = coin(fee_amount, self.get_fee_token());
         // During simulation, we also make sure the account has enough balance to submit the transaction
         // This is disabled by an env variable
-        if !CwOrchEnvVars::load()?.disable_wallet_balance_assertion {
+        if !DaemonEnvVars::load()?.disable_wallet_balance_assertion {
             self.assert_wallet_balance(&expected_fee).await?;
         }
 
@@ -467,7 +468,7 @@ impl Sender<All> {
             parsed_balance
         );
 
-        if !CwOrchEnvVars::load()?.disable_manual_interaction {
+        if !CoreEnvVars::load()?.disable_manual_interaction {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),

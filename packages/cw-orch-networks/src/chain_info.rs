@@ -1,12 +1,13 @@
 use std::fmt::Display;
 
+use cw_orch_core::CwEnvError;
 use serde::{Deserialize, Serialize};
 
 use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
 
-use cw_orch_core::{
+use crate::{
+    env::NetworkEnvVars,
     env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
-    CwEnvError, CwOrchEnvVars,
 };
 
 #[allow(clippy::from_over_into)]
@@ -97,7 +98,7 @@ impl ChainKind {
     }
 
     pub fn mnemonic(&self) -> Result<String, CwEnvError> {
-        let env_vars = CwOrchEnvVars::load()?;
+        let env_vars = NetworkEnvVars::load()?;
         match *self {
             ChainKind::Local => env_vars.local_mnemonic,
             ChainKind::Testnet => env_vars.test_mnemonic,

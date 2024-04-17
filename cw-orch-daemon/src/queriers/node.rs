@@ -1,6 +1,6 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, Daemon};
+use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, Daemon, DaemonEnvVars};
 
 use cosmrs::{
     proto::cosmos::{
@@ -13,7 +13,6 @@ use cosmwasm_std::BlockInfo;
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter},
     log::query_target,
-    CwOrchEnvVars,
 };
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -220,7 +219,7 @@ impl Node {
 
     /// Find TX by hash
     pub async fn _find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self._find_tx_with_retries(hash, CwOrchEnvVars::load()?.max_tx_query_retries)
+        self._find_tx_with_retries(hash, DaemonEnvVars::load()?.max_tx_query_retries)
             .await
     }
 
@@ -235,7 +234,7 @@ impl Node {
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self._average_block_speed(Some(0.7)).await?;
-        block_speed = block_speed.max(CwOrchEnvVars::load()?.min_block_speed);
+        block_speed = block_speed.max(DaemonEnvVars::load()?.min_block_speed);
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -270,7 +269,7 @@ impl Node {
             page,
             order_by,
             false,
-            CwOrchEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::load()?.max_tx_query_retries,
         )
         .await
     }
@@ -289,7 +288,7 @@ impl Node {
             page,
             order_by,
             true,
-            CwOrchEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::load()?.max_tx_query_retries,
         )
         .await
     }
@@ -344,7 +343,7 @@ impl Node {
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(
             format!("with events {:?}", events),
-            CwOrchEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::load()?.max_tx_query_retries,
         ))
     }
 }
