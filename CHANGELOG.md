@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
+- Current Status : Non-breaking
 
 ## 0.21.2
 
