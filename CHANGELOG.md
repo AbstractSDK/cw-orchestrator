@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
+
+## 0.21.2
+
 - Allow cw-orch wasm compilation without features
 
 ## 0.21.1
