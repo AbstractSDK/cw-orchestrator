@@ -26,7 +26,7 @@ pub struct DaemonBuilder {
     // # Optional
     pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
-    pub(crate) additional_grpc_url: Option<String>,
+    pub(crate) overwrite_grpc_url: Option<String>,
     pub(crate) gas_denom: Option<String>,
     pub(crate) gas_fee: Option<f64>,
 
@@ -100,8 +100,8 @@ impl DaemonBuilder {
         self
     }
 
-    pub fn add_grpc_url(&mut self, url: &str) -> &mut Self {
-        self.additional_grpc_url = Some(url.to_string());
+    pub fn grpc_url(&mut self, url: &str) -> &mut Self {
+        self.overwrite_grpc_url = Some(url.to_string());
         self
     }
 
@@ -124,9 +124,9 @@ impl DaemonBuilder {
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
 
         // Override gas fee
-        override_fee(&mut chain, self.gas_denom.clone(), self.gas_fee);
+        overwrite_fee(&mut chain, self.gas_denom.clone(), self.gas_fee);
         // Override grpc_url
-        override_grpc_url(&mut chain, self.additional_grpc_url.clone());
+        overwrite_grpc_url(&mut chain, self.overwrite_grpc_url.clone());
 
         let mut builder = self.clone();
         builder.chain = Some(chain);
@@ -138,7 +138,7 @@ impl DaemonBuilder {
     }
 }
 
-fn override_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64>) {
+fn overwrite_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64>) {
     let selected_fee = chain.fees.fee_tokens.first().cloned();
     let fee_denom = denom
         .clone()
@@ -160,7 +160,7 @@ fn override_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64
     chain.fees.fee_tokens = vec![fee];
 }
 
-fn override_grpc_url(chain: &mut ChainData, grpc_url: Option<String>) {
+fn overwrite_grpc_url(chain: &mut ChainData, grpc_url: Option<String>) {
     if let Some(grpc_url) = grpc_url {
         chain.apis.grpc = vec![Grpc {
             address: grpc_url,
@@ -184,7 +184,7 @@ mod test {
         let daemon = DaemonBuilder::default()
             .chain(chain)
             .mnemonic(DUMMY_MNEMONIC)
-            .add_grpc_url(OSMOSIS_1.grpc_urls[0])
+            .grpc_url(OSMOSIS_1.grpc_urls[0])
             .build()
             .unwrap();
 
