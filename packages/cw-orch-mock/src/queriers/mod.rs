@@ -1,5 +1,6 @@
-use crate::Mock;
+use crate::MockBase;
 
+use cosmwasm_std::Api;
 use cw_multi_test::next_block;
 use cw_orch_core::{
     environment::{DefaultQueriers, QueryHandler, StateInterface},
@@ -11,7 +12,7 @@ mod env;
 pub mod node;
 pub mod wasm;
 
-impl<S: StateInterface> QueryHandler for Mock<S> {
+impl<A: Api, S: StateInterface> QueryHandler for MockBase<A, S> {
     type Error = CwEnvError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
@@ -36,8 +37,8 @@ impl<S: StateInterface> QueryHandler for Mock<S> {
     }
 }
 
-impl<S: StateInterface> DefaultQueriers for Mock<S> {
-    type Bank = bank::MockBankQuerier;
-    type Wasm = wasm::MockWasmQuerier;
-    type Node = node::MockNodeQuerier;
+impl<A: Api, S: StateInterface> DefaultQueriers for MockBase<A, S> {
+    type Bank = bank::MockBankQuerier<A>;
+    type Wasm = wasm::MockWasmQuerier<A>;
+    type Node = node::MockNodeQuerier<A>;
 }

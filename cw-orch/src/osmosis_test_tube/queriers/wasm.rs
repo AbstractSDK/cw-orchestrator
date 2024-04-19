@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc, str::FromStr};
 use cosmrs::AccountId;
 use cosmwasm_std::{
     from_json, instantiate2_address, to_json_vec, CanonicalAddr, CodeInfoResponse,
-    ContractInfoResponse,
+    ContractInfoResponse, HexBinary,
 };
 use cw_orch_core::{
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
@@ -12,7 +12,7 @@ use cw_orch_core::{
 use osmosis_test_tube::{OsmosisTestApp, Runner};
 
 use crate::osmosis_test_tube::{map_err, OsmosisTestTube};
-use osmosis_std::types::cosmwasm::wasm::v1::{
+use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
     QueryRawContractStateRequest, QueryRawContractStateResponse, QuerySmartContractStateRequest,
     QuerySmartContractStateResponse,
@@ -41,7 +41,7 @@ impl<S: StateInterface> QuerierGetter<OsmosisTestTubeWasmQuerier> for OsmosisTes
 }
 
 impl WasmQuerier for OsmosisTestTubeWasmQuerier {
-    fn code_id_hash(&self, code_id: u64) -> Result<String, Self::Error> {
+    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         let code_info_result: QueryCodeResponse = self
             .app
             .borrow()
@@ -51,12 +51,11 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
             )
             .map_err(map_err)?;
 
-        Ok(hex::encode(
-            code_info_result
-                .code_info
-                .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?
-                .data_hash,
-        ))
+        Ok(code_info_result
+            .code_info
+            .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?
+            .data_hash
+            .into())
     }
 
     fn contract_info(
@@ -157,7 +156,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         Ok(c)
     }
 
-    fn instantiate2_addr<I: serde::Serialize + std::fmt::Debug>(
+    fn instantiate2_addr(
         &self,
         code_id: u64,
         creator: impl Into<String>,
@@ -170,7 +169,7 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
         let prefix = account_id.prefix();
         let canon = account_id.to_bytes();
         let addr =
-            instantiate2_address(checksum.as_bytes(), &CanonicalAddr(canon.into()), &salt).unwrap();
+            instantiate2_address(checksum.as_slice(), &CanonicalAddr(canon.into()), &salt).unwrap();
 
         Ok(AccountId::new(prefix, &addr.0).unwrap().to_string())
     }

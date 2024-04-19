@@ -32,7 +32,7 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
 };
 
 pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
-    kind: ChainKind::Mainnet,
+    kind: ChainKind::Local,
     chain_id: "test-1",
     gas_denom: "untrn",
     gas_price: 0.0025,

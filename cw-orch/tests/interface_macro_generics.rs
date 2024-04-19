@@ -1,4 +1,4 @@
-use cw_orch::{environment::CwEnv, interface, prelude::*};
+use cw_orch::{interface, prelude::*};
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 use cosmwasm_std::Event;
@@ -7,7 +7,7 @@ use cw_orch::prelude::Mock;
 #[interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg, MigrateMsg, id = "test:mock_contract")]
 pub struct MockContract;
 
-impl<Chain: CwEnv, T> Uploadable for MockContract<Chain, T> {
+impl<Chain, T> Uploadable for MockContract<Chain, T> {
     fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(

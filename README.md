@@ -14,7 +14,7 @@ The documentation here gives you a brief overview of the functionality that cw-o
 
 ## How it works
 
-Interacting with a [CosmWasm](https://cosmwasm.com/) contract is done by calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
+Interacting with a [CosmWasm](https://cosmwasm.com/) contract involves calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
 
 ## Maintained Interfaces
 
@@ -23,14 +23,13 @@ We maintain a small set of interfaces ourselves that we use in our own projects.
 | Codebase | Latest Version |
 |---|---|
 | [cw-plus](https://github.com/AbstractSDK/cw-plus) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/cw-plus"> |
-| [wyndex](https://github.com/AbstractSDK/integration-bundles) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/integration-bundles"> |
 | [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-interface) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-interface"> |
 
 ## Creating an Interface
 
-In order to generate a typed interface to your contract you can either pass the contract's message types into the `contract` macro or you can add the `interface` macro to your endpoint function exports!
+In order to generate a typed interface to your contract you can pass the contract's message types into the `cw_orch::interface` macro.
 
-### The `contract` Macro
+### The `interface` Macro
 
 Provide your messages to a new struct that's named after your contract.
 
@@ -55,7 +54,7 @@ use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
 
 // Implement the Uploadable trait so it can be uploaded to the mock. 
-impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
+impl <Chain> Uploadable for Cw20<Chain> {
     fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
@@ -109,7 +108,7 @@ fn example_test() {
 
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
 
-The `ExecuteFns` macro should only run on the Msg when the "interface" trait is enable. This is ensured by the `interface` feature in the following example:
+The `ExecuteFns` macro would only run on the Msg when compiled for non-wasm target. Optionally you can ensure it by the `interface` feature, like in the following example:
 
 ```rust,ignore
 use cw_orch::prelude::*;
@@ -133,7 +132,7 @@ The generated functions can then be used for any interface that uses this `Execu
 #[cw_orch::interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1<Chain>;
 
-impl<Chain: CwEnv> Cw1<Chain> {
+impl<Chain> Cw1<Chain> {
     pub fn test_macro(&self) {
         // Enjoy the nice API! 
         self.freeze().unwrap();
@@ -163,8 +162,8 @@ pub enum GenericExecuteMsg<T> {
 
 // A type that will fill the generic.
 #[cosmwasm_schema::cw_serde]
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
-#[cfg_attr(feature = "interface", impl_into(ExecuteMsg))]
+#[derive(cw_orch::ExecuteFns)]
+#[impl_into(ExecuteMsg)]
 pub enum Foo {
     Bar { a: String },
 }
@@ -212,6 +211,7 @@ Cw-orchestrator supports the following chains natively:
 - Osmosis 🟥🟦🟩
 - Sei 🟥🟦🟩
 - Terra 🟥🟦🟩
+- Rollkit 🟥
 
 Additional chains can easily be integrated by creating a new [`ChainInfo`](./packages/cw-orch-networks/src/chain_info.rs) structure. This can be done in your script directly. If you have additional time, don't hesitate to open a PR on this repository.
 

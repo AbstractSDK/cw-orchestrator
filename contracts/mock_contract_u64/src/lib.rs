@@ -73,34 +73,36 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
     }
 }
 
-#[cfg(feature = "interface")]
-#[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg, id = "mock-contract")]
-pub struct MockContract<Chain, T, Q>;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod interface {
+    use super::*;
 
-#[cfg(feature = "interface")]
-impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
-    for MockContract<Chain, u64, u64>
-{
-    fn wrapper(
-        &self,
-    ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>> {
-        Box::new(
-            cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
-                .with_migrate(migrate),
-        )
-    }
+    #[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg, id = "mock-contract")]
+    pub struct MockContract<Chain, T, Q>;
 
-    fn wasm(&self) -> cw_orch::prelude::WasmPath {
-        use cw_orch::prelude::*;
-        artifacts_dir_from_workspace!()
-            .find_wasm_path("mock_contract")
-            .unwrap()
+    impl<Chain> cw_orch::prelude::Uploadable for MockContract<Chain, u64, u64> {
+        fn wrapper(
+            &self,
+        ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>>
+        {
+            Box::new(
+                cw_orch::prelude::ContractWrapper::new(execute, instantiate, query)
+                    .with_migrate(migrate),
+            )
+        }
+
+        fn wasm(&self) -> cw_orch::prelude::WasmPath {
+            use cw_orch::prelude::*;
+            artifacts_dir_from_workspace!()
+                .find_wasm_path("mock_contract")
+                .unwrap()
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::MockContract as LocalMockContract;
+    use super::interface::MockContract as LocalMockContract;
     use super::*;
     use cosmwasm_std::{coins, Addr};
     use cw_orch::prelude::*;

@@ -27,7 +27,7 @@ use super::interface_traits::ContractInstance;
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
-/// pub struct MyApplication<Chain: CwEnv> {
+/// pub struct MyApplication<Chain> {
 ///   pub token: Cw20Base<Chain>
 /// }
 ///

@@ -1,5 +1,30 @@
 # cw-orchestrator Changelog
 
+## Unreleased
+
+- Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
+- Current Status : Non-breaking
+
+## 0.21.2
+
+- Allow cw-orch wasm compilation without features
+
+## 0.21.1
+
+- Remove mandatory runtimes when building Daemon
+- Allow cw-orch to compile for a wasm target without adding features
+- Changed GRPC url for Local Terra
+
+## 0.21.0
+
+- Updated cw-multi-test to allow for IBC packet timeout
+
+## 0.20.1
+
+- Fix ARM path derivation for wasm
+- Fix state file path creation on cw-orch-daemon
+- Added addr_make_with_balance
+
 ## 0.20.0
 
 - Changed behavior for default constructor implementation by macro "interface" --> Added possibility to have a fixed ID

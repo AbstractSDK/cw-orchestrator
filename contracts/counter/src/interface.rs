@@ -6,10 +6,13 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 pub const CONTRACT_ID: &str = "counter_contract";
 
+// ANCHOR: interface_macro
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg, id = CONTRACT_ID)]
 pub struct CounterContract;
+// ANCHOR_END: interface_macro
 
-impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
+// ANCHOR: uploadable_impl
+impl<Chain> Uploadable for CounterContract<Chain> {
     /// Return the path to the wasm file corresponding to the contract
     fn wasm(&self) -> WasmPath {
         artifacts_dir_from_workspace!()
@@ -28,6 +31,7 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
         )
     }
 }
+// ANCHOR_END: uploadable_impl
 // ANCHOR_END: custom_interface
 
 use cw_orch::anyhow::Result;
