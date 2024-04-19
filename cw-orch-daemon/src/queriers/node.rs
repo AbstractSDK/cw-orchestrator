@@ -219,7 +219,7 @@ impl Node {
 
     /// Find TX by hash
     pub async fn _find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self._find_tx_with_retries(hash, DaemonEnvVars::load()?.max_tx_query_retries)
+        self._find_tx_with_retries(hash, DaemonEnvVars::max_tx_query_retries())
             .await
     }
 
@@ -234,7 +234,7 @@ impl Node {
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self._average_block_speed(Some(0.7)).await?;
-        block_speed = block_speed.max(DaemonEnvVars::load()?.min_block_speed);
+        block_speed = block_speed.max(DaemonEnvVars::min_block_speed());
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -269,7 +269,7 @@ impl Node {
             page,
             order_by,
             false,
-            DaemonEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::max_tx_query_retries(),
         )
         .await
     }
@@ -288,7 +288,7 @@ impl Node {
             page,
             order_by,
             true,
-            DaemonEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::max_tx_query_retries(),
         )
         .await
     }
@@ -343,7 +343,7 @@ impl Node {
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(
             format!("with events {:?}", events),
-            DaemonEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::max_tx_query_retries(),
         ))
     }
 }

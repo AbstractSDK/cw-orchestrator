@@ -8,14 +8,15 @@
 
 use std::{env, path::PathBuf, str::FromStr};
 
-use crate::CwEnvError;
+use cosmwasm_std::StdError;
 
 pub const ARTIFACTS_DIR_ENV_NAME: &str = "ARTIFACTS_DIR";
 pub const SERIALIZE_ENV_NAME: &str = "CW_ORCH_SERIALIZE_JSON";
 pub const DISABLE_MANUAL_INTERACTION_ENV_NAME: &str = "CW_ORCH_DISABLE_MANUAL_INTERACTION";
 
-#[derive(Default)]
-pub struct CoreEnvVars {
+pub struct CoreEnvVars;
+
+impl CoreEnvVars {
     // /// Optional - Path
     // /// This is the path to the state file
     // /// `folder/file.json` will resolve to `~/.cw-orchestrator/folder/file.json`
@@ -26,33 +27,48 @@ pub struct CoreEnvVars {
     // pub state_file: PathBuf,
     /// Optional - Path
     /// Where cw-orch will look for wasm files. This is used by `ArtifactsDir::env()``
-    pub artifacts_dir: Option<PathBuf>,
+    pub fn artifacts_dir() -> Option<PathBuf> {
+        if let Ok(str_value) = env::var(ARTIFACTS_DIR_ENV_NAME) {
+            Some(parse_with_log(str_value, ARTIFACTS_DIR_ENV_NAME))
+        } else {
+            None
+        }
+    }
 
     /// Optional - Boolean
     /// Defaults to false
     /// If equals to true, will serialize the blockchain messages as json (for easy copying) instead of Rust Debug formatting
-    pub serialize_json: bool,
+    pub fn serialize_json() -> bool {
+        if let Ok(str_value) = env::var(SERIALIZE_ENV_NAME) {
+            parse_with_log(str_value, SERIALIZE_ENV_NAME)
+        } else {
+            false
+        }
+    }
 
     /// Optional - boolean
     /// Defaults to "false"
     /// Disable manual interactions
     /// It allows to automate scripting and get rid of prompting
-    pub disable_manual_interaction: bool,
+    pub fn disable_manual_interaction() -> bool {
+        if let Ok(str_value) = env::var(DISABLE_MANUAL_INTERACTION_ENV_NAME) {
+            parse_with_log(str_value, DISABLE_MANUAL_INTERACTION_ENV_NAME)
+        } else {
+            false
+        }
+    }
 }
 
-impl CoreEnvVars {
-    pub fn load() -> Result<Self, CwEnvError> {
-        let mut env_values = CoreEnvVars::default();
-
-        if let Ok(str_value) = env::var(ARTIFACTS_DIR_ENV_NAME) {
-            env_values.artifacts_dir = Some(PathBuf::from_str(&str_value).unwrap());
-        }
-        if let Ok(str_value) = env::var(SERIALIZE_ENV_NAME) {
-            env_values.serialize_json = str_value.parse()?;
-        }
-        if let Ok(str_value) = env::var(DISABLE_MANUAL_INTERACTION_ENV_NAME) {
-            env_values.disable_manual_interaction = str_value.parse()?;
-        }
-        Ok(env_values)
-    }
+fn parse_with_log<F: FromStr<Err = E>, E: std::fmt::Display>(
+    value: String,
+    env_var_name: &str,
+) -> F {
+    value
+        .parse()
+        .map_err(|e| {
+            StdError::generic_err(format!(
+                "Couldn't parse content of env var {env_var_name}, error : {e}"
+            ))
+        })
+        .unwrap()
 }

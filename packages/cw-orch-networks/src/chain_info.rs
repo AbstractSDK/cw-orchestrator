@@ -98,11 +98,10 @@ impl ChainKind {
     }
 
     pub fn mnemonic(&self) -> Result<String, CwEnvError> {
-        let env_vars = NetworkEnvVars::load()?;
         match *self {
-            ChainKind::Local => env_vars.local_mnemonic,
-            ChainKind::Testnet => env_vars.test_mnemonic,
-            ChainKind::Mainnet => env_vars.main_mnemonic,
+            ChainKind::Local => NetworkEnvVars::local_mnemonic(),
+            ChainKind::Testnet => NetworkEnvVars::test_mnemonic(),
+            ChainKind::Mainnet => NetworkEnvVars::main_mnemonic(),
         }
         .ok_or(CwEnvError::EnvVarNotPresentNamed(
             self.mnemonic_env_variable_name().to_string(),

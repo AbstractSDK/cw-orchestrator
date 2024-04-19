@@ -123,9 +123,7 @@ mod artifacts_dir {
     impl ArtifactsDir {
         /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
         pub fn env() -> Self {
-            let dir = CoreEnvVars::load()
-                .unwrap()
-                .artifacts_dir
+            let dir = CoreEnvVars::artifacts_dir()
                 .unwrap_or_else(|| panic!("{} env variable not set", ARTIFACTS_DIR_ENV_NAME));
             Self::new(dir)
         }

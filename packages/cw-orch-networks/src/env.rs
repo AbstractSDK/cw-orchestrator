@@ -8,43 +8,31 @@
 
 use std::env;
 
-use cw_orch_core::CwEnvError;
-
 pub const MAIN_MNEMONIC_ENV_NAME: &str = "MAIN_MNEMONIC";
 pub const TEST_MNEMONIC_ENV_NAME: &str = "TEST_MNEMONIC";
 pub const LOCAL_MNEMONIC_ENV_NAME: &str = "LOCAL_MNEMONIC";
 
-#[derive(Default)]
-pub struct NetworkEnvVars {
+pub struct NetworkEnvVars;
+
+impl NetworkEnvVars {
     /// Optional - String
     /// Mandatory when interacting with a daemon on mainnet
     /// Mnemonic of the address interacting with a mainnet
-    pub main_mnemonic: Option<String>,
+    pub fn main_mnemonic() -> Option<String> {
+        env::var(MAIN_MNEMONIC_ENV_NAME).ok()
+    }
 
     /// Optional - String
     /// Mandatory when interacting with a daemon on mainnet
     /// Mnemonic of the address interacting with a testnet
-    pub test_mnemonic: Option<String>,
+    pub fn test_mnemonic() -> Option<String> {
+        env::var(TEST_MNEMONIC_ENV_NAME).ok()
+    }
 
     /// Optional - String
     /// Mandatory when interacting with a daemon on mainnet
     /// Mnemonic of the address interacting with a localnet
-    pub local_mnemonic: Option<String>,
-}
-
-impl NetworkEnvVars {
-    pub fn load() -> Result<Self, CwEnvError> {
-        let mut env_values = NetworkEnvVars::default();
-
-        if let Ok(str_value) = env::var(MAIN_MNEMONIC_ENV_NAME) {
-            env_values.main_mnemonic = Some(str_value);
-        }
-        if let Ok(str_value) = env::var(TEST_MNEMONIC_ENV_NAME) {
-            env_values.test_mnemonic = Some(str_value);
-        }
-        if let Ok(str_value) = env::var(LOCAL_MNEMONIC_ENV_NAME) {
-            env_values.local_mnemonic = Some(str_value);
-        }
-        Ok(env_values)
+    pub fn local_mnemonic() -> Option<String> {
+        env::var(LOCAL_MNEMONIC_ENV_NAME).ok()
     }
 }

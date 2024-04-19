@@ -154,7 +154,7 @@ mod node {
         }
         let image = env::var("JUNO_IMAGE").unwrap();
 
-        if NetworkEnvVars::load().unwrap().local_mnemonic.is_none() {
+        if NetworkEnvVars::local_mnemonic().is_none() {
             env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
         }
 
@@ -162,11 +162,11 @@ mod node {
         log::info!("Using CONTAINER_NAME: {}", container);
         log::info!(
             "Using STATE_FILE: {}",
-            DaemonEnvVars::load().unwrap().state_file.display()
+            DaemonEnvVars::state_file().display()
         );
         log::info!(
             "Using LOCAL_MNEMONIC: {:?}",
-            NetworkEnvVars::load().unwrap().local_mnemonic
+            NetworkEnvVars::local_mnemonic()
         );
 
         container::start(&container, &image);

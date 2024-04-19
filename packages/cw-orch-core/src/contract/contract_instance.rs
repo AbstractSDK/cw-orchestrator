@@ -334,7 +334,7 @@ impl<Chain: ChainState + QueryHandler> Contract<Chain> {
 
 /// Helper to serialize objects (JSON or Rust DEBUG)
 fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
-    if CoreEnvVars::load()?.serialize_json {
+    if CoreEnvVars::serialize_json() {
         Ok(serde_json::to_string(msg)?)
     } else {
         Ok(format!("{:#?}", msg))
