@@ -3,7 +3,7 @@
 //! To get the env variable parsed value, you can use
 //! ```rust,no_run
 //! use cw_orch_daemon::DaemonEnvVars;
-//! let env_variable = DaemonEnvVars::load().unwrap().state_file;
+//! let env_variable = DaemonEnvVars::state_file();
 //! ```
 
 use std::{env, path::PathBuf, str::FromStr};

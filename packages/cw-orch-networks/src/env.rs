@@ -3,7 +3,7 @@
 //! To get the env variable parsed value, you can use
 //! ```rust,no_run
 //! use cw_orch_networks::NetworkEnvVars;
-//! let env_variable = NetworkEnvVars::load().unwrap().main_mnemonic;
+//! let env_variable = NetworkEnvVars::main_mnemonic();
 //! ```
 
 use std::env;
