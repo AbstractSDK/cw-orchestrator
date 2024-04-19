@@ -100,11 +100,16 @@ impl DaemonBuilder {
         self
     }
 
+    /// Overwrites the grpc_url used to interact with the chain
     pub fn grpc_url(&mut self, url: &str) -> &mut Self {
         self.overwrite_grpc_url = Some(url.to_string());
         self
     }
 
+    /// Overwrites the gas denom used for broadcasting transactions.
+    /// Behavior :
+    /// - If no gas denom is provided, the first gas denom specified in the `self.chain` is used
+    /// - If no gas fee is provided, the first gas fee specified in the self.chain is used
     pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
         self.gas_denom = gas_denom.map(ToString::to_string);
         self.gas_fee = gas_fee.map(Into::into);
@@ -140,6 +145,7 @@ impl DaemonBuilder {
 
 fn overwrite_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64>) {
     let selected_fee = chain.fees.fee_tokens.first().cloned();
+
     let fee_denom = denom
         .clone()
         .or(selected_fee.clone().map(|s| s.denom))
