@@ -2,8 +2,8 @@
 //! This is used to import environment variables with safe names (and at a centralized location)
 //! To get the env variable parsed value, you can use
 //! ```rust,no_run
-//! use cw_orch_core::NetworkEnvVars;
-//! let env_variable = NetworkEnvVars::load().unwrap().state_file;
+//! use cw_orch_networks::NetworkEnvVars;
+//! let env_variable = NetworkEnvVars::load().unwrap().main_mnemonic;
 //! ```
 
 use std::env;
