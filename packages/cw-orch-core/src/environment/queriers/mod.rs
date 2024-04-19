@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BlockInfo};
+use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 
 use self::{bank::BankQuerier, env::EnvironmentQuerier, node::NodeQuerier, wasm::WasmQuerier};
@@ -27,6 +27,14 @@ pub trait QueryHandler: DefaultQueriers {
     /// Return current block info see [`BlockInfo`].
     fn block_info(&self) -> Result<BlockInfo, <Self::Node as Querier>::Error> {
         self.node_querier().latest_block()
+    }
+
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<Coin>, <Self::Bank as Querier>::Error> {
+        self.bank_querier().balance(address, denom)
     }
 
     /// Send a QueryMsg to a contract.
