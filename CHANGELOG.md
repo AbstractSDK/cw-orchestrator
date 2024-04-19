@@ -4,6 +4,7 @@
 
 - Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
 - Added `balance` query at the root of QueryHandler
+- Added DaemonBuilder configuration for grpc url and fee overwriting
 - Current Status : Non-breaking
 
 ## 0.21.2
