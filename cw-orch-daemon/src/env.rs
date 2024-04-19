@@ -32,11 +32,8 @@ impl DaemonEnvVars {
     /// `/usr/var/file.json` will resolve to `/usr/var/file.json`
     /// Defaults to "~./cw-orchestrator/state.json"
     pub fn state_file() -> PathBuf {
-        if let Ok(str_value) = env::var(STATE_FILE_ENV_NAME) {
-            parse_with_log(str_value, STATE_FILE_ENV_NAME)
-        } else {
-            parse_with_log("state.json".to_string(), STATE_FILE_ENV_NAME)
-        }
+        let state_file_string = env::var(STATE_FILE_ENV_NAME).unwrap_or("state.json".to_string());
+        parse_with_log(state_file_string, STATE_FILE_ENV_NAME)
     }
 
     /// Optional - Float
