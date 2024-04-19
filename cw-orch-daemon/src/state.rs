@@ -34,6 +34,7 @@ pub struct DaemonState {
     read_only: bool,
 }
 
+// On clone increase lock count so we track how many daemon states using the file
 impl Clone for DaemonState {
     fn clone(&self) -> Self {
         let new_self = Self {
@@ -41,12 +42,15 @@ impl Clone for DaemonState {
             deployment_id: self.deployment_id.clone(),
             grpc_channel: self.grpc_channel.clone(),
             chain_data: self.chain_data.clone(),
-            read_only: self.read_only.clone(),
+            read_only: self.read_only,
         };
+
         // Increase DaemonStates count for this file
-        let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
-        let (count, _) = lock.get_mut(&self.json_file_path).unwrap();
-        *count += 1;
+        if !self.read_only {
+            let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
+            let (count, _) = lock.get_mut(&self.json_file_path).unwrap();
+            *count += 1;
+        }
 
         new_self
     }
@@ -181,24 +185,30 @@ impl DaemonState {
 
         Ok(state_file_path)
     }
-    /// Get the state filepath and read it as json
-    fn read_state(&self) -> Result<serde_json::Value, DaemonError> {
+
+    /// Get the chain state as json
+    fn chain_state(&self) -> Result<serde_json::Value, DaemonError> {
         // Check if already open in write mode {
         let lock = GLOBAL_WRITE_STATE.lock().unwrap();
         if let Some((_, j)) = lock.get(&self.json_file_path) {
-            Ok(j.state())
+            Ok(j.get(
+                &self.chain_data.chain_name,
+                self.chain_data.chain_id.as_str(),
+            )
+            .clone())
         } else {
             // drop guard if not found, since reading may take a while
             drop(lock);
             // Or just read it from a file
             crate::json_file::read(&self.json_file_path)
+                .map(|j| j[self.chain_data.chain_id.as_str()][&self.chain_data.chain_name].clone())
         }
     }
 
     /// Retrieve a stateful value using the chainId and networkId
     pub fn get(&self, key: &str) -> Result<Value, DaemonError> {
-        let json = self.read_state()?;
-        Ok(json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key].clone())
+        let json = self.chain_state()?;
+        Ok(json[key].clone())
     }
 
     /// Set a stateful value using the chainId and networkId
@@ -233,6 +243,7 @@ impl DaemonState {
     }
 }
 
+// Manual drop implementation to write state when no daemon states uses the file
 impl Drop for DaemonState {
     fn drop(&mut self) {
         let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
