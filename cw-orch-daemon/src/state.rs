@@ -15,6 +15,9 @@ use serde_json::{json, Value};
 use std::{collections::HashMap, path::Path, sync::Mutex};
 use tonic::transport::Channel;
 
+/// Global state for writing json
+/// Key: path to state file
+/// Value: (DaemonState count that points to that state file, Json file)
 pub(crate) static GLOBAL_WRITE_STATE: Lazy<Mutex<HashMap<String, (u64, JsonFileState)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
