@@ -371,6 +371,7 @@ pub mod test {
             parent_and_relative_state_path
         );
 
+        std::env::remove_var(STATE_FILE_ENV_NAME);
         Ok(())
     }
 }
