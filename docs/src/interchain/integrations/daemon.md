@@ -112,4 +112,4 @@ This is what the second argument of the `DaemonInterchainEnv::new` function is u
 
     To create the interchain environment with this `ChannelCreator`, [use the Starship syntax above](#for-testing).
 
-[^documentation_date] as of writing this documentation 09/28/2023
+[^documentation_date]: as of writing this documentation 09/28/2023
