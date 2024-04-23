@@ -1,9 +1,11 @@
+mod chain_info;
 mod cosmwasm_environment;
 mod index_response;
 mod mut_env;
 mod queriers;
 mod state;
 
+pub use chain_info::{ChainInfo, ChainInfoConst, ChainKind, NetworkInfo, NetworkInfoConst};
 pub use cosmwasm_environment::{CwEnv, TxHandler, TxResponse};
 pub use index_response::IndexResponse;
 pub use mut_env::{BankSetter, MutCwEnv};

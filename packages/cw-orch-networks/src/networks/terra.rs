@@ -1,4 +1,4 @@
-use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
+use cw_orch_core::environment::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: terra
 pub const TERRA_NETWORK: NetworkInfoConst = NetworkInfoConst {

@@ -7,7 +7,7 @@ use std::sync::Arc;
 use bitcoin::secp256k1::All;
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
-use cw_orch_networks::ChainInfo;
+use cw_orch_core::environment::ChainInfo;
 
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";

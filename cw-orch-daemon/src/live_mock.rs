@@ -20,8 +20,8 @@ use cosmwasm_std::{
 };
 use cosmwasm_std::{AllDelegationsResponse, BondedDenomResponse};
 use cw_orch_core::environment::BankQuerier;
+use cw_orch_core::environment::ChainInfo;
 use cw_orch_core::environment::WasmQuerier;
-use cw_orch_networks::ChainInfo;
 use std::marker::PhantomData;
 use std::str::FromStr;
 use tonic::transport::Channel;

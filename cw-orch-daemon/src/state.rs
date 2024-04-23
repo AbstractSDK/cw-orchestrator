@@ -2,13 +2,13 @@ use super::error::DaemonError;
 use crate::{channel::GrpcChannel, networks::ChainKind};
 
 use cosmwasm_std::Addr;
+use cw_orch_core::environment::ChainInfo;
 use cw_orch_core::{
     env::default_state_folder,
     environment::StateInterface,
     log::{connectivity_target, local_target},
     CwEnvError, CwOrchEnvVars,
 };
-use cw_orch_networks::ChainInfo;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{collections::HashMap, fs::File, path::Path};
