@@ -1,13 +1,13 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::networks::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: migaloo
-pub const MIGALOO_NETWORK: NetworkInfo = NetworkInfo {
+pub const MIGALOO_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "migaloo-1",
     pub_address_prefix: "migaloo",
     coin_type: 118u32,
 };
 
-pub const LOCAL_MIGALOO: ChainInfo = ChainInfo {
+pub const LOCAL_MIGALOO: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Local,
     chain_id: "migaloo-chain",
     gas_denom: "uwhale",
@@ -19,7 +19,7 @@ pub const LOCAL_MIGALOO: ChainInfo = ChainInfo {
 };
 
 /// <https://docs.migaloo.zone/validators/testnet>
-pub const NARWHAL_1: ChainInfo = ChainInfo {
+pub const NARWHAL_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "narwhal-1",
     gas_denom: "uwhale",
@@ -31,7 +31,7 @@ pub const NARWHAL_1: ChainInfo = ChainInfo {
 };
 
 /// <https://docs.migaloo.zone/validators/mainnet>
-pub const MIGALOO_1: ChainInfo = ChainInfo {
+pub const MIGALOO_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "migaloo-1",
     gas_denom: "uwhale",

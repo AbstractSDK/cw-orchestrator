@@ -1,7 +1,7 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: terra
-pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
+pub const TERRA_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "terra2",
     pub_address_prefix: "terra",
     coin_type: 330u32,
@@ -9,7 +9,7 @@ pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
 
 /// Terra testnet network.
 /// <https://docs.terra.money/develop/endpoints>
-pub const PISCO_1: ChainInfo = ChainInfo {
+pub const PISCO_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "pisco-1",
     gas_denom: "uluna",
@@ -22,7 +22,7 @@ pub const PISCO_1: ChainInfo = ChainInfo {
 
 /// Terra mainnet network.
 ///<https://docs.terra.money/develop/endpoints>
-pub const PHOENIX_1: ChainInfo = ChainInfo {
+pub const PHOENIX_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "phoenix-1",
     gas_denom: "uluna",
@@ -35,7 +35,7 @@ pub const PHOENIX_1: ChainInfo = ChainInfo {
 
 /// Terra local network.
 /// <https://docs.terra.money/develop/guides/initial/#next-steps-localterra-or-testnet>
-pub const LOCAL_TERRA: ChainInfo = ChainInfo {
+pub const LOCAL_TERRA: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Local,
     chain_id: "localterra",
     gas_denom: "uluna",

@@ -1,13 +1,13 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::networks::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: sei
-pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
+pub const SEI_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "sei",
     pub_address_prefix: "sei",
     coin_type: 118u32,
 };
 
-pub const LOCAL_SEI: ChainInfo = ChainInfo {
+pub const LOCAL_SEI: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Local,
     chain_id: "sei-chain",
     gas_denom: "usei",
@@ -18,7 +18,7 @@ pub const LOCAL_SEI: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const SEI_DEVNET_3: ChainInfo = ChainInfo {
+pub const SEI_DEVNET_3: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "sei-devnet-3",
     gas_denom: "usei",
@@ -29,7 +29,7 @@ pub const SEI_DEVNET_3: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const ATLANTIC_2: ChainInfo = ChainInfo {
+pub const ATLANTIC_2: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "atlantic-2",
     gas_denom: "usei",
@@ -40,7 +40,7 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const PACIFIC_1: ChainInfo = ChainInfo {
+pub const PACIFIC_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "pacific-1",
     gas_denom: "usei",

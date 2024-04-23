@@ -1,14 +1,14 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::networks::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: neutron
-pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
+pub const NEUTRON_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "neutron",
     pub_address_prefix: "neutron",
     coin_type: 118u32,
 };
 
 /// <https://github.com/cosmos/chain-registry/blob/master/testnets/neutrontestnet/chain.json>
-pub const PION_1: ChainInfo = ChainInfo {
+pub const PION_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "pion-1",
     gas_denom: "untrn",
@@ -20,7 +20,7 @@ pub const PION_1: ChainInfo = ChainInfo {
 };
 
 /// <https://github.com/cosmos/chain-registry/blob/master/neutron/chain.json>
-pub const NEUTRON_1: ChainInfo = ChainInfo {
+pub const NEUTRON_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "neutron-1",
     gas_denom: "untrn",
@@ -31,7 +31,7 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
+pub const LOCAL_NEUTRON: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Local,
     chain_id: "test-1",
     gas_denom: "untrn",

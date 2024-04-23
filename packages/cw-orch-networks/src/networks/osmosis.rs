@@ -1,13 +1,13 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: osmosis
-pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
+pub const OSMO_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "osmosis",
     pub_address_prefix: "osmo",
     coin_type: 118u32,
 };
 
-pub const OSMOSIS_1: ChainInfo = ChainInfo {
+pub const OSMOSIS_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "osmosis-1",
     gas_denom: "uosmo",
@@ -18,7 +18,7 @@ pub const OSMOSIS_1: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const OSMO_5: ChainInfo = ChainInfo {
+pub const OSMO_5: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "osmo-test-5",
     gas_denom: "uosmo",
@@ -29,7 +29,7 @@ pub const OSMO_5: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const LOCAL_OSMO: ChainInfo = ChainInfo {
+pub const LOCAL_OSMO: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Local,
     chain_id: "localosmosis",
     gas_denom: "uosmo",

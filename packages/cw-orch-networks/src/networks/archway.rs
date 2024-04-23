@@ -1,7 +1,7 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::networks::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: archway
-pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
+pub const ARCHWAY_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "archway",
     pub_address_prefix: "archway",
     coin_type: 118u32,
@@ -9,7 +9,7 @@ pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
 
 /// Archway Docs: <https://docs.archway.io/resources/networks>
 /// Parameters: <https://testnet.mintscan.io/archway-testnet/parameters>
-pub const CONSTANTINE_3: ChainInfo = ChainInfo {
+pub const CONSTANTINE_3: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "constantine-3",
     gas_denom: "aconst",
@@ -22,7 +22,7 @@ pub const CONSTANTINE_3: ChainInfo = ChainInfo {
 
 /// Archway Docs: <https://docs.archway.io/resources/networks>
 /// Parameters <https://www.mintscan.io/archway/parameters>
-pub const ARCHWAY_1: ChainInfo = ChainInfo {
+pub const ARCHWAY_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "archway-1",
     gas_denom: "aarch",

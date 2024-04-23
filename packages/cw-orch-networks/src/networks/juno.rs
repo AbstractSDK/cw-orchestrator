@@ -1,15 +1,15 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // https://notional.ventures/resources/endpoints#juno
 
 // ANCHOR: juno
-pub const JUNO_NETWORK: NetworkInfo = NetworkInfo {
+pub const JUNO_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "juno",
     pub_address_prefix: "juno",
     coin_type: 118u32,
 };
 
-pub const UNI_6: ChainInfo = ChainInfo {
+pub const UNI_6: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "uni-6",
     gas_denom: "ujunox",
@@ -20,7 +20,7 @@ pub const UNI_6: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const JUNO_1: ChainInfo = ChainInfo {
+pub const JUNO_1: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Mainnet,
     chain_id: "juno-1",
     gas_denom: "ujuno",
@@ -31,7 +31,7 @@ pub const JUNO_1: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
-pub const LOCAL_JUNO: ChainInfo = ChainInfo {
+pub const LOCAL_JUNO: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Local,
     chain_id: "testing",
     gas_denom: "ujunox",

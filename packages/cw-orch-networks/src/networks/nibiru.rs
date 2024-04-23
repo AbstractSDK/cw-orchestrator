@@ -1,13 +1,13 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
 
 // ANCHOR: nibiru
-pub const NIBIRU_NETWORK: NetworkInfo = NetworkInfo {
+pub const NIBIRU_NETWORK: NetworkInfoConst = NetworkInfoConst {
     id: "nibiru",
     pub_address_prefix: "nibi",
     coin_type: 118u32,
 };
 
-pub const NIBIRU_ITN_2: ChainInfo = ChainInfo {
+pub const NIBIRU_ITN_2: ChainInfoConst = ChainInfoConst {
     kind: ChainKind::Testnet,
     chain_id: "nibiru-itn-2",
     gas_denom: "unibi",
