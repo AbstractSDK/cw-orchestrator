@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::testing::MockApi;
@@ -13,38 +14,40 @@ use sha2::{Digest, Sha256};
 
 use crate::{core::MockApp, MockBase};
 
-pub struct MockWasmQuerier<A: Api> {
+pub struct MockWasmQuerier<A: Api, S: StateInterface> {
     app: Rc<RefCell<MockApp<A>>>,
+    _state: PhantomData<S>,
 }
 
-impl<A: Api> MockWasmQuerier<A> {
-    fn new<S: StateInterface>(mock: &MockBase<A, S>) -> Self {
+impl<A: Api, S: StateInterface> MockWasmQuerier<A, S> {
+    fn new(mock: &MockBase<A, S>) -> Self {
         Self {
             app: mock.app.clone(),
+            _state: PhantomData,
         }
     }
 }
 
-impl<A: Api> Querier for MockWasmQuerier<A> {
+impl<A: Api, S: StateInterface> Querier for MockWasmQuerier<A, S> {
     type Error = CwEnvError;
 }
 
-impl<A: Api, S: StateInterface> QuerierGetter<MockWasmQuerier<A>> for MockBase<A, S> {
-    fn querier(&self) -> MockWasmQuerier<A> {
+impl<A: Api, S: StateInterface> QuerierGetter<MockWasmQuerier<A, S>> for MockBase<A, S> {
+    fn querier(&self) -> MockWasmQuerier<A, S> {
         MockWasmQuerier::new(self)
     }
 }
 
-fn code_id_hash<A: Api>(
-    querier: &MockWasmQuerier<A>,
+fn code_id_hash<A: Api, S: StateInterface>(
+    querier: &MockWasmQuerier<A, S>,
     code_id: u64,
 ) -> Result<HexBinary, CwEnvError> {
     let code_info = querier.app.borrow().wrap().query_wasm_code_info(code_id)?;
     Ok(code_info.checksum)
 }
 
-fn contract_info<A: Api>(
-    querier: &MockWasmQuerier<A>,
+fn contract_info<A: Api, S: StateInterface>(
+    querier: &MockWasmQuerier<A, S>,
     address: impl Into<String>,
 ) -> Result<ContractInfoResponse, CwEnvError> {
     let info = querier
@@ -64,8 +67,8 @@ fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<
     Ok(hash.into())
 }
 
-fn raw_query<A: Api>(
-    querier: &MockWasmQuerier<A>,
+fn raw_query<A: Api, S: StateInterface>(
+    querier: &MockWasmQuerier<A, S>,
     address: impl Into<String>,
     query_data: Vec<u8>,
 ) -> Result<Vec<u8>, CwEnvError> {
@@ -81,8 +84,8 @@ fn raw_query<A: Api>(
         ))?)
 }
 
-fn smart_query<A: Api, Q, T>(
-    querier: &MockWasmQuerier<A>,
+fn smart_query<A: Api, S: StateInterface, Q, T>(
+    querier: &MockWasmQuerier<A, S>,
     address: impl Into<String>,
     query_data: &Q,
 ) -> Result<T, CwEnvError>
@@ -102,8 +105,8 @@ where
         ))?)
 }
 
-fn code<A: Api>(
-    querier: &MockWasmQuerier<A>,
+fn code<A: Api, S: StateInterface>(
+    querier: &MockWasmQuerier<A, S>,
     code_id: u64,
 ) -> Result<cosmwasm_std::CodeInfoResponse, CwEnvError> {
     Ok(querier
@@ -115,7 +118,8 @@ fn code<A: Api>(
         ))?)
 }
 
-impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
+impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
+    type Chain = MockBase<A, S>;
     /// Returns the hex-encoded checksum of the code.
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, CwEnvError> {
         code_id_hash(self, code_id)
@@ -129,7 +133,8 @@ impl<A: Api> WasmQuerier for MockWasmQuerier<A> {
         contract_info(self, address)
     }
 
-    fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
+    fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
+        &self,
         contract: &T,
     ) -> Result<HexBinary, CwEnvError> {
         local_hash(contract)

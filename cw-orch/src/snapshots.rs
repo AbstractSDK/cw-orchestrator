@@ -53,7 +53,10 @@ pub mod tests {
     use crate::mock::cw_multi_test::ContractWrapper;
     use cosmwasm_std::Empty;
     use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};
-    use cw_orch_core::contract::{interface_traits::Uploadable, WasmPath};
+    use cw_orch_core::{
+        contract::{interface_traits::Uploadable, WasmPath},
+        environment::ChainInfo,
+    };
 
     #[test]
     fn contract_snapshots() -> anyhow::Result<()> {
@@ -85,11 +88,11 @@ pub mod tests {
 
     impl<Chain> Uploadable for CounterContractWithId<Chain> {
         /// Return the path to the wasm file corresponding to the contract
-        fn wasm(&self) -> WasmPath {
+        fn wasm(_chain: &ChainInfo) -> WasmPath {
             unimplemented!()
         }
         /// Returns a CosmWasm contract wrapper
-        fn wrapper(&self) -> Box<dyn cw_orch::prelude::MockContract<Empty>> {
+        fn wrapper() -> Box<dyn cw_orch::prelude::MockContract<Empty>> {
             Box::new(
                 ContractWrapper::new_with_empty(
                     counter_contract::contract::execute,

@@ -7,7 +7,10 @@ use cosmwasm_std::{
     from_json, instantiate2_address, to_json_binary, CanonicalAddr, CodeInfoResponse,
     ContractInfoResponse, HexBinary,
 };
-use cw_orch_core::environment::{Querier, QuerierGetter, WasmQuerier};
+use cw_orch_core::{
+    contract::interface_traits::Uploadable,
+    environment::{Querier, QuerierGetter, WasmQuerier},
+};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
@@ -198,6 +201,7 @@ impl CosmWasm {
 }
 
 impl WasmQuerier for CosmWasm {
+    type Chain = Daemon;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
@@ -289,5 +293,15 @@ impl WasmQuerier for CosmWasm {
         let addr = instantiate2_address(checksum.as_slice(), &CanonicalAddr(canon.into()), &salt)?;
 
         Ok(AccountId::new(prefix, &addr.0)?.to_string())
+    }
+
+    fn local_hash<
+        T: cw_orch_core::contract::interface_traits::Uploadable
+            + cw_orch_core::contract::interface_traits::ContractInstance<Daemon>,
+    >(
+        &self,
+        contract: &T,
+    ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
+        <T as Uploadable>::wasm(&contract.get_chain().daemon.state.chain_data).checksum()
     }
 }

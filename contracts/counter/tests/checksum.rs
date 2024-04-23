@@ -1,5 +1,5 @@
 use counter_contract::CounterContract;
-use cw_orch::{contract::interface_traits::Uploadable, mock::Mock};
+use cw_orch::{contract::interface_traits::Uploadable, mock::Mock, osmosis_test_tube::MOCK_CHAIN_INFO};
 
 #[test]
 fn checksum() {
@@ -16,8 +16,7 @@ fn checksum() {
         if line.contains("counter_contract.wasm") {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() > 1 {
-                let calculated_hash = CounterContract::new(Mock::new("sender"))
-                    .wasm()
+                let calculated_hash = CounterContract::<Mock>::wasm(&MOCK_CHAIN_INFO.into())
                     .checksum()
                     .unwrap();
                 assert_eq!(parts[0], calculated_hash.to_string());

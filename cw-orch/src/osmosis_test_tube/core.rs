@@ -3,6 +3,7 @@ use crate::prelude::Uploadable;
 use cosmwasm_std::{coin, Addr, Coins};
 
 use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
+use cw_orch_daemon::networks::{ChainInfoConst, NetworkInfoConst};
 use cw_orch_traits::stargate::Stargate;
 
 use crate::mock::cw_multi_test::AppResponse;
@@ -33,6 +34,22 @@ use crate::mock::MockState;
 pub use osmosis_test_tube;
 
 use super::queriers::bank::OsmosisTestTubeBankQuerier;
+
+/// Mock Chain info for osmosis test tube. This is used to get the right wasm
+pub const MOCK_CHAIN_INFO: ChainInfoConst = ChainInfoConst {
+    chain_id: "osmosis-1",
+    gas_denom: "uosmo",
+    gas_price: 0.0,
+    grpc_urls: &[],
+    lcd_url: None,
+    fcd_url: None,
+    network_info: NetworkInfoConst {
+        id: "osmosis",
+        pub_address_prefix: "osmo",
+        coin_type: 118u32,
+    },
+    kind: cw_orch_daemon::networks::ChainKind::Local,
+};
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
 ///
@@ -206,8 +223,8 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         self.sender = sender;
     }
 
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwOrchError> {
-        let wasm_contents = std::fs::read(contract.wasm().path())?;
+    fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwOrchError> {
+        let wasm_contents = std::fs::read(<T as Uploadable>::wasm(&MOCK_CHAIN_INFO.into()).path())?;
         let upload_response = Wasm::new(&*self.app.borrow())
             .store_code(&wasm_contents, None, &self.sender)
             .map_err(map_err)?;
@@ -342,7 +359,7 @@ pub mod tests {
     use cw_orch_core::environment::*;
     use osmosis_test_tube::Account;
 
-    use crate::osmosis_test_tube::GAS_TOKEN;
+    use crate::osmosis_test_tube::{GAS_TOKEN, MOCK_CHAIN_INFO};
 
     use super::OsmosisTestTube;
     use counter_contract::{msg::InstantiateMsg, CounterContract};
@@ -361,7 +378,7 @@ pub mod tests {
         )?;
 
         assert_eq!(
-            contract.wasm().checksum()?,
+            CounterContract::<Mock>::wasm(&MOCK_CHAIN_INFO.into()).checksum()?,
             app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
