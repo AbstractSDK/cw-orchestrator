@@ -1,6 +1,8 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, Daemon, DaemonEnvVars};
+use crate::{
+    cosmos_modules, env::DaemonEnvVars, error::DaemonError, tx_resp::CosmTxResponse, Daemon,
+};
 
 use cosmrs::{
     proto::cosmos::{

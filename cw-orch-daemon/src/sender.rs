@@ -1,4 +1,5 @@
 use crate::{
+    env::DaemonEnvVars,
     networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
     queriers::Bank,
@@ -6,7 +7,6 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    DaemonEnvVars,
 };
 
 use super::{
@@ -299,7 +299,7 @@ impl Sender<All> {
         let expected_fee = coin(fee_amount, self.get_fee_token());
         // During simulation, we also make sure the account has enough balance to submit the transaction
         // This is disabled by an env variable
-        if !DaemonEnvVars::disable_wallet_balance_assertion() {
+        if DaemonEnvVars::wallet_balance_assertion() {
             self.assert_wallet_balance(&expected_fee).await?;
         }
 
@@ -468,24 +468,24 @@ impl Sender<All> {
             parsed_balance
         );
 
-        if !CoreEnvVars::disable_manual_interaction() {
+        if CoreEnvVars::manual_interaction() {
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            if input.to_lowercase().contains('y') {
+                // We retry asserting the balance
+                self.assert_wallet_balance(fee).await
+            } else {
+                Err(DaemonError::NotEnoughBalance {
+                    expected: fee.clone(),
+                    current: parsed_balance,
+                })
+            }
+        } else {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
                 current: parsed_balance,
             });
-        }
-
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input)?;
-        if input.to_lowercase().contains('y') {
-            // We retry asserting the balance
-            self.assert_wallet_balance(fee).await
-        } else {
-            Err(DaemonError::NotEnoughBalance {
-                expected: fee.clone(),
-                current: parsed_balance,
-            })
         }
     }
 }

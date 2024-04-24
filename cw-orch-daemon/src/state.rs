@@ -1,5 +1,7 @@
 use super::error::DaemonError;
-use crate::{channel::GrpcChannel, env::default_state_folder, networks::ChainKind, DaemonEnvVars};
+use crate::{
+    channel::GrpcChannel, env::default_state_folder, env::DaemonEnvVars, networks::ChainKind,
+};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{

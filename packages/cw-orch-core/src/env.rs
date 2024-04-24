@@ -12,7 +12,7 @@ use cosmwasm_std::StdError;
 
 pub const ARTIFACTS_DIR_ENV_NAME: &str = "ARTIFACTS_DIR";
 pub const SERIALIZE_ENV_NAME: &str = "CW_ORCH_SERIALIZE_JSON";
-pub const DISABLE_MANUAL_INTERACTION_ENV_NAME: &str = "CW_ORCH_DISABLE_MANUAL_INTERACTION";
+pub const MANUAL_INTERACTION_ENV_NAME: &str = "CW_ORCH_MANUAL_INTERACTION";
 
 pub struct CoreEnvVars;
 
@@ -47,14 +47,14 @@ impl CoreEnvVars {
     }
 
     /// Optional - boolean
-    /// Defaults to "false"
+    /// Defaults to "true"
     /// Disable manual interactions
     /// It allows to automate scripting and get rid of prompting
-    pub fn disable_manual_interaction() -> bool {
-        if let Ok(str_value) = env::var(DISABLE_MANUAL_INTERACTION_ENV_NAME) {
-            parse_with_log(str_value, DISABLE_MANUAL_INTERACTION_ENV_NAME)
+    pub fn manual_interaction() -> bool {
+        if let Ok(str_value) = env::var(MANUAL_INTERACTION_ENV_NAME) {
+            parse_with_log(str_value, MANUAL_INTERACTION_ENV_NAME)
         } else {
-            false
+            true
         }
     }
 }

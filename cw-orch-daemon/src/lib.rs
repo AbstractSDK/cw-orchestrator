@@ -24,7 +24,6 @@ pub mod tx_builder;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;
-pub use env::DaemonEnvVars;
 pub use sender::Wallet;
 pub use tx_builder::TxBuilder;
 

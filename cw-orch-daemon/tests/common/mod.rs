@@ -7,7 +7,7 @@ mod node {
 
     use ctor::{ctor, dtor};
 
-    use cw_orch_daemon::DaemonEnvVars;
+    use cw_orch_daemon::env::DaemonEnvVars;
     use cw_orch_networks::NetworkEnvVars;
     use duct::cmd;
 

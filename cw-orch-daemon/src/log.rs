@@ -1,4 +1,4 @@
-use crate::DaemonEnvVars;
+use crate::env::DaemonEnvVars;
 
 use crate::DaemonError;
 
@@ -10,7 +10,7 @@ static LOGS_DISABLED: Once = Once::new();
 pub fn print_if_log_disabled() -> Result<(), DaemonError> {
     LOGS_DISABLED.call_once(|| {
         // Here we check for logging capabilities.
-        if !log::log_enabled!(log::Level::Info) && !DaemonEnvVars::disable_logs_message(){
+        if !log::log_enabled!(log::Level::Info) && DaemonEnvVars::logs_message(){
             println!(
                 "Warning: It seems like you haven't enabled logs. In order to do so, you have to : 
                 - use `env_logger::init()` at the start of your script.

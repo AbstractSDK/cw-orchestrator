@@ -17,10 +17,8 @@ pub const GAS_BUFFER_ENV_NAME: &str = "CW_ORCH_GAS_BUFFER";
 pub const MIN_GAS_ENV_NAME: &str = "CW_ORCH_MIN_GAS";
 pub const MAX_TX_QUERIES_RETRY_ENV_NAME: &str = "CW_ORCH_MAX_TX_QUERY_RETRIES";
 pub const MIN_BLOCK_SPEED_ENV_NAME: &str = "CW_ORCH_MIN_BLOCK_SPEED";
-pub const DISABLE_WALLET_BALANCE_ASSERTION_ENV_NAME: &str =
-    "CW_ORCH_DISABLE_WALLET_BALANCE_ASSERTION";
-pub const DISABLE_LOGS_ACTIVATION_MESSAGE_ENV_NAME: &str =
-    "CW_ORCH_DISABLE_LOGS_ACTIVATION_MESSAGE";
+pub const WALLET_BALANCE_ASSERTION_ENV_NAME: &str = "CW_ORCH_WALLET_BALANCE_ASSERTION";
+pub const LOGS_ACTIVATION_MESSAGE_ENV_NAME: &str = "CW_ORCH_LOGS_ACTIVATION_MESSAGE";
 
 pub struct DaemonEnvVars {}
 impl DaemonEnvVars {
@@ -81,26 +79,26 @@ impl DaemonEnvVars {
     }
 
     /// Optional - boolean
-    /// Defaults to "false"
+    /// Defaults to "true"
     /// Disable wallet balance assertion.
     /// When balance assertion is enabled, it asserts that the balance of the sender is sufficient before submitting any transactions (during the simulation step)
-    pub fn disable_wallet_balance_assertion() -> bool {
-        if let Ok(str_value) = env::var(DISABLE_WALLET_BALANCE_ASSERTION_ENV_NAME) {
-            parse_with_log(str_value, DISABLE_WALLET_BALANCE_ASSERTION_ENV_NAME)
+    pub fn wallet_balance_assertion() -> bool {
+        if let Ok(str_value) = env::var(WALLET_BALANCE_ASSERTION_ENV_NAME) {
+            parse_with_log(str_value, WALLET_BALANCE_ASSERTION_ENV_NAME)
         } else {
-            false
+            true
         }
     }
 
     /// Optional - boolean
-    /// Defaults to "false"
+    /// Defaults to "true"
     /// Disable the "Enable Logs" message
     /// It allows forcing cw-orch to not output anything
-    pub fn disable_logs_message() -> bool {
-        if let Ok(str_value) = env::var(DISABLE_LOGS_ACTIVATION_MESSAGE_ENV_NAME) {
-            parse_with_log(str_value, DISABLE_LOGS_ACTIVATION_MESSAGE_ENV_NAME)
+    pub fn logs_message() -> bool {
+        if let Ok(str_value) = env::var(LOGS_ACTIVATION_MESSAGE_ENV_NAME) {
+            parse_with_log(str_value, LOGS_ACTIVATION_MESSAGE_ENV_NAME)
         } else {
-            false
+            true
         }
     }
 }
@@ -122,12 +120,8 @@ fn parse_with_log<F: FromStr<Err = E>, E: std::fmt::Display>(
     value: String,
     env_var_name: &str,
 ) -> F {
-    value
-        .parse()
-        .map_err(|e| {
-            StdError::generic_err(format!(
-                "Couldn't parse content of env var {env_var_name}, error : {e}"
-            ))
-        })
-        .unwrap()
+    match value.parse() {
+        Ok(parsed) => parsed,
+        Err(e) => panic!("Couldn't parse content of env var {env_var_name}, error : {e}"),
+    }
 }

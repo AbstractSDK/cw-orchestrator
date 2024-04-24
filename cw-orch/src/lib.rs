@@ -42,7 +42,7 @@ pub mod wasm_protected {
     pub mod env_vars {
         pub use cw_orch_core::CoreEnvVars;
         #[cfg(feature = "daemon")]
-        pub use cw_orch_daemon::{env::default_state_folder, DaemonEnvVars};
+        pub use cw_orch_daemon::{env::default_state_folder, env::DaemonEnvVars};
         #[cfg(feature = "daemon")]
         pub use cw_orch_networks::NetworkEnvVars;
     }
