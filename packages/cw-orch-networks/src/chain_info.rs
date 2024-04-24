@@ -1,10 +1,11 @@
 use std::fmt::Display;
 
+use cw_orch_core::CwEnvError;
 use serde::{Deserialize, Serialize};
 
-use cw_orch_core::{
+use crate::{
+    env::NetworkEnvVars,
     env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
-    CwEnvError, CwOrchEnvVars,
 };
 
 pub type ChainInfo = ChainInfoBase<&'static str, &'static [&'static str]>;
@@ -93,11 +94,10 @@ impl ChainKind {
     }
 
     pub fn mnemonic(&self) -> Result<String, CwEnvError> {
-        let env_vars = CwOrchEnvVars::load()?;
         match *self {
-            ChainKind::Local => env_vars.local_mnemonic,
-            ChainKind::Testnet => env_vars.test_mnemonic,
-            ChainKind::Mainnet => env_vars.main_mnemonic,
+            ChainKind::Local => NetworkEnvVars::local_mnemonic(),
+            ChainKind::Testnet => NetworkEnvVars::test_mnemonic(),
+            ChainKind::Mainnet => NetworkEnvVars::main_mnemonic(),
         }
         .ok_or(CwEnvError::EnvVarNotPresentNamed(
             self.mnemonic_env_variable_name().to_string(),
