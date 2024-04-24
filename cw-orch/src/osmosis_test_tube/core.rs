@@ -3,7 +3,7 @@ use crate::prelude::Uploadable;
 use cosmwasm_std::{coin, Addr, Coins};
 
 use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
-use cw_orch_daemon::networks::{ChainInfoConst, NetworkInfoConst};
+use cw_orch_daemon::networks::{ChainInfo, NetworkInfo};
 use cw_orch_traits::stargate::Stargate;
 
 use crate::mock::cw_multi_test::AppResponse;
@@ -36,14 +36,14 @@ pub use osmosis_test_tube;
 use super::queriers::bank::OsmosisTestTubeBankQuerier;
 
 /// Mock Chain info for osmosis test tube. This is used to get the right wasm
-pub const MOCK_CHAIN_INFO: ChainInfoConst = ChainInfoConst {
+pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
     chain_id: "osmosis-1",
     gas_denom: "uosmo",
     gas_price: 0.0,
     grpc_urls: &[],
     lcd_url: None,
     fcd_url: None,
-    network_info: NetworkInfoConst {
+    network_info: NetworkInfo {
         id: "osmosis",
         pub_address_prefix: "osmo",
         coin_type: 118u32,

@@ -1,13 +1,13 @@
-use cw_orch_core::environment::{ChainInfoConst, ChainKind, NetworkInfoConst};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: rollkit
-pub const ROLLKIT_NETWORK: NetworkInfoConst = NetworkInfoConst {
+pub const ROLLKIT_NETWORK: NetworkInfo = NetworkInfo {
     id: "rollkit",
     pub_address_prefix: "wasm",
     coin_type: 118u32,
 };
 
-pub const LOCAL_ROLLKIT: ChainInfoConst = ChainInfoConst {
+pub const LOCAL_ROLLKIT: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "celeswasm",
     gas_denom: "uwasm",

@@ -1,5 +1,5 @@
 use cw_orch::daemon::queriers::Node;
-use cw_orch::environment::ChainInfo;
+use cw_orch::environment::ChainInfoOwned;
 // ANCHOR: custom_interface
 use cw_orch::{interface, prelude::*};
 
@@ -15,7 +15,7 @@ pub struct CounterContract;
 // ANCHOR: uploadable_impl
 impl<Chain> Uploadable for CounterContract<Chain> {
     /// Return the path to the wasm file corresponding to the contract
-    fn wasm(_chain: &ChainInfo) -> WasmPath {
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
         artifacts_dir_from_workspace!()
             .find_wasm_path("counter_contract")
             .unwrap()

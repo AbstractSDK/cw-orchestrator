@@ -55,7 +55,7 @@ pub mod tests {
     use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};
     use cw_orch_core::{
         contract::{interface_traits::Uploadable, WasmPath},
-        environment::ChainInfo,
+        environment::ChainInfoOwned,
     };
 
     #[test]
@@ -88,7 +88,7 @@ pub mod tests {
 
     impl<Chain> Uploadable for CounterContractWithId<Chain> {
         /// Return the path to the wasm file corresponding to the contract
-        fn wasm(_chain: &ChainInfo) -> WasmPath {
+        fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
             unimplemented!()
         }
         /// Returns a CosmWasm contract wrapper

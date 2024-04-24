@@ -20,7 +20,7 @@ use cosmwasm_std::{
 };
 use cosmwasm_std::{AllDelegationsResponse, BondedDenomResponse};
 use cw_orch_core::environment::BankQuerier;
-use cw_orch_core::environment::ChainInfo;
+use cw_orch_core::environment::ChainInfoOwned;
 use cw_orch_core::environment::WasmQuerier;
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -41,7 +41,7 @@ const QUERIER_ERROR: &str =
 /// mock_dependencies is a drop-in replacement for cosmwasm_std::testing::mock_dependencies
 /// this uses our CustomQuerier.
 pub fn mock_dependencies(
-    chain_info: ChainInfo,
+    chain_info: ChainInfoOwned,
 ) -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier> {
     let custom_querier: WasmMockQuerier = WasmMockQuerier::new(chain_info);
 
@@ -188,7 +188,7 @@ impl WasmMockQuerier {
 
 impl WasmMockQuerier {
     /// Creates a querier from chain information
-    pub fn new(chain: ChainInfo) -> Self {
+    pub fn new(chain: ChainInfoOwned) -> Self {
         let channel = RUNTIME
             .block_on(GrpcChannel::connect(
                 &chain.grpc_urls,

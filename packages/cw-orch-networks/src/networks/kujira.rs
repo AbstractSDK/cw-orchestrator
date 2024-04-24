@@ -1,13 +1,13 @@
-use crate::networks::{ChainInfoConst, ChainKind, NetworkInfoConst};
+use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: kujira
-pub const KUJIRA_NETWORK: NetworkInfoConst = NetworkInfoConst {
+pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
     id: "kujira",
     pub_address_prefix: "kujira",
     coin_type: 118u32,
 };
 
-pub const HARPOON_4: ChainInfoConst = ChainInfoConst {
+pub const HARPOON_4: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "harpoon-4",
     gas_denom: "ukuji",

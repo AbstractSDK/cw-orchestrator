@@ -136,7 +136,7 @@ pub struct MockContract;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod interface {
-    use cw_orch::environment::ChainInfo;
+    use cw_orch::environment::ChainInfoOwned;
 
     use super::*;
 
@@ -150,7 +150,7 @@ pub mod interface {
             )
         }
 
-        fn wasm(_chain: &ChainInfo) -> cw_orch::prelude::WasmPath {
+        fn wasm(_chain: &ChainInfoOwned) -> cw_orch::prelude::WasmPath {
             use cw_orch::prelude::*;
             artifacts_dir_from_workspace!()
                 .find_wasm_path("mock_contract")

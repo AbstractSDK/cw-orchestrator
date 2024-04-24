@@ -1,7 +1,7 @@
-use cw_orch_core::environment::{ChainInfoConst, ChainKind, NetworkInfoConst};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: terra
-pub const TERRA_NETWORK: NetworkInfoConst = NetworkInfoConst {
+pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
     id: "terra2",
     pub_address_prefix: "terra",
     coin_type: 330u32,
@@ -9,7 +9,7 @@ pub const TERRA_NETWORK: NetworkInfoConst = NetworkInfoConst {
 
 /// Terra testnet network.
 /// <https://docs.terra.money/develop/endpoints>
-pub const PISCO_1: ChainInfoConst = ChainInfoConst {
+pub const PISCO_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "pisco-1",
     gas_denom: "uluna",
@@ -22,7 +22,7 @@ pub const PISCO_1: ChainInfoConst = ChainInfoConst {
 
 /// Terra mainnet network.
 ///<https://docs.terra.money/develop/endpoints>
-pub const PHOENIX_1: ChainInfoConst = ChainInfoConst {
+pub const PHOENIX_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "phoenix-1",
     gas_denom: "uluna",
@@ -35,7 +35,7 @@ pub const PHOENIX_1: ChainInfoConst = ChainInfoConst {
 
 /// Terra local network.
 /// <https://docs.terra.money/develop/guides/initial/#next-steps-localterra-or-testnet>
-pub const LOCAL_TERRA: ChainInfoConst = ChainInfoConst {
+pub const LOCAL_TERRA: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
     chain_id: "localterra",
     gas_denom: "uluna",
