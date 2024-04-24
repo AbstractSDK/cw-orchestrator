@@ -16,7 +16,7 @@ You can provide mnemonics directly to the `Daemon` using the following environme
 
 ## Saving and Loading State
 
-### STATE_FILE_ENV_NAME
+### STATE_FILE
 
 Optional, accepted values: Path to a valid file
 Default value: `~./cw-orchestrator/state.json`

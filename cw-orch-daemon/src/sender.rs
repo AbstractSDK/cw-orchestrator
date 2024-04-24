@@ -1,6 +1,5 @@
 use crate::{
     env::DaemonEnvVars,
-    networks::ChainKind,
     proto::injective::ETHEREUM_COIN_TYPE,
     queriers::Bank,
     tx_broadcaster::{
@@ -35,7 +34,7 @@ use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{log::local_target, CoreEnvVars};
 
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -106,7 +105,7 @@ impl Sender<All> {
         daemon_state: &Arc<DaemonState>,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
-        let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
+        let kind = daemon_state.chain_data.kind.clone();
         // NETWORK_MNEMONIC_GROUP
         let env_variable_name = kind.mnemonic_env_variable_name();
         let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
@@ -139,7 +138,7 @@ impl Sender<All> {
             mnemonic,
             0,
             options.hd_index.unwrap_or(0),
-            daemon_state.chain_data.slip44,
+            daemon_state.chain_data.network_info.coin_type,
         )?;
         let sender = Sender {
             daemon_state: daemon_state.clone(),
@@ -178,7 +177,7 @@ impl Sender<All> {
 
     pub fn pub_addr(&self) -> Result<AccountId, DaemonError> {
         Ok(AccountId::new(
-            &self.daemon_state.chain_data.bech32_prefix,
+            &self.daemon_state.chain_data.network_info.pub_address_prefix,
             &self.private_key.public_key(&self.secp).raw_address.unwrap(),
         )?)
     }
@@ -217,9 +216,7 @@ impl Sender<All> {
     }
 
     pub(crate) fn get_fee_token(&self) -> String {
-        self.daemon_state.chain_data.fees.fee_tokens[0]
-            .denom
-            .clone()
+        self.daemon_state.chain_data.gas_denom.to_string()
     }
 
     /// Compute the gas fee from the expected gas in the transaction
@@ -236,11 +233,7 @@ impl Sender<All> {
         if let Some(min_gas) = DaemonEnvVars::min_gas() {
             gas_expected = (min_gas as f64).max(gas_expected);
         }
-        let fee_amount = gas_expected
-            * (self.daemon_state.chain_data.fees.fee_tokens[0]
-                .fixed_min_gas_price
-                .max(self.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price)
-                + 0.00001);
+        let fee_amount = gas_expected * (self.daemon_state.chain_data.gas_price + 0.00001);
 
         Ok((gas_expected as u64, fee_amount as u128))
     }
@@ -254,7 +247,7 @@ impl Sender<All> {
     ) -> Result<u64, DaemonError> {
         let fee = TxBuilder::build_fee(
             0u8,
-            &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
+            &self.daemon_state.chain_data.gas_denom,
             0,
             self.options.clone(),
         )?;

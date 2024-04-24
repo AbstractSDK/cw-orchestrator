@@ -52,9 +52,6 @@ pub(crate) mod cosmos_modules {
     };
 }
 
-/// Re-export trait and data required to fetch daemon data from chain-registry
-pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
-
 lazy_static::lazy_static! {
     pub static ref RUNTIME: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
 }
