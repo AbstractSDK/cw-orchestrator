@@ -67,7 +67,7 @@ mod artifacts_dir {
     use super::WasmPath;
     use crate::{
         build::BuildPostfix, env::ARTIFACTS_DIR_ENV_NAME, environment::EnvironmentQuerier,
-        error::CwEnvError, log::local_target, CwOrchEnvVars,
+        error::CwEnvError, log::local_target, CoreEnvVars,
     };
 
     use std::{env, fs, path::PathBuf};
@@ -123,9 +123,7 @@ mod artifacts_dir {
     impl ArtifactsDir {
         /// Get the artifacts directory from the environment variable `ARTIFACTS_DIR`.
         pub fn env() -> Self {
-            let dir = CwOrchEnvVars::load()
-                .unwrap()
-                .artifacts_dir
+            let dir = CoreEnvVars::artifacts_dir()
                 .unwrap_or_else(|| panic!("{} env variable not set", ARTIFACTS_DIR_ENV_NAME));
             Self::new(dir)
         }

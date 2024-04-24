@@ -2,11 +2,6 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
-    CwEnvError, CwOrchEnvVars,
-};
-
 pub type ChainInfo = ChainInfoBase<&'static str, &'static [&'static str]>;
 pub type ChainInfoOwned = ChainInfoBase<String, Vec<String>>;
 
@@ -80,29 +75,6 @@ pub enum ChainKind {
     Mainnet,
     /// A testnet chain
     Testnet,
-}
-
-impl ChainKind {
-    /// Get the mnemonic name for the chain kind
-    pub fn mnemonic_env_variable_name(&self) -> &str {
-        match *self {
-            ChainKind::Local => LOCAL_MNEMONIC_ENV_NAME,
-            ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
-            ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
-        }
-    }
-
-    pub fn mnemonic(&self) -> Result<String, CwEnvError> {
-        let env_vars = CwOrchEnvVars::load()?;
-        match *self {
-            ChainKind::Local => env_vars.local_mnemonic,
-            ChainKind::Testnet => env_vars.test_mnemonic,
-            ChainKind::Mainnet => env_vars.main_mnemonic,
-        }
-        .ok_or(CwEnvError::EnvVarNotPresentNamed(
-            self.mnemonic_env_variable_name().to_string(),
-        ))
-    }
 }
 
 impl Display for ChainKind {

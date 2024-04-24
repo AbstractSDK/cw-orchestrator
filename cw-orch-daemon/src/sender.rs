@@ -1,4 +1,5 @@
 use crate::{
+    env::DaemonEnvVars,
     proto::injective::ETHEREUM_COIN_TYPE,
     queriers::Bank,
     tx_broadcaster::{
@@ -30,8 +31,9 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::local_target, CwOrchEnvVars};
+use cw_orch_core::{environment::ChainKind, log::local_target, CoreEnvVars, CwEnvError};
 
+use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
 use std::{str::FromStr, sync::Arc};
 
@@ -104,15 +106,7 @@ impl Sender<All> {
         daemon_state: &Arc<DaemonState>,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
-        let kind = daemon_state.chain_data.kind.clone();
-        // NETWORK_MNEMONIC_GROUP
-        let env_variable_name = kind.mnemonic_env_variable_name();
-        let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
-            panic!(
-                "Wallet mnemonic environment variable {} not set.",
-                env_variable_name
-            )
-        });
+        let mnemonic = get_mnemonic_env(&daemon_state.chain_data.kind)?;
 
         Self::from_mnemonic_with_options(daemon_state, &mnemonic, options)
     }
@@ -221,7 +215,7 @@ impl Sender<All> {
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let mut gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
+        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
             gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
@@ -229,7 +223,7 @@ impl Sender<All> {
             gas as f64 * GAS_BUFFER
         };
 
-        if let Some(min_gas) = CwOrchEnvVars::load()?.min_gas {
+        if let Some(min_gas) = DaemonEnvVars::min_gas() {
             gas_expected = (min_gas as f64).max(gas_expected);
         }
         let fee_amount = gas_expected * (self.daemon_state.chain_data.gas_price + 0.00001);
@@ -291,7 +285,7 @@ impl Sender<All> {
         let expected_fee = coin(fee_amount, self.get_fee_token());
         // During simulation, we also make sure the account has enough balance to submit the transaction
         // This is disabled by an env variable
-        if !CwOrchEnvVars::load()?.disable_wallet_balance_assertion {
+        if DaemonEnvVars::wallet_balance_assertion() {
             self.assert_wallet_balance(&expected_fee).await?;
         }
 
@@ -460,24 +454,43 @@ impl Sender<All> {
             parsed_balance
         );
 
-        if !CwOrchEnvVars::load()?.disable_manual_interaction {
+        if CoreEnvVars::manual_interaction() {
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            if input.to_lowercase().contains('y') {
+                // We retry asserting the balance
+                self.assert_wallet_balance(fee).await
+            } else {
+                Err(DaemonError::NotEnoughBalance {
+                    expected: fee.clone(),
+                    current: parsed_balance,
+                })
+            }
+        } else {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
                 current: parsed_balance,
             });
         }
+    }
+}
 
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input)?;
-        if input.to_lowercase().contains('y') {
-            // We retry asserting the balance
-            self.assert_wallet_balance(fee).await
-        } else {
-            Err(DaemonError::NotEnoughBalance {
-                expected: fee.clone(),
-                current: parsed_balance,
-            })
-        }
+fn get_mnemonic_env(chain_kind: &ChainKind) -> Result<String, CwEnvError> {
+    match chain_kind {
+        ChainKind::Local => DaemonEnvVars::local_mnemonic(),
+        ChainKind::Testnet => DaemonEnvVars::test_mnemonic(),
+        ChainKind::Mainnet => DaemonEnvVars::main_mnemonic(),
+    }
+    .ok_or(CwEnvError::EnvVarNotPresentNamed(
+        get_mnemonic_env_name(chain_kind).to_string(),
+    ))
+}
+
+fn get_mnemonic_env_name(chain_kind: &ChainKind) -> &str {
+    match chain_kind {
+        ChainKind::Local => LOCAL_MNEMONIC_ENV_NAME,
+        ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
+        ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
     }
 }

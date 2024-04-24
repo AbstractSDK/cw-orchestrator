@@ -1,13 +1,14 @@
 use super::error::DaemonError;
-use crate::{channel::GrpcChannel, networks::ChainKind};
+use crate::{
+    channel::GrpcChannel, env::default_state_folder, env::DaemonEnvVars, networks::ChainKind,
+};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::environment::ChainInfoOwned;
 use cw_orch_core::{
-    env::default_state_folder,
     environment::StateInterface,
     log::{connectivity_target, local_target},
-    CwEnvError, CwOrchEnvVars,
+    CwEnvError,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -101,7 +102,7 @@ impl DaemonState {
     /// Returns the path of the file where the state of `cw-orchestrator` is stored.
     pub fn state_file_path() -> Result<String, DaemonError> {
         // check if STATE_FILE en var is configured, default to state.json
-        let env_file_path = CwOrchEnvVars::load()?.state_file;
+        let env_file_path = DaemonEnvVars::state_file();
         let state_file_path = if env_file_path.is_relative() {
             // If it's relative, we check if it start with "."
             let first_path_component = env_file_path
@@ -225,9 +226,7 @@ impl StateInterface for DaemonState {
 pub mod test {
     use std::env;
 
-    use cw_orch_core::env::STATE_FILE_ENV_NAME;
-
-    use crate::DaemonState;
+    use crate::{env::STATE_FILE_ENV_NAME, DaemonState};
 
     #[test]
     fn test_env_variable_state_path() -> anyhow::Result<()> {
