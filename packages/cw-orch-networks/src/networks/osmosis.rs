@@ -1,4 +1,4 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: osmosis
 pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {

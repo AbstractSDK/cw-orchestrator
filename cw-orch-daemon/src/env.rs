@@ -20,6 +20,9 @@ pub const MIN_BLOCK_SPEED_ENV_NAME: &str = "CW_ORCH_MIN_BLOCK_SPEED";
 pub const WALLET_BALANCE_ASSERTION_ENV_NAME: &str = "CW_ORCH_WALLET_BALANCE_ASSERTION";
 pub const LOGS_ACTIVATION_MESSAGE_ENV_NAME: &str = "CW_ORCH_LOGS_ACTIVATION_MESSAGE";
 
+pub const MAIN_MNEMONIC_ENV_NAME: &str = "MAIN_MNEMONIC";
+pub const TEST_MNEMONIC_ENV_NAME: &str = "TEST_MNEMONIC";
+pub const LOCAL_MNEMONIC_ENV_NAME: &str = "LOCAL_MNEMONIC";
 pub struct DaemonEnvVars {}
 impl DaemonEnvVars {
     /// Optional - Path
@@ -100,6 +103,27 @@ impl DaemonEnvVars {
         } else {
             true
         }
+    }
+
+    /// Optional - String
+    /// Mandatory when interacting with a daemon on mainnet
+    /// Mnemonic of the address interacting with a mainnet
+    pub fn main_mnemonic() -> Option<String> {
+        env::var(MAIN_MNEMONIC_ENV_NAME).ok()
+    }
+
+    /// Optional - String
+    /// Mandatory when interacting with a daemon on mainnet
+    /// Mnemonic of the address interacting with a testnet
+    pub fn test_mnemonic() -> Option<String> {
+        env::var(TEST_MNEMONIC_ENV_NAME).ok()
+    }
+
+    /// Optional - String
+    /// Mandatory when interacting with a daemon on mainnet
+    /// Mnemonic of the address interacting with a localnet
+    pub fn local_mnemonic() -> Option<String> {
+        env::var(LOCAL_MNEMONIC_ENV_NAME).ok()
     }
 }
 

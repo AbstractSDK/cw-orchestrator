@@ -4,12 +4,12 @@ use crate::{
 };
 
 use cosmwasm_std::Addr;
+use cw_orch_core::environment::ChainInfoOwned;
 use cw_orch_core::{
     environment::StateInterface,
     log::{connectivity_target, local_target},
     CwEnvError,
 };
-use cw_orch_networks::ChainInfoOwned;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{collections::HashMap, fs::File, path::Path};

@@ -1,4 +1,4 @@
-use crate::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: rollkit
 pub const ROLLKIT_NETWORK: NetworkInfo = NetworkInfo {

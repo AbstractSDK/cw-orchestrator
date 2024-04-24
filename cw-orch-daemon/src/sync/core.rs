@@ -98,7 +98,7 @@ impl TxHandler for Daemon {
         self.daemon.sender = sender
     }
 
-    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+    fn upload<T: Uploadable>(&self, uploadable: &T) -> Result<Self::Response, DaemonError> {
         self.rt_handle.block_on(self.daemon.upload(uploadable))
     }
 

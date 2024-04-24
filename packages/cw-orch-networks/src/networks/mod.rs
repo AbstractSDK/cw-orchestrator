@@ -15,8 +15,8 @@ pub mod rollkit;
 pub mod sei;
 pub mod terra;
 
-pub use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
+pub use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 pub use doravota::{VOTA_ASH, VOTA_TESTNET};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};

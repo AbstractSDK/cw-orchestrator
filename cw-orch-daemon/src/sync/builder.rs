@@ -4,7 +4,7 @@ use crate::{
     DaemonAsyncBuilder,
 };
 use bitcoin::secp256k1::All;
-use cw_orch_networks::ChainInfoOwned;
+use cw_orch_core::environment::ChainInfoOwned;
 
 use super::{super::error::DaemonError, core::Daemon};
 
