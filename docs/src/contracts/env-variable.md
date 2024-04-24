@@ -101,6 +101,7 @@ Optional, accepted values: `debug`, `error`, `info`, `warn`,  `trace`
 ### CW_ORCH_SERIALIZE_JSON
 
 Optional, accepted values: `false`, `true`
+Defaults to `false`
 
 If equals to `true`, in the output logs, cw-orch will serialize the contract messages (instantiate, execute, query,... ) as JSON. This replaces the standard Rust Debug formatting and allows for easy copying and sharing of the executed messages.
 
