@@ -1,4 +1,4 @@
 pub mod chain_info;
 pub mod networks;
 
-pub use chain_info::{ChainInfo, ChainInfoConst, ChainKind, NetworkInfo, NetworkInfoConst};
+pub use chain_info::{ChainInfo, ChainInfoOwned, ChainKind, NetworkInfo, NetworkInfoOwned};

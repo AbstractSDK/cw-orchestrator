@@ -7,16 +7,11 @@ use cw_orch_core::{
     CwEnvError, CwOrchEnvVars,
 };
 
-pub trait StringType {
-    type StringType;
-    type StringArrayType;
-}
+pub type ChainInfo = ChainInfoBase<&'static str, &'static [&'static str]>;
+pub type ChainInfoOwned = ChainInfoBase<String, Vec<String>>;
 
-pub type ChainInfoConst = ChainInfoBase<&'static str, &'static [&'static str]>;
-pub type ChainInfo = ChainInfoBase<String, Vec<String>>;
-
-pub type NetworkInfoConst = NetworkInfoBase<&'static str>;
-pub type NetworkInfo = NetworkInfoBase<String>;
+pub type NetworkInfo = NetworkInfoBase<&'static str>;
+pub type NetworkInfoOwned = NetworkInfoBase<String>;
 
 /// Information about a chain.
 /// This is used to connect to a chain and to generate transactions.
@@ -52,9 +47,9 @@ pub struct NetworkInfoBase<StringType> {
     pub coin_type: u32,
 }
 
-impl From<ChainInfoConst> for ChainInfo {
-    fn from(value: ChainInfoConst) -> Self {
-        ChainInfo {
+impl From<ChainInfo> for ChainInfoOwned {
+    fn from(value: ChainInfo) -> Self {
+        ChainInfoOwned {
             chain_id: value.chain_id.to_string(),
             gas_denom: value.gas_denom.to_string(),
             gas_price: value.gas_price,
@@ -66,9 +61,9 @@ impl From<ChainInfoConst> for ChainInfo {
         }
     }
 }
-impl From<NetworkInfoConst> for NetworkInfo {
-    fn from(value: NetworkInfoConst) -> Self {
-        NetworkInfo {
+impl From<NetworkInfo> for NetworkInfoOwned {
+    fn from(value: NetworkInfo) -> Self {
+        NetworkInfoOwned {
             id: value.id.to_string(),
             pub_address_prefix: value.pub_address_prefix.to_string(),
             coin_type: value.coin_type,

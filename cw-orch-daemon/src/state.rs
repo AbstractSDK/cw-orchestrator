@@ -8,7 +8,7 @@ use cw_orch_core::{
     log::{connectivity_target, local_target},
     CwEnvError, CwOrchEnvVars,
 };
-use cw_orch_networks::ChainInfo;
+use cw_orch_networks::ChainInfoOwned;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{collections::HashMap, fs::File, path::Path};
@@ -25,7 +25,7 @@ pub struct DaemonState {
     /// gRPC channel
     pub grpc_channel: Channel,
     /// Information about the chain
-    pub chain_data: ChainInfo,
+    pub chain_data: ChainInfoOwned,
     /// Flag to set the daemon state readonly and not pollute the env file
     pub read_only: bool,
 }
@@ -34,7 +34,7 @@ impl DaemonState {
     /// Creates a new state from the given chain data and deployment id.
     /// Attempts to connect to any of the provided gRPC endpoints.
     pub async fn new(
-        chain_data: ChainInfo,
+        chain_data: ChainInfoOwned,
         deployment_id: String,
         read_only: bool,
     ) -> Result<DaemonState, DaemonError> {

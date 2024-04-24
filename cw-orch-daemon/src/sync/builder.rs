@@ -4,7 +4,7 @@ use crate::{
     DaemonAsyncBuilder,
 };
 use bitcoin::secp256k1::All;
-use cw_orch_networks::ChainInfo;
+use cw_orch_networks::ChainInfoOwned;
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -22,7 +22,7 @@ use super::{super::error::DaemonError, core::Daemon};
 /// ```
 pub struct DaemonBuilder {
     // # Required
-    pub(crate) chain: Option<ChainInfo>,
+    pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
     pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
@@ -39,7 +39,7 @@ pub struct DaemonBuilder {
 
 impl DaemonBuilder {
     /// Set the chain the Daemon will connect to
-    pub fn chain(&mut self, chain: impl Into<ChainInfo>) -> &mut Self {
+    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
         self
     }
@@ -143,14 +143,14 @@ impl DaemonBuilder {
     }
 }
 
-fn overwrite_fee(chain: &mut ChainInfo, denom: Option<String>, amount: Option<f64>) {
+fn overwrite_fee(chain: &mut ChainInfoOwned, denom: Option<String>, amount: Option<f64>) {
     if let Some(denom) = denom {
         chain.gas_denom = denom.to_string()
     }
     chain.gas_price = amount.unwrap_or(chain.gas_price);
 }
 
-fn overwrite_grpc_url(chain: &mut ChainInfo, grpc_url: Option<String>) {
+fn overwrite_grpc_url(chain: &mut ChainInfoOwned, grpc_url: Option<String>) {
     if let Some(grpc_url) = grpc_url {
         chain.grpc_urls = vec![grpc_url.to_string()]
     }

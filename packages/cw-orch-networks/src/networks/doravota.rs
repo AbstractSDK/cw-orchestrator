@@ -1,15 +1,15 @@
-use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
+use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 
 // https://notional.ventures/resources/endpoints#juno
 
 // ANCHOR: juno
-pub const DORAVOTA_NETWORK: NetworkInfoConst = NetworkInfoConst {
+pub const DORAVOTA_NETWORK: NetworkInfo = NetworkInfo {
     id: "doravota",
     pub_address_prefix: "dora",
     coin_type: 118u32,
 };
 
-pub const VOTA_ASH: ChainInfoConst = ChainInfoConst {
+pub const VOTA_ASH: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "vota-ash",
     gas_denom: "peaka",
@@ -20,7 +20,7 @@ pub const VOTA_ASH: ChainInfoConst = ChainInfoConst {
     fcd_url: None,
 };
 
-pub const VOTA_TESTNET: ChainInfoConst = ChainInfoConst {
+pub const VOTA_TESTNET: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "vota-testnet",
     gas_denom: "peaka",

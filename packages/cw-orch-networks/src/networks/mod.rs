@@ -15,7 +15,7 @@ pub mod rollkit;
 pub mod sei;
 pub mod terra;
 
-pub use crate::chain_info::{ChainInfoConst, ChainKind, NetworkInfoConst};
+pub use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use doravota::{VOTA_ASH, VOTA_TESTNET};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
@@ -28,17 +28,17 @@ pub use osmosis::{LOCAL_OSMO, OSMOSIS_1, OSMO_5};
 pub use rollkit::LOCAL_ROLLKIT;
 pub use sei::{ATLANTIC_2, LOCAL_SEI, PACIFIC_1, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
-/// A helper function to retrieve a [`ChainInfoConst`] struct for a given chain-id.
+/// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///
 /// ## Example
 /// ```rust,no_run
-/// use cw_orch_networks::networks::{parse_network, ChainInfoConst};
-/// let juno_mainnet: ChainInfoConst = parse_network("juno-1").unwrap();
+/// use cw_orch_networks::networks::{parse_network, ChainInfo};
+/// let juno_mainnet: ChainInfo = parse_network("juno-1").unwrap();
 /// ```
 /// ---
 /// supported chains are defined by the `SUPPORT_NETWORKS` variable
 
-pub fn parse_network(net_id: &str) -> Result<ChainInfoConst, String> {
+pub fn parse_network(net_id: &str) -> Result<ChainInfo, String> {
     SUPPORTED_NETWORKS
         .iter()
         .find(|net| net.chain_id == net_id)
@@ -46,7 +46,7 @@ pub fn parse_network(net_id: &str) -> Result<ChainInfoConst, String> {
         .ok_or(format!("Network not found: {}", net_id))
 }
 
-pub const SUPPORTED_NETWORKS: &[ChainInfoConst] = &[
+pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     UNI_6,
     JUNO_1,
     LOCAL_JUNO,
