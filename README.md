@@ -55,7 +55,7 @@ use cw20::{Cw20Coin, BalanceResponse};
 
 // Implement the Uploadable trait so it can be uploaded to the mock. 
 impl <Chain> Uploadable for Cw20<Chain> {
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,

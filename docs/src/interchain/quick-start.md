@@ -55,12 +55,11 @@ struct Client;
 impl<Chain> Uploadable for Client<Chain> {
     // No wasm needed for this example
     // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
-    fn wasm(&self) -> WasmPath {
-        let wasm_path = format!("No wasm");
-        WasmPath::new(wasm_path).unwrap()
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
+        unimplemented!("No wasm")
     }
     // Return a CosmWasm contract wrapper with IBC capabilities
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 simple_ica_controller::contract::execute,
@@ -102,12 +101,11 @@ struct Host;
 impl<Chain> Uploadable for Host<Chain> {
     // No wasm needed for this example
     // You would need to get the contract wasm to be able to interact with actual Cosmos SDK nodes
-    fn wasm(&self) -> WasmPath {
-        let wasm_path = format!("No wasm");
-        WasmPath::new(wasm_path).unwrap()
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
+        unimplemented!("No wasm")
     }
     // Return a CosmWasm contract wrapper with IBC capabilities
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 host_execute,
