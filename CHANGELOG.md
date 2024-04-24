@@ -5,7 +5,11 @@
 - Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
 - Added `balance` query at the root of QueryHandler
 - Added DaemonBuilder configuration for grpc url and fee overwriting
-- Current Status : Non-breaking
+- Removed IBC chain registry from cw-orch-networks. Using the custom `ChainInfo` and `ChainInfoOwned` types
+- Fixed broken documentation links
+- Separate Env variables and define them in the crates where they are used
+- Removed self from the methods inside Uploadable trait
+- Current Status : Breaking
 
 ## 0.21.2
 
