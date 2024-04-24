@@ -11,7 +11,7 @@ pub type NetworkInfoOwned = NetworkInfoBase<String>;
 /// Information about a chain.
 /// This is used to connect to a chain and to generate transactions.
 #[derive(Clone, Debug)]
-pub struct ChainInfoBase<StringType, StringArrayType> {
+pub struct ChainInfoBase<StringType: Into<String>, StringArrayType: AsRef<[StringType]>> {
     /// Identifier for the network ex. columbus-2
     pub chain_id: StringType,
     /// Max gas and denom info
