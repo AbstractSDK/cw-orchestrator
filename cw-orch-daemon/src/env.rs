@@ -2,7 +2,7 @@
 //! This is used to import environment variables with safe names (and at a centralized location)
 //! To get the env variable parsed value, you can use
 //! ```rust,no_run
-//! use cw_orch_daemon::DaemonEnvVars;
+//! use cw_orch_daemon::env::DaemonEnvVars;
 //! let env_variable = DaemonEnvVars::state_file();
 //! ```
 
