@@ -31,8 +31,9 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::local_target, CoreEnvVars};
+use cw_orch_core::{environment::ChainKind, log::local_target, CoreEnvVars, CwEnvError};
 
+use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
 use std::{str::FromStr, sync::Arc};
 
@@ -105,15 +106,7 @@ impl Sender<All> {
         daemon_state: &Arc<DaemonState>,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
-        let kind = daemon_state.chain_data.kind.clone();
-        // NETWORK_MNEMONIC_GROUP
-        let env_variable_name = kind.mnemonic_env_variable_name();
-        let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
-            panic!(
-                "Wallet mnemonic environment variable {} not set.",
-                env_variable_name
-            )
-        });
+        let mnemonic = get_mnemonic_env(&daemon_state.chain_data.kind)?;
 
         Self::from_mnemonic_with_options(daemon_state, &mnemonic, options)
     }
@@ -480,5 +473,24 @@ impl Sender<All> {
                 current: parsed_balance,
             });
         }
+    }
+}
+
+fn get_mnemonic_env(chain_kind: &ChainKind) -> Result<String, CwEnvError> {
+    match chain_kind {
+        ChainKind::Local => DaemonEnvVars::local_mnemonic(),
+        ChainKind::Testnet => DaemonEnvVars::test_mnemonic(),
+        ChainKind::Mainnet => DaemonEnvVars::main_mnemonic(),
+    }
+    .ok_or(CwEnvError::EnvVarNotPresentNamed(
+        get_mnemonic_env_name(chain_kind).to_string(),
+    ))
+}
+
+fn get_mnemonic_env_name(chain_kind: &ChainKind) -> &str {
+    match chain_kind {
+        ChainKind::Local => LOCAL_MNEMONIC_ENV_NAME,
+        ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
+        ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
     }
 }

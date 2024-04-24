@@ -42,7 +42,7 @@ pub enum CwEnvError {
     AnyError(#[from] ::anyhow::Error),
     #[error("Generic Error {0}")]
     StdErr(String),
-    #[error("Environment varable not defined {0}")]
+    #[error("Environment variable not defined {0}")]
     EnvVarNotPresentNamed(String),
 }
 

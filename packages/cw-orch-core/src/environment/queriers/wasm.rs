@@ -3,13 +3,15 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     contract::interface_traits::{ContractInstance, Uploadable},
-    environment::TxHandler,
+    environment::ChainState,
     CwEnvError,
 };
 
-use super::{Querier, QueryHandler};
+use super::Querier;
 
 pub trait WasmQuerier: Querier {
+    type Chain: ChainState;
+
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error>;
 
     /// Query contract info
@@ -35,11 +37,10 @@ pub trait WasmQuerier: Querier {
     fn code(&self, code_id: u64) -> Result<CodeInfoResponse, Self::Error>;
 
     /// Returns the checksum of the WASM file if the env supports it. Will re-upload every time if not supported.
-    fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
+    fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
+        &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError> {
-        contract.wasm().checksum()
-    }
+    ) -> Result<HexBinary, CwEnvError>;
 
     fn instantiate2_addr(
         &self,

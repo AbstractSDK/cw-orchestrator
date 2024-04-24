@@ -43,8 +43,6 @@ pub mod wasm_protected {
         pub use cw_orch_core::CoreEnvVars;
         #[cfg(feature = "daemon")]
         pub use cw_orch_daemon::{env::default_state_folder, env::DaemonEnvVars};
-        #[cfg(feature = "daemon")]
-        pub use cw_orch_networks::NetworkEnvVars;
     }
     pub use cw_orch_mock as mock;
 

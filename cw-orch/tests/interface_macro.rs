@@ -23,7 +23,7 @@ use cw_orch::interface;
 pub struct MockContract;
 
 impl<Chain> Uploadable for MockContract<Chain> {
-    fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+    fn wrapper() -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 mock_contract::execute,

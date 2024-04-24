@@ -8,7 +8,7 @@ use cw_orch::prelude::Mock;
 pub struct MockContract;
 
 impl<Chain, T> Uploadable for MockContract<Chain, T> {
-    fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+    fn wrapper() -> <Mock as TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 mock_contract_u64::execute,
