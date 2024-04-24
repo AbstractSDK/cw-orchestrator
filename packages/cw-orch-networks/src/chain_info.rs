@@ -2,77 +2,73 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
-use ibc_chain_registry::chain::{Apis, ChainData as RegistryChainInfo, FeeToken, FeeTokens, Grpc};
-
 use cw_orch_core::{
     env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
     CwEnvError, CwOrchEnvVars,
 };
 
-#[allow(clippy::from_over_into)]
-impl Into<RegistryChainInfo> for ChainInfo<'_> {
-    fn into(self) -> RegistryChainInfo {
-        RegistryChainInfo {
-            chain_name: self.network_info.id.to_string(),
-            chain_id: self.chain_id.to_string().into(),
-            bech32_prefix: self.network_info.pub_address_prefix.into(),
-            fees: FeeTokens {
-                fee_tokens: vec![FeeToken {
-                    fixed_min_gas_price: self.gas_price,
-                    denom: self.gas_denom.to_string(),
-                    ..Default::default()
-                }],
-            },
-            network_type: self.kind.to_string(),
-            apis: Apis {
-                grpc: self
-                    .grpc_urls
-                    .iter()
-                    .map(|url| Grpc {
-                        address: url.to_string(),
-                        ..Default::default()
-                    })
-                    .collect(),
-                ..Default::default()
-            },
-            slip44: self.network_info.coin_type,
-            ..Default::default()
-        }
-    }
-}
+pub type ChainInfo = ChainInfoBase<&'static str, &'static [&'static str]>;
+pub type ChainInfoOwned = ChainInfoBase<String, Vec<String>>;
+
+pub type NetworkInfo = NetworkInfoBase<&'static str>;
+pub type NetworkInfoOwned = NetworkInfoBase<String>;
 
 /// Information about a chain.
 /// This is used to connect to a chain and to generate transactions.
 #[derive(Clone, Debug)]
-pub struct ChainInfo<'a> {
+pub struct ChainInfoBase<StringType, StringArrayType> {
     /// Identifier for the network ex. columbus-2
-    pub chain_id: &'a str,
+    pub chain_id: StringType,
     /// Max gas and denom info
     // #[serde(with = "cosm_denom_format")]
-    pub gas_denom: &'a str,
+    pub gas_denom: StringType,
     /// gas price
     pub gas_price: f64,
     /// gRPC urls, used to attempt connection
-    pub grpc_urls: &'a [&'a str],
+    pub grpc_urls: StringArrayType,
     /// Optional urls for custom functionality
-    pub lcd_url: Option<&'a str>,
+    pub lcd_url: Option<StringType>,
     /// Optional urls for custom functionality
-    pub fcd_url: Option<&'a str>,
+    pub fcd_url: Option<StringType>,
     /// Underlying network details (coin type, address prefix, etc)
-    pub network_info: NetworkInfo<'a>,
+    pub network_info: NetworkInfoBase<StringType>,
     /// Chain kind, (local, testnet, mainnet)
     pub kind: ChainKind,
 }
 
 /// Information about the underlying network, used for key derivation
 #[derive(Clone, Debug, Serialize, Default)]
-pub struct NetworkInfo<'a> {
+pub struct NetworkInfoBase<StringType> {
     /// network identifier (ex. juno, terra, osmosis, etc)
-    pub id: &'a str,
+    pub id: StringType,
     /// address prefix
-    pub pub_address_prefix: &'a str,
+    pub pub_address_prefix: StringType,
     /// coin type for key derivation
     pub coin_type: u32,
+}
+
+impl From<ChainInfo> for ChainInfoOwned {
+    fn from(value: ChainInfo) -> Self {
+        ChainInfoOwned {
+            chain_id: value.chain_id.to_string(),
+            gas_denom: value.gas_denom.to_string(),
+            gas_price: value.gas_price,
+            grpc_urls: value.grpc_urls.iter().map(|url| url.to_string()).collect(),
+            lcd_url: value.lcd_url.map(ToString::to_string),
+            fcd_url: value.fcd_url.map(ToString::to_string),
+            network_info: value.network_info.into(),
+            kind: value.kind,
+        }
+    }
+}
+impl From<NetworkInfo> for NetworkInfoOwned {
+    fn from(value: NetworkInfo) -> Self {
+        NetworkInfoOwned {
+            id: value.id.to_string(),
+            pub_address_prefix: value.pub_address_prefix.to_string(),
+            coin_type: value.coin_type,
+        }
+    }
 }
 
 /// Kind of chain (local, testnet, mainnet)

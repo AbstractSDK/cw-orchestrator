@@ -2,7 +2,6 @@ use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
     service_client::ServiceClient, GetNodeInfoRequest,
 };
 use cw_orch_core::log::connectivity_target;
-use ibc_chain_registry::chain::Grpc;
 use tonic::transport::{Channel, ClientTlsConfig};
 
 use super::error::DaemonError;
@@ -12,10 +11,10 @@ pub struct GrpcChannel {}
 
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
-    pub async fn connect(grpc: &[Grpc], chain_id: &str) -> Result<Channel, DaemonError> {
+    pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
         let mut successful_connections = vec![];
 
-        for Grpc { address, .. } in grpc.iter() {
+        for address in grpc.iter() {
             log::debug!(target: &connectivity_target(), "Trying to connect to endpoint: {}", address);
 
             // get grpc endpoint
@@ -120,7 +119,7 @@ mod tests {
     #[tokio::test]
     async fn network_grpcs_list_is_empty() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
-        let grpcs: &Vec<&str> = &vec![];
+        let grpcs = &[];
         chain.grpc_urls = grpcs;
 
         let build_res = DaemonAsync::builder()

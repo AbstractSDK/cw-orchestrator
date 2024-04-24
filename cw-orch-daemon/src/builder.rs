@@ -5,9 +5,9 @@ use crate::{
 use std::sync::Arc;
 
 use bitcoin::secp256k1::All;
-use ibc_chain_registry::chain::ChainData;
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
+use cw_orch_networks::ChainInfoOwned;
 
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
@@ -27,7 +27,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 /// ```
 pub struct DaemonAsyncBuilder {
     // # Required
-    pub(crate) chain: Option<ChainData>,
+    pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
 
@@ -41,7 +41,7 @@ pub struct DaemonAsyncBuilder {
 
 impl DaemonAsyncBuilder {
     /// Set the chain the daemon will connect to
-    pub fn chain(&mut self, chain: impl Into<ChainData>) -> &mut Self {
+    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
         self
     }

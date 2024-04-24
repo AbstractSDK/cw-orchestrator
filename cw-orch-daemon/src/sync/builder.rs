@@ -4,7 +4,7 @@ use crate::{
     DaemonAsyncBuilder,
 };
 use bitcoin::secp256k1::All;
-use ibc_chain_registry::chain::{ChainData, FeeToken, Grpc};
+use cw_orch_networks::ChainInfoOwned;
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -22,7 +22,7 @@ use super::{super::error::DaemonError, core::Daemon};
 /// ```
 pub struct DaemonBuilder {
     // # Required
-    pub(crate) chain: Option<ChainData>,
+    pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
     pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
@@ -39,7 +39,7 @@ pub struct DaemonBuilder {
 
 impl DaemonBuilder {
     /// Set the chain the Daemon will connect to
-    pub fn chain(&mut self, chain: impl Into<ChainData>) -> &mut Self {
+    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
         self
     }
@@ -143,35 +143,16 @@ impl DaemonBuilder {
     }
 }
 
-fn overwrite_fee(chain: &mut ChainData, denom: Option<String>, amount: Option<f64>) {
-    let selected_fee = chain.fees.fee_tokens.first().cloned();
-
-    let fee_denom = denom
-        .clone()
-        .or(selected_fee.clone().map(|s| s.denom))
-        .unwrap();
-
-    let mut fee = amount
-        .map(|fee| FeeToken {
-            denom: fee_denom.clone(),
-            fixed_min_gas_price: fee,
-            low_gas_price: fee,
-            average_gas_price: fee,
-            high_gas_price: fee,
-        })
-        .or(selected_fee)
-        .unwrap();
-
-    fee.denom = fee_denom;
-    chain.fees.fee_tokens = vec![fee];
+fn overwrite_fee(chain: &mut ChainInfoOwned, denom: Option<String>, amount: Option<f64>) {
+    if let Some(denom) = denom {
+        chain.gas_denom = denom.to_string()
+    }
+    chain.gas_price = amount.unwrap_or(chain.gas_price);
 }
 
-fn overwrite_grpc_url(chain: &mut ChainData, grpc_url: Option<String>) {
+fn overwrite_grpc_url(chain: &mut ChainInfoOwned, grpc_url: Option<String>) {
     if let Some(grpc_url) = grpc_url {
-        chain.apis.grpc = vec![Grpc {
-            address: grpc_url,
-            ..Default::default()
-        }];
+        chain.grpc_urls = vec![grpc_url.to_string()]
     }
 }
 
@@ -194,9 +175,9 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.apis.grpc.len(), 1);
+        assert_eq!(daemon.daemon.state.chain_data.grpc_urls.len(), 1);
         assert_eq!(
-            daemon.daemon.state.chain_data.apis.grpc[0].address,
+            daemon.daemon.state.chain_data.grpc_urls[0],
             OSMOSIS_1.grpc_urls[0].to_string(),
         );
     }
@@ -213,23 +194,7 @@ mod test {
             .unwrap();
         println!("chain {:?}", daemon.daemon.state.chain_data);
 
-        assert_eq!(daemon.daemon.state.chain_data.fees.fee_tokens.len(), 1);
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].fixed_min_gas_price,
-            fee_amount
-        );
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].low_gas_price,
-            fee_amount
-        );
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].average_gas_price,
-            fee_amount
-        );
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].high_gas_price,
-            fee_amount
-        );
+        assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
     }
 
     #[test]
@@ -243,11 +208,7 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.fees.fee_tokens.len(), 1);
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].denom,
-            token.to_string()
-        );
+        assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
     }
 
     #[test]
@@ -262,27 +223,8 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.fees.fee_tokens.len(), 1);
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].denom,
-            token.to_string()
-        );
+        assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
 
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].fixed_min_gas_price,
-            fee_amount
-        );
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].low_gas_price,
-            fee_amount
-        );
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].average_gas_price,
-            fee_amount
-        );
-        assert_eq!(
-            daemon.daemon.state.chain_data.fees.fee_tokens[0].high_gas_price,
-            fee_amount
-        );
+        assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
     }
 }

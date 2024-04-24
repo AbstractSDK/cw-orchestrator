@@ -7,7 +7,6 @@ mod queriers {
     use cw_orch_core::environment::TxHandler;
     use cw_orch_daemon::{queriers::Bank, GrpcChannel};
     use cw_orch_networks::networks;
-    use ibc_chain_registry::chain::Grpc;
     use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
     use std::str::FromStr;
@@ -28,10 +27,7 @@ mod queriers {
     pub async fn build_channel() -> tonic::transport::Channel {
         let network = networks::LOCAL_JUNO;
 
-        let grpcs: Vec<Grpc> = vec![Grpc {
-            address: network.grpc_urls[0].into(),
-            provider: None,
-        }];
+        let grpcs = vec![network.grpc_urls[0].into()];
 
         let channel = GrpcChannel::connect(&grpcs, network.chain_id).await;
 

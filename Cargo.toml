@@ -41,7 +41,5 @@ prost = "0.12.3"
 # Test deps
 speculoos = "0.11.0"
 
-ibc-chain-registry = { version = "0.25.0" }
-
 # Logging
 log = "0.4.14"
