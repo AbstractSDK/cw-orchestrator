@@ -103,8 +103,8 @@ impl CosmTxResponse {
                         .attributes
                         .iter()
                         .map(|attr| TxResultBlockAttribute {
-                            key: String::from_utf8_lossy(&attr.key).to_string(),
-                            value: String::from_utf8_lossy(&attr.value).to_string(),
+                            key: parse_attribute_bytes(&attr.key),
+                            value: parse_attribute_bytes(&attr.value),
                         })
                         .collect(),
                 })

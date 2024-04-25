@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Allow cw-orch wasm compilation without features
+- Transaction Response now inspects logs and events to find matching events.
 
 ## 0.21.1
 
