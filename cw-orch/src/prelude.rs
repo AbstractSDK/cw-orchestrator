@@ -30,6 +30,9 @@ pub use crate::environment::{
     NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
 };
 
+// Chains
+pub use crate::environment::{ChainInfo, ChainInfoOwned};
+
 // Mock for testing
 pub use crate::mock::{Mock, MockBech32};
 
