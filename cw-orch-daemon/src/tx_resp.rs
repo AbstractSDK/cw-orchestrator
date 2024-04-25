@@ -90,6 +90,33 @@ impl CosmTxResponse {
 
     /// get the list of event types from a TX record
     pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
+        let log_events = self.get_events_from_logs(event_type);
+        // In case log events are empty, we fetch the events from the .events field
+        if log_events.is_empty() {
+            let events_filtered = self
+                .events
+                .iter()
+                .filter(|event| event.r#type == event_type)
+                .map(|event| TxResultBlockEvent {
+                    s_type: event.r#type.clone(),
+                    attributes: event
+                        .attributes
+                        .iter()
+                        .map(|attr| TxResultBlockAttribute {
+                            key: String::from_utf8_lossy(&attr.key).to_string(),
+                            value: String::from_utf8_lossy(&attr.value).to_string(),
+                        })
+                        .collect(),
+                })
+                .collect::<Vec<_>>();
+
+            events_filtered
+        } else {
+            log_events
+        }
+    }
+
+    pub fn get_events_from_logs(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
         let mut response: Vec<TxResultBlockEvent> = Default::default();
 
         for log_part in &self.logs {
