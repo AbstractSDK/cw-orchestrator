@@ -2,8 +2,7 @@ use crate::contract::WasmPath;
 use crate::prelude::Uploadable;
 use cosmwasm_std::{coin, Addr, Coins};
 
-use cw_orch_core::environment::{BankQuerier, BankSetter, DefaultQueriers};
-use cw_orch_daemon::networks::{ChainInfo, NetworkInfo};
+use cw_orch_core::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueriers, NetworkInfo};
 use cw_orch_traits::stargate::Stargate;
 
 use crate::mock::cw_multi_test::AppResponse;
@@ -48,7 +47,7 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
         pub_address_prefix: "osmo",
         coin_type: 118u32,
     },
-    kind: cw_orch_daemon::networks::ChainKind::Local,
+    kind: cw_orch_core::environment::ChainKind::Local,
 };
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
