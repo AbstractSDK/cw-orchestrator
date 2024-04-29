@@ -12,7 +12,7 @@ XION empowers developers and brands to create frictionless Web3 experiences, wit
 
 ## Usage
 
-See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::OSMO_5`.
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::XION_TESTNET_1`.
 
 ## References
 
