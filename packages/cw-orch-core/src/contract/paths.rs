@@ -66,8 +66,8 @@ mod artifacts_dir {
 
     use super::WasmPath;
     use crate::{
-        build::BuildPostfix, env::ARTIFACTS_DIR_ENV_NAME, environment::EnvironmentQuerier,
-        error::CwEnvError, log::local_target, CoreEnvVars,
+        build::BuildPostfix, env::ARTIFACTS_DIR_ENV_NAME, error::CwEnvError, log::local_target,
+        CoreEnvVars,
     };
 
     use std::{env, fs, path::PathBuf};
@@ -160,10 +160,10 @@ mod artifacts_dir {
         /// Find a WASM file in the artifacts directory that contains the given contract name AND build post-fix.
         /// If a build with the post-fix is not found, the default build will be used.
         /// If none of the two are found, an error is returned.
-        pub fn find_wasm_path_with_build_postfix<T: EnvironmentQuerier>(
+        pub fn find_wasm_path_with_build_postfix(
             &self,
             name: &str,
-            build_postfix: BuildPostfix<T>,
+            build_postfix: BuildPostfix,
         ) -> Result<WasmPath, CwEnvError> {
             let build_postfix: String = build_postfix.into();
             // Found artifacts priority respected

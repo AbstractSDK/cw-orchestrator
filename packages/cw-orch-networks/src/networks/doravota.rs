@@ -4,7 +4,7 @@ use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: juno
 pub const DORAVOTA_NETWORK: NetworkInfo = NetworkInfo {
-    id: "doravota",
+    chain_name: "doravota",
     pub_address_prefix: "dora",
     coin_type: 118u32,
 };

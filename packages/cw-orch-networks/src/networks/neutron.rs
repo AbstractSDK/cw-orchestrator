@@ -2,7 +2,7 @@ use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: neutron
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
-    id: "neutron",
+    chain_name: "neutron",
     pub_address_prefix: "neutron",
     coin_type: 118u32,
 };

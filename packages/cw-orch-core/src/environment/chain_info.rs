@@ -12,7 +12,7 @@ pub type NetworkInfoOwned = NetworkInfoBase<String>;
 /// This is used to connect to a chain and to generate transactions.
 #[derive(Clone, Debug)]
 pub struct ChainInfoBase<StringType: Into<String>, StringArrayType: AsRef<[StringType]>> {
-    /// Identifier for the network ex. columbus-2
+    /// Identifier for the network ex. phoenix-2, pisco-1
     pub chain_id: StringType,
     /// Max gas and denom info
     // #[serde(with = "cosm_denom_format")]
@@ -34,8 +34,8 @@ pub struct ChainInfoBase<StringType: Into<String>, StringArrayType: AsRef<[Strin
 /// Information about the underlying network, used for key derivation
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct NetworkInfoBase<StringType> {
-    /// network identifier (ex. juno, terra, osmosis, etc)
-    pub id: StringType,
+    /// network identifier (ex. juno, terra2, osmosis, etc)
+    pub chain_name: StringType,
     /// address prefix
     pub pub_address_prefix: StringType,
     /// coin type for key derivation
@@ -59,7 +59,7 @@ impl From<ChainInfo> for ChainInfoOwned {
 impl From<NetworkInfo> for NetworkInfoOwned {
     fn from(value: NetworkInfo) -> Self {
         NetworkInfoOwned {
-            id: value.id.to_string(),
+            chain_name: value.chain_name.to_string(),
             pub_address_prefix: value.pub_address_prefix.to_string(),
             coin_type: value.coin_type,
         }

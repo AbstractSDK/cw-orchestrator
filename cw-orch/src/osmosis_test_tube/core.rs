@@ -44,7 +44,7 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
     network_info: NetworkInfo {
-        id: "osmosis",
+        chain_name: "osmosis",
         pub_address_prefix: "osmo",
         coin_type: 118u32,
     },
