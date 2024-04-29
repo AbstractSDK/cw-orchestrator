@@ -17,4 +17,15 @@ pub const LOCAL_ROLLKIT: ChainInfo = ChainInfo {
     lcd_url: None,
     fcd_url: None,
 };
+
+pub const ROLLKIT_TESTNET: ChainInfo = ChainInfo {
+    kind: ChainKind::Local,
+    chain_id: "rosm",
+    gas_denom: "urosm",
+    gas_price: 0.025,
+    grpc_urls: &["http://grpc.rosm.rollkit.dev:9290"],
+    network_info: ROLLKIT_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
 // ANCHOR_END: rollkit
