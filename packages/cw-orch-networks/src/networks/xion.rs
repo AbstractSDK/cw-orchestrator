@@ -1,4 +1,4 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: xion
 pub const XION_NETWORK: NetworkInfo = NetworkInfo {
