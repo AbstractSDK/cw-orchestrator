@@ -11,7 +11,7 @@ pub const XION_TESTNET_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "xion-testnet-1",
     gas_denom: "uxion",
-    gas_price: 0.025,
+    gas_price: 0.0,
     grpc_urls: &["http://xion-testnet-grpc.polkachu.com:22390"],
     network_info: XION_NETWORK,
     lcd_url: None,
