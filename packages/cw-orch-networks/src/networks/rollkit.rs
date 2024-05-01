@@ -2,7 +2,7 @@ use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: rollkit
 pub const ROLLKIT_NETWORK: NetworkInfo = NetworkInfo {
-    id: "rollkit",
+    chain_name: "rollkit",
     pub_address_prefix: "wasm",
     coin_type: 118u32,
 };

@@ -2,7 +2,7 @@ use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: xion
 pub const XION_NETWORK: NetworkInfo = NetworkInfo {
-    id: "xion",
+    chain_name: "xion",
     pub_address_prefix: "xion",
     coin_type: 118u32,
 };

@@ -90,7 +90,7 @@ impl DaemonState {
             crate::json_file::write(
                 &state.json_file_path,
                 &state.chain_data.chain_id.to_string(),
-                &state.chain_data.network_info.id.to_string(),
+                &state.chain_data.network_info.chain_name.to_string(),
                 &state.deployment_id,
             );
         }
@@ -142,7 +142,8 @@ impl DaemonState {
     pub fn get(&self, key: &str) -> Result<Value, DaemonError> {
         let json = self.read_state()?;
         Ok(
-            json[&self.chain_data.network_info.id][&self.chain_data.chain_id.to_string()][key]
+            json[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id.to_string()]
+                [key]
                 .clone(),
         )
     }
@@ -160,8 +161,8 @@ impl DaemonState {
 
         let mut json = self.read_state()?;
 
-        json[&self.chain_data.network_info.id][&self.chain_data.chain_id.to_string()][key]
-            [contract_id] = json!(value);
+        json[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id.to_string()]
+            [key][contract_id] = json!(value);
 
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
         Ok(())
