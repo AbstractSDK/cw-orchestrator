@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload book repository
-          path: "./docs/book/html"
+          path: "./docs/book"
 
   # Deploy job
   deploy:
