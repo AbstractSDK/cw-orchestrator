@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = "0.22.0-rc"
+version = "0.22.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
