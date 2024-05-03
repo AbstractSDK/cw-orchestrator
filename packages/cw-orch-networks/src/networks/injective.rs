@@ -2,7 +2,7 @@ use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: injective
 pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {
-    id: "injective",
+    chain_name: "injective",
     pub_address_prefix: "inj",
     coin_type: 60u32,
 };

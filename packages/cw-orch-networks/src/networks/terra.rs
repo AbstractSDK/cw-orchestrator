@@ -1,8 +1,8 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: terra
 pub const TERRA_NETWORK: NetworkInfo = NetworkInfo {
-    id: "terra2",
+    chain_name: "terra2",
     pub_address_prefix: "terra",
     coin_type: 330u32,
 };

@@ -1,8 +1,8 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: nibiru
 pub const NIBIRU_NETWORK: NetworkInfo = NetworkInfo {
-    id: "nibiru",
+    chain_name: "nibiru",
     pub_address_prefix: "nibi",
     coin_type: 118u32,
 };

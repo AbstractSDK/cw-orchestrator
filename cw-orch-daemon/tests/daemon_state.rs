@@ -1,5 +1,4 @@
-use cw_orch_core::env::STATE_FILE_ENV_NAME;
-use cw_orch_daemon::{json_file::JsonFileState, ChainRegistryData, DaemonState};
+use cw_orch_daemon::{env::STATE_FILE_ENV_NAME, json_file::JsonFileState, DaemonState};
 use cw_orch_networks::networks::JUNO_1;
 use tokio::runtime::Runtime;
 
@@ -9,7 +8,7 @@ const TEST_STATE_FILE: &str = "./tests/test.json";
 fn simultaneous_read() {
     let runtime = Runtime::new().unwrap();
 
-    let chain_data: ChainRegistryData = JUNO_1.into();
+    let chain_data = JUNO_1.into();
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
 
     let daemon_state = runtime
@@ -40,7 +39,7 @@ fn simultaneous_read() {
 fn simultaneous_write() {
     let runtime = Runtime::new().unwrap();
 
-    let chain_data: ChainRegistryData = JUNO_1.into();
+    let chain_data = JUNO_1.into();
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
 
     let daemon_state = runtime

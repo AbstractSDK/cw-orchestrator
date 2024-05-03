@@ -28,6 +28,6 @@ impl<S: StateInterface> QueryHandler for OsmosisTestTube<S> {
 
 impl<S: StateInterface> DefaultQueriers for OsmosisTestTube<S> {
     type Bank = bank::OsmosisTestTubeBankQuerier;
-    type Wasm = wasm::OsmosisTestTubeWasmQuerier;
+    type Wasm = wasm::OsmosisTestTubeWasmQuerier<S>;
     type Node = node::OsmosisTestTubeNodeQuerier;
 }

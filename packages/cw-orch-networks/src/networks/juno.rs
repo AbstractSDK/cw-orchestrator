@@ -1,10 +1,10 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // https://notional.ventures/resources/endpoints#juno
 
 // ANCHOR: juno
 pub const JUNO_NETWORK: NetworkInfo = NetworkInfo {
-    id: "juno",
+    chain_name: "juno",
     pub_address_prefix: "juno",
     coin_type: 118u32,
 };

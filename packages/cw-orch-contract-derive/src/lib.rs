@@ -124,7 +124,7 @@ The interface can be linked to its source code by implementing the `Uploadable` 
 use cw_orch::prelude::*;
 
 impl <Chain> Uploadable for Cw20<Chain> {
-    fn wrapper(&self) -> <Mock as cw_orch::TxHandler>::ContractSource {
+    fn wrapper() -> <Mock as cw_orch::TxHandler>::ContractSource {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -135,7 +135,7 @@ impl <Chain> Uploadable for Cw20<Chain> {
         )
     }
 
-    fn wasm(&self) -> <Daemon as cw_orch::TxHandler>::ContractSource {
+    fn wasm(_chain: &ChainInfoOwned) -> <Daemon as cw_orch::TxHandler>::ContractSource {
         WasmPath::new("path/to/cw20.wasm").unwrap()
     }
 }

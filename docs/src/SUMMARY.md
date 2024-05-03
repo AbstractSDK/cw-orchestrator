@@ -26,7 +26,7 @@
   - [Cw Multi Test](./integrations/cw-multi-test.md)
   - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
   - [Unit tests](./integrations/unit-tests.md)
-  - [Fork Testing](./integrations/fork-testing.md)
+  - [Fork Testing](./integrations/clone-testing.md)
 
 - [IBC](./interchain/index.md)
   - [Quick Start](./interchain/quick-start.md)
@@ -45,6 +45,7 @@
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
   - [Rollkit](./chains/rollkit.md)
+  - [XION](./chains/xion.md)
 
 # Extras
 

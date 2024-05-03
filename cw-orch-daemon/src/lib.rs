@@ -14,6 +14,7 @@ pub mod state;
 pub mod sync;
 pub mod tx_resp;
 // expose these as mods as they can grow
+pub mod env;
 pub mod keys;
 pub mod live_mock;
 mod log;
@@ -21,7 +22,6 @@ pub mod queriers;
 pub mod tx_broadcaster;
 pub mod tx_builder;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
-pub use cw_orch_networks::chain_info::*;
 pub use cw_orch_networks::networks;
 pub use sender::Wallet;
 pub use tx_builder::TxBuilder;
@@ -50,9 +50,6 @@ pub(crate) mod cosmos_modules {
         tendermint::v0_34::abci as tendermint_abci,
     };
 }
-
-/// Re-export trait and data required to fetch daemon data from chain-registry
-pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
 
 lazy_static::lazy_static! {
     pub static ref RUNTIME: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();

@@ -1,6 +1,8 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier},
+    environment::{
+        ChainInfoOwned, ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+    },
     error::CwEnvError,
     log::contract_target,
 };
@@ -176,12 +178,12 @@ impl<T: MigratableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchMi
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
     /// Return an object that can be used to upload the contract to a WASM-supported environment.
-    fn wasm(&self) -> WasmPath {
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
         unimplemented!("no wasm file provided for this contract")
     }
 
     /// Return the wrapper object for the contract, only works for non-custom mock environments
-    fn wrapper(&self) -> Box<dyn MockContract<Empty, Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
         unimplemented!("no wrapper function implemented for this contract")
     }
 }
@@ -240,7 +242,8 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             .wasm_querier()
             .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = Chain::Wasm::local_hash(self)?;
+        let local_hash = self.get_chain().wasm_querier().local_hash(self)?;
+
         Ok(local_hash == on_chain_hash)
     }
 

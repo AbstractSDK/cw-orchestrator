@@ -34,10 +34,15 @@ pub mod wasm_protected {
 
     pub use cw_orch_core::{build, contract};
 
-    /// Related to execution environents and variables
+    /// Related to execution environments
     pub mod environment {
-        pub use cw_orch_core::env::{default_state_folder, CwOrchEnvVars};
         pub use cw_orch_core::environment::*;
+    }
+    /// Related environment variables definition
+    pub mod env_vars {
+        pub use cw_orch_core::CoreEnvVars;
+        #[cfg(feature = "daemon")]
+        pub use cw_orch_daemon::{env::default_state_folder, env::DaemonEnvVars};
     }
     pub use cw_orch_mock as mock;
 
