@@ -63,7 +63,7 @@ pub(crate) fn process_impl_into(
                 type_generics = argo.args
             }
         };
-        (quote!(.into()), quote!(#entrypoint_msg_type), type_generics)
+        (quote!(.into()), quote!(#ident), type_generics)
     } else {
         (quote!(), quote!(#ident), type_generics)
     }

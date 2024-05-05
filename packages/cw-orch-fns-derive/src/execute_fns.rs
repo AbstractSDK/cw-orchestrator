@@ -20,8 +20,8 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let bname = Ident::new(&format!("{name}Fns"), name.span());
 
     let generics = input.generics.clone();
-    let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl().clone();
-    let (maybe_into, entrypoint_msg_type, type_generics) =
+    let (_impl_generics, _ty_generics, where_clause) = generics.split_for_impl().clone();
+    let (_maybe_into, entrypoint_msg_type, type_generics) =
         process_impl_into(&input.attrs, name, input.generics);
 
     let is_attributes_sorted = process_sorting(&input.attrs);
@@ -82,7 +82,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                         let msg = #name::#variant_name (
                             #(#variant_ident_content_names,)*
                         );
-                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
                     }
                 )
             },
@@ -92,7 +92,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                     #variant_doc
                     fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
-                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
                     }
                 )
             }
@@ -118,7 +118,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                         let msg = #name::#variant_name {
                             #(#variant_ident_content_names,)*
                         };
-                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg #maybe_into,#passed_coins)
+                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
                     }
                 )
             }
@@ -128,7 +128,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: ::cw_orch::prelude::TxHandler, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics> #where_clause {
+        pub trait #bname<Chain: ::cw_orch::prelude::TxHandler, CwOrchExecuteMsgType : From<#entrypoint_msg_type<#type_generics>>, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = CwOrchExecuteMsgType> #where_clause {
             #(#variant_fns)*
         }
 
@@ -141,7 +141,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
     // We need to merge the where clauses (rust doesn't support 2 wheres)
     // If there is no where clause, we simply add the necessary where
-    let necessary_where = quote!(SupportedContract: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = #entrypoint_msg_type #ty_generics >);
+    let necessary_where = quote!(SupportedContract: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = CwOrchExecuteMsgType >);
     let combined_where_clause = where_clause
         .map(|w| {
             quote!(
@@ -155,7 +155,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: ::cw_orch::prelude::TxHandler, #type_generics> #bname<Chain, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::cw_orch::prelude::TxHandler, CwOrchExecuteMsgType : From<#entrypoint_msg_type<#type_generics>>, #type_generics> #bname<Chain, CwOrchExecuteMsgType, #type_generics> for SupportedContract
         #combined_where_clause {}
     );
 
