@@ -75,7 +75,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name (#(#variant_ident_content_names,)*);
-                        self.query(&msg #maybe_into)
+                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self,&msg #maybe_into)
                     }
                 )
             }
@@ -84,7 +84,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                     #variant_doc
                     fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
-                        self.query(&msg #maybe_into)
+                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg #maybe_into)
                     }
                 )
             },
@@ -109,7 +109,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                         let msg = #name::#variant_name {
                             #(#variant_idents,)*
                         };
-                        self.query(&msg #maybe_into)
+                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg #maybe_into)
                     }
                 )
             }
