@@ -5,12 +5,13 @@ use std::{fs::File, io::Seek};
 
 /// State file reader and writer
 /// Mainly used by [`crate::Daemon`] and [`crate::DaemonAsync`], but could also be used for tests or custom edits of the state
-pub struct JsonFileState {
+#[derive(Debug)]
+pub struct JsonLockedState {
     lock: FileLock,
     json: Value,
 }
 
-impl JsonFileState {
+impl JsonLockedState {
     /// Lock a state files
     /// Other process won't be able to lock it
     pub fn new(filename: &str) -> Self {
@@ -36,7 +37,7 @@ impl JsonFileState {
             from_reader(&lock.file).unwrap()
         };
 
-        JsonFileState { lock, json }
+        JsonLockedState { lock, json }
     }
 
     /// Prepare json for further writes
@@ -78,7 +79,7 @@ impl JsonFileState {
 }
 
 // Write json when dropping
-impl Drop for JsonFileState {
+impl Drop for JsonLockedState {
     fn drop(&mut self) {
         self.force_write()
     }

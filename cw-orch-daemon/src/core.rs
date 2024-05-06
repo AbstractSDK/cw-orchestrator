@@ -25,7 +25,7 @@ use std::{
     fmt::Debug,
     io::Write,
     str::{from_utf8, FromStr},
-    sync::Arc,
+    sync::{Arc, Mutex},
     time::Duration,
 };
 
@@ -67,7 +67,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Arc<DaemonState>,
+    pub state: Arc<Mutex<DaemonState>>,
 }
 
 impl DaemonAsync {
@@ -78,15 +78,17 @@ impl DaemonAsync {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.state.grpc_channel.clone()
+        // TODO: Channel shouldn't be inside state
+        let lock = self.state.lock().unwrap();
+        lock.grpc_channel.clone()
     }
 }
 
 impl ChainState for DaemonAsync {
-    type Out = Arc<DaemonState>;
+    type Out = Arc<Mutex<DaemonState>>;
 
     fn state(&self) -> Self::Out {
-        self.state.clone()
+        self.state
     }
 }
 
@@ -101,10 +103,11 @@ impl DaemonAsync {
     /// Does not consume the original [`DaemonAsync`].
     pub fn rebuild(&self) -> DaemonAsyncBuilder {
         let mut builder = Self::builder();
+        let state = self.state().lock().unwrap();
         builder
-            .chain(self.state().chain_data.clone())
+            .chain(state.chain_data.clone())
             .sender((*self.sender).clone())
-            .deployment_id(&self.state().deployment_id);
+            .deployment_id(state.deployment_id.clone());
         builder
     }
 
@@ -281,7 +284,7 @@ impl DaemonAsync {
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = <T as Uploadable>::wasm(&self.state.chain_data);
+        let wasm_path = <T as Uploadable>::wasm(&self.state.lock().unwrap().chain_data);
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 

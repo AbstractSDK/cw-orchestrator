@@ -1,6 +1,6 @@
 use super::error::DaemonError;
 use crate::env::{default_state_folder, DaemonEnvVars};
-use crate::{channel::GrpcChannel, json_file::JsonFileState, networks::ChainKind};
+use crate::{channel::GrpcChannel, json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::environment::ChainInfoOwned;
@@ -12,51 +12,38 @@ use cw_orch_core::{
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::collections::HashSet;
 use std::{collections::HashMap, path::Path, sync::Mutex};
 use tonic::transport::Channel;
 
-/// Global state for sharing json files between daemons
-/// Key: path to state file
-/// Value: (DaemonState count that points to that state file, Json file)
-pub(crate) static GLOBAL_WRITE_STATE: Lazy<Mutex<HashMap<String, (u64, JsonFileState)>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
+/// Global state to track which files are already open by other daemons from other threads
+/// This is necessary because File lock will allow same process to lock file how many times as process wants
+pub(crate) static LOCKED_FILES: Lazy<Mutex<HashSet<String>>> =
+    Lazy::new(|| Mutex::new(HashSet::new()));
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
 #[derive(Debug)]
 pub struct DaemonState {
-    /// this is passed via env var STATE_FILE
-    json_file_path: String,
+    json_state: DaemonStateFile,
     /// Deployment identifier
     pub deployment_id: String,
+    // TODO: Move grpc_channel and chain_data to DaemonAsync. No reason to have it here
     /// gRPC channel
     pub grpc_channel: Channel,
     /// Information about the chain
     pub chain_data: ChainInfoOwned,
-    /// Flag to set the daemon state readonly and not pollute the env file
-    read_only: bool,
 }
 
-// On clone increase lock count so we track how many daemon states using the file
-impl Clone for DaemonState {
-    fn clone(&self) -> Self {
-        let new_self = Self {
-            json_file_path: self.json_file_path.clone(),
-            deployment_id: self.deployment_id.clone(),
-            grpc_channel: self.grpc_channel.clone(),
-            chain_data: self.chain_data.clone(),
-            read_only: self.read_only,
-        };
-
-        // Increase DaemonStates count for this file
-        if !self.read_only {
-            let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
-            let (count, _) = lock.get_mut(&self.json_file_path).unwrap();
-            *count += 1;
-        }
-
-        new_self
-    }
+#[derive(Debug)]
+enum DaemonStateFile {
+    ReadOnly {
+        /// this is passed via env var STATE_FILE
+        path: String,
+    },
+    FullAccess {
+        json_file_state: JsonLockedState,
+    },
 }
 
 impl DaemonState {
@@ -98,46 +85,39 @@ impl DaemonState {
             json_file_path = format!("{folder}/{name}_local.json");
         }
 
-        // build daemon state
-        let state = DaemonState {
-            json_file_path: json_file_path.clone(),
+        let json_state = if read_only {
+            DaemonStateFile::ReadOnly {
+                path: json_file_path,
+            }
+        } else {
+            log::info!(
+                target: &local_target(),
+                "Writing daemon state JSON file: {json_file_path:#?}",
+            );
+
+            let mut lock = LOCKED_FILES.lock().unwrap();
+            if lock.contains(&json_file_path) {
+                return Err(DaemonError::StateAlreadyLocked(json_file_path));
+            }
+            let mut json_file_state = JsonLockedState::new(&json_file_path);
+            // Insert and drop mutex lock asap
+            lock.insert(json_file_path);
+            drop(lock);
+
+            json_file_state.prepare(
+                &chain_data.chain_id,
+                &chain_data.network_info.chain_name,
+                &deployment_id,
+            );
+            DaemonStateFile::FullAccess { json_file_state }
+        };
+
+        Ok(DaemonState {
+            json_state,
             deployment_id,
             grpc_channel,
             chain_data,
-            read_only,
-        };
-
-        if !read_only {
-            log::info!(
-                target: &local_target(),
-                "Writing daemon state JSON file: {:#?}",
-                state.json_file_path
-            );
-
-            let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
-            // Lock file if first time write
-            let file_state = match lock.entry(json_file_path.clone()) {
-                // Increase count if already locked this file
-                std::collections::hash_map::Entry::Occupied(o) => {
-                    let (count, lock) = o.into_mut();
-                    *count += 1;
-                    lock
-                }
-                // Insert as 1 count of DaemonStates pointing to this file if it's first open
-                std::collections::hash_map::Entry::Vacant(v) => {
-                    let (_, lock) = v.insert((1, JsonFileState::new(&json_file_path)));
-                    lock
-                }
-            };
-            file_state.prepare(
-                &state.chain_data.chain_id,
-                &state.chain_data.network_info.chain_name,
-                &state.deployment_id,
-            );
-        }
-
-        // finish
-        Ok(state)
+        })
     }
 
     /// Returns the path of the file where the state of `cw-orchestrator` is stored.
@@ -177,22 +157,20 @@ impl DaemonState {
 
     /// Get the chain state as json
     fn chain_state(&self) -> Result<serde_json::Value, DaemonError> {
-        // Check if already open in write mode {
-        let lock = GLOBAL_WRITE_STATE.lock().unwrap();
-        if let Some((_, j)) = lock.get(&self.json_file_path) {
-            Ok(
-                j.get(&self.chain_data.chain_id, self.chain_data.chain_id.as_str())
-                    .clone(),
-            )
-        } else {
-            // drop guard if not found, since reading may take a while
-            drop(lock);
-            // Or just read it from a file
-            crate::json_file::read(&self.json_file_path).map(|j| {
-                j[self.chain_data.chain_id.as_str()][&self.chain_data.network_info.chain_name]
-                    .clone()
-            })
-        }
+        let state = match &self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                let j = crate::json_lock::read(path)?;
+
+                j[&self.chain_data.chain_id][&self.chain_data.network_info.chain_name]
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state
+                .get(
+                    &self.chain_data.chain_id,
+                    &self.chain_data.network_info.chain_name,
+                )
+                .clone(),
+        };
+        Ok(state)
     }
 
     /// Retrieve a stateful value using the chainId and networkId
@@ -203,20 +181,20 @@ impl DaemonState {
 
     /// Set a stateful value using the chainId and networkId
     pub fn set<T: Serialize>(
-        &self,
+        &mut self,
         key: &str,
         contract_id: &str,
         value: T,
     ) -> Result<(), DaemonError> {
-        if self.read_only {
-            return Err(DaemonError::StateReadOnly);
-        }
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
 
-        let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
-
-        let (_, file_state) = lock.get_mut(&self.json_file_path).unwrap();
-        let val = file_state.get_mut(
-            self.chain_data.chain_id.as_str(),
+        let val = json_file_state.get_mut(
+            &self.chain_data.chain_id,
             &self.chain_data.network_info.chain_name,
         );
         val[key][contract_id] = json!(value);
@@ -225,27 +203,15 @@ impl DaemonState {
     }
 
     /// Forcefully write current json to a file
-    pub fn force_write(&self) -> Result<(), DaemonError> {
-        let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
-        let (_, file_state) = lock.get_mut(&self.json_file_path).unwrap();
-        file_state.force_write();
+    pub fn force_write(&mut self) -> Result<(), DaemonError> {
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
+        json_file_state.force_write();
         Ok(())
-    }
-}
-
-// Manual drop implementation to write state when no daemon states uses the file
-impl Drop for DaemonState {
-    fn drop(&mut self) {
-        let mut lock = GLOBAL_WRITE_STATE.lock().unwrap();
-
-        // Decrease open count
-        let (count, _) = lock.get_mut(&self.json_file_path).unwrap();
-        *count -= 1;
-
-        // If we get to zero count - write to a file
-        if *count == 0 {
-            lock.remove(&self.json_file_path);
-        }
     }
 }
 

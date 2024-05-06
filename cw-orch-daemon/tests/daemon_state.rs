@@ -1,4 +1,4 @@
-use cw_orch_daemon::{env::STATE_FILE_ENV_NAME, json_file::JsonFileState, DaemonState};
+use cw_orch_daemon::{env::STATE_FILE_ENV_NAME, json_lock::JsonLockedState, DaemonState};
 use cw_orch_networks::networks::JUNO_1;
 use tokio::runtime::Runtime;
 
@@ -75,13 +75,13 @@ fn panic_when_someone_else_holds_it() {
     match unsafe { nix::unistd::fork() } {
         Ok(nix::unistd::ForkResult::Child) => {
             // Occur lock for file for 100 millis
-            let _state = JsonFileState::new(TEST_STATE_FILE);
+            let _state = JsonLockedState::new(TEST_STATE_FILE);
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
         Ok(nix::unistd::ForkResult::Parent { .. }) => {
             // Wait a bit for child to occur lock and try to lock already locked file by child
             std::thread::sleep(std::time::Duration::from_millis(50));
-            let _state = JsonFileState::new(TEST_STATE_FILE);
+            let _state = JsonLockedState::new(TEST_STATE_FILE);
         }
         Err(_) => (),
     }

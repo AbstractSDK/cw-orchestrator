@@ -2,7 +2,7 @@ use crate::{
     log::print_if_log_disabled, sender::SenderBuilder, sender::SenderOptions, DaemonAsync,
     DaemonBuilder,
 };
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use bitcoin::secp256k1::All;
 
@@ -97,7 +97,9 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let state = Arc::new(DaemonState::new(chain, deployment_id, false).await?);
+        let state = Arc::new(Mutex::new(
+            DaemonState::new(chain, deployment_id, false).await?,
+        ));
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender_options = self.sender_options.clone();
 

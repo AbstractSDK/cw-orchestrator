@@ -31,11 +31,18 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{environment::ChainKind, log::local_target, CoreEnvVars, CwEnvError};
+use cw_orch_core::{
+    environment::{ChainInfoOwned, ChainKind},
+    log::local_target,
+    CoreEnvVars, CwEnvError,
+};
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
-use std::{str::FromStr, sync::Arc};
+use std::{
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -60,7 +67,7 @@ pub type Wallet = Arc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
-    pub(crate) daemon_state: Arc<DaemonState>,
+    pub(crate) chain_data: ChainInfoOwned,
     pub(crate) options: SenderOptions,
 }
 
@@ -97,23 +104,28 @@ impl SenderOptions {
     }
 }
 
+// TODO: Sender shouldn't need to use daemon state, chain_data should be enough
 impl Sender<All> {
-    pub fn new(daemon_state: &Arc<DaemonState>) -> Result<Sender<All>, DaemonError> {
+    pub fn new(daemon_state: Arc<Mutex<DaemonState>>) -> Result<Sender<All>, DaemonError> {
         Self::new_with_options(daemon_state, SenderOptions::default())
     }
 
     pub fn new_with_options(
-        daemon_state: &Arc<DaemonState>,
+        daemon_state: Arc<Mutex<DaemonState>>,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
-        let mnemonic = get_mnemonic_env(&daemon_state.chain_data.kind)?;
+        let lock_state = daemon_state.lock().unwrap();
+        let mnemonic = get_mnemonic_env(&lock_state.chain_data.kind)?;
+        // We pass daemon_state inside from_mnemonic_with_options
+        // but we haven't dropped lock
+        drop(lock_state);
 
         Self::from_mnemonic_with_options(daemon_state, &mnemonic, options)
     }
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic(
-        daemon_state: &Arc<DaemonState>,
+        daemon_state: Arc<Mutex<DaemonState>>,
         mnemonic: &str,
     ) -> Result<Sender<All>, DaemonError> {
         Self::from_mnemonic_with_options(daemon_state, mnemonic, SenderOptions::default())
@@ -121,20 +133,22 @@ impl Sender<All> {
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic_with_options(
-        daemon_state: &Arc<DaemonState>,
+        daemon_state: Arc<Mutex<DaemonState>>,
         mnemonic: &str,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
+        let lock_state = daemon_state.lock().unwrap();
         let secp = Secp256k1::new();
         let p_key: PrivateKey = PrivateKey::from_words(
             &secp,
             mnemonic,
             0,
             options.hd_index.unwrap_or(0),
-            daemon_state.chain_data.network_info.coin_type,
+            lock_state.chain_data.network_info.coin_type,
         )?;
+
         let sender = Sender {
-            daemon_state: daemon_state.clone(),
+            chain_data: lock_state.chain_data,
             private_key: p_key,
             secp,
             options,
@@ -142,7 +156,7 @@ impl Sender<All> {
         log::info!(
             target: &local_target(),
             "Interacting with {} using address: {}",
-            daemon_state.chain_data.chain_id,
+            lock_state.chain_data.chain_id,
             sender.pub_addr_str()?
         );
         Ok(sender)

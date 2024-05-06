@@ -6,7 +6,7 @@ pub mod builder;
 pub mod channel;
 pub mod core;
 pub mod error;
-pub mod json_file;
+pub mod json_lock;
 /// Proto types for different blockchains
 pub mod proto;
 pub mod sender;
