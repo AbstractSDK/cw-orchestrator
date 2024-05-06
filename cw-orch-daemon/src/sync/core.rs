@@ -1,4 +1,7 @@
-use std::{fmt::Debug, sync::Arc};
+use std::{
+    fmt::Debug,
+    sync::{Arc, Mutex},
+};
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
@@ -55,7 +58,7 @@ impl Daemon {
 
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.daemon.state.grpc_channel.clone()
+        self.daemon.grpc_channel.clone()
     }
 
     /// Get the channel configured for this Daemon
@@ -66,20 +69,22 @@ impl Daemon {
     /// Returns a new [`DaemonBuilder`] with the current configuration.
     /// Does not consume the original [`Daemon`].
     pub fn rebuild(&self) -> DaemonBuilder {
-        let mut builder = Self::builder();
+        let mut builder = DaemonBuilder {
+            state: Some(self.state()),
+            ..Default::default()
+        };
         builder
-            .chain(self.state().chain_data.clone())
-            .sender((*self.daemon.sender).clone())
-            .deployment_id(&self.state().deployment_id);
+            .chain(self.daemon.chain_info.clone())
+            .sender((*self.daemon.sender).clone());
         builder
     }
 }
 
 impl ChainState for Daemon {
-    type Out = Arc<DaemonState>;
+    type Out = Arc<Mutex<DaemonState>>;
 
     fn state(&self) -> Self::Out {
-        self.daemon.state.clone()
+        Arc::clone(&self.daemon.state)
     }
 }
 
@@ -162,6 +167,7 @@ impl Stargate for Daemon {
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle.block_on(
             self.wallet().commit_tx_any(
+                self.channel(),
                 msgs.iter()
                     .map(|msg| cosmrs::Any {
                         type_url: msg.type_url.clone(),

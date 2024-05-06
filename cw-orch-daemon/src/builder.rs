@@ -1,13 +1,14 @@
 use crate::{
-    log::print_if_log_disabled, sender::SenderBuilder, sender::SenderOptions, DaemonAsync,
-    DaemonBuilder,
+    log::print_if_log_disabled,
+    sender::{SenderBuilder, SenderOptions},
+    DaemonAsync, DaemonBuilder, GrpcChannel,
 };
 use std::sync::{Arc, Mutex};
 
 use bitcoin::secp256k1::All;
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
-use cw_orch_core::environment::ChainInfoOwned;
+use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
@@ -37,6 +38,9 @@ pub struct DaemonAsyncBuilder {
     pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
+
+    /* Rebuilder related options */
+    pub(crate) state: Option<Arc<Mutex<DaemonState>>>,
 }
 
 impl DaemonAsyncBuilder {
@@ -48,6 +52,7 @@ impl DaemonAsyncBuilder {
 
     /// Set the deployment id to use for the daemon interactions
     /// Defaults to `default`
+    /// This field is ignored for rebuilt daemon and deployment id of the original used instead
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
         self
@@ -89,7 +94,7 @@ impl DaemonAsyncBuilder {
 
     /// Build a daemon
     pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
-        let chain = self
+        let chain_info = self
             .chain
             .clone()
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
@@ -97,27 +102,46 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let state = Arc::new(Mutex::new(
-            DaemonState::new(chain, deployment_id, false).await?,
-        ));
+
+        if chain_info.grpc_urls.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
+        log::debug!(target: &connectivity_target(), "Found {} gRPC endpoints", chain_info.grpc_urls.len());
+
+        // find working grpc channel
+        let grpc_channel =
+            GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
+
+        let state = match &self.state {
+            Some(state) => state.clone(),
+            None => Arc::new(Mutex::new(
+                DaemonState::new(chain_info.clone(), deployment_id, false).await?,
+            )),
+        };
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender_options = self.sender_options.clone();
 
         let sender = match self.sender.clone() {
             Some(sender) => match sender {
-                SenderBuilder::Mnemonic(mnemonic) => {
-                    Sender::from_mnemonic_with_options(&state, &mnemonic, sender_options)?
-                }
+                SenderBuilder::Mnemonic(mnemonic) => Sender::from_mnemonic_with_options(
+                    chain_info.clone(),
+                    &mnemonic,
+                    sender_options,
+                )?,
                 SenderBuilder::Sender(mut sender) => {
                     sender.set_options(self.sender_options.clone());
                     sender
                 }
             },
-            None => Sender::new_with_options(&state, sender_options)?,
+            None => Sender::new_with_options(chain_info.clone(), sender_options)?,
         };
+
         let daemon = DaemonAsync {
             state,
             sender: Arc::new(sender),
+            chain_info,
+            grpc_channel,
         };
         print_if_log_disabled()?;
         Ok(daemon)
@@ -131,6 +155,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             deployment_id: value.deployment_id,
             sender_options: value.sender_options,
             sender: value.sender,
+            state: value.state,
         }
     }
 }

@@ -10,6 +10,7 @@ use cosmrs::{
     Any, Coin,
 };
 use cw_orch_core::log::transaction_target;
+use tonic::transport::Channel;
 
 use crate::sender::SenderOptions;
 
@@ -25,16 +26,22 @@ pub struct TxBuilder {
     pub(crate) gas_limit: Option<u64>,
     // if defined, use this sequence, else get it from the node
     pub(crate) sequence: Option<SequenceNumber>,
+    // Channel over which tx is sent
+    pub(crate) channel: Channel,
+    /// `chain_id` is the unique identifier of the chain this transaction targets.
+    pub(crate) chain_id: String,
 }
 
 impl TxBuilder {
     /// Create a new TxBuilder with a given body.
-    pub fn new(body: Body) -> Self {
+    pub fn new(body: Body, channel: Channel, chain_id: String) -> Self {
         Self {
             body,
             fee_amount: None,
             gas_limit: None,
             sequence: None,
+            channel,
+            chain_id,
         }
     }
     /// Set a fixed fee amount for the tx
@@ -84,13 +91,13 @@ impl TxBuilder {
             account_number,
             sequence,
             ..
-        } = wallet.base_account().await?;
+        } = wallet.base_account(self.channel.clone()).await?;
 
         // overwrite sequence if set (can be used for concurrent txs)
         let sequence = self.sequence.unwrap_or(sequence);
 
         wallet
-            .calculate_gas(&self.body, sequence, account_number)
+            .calculate_gas(self.channel.clone(), &self.body, sequence, account_number)
             .await
     }
 
@@ -102,7 +109,7 @@ impl TxBuilder {
             account_number,
             sequence,
             ..
-        } = wallet.base_account().await?;
+        } = wallet.base_account(self.channel.clone()).await?;
 
         // overwrite sequence if set (can be used for concurrent txs)
         let sequence = self.sequence.unwrap_or(sequence);
@@ -120,7 +127,7 @@ impl TxBuilder {
             (fee, gas_limit)
         } else {
             let sim_gas_used = wallet
-                .calculate_gas(&self.body, sequence, account_number)
+                .calculate_gas(self.channel.clone(), &self.body, sequence, account_number)
                 .await?;
             log::debug!(target: &transaction_target(), "Simulated gas needed {:?}", sim_gas_used);
 
@@ -159,7 +166,7 @@ impl TxBuilder {
         let sign_doc = SignDoc::new(
             &self.body,
             &auth_info,
-            &Id::try_from(wallet.daemon_state.chain_data.chain_id.to_string())?,
+            &Id::try_from(self.chain_id.clone())?,
             account_number,
         )?;
         wallet.sign(sign_doc).map_err(Into::into)

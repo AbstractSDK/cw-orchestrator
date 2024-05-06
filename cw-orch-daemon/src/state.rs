@@ -1,20 +1,15 @@
 use super::error::DaemonError;
 use crate::env::{default_state_folder, DaemonEnvVars};
-use crate::{channel::GrpcChannel, json_lock::JsonLockedState, networks::ChainKind};
+use crate::{json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
 use cw_orch_core::environment::ChainInfoOwned;
-use cw_orch_core::{
-    environment::StateInterface,
-    log::{connectivity_target, local_target},
-    CwEnvError,
-};
+use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::{collections::HashMap, path::Path, sync::Mutex};
-use tonic::transport::Channel;
 
 /// Global state to track which files are already open by other daemons from other threads
 /// This is necessary because File lock will allow same process to lock file how many times as process wants
@@ -28,11 +23,10 @@ pub struct DaemonState {
     json_state: DaemonStateFile,
     /// Deployment identifier
     pub deployment_id: String,
-    // TODO: Move grpc_channel and chain_data to DaemonAsync. No reason to have it here
-    /// gRPC channel
-    pub grpc_channel: Channel,
-    /// Information about the chain
-    pub chain_data: ChainInfoOwned,
+    /// Chain Id
+    pub chain_id: String,
+    /// Chain Name
+    pub chain_name: String,
 }
 
 #[derive(Debug)]
@@ -54,15 +48,8 @@ impl DaemonState {
         deployment_id: String,
         read_only: bool,
     ) -> Result<DaemonState, DaemonError> {
-        if chain_data.grpc_urls.is_empty() {
-            return Err(DaemonError::GRPCListIsEmpty);
-        }
-
-        log::debug!(target: &connectivity_target(), "Found {} gRPC endpoints", chain_data.grpc_urls.len());
-
-        // find working grpc channel
-        let grpc_channel =
-            GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
+        let chain_id = chain_data.chain_id;
+        let chain_name = chain_data.network_info.chain_name;
 
         // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
         let mut json_file_path = Self::state_file_path()?;
@@ -104,19 +91,15 @@ impl DaemonState {
             lock.insert(json_file_path);
             drop(lock);
 
-            json_file_state.prepare(
-                &chain_data.chain_id,
-                &chain_data.network_info.chain_name,
-                &deployment_id,
-            );
+            json_file_state.prepare(&chain_id, &chain_name, &deployment_id);
             DaemonStateFile::FullAccess { json_file_state }
         };
 
         Ok(DaemonState {
             json_state,
             deployment_id,
-            grpc_channel,
-            chain_data,
+            chain_id,
+            chain_name,
         })
     }
 
@@ -161,13 +144,10 @@ impl DaemonState {
             DaemonStateFile::ReadOnly { path } => {
                 let j = crate::json_lock::read(path)?;
 
-                j[&self.chain_data.chain_id][&self.chain_data.network_info.chain_name]
+                j[&self.chain_id][&self.chain_name].clone()
             }
             DaemonStateFile::FullAccess { json_file_state } => json_file_state
-                .get(
-                    &self.chain_data.chain_id,
-                    &self.chain_data.network_info.chain_name,
-                )
+                .get(&self.chain_id, &self.chain_name)
                 .clone(),
         };
         Ok(state)
@@ -193,10 +173,7 @@ impl DaemonState {
             DaemonStateFile::FullAccess { json_file_state } => json_file_state,
         };
 
-        let val = json_file_state.get_mut(
-            &self.chain_data.chain_id,
-            &self.chain_data.network_info.chain_name,
-        );
+        let val = json_file_state.get_mut(&self.chain_id, &self.chain_name);
         val[key][contract_id] = json!(value);
 
         Ok(())
@@ -228,7 +205,8 @@ impl StateInterface for DaemonState {
 
     /// Set address for contract in deployment id in state file
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.set(&self.deployment_id, contract_id, address.as_str())
+        let deployment_id = self.deployment_id.clone();
+        self.set(&deployment_id, contract_id, address.as_str())
             .unwrap();
     }
 

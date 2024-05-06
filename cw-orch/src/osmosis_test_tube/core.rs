@@ -208,7 +208,7 @@ impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
+impl<S: StateInterface + Clone> TxHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
     type ContractSource = WasmPath;
     type Response = AppResponse;

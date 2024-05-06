@@ -4,11 +4,13 @@ use crate::Daemon;
 
 impl EnvironmentQuerier for Daemon {
     fn env_info(&self) -> EnvironmentInfo {
-        let state = &self.daemon.sender.daemon_state;
+        let chain_info = &self.daemon.chain_info;
+        let locked_state = self.daemon.state.lock().unwrap();
+
         EnvironmentInfo {
-            chain_id: state.chain_data.chain_id.to_string(),
-            chain_name: state.chain_data.network_info.chain_name.to_string(),
-            deployment_id: state.deployment_id.clone(),
+            chain_id: chain_info.chain_id.to_string(),
+            chain_name: chain_info.network_info.chain_name.to_string(),
+            deployment_id: locked_state.deployment_id.clone(),
         }
     }
 }

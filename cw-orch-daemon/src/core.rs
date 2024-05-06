@@ -14,7 +14,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{ChainState, IndexResponse},
+    environment::{ChainInfoOwned, ChainState, IndexResponse},
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -68,6 +68,10 @@ pub struct DaemonAsync {
     pub sender: Wallet,
     /// State of the daemon
     pub state: Arc<Mutex<DaemonState>>,
+    /// gRPC channel
+    pub grpc_channel: Channel,
+    /// Information about the chain
+    pub chain_info: ChainInfoOwned,
 }
 
 impl DaemonAsync {
@@ -78,9 +82,7 @@ impl DaemonAsync {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        // TODO: Channel shouldn't be inside state
-        let lock = self.state.lock().unwrap();
-        lock.grpc_channel.clone()
+        self.grpc_channel.clone()
     }
 }
 
@@ -88,7 +90,7 @@ impl ChainState for DaemonAsync {
     type Out = Arc<Mutex<DaemonState>>;
 
     fn state(&self) -> Self::Out {
-        self.state
+        Arc::clone(&self.state)
     }
 }
 
@@ -102,12 +104,13 @@ impl DaemonAsync {
     /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
     /// Does not consume the original [`DaemonAsync`].
     pub fn rebuild(&self) -> DaemonAsyncBuilder {
-        let mut builder = Self::builder();
-        let state = self.state().lock().unwrap();
+        let mut builder = DaemonAsyncBuilder {
+            state: Some(self.state()),
+            ..Default::default()
+        };
         builder
-            .chain(state.chain_data.clone())
-            .sender((*self.sender).clone())
-            .deployment_id(state.deployment_id.clone());
+            .chain(self.chain_info.clone())
+            .sender((*self.sender).clone());
         builder
     }
 
@@ -124,7 +127,10 @@ impl DaemonAsync {
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
         };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let result = self
+            .sender
+            .commit_tx(self.channel(), vec![exec_msg], None)
+            .await?;
         log::info!(target: &transaction_target(), "Execution done: {:?}", result.txhash);
 
         Ok(result)
@@ -150,7 +156,9 @@ impl DaemonAsync {
             funds: parse_cw_coins(coins)?,
         };
 
-        let result = sender.commit_tx(vec![init_msg], None).await?;
+        let result = sender
+            .commit_tx(self.channel(), vec![init_msg], None)
+            .await?;
 
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
@@ -182,6 +190,7 @@ impl DaemonAsync {
 
         let result = sender
             .commit_tx_any(
+                self.channel(),
                 vec![Any {
                     type_url: "/cosmwasm.wasm.v1.MsgInstantiateContract2".to_string(),
                     value: init_msg.encode_to_vec(),
@@ -225,7 +234,10 @@ impl DaemonAsync {
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
         };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let result = self
+            .sender
+            .commit_tx(self.channel(), vec![exec_msg], None)
+            .await?;
         Ok(result)
     }
 
@@ -284,7 +296,7 @@ impl DaemonAsync {
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = <T as Uploadable>::wasm(&self.state.lock().unwrap().chain_data);
+        let wasm_path = <T as Uploadable>::wasm(&self.chain_info);
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
@@ -298,7 +310,9 @@ impl DaemonAsync {
             instantiate_permission: None,
         };
 
-        let result = sender.commit_tx(vec![store_msg], None).await?;
+        let result = sender
+            .commit_tx(self.channel(), vec![store_msg], None)
+            .await?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 

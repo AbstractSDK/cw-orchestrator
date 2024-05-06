@@ -1,8 +1,10 @@
-use crate::RUNTIME;
+use std::sync::{Arc, Mutex};
+
 use crate::{
     sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
+use crate::{DaemonState, RUNTIME};
 use bitcoin::secp256k1::All;
 use cw_orch_core::environment::ChainInfoOwned;
 
@@ -35,6 +37,9 @@ pub struct DaemonBuilder {
     pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
+
+    /* Rebuilder related options */
+    pub(crate) state: Option<Arc<Mutex<DaemonState>>>,
 }
 
 impl DaemonBuilder {
@@ -175,9 +180,9 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.grpc_urls.len(), 1);
+        assert_eq!(daemon.daemon.chain_info.grpc_urls.len(), 1);
         assert_eq!(
-            daemon.daemon.state.chain_data.grpc_urls[0],
+            daemon.daemon.chain_info.grpc_urls[0],
             OSMOSIS_1.grpc_urls[0].to_string(),
         );
     }

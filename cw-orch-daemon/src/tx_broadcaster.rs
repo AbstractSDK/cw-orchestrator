@@ -3,6 +3,7 @@ use std::time::Duration;
 use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
+use tonic::transport::Channel;
 
 use crate::{queriers::Node, sender::Sender, CosmTxResponse, DaemonError, TxBuilder};
 
@@ -69,13 +70,14 @@ impl TxBroadcaster {
     // Thus we use a `while` loop structure here
     pub async fn broadcast(
         mut self,
+        channel: Channel,
         mut tx_builder: TxBuilder,
         wallet: &Sender<All>,
     ) -> Result<TxResponse, DaemonError> {
         let mut tx_retry = true;
 
         // We try and broadcast once
-        let mut tx_response = broadcast_helper(&mut tx_builder, wallet).await;
+        let mut tx_response = broadcast_helper(channel.clone(), &mut tx_builder, wallet).await;
         log::info!(
             target: &transaction_target(),
             "Awaiting TX inclusion in block..."
@@ -93,7 +95,7 @@ impl TxBroadcaster {
                     tx_retry = true;
 
                     // We still await for the next block, to avoid spamming retry when an error occurs
-                    let block_speed = Node::new_async(wallet.channel())
+                    let block_speed = Node::new_async(channel.clone())
                         ._average_block_speed(None)
                         .await?;
                     log::warn!(
@@ -104,7 +106,7 @@ impl TxBroadcaster {
                     );
                     tokio::time::sleep(Duration::from_secs(block_speed)).await;
 
-                    tx_response = broadcast_helper(&mut tx_builder, wallet).await;
+                    tx_response = broadcast_helper(channel.clone(), &mut tx_builder, wallet).await;
                     continue;
                 }
             }
@@ -124,11 +126,12 @@ fn strategy_condition_met(
 }
 
 async fn broadcast_helper(
+    channel: Channel,
     tx_builder: &mut TxBuilder,
     wallet: &Sender<All>,
 ) -> Result<TxResponse, DaemonError> {
     let tx = tx_builder.build(wallet).await?;
-    let tx_response = wallet.broadcast_tx(tx).await?;
+    let tx_response = wallet.broadcast_tx(channel, tx).await?;
     log::debug!(target: &transaction_target(), "TX broadcast response: {:?}", tx_response);
 
     assert_broadcast_code_response(tx_response)
