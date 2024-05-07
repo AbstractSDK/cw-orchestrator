@@ -1,6 +1,7 @@
-use crate::error::CwOrchError;
-
-use cw_orch_core::environment::{DefaultQueriers, QueryHandler, StateInterface};
+use cw_orch::{
+    environment::{DefaultQueriers, QueryHandler, StateInterface},
+    prelude::CwOrchError,
+};
 
 use super::OsmosisTestTube;
 

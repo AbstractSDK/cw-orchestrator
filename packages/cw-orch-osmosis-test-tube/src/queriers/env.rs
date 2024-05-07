@@ -1,8 +1,6 @@
-use cw_orch_core::environment::{
-    EnvironmentInfo, EnvironmentQuerier, QueryHandler, StateInterface,
-};
+use cw_orch::environment::{EnvironmentInfo, EnvironmentQuerier, QueryHandler, StateInterface};
 
-use crate::prelude::OsmosisTestTube;
+use crate::OsmosisTestTube;
 
 impl<S: StateInterface> EnvironmentQuerier for OsmosisTestTube<S> {
     fn env_info(&self) -> EnvironmentInfo {

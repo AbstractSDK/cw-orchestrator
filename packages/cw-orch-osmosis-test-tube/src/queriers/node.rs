@@ -1,14 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::mock::cw_multi_test::AppResponse;
+use crate::OsmosisTestTube;
 use cosmwasm_std::{BlockInfo, Timestamp};
-use cw_orch_core::{
-    environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
-    CwEnvError,
-};
+use cw_orch::environment::{NodeQuerier, Querier, QuerierGetter, StateInterface};
+use cw_orch::mock::cw_multi_test::AppResponse;
+use cw_orch::prelude::CwOrchError;
 use osmosis_test_tube::OsmosisTestApp;
-
-use crate::prelude::OsmosisTestTube;
 
 pub struct OsmosisTestTubeNodeQuerier {
     app: Rc<RefCell<OsmosisTestApp>>,
@@ -23,7 +20,7 @@ impl OsmosisTestTubeNodeQuerier {
 }
 
 impl Querier for OsmosisTestTubeNodeQuerier {
-    type Error = CwEnvError;
+    type Error = CwOrchError;
 }
 
 impl<S: StateInterface> QuerierGetter<OsmosisTestTubeNodeQuerier> for OsmosisTestTube<S> {

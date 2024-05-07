@@ -1,7 +1,6 @@
 use counter_contract::CounterContract;
-use cw_orch::{
-    contract::interface_traits::Uploadable, mock::Mock, osmosis_test_tube::MOCK_CHAIN_INFO,
-};
+use cw_orch::{contract::interface_traits::Uploadable, mock::Mock};
+use cw_orch_osmosis_test_tube::MOCK_CHAIN_INFO;
 
 #[test]
 fn checksum() {

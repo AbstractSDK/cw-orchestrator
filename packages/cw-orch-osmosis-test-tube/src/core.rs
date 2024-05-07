@@ -1,12 +1,12 @@
-use crate::contract::WasmPath;
-use crate::prelude::Uploadable;
 use cosmwasm_std::{coin, Addr, Coins};
 
-use cw_orch_core::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueriers, NetworkInfo};
-use cw_orch_traits::stargate::Stargate;
+use cw_orch::contract::interface_traits::Uploadable;
+use cw_orch::contract::WasmPath;
+use cw_orch::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueriers, NetworkInfo};
 
-use crate::mock::cw_multi_test::AppResponse;
 use cosmwasm_std::{Binary, Coin, Uint128};
+use cw_orch::mock::cw_multi_test::AppResponse;
+use cw_orch::prelude::Stargate;
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
@@ -22,13 +22,13 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use serde::Serialize;
 
-use crate::{
+use cw_orch::{
     environment::TxHandler,
     environment::{ChainState, StateInterface},
-    error::CwOrchError,
+    prelude::CwOrchError,
 };
 
-use crate::mock::MockState;
+use cw_orch::mock::MockState;
 
 pub use osmosis_test_tube;
 
@@ -47,7 +47,7 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
         pub_address_prefix: "osmo",
         coin_type: 118u32,
     },
-    kind: cw_orch_core::environment::ChainKind::Local,
+    kind: cw_orch::environment::ChainKind::Local,
 };
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
@@ -355,17 +355,17 @@ impl Stargate for OsmosisTestTube {
 pub mod tests {
     use cosmwasm_std::{coin, coins, ContractInfoResponse};
 
-    use cw_orch_core::environment::*;
+    use cw_orch::environment::*;
     use osmosis_test_tube::Account;
 
-    use crate::osmosis_test_tube::{GAS_TOKEN, MOCK_CHAIN_INFO};
+    use crate::{GAS_TOKEN, MOCK_CHAIN_INFO};
 
     use super::OsmosisTestTube;
     use counter_contract::{msg::InstantiateMsg, CounterContract};
     use cw_orch::prelude::*;
 
     #[test]
-    fn wasm_querier_works() -> anyhow::Result<()> {
+    fn wasm_querier_works() -> cw_orch::anyhow::Result<()> {
         let app = OsmosisTestTube::new(coins(100_000_000_000_000, "uosmo"));
 
         let contract = CounterContract::new(app.clone());
@@ -393,7 +393,7 @@ pub mod tests {
     }
 
     #[test]
-    fn bank_querier_works() -> anyhow::Result<()> {
+    fn bank_querier_works() -> cw_orch::anyhow::Result<()> {
         let denom = "urandom";
         let init_coins = coins(45, denom);
         let app = OsmosisTestTube::new(init_coins.clone());
@@ -411,7 +411,7 @@ pub mod tests {
     }
 
     #[test]
-    fn add_balance_works() -> anyhow::Result<()> {
+    fn add_balance_works() -> cw_orch::anyhow::Result<()> {
         let denom = "uosmo";
         let init_coins = coins(100_000_000_000_000, denom);
         let mut app = OsmosisTestTube::new(init_coins.clone());

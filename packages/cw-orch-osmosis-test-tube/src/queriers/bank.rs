@@ -1,19 +1,16 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::coin;
-use cw_orch_core::{
-    environment::{
-        Querier, StateInterface, {BankQuerier, QuerierGetter},
-    },
-    CwEnvError,
-};
+use cw_orch::{environment::{
+    BankQuerier, Querier, QuerierGetter, StateInterface
+}, prelude::CwOrchError};
 use osmosis_test_tube::osmosis_std::try_proto_to_cosmwasm_coins;
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QuerySupplyOfRequest, QuerySupplyOfResponse,
 };
 use osmosis_test_tube::{Bank, Module, OsmosisTestApp, Runner};
 
-use crate::osmosis_test_tube::{map_err, OsmosisTestTube};
+use crate::{map_err, OsmosisTestTube};
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QueryAllBalancesRequest, QueryBalanceRequest,
 };
@@ -30,7 +27,7 @@ impl OsmosisTestTubeBankQuerier {
 }
 
 impl Querier for OsmosisTestTubeBankQuerier {
-    type Error = CwEnvError;
+    type Error = CwOrchError;
 }
 
 impl<S: StateInterface> QuerierGetter<OsmosisTestTubeBankQuerier> for OsmosisTestTube<S> {
@@ -55,7 +52,7 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 .balance
                 .map(|c| {
                     let coins = try_proto_to_cosmwasm_coins(vec![c])?[0].clone();
-                    Ok::<_, CwEnvError>(coins)
+                    Ok::<_, CwOrchError>(coins)
                 })
                 .transpose()?
                 .unwrap_or(coin(0, &denom));
@@ -93,7 +90,7 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 //     amount: c.amount.parse()?,
                 //     denom: c.denom,
                 // })
-                Ok::<_, CwEnvError>(try_proto_to_cosmwasm_coins(vec![c])?[0].clone())
+                Ok::<_, CwOrchError>(try_proto_to_cosmwasm_coins(vec![c])?[0].clone())
             })
             .transpose()?
             .unwrap_or(coin(0, &denom)))

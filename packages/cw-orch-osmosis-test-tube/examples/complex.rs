@@ -5,7 +5,7 @@ use counter_contract::{
 };
 
 use cw_orch::prelude::*;
-use cw_orch_traits::Stargate;
+use cw_orch_osmosis_test_tube::OsmosisTestTube;
 use osmosis_test_tube::osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
     osmosis::tokenfactory::v1beta1::{
@@ -17,7 +17,7 @@ use prost::Message;
 use prost_types::Any;
 
 pub const SUBDENOM: &str = "sub-denom";
-pub fn main() -> anyhow::Result<()> {
+pub fn main() -> cw_orch::anyhow::Result<()> {
     env_logger::init();
     let chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
 
