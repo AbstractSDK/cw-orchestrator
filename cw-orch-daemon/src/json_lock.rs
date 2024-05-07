@@ -9,15 +9,16 @@ use std::{fs::File, io::Seek};
 pub struct JsonLockedState {
     lock: FileLock,
     json: Value,
+    path: String,
 }
 
 impl JsonLockedState {
     /// Lock a state files
     /// Other process won't be able to lock it
-    pub fn new(filename: &str) -> Self {
+    pub fn new(path: &str) -> Self {
         // open file pointer set read/write permissions to true
         // create it if it does not exists
-        // dont truncate it
+        // don't truncate it
 
         let options = FileOptions::new()
             .create(true)
@@ -26,8 +27,8 @@ impl JsonLockedState {
             .truncate(false);
 
         // Lock file, non blocking so it errors in case someone else already holding lock of it
-        let lock: FileLock = FileLock::lock(filename, false, options)
-            .unwrap_or_else(|_| panic!("Was not able to receive {filename} state lock"));
+        let lock: FileLock = FileLock::lock(path, false, options)
+            .unwrap_or_else(|_| panic!("Was not able to receive {path} state lock"));
 
         // return empty json object if file is empty
         // return file content if not
@@ -37,7 +38,13 @@ impl JsonLockedState {
             from_reader(&lock.file).unwrap()
         };
 
-        JsonLockedState { lock, json }
+        let filename = path.to_owned();
+
+        JsonLockedState {
+            lock,
+            json,
+            path: filename,
+        }
     }
 
     /// Prepare json for further writes
@@ -75,6 +82,10 @@ impl JsonLockedState {
     pub fn force_write(&mut self) {
         self.lock.file.rewind().unwrap();
         serde_json::to_writer_pretty(&self.lock.file, &self.json).unwrap();
+    }
+
+    pub fn path(&self) -> &str {
+        &self.path
     }
 }
 

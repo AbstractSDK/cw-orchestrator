@@ -58,7 +58,7 @@ impl Daemon {
 
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.daemon.grpc_channel.clone()
+        self.daemon.sender.grpc_channel.clone()
     }
 
     /// Get the channel configured for this Daemon
@@ -74,7 +74,7 @@ impl Daemon {
             ..Default::default()
         };
         builder
-            .chain(self.daemon.chain_info.clone())
+            .chain(self.daemon.sender.chain_info.clone())
             .sender((*self.daemon.sender).clone());
         builder
     }
@@ -167,7 +167,6 @@ impl Stargate for Daemon {
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle.block_on(
             self.wallet().commit_tx_any(
-                self.channel(),
                 msgs.iter()
                     .map(|msg| cosmrs::Any {
                         type_url: msg.type_url.clone(),

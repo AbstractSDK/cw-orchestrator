@@ -4,7 +4,7 @@ use crate::Daemon;
 
 impl EnvironmentQuerier for Daemon {
     fn env_info(&self) -> EnvironmentInfo {
-        let chain_info = &self.daemon.chain_info;
+        let chain_info = &self.daemon.sender.chain_info;
         let locked_state = self.daemon.state.lock().unwrap();
 
         EnvironmentInfo {

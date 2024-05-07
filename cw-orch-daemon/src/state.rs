@@ -29,30 +29,32 @@ pub struct DaemonState {
     pub chain_name: String,
 }
 
+impl Drop for DaemonState {
+    fn drop(&mut self) {
+        if let DaemonStateFile::FullAccess { json_file_state } = &self.json_state {
+            let mut lock = LOCKED_FILES.lock().unwrap();
+            lock.remove(json_file_state.path());
+        }
+    }
+}
+
 #[derive(Debug)]
 enum DaemonStateFile {
-    ReadOnly {
-        /// this is passed via env var STATE_FILE
-        path: String,
-    },
-    FullAccess {
-        json_file_state: JsonLockedState,
-    },
+    ReadOnly { path: String },
+    FullAccess { json_file_state: JsonLockedState },
 }
 
 impl DaemonState {
     /// Creates a new state from the given chain data and deployment id.
     /// Attempts to connect to any of the provided gRPC endpoints.
     pub async fn new(
+        mut json_file_path: String,
         chain_data: ChainInfoOwned,
         deployment_id: String,
         read_only: bool,
     ) -> Result<DaemonState, DaemonError> {
         let chain_id = chain_data.chain_id;
         let chain_name = chain_data.network_info.chain_name;
-
-        // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
-        let mut json_file_path = Self::state_file_path()?;
 
         log::debug!(target: &local_target(), "Using state file : {}", json_file_path);
 

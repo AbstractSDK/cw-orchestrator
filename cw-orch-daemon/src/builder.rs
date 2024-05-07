@@ -31,6 +31,7 @@ pub struct DaemonAsyncBuilder {
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
+    pub(crate) state_path: Option<String>,
 
     /* Sender related options */
     /// Wallet sender
@@ -52,7 +53,8 @@ impl DaemonAsyncBuilder {
 
     /// Set the deployment id to use for the daemon interactions
     /// Defaults to `default`
-    /// This field is ignored for rebuilt daemon and deployment id of the original used instead
+    ///
+    /// This field is ignored for rebuilt daemon and deployment id of the original daemon used instead
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
         self
@@ -92,6 +94,17 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    ///
+    /// This field is ignored for rebuilt daemon and path of the original daemon used instead
+    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
+        self
+    }
+
     /// Build a daemon
     pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
         let chain_info = self
@@ -115,9 +128,18 @@ impl DaemonAsyncBuilder {
 
         let state = match &self.state {
             Some(state) => state.clone(),
-            None => Arc::new(Mutex::new(
-                DaemonState::new(chain_info.clone(), deployment_id, false).await?,
-            )),
+            None => {
+                // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
+                let json_file_path = self
+                    .state_path
+                    .clone()
+                    .unwrap_or(DaemonState::state_file_path()?);
+
+                Arc::new(Mutex::new(
+                    DaemonState::new(json_file_path, chain_info.clone(), deployment_id, false)
+                        .await?,
+                ))
+            }
         };
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
         let sender_options = self.sender_options.clone();
@@ -126,22 +148,22 @@ impl DaemonAsyncBuilder {
             Some(sender) => match sender {
                 SenderBuilder::Mnemonic(mnemonic) => Sender::from_mnemonic_with_options(
                     chain_info.clone(),
+                    grpc_channel,
                     &mnemonic,
                     sender_options,
                 )?,
                 SenderBuilder::Sender(mut sender) => {
                     sender.set_options(self.sender_options.clone());
+                    sender.grpc_channel = grpc_channel;
                     sender
                 }
             },
-            None => Sender::new_with_options(chain_info.clone(), sender_options)?,
+            None => Sender::new_with_options(chain_info.clone(), grpc_channel, sender_options)?,
         };
 
         let daemon = DaemonAsync {
             state,
             sender: Arc::new(sender),
-            chain_info,
-            grpc_channel,
         };
         print_if_log_disabled()?;
         Ok(daemon)
@@ -156,6 +178,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             sender_options: value.sender_options,
             sender: value.sender,
             state: value.state,
+            state_path: value.state_path,
         }
     }
 }

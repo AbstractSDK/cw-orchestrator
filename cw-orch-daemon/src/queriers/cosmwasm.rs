@@ -302,6 +302,6 @@ impl WasmQuerier for CosmWasm {
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(&contract.get_chain().daemon.chain_info).checksum()
+        <T as Uploadable>::wasm(&contract.get_chain().daemon.sender.chain_info).checksum()
     }
 }

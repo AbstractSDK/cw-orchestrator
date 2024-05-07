@@ -84,7 +84,7 @@ duct = "0.13"
 mock-contract = { path = "../contracts/mock_contract", features = [
   "interface",
 ] }
-serial_test = "3.0.0"
+serial_test = { version = "3.0.0" }
 
 # Ethereum deps
 ethers-signers = { version = "2.0.7" }

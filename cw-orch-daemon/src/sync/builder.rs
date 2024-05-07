@@ -31,6 +31,7 @@ pub struct DaemonBuilder {
     pub(crate) overwrite_grpc_url: Option<String>,
     pub(crate) gas_denom: Option<String>,
     pub(crate) gas_fee: Option<f64>,
+    pub(crate) state_path: Option<String>,
 
     /* Sender Options */
     /// Wallet sender
@@ -51,6 +52,8 @@ impl DaemonBuilder {
 
     /// Set the deployment id to use for the Daemon interactions
     /// Defaults to `default`
+    ///
+    /// This field is ignored for rebuilt daemon and deployment id of the original daemon used instead
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
         self
@@ -121,6 +124,17 @@ impl DaemonBuilder {
         self
     }
 
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    ///
+    /// This field is ignored for rebuilt daemon and path of the original daemon used instead
+    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
+        self
+    }
+
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
         let rt_handle = self
@@ -180,9 +194,9 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.chain_info.grpc_urls.len(), 1);
+        assert_eq!(daemon.daemon.sender.chain_info.grpc_urls.len(), 1);
         assert_eq!(
-            daemon.daemon.chain_info.grpc_urls[0],
+            daemon.daemon.sender.chain_info.grpc_urls[0],
             OSMOSIS_1.grpc_urls[0].to_string(),
         );
     }
@@ -197,9 +211,9 @@ mod test {
             .gas(None, Some(fee_amount))
             .build()
             .unwrap();
-        println!("chain {:?}", daemon.daemon.state.chain_data);
+        println!("chain {:?}", daemon.daemon.sender.chain_info);
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
+        assert_eq!(daemon.daemon.sender.chain_info.gas_price, fee_amount);
     }
 
     #[test]
@@ -213,7 +227,7 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
+        assert_eq!(daemon.daemon.sender.chain_info.gas_denom, token.to_string());
     }
 
     #[test]
@@ -228,8 +242,8 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
+        assert_eq!(daemon.daemon.sender.chain_info.gas_denom, token.to_string());
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
+        assert_eq!(daemon.daemon.sender.chain_info.gas_price, fee_amount);
     }
 }
