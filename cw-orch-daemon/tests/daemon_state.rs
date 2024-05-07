@@ -5,6 +5,7 @@ use cw_orch_daemon::{json_lock::JsonLockedState, networks::OSMOSIS_1, DaemonBuil
 
 pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
 const TEST_STATE_FILE: &str = "./tests/test.json";
+const TEST2_STATE_FILE: &str = "./tests/test2.json";
 
 #[test]
 #[serial_test::serial]
@@ -162,4 +163,45 @@ fn error_when_another_daemon_holds_it() {
         daemon_res,
         Err(DaemonError::StateAlreadyLocked(_))
     ));
+}
+
+#[test]
+#[serial_test::serial]
+fn does_not_error_when_previous_daemon_dropped_state() {
+    let daemon = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .state_path(TEST_STATE_FILE)
+        .build()
+        .unwrap();
+
+    drop(daemon);
+
+    let daemon_res = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .state_path(TEST_STATE_FILE)
+        .build();
+
+    assert!(daemon_res.is_ok(),);
+}
+
+#[test]
+#[serial_test::serial]
+fn does_not_error_when_using_different_files() {
+    let daemon = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .state_path(TEST_STATE_FILE)
+        .build()
+        .unwrap();
+
+    let daemon_res = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        // Different file
+        .state_path(TEST2_STATE_FILE)
+        .build();
+
+    assert!(daemon_res.is_ok());
 }
