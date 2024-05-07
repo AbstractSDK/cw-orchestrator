@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
+
+## 0.22.0
+
 - Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
 - Added `balance` query at the root of QueryHandler
 - Added DaemonBuilder configuration for grpc url and fee overwriting
