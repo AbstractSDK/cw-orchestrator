@@ -65,32 +65,6 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     }
 }
 
-// impl<S: StateInterface> StateInterface for Rc<S> {
-//     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
-//         (**self).get_address(contract_id)
-//     }
-
-//     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-//         (*Rc::make_mut(self)).set_address(contract_id, address)
-//     }
-
-//     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
-//         (**self).get_code_id(contract_id)
-//     }
-
-//     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-//         (*Rc::make_mut(self)).set_code_id(contract_id, code_id)
-//     }
-
-//     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
-//         (**self).get_all_addresses()
-//     }
-
-//     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
-//         (**self).get_all_code_ids()
-//     }
-// }
-
 // TODO: error handling
 impl<S: StateInterface> StateInterface for Arc<Mutex<S>> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
