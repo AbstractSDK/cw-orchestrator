@@ -135,10 +135,12 @@ impl DaemonAsyncBuilder {
                     .clone()
                     .unwrap_or(DaemonState::state_file_path()?);
 
-                Arc::new(Mutex::new(
-                    DaemonState::new(json_file_path, chain_info.clone(), deployment_id, false)
-                        .await?,
-                ))
+                Arc::new(Mutex::new(DaemonState::new(
+                    json_file_path,
+                    chain_info.clone(),
+                    deployment_id,
+                    false,
+                )?))
             }
         };
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
