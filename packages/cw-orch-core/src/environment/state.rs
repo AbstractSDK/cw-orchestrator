@@ -65,35 +65,34 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     }
 }
 
-// TODO: error handling
 impl<S: StateInterface> StateInterface for Arc<Mutex<S>> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
-        let locked_state = self.lock().unwrap();
+        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
         locked_state.get_address(contract_id)
     }
 
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        let mut locked_state = self.lock().unwrap();
+        let mut locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {}).unwrap();
         locked_state.set_address(contract_id, address)
     }
 
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
-        let locked_state = self.lock().unwrap();
+        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
         locked_state.get_code_id(contract_id)
     }
 
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        let mut locked_state = self.lock().unwrap();
+        let mut locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {}).unwrap();
         locked_state.set_code_id(contract_id, code_id)
     }
 
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
-        let locked_state = self.lock().unwrap();
+        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
         locked_state.get_all_addresses()
     }
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
-        let locked_state = self.lock().unwrap();
+        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
         locked_state.get_all_code_ids()
     }
 }

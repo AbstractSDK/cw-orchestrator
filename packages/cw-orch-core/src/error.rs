@@ -44,6 +44,8 @@ pub enum CwEnvError {
     StdErr(String),
     #[error("Environment variable not defined {0}")]
     EnvVarNotPresentNamed(String),
+    #[error("Poisoned lock: another state task failed inside")]
+    PoisonError {},
 }
 
 impl CwEnvError {
