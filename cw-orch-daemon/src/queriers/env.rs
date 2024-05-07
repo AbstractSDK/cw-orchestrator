@@ -10,7 +10,7 @@ impl EnvironmentQuerier for Daemon {
         EnvironmentInfo {
             chain_id: chain_info.chain_id.to_string(),
             chain_name: chain_info.network_info.chain_name.to_string(),
-            deployment_id: locked_state.deployment_id.clone(),
+            deployment_id: locked_state.deployment_id(),
         }
     }
 }

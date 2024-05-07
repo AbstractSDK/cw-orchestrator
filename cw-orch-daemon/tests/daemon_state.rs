@@ -126,7 +126,7 @@ fn simultaneous_write_rebuilt() {
 #[test]
 #[serial_test::serial]
 #[should_panic]
-fn panic_when_someone_else_json_file() {
+fn panic_when_someone_holds_json_file() {
     match unsafe { nix::unistd::fork() } {
         Ok(nix::unistd::ForkResult::Child) => {
             // Occur lock for file for 100 millis

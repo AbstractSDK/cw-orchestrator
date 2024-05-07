@@ -22,11 +22,11 @@ pub(crate) static LOCKED_FILES: Lazy<Mutex<HashSet<String>>> =
 pub struct DaemonState {
     json_state: DaemonStateFile,
     /// Deployment identifier
-    pub deployment_id: String,
+    deployment_id: String,
     /// Chain Id
-    pub chain_id: String,
+    chain_id: String,
     /// Chain Name
-    pub chain_name: String,
+    chain_name: String,
 }
 
 impl Drop for DaemonState {
@@ -103,6 +103,10 @@ impl DaemonState {
             chain_id,
             chain_name,
         })
+    }
+
+    pub fn deployment_id(&self) -> String {
+        self.deployment_id.clone()
     }
 
     /// Returns the path of the file where the state of `cw-orchestrator` is stored.

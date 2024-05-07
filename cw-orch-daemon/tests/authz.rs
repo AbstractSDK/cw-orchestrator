@@ -35,8 +35,8 @@ mod tests {
 
         let sender = daemon.sender().to_string();
 
-        let second_daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let second_daemon = daemon
+            .rebuild()
             .authz_granter(sender.clone())
             .mnemonic(SECOND_MNEMONIC)
             .build()
