@@ -12,8 +12,8 @@ pub mod wasm;
 impl<S: StateInterface> QueryHandler for OsmosisTestTube<S> {
     type Error = CwOrchError;
 
-    fn wait_blocks(&self, _amount: u64) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwOrchError> {
+        self.wait_seconds(amount * 10)
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
@@ -22,7 +22,7 @@ impl<S: StateInterface> QueryHandler for OsmosisTestTube<S> {
     }
 
     fn next_block(&self) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+        self.wait_blocks(1)
     }
 }
 
