@@ -59,8 +59,8 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
 /// ## Example
 /// ```
 /// # use cosmwasm_std::{Addr, coins, Uint128};
-/// use cw_orch::osmosis_test_tube::OsmosisTestTube;
-/// use cw_orch::osmosis_test_tube::osmosis_test_tube::Account;
+/// use cw_orch_osmosis_test_tube::OsmosisTestTube;
+/// use cw_orch_osmosis_test_tube::osmosis_test_tube::Account;
 ///
 /// // Creates an app, creates a sender with an initial balance
 /// let mut tube: OsmosisTestTube = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
