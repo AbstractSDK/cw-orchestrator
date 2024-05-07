@@ -85,9 +85,6 @@ mod tests {
         asserting!("code_id is ok")
             .that(&contract.code_id())
             .is_ok();
-
-        // Don't write to the file to make it reproducible
-        std::mem::forget(daemon);
     }
 
     // #[test]
@@ -165,8 +162,5 @@ mod tests {
         asserting!("that upload_if_needed returns None")
             .that(&contract.upload_if_needed().unwrap())
             .is_none();
-
-        // Don't write to the file to make it reproducible
-        std::mem::forget(daemon);
     }
 }

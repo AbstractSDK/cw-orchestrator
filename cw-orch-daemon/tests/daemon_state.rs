@@ -189,7 +189,7 @@ fn does_not_error_when_previous_daemon_dropped_state() {
 #[test]
 #[serial_test::serial]
 fn does_not_error_when_using_different_files() {
-    let daemon = DaemonBuilder::default()
+    let _daemon = DaemonBuilder::default()
         .chain(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .state_path(TEST_STATE_FILE)

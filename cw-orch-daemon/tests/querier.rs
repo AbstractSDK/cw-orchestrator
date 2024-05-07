@@ -238,9 +238,6 @@ mod queriers {
         asserting!("contract info is ok")
             .that(&contract_info)
             .is_ok();
-
-        // Don't write to the file to make it reproducible
-        std::mem::forget(daemon);
     }
 
     fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, DaemonError> {
