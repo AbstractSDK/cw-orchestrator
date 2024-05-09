@@ -8,8 +8,12 @@ use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::collections::HashSet;
-use std::{collections::HashMap, path::Path, sync::Mutex};
+use std::sync::Arc;
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+    sync::Mutex,
+};
 
 /// Global state to track which files are already open by other daemons from other threads
 /// This is necessary because File lock will allow same process to lock file how many times as process wants
@@ -18,30 +22,35 @@ pub(crate) static LOCKED_FILES: Lazy<Mutex<HashSet<String>>> =
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DaemonState {
-    json_state: DaemonStateFile,
+    pub json_state: DaemonStateFile,
     /// Deployment identifier
-    deployment_id: String,
+    pub deployment_id: String,
     /// Chain Id
-    chain_id: String,
+    pub chain_id: String,
     /// Chain Name
-    chain_name: String,
+    pub chain_name: String,
 }
 
 impl Drop for DaemonState {
     fn drop(&mut self) {
         if let DaemonStateFile::FullAccess { json_file_state } = &self.json_state {
-            let mut lock = LOCKED_FILES.lock().unwrap();
-            lock.remove(json_file_state.path());
+            let json_lock = json_file_state.lock().unwrap();
+            let mut locked_files = LOCKED_FILES.lock().unwrap();
+            locked_files.remove(json_lock.path());
         }
     }
 }
 
-#[derive(Debug)]
-enum DaemonStateFile {
-    ReadOnly { path: String },
-    FullAccess { json_file_state: JsonLockedState },
+#[derive(Debug, Clone)]
+pub enum DaemonStateFile {
+    ReadOnly {
+        path: String,
+    },
+    FullAccess {
+        json_file_state: Arc<Mutex<JsonLockedState>>,
+    },
 }
 
 impl DaemonState {
@@ -94,7 +103,9 @@ impl DaemonState {
             drop(lock);
 
             json_file_state.prepare(&chain_id, &chain_name, &deployment_id);
-            DaemonStateFile::FullAccess { json_file_state }
+            DaemonStateFile::FullAccess {
+                json_file_state: Arc::new(Mutex::new(json_file_state)),
+            }
         };
 
         Ok(DaemonState {
@@ -103,10 +114,6 @@ impl DaemonState {
             chain_id,
             chain_name,
         })
-    }
-
-    pub fn deployment_id(&self) -> String {
-        self.deployment_id.clone()
     }
 
     /// Returns the path of the file where the state of `cw-orchestrator` is stored.
@@ -153,6 +160,8 @@ impl DaemonState {
                 j[&self.chain_id][&self.chain_name].clone()
             }
             DaemonStateFile::FullAccess { json_file_state } => json_file_state
+                .lock()
+                .unwrap()
                 .get(&self.chain_id, &self.chain_name)
                 .clone(),
         };
@@ -179,7 +188,8 @@ impl DaemonState {
             DaemonStateFile::FullAccess { json_file_state } => json_file_state,
         };
 
-        let val = json_file_state.get_mut(&self.chain_id, &self.chain_name);
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let val = json_file_lock.get_mut(&self.chain_id, &self.chain_name);
         val[key][contract_id] = json!(value);
 
         Ok(())
@@ -193,7 +203,7 @@ impl DaemonState {
             }
             DaemonStateFile::FullAccess { json_file_state } => json_file_state,
         };
-        json_file_state.force_write();
+        json_file_state.lock().unwrap().force_write();
         Ok(())
     }
 }

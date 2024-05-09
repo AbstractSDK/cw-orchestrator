@@ -3,7 +3,7 @@ use crate::{
     sender::{SenderBuilder, SenderOptions},
     DaemonAsync, DaemonBuilder, GrpcChannel,
 };
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use bitcoin::secp256k1::All;
 
@@ -41,7 +41,7 @@ pub struct DaemonAsyncBuilder {
     pub(crate) sender_options: SenderOptions,
 
     /* Rebuilder related options */
-    pub(crate) state: Option<Arc<Mutex<DaemonState>>>,
+    pub(crate) state: Option<DaemonState>,
 }
 
 impl DaemonAsyncBuilder {
@@ -135,12 +135,7 @@ impl DaemonAsyncBuilder {
                     .clone()
                     .unwrap_or(DaemonState::state_file_path()?);
 
-                Arc::new(Mutex::new(DaemonState::new(
-                    json_file_path,
-                    chain_info.clone(),
-                    deployment_id,
-                    false,
-                )?))
+                DaemonState::new(json_file_path, chain_info.clone(), deployment_id, false)?
             }
         };
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic

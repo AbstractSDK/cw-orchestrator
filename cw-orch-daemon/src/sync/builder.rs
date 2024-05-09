@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use crate::{
     sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
@@ -40,7 +38,7 @@ pub struct DaemonBuilder {
     pub(crate) sender_options: SenderOptions,
 
     /* Rebuilder related options */
-    pub(crate) state: Option<Arc<Mutex<DaemonState>>>,
+    pub(crate) state: Option<DaemonState>,
 }
 
 impl DaemonBuilder {

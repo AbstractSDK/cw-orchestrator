@@ -25,7 +25,6 @@ use std::{
     fmt::Debug,
     io::Write,
     str::{from_utf8, FromStr},
-    sync::{Arc, Mutex},
     time::Duration,
 };
 
@@ -67,7 +66,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Arc<Mutex<DaemonState>>,
+    pub state: DaemonState,
 }
 
 impl DaemonAsync {
@@ -83,10 +82,10 @@ impl DaemonAsync {
 }
 
 impl ChainState for DaemonAsync {
-    type Out = Arc<Mutex<DaemonState>>;
+    type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
-        Arc::clone(&self.state)
+        self.state.clone()
     }
 }
 

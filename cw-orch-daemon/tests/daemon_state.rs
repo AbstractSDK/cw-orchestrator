@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use cw_orch_core::environment::ChainState;
-use cw_orch_daemon::{json_lock::JsonLockedState, networks::OSMOSIS_1, DaemonBuilder, DaemonError};
+use cw_orch_daemon::{
+    json_lock::JsonLockedState, networks::OSMOSIS_1, DaemonBuilder, DaemonError, DaemonStateFile,
+};
 
 pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
 const TEST_STATE_FILE: &str = "./tests/test.json";
@@ -17,8 +19,8 @@ fn simultaneous_read() {
         .build()
         .unwrap();
 
-    // Write to state something, don't forget to drop lock to avoid deadlock
-    let mut daemon_state = daemon.daemon.state.lock().unwrap();
+    // Write to state something
+    let mut daemon_state = daemon.state();
     daemon_state.set("test", "test", "test").unwrap();
     drop(daemon_state);
 
@@ -26,12 +28,14 @@ fn simultaneous_read() {
     for _ in 0..25 {
         let daemon_state = daemon.state();
         let handle = std::thread::spawn(move || {
-            // Just make sure it outputs > 2 so we know state is shared
-            let strong_count = Arc::strong_count(&daemon_state);
-            dbg!(strong_count);
-
-            let state_lock = daemon_state.lock().unwrap();
-            state_lock.get("test").unwrap()
+            if let DaemonStateFile::FullAccess { json_file_state } = &daemon_state.json_state {
+                // Just make sure it outputs > 2 so we know state is shared
+                let strong_count = Arc::strong_count(json_file_state);
+                dbg!(strong_count);
+            } else {
+                unreachable!("It's full access daemon");
+            }
+            daemon_state.get("test").unwrap()
         });
         handles.push(handle);
     }
@@ -60,13 +64,16 @@ fn simultaneous_write() {
 
     let mut handles = vec![];
     for i in 0..25 {
-        let daemon_state = daemon.state();
+        let mut daemon_state = daemon.state();
         let handle = std::thread::spawn(move || {
-            // Just make sure it outputs > 2 so we know state is shared
-            let strong_count = Arc::strong_count(&daemon_state);
-            dbg!(strong_count);
-            let mut state_lock = daemon_state.lock().unwrap();
-            state_lock
+            if let DaemonStateFile::FullAccess { json_file_state } = &daemon_state.json_state {
+                // Just make sure it outputs > 2 so we know state is shared
+                let strong_count = Arc::strong_count(json_file_state);
+                dbg!(strong_count);
+            } else {
+                unreachable!("It's full access daemon");
+            }
+            daemon_state
                 .set("test", &format!("test{i}"), format!("test-{i}"))
                 .unwrap();
         });
@@ -96,16 +103,19 @@ fn simultaneous_write_rebuilt() {
         .unwrap();
 
     let mut handles = vec![];
-    // Note this one has lower iterations since it rebuild is pretty long process
+    // Note this one has lower iterations since rebuild is pretty long process
     for i in 0..10 {
         let daemon = daemon.rebuild().build().unwrap();
-        let daemon_state = daemon.state();
+        let mut daemon_state = daemon.state();
         let handle = std::thread::spawn(move || {
-            // Just make sure it outputs > 2 so we know state is shared
-            let strong_count = Arc::strong_count(&daemon_state);
-            dbg!(strong_count);
-            let mut state_lock = daemon_state.lock().unwrap();
-            state_lock
+            if let DaemonStateFile::FullAccess { json_file_state } = &daemon_state.json_state {
+                // Just make sure it outputs > 2 so we know state is shared
+                let strong_count = Arc::strong_count(json_file_state);
+                dbg!(strong_count);
+            } else {
+                unreachable!("It's full access daemon");
+            }
+            daemon_state
                 .set("test", &format!("test{i}"), format!("test-{i}"))
                 .unwrap();
         });
