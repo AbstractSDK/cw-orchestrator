@@ -2,12 +2,7 @@
 
 use crate::error::CwEnvError;
 use cosmwasm_std::Addr;
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
 /// State accessor trait.
 /// Indicates that the type has access to an underlying state.
@@ -19,7 +14,7 @@ pub trait ChainState {
 }
 
 /// This Interface allows for managing the local state of a deployment on any CosmWasm-supported environment.
-pub trait StateInterface {
+pub trait StateInterface: Clone {
     /// Get the address of a contract using the specified contract id.
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError>;
 
@@ -65,34 +60,54 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
     }
 }
 
-impl<S: StateInterface> StateInterface for Arc<Mutex<S>> {
+impl<S: StateInterface> StateInterface for Rc<S> {
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
-        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
-        locked_state.get_address(contract_id)
+        (**self).get_address(contract_id)
     }
 
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        let mut locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {}).unwrap();
-        locked_state.set_address(contract_id, address)
+        (*Rc::make_mut(self)).set_address(contract_id, address)
     }
 
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
-        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
-        locked_state.get_code_id(contract_id)
+        (**self).get_code_id(contract_id)
     }
 
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
-        let mut locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {}).unwrap();
-        locked_state.set_code_id(contract_id, code_id)
+        (*Rc::make_mut(self)).set_code_id(contract_id, code_id)
     }
 
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
-        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
-        locked_state.get_all_addresses()
+        (**self).get_all_addresses()
     }
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
-        let locked_state = self.lock().map_err(|_| CwEnvError::PoisonError {})?;
-        locked_state.get_all_code_ids()
+        (**self).get_all_code_ids()
+    }
+}
+
+impl<S: StateInterface> StateInterface for Arc<S> {
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
+        (**self).get_address(contract_id)
+    }
+
+    fn set_address(&mut self, contract_id: &str, address: &Addr) {
+        (*Arc::make_mut(self)).set_address(contract_id, address)
+    }
+
+    fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
+        (**self).get_code_id(contract_id)
+    }
+
+    fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
+        (*Arc::make_mut(self)).set_code_id(contract_id, code_id)
+    }
+
+    fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
+        (**self).get_all_addresses()
+    }
+
+    fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
+        (**self).get_all_code_ids()
     }
 }
