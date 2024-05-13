@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, str::FromStr};
+use std::{cell::RefCell, marker::PhantomData, rc::Rc, str::FromStr};
 
 use cosmrs::AccountId;
 use cosmwasm_std::{
@@ -6,41 +6,45 @@ use cosmwasm_std::{
     ContractInfoResponse, HexBinary,
 };
 use cw_orch_core::{
+    contract::interface_traits::Uploadable,
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
     CwEnvError,
 };
 use osmosis_test_tube::{OsmosisTestApp, Runner};
 
-use crate::osmosis_test_tube::{map_err, OsmosisTestTube};
-use osmosis_std::types::cosmwasm::wasm::v1::{
+use crate::osmosis_test_tube::{map_err, OsmosisTestTube, MOCK_CHAIN_INFO};
+use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
     QueryRawContractStateRequest, QueryRawContractStateResponse, QuerySmartContractStateRequest,
     QuerySmartContractStateResponse,
 };
 
-pub struct OsmosisTestTubeWasmQuerier {
+pub struct OsmosisTestTubeWasmQuerier<S> {
     app: Rc<RefCell<OsmosisTestApp>>,
+    _state: PhantomData<S>,
 }
 
-impl OsmosisTestTubeWasmQuerier {
-    fn new<S: StateInterface>(mock: &OsmosisTestTube<S>) -> Self {
+impl<S: StateInterface> OsmosisTestTubeWasmQuerier<S> {
+    fn new(mock: &OsmosisTestTube<S>) -> Self {
         Self {
             app: mock.app.clone(),
+            _state: PhantomData,
         }
     }
 }
 
-impl Querier for OsmosisTestTubeWasmQuerier {
+impl<S> Querier for OsmosisTestTubeWasmQuerier<S> {
     type Error = CwEnvError;
 }
 
-impl<S: StateInterface> QuerierGetter<OsmosisTestTubeWasmQuerier> for OsmosisTestTube<S> {
-    fn querier(&self) -> OsmosisTestTubeWasmQuerier {
+impl<S: StateInterface> QuerierGetter<OsmosisTestTubeWasmQuerier<S>> for OsmosisTestTube<S> {
+    fn querier(&self) -> OsmosisTestTubeWasmQuerier<S> {
         OsmosisTestTubeWasmQuerier::new(self)
     }
 }
 
-impl WasmQuerier for OsmosisTestTubeWasmQuerier {
+impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
+    type Chain = OsmosisTestTube<S>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         let code_info_result: QueryCodeResponse = self
             .app
@@ -172,5 +176,15 @@ impl WasmQuerier for OsmosisTestTubeWasmQuerier {
             instantiate2_address(checksum.as_slice(), &CanonicalAddr(canon.into()), &salt).unwrap();
 
         Ok(AccountId::new(prefix, &addr.0).unwrap().to_string())
+    }
+
+    fn local_hash<
+        T: cw_orch_core::contract::interface_traits::Uploadable
+            + cw_orch_core::contract::interface_traits::ContractInstance<Self::Chain>,
+    >(
+        &self,
+        _contract: &T,
+    ) -> Result<HexBinary, CwEnvError> {
+        <T as Uploadable>::wasm(&MOCK_CHAIN_INFO.into()).checksum()
     }
 }

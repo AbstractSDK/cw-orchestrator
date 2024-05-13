@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cw_orch_core::environment::{Querier, QuerierGetter};
@@ -292,14 +294,14 @@ pub enum StakingBondStatus {
     Bonded = 3,
 }
 
-impl ToString for StakingBondStatus {
-    /// Convert to string
-    fn to_string(&self) -> String {
-        match self {
-            StakingBondStatus::Unspecified => "BOND_STATUS_UNSPECIFIED".to_string(),
-            StakingBondStatus::Unbonded => "BOND_STATUS_UNBONDED".to_string(),
-            StakingBondStatus::Unbonding => "BOND_STATUS_UNBONDING".to_string(),
-            StakingBondStatus::Bonded => "BOND_STATUS_BONDED".to_string(),
-        }
+impl Display for StakingBondStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            StakingBondStatus::Unspecified => "BOND_STATUS_UNSPECIFIED",
+            StakingBondStatus::Unbonded => "BOND_STATUS_UNBONDED",
+            StakingBondStatus::Unbonding => "BOND_STATUS_UNBONDING",
+            StakingBondStatus::Bonded => "BOND_STATUS_BONDED",
+        };
+        write!(f, "{}", str)
     }
 }

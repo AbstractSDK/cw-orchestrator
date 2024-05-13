@@ -1,10 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin, Uint128};
-use cw_multi_test::{
-    addons::{MockAddressGenerator, MockApiBech32},
-    AppBuilder, WasmKeeper,
-};
+use cw_multi_test::{AppBuilder, MockAddressGenerator, MockApiBech32, WasmKeeper};
 use cw_orch_core::{
     environment::{BankQuerier, BankSetter, DefaultQueriers, StateInterface, TxHandler},
     CwEnvError,

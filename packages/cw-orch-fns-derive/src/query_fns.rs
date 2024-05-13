@@ -75,7 +75,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                     #[allow(clippy::too_many_arguments)]
                     fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name (#(#variant_ident_content_names,)*);
-                        self.query(&msg #maybe_into)
+                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self,&msg #maybe_into)
                     }
                 )
             }
@@ -84,7 +84,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                     #variant_doc
                     fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
                         let msg = #name::#variant_name;
-                        self.query(&msg #maybe_into)
+                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg #maybe_into)
                     }
                 )
             },
@@ -109,7 +109,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                         let msg = #name::#variant_name {
                             #(#variant_idents,)*
                         };
-                        self.query(&msg #maybe_into)
+                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg #maybe_into)
                     }
                 )
             }
@@ -119,7 +119,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: ::cw_orch::prelude::CwEnv, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics > #where_clause {
+        pub trait #bname<Chain: ::cw_orch::prelude::QueryHandler + ::cw_orch::environment::ChainState, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = #entrypoint_msg_type #ty_generics > #where_clause {
             #(#variant_fns)*
         }
 
@@ -146,7 +146,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: ::cw_orch::prelude::CwEnv, #type_generics> #bname<Chain, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::cw_orch::prelude::QueryHandler + ::cw_orch::environment::ChainState, #type_generics> #bname<Chain, #type_generics> for SupportedContract
         #combined_where_clause {}
     );
 

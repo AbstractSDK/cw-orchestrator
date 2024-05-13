@@ -4,7 +4,6 @@ test:
 install-docs:
   cargo install mdbook
   cargo install mdbook-keeper@0.3.0
-  cargo install mdbook-linkcheck
 
 install-docs-fast:
   mkdir bin
@@ -12,7 +11,6 @@ install-docs-fast:
 
 setup-docs:
   cargo install mdbook-keeper@0.3.0
-  cargo install mdbook-linkcheck
 
 serve-docs:
   (cd docs && mdbook serve --open)

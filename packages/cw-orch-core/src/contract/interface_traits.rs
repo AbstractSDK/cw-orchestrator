@@ -1,6 +1,8 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier},
+    environment::{
+        ChainInfoOwned, ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+    },
     error::CwEnvError,
     log::contract_target,
 };
@@ -11,7 +13,7 @@ use std::fmt::Debug;
 
 // Fn for custom implementation to return ContractInstance
 /// Interface to the underlying `Contract` struct. Implemented automatically when using our macros.
-pub trait ContractInstance<Chain: TxHandler + QueryHandler + Clone> {
+pub trait ContractInstance<Chain: ChainState> {
     /// Return a reference to the underlying contract instance.
     fn as_instance(&self) -> &Contract<Chain>;
 
@@ -93,7 +95,7 @@ pub trait MigratableContract {
 }
 
 /// Smart contract execute entry point.
-pub trait CwOrchExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Chain> {
+pub trait CwOrchExecute<Chain: TxHandler>: ExecutableContract + ContractInstance<Chain> {
     /// Send a ExecuteMsg to the contract.
     fn execute(
         &self,
@@ -104,10 +106,12 @@ pub trait CwOrchExecute<Chain: CwEnv>: ExecutableContract + ContractInstance<Cha
     }
 }
 
-impl<T: ExecutableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchExecute<Chain> for T {}
+impl<T: ExecutableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchExecute<Chain> for T {}
 
 /// Smart contract instantiate entry point.
-pub trait CwOrchInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstance<Chain> {
+pub trait CwOrchInstantiate<Chain: TxHandler>:
+    InstantiableContract + ContractInstance<Chain>
+{
     /// Instantiates the contract.
     fn instantiate(
         &self,
@@ -132,13 +136,15 @@ pub trait CwOrchInstantiate<Chain: CwEnv>: InstantiableContract + ContractInstan
     }
 }
 
-impl<T: InstantiableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchInstantiate<Chain>
+impl<T: InstantiableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchInstantiate<Chain>
     for T
 {
 }
 
 /// Smart contract query entry point.
-pub trait CwOrchQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain> {
+pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
+    QueryableContract + ContractInstance<Chain>
+{
     /// Query the contract.
     fn query<G: Serialize + DeserializeOwned + Debug>(
         &self,
@@ -148,10 +154,13 @@ pub trait CwOrchQuery<Chain: CwEnv>: QueryableContract + ContractInstance<Chain>
     }
 }
 
-impl<T: QueryableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchQuery<Chain> for T {}
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: QueryHandler + ChainState>
+    CwOrchQuery<Chain> for T
+{
+}
 
 /// Smart contract migrate entry point.
-pub trait CwOrchMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Chain> {
+pub trait CwOrchMigrate<Chain: TxHandler>: MigratableContract + ContractInstance<Chain> {
     /// Migrate the contract.
     fn migrate(
         &self,
@@ -162,25 +171,25 @@ pub trait CwOrchMigrate<Chain: CwEnv>: MigratableContract + ContractInstance<Cha
     }
 }
 
-impl<T: MigratableContract + ContractInstance<Chain>, Chain: CwEnv> CwOrchMigrate<Chain> for T {}
+impl<T: MigratableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchMigrate<Chain> for T {}
 
 /// Trait to implement on the contract to enable it to be uploaded
 /// Should return [`WasmPath`](crate::contract::interface_traits::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
     /// Return an object that can be used to upload the contract to a WASM-supported environment.
-    fn wasm(&self) -> WasmPath {
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
         unimplemented!("no wasm file provided for this contract")
     }
 
     /// Return the wrapper object for the contract, only works for non-custom mock environments
-    fn wrapper(&self) -> Box<dyn MockContract<Empty, Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
         unimplemented!("no wrapper function implemented for this contract")
     }
 }
 
 /// Trait that indicates that the contract can be uploaded.
-pub trait CwOrchUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable + Sized {
+pub trait CwOrchUpload<Chain: TxHandler>: ContractInstance<Chain> + Uploadable + Sized {
     /// upload the contract to the configured environment.
     fn upload(&self) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().upload(self)
@@ -188,12 +197,12 @@ pub trait CwOrchUpload<Chain: CwEnv>: ContractInstance<Chain> + Uploadable + Siz
 }
 
 /// enable `.upload()` for contracts that implement `Uploadable` for that environment.
-impl<T: ContractInstance<Chain> + Uploadable, Chain: CwEnv> CwOrchUpload<Chain> for T {}
+impl<T: ContractInstance<Chain> + Uploadable, Chain: TxHandler> CwOrchUpload<Chain> for T {}
 
 /// Enables calling a contract with a different sender.
 ///
 /// Clones the contract interface to prevent mutation of the original.
-pub trait CallAs<Chain: CwEnv>: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone {
+pub trait CallAs<Chain: TxHandler>: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone {
     fn set_sender(&mut self, sender: &<Chain as TxHandler>::Sender) {
         self.as_instance_mut().chain.set_sender(sender.clone())
     }
@@ -206,7 +215,10 @@ pub trait CallAs<Chain: CwEnv>: CwOrchExecute<Chain> + ContractInstance<Chain> +
     }
 }
 
-impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: CwEnv> CallAs<Chain> for T {}
+impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: TxHandler> CallAs<Chain>
+    for T
+{
+}
 
 /// Helper methods for conditional uploading of a contract.
 pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
@@ -230,7 +242,8 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             .wasm_querier()
             .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = Chain::Wasm::local_hash(self)?;
+        let local_hash = self.get_chain().wasm_querier().local_hash(self)?;
+
         Ok(local_hash == on_chain_hash)
     }
 

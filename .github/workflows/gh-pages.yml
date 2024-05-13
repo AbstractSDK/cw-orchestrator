@@ -26,16 +26,15 @@ jobs:
     runs-on: ubuntu-latest
     # container: michaelfbryan/mdbook-docker-image:latest
 
-
     steps:
       - name: Checkout 🛎
         uses: actions/checkout@v4
 
       - name: Setup | Rust
         id: rustup
-        uses: ATiltedTree/setup-rust@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          rust-version: stable
+          components: rustfmt
 
       - name: Setup | Just
         id: just
@@ -43,7 +42,7 @@ jobs:
 
       - name: Setup PATH # For using the pre-built mdbook
         run: echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
-        
+
       - name: Install dependencies 🔧
         run: just install-docs-fast && just setup-docs
 
@@ -55,7 +54,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload book repository
-          path: './docs/book/html'
+          path: "./docs/book"
 
   # Deploy job
   deploy:
@@ -65,8 +64,8 @@ jobs:
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
 
     # Deploy to the github-pages environment
     environment:

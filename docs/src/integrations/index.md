@@ -7,7 +7,7 @@ In order to do so, it provides a set of traits and interfaces, e.g. for [contrac
 - [Node interaction (grpc)](./daemon.md)
 - [Osmosis Test Tube](./osmosis-test-tube.md)
 - [Cw-Multi-test](./cw-multi-test.md)
-- [Fork Testing](./fork-testing.md)
+- [Fork Testing](./clone-testing.md)
 
 Those environments allow developers to test, deploy, manage, migrate, maintain, without having to switch programming languages, care for types and version compatibilities as they are enforced by the compiler and even change the syntax of the code used.
 

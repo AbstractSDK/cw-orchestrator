@@ -54,8 +54,8 @@ use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
 
 // Implement the Uploadable trait so it can be uploaded to the mock. 
-impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+impl <Chain> Uploadable for Cw20<Chain> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -132,7 +132,7 @@ The generated functions can then be used for any interface that uses this `Execu
 #[cw_orch::interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1<Chain>;
 
-impl<Chain: CwEnv> Cw1<Chain> {
+impl<Chain> Cw1<Chain> {
     pub fn test_macro(&self) {
         // Enjoy the nice API! 
         self.freeze().unwrap();
@@ -211,6 +211,8 @@ Cw-orchestrator supports the following chains natively:
 - Osmosis 🟥🟦🟩
 - Sei 🟥🟦🟩
 - Terra 🟥🟦🟩
+- Rollkit 🟥🟦
+- Xion 🟦
 
 Additional chains can easily be integrated by creating a new [`ChainInfo`](./packages/cw-orch-networks/src/chain_info.rs) structure. This can be done in your script directly. If you have additional time, don't hesitate to open a PR on this repository.
 

@@ -276,12 +276,12 @@ impl DaemonAsync {
     }
 
     /// Upload a contract to the chain.
-    pub async fn upload(
+    pub async fn upload<T: Uploadable>(
         &self,
-        uploadable: &impl Uploadable,
+        _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = uploadable.wasm();
+        let wasm_path = <T as Uploadable>::wasm(&self.state.chain_data);
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 

@@ -75,16 +75,15 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod interface {
+    use cw_orch::environment::ChainInfoOwned;
+
     use super::*;
 
     #[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg, id = "mock-contract")]
     pub struct MockContract<Chain, T, Q>;
 
-    impl<Chain: cw_orch::prelude::CwEnv> cw_orch::prelude::Uploadable
-        for MockContract<Chain, u64, u64>
-    {
+    impl<Chain> cw_orch::prelude::Uploadable for MockContract<Chain, u64, u64> {
         fn wrapper(
-            &self,
         ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>>
         {
             Box::new(
@@ -93,7 +92,7 @@ pub mod interface {
             )
         }
 
-        fn wasm(&self) -> cw_orch::prelude::WasmPath {
+        fn wasm(_chain: &ChainInfoOwned) -> cw_orch::prelude::WasmPath {
             use cw_orch::prelude::*;
             artifacts_dir_from_workspace!()
                 .find_wasm_path("mock_contract")
