@@ -1,4 +1,4 @@
-use cosmwasm_std::{CodeInfoResponse, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{Checksum, CodeInfoResponse, ContractInfoResponse};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -12,7 +12,7 @@ use super::Querier;
 pub trait WasmQuerier: Querier {
     type Chain: ChainState;
 
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error>;
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error>;
 
     /// Query contract info
     fn contract_info(
@@ -40,7 +40,7 @@ pub trait WasmQuerier: Querier {
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError>;
+    ) -> Result<Checksum, CwEnvError>;
 
     fn instantiate2_addr(
         &self,

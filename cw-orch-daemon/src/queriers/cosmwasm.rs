@@ -4,8 +4,8 @@ use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
-    from_json, instantiate2_address, to_json_binary, CanonicalAddr, CodeInfoResponse,
-    ContractInfoResponse, HexBinary,
+    from_json, instantiate2_address, to_json_binary, Addr, Checksum, CodeInfoResponse,
+    ContractInfoResponse,
 };
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
@@ -48,13 +48,13 @@ impl Querier for CosmWasm {
 
 impl CosmWasm {
     /// Query code_id by hash
-    pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
+    pub async fn _code_id_hash(&self, code_id: u64) -> Result<Checksum, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodeRequest { code_id };
         let resp = client.code(request).await?.into_inner();
         let contract_hash = resp.code_info.unwrap().data_hash;
-        Ok(contract_hash.into())
+        Ok(contract_hash.as_slice().try_into()?)
     }
 
     /// Query contract info
@@ -202,7 +202,7 @@ impl CosmWasm {
 
 impl WasmQuerier for CosmWasm {
     type Chain = Daemon;
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error> {
         self.rt_handle
             .as_ref()
             .ok_or(DaemonError::QuerierNeedRuntime)?
@@ -219,20 +219,21 @@ impl WasmQuerier for CosmWasm {
             .ok_or(DaemonError::QuerierNeedRuntime)?
             .block_on(self._contract_info(address))?;
 
-        let mut c = ContractInfoResponse::default();
-        c.code_id = contract_info.code_id;
-        c.creator = contract_info.creator;
-        c.admin = if contract_info.admin.is_empty() {
-            None
-        } else {
-            Some(contract_info.admin)
-        };
-        c.ibc_port = if contract_info.ibc_port_id.is_empty() {
-            None
-        } else {
-            Some(contract_info.ibc_port_id)
-        };
-
+        let c = ContractInfoResponse::new(
+            contract_info.code_id,
+            Addr::unchecked(contract_info.creator),
+            if contract_info.admin.is_empty() {
+                None
+            } else {
+                Some(Addr::unchecked(contract_info.admin))
+            },
+            false,
+            if contract_info.ibc_port_id.is_empty() {
+                None
+            } else {
+                Some(contract_info.ibc_port_id)
+            },
+        );
         Ok(c)
     }
 
@@ -271,10 +272,11 @@ impl WasmQuerier for CosmWasm {
             .ok_or(DaemonError::QuerierNeedRuntime)?
             .block_on(self._code(code_id))?;
 
-        let mut c = CodeInfoResponse::default();
-        c.code_id = code_id;
-        c.creator = response.creator;
-        c.checksum = response.data_hash.into();
+        let c = CodeInfoResponse::new(
+            code_id,
+            Addr::unchecked(response.creator),
+            response.data_hash.as_slice().try_into()?,
+        );
 
         Ok(c)
     }
@@ -290,9 +292,9 @@ impl WasmQuerier for CosmWasm {
         let prefix = account_id.prefix();
         let canon = account_id.to_bytes();
         let checksum = self.code_id_hash(code_id)?;
-        let addr = instantiate2_address(checksum.as_slice(), &CanonicalAddr(canon.into()), &salt)?;
+        let addr = instantiate2_address(checksum.as_slice(), &canon.into(), &salt)?;
 
-        Ok(AccountId::new(prefix, &addr.0)?.to_string())
+        Ok(AccountId::new(prefix, addr.as_slice())?.to_string())
     }
 
     fn local_hash<
@@ -301,7 +303,7 @@ impl WasmQuerier for CosmWasm {
     >(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
+    ) -> Result<Checksum, cw_orch_core::CwEnvError> {
         <T as Uploadable>::wasm(&contract.get_chain().daemon.state.chain_data).checksum()
     }
 }

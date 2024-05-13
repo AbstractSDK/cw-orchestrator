@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin, Uint128};
-use cw_multi_test::{AppBuilder, MockAddressGenerator, MockApiBech32, WasmKeeper};
+use cw_multi_test::{AppBuilder, MockApiBech32, SimpleAddressGenerator, WasmKeeper};
 use cw_orch_core::{
     environment::{BankQuerier, BankSetter, DefaultQueriers, StateInterface, TxHandler},
     CwEnvError,
@@ -57,7 +57,6 @@ impl<S: StateInterface> MockBase<MockApiBech32, S> {
         let app = Rc::new(RefCell::new(
             AppBuilder::new_custom()
                 .with_api(MockApiBech32::new(prefix))
-                .with_wasm(WasmKeeper::default().with_address_generator(MockAddressGenerator))
                 .build(|_, _, _| {}),
         ));
 

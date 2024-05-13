@@ -15,7 +15,7 @@ use mock_contract::MockContract;
 fn instantiate2() -> anyhow::Result<()> {
     let app = MockBech32::new("mock");
 
-    let salt = Binary(vec![12, 89, 156, 63]);
+    let salt = vec![12, 89, 156, 63].into();
     let mock_contract = MockContract::new("mock-contract", app.clone());
 
     mock_contract.upload()?;

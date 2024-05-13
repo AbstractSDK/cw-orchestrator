@@ -122,6 +122,8 @@ pub enum DaemonError {
     QuerierNeedRuntime,
     #[error(transparent)]
     Instantiate2Error(#[from] Instantiate2AddressError),
+    #[error(transparent)]
+    CheckSum(#[from] cosmwasm_std::ChecksumError),
 }
 
 impl DaemonError {

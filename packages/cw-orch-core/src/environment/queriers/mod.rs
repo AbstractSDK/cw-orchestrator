@@ -123,7 +123,7 @@ pub mod test {
     }
     impl WasmQuerier for MockQuerier {
         type Chain = MockHandler;
-        fn code_id_hash(&self, _code_id: u64) -> Result<cosmwasm_std::HexBinary, Self::Error> {
+        fn code_id_hash(&self, _code_id: u64) -> Result<cosmwasm_std::Checksum, Self::Error> {
             unimplemented!()
         }
 
@@ -169,7 +169,7 @@ pub mod test {
         >(
             &self,
             _contract: &T,
-        ) -> Result<cosmwasm_std::HexBinary, CwEnvError> {
+        ) -> Result<cosmwasm_std::Checksum, CwEnvError> {
             unimplemented!()
         }
     }
