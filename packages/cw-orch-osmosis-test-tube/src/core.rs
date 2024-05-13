@@ -1,12 +1,13 @@
 use cosmwasm_std::{coin, Addr, Coins};
 
-use cw_orch::contract::interface_traits::Uploadable;
-use cw_orch::contract::WasmPath;
-use cw_orch::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueriers, NetworkInfo};
+use cw_orch_core::contract::interface_traits::Uploadable;
+use cw_orch_core::contract::WasmPath;
+use cw_orch_core::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueriers, NetworkInfo};
 
 use cosmwasm_std::{Binary, Coin, Uint128};
-use cw_orch::mock::cw_multi_test::AppResponse;
-use cw_orch::prelude::Stargate;
+use cw_orch_core::CwEnvError;
+use cw_orch_mock::cw_multi_test::AppResponse;
+use cw_orch_traits::Stargate;
 use osmosis_test_tube::{
     Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
 };
@@ -22,13 +23,12 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use serde::Serialize;
 
-use cw_orch::{
+use cw_orch_core::{
     environment::TxHandler,
     environment::{ChainState, StateInterface},
-    prelude::CwOrchError,
 };
 
-use cw_orch::mock::MockState;
+use cw_orch_mock::MockState;
 
 pub use osmosis_test_tube;
 
@@ -47,7 +47,7 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
         pub_address_prefix: "osmo",
         coin_type: 118u32,
     },
-    kind: cw_orch::environment::ChainKind::Local,
+    kind: cw_orch_core::environment::ChainKind::Local,
 };
 
 /// Wrapper around a osmosis-test-tube [`OsmosisTestApp`](osmosis_test_tube::OsmosisTestApp) backend.
@@ -82,8 +82,8 @@ pub struct OsmosisTestTube<S: StateInterface = MockState> {
     pub app: Rc<RefCell<OsmosisTestApp>>,
 }
 
-pub(crate) fn map_err(e: RunnerError) -> CwOrchError {
-    CwOrchError::StdErr(e.to_string())
+pub(crate) fn map_err(e: RunnerError) -> CwEnvError {
+    CwEnvError::StdErr(e.to_string())
 }
 
 impl<S: StateInterface> OsmosisTestTube<S> {
@@ -91,7 +91,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     pub fn init_account(
         &mut self,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<Rc<SigningAccount>, CwOrchError> {
+    ) -> Result<Rc<SigningAccount>, CwEnvError> {
         let account = self
             .app
             .borrow()
@@ -107,7 +107,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &mut self,
         amount: Vec<cosmwasm_std::Coin>,
         account_n: u64,
-    ) -> Result<Vec<Rc<SigningAccount>>, CwOrchError> {
+    ) -> Result<Vec<Rc<SigningAccount>>, CwEnvError> {
         let accounts: Vec<_> = self
             .app
             .borrow()
@@ -123,7 +123,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
         &self,
         to: String,
         amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<AppResponse, CwOrchError> {
+    ) -> Result<AppResponse, CwEnvError> {
         let send_response = Bank::new(&*self.app.borrow())
             .send(
                 MsgSend {
@@ -142,7 +142,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     }
 
     /// Creates an osmosis pool (helper)
-    pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwOrchError> {
+    pub fn create_pool(&self, liquidity: Vec<Coin>) -> Result<u64, CwEnvError> {
         // create balancer pool with basic configuration
         let pool_id = Gamm::new(&*self.app.borrow())
             .create_basic_pool(&liquidity, &self.sender)
@@ -155,7 +155,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwOrchError> {
+    pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwEnvError> {
         let amount = self
             .bank_querier()
             .balance(address, Some(denom.to_string()))?;
@@ -163,10 +163,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     }
 
     /// Fetch all the balances of an address.
-    pub fn query_all_balances(
-        &self,
-        address: &str,
-    ) -> Result<Vec<cosmwasm_std::Coin>, CwOrchError> {
+    pub fn query_all_balances(&self, address: &str) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         let amount = self.bank_querier().balance(address, None)?;
         Ok(amount)
     }
@@ -209,7 +206,7 @@ impl<S: StateInterface> ChainState for OsmosisTestTube<S> {
 
 // Execute on the test chain, returns test response type
 impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
-    type Error = CwOrchError;
+    type Error = CwEnvError;
     type ContractSource = WasmPath;
     type Response = AppResponse;
     type Sender = Rc<SigningAccount>;
@@ -222,7 +219,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         self.sender = sender;
     }
 
-    fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwOrchError> {
+    fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
         let wasm_contents = std::fs::read(<T as Uploadable>::wasm(&MOCK_CHAIN_INFO.into()).path())?;
         let upload_response = Wasm::new(&*self.app.borrow())
             .store_code(&wasm_contents, None, &self.sender)
@@ -239,7 +236,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         exec_msg: &E,
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
-    ) -> Result<Self::Response, CwOrchError> {
+    ) -> Result<Self::Response, CwEnvError> {
         let execute_response = Wasm::new(&*self.app.borrow())
             .execute(contract_address.as_ref(), exec_msg, coins, &self.sender)
             .map_err(map_err)?;
@@ -257,7 +254,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         label: Option<&str>,
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
-    ) -> Result<Self::Response, CwOrchError> {
+    ) -> Result<Self::Response, CwEnvError> {
         let instantiate_response = Wasm::new(&*self.app.borrow())
             .instantiate(
                 code_id,
@@ -280,7 +277,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
         _migrate_msg: &M,
         _new_code_id: u64,
         _contract_address: &Addr,
-    ) -> Result<Self::Response, CwOrchError> {
+    ) -> Result<Self::Response, CwEnvError> {
         panic!("Migrate not implemented on osmosis test_tube")
     }
 
@@ -355,7 +352,6 @@ impl Stargate for OsmosisTestTube {
 pub mod tests {
     use cosmwasm_std::{coin, coins, ContractInfoResponse};
 
-    use cw_orch::environment::*;
     use osmosis_test_tube::Account;
 
     use crate::{GAS_TOKEN, MOCK_CHAIN_INFO};

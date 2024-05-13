@@ -16,8 +16,12 @@ prost-types = { workspace = true }
 prost = { workspace = true }
 cosmwasm-std.workspace = true
 serde.workspace = true
-cw-orch = { workspace = true }
+cw-orch-core = { workspace = true }
+cw-orch-mock = { workspace = true }
+cw-orch-traits = { workspace = true }
 
 [dev-dependencies]
 counter-contract = { path = "../../contracts/counter" }
 env_logger = "0.11.3"
+
+cw-orch = { workspace = true }

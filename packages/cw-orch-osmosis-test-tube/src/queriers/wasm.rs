@@ -4,10 +4,9 @@ use cosmwasm_std::{
     from_json, instantiate2_address, to_json_vec, CanonicalAddr, CodeInfoResponse,
     ContractInfoResponse, HexBinary,
 };
-use cw_orch::{
-    contract::interface_traits::Uploadable,
-    environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
-    prelude::CwOrchError,
+use cw_orch_core::{
+    contract::interface_traits::{ContractInstance, Uploadable},
+    environment::{Querier, QuerierGetter, StateInterface, WasmQuerier}, CwEnvError,
 };
 use osmosis_test_tube::cosmrs::AccountId;
 use osmosis_test_tube::{OsmosisTestApp, Runner};
@@ -34,7 +33,7 @@ impl<S: StateInterface> OsmosisTestTubeWasmQuerier<S> {
 }
 
 impl<S> Querier for OsmosisTestTubeWasmQuerier<S> {
-    type Error = CwOrchError;
+    type Error = CwEnvError;
 }
 
 impl<S: StateInterface> QuerierGetter<OsmosisTestTubeWasmQuerier<S>> for OsmosisTestTube<S> {
@@ -57,7 +56,7 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
 
         Ok(code_info_result
             .code_info
-            .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?
+            .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?
             .data_hash
             .into())
     }
@@ -65,7 +64,7 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
     fn contract_info(
         &self,
         address: impl Into<String>,
-    ) -> Result<ContractInfoResponse, CwOrchError> {
+    ) -> Result<ContractInfoResponse, CwEnvError> {
         let address = address.into();
         let result = self
             .app
@@ -78,7 +77,7 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
             )
             .map_err(map_err)?
             .contract_info
-            .ok_or(CwOrchError::AddrNotInStore(address))?;
+            .ok_or(CwEnvError::AddrNotInStore(address))?;
 
         let mut contract_info = ContractInfoResponse::default();
         contract_info.code_id = result.code_id;
@@ -150,7 +149,7 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
 
         let code_info = response
             .code_info
-            .ok_or(CwOrchError::CodeIdNotInStore(code_id.to_string()))?;
+            .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?;
 
         let mut c = CodeInfoResponse::default();
         c.code_id = code_id;
@@ -178,13 +177,10 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
         Ok(AccountId::new(prefix, &addr.0).unwrap().to_string())
     }
 
-    fn local_hash<
-        T: cw_orch::contract::interface_traits::Uploadable
-            + cw_orch::contract::interface_traits::ContractInstance<Self::Chain>,
-    >(
+    fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         _contract: &T,
-    ) -> Result<HexBinary, CwOrchError> {
+    ) -> Result<HexBinary, CwEnvError> {
         <T as Uploadable>::wasm(&MOCK_CHAIN_INFO.into()).checksum()
     }
 }

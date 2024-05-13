@@ -1,10 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::coin;
-use cw_orch::{
-    environment::{BankQuerier, Querier, QuerierGetter, StateInterface},
-    prelude::CwOrchError,
-};
+use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter, StateInterface};
+use cw_orch_core::CwEnvError;
 use osmosis_test_tube::osmosis_std::try_proto_to_cosmwasm_coins;
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QuerySupplyOfRequest, QuerySupplyOfResponse,
@@ -28,7 +26,7 @@ impl OsmosisTestTubeBankQuerier {
 }
 
 impl Querier for OsmosisTestTubeBankQuerier {
-    type Error = CwOrchError;
+    type Error = CwEnvError;
 }
 
 impl<S: StateInterface> QuerierGetter<OsmosisTestTubeBankQuerier> for OsmosisTestTube<S> {
@@ -53,7 +51,7 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 .balance
                 .map(|c| {
                     let coins = try_proto_to_cosmwasm_coins(vec![c])?[0].clone();
-                    Ok::<_, CwOrchError>(coins)
+                    Ok::<_, CwEnvError>(coins)
                 })
                 .transpose()?
                 .unwrap_or(coin(0, &denom));
@@ -91,7 +89,7 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 //     amount: c.amount.parse()?,
                 //     denom: c.denom,
                 // })
-                Ok::<_, CwOrchError>(try_proto_to_cosmwasm_coins(vec![c])?[0].clone())
+                Ok::<_, CwEnvError>(try_proto_to_cosmwasm_coins(vec![c])?[0].clone())
             })
             .transpose()?
             .unwrap_or(coin(0, &denom)))
