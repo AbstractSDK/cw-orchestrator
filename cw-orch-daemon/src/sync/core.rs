@@ -1,6 +1,6 @@
 use std::{fmt::Debug, sync::Arc};
 
-use super::super::{sender::Wallet, DaemonAsync};
+use super::super::{senders::base_sender::Wallet, DaemonAsync};
 use crate::{
     queriers::{Bank, CosmWasm, Node},
     CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
@@ -14,6 +14,8 @@ use cw_orch_traits::stargate::Stargate;
 use serde::Serialize;
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
+
+use crate::senders::sender_trait::SenderTrait;
 
 #[derive(Clone)]
 /**

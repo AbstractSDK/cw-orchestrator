@@ -8,7 +8,8 @@ use crate::{
     },
 };
 
-use super::{
+use crate::proto::injective::InjectiveEthAccount;
+use crate::{
     cosmos_modules::{self, auth::BaseAccount},
     error::DaemonError,
     queriers::Node,
@@ -16,7 +17,6 @@ use super::{
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
 };
-use crate::proto::injective::InjectiveEthAccount;
 
 #[cfg(feature = "eth")]
 use crate::proto::injective::InjectiveSigner;
@@ -39,6 +39,8 @@ use std::{str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
+
+use super::sender_trait::SenderTrait;
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -94,6 +96,80 @@ impl SenderOptions {
     }
     pub fn set_hd_index(&mut self, index: u32) {
         self.hd_index = Some(index);
+    }
+}
+
+impl SenderTrait for Sender<All> {
+    type Error = DaemonError;
+
+    async fn commit_tx_any(
+        &self,
+        msgs: Vec<Any>,
+        memo: Option<&str>,
+    ) -> Result<CosmTxResponse, Self::Error> {
+        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
+
+        let msgs = if self.options.authz_granter.is_some() {
+            // We wrap authz messages
+            vec![Any {
+                type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
+                value: MsgExec {
+                    grantee: self.pub_addr_str()?,
+                    msgs,
+                }
+                .encode_to_vec(),
+            }]
+        } else {
+            msgs
+        };
+
+        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
+
+        let tx_builder = TxBuilder::new(tx_body);
+
+        // We retry broadcasting the tx, with the following strategies
+        // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
+        // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
+        // 3. In case there is an other error, we fail
+        let tx_response = TxBroadcaster::default()
+            .add_strategy(insufficient_fee_strategy())
+            .add_strategy(account_sequence_strategy())
+            .broadcast(tx_builder, self)
+            .await?;
+
+        let resp = Node::new_async(self.channel())
+            ._find_tx(tx_response.txhash)
+            .await?;
+
+        assert_broadcast_code_cosm_response(resp)
+    }
+
+    async fn broadcast_tx(
+        &self,
+        tx: Raw,
+    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error> {
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
+        let commit = client
+            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
+                tx_bytes: tx.to_bytes()?,
+                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
+            })
+            .await?;
+
+        let commit = commit.into_inner().tx_response.unwrap();
+        Ok(commit)
+    }
+
+    fn address(&self) -> Result<Addr, DaemonError> {
+        Ok(Addr::unchecked(self.pub_addr_str()?))
+    }
+
+    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
+        if let Some(sender) = &self.options.authz_granter {
+            Ok(sender.parse()?)
+        } else {
+            self.pub_addr()
+        }
     }
 }
 
@@ -175,23 +251,8 @@ impl Sender<All> {
         )?)
     }
 
-    pub fn address(&self) -> Result<Addr, DaemonError> {
-        Ok(Addr::unchecked(self.pub_addr_str()?))
-    }
-
     pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
         Ok(self.pub_addr()?.to_string())
-    }
-
-    /// Returns the actual sender of every message sent.
-    /// If an authz granter is set, returns the authz granter
-    /// Else, returns the address associated with the current private key
-    pub fn msg_sender(&self) -> Result<AccountId, DaemonError> {
-        if let Some(sender) = &self.options.authz_granter {
-            Ok(sender.parse()?)
-        } else {
-            self.pub_addr()
-        }
     }
 
     pub async fn bank_send(
@@ -306,48 +367,6 @@ impl Sender<All> {
         self.commit_tx_any(msgs, memo).await
     }
 
-    pub async fn commit_tx_any(
-        &self,
-        msgs: Vec<Any>,
-        memo: Option<&str>,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
-
-        let msgs = if self.options.authz_granter.is_some() {
-            // We wrap authz messages
-            vec![Any {
-                type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
-                value: MsgExec {
-                    grantee: self.pub_addr_str()?,
-                    msgs,
-                }
-                .encode_to_vec(),
-            }]
-        } else {
-            msgs
-        };
-
-        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
-
-        let tx_builder = TxBuilder::new(tx_body);
-
-        // We retry broadcasting the tx, with the following strategies
-        // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
-        // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
-        // 3. In case there is an other error, we fail
-        let tx_response = TxBroadcaster::default()
-            .add_strategy(insufficient_fee_strategy())
-            .add_strategy(account_sequence_strategy())
-            .broadcast(tx_builder, self)
-            .await?;
-
-        let resp = Node::new_async(self.channel())
-            ._find_tx(tx_response.txhash)
-            .await?;
-
-        assert_broadcast_code_cosm_response(resp)
-    }
-
     pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
         let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
             #[cfg(not(feature = "eth"))]
@@ -389,22 +408,6 @@ impl Sender<All> {
         };
 
         Ok(acc)
-    }
-
-    pub async fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-        let commit = client
-            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
-                tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
-            })
-            .await?;
-
-        let commit = commit.into_inner().tx_response.unwrap();
-        Ok(commit)
     }
 
     /// Allows for checking wether the sender is able to broadcast a transaction that necessitates the provided `gas`

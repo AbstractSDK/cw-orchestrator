@@ -2,7 +2,7 @@ use crate::{queriers::CosmWasm, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
-    sender::Wallet, tx_resp::CosmTxResponse,
+    senders::base_sender::Wallet, tx_resp::CosmTxResponse,
 };
 
 use cosmrs::{
@@ -30,6 +30,8 @@ use std::{
 };
 
 use tonic::transport::Channel;
+
+use crate::senders::sender_trait::SenderTrait;
 
 #[derive(Clone)]
 /**
@@ -63,9 +65,11 @@ use tonic::transport::Channel;
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsync {
+pub struct DaemonAsync<SenderTrait = Wallet, QuerierTrait = ()> {
     /// Sender to send transactions to the chain
-    pub sender: Wallet,
+    pub sender: SenderTrait,
+    /// Querier associated with the Daemon object. It's used to query chain information
+    pub querier: QuerierTrait,
     /// State of the daemon
     pub state: Arc<DaemonState>,
 }
@@ -91,7 +95,7 @@ impl ChainState for DaemonAsync {
 }
 
 // Execute on the real chain, returns tx response.
-impl DaemonAsync {
+impl<Sender: SenderTrait> DaemonAsync<Sender> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -310,7 +314,7 @@ impl DaemonAsync {
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender(&mut self, sender: &Wallet) {
+    pub fn set_sender(&mut self, sender: &Sender) {
         self.sender = sender.clone();
     }
 }

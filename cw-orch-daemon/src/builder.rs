@@ -1,12 +1,12 @@
 use crate::{
-    log::print_if_log_disabled, sender::SenderBuilder, sender::SenderOptions, DaemonAsync,
-    DaemonBuilder,
+    log::print_if_log_disabled, senders::base_sender::SenderBuilder,
+    senders::base_sender::SenderOptions, DaemonAsync, DaemonBuilder,
 };
 use std::sync::Arc;
 
 use bitcoin::secp256k1::All;
 
-use super::{error::DaemonError, sender::Sender, state::DaemonState};
+use super::{error::DaemonError, senders::base_sender::Sender, state::DaemonState};
 use cw_orch_core::environment::ChainInfoOwned;
 
 /// The default deployment id if none is provided
@@ -116,6 +116,7 @@ impl DaemonAsyncBuilder {
         let daemon = DaemonAsync {
             state,
             sender: Arc::new(sender),
+            querier: (),
         };
         print_if_log_disabled()?;
         Ok(daemon)

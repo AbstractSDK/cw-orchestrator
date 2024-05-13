@@ -11,9 +11,9 @@ use cosmrs::{
 };
 use cw_orch_core::log::transaction_target;
 
-use crate::sender::SenderOptions;
+use crate::senders::base_sender::SenderOptions;
 
-use super::{sender::Sender, DaemonError};
+use super::{senders::base_sender::Sender, DaemonError};
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]

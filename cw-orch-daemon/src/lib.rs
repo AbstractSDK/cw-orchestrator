@@ -9,7 +9,7 @@ pub mod error;
 pub(crate) mod json_file;
 /// Proto types for different blockchains
 pub mod proto;
-pub mod sender;
+pub mod senders;
 pub mod state;
 pub mod sync;
 pub mod tx_resp;
@@ -23,7 +23,7 @@ pub mod tx_broadcaster;
 pub mod tx_builder;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
-pub use sender::Wallet;
+pub use senders::base_sender::Wallet;
 pub use tx_builder::TxBuilder;
 
 pub(crate) mod cosmos_modules {

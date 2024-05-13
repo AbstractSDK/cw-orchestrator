@@ -1,6 +1,6 @@
 use crate::RUNTIME;
 use crate::{
-    sender::{Sender, SenderBuilder, SenderOptions},
+    senders::base_sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
 use bitcoin::secp256k1::All;

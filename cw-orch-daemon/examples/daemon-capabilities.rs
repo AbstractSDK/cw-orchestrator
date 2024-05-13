@@ -3,9 +3,9 @@ use std::str::FromStr;
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
 use cosmwasm_std::coins;
 // ANCHOR: full_counter_example
+use cw_orch_daemon::senders::sender_trait::SenderTrait;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
-
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
