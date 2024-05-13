@@ -116,7 +116,7 @@ impl CosmTxResponse {
         }
     }
 
-    pub fn get_events_from_logs(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
+    fn get_events_from_logs(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
         let mut response: Vec<TxResultBlockEvent> = Default::default();
 
         for log_part in &self.logs {
