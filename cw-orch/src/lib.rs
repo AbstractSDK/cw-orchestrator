@@ -32,6 +32,7 @@ pub mod wasm_protected {
     /// Re-export anyhow for use in the macros
     pub extern crate anyhow;
 
+    pub use cw_orch_core as core;
     pub use cw_orch_core::{build, contract};
 
     /// Related to execution environments
