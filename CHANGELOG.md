@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 
 ## 0.22.0
