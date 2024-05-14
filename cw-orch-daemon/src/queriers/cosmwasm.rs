@@ -61,7 +61,7 @@ impl CosmWasm {
     pub async fn _contract_info(
         &self,
         address: impl Into<String>,
-    ) -> Result<cosmos_modules::cosmwasm::ContractInfo, DaemonError> {
+    ) -> Result<ContractInfoResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryContractInfoRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryContractInfoRequest {
@@ -69,7 +69,21 @@ impl CosmWasm {
         };
         let resp = client.contract_info(request).await?.into_inner();
         let contract_info = resp.contract_info.unwrap();
-        Ok(contract_info)
+
+        let mut c = ContractInfoResponse::default();
+        c.code_id = contract_info.code_id;
+        c.creator = contract_info.creator;
+        c.admin = if contract_info.admin.is_empty() {
+            None
+        } else {
+            Some(contract_info.admin)
+        };
+        c.ibc_port = if contract_info.ibc_port_id.is_empty() {
+            None
+        } else {
+            Some(contract_info.ibc_port_id)
+        };
+        Ok(c)
     }
 
     /// Query contract history
@@ -122,14 +136,13 @@ impl CosmWasm {
     }
 
     /// Query code
-    pub async fn _code(
-        &self,
-        code_id: u64,
-    ) -> Result<cosmos_modules::cosmwasm::CodeInfoResponse, DaemonError> {
+    pub async fn _code(&self, code_id: u64) -> Result<CodeInfoResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodeRequest { code_id };
-        Ok(client.code(request).await?.into_inner().code_info.unwrap())
+        let response = client.code(request).await?.into_inner().code_info.unwrap();
+
+        Ok(cosmrs_to_cosmwasm_code_info(response))
     }
 
     /// Query code bytes
@@ -144,11 +157,16 @@ impl CosmWasm {
     pub async fn _codes(
         &self,
         pagination: Option<PageRequest>,
-    ) -> Result<Vec<cosmos_modules::cosmwasm::CodeInfoResponse>, DaemonError> {
+    ) -> Result<Vec<CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let request = QueryCodesRequest { pagination };
-        Ok(client.codes(request).await?.into_inner().code_infos)
+        let response = client.codes(request).await?.into_inner().code_infos;
+
+        Ok(response
+            .into_iter()
+            .map(cosmrs_to_cosmwasm_code_info)
+            .collect())
     }
 
     /// Query pinned codes
@@ -213,27 +231,10 @@ impl WasmQuerier for CosmWasm {
         &self,
         address: impl Into<String>,
     ) -> Result<cosmwasm_std::ContractInfoResponse, Self::Error> {
-        let contract_info = self
-            .rt_handle
+        self.rt_handle
             .as_ref()
             .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._contract_info(address))?;
-
-        let mut c = ContractInfoResponse::default();
-        c.code_id = contract_info.code_id;
-        c.creator = contract_info.creator;
-        c.admin = if contract_info.admin.is_empty() {
-            None
-        } else {
-            Some(contract_info.admin)
-        };
-        c.ibc_port = if contract_info.ibc_port_id.is_empty() {
-            None
-        } else {
-            Some(contract_info.ibc_port_id)
-        };
-
-        Ok(c)
+            .block_on(self._contract_info(address))
     }
 
     fn raw_query(
@@ -265,18 +266,10 @@ impl WasmQuerier for CosmWasm {
     }
 
     fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
-        let response = self
-            .rt_handle
+        self.rt_handle
             .as_ref()
             .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._code(code_id))?;
-
-        let mut c = CodeInfoResponse::default();
-        c.code_id = code_id;
-        c.creator = response.creator;
-        c.checksum = response.data_hash.into();
-
-        Ok(c)
+            .block_on(self._code(code_id))
     }
 
     fn instantiate2_addr(
@@ -304,4 +297,14 @@ impl WasmQuerier for CosmWasm {
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
         <T as Uploadable>::wasm(&contract.get_chain().daemon.state.chain_data).checksum()
     }
+}
+
+pub fn cosmrs_to_cosmwasm_code_info(
+    code_info: cosmrs::proto::cosmwasm::wasm::v1::CodeInfoResponse,
+) -> CodeInfoResponse {
+    let mut c = CodeInfoResponse::default();
+    c.code_id = code_info.code_id;
+    c.creator = code_info.creator;
+    c.checksum = code_info.data_hash.into();
+    c
 }
