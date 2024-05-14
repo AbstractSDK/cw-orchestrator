@@ -6,7 +6,8 @@ use cosmwasm_std::{
 };
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
-    environment::{Querier, QuerierGetter, StateInterface, WasmQuerier}, CwEnvError,
+    environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
+    CwEnvError,
 };
 use osmosis_test_tube::cosmrs::AccountId;
 use osmosis_test_tube::{OsmosisTestApp, Runner};

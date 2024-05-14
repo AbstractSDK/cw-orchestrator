@@ -1,4 +1,7 @@
-use cw_orch_core::{environment::{DefaultQueriers, QueryHandler, StateInterface}, CwEnvError};
+use cw_orch_core::{
+    environment::{DefaultQueriers, QueryHandler, StateInterface},
+    CwEnvError,
+};
 
 use super::OsmosisTestTube;
 
