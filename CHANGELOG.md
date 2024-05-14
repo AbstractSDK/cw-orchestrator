@@ -2,9 +2,13 @@
 
 ## Unreleased
 
-### Breaking changes
+- Added a test to make sure the derive macros stay compatible with new cw-orch versions
+- Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 
-- Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
+### Breaking
+
+- Daemon : Changed return types on daemon queriers to match Cosmwasm std types
+- Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
 
 ## 0.22.0
 
@@ -20,6 +24,7 @@
 ## 0.21.2
 
 - Allow cw-orch wasm compilation without features
+- Transaction Response now inspects logs and events to find matching events.
 
 ## 0.21.1
 

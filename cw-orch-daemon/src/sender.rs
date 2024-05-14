@@ -435,9 +435,8 @@ impl Sender<All> {
             fee,
             fee.denom
         );
-        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
 
-        if parsed_balance.amount >= fee.amount {
+        if balance.amount >= fee.amount {
             log::debug!("The wallet has enough balance to deploy");
             return Ok(());
         }
@@ -451,7 +450,7 @@ impl Sender<All> {
             self.address()?,
             fee,
             fee.denom,
-            parsed_balance
+            balance
         );
 
         if CoreEnvVars::manual_interaction() {
@@ -463,14 +462,14 @@ impl Sender<All> {
             } else {
                 Err(DaemonError::NotEnoughBalance {
                     expected: fee.clone(),
-                    current: parsed_balance,
+                    current: balance,
                 })
             }
         } else {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
-                current: parsed_balance,
+                current: balance,
             });
         }
     }

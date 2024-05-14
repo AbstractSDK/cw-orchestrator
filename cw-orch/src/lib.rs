@@ -28,6 +28,8 @@ pub mod wasm_protected {
     /// Re-export anyhow for use in the macros
     pub extern crate anyhow;
 
+    // This re-export should not be touched or the derive macros WILL break
+    pub use cw_orch_core as core;
     pub use cw_orch_core::{build, contract};
 
     /// Related to execution environments
