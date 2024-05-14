@@ -24,6 +24,7 @@ osmosis-test-tube = { version = "24.0.1" }
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 
+cw-orch = { path = "./cw-orch", version = "0.22.0" }
 cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.22.0" }
 cw-orch-core = { path = "packages/cw-orch-core", version = "1.0.0" }
 cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.22.0" }
@@ -38,6 +39,7 @@ serde_json = "1.0.79"
 tonic = { version = "0.10.2" }
 prost-types = "0.12.3"
 prost = "0.12.3"
+cosmrs = { version = "0.15.0" }
 # Test deps
 speculoos = "0.11.0"
 
