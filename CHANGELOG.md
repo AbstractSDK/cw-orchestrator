@@ -3,8 +3,9 @@
 ## Unreleased
 
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
+- Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 
-## 0.22
+## 0.22.0
 
 - Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
 - Added `balance` query at the root of QueryHandler
@@ -18,6 +19,7 @@
 ## 0.21.2
 
 - Allow cw-orch wasm compilation without features
+- Transaction Response now inspects logs and events to find matching events.
 
 ## 0.21.1
 
