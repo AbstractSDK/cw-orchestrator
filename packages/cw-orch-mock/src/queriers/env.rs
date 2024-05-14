@@ -15,7 +15,7 @@ impl<A: Api, S: StateInterface> EnvironmentQuerier for MockBase<A, S> {
             .collect::<Vec<_>>();
 
         // We make sure this doesn't error even if the chain id doesn't have the `osmosis-1` format
-        let chain_name = if chain_id_split.len() > 2 {
+        let chain_name = if chain_id_split.len() > 1 {
             &chain_id_split[1]
         } else {
             &chain_id_split[0]
