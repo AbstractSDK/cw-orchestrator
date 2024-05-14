@@ -2,9 +2,30 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
+use cw_orch::{daemon::networks::ChainInfo, environment::ChainKind};
+use cw_orch::{
+    environment::NetworkInfo,
+    prelude::{
+        ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
+        TxHandler,
+    },
+};
+
+pub const UNION: NetworkInfo = NetworkInfo {
+    chain_name: "union",
+    pub_address_prefix: "union",
+    coin_type: 118,
+};
+
+pub const UNION_TESTNET: ChainInfo = ChainInfo {
+    chain_id: "union-testnet-8",
+    gas_denom: "muno",
+    gas_price: 0.0025,
+    grpc_urls: &["https://grpc.testnet.bonlulu.uno"],
+    lcd_url: None,
+    fcd_url: None,
+    network_info: UNION,
+    kind: ChainKind::Testnet,
 };
 
 /// In order to use this script, you need to set the following env variables
@@ -24,7 +45,7 @@ pub fn main() {
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
     let daemon = Daemon::builder()
         // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+        .chain(UNION_TESTNET)
         .build()
         .unwrap();
 
@@ -32,8 +53,7 @@ pub fn main() {
     let counter = CounterContract::new(daemon.clone());
 
     // Uploading a contract is very simple
-    let upload_res = counter.upload();
-    assert!(upload_res.is_ok());
+    let upload_res = counter.upload().unwrap();
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
