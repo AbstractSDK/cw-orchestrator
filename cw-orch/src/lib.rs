@@ -18,10 +18,6 @@ mod error;
 pub mod daemon;
 
 #[cfg(not(target_arch = "wasm32"))]
-#[cfg(feature = "osmosis-test-tube")]
-pub mod osmosis_test_tube;
-
-#[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "snapshot-testing")]
 pub mod snapshots;
 
