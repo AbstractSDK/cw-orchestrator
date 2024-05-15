@@ -27,7 +27,7 @@ pub struct DaemonState {
     pub json_state: DaemonStateFile,
     /// Deployment identifier
     pub deployment_id: String,
-    /// Chain Id
+    /// Chain Id, ex. "osmosis-1"
     pub chain_id: String,
     /// Chain Name
     pub chain_name: String,
