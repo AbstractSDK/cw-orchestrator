@@ -29,7 +29,7 @@ pub struct DaemonState {
     pub deployment_id: String,
     /// Chain Id, ex. "osmosis-1"
     pub chain_id: String,
-    /// Chain Name
+    /// Chain Name, ex. "osmosis"
     pub chain_name: String,
 }
 
