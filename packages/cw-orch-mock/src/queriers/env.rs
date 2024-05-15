@@ -13,7 +13,7 @@ impl<A: Api, S: StateInterface> EnvironmentQuerier for MockBase<A, S> {
 
         EnvironmentInfo {
             chain_id,
-            chain_name: chain_name.clone(),
+            chain_name,
             deployment_id: "default".to_string(),
         }
     }
