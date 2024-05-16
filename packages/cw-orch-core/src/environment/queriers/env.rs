@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EnvironmentInfo {
     pub chain_id: String,
     pub chain_name: String,
