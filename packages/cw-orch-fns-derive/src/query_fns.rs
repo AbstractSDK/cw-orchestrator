@@ -77,18 +77,18 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name (#(#variant_ident_content_names,)*);
-                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg.into())
+                        <Self as ::cw_orch::core::contract::interface_traits::CwOrchQuery<Chain>>::query(self, &msg.into())
                     }
                 )
             }
             Fields::Unit => {
                 quote!(
                     #variant_doc
-                    fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self) -> ::core::result::Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name;
-                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg.into())
+                        <Self as ::cw_orch::core::contract::interface_traits::CwOrchQuery<Chain>>::query(self, &msg.into())
                     }
                 )
             },
@@ -109,11 +109,11 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)*) -> ::core::result::Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name {
                             #(#variant_idents,)*
                         };
-                        <Self as ::cw_orch::prelude::CwOrchQuery<Chain>>::query(self, &msg.into())
+                        <Self as ::cw_orch::core::contract::interface_traits::CwOrchQuery<Chain>>::query(self, &msg.into())
                     }
                 )
             }
@@ -135,7 +135,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: ::cw_orch::prelude::QueryHandler + ::cw_orch::environment::ChainState, CwOrchQueryMsgType, #type_generics>: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = CwOrchQueryMsgType> #combined_trait_where_clause {
+        pub trait #bname<Chain: ::cw_orch::core::environment::QueryHandler + ::cw_orch::core::environment::ChainState, CwOrchQueryMsgType, #type_generics>: ::cw_orch::core::contract::interface_traits::CwOrchQuery<Chain, QueryMsg = CwOrchQueryMsgType> #combined_trait_where_clause {
             #(#variant_fns)*
         }
 
@@ -148,7 +148,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     // We need to merge the where clauses (rust doesn't support 2 wheres)
     // If there is no where clause, we simply add the necessary where
-    let necessary_where = quote!(SupportedContract: ::cw_orch::prelude::CwOrchQuery<Chain, QueryMsg = CwOrchQueryMsgType >, #necessary_trait_where);
+    let necessary_where = quote!(SupportedContract: ::cw_orch::core::contract::interface_traits::CwOrchQuery<Chain, QueryMsg = CwOrchQueryMsgType >, #necessary_trait_where);
     let combined_where_clause = where_clause
         .map(|w| {
             quote!(
@@ -162,7 +162,7 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: ::cw_orch::prelude::QueryHandler + ::cw_orch::environment::ChainState, CwOrchQueryMsgType, #type_generics> #bname<Chain, CwOrchQueryMsgType, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain:  ::cw_orch::core::environment::QueryHandler + ::cw_orch::core::environment::ChainState, CwOrchQueryMsgType, #type_generics> #bname<Chain, CwOrchQueryMsgType, #type_generics> for SupportedContract
         #combined_where_clause {}
     );
 

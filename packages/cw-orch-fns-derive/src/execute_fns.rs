@@ -82,11 +82,11 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::core::environment::TxResponse<Chain>, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name (
                             #(#variant_ident_content_names,)*
                         );
-                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
                     }
                 )
             },
@@ -94,9 +94,9 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
                 quote!(
                     #variant_doc
-                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<::cw_orch::core::environment::TxResponse<Chain>, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name;
-                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
                     }
                 )
             }
@@ -118,11 +118,11 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::prelude::TxResponse<Chain>, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<::cw_orch::core::environment::TxResponse<Chain>, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name {
                             #(#variant_ident_content_names,)*
                         };
-                        <Self as ::cw_orch::prelude::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::CwOrchExecute<Chain>>::execute(self, &msg.into(),#passed_coins)
                     }
                 )
             }
@@ -143,7 +143,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: ::cw_orch::prelude::TxHandler, CwOrchExecuteMsgType, #type_generics>: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = CwOrchExecuteMsgType> #combined_trait_where_clause {
+        pub trait #bname<Chain: ::cw_orch::core::environment::TxHandler, CwOrchExecuteMsgType, #type_generics>: ::cw_orch::core::contract::interface_traits::CwOrchExecute<Chain, ExecuteMsg = CwOrchExecuteMsgType> #combined_trait_where_clause {
             #(#variant_fns)*
         }
 
@@ -156,7 +156,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
     // We need to merge the where clauses (rust doesn't support 2 wheres)
     // If there is no where clause, we simply add the necessary where
-    let necessary_where = quote!(SupportedContract: ::cw_orch::prelude::CwOrchExecute<Chain, ExecuteMsg = CwOrchExecuteMsgType >, #necessary_trait_where);
+    let necessary_where = quote!(SupportedContract: ::cw_orch::core::contract::interface_traits::CwOrchExecute<Chain, ExecuteMsg = CwOrchExecuteMsgType >, #necessary_trait_where);
     let combined_where_clause = where_clause
         .map(|w| {
             quote!(
@@ -170,7 +170,7 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
 
     let derived_trait_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: ::cw_orch::prelude::TxHandler, CwOrchExecuteMsgType, #type_generics> #bname<Chain, CwOrchExecuteMsgType, #type_generics> for SupportedContract
+        impl<SupportedContract, Chain: ::cw_orch::core::environment::TxHandler, CwOrchExecuteMsgType, #type_generics> #bname<Chain, CwOrchExecuteMsgType, #type_generics> for SupportedContract
         #combined_where_clause {}
     );
 

@@ -4,8 +4,9 @@ use counter_contract::{
     CounterContract,
 };
 
-use cw_orch::prelude::{CallAs, ContractInstance, OsmosisTestTube};
+use cw_orch::prelude::{CallAs, ContractInstance};
 use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload};
+use cw_orch_osmosis_test_tube::OsmosisTestTube;
 
 pub fn main() {
     // ANCHOR: osmosis_test_tube_creation

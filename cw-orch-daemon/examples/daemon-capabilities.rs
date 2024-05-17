@@ -6,6 +6,7 @@ use cosmwasm_std::coins;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
 
+// From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
