@@ -46,7 +46,7 @@ impl<Chain: CwEnv> Example<Chain> {
         self.bar("hello".to_string()).unwrap();
 
         // function `test` is available because of the `impl_into` attribute!
-        self.test(65).unwrap();
+        self.test(65u64).unwrap();
     }
 }
 

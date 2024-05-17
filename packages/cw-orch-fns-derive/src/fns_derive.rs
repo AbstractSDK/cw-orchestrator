@@ -81,22 +81,34 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
                 // We need to figure out a parameter name for all fields associated to their types
                 // They will be numbered from 0 to n-1
-                let variant_ident_content_names = variant_idents
-                    .iter()
-                    .enumerate()
-                    .map(|(i, _)|  Ident::new(&format!("arg{}", i), Span::call_site()));
-
-                let variant_attr = variant_idents.clone().into_iter()
+                
+                let variant_fields: Vec<_> = variant_idents.clone().into_iter()
                     .enumerate()
                     .map(|(i, mut id)| {
                     id.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
                     id
+                }).collect();
+
+                // Generate the struct members (This can be kept, it doesn't disturb)
+                let variant_ident_content_names = variant_fields
+                    .iter()
+                    .map(|id| {
+                        let ident = &id.ident;
+                        quote!(#ident.into())
+                    });
+
+                // Generate the function arguments (This may be made optional)
+                let variant_params = variant_fields.iter().map(|field| {
+                    let field_name = &field.ident;
+                    let field_type = &field.ty;
+                    quote! (#field_name: impl Into<#field_type> )
                 });
+
 
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
+                    fn #variant_func_name(&self, #(#variant_params,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name (
                             #(#variant_ident_content_names,)*
                         );
@@ -125,9 +137,19 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
                 // Parse these fields as arguments to function
                 let variant_fields = variant_fields.named.clone();
-                let variant_idents = variant_fields.iter().map(|f|f.ident.clone().unwrap());
 
-                let variant_attr = variant_fields.iter();
+                // Generate the struct members (This can be kept, it doesn't disturb)
+                let variant_idents = variant_fields.iter().map(|f|{
+                    let ident = f.ident.clone().unwrap();
+                    quote!(#ident: #ident.into())
+                });
+
+                // Generate the function arguments (This may be made optional)
+                let variant_attr = variant_fields.iter().map(|field| {
+                    let field_name = &field.ident;
+                    let field_type = &field.ty;
+                    quote! (#field_name: impl Into<#field_type> )
+                });
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
