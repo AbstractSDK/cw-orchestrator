@@ -4,6 +4,11 @@ use syn::{
     GenericArgument, GenericParam, Generics, Lit, Meta, NestedMeta,
 };
 
+pub enum MsgType {
+    Execute,
+    Query,
+}
+
 pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
     for attr in &v.attrs {
         if let Ok(Meta::List(list)) = attr.parse_meta() {
