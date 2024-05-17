@@ -2,8 +2,7 @@ extern crate proc_macro;
 use crate::{
     execute_fns::payable,
     helpers::{
-        process_fn_name, process_sorting, to_generic_arguments, LexiographicMatching, 
-        MsgType,
+        process_fn_name, process_sorting, to_generic_arguments, LexiographicMatching, MsgType,
     },
     query_fns::parse_query_type,
 };
@@ -26,9 +25,21 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
     let variants = input.variants;
 
     let (trait_name, func_name, trait_msg_type, generic_msg_type, chain_trait) = match msg_type {
-        MsgType::Execute =>(quote!(CwOrchExecute), quote!(execute), quote!(ExecuteMsg),quote!(CwOrchExecuteMsgType),quote!(::cw_orch::core::environment::TxHandler)),
-        MsgType::Query => (quote!(CwOrchQuery),quote!(query), quote!(QueryMsg),quote!(CwOrchQueryMsgType), quote!(
-                ::cw_orch::core::environment::QueryHandler + ::cw_orch::core::environment::ChainState
+        MsgType::Execute => (
+            quote!(CwOrchExecute),
+            quote!(execute),
+            quote!(ExecuteMsg),
+            quote!(CwOrchExecuteMsgType),
+            quote!(::cw_orch::core::environment::TxHandler),
+        ),
+        MsgType::Query => (
+            quote!(CwOrchQuery),
+            quote!(query),
+            quote!(QueryMsg),
+            quote!(CwOrchQueryMsgType),
+            quote!(
+                ::cw_orch::core::environment::QueryHandler
+                    + ::cw_orch::core::environment::ChainState
             ),
         ),
     };
@@ -70,7 +81,6 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
             MsgType::Execute => quote!(::cw_orch::core::environment::TxResponse<Chain>),
             MsgType::Query => parse_query_type(&variant)
         };
-            
 
         match &mut variant.fields {
             Fields::Unnamed(variant_fields) => {
