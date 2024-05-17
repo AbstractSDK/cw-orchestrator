@@ -26,9 +26,9 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
     let variants = input.variants;
 
     let (trait_name, func_name, trait_msg_type, generic_msg_type, chain_trait) = match msg_type {
-        MsgType::Execute =>(quote!(CwOrchExecute), quote!(execute), quote!(ExecuteMsg),quote!(CwOrchExecuteMsgType),quote!(::cw_orch::prelude::TxHandler)),
+        MsgType::Execute =>(quote!(CwOrchExecute), quote!(execute), quote!(ExecuteMsg),quote!(CwOrchExecuteMsgType),quote!(::cw_orch::core::environment::TxHandler)),
         MsgType::Query => (quote!(CwOrchQuery),quote!(query), quote!(QueryMsg),quote!(CwOrchQueryMsgType), quote!(
-                ::cw_orch::prelude::QueryHandler + ::cw_orch::environment::ChainState
+                ::cw_orch::core::environment::QueryHandler + ::cw_orch::core::environment::ChainState
             ),
         ),
     };
@@ -67,7 +67,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
 
         let response = match msg_type{
-            MsgType::Execute => quote!(::cw_orch::prelude::TxResponse<Chain>),
+            MsgType::Execute => quote!(::cw_orch::core::environment::TxResponse<Chain>),
             MsgType::Query => parse_query_type(&variant)
         };
             
@@ -96,11 +96,11 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name (
                             #(#variant_ident_content_names,)*
                         );
-                        <Self as ::cw_orch::prelude::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
                     }
                 )
             },
@@ -108,9 +108,9 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
                 quote!(
                     #variant_doc
-                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<#response, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name;
-                        <Self as ::cw_orch::prelude::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
                     }
                 )
             }
@@ -131,11 +131,11 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::prelude::CwOrchError> {
+                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name {
                             #(#variant_idents,)*
                         };
-                        <Self as ::cw_orch::prelude::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
                     }
                 )
             }
@@ -157,7 +157,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: #chain_trait, #generic_msg_type, #type_generics>: ::cw_orch::prelude::#trait_name<Chain, #trait_msg_type = #generic_msg_type> #combined_trait_where_clause {
+        pub trait #bname<Chain: #chain_trait, #generic_msg_type, #type_generics>: ::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type> #combined_trait_where_clause {
             #(#variant_fns)*
         }
 
@@ -170,7 +170,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
     // We need to merge the where clauses (rust doesn't support 2 wheres)
     // If there is no where clause, we simply add the necessary where
-    let necessary_where = quote!(SupportedContract: ::cw_orch::prelude::#trait_name<Chain, #trait_msg_type = #generic_msg_type >, #necessary_trait_where);
+    let necessary_where = quote!(SupportedContract: ::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type >, #necessary_trait_where);
     let combined_where_clause = where_clause
         .map(|w| {
             quote!(

@@ -1,6 +1,7 @@
-use crate::error::CwOrchError;
-
-use cw_orch_core::environment::{DefaultQueriers, QueryHandler, StateInterface};
+use cw_orch_core::{
+    environment::{DefaultQueriers, QueryHandler, StateInterface},
+    CwEnvError,
+};
 
 use super::OsmosisTestTube;
 
@@ -10,19 +11,19 @@ pub mod node;
 pub mod wasm;
 
 impl<S: StateInterface> QueryHandler for OsmosisTestTube<S> {
-    type Error = CwOrchError;
+    type Error = CwEnvError;
 
-    fn wait_blocks(&self, _amount: u64) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+    fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
+        self.wait_seconds(amount * 10)
     }
 
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwOrchError> {
+    fn wait_seconds(&self, secs: u64) -> Result<(), CwEnvError> {
         self.app.borrow().increase_time(secs);
         Ok(())
     }
 
-    fn next_block(&self) -> Result<(), CwOrchError> {
-        panic!("Can't wait blocks on osmosis_test_tube")
+    fn next_block(&self) -> Result<(), CwEnvError> {
+        self.wait_blocks(1)
     }
 }
 

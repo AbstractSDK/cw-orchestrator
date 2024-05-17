@@ -95,22 +95,22 @@ This generated the following code:
 ```ignore
 
 // This struct represents the interface to the contract.
-pub struct Cw20<Chain>(::cw_orch::prelude::Contract<Chain>);
+pub struct Cw20<Chain>(::cw_orch::core::contract::Contract<Chain>);
 
 impl <Chain> Cw20<Chain> {
     /// Constructor for the contract interface
      pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
         Self(
-            ::cw_orch::contract::Contract::new(contract_id, chain)
+            ::cw_orch::core::contract::Contract::new(contract_id, chain)
         )
     }
 }
 
 // Traits for signaling cw-orchestrator with what messages to call the contract's entry points.
-impl <Chain> ::cw_orch::prelude::InstantiableContract for Cw20<Chain> {
+impl <Chain> ::cw_orch::core::contract::interface_traits::InstantiableContract for Cw20<Chain> {
     type InstantiateMsg = InstantiateMsg;
 }
-impl <Chain> ::cw_orch::prelude::ExecutableContract for Cw20<Chain> {
+impl <Chain> ::cw_orch::core::contract::interface_traits::ExecutableContract for Cw20<Chain> {
     type ExecuteMsg = ExecuteMsg;
 }
 // ... other entry point & upload traits
@@ -207,7 +207,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
             impl <Chain, #all_generics> #name<Chain, #all_generics> {
                 pub fn new(chain: Chain) -> Self {
                     Self(
-                        ::cw_orch::contract::Contract::new(#id_expr, chain)
+                        ::cw_orch::core::contract::Contract::new(#id_expr, chain)
                     , #(#all_phantom_marker_values,)*)
                 }
             }
@@ -217,7 +217,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
             impl <Chain, #all_generics> #name<Chain, #all_generics> {
                 pub fn new(contract_id: impl ToString, chain: Chain) -> Self {
                     Self(
-                        ::cw_orch::contract::Contract::new(contract_id, chain)
+                        ::cw_orch::core::contract::Contract::new(contract_id, chain)
                     , #(#all_phantom_marker_values,)*)
                 }
             }
@@ -228,7 +228,7 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         #[derive(
             ::std::clone::Clone,
         )]
-        pub struct #name<Chain, #all_generics>(::cw_orch::contract::Contract<Chain>, #(#all_phantom_markers,)*);
+        pub struct #name<Chain, #all_generics>(::cw_orch::core::contract::Contract<Chain>, #(#all_phantom_markers,)*);
 
         #[cfg(target_arch = "wasm32")]
         #[derive(
@@ -240,32 +240,32 @@ pub fn interface(attrs: TokenStream, input: TokenStream) -> TokenStream {
         #default_num
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain: ::cw_orch::environment::ChainState, #all_generics> ::cw_orch::prelude::ContractInstance<Chain> for #name<Chain, #all_generics> {
-            fn as_instance(&self) -> &::cw_orch::contract::Contract<Chain> {
+        impl<Chain: ::cw_orch::core::environment::ChainState, #all_generics> ::cw_orch::core::contract::interface_traits::ContractInstance<Chain> for #name<Chain, #all_generics> {
+            fn as_instance(&self) -> &::cw_orch::core::contract::Contract<Chain> {
                 &self.0
             }
-            fn as_instance_mut(&mut self) -> &mut ::cw_orch::contract::Contract<Chain> {
+            fn as_instance_mut(&mut self) -> &mut ::cw_orch::core::contract::Contract<Chain> {
                 &mut self.0
             }
         }
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain, #all_generics> ::cw_orch::prelude::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain, #all_generics> ::cw_orch::core::contract::interface_traits::InstantiableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type InstantiateMsg = #init;
         }
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain, #all_generics> ::cw_orch::prelude::ExecutableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain, #all_generics> ::cw_orch::core::contract::interface_traits::ExecutableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type ExecuteMsg = #exec;
         }
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain, #all_generics> ::cw_orch::prelude::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain, #all_generics> ::cw_orch::core::contract::interface_traits::QueryableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type QueryMsg = #query;
         }
 
         #[cfg(not(target_arch = "wasm32"))]
-        impl<Chain, #all_generics> ::cw_orch::prelude::MigratableContract for #name<Chain, #all_generics> #all_debug_serialize {
+        impl<Chain, #all_generics> ::cw_orch::core::contract::interface_traits::MigratableContract for #name<Chain, #all_generics> #all_debug_serialize {
             type MigrateMsg = #migrate;
         }
     );

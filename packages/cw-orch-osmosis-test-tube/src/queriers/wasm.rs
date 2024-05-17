@@ -1,18 +1,18 @@
 use std::{cell::RefCell, marker::PhantomData, rc::Rc, str::FromStr};
 
-use cosmrs::AccountId;
 use cosmwasm_std::{
     from_json, instantiate2_address, to_json_vec, CanonicalAddr, CodeInfoResponse,
     ContractInfoResponse, HexBinary,
 };
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
     CwEnvError,
 };
+use osmosis_test_tube::cosmrs::AccountId;
 use osmosis_test_tube::{OsmosisTestApp, Runner};
 
-use crate::osmosis_test_tube::{map_err, OsmosisTestTube, MOCK_CHAIN_INFO};
+use crate::{map_err, OsmosisTestTube, MOCK_CHAIN_INFO};
 use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
     QueryCodeRequest, QueryCodeResponse, QueryContractInfoRequest, QueryContractInfoResponse,
     QueryRawContractStateRequest, QueryRawContractStateResponse, QuerySmartContractStateRequest,
@@ -178,10 +178,7 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
         Ok(AccountId::new(prefix, &addr.0).unwrap().to_string())
     }
 
-    fn local_hash<
-        T: cw_orch_core::contract::interface_traits::Uploadable
-            + cw_orch_core::contract::interface_traits::ContractInstance<Self::Chain>,
-    >(
+    fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         _contract: &T,
     ) -> Result<HexBinary, CwEnvError> {
