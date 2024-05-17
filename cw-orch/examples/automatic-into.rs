@@ -30,8 +30,8 @@ pub fn instantiate(
 pub fn execute(
     _deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
+    _info: MessageInfo,
+    _msg: ExecuteMsg,
 ) -> StdResult<Response> {
     Ok(Response::new())
 }
@@ -39,8 +39,8 @@ pub fn execute(
 pub fn minter_execute(
     _deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
-    msg: MintingExecMsg,
+    _info: MessageInfo,
+    _msg: MintingExecMsg,
 ) -> StdResult<Response> {
     Ok(Response::new())
 }
@@ -48,8 +48,8 @@ pub fn minter_execute(
 pub fn base_execute(
     _deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
-    msg: BaseExecMsg,
+    _info: MessageInfo,
+    _msg: BaseExecMsg,
 ) -> StdResult<Response> {
     Ok(Response::new())
 }
@@ -69,7 +69,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-pub fn migrate(_deps: DepsMut, _env: Env, msg: Empty) -> StdResult<Response> {
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> StdResult<Response> {
     Ok(Response::new())
 }
 
@@ -196,7 +196,6 @@ mod msg {
 
         use cosmwasm_schema::{cw_serde, QueryResponses};
         use cosmwasm_std::Uint128;
-        use cw_orch::prelude::*;
 
         #[cw_serde]
         #[derive(QueryResponses, cw_orch::QueryFns)]
