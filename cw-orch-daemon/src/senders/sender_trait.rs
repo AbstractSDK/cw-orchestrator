@@ -5,9 +5,13 @@ use cosmrs::{
 use cosmwasm_std::Addr;
 
 use crate::{CosmTxResponse, DaemonError};
+use std::sync::Arc;
 
-pub trait SenderTrait: Clone {
+pub trait SenderTraitBase: SenderTrait where DaemonError: From<Self::Error>{}
+
+pub trait SenderTraitBase: Clone {
     type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
+    type SenderBuilder;
 
     // TODO: do we want to enforce sync on this function ?
     fn address(&self) -> Result<Addr, Self::Error>;
@@ -18,28 +22,60 @@ pub trait SenderTrait: Clone {
     /// Else, returns the address associated with the current private key
     fn msg_sender(&self) -> Result<AccountId, Self::Error>;
 
-    async fn commit_tx<T: Msg>(
+    fn commit_tx<T: Msg>(
         &self,
         msgs: Vec<T>,
         memo: Option<&str>,
-    ) -> Result<CosmTxResponse, Self::Error> {
+    ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send {
         let msgs = msgs
             .into_iter()
             .map(Msg::into_any)
             .collect::<Result<Vec<Any>, _>>()
             .unwrap();
 
-        self.commit_tx_any(msgs, memo).await
+        self.commit_tx_any(msgs, memo)
     }
 
-    async fn commit_tx_any(
+    fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
-    ) -> Result<CosmTxResponse, Self::Error>;
+    ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send;
 
-    async fn broadcast_tx(
+    fn broadcast_tx(
         &self,
         tx: Raw,
-    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>;
+    ) -> impl std::future::Future<
+        Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>,
+    > + Send;
+}
+
+impl<T: SenderTrait> SenderTrait for Arc<T> {
+    type Error = T::Error;
+    type SenderBuilder = T::SenderBuilder;
+
+    fn address(&self) -> Result<Addr, Self::Error> {
+        (**self).address()
+    }
+
+    fn msg_sender(&self) -> Result<AccountId, Self::Error> {
+        (**self).msg_sender()
+    }
+
+    fn commit_tx_any(
+        &self,
+        msgs: Vec<Any>,
+        memo: Option<&str>,
+    ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send {
+        (**self).commit_tx_any(msgs, memo)
+    }
+
+    fn broadcast_tx(
+        &self,
+        tx: Raw,
+    ) -> impl std::future::Future<
+        Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>,
+    > + Send {
+        (**self).broadcast_tx(tx)
+    }
 }

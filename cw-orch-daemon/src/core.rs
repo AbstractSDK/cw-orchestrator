@@ -1,4 +1,8 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{
+    queriers::CosmWasm,
+    senders::{base_sender::Sender, querier_trait::QuerierTrait},
+    DaemonAsyncBuilderBase, DaemonState,
+};
 
 use super::{
     builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
@@ -65,16 +69,18 @@ use crate::senders::sender_trait::SenderTrait;
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsync<SenderTrait = Wallet, QuerierTrait = ()> {
+pub struct DaemonAsyncBase<SenderGen: SenderTrait = Wallet, QuerierGen: QuerierTrait = ()> {
     /// Sender to send transactions to the chain
-    pub sender: SenderTrait,
+    pub sender: SenderGen,
     /// Querier associated with the Daemon object. It's used to query chain information
-    pub querier: QuerierTrait,
+    pub querier: QuerierGen,
     /// State of the daemon
     pub state: Arc<DaemonState>,
 }
 
-impl DaemonAsync {
+pub type DaemonAsync = DaemonAsyncBase<Wallet, ()>;
+
+impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen, QuerierGen> {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
@@ -95,7 +101,7 @@ impl ChainState for DaemonAsync {
 }
 
 // Execute on the real chain, returns tx response.
-impl<Sender: SenderTrait> DaemonAsync<Sender> {
+impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen, QuerierGen> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -103,7 +109,7 @@ impl<Sender: SenderTrait> DaemonAsync<Sender> {
 
     /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
     /// Does not consume the original [`DaemonAsync`].
-    pub fn rebuild(&self) -> DaemonAsyncBuilder {
+    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<SenderGen, QuerierGen> {
         let mut builder = Self::builder();
         builder
             .chain(self.state().chain_data.clone())
@@ -314,8 +320,15 @@ impl<Sender: SenderTrait> DaemonAsync<Sender> {
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender(&mut self, sender: &Sender) {
-        self.sender = sender.clone();
+    pub fn set_sender<SenderGen2: SenderTrait>(
+        self,
+        sender: SenderGen2,
+    ) -> DaemonAsyncBase<SenderGen2, QuerierGen> {
+        DaemonAsyncBase {
+            sender,
+            querier: self.querier,
+            state: self.state,
+        }
     }
 }
 

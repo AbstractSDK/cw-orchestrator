@@ -1,8 +1,10 @@
-use crate::RUNTIME;
+use crate::senders::querier_trait::QuerierTrait;
+use crate::senders::sender_trait::SenderTrait;
 use crate::{
     senders::base_sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
+use crate::{Wallet, RUNTIME};
 use bitcoin::secp256k1::All;
 use cw_orch_core::environment::ChainInfoOwned;
 
@@ -20,7 +22,7 @@ use super::{super::error::DaemonError, core::Daemon};
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct DaemonBuilder {
+pub struct DaemonBuilderBase<SenderGen: SenderTrait = Wallet, QuerierGen: QuerierTrait = ()> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -32,12 +34,16 @@ pub struct DaemonBuilder {
 
     /* Sender Options */
     /// Wallet sender
-    pub(crate) sender: Option<SenderBuilder<All>>,
+    pub(crate) sender: Option<SenderGen::SenderBuilder>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
+
+    pub(crate) querier: Option<QuerierGen::QuerierBuilder>,
 }
 
-impl DaemonBuilder {
+pub type DaemonBuilder = DaemonBuilderBase<Wallet, ()>;
+
+impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBuilderBase<SenderGen, QuerierGen> {
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());

@@ -101,12 +101,13 @@ impl SenderOptions {
 
 impl SenderTrait for Sender<All> {
     type Error = DaemonError;
+    type SenderBuilder = SenderBuilder<All>;
 
     async fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
-    ) -> Result<CosmTxResponse, Self::Error> {
+    ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
 
         let msgs = if self.options.authz_granter.is_some() {

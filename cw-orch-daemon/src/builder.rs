@@ -1,6 +1,11 @@
 use crate::{
-    log::print_if_log_disabled, senders::base_sender::SenderBuilder,
-    senders::base_sender::SenderOptions, DaemonAsync, DaemonBuilder,
+    log::print_if_log_disabled,
+    senders::{
+        base_sender::{SenderBuilder, SenderOptions},
+        querier_trait::QuerierTrait,
+        sender_trait::SenderTrait,
+    },
+    DaemonAsync, DaemonBuilder, DaemonBuilderBase, Wallet,
 };
 use std::sync::Arc;
 
@@ -25,7 +30,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 ///     .await.unwrap();
 /// # })
 /// ```
-pub struct DaemonAsyncBuilder {
+pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait, QuerierGen: QuerierTrait> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -34,12 +39,18 @@ pub struct DaemonAsyncBuilder {
     /* Sender related options */
     /// Wallet sender
     /// Will be used in priority when set
-    pub(crate) sender: Option<SenderBuilder<All>>,
+    pub(crate) sender: Option<SenderGen::SenderBuilder>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
+
+    pub(crate) querier_builder: QuerierGen::QuerierBuilder,
 }
 
-impl DaemonAsyncBuilder {
+pub type DaemonAsyncBuilder = DaemonAsyncBuilderBase<Wallet, ()>;
+
+impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait>
+    DaemonAsyncBuilderBase<SenderGen, QuerierGen>
+{
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -123,13 +134,17 @@ impl DaemonAsyncBuilder {
     }
 }
 
-impl From<DaemonBuilder> for DaemonAsyncBuilder {
-    fn from(value: DaemonBuilder) -> Self {
-        DaemonAsyncBuilder {
+impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait>
+    From<DaemonBuilderBase<SenderGen, QuerierGen>>
+    for DaemonAsyncBuilderBase<SenderGen, QuerierGen>
+{
+    fn from(value: DaemonBuilderBase<SenderGen, QuerierGen>) -> Self {
+        DaemonAsyncBuilderBase {
             chain: value.chain,
             deployment_id: value.deployment_id,
             sender_options: value.sender_options,
             sender: value.sender,
+            querier_builder: value.querier,
         }
     }
 }
