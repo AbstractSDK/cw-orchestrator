@@ -167,6 +167,25 @@ impl DaemonState {
         serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
         Ok(())
     }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush(&self) -> Result<(), DaemonError> {
+        if self.chain_data.kind != ChainKind::Local {
+            panic!("Can only flush local chain state");
+        }
+        if self.read_only {
+            return Err(DaemonError::StateReadOnly);
+        }
+
+        let mut json = self.read_state()?;
+
+        json[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id.to_string()] =
+            json!({});
+
+        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
+        Ok(())
+    }
 }
 
 impl StateInterface for DaemonState {
