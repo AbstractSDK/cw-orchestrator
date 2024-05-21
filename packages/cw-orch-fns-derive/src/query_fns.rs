@@ -1,6 +1,7 @@
 extern crate proc_macro;
 use crate::helpers::{
-    process_fn_name, process_sorting, to_generic_arguments, LexiographicMatching,
+    impl_into_deprecation, process_fn_name, process_sorting, to_generic_arguments,
+    LexiographicMatching,
 };
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
@@ -130,8 +131,10 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
                 #necessary_trait_where
         ));
 
+    let impl_into_depr = impl_into_deprecation(&input.attrs);
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
+        #impl_into_depr
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
         pub trait #bname<Chain: ::cw_orch::core::environment::QueryHandler + ::cw_orch::core::environment::ChainState, CwOrchQueryMsgType, #type_generics>: ::cw_orch::core::contract::interface_traits::CwOrchQuery<Chain, QueryMsg = CwOrchQueryMsgType> #combined_trait_where_clause {
             #(#variant_fns)*

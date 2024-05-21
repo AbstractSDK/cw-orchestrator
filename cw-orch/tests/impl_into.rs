@@ -42,11 +42,13 @@ struct Example<Chain>;
 
 impl<Chain: CwEnv> Example<Chain> {
     pub fn test_macro(&self) {
+        #[allow(deprecated)]
         // function `bar` is available because of the `impl_into` attribute!
-        self.bar("hello".to_string()).unwrap();
+        self.bar("hello".to_string()).unwrap_err();
 
+        #[allow(deprecated)]
         // function `test` is available because of the `impl_into` attribute!
-        self.test(65).unwrap();
+        self.test(65).unwrap_err();
     }
 }
 

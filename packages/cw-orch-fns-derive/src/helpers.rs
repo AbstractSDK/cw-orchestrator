@@ -1,3 +1,5 @@
+use proc_macro2::TokenStream;
+use quote::quote;
 use std::cmp::Ordering;
 use syn::{
     parse_quote, punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed,
@@ -102,4 +104,23 @@ fn is_option(wrapper: &str, ty: &'_ syn::Type) -> bool {
         }
     }
     false
+}
+
+pub(crate) fn has_impl_into(attrs: &Vec<Attribute>) -> bool {
+    for attr in attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "impl_into" {
+            return true;
+        }
+    }
+    false
+}
+
+pub(crate) fn impl_into_deprecation(attrs: &Vec<Attribute>) -> TokenStream {
+    if has_impl_into(attrs) {
+        quote!(
+            #[deprecated = "the `impl_into` attribute is deprecated. You don't need to use it anymore"]
+        )
+    } else {
+        quote!()
+    }
 }
