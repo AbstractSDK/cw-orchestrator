@@ -1,4 +1,4 @@
-use crate::{cosmos_modules, error::DaemonError, Daemon};
+use crate::{cosmos_modules, error::DaemonError, senders::sender_trait::SenderTrait, DaemonBase};
 use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
 use cosmwasm_std::StdError;
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
@@ -13,7 +13,7 @@ pub struct Bank {
 }
 
 impl Bank {
-    pub fn new(daemon: &Daemon) -> Self {
+    pub fn new<SenderGen: SenderTrait>(daemon: &DaemonBase<SenderGen>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
@@ -31,7 +31,7 @@ impl Querier for Bank {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<Bank> for Daemon {
+impl<SenderGen: SenderTrait> QuerierGetter<Bank> for DaemonBase<SenderGen> {
     fn querier(&self) -> Bank {
         Bank::new(self)
     }

@@ -2,10 +2,9 @@ use crate::{
     log::print_if_log_disabled,
     senders::{
         base_sender::{SenderBuilder, SenderOptions},
-        querier_trait::QuerierTrait,
         sender_trait::SenderTrait,
     },
-    DaemonAsync, DaemonBuilder, DaemonBuilderBase, Wallet,
+    DaemonAsync, DaemonBuilder, Wallet,
 };
 use std::sync::Arc;
 
@@ -17,7 +16,7 @@ use cw_orch_core::environment::ChainInfoOwned;
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 /// Create [`DaemonAsync`] through [`DaemonAsyncBuilder`]
 /// ## Example
 /// ```no_run
@@ -30,7 +29,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 ///     .await.unwrap();
 /// # })
 /// ```
-pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait, QuerierGen: QuerierTrait> {
+pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -42,15 +41,22 @@ pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait, QuerierGen: QuerierTra
     pub(crate) sender: Option<SenderGen::SenderBuilder>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
-
-    pub(crate) querier_builder: QuerierGen::QuerierBuilder,
 }
 
-pub type DaemonAsyncBuilder = DaemonAsyncBuilderBase<Wallet, ()>;
+pub type DaemonAsyncBuilder = DaemonAsyncBuilderBase<Wallet>;
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait>
-    DaemonAsyncBuilderBase<SenderGen, QuerierGen>
-{
+impl<SenderGen: SenderTrait> Default for DaemonAsyncBuilderBase<SenderGen> {
+    fn default() -> Self {
+        Self {
+            chain: Default::default(),
+            deployment_id: Default::default(),
+            sender: Default::default(),
+            sender_options: Default::default(),
+        }
+    }
+}
+
+impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -127,24 +133,19 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait>
         let daemon = DaemonAsync {
             state,
             sender: Arc::new(sender),
-            querier: (),
         };
         print_if_log_disabled()?;
         Ok(daemon)
     }
 }
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait>
-    From<DaemonBuilderBase<SenderGen, QuerierGen>>
-    for DaemonAsyncBuilderBase<SenderGen, QuerierGen>
-{
-    fn from(value: DaemonBuilderBase<SenderGen, QuerierGen>) -> Self {
-        DaemonAsyncBuilderBase {
+impl From<DaemonBuilder> for DaemonAsyncBuilder {
+    fn from(value: DaemonBuilder) -> Self {
+        DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
             sender_options: value.sender_options,
             sender: value.sender,
-            querier_builder: value.querier,
         }
     }
 }

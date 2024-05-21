@@ -3,8 +3,7 @@ use std::{fmt::Debug, sync::Arc};
 use super::super::senders::base_sender::Wallet;
 use crate::{
     queriers::{Bank, CosmWasm, Node},
-    senders::querier_trait::QuerierTrait,
-    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonBuilderBase, DaemonError, DaemonState,
+    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
@@ -44,15 +43,15 @@ use crate::senders::sender_trait::SenderTrait;
     Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
 */
-pub struct DaemonBase<SenderGen: SenderTrait, QuerierGen: QuerierTrait> {
-    pub daemon: DaemonAsyncBase<SenderGen, QuerierGen>,
+pub struct DaemonBase<SenderGen: SenderTrait> {
+    pub daemon: DaemonAsyncBase<SenderGen>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
 }
 
-pub type Daemon = DaemonBase<Wallet, ()>;
+pub type Daemon = DaemonBase<Wallet>;
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBase<SenderGen, QuerierGen> {
+impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
     /// Get the daemon builder
     pub fn builder() -> DaemonBuilder {
         DaemonBuilder::default()
@@ -64,25 +63,23 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBase<SenderGen, Que
     }
 
     /// Get the channel configured for this Daemon
-    pub fn wallet(&self) -> Wallet {
+    pub fn wallet(&self) -> SenderGen {
         self.daemon.sender.clone()
     }
 
-    /// Returns a new [`DaemonBuilder`] with the current configuration.
-    /// Does not consume the original [`Daemon`].
-    pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen, QuerierGen> {
-        let mut builder = Self::builder();
-        builder
-            .chain(self.state().chain_data.clone())
-            .sender((*self.daemon.sender).clone())
-            .deployment_id(&self.state().deployment_id);
-        builder
-    }
+    // /// Returns a new [`DaemonBuilder`] with the current configuration.
+    // /// Does not consume the original [`Daemon`].
+    // pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen> {
+    //     let mut builder = Self::builder();
+    //     builder
+    //         .chain(self.state().chain_data.clone())
+    //         .sender((*self.daemon.sender).clone())
+    //         .deployment_id(&self.state().deployment_id);
+    //     builder
+    // }
 }
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> ChainState
-    for DaemonBase<SenderGen, QuerierGen>
-{
+impl<SenderGen: SenderTrait> ChainState for DaemonBase<SenderGen> {
     type Out = Arc<DaemonState>;
 
     fn state(&self) -> Self::Out {
@@ -91,13 +88,11 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> ChainState
 }
 
 // Execute on the real chain, returns tx response
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> TxHandler
-    for DaemonBase<SenderGen, QuerierGen>
-{
+impl<SenderGen: SenderTrait> TxHandler for DaemonBase<SenderGen> {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
-    type Sender = Wallet;
+    type Sender = SenderGen;
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
@@ -163,31 +158,29 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> TxHandler
     }
 }
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> Stargate
-    for DaemonBase<SenderGen, QuerierGen>
-{
+impl<SenderGen: SenderTrait> Stargate for DaemonBase<SenderGen> {
     fn commit_any<R>(
         &self,
         msgs: Vec<prost_types::Any>,
         memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
-        self.rt_handle.block_on(
-            self.wallet().commit_tx_any(
-                msgs.iter()
-                    .map(|msg| cosmrs::Any {
-                        type_url: msg.type_url.clone(),
-                        value: msg.value.clone(),
-                    })
-                    .collect(),
-                memo,
-            ),
-        )
+        self.rt_handle
+            .block_on(
+                self.wallet().commit_tx_any(
+                    msgs.iter()
+                        .map(|msg| cosmrs::Any {
+                            type_url: msg.type_url.clone(),
+                            value: msg.value.clone(),
+                        })
+                        .collect(),
+                    memo,
+                ),
+            )
+            .map_err(Into::into)
     }
 }
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> QueryHandler
-    for DaemonBase<SenderGen, QuerierGen>
-{
+impl<SenderGen: SenderTrait> QueryHandler for DaemonBase<SenderGen> {
     type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
@@ -209,10 +202,8 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> QueryHandler
     }
 }
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DefaultQueriers
-    for DaemonBase<SenderGen, QuerierGen>
-{
+impl<SenderGen: SenderTrait> DefaultQueriers for DaemonBase<SenderGen> {
     type Bank = Bank;
-    type Wasm = CosmWasm;
+    type Wasm = CosmWasm<SenderGen>;
     type Node = Node;
 }

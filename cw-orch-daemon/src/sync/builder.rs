@@ -1,12 +1,13 @@
-use crate::senders::querier_trait::QuerierTrait;
 use crate::senders::sender_trait::SenderTrait;
+use crate::RUNTIME;
 use crate::{
     senders::base_sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
-use crate::{Wallet, RUNTIME};
 use bitcoin::secp256k1::All;
 use cw_orch_core::environment::ChainInfoOwned;
+
+use self::generic::DaemonBuilderBase;
 
 use super::{super::error::DaemonError, core::Daemon};
 
@@ -22,7 +23,7 @@ use super::{super::error::DaemonError, core::Daemon};
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct DaemonBuilderBase<SenderGen: SenderTrait = Wallet, QuerierGen: QuerierTrait = ()> {
+pub struct DaemonBuilder {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -34,16 +35,12 @@ pub struct DaemonBuilderBase<SenderGen: SenderTrait = Wallet, QuerierGen: Querie
 
     /* Sender Options */
     /// Wallet sender
-    pub(crate) sender: Option<SenderGen::SenderBuilder>,
+    pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
-
-    pub(crate) querier: Option<QuerierGen::QuerierBuilder>,
 }
 
-pub type DaemonBuilder = DaemonBuilderBase<Wallet, ()>;
-
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBuilderBase<SenderGen, QuerierGen> {
+impl DaemonBuilder {
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -122,6 +119,13 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBuilderBase<SenderG
         self
     }
 
+    pub fn set_sender<SenderGen: SenderTrait>(
+        &self,
+        sender: SenderGen,
+    ) -> DaemonBuilderBase<SenderGen> {
+        DaemonBuilderBase::from_wallet_builder(self, sender)
+    }
+
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
         let rt_handle = self
@@ -130,14 +134,8 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBuilderBase<SenderG
             .unwrap_or_else(|| RUNTIME.handle().clone());
 
         let mut chain = self
-            .chain
-            .clone()
+            .get_built_chain_object()
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
-
-        // Override gas fee
-        overwrite_fee(&mut chain, self.gas_denom.clone(), self.gas_fee);
-        // Override grpc_url
-        overwrite_grpc_url(&mut chain, self.overwrite_grpc_url.clone());
 
         let mut builder = self.clone();
         builder.chain = Some(chain);
@@ -146,6 +144,16 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonBuilderBase<SenderG
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build())?;
 
         Ok(Daemon { rt_handle, daemon })
+    }
+
+    fn get_built_chain_object(&self) -> Option<ChainInfoOwned> {
+        self.chain.clone().map(|mut chain| {
+            // Override gas fee
+            overwrite_fee(&mut chain, self.gas_denom.clone(), self.gas_fee);
+            // Override grpc_url
+            overwrite_grpc_url(&mut chain, self.overwrite_grpc_url.clone());
+            chain
+        })
     }
 }
 
@@ -159,6 +167,37 @@ fn overwrite_fee(chain: &mut ChainInfoOwned, denom: Option<String>, amount: Opti
 fn overwrite_grpc_url(chain: &mut ChainInfoOwned, grpc_url: Option<String>) {
     if let Some(grpc_url) = grpc_url {
         chain.grpc_urls = vec![grpc_url.to_string()]
+    }
+}
+
+pub mod generic {
+    use cw_orch_core::environment::ChainInfoOwned;
+
+    use crate::{senders::sender_trait::SenderTrait, DaemonBuilder};
+
+    #[derive(Clone)]
+    #[non_exhaustive] // To avoid building directly
+    /// TODO : doc comments
+    pub struct DaemonBuilderBase<SenderGen: SenderTrait> {
+        // # Required
+        pub(crate) chain: Option<ChainInfoOwned>,
+        // # Optional
+        pub(crate) handle: Option<tokio::runtime::Handle>,
+        pub(crate) deployment_id: Option<String>,
+
+        /* Sender Options */
+        pub(crate) sender: SenderGen,
+    }
+
+    impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
+        pub fn from_wallet_builder(builder: &DaemonBuilder, sender: SenderGen) -> Self {
+            DaemonBuilderBase {
+                chain: builder.get_built_chain_object(),
+                handle: builder.handle,
+                deployment_id: builder.deployment_id,
+                sender,
+            }
+        }
     }
 }
 

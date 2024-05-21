@@ -7,9 +7,7 @@ use cosmwasm_std::Addr;
 use crate::{CosmTxResponse, DaemonError};
 use std::sync::Arc;
 
-pub trait SenderTraitBase: SenderTrait where DaemonError: From<Self::Error>{}
-
-pub trait SenderTraitBase: Clone {
+pub trait SenderTrait: Clone {
     type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
     type SenderBuilder;
 

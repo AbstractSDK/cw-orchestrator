@@ -1,6 +1,8 @@
-use std::str::FromStr;
+use std::{marker::PhantomData, str::FromStr};
 
-use crate::{cosmos_modules, error::DaemonError, Daemon};
+use crate::{
+    cosmos_modules, error::DaemonError, senders::sender_trait::SenderTrait, DaemonBase, Wallet,
+};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
@@ -16,37 +18,47 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasm {
+pub struct CosmWasm<SenderGen: SenderTrait = Wallet> {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
+    _sender: PhantomData<SenderGen>,
 }
 
-impl CosmWasm {
-    pub fn new(daemon: &Daemon) -> Self {
+impl<SenderGen: SenderTrait> CosmWasm<SenderGen> {
+    pub fn new(daemon: &DaemonBase<SenderGen>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
+            _sender: PhantomData,
         }
     }
     pub fn new_async(channel: Channel) -> Self {
         Self {
             channel,
             rt_handle: None,
+            _sender: PhantomData,
+        }
+    }
+    pub fn new_sync(channel: Channel, handle: &Handle) -> Self {
+        Self {
+            channel,
+            rt_handle: Some(handle.clone()),
+            _sender: PhantomData,
         }
     }
 }
 
-impl QuerierGetter<CosmWasm> for Daemon {
-    fn querier(&self) -> CosmWasm {
+impl<SenderGen: SenderTrait> QuerierGetter<CosmWasm<SenderGen>> for DaemonBase<SenderGen> {
+    fn querier(&self) -> CosmWasm<SenderGen> {
         CosmWasm::new(self)
     }
 }
 
-impl Querier for CosmWasm {
+impl<SenderGen: SenderTrait> Querier for CosmWasm<SenderGen> {
     type Error = DaemonError;
 }
 
-impl CosmWasm {
+impl<SenderGen: SenderTrait> CosmWasm<SenderGen> {
     /// Query code_id by hash
     pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -200,8 +212,8 @@ impl CosmWasm {
     }
 }
 
-impl WasmQuerier for CosmWasm {
-    type Chain = Daemon;
+impl<SenderGen: SenderTrait> WasmQuerier for CosmWasm<SenderGen> {
+    type Chain = DaemonBase<SenderGen>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
@@ -297,7 +309,7 @@ impl WasmQuerier for CosmWasm {
 
     fn local_hash<
         T: cw_orch_core::contract::interface_traits::Uploadable
-            + cw_orch_core::contract::interface_traits::ContractInstance<Daemon>,
+            + cw_orch_core::contract::interface_traits::ContractInstance<DaemonBase<SenderGen>>,
     >(
         &self,
         contract: &T,

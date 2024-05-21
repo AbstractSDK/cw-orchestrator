@@ -1,7 +1,8 @@
 use std::{cmp::min, time::Duration};
 
 use crate::{
-    cosmos_modules, env::DaemonEnvVars, error::DaemonError, tx_resp::CosmTxResponse, Daemon,
+    cosmos_modules, env::DaemonEnvVars, error::DaemonError, senders::sender_trait::SenderTrait,
+    tx_resp::CosmTxResponse, DaemonBase,
 };
 
 use cosmrs::{
@@ -28,7 +29,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(daemon: &Daemon) -> Self {
+    pub fn new<SenderGen: SenderTrait>(daemon: &DaemonBase<SenderGen>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
@@ -42,7 +43,7 @@ impl Node {
     }
 }
 
-impl QuerierGetter<Node> for Daemon {
+impl<SenderGen: SenderTrait> QuerierGetter<Node> for DaemonBase<SenderGen> {
     fn querier(&self) -> Node {
         Node::new(self)
     }

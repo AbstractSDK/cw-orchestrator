@@ -1,8 +1,4 @@
-use crate::{
-    queriers::CosmWasm,
-    senders::{base_sender::Sender, querier_trait::QuerierTrait},
-    DaemonAsyncBuilderBase, DaemonState,
-};
+use crate::{queriers::CosmWasm, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
@@ -69,18 +65,16 @@ use crate::senders::sender_trait::SenderTrait;
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsyncBase<SenderGen: SenderTrait = Wallet, QuerierGen: QuerierTrait = ()> {
+pub struct DaemonAsyncBase<SenderGen: SenderTrait = Wallet> {
     /// Sender to send transactions to the chain
     pub sender: SenderGen,
-    /// Querier associated with the Daemon object. It's used to query chain information
-    pub querier: QuerierGen,
     /// State of the daemon
     pub state: Arc<DaemonState>,
 }
 
-pub type DaemonAsync = DaemonAsyncBase<Wallet, ()>;
+pub type DaemonAsync = DaemonAsyncBase<Wallet>;
 
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen, QuerierGen> {
+impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
@@ -101,22 +95,22 @@ impl ChainState for DaemonAsync {
 }
 
 // Execute on the real chain, returns tx response.
-impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen, QuerierGen> {
+impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
     }
 
-    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
-    /// Does not consume the original [`DaemonAsync`].
-    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<SenderGen, QuerierGen> {
-        let mut builder = Self::builder();
-        builder
-            .chain(self.state().chain_data.clone())
-            .sender((*self.sender).clone())
-            .deployment_id(&self.state().deployment_id);
-        builder
-    }
+    // /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
+    // /// Does not consume the original [`DaemonAsync`].
+    // pub fn rebuild(&self) -> DaemonAsyncBuilderBase<SenderGen> {
+    //     let mut builder = Self::builder();
+    //     builder
+    //         .chain(self.state().chain_data.clone())
+    //         .sender((*self.sender).clone())
+    //         .deployment_id(&self.state().deployment_id);
+    //     builder
+    // }
 
     /// Execute a message on a contract.
     pub async fn execute<E: Serialize>(
@@ -126,12 +120,16 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
         };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let result = self
+            .sender
+            .commit_tx(vec![exec_msg], None)
+            .await
+            .map_err(Into::into)?;
         log::info!(target: &transaction_target(), "Execution done: {:?}", result.txhash);
 
         Ok(result)
@@ -152,12 +150,15 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
             code_id,
             label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
 
-        let result = sender.commit_tx(vec![init_msg], None).await?;
+        let result = sender
+            .commit_tx(vec![init_msg], None)
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
@@ -180,7 +181,7 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
             code_id,
             label: label.unwrap_or("instantiate_contract").to_string(),
             admin: admin.map(Into::into).unwrap_or_default(),
-            sender: sender.address()?.to_string(),
+            sender: sender.address().map_err(Into::into)?.to_string(),
             msg: serde_json::to_vec(&init_msg)?,
             funds: proto_parse_cw_coins(coins)?,
             salt: salt.to_vec(),
@@ -195,7 +196,8 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
                 }],
                 None,
             )
-            .await?;
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
@@ -227,12 +229,16 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
         };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let result = self
+            .sender
+            .commit_tx(vec![exec_msg], None)
+            .await
+            .map_err(Into::into)?;
         Ok(result)
     }
 
@@ -300,19 +306,22 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
         e.write_all(&file_contents)?;
         let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             wasm_byte_code,
             instantiate_permission: None,
         };
 
-        let result = sender.commit_tx(vec![store_msg], None).await?;
+        let result = sender
+            .commit_tx(vec![store_msg], None)
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 
         let code_id = result.uploaded_code_id().unwrap();
 
         // wait for the node to return the contract information for this upload
-        let wasm = CosmWasm::new_async(self.channel());
+        let wasm = CosmWasm::<Wallet>::new_async(self.channel());
         while wasm._code(code_id).await.is_err() {
             self.next_block().await?;
         }
@@ -323,10 +332,9 @@ impl<SenderGen: SenderTrait, QuerierGen: QuerierTrait> DaemonAsyncBase<SenderGen
     pub fn set_sender<SenderGen2: SenderTrait>(
         self,
         sender: SenderGen2,
-    ) -> DaemonAsyncBase<SenderGen2, QuerierGen> {
+    ) -> DaemonAsyncBase<SenderGen2> {
         DaemonAsyncBase {
             sender,
-            querier: self.querier,
             state: self.state,
         }
     }
