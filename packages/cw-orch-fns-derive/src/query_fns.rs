@@ -30,8 +30,6 @@ pub fn query_fns_derive(input: ItemEnum) -> TokenStream {
     let (_impl_generics, _ty_generics, where_clause) = generics.split_for_impl().clone();
 
     let type_generics = to_generic_arguments(&generics);
-    // let (maybe_into, _entrypoint_msg_type, type_generics) =
-    //     process_impl_into(&input.attrs, name, input.generics);
 
     let is_attributes_sorted = process_sorting(&input.attrs);
 

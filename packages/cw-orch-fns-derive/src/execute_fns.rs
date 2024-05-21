@@ -25,9 +25,6 @@ pub fn execute_fns_derive(input: DeriveInput) -> TokenStream {
     let (_impl_generics, _ty_generics, where_clause) = generics.split_for_impl().clone();
     let type_generics = to_generic_arguments(&generics);
 
-    // let (_maybe_into, entrypoint_msg_type, type_generics) =
-    //     process_impl_into(&input.attrs, name, input.generics);
-
     let is_attributes_sorted = process_sorting(&input.attrs);
 
     let syn::Data::Enum(syn::DataEnum { variants, .. }) = input.data else {
