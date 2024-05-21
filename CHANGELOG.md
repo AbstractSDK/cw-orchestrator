@@ -5,6 +5,7 @@
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 - Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
+- Add `flush_state` method for Local Chain Daemons 
 
 ### Breaking
 
