@@ -65,11 +65,12 @@ pub struct MigrateMsg {
 
 #[cfg_attr(feature = "export", cosmwasm_std::entry_point)]
 pub fn instantiate(
-    _deps: DepsMut,
+    deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
     _msg: InstantiateMsg,
 ) -> StdResult<Response> {
+    cw2::set_contract_version(deps.storage, "mock-contract", "0")?;
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
@@ -163,7 +164,7 @@ pub mod interface {
 mod test {
     use super::MockContract as LocalMockContract;
     use super::*;
-    use cosmwasm_std::coins;
+    use cosmwasm_std::{coins, from_json};
     use cw_orch::prelude::*;
 
     #[test]
@@ -194,6 +195,32 @@ mod test {
         contract.third_query("arg".to_string()).unwrap();
         contract.fourth_query(45u64, "moneys".to_string()).unwrap();
 
+        Ok(())
+    }
+
+    #[test]
+    fn raw_query() -> Result<(), CwOrchError> {
+        // We need to check we can still call the execute msgs conveniently
+        let sender = Addr::unchecked("sender");
+        let mock = Mock::new(&sender);
+        mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
+        let contract = LocalMockContract::new("mock-contract", mock.clone());
+
+        contract.upload()?;
+        contract.instantiate(&InstantiateMsg {}, None, None)?;
+
+        let cw2_info: cw2::ContractVersion = from_json(
+            mock.wasm_querier()
+                .raw_query(contract.address()?, b"contract_info".to_vec())?,
+        )?;
+
+        assert_eq!(
+            cw2_info,
+            cw2::ContractVersion {
+                contract: "mock-contract".to_owned(),
+                version: "0".to_owned()
+            }
+        );
         Ok(())
     }
 }

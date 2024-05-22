@@ -1,9 +1,9 @@
 use crate::senders::sender_trait::SenderTrait;
-use crate::RUNTIME;
 use crate::{
     senders::base_sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
+use crate::{Wallet, RUNTIME};
 use bitcoin::secp256k1::All;
 use cw_orch_core::environment::ChainInfoOwned;
 
@@ -33,9 +33,11 @@ pub struct DaemonBuilder {
     pub(crate) gas_denom: Option<String>,
     pub(crate) gas_fee: Option<f64>,
 
-    /* Sender Options */
-    /// Wallet sender
-    pub(crate) sender: Option<SenderBuilder<All>>,
+    pub(crate) sender: Option<Wallet>,
+
+    // /* Sender Options */
+    // /// Wallet sender
+    // pub(crate) sender: SenderBuilder<All>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
 }
@@ -72,18 +74,19 @@ impl DaemonBuilder {
         self
     }
 
-    /// Set the mnemonic to use with this chain.
-    pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-        self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
-        self
-    }
+    //TODO
+    // /// Set the mnemonic to use with this chain.
+    // pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
+    //     self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
+    //     self
+    // }
 
-    /// Specifies a sender to use with this chain
-    /// This will be used in priority when set on the builder
-    pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
-        self.sender = Some(SenderBuilder::Sender(wallet));
-        self
-    }
+    // /// Specifies a sender to use with this chain
+    // /// This will be used in priority when set on the builder
+    // pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
+    //     self.sender = Some(SenderBuilder::Sender(wallet));
+    //     self
+    // }
 
     /// Specifies wether authz should be used with this daemon
     pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
@@ -193,8 +196,8 @@ pub mod generic {
         pub fn from_wallet_builder(builder: &DaemonBuilder, sender: SenderGen) -> Self {
             DaemonBuilderBase {
                 chain: builder.get_built_chain_object(),
-                handle: builder.handle,
-                deployment_id: builder.deployment_id,
+                handle: builder.handle.clone(),
+                deployment_id: builder.deployment_id.clone(),
                 sender,
             }
         }

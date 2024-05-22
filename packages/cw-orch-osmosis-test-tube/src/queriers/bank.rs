@@ -1,19 +1,15 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::coin;
-use cw_orch_core::{
-    environment::{
-        Querier, StateInterface, {BankQuerier, QuerierGetter},
-    },
-    CwEnvError,
-};
+use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter, StateInterface};
+use cw_orch_core::CwEnvError;
 use osmosis_test_tube::osmosis_std::try_proto_to_cosmwasm_coins;
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QuerySupplyOfRequest, QuerySupplyOfResponse,
 };
 use osmosis_test_tube::{Bank, Module, OsmosisTestApp, Runner};
 
-use crate::osmosis_test_tube::{map_err, OsmosisTestTube};
+use crate::{map_err, OsmosisTestTube};
 use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::{
     QueryAllBalancesRequest, QueryBalanceRequest,
 };

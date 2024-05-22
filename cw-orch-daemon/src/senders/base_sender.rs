@@ -51,6 +51,13 @@ const SMALL_GAS_BUFFER: f64 = 1.4;
 pub enum SenderBuilder<C: Signing + Context> {
     Sender(Sender<C>),
     Mnemonic(String),
+    None,
+}
+
+impl<C: Signing + Context> Default for SenderBuilder<C> {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
@@ -101,7 +108,6 @@ impl SenderOptions {
 
 impl SenderTrait for Sender<All> {
     type Error = DaemonError;
-    type SenderBuilder = SenderBuilder<All>;
 
     async fn commit_tx_any(
         &self,
@@ -171,6 +177,21 @@ impl SenderTrait for Sender<All> {
         } else {
             self.pub_addr()
         }
+    }
+
+    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error> {
+        // let sender = match self {
+        //     SenderBuilder::Mnemonic(mnemonic) => {
+        //         Sender::from_mnemonic_with_options(&state, &mnemonic, sender_options)?
+        //     }
+        //     SenderBuilder::Sender(mut sender) => {
+        //         sender.set_options(sender_options.clone());
+        //         sender
+        //     }
+        //     SenderBuilder::None => Sender::new_with_options(&state, sender_options)?,
+        // };
+
+        Ok(Sender::new_with_options(&state, sender_options)?)
     }
 }
 
@@ -439,9 +460,8 @@ impl Sender<All> {
             fee,
             fee.denom
         );
-        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
 
-        if parsed_balance.amount >= fee.amount {
+        if balance.amount >= fee.amount {
             log::debug!("The wallet has enough balance to deploy");
             return Ok(());
         }
@@ -455,7 +475,7 @@ impl Sender<All> {
             self.address()?,
             fee,
             fee.denom,
-            parsed_balance
+            balance
         );
 
         if CoreEnvVars::manual_interaction() {
@@ -467,14 +487,14 @@ impl Sender<All> {
             } else {
                 Err(DaemonError::NotEnoughBalance {
                     expected: fee.clone(),
-                    current: parsed_balance,
+                    current: balance,
                 })
             }
         } else {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
-                current: parsed_balance,
+                current: balance,
             });
         }
     }

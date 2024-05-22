@@ -4,12 +4,13 @@ use cosmrs::{
 };
 use cosmwasm_std::Addr;
 
-use crate::{CosmTxResponse, DaemonError};
+use crate::{CosmTxResponse, DaemonError, DaemonState};
 use std::sync::Arc;
+
+use super::base_sender::SenderOptions;
 
 pub trait SenderTrait: Clone {
     type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
-    type SenderBuilder;
 
     // TODO: do we want to enforce sync on this function ?
     fn address(&self) -> Result<Addr, Self::Error>;
@@ -46,11 +47,12 @@ pub trait SenderTrait: Clone {
     ) -> impl std::future::Future<
         Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>,
     > + Send;
+
+    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error>;
 }
 
 impl<T: SenderTrait> SenderTrait for Arc<T> {
     type Error = T::Error;
-    type SenderBuilder = T::SenderBuilder;
 
     fn address(&self) -> Result<Addr, Self::Error> {
         (**self).address()
@@ -75,5 +77,9 @@ impl<T: SenderTrait> SenderTrait for Arc<T> {
         Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>,
     > + Send {
         (**self).broadcast_tx(tx)
+    }
+
+    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error> {
+        Ok(Arc::new(T::build(sender_options, state)?))
     }
 }

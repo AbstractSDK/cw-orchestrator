@@ -40,6 +40,9 @@ jobs:
         id: just
         uses: extractions/setup-just@v1
 
+      - name: Install static-sitemap-cli
+        run: npm install static-sitemap-cli
+
       - name: Setup PATH # For using the pre-built mdbook
         run: echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
 
@@ -48,6 +51,12 @@ jobs:
 
       - name: Build 🏗️
         run: just build-docs
+
+      - name: Generate sitemap
+        run: |
+          cd docs/book
+          npx sscli --no-clean --base https://orchestrator.abstract.money
+
 
       - name: Upload artifact
         if: ${{ github.event_name != 'pull_request' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' ) }}

@@ -1,5 +1,5 @@
 [package]
-name = "mock-contract"
+name = "cw-orch-compatibility-test"
 version = "0.1.0"
 description = "Mock constract for cw-orch macro testing"
 keywords = ["cosmwasm", "blockchain"]
@@ -17,10 +17,13 @@ interface = []
 
 [dependencies]
 cosmwasm-std = { workspace = true }
-cw2 = { version = "1.1.2" }
 serde = { workspace = true }
 schemars = "0.8.10"
 serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
 cosmwasm-schema = "1.2"
-cw-orch = { path = "../../cw-orch" }
+# This version should not be a path dependency and be kept to the last cw-orch version (beyond v0.23)
+# Keeping a different package until v0.23 to avoid package conflicts
+cw-orch = { package = "aaa-test-cw-orch", version = "0.22" }
+# Keep the old-cw-orch version to 0.22 for backwards compatibility
+old-cw-orch = { package = "cw-orch", version = "0.22" }
