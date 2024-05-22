@@ -1,4 +1,5 @@
-use cosmwasm_std::{CodeInfoResponse, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{from_json, CodeInfoResponse, ContractInfoResponse, HexBinary};
+use cw_storage_plus::Item;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -26,6 +27,18 @@ pub trait WasmQuerier: Querier {
         address: impl Into<String>,
         query_keys: Vec<u8>,
     ) -> Result<Vec<u8>, Self::Error>;
+
+    fn item_query<T: Serialize + DeserializeOwned>(
+        &self,
+        address: impl Into<String>,
+        item: Item<T>,
+    ) -> Result<T, CwEnvError> {
+        let current_manager_version = self
+            .raw_query(address, item.as_slice().to_vec())
+            .map_err(Into::into)?;
+
+        from_json(current_manager_version).map_err(Into::into)
+    }
 
     fn smart_query<Q: Serialize, T: DeserializeOwned>(
         &self,
