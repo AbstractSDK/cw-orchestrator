@@ -1,0 +1,30 @@
+[package]
+name = "cw-orch-interchain-core"
+version = "0.22.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+daemon = ["dep:cw-orch-daemon"]
+
+
+[dependencies]
+base64 = "0.21.3"
+cosmwasm-schema = "1.4.0"
+cosmwasm-std.workspace = true
+cw-orch-core = { workspace = true }
+cw-orch-mock = { workspace = true }
+cw-orch-daemon = { workspace = true, optional = true }
+futures = "0.3.28"
+ibc-relayer-types.workspace = true
+log.workspace = true
+polytone = "1.0.0"
+prost = "0.12.6"
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = "1.32.0"
+tonic = { workspace = true, features = ["tls", "tls-roots"] }

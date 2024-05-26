@@ -50,21 +50,32 @@ daemon = [
   "dep:cosmrs",
   "dep:cw-orch-daemon",
   "dep:cw-orch-networks",
+  "cw-orch-interchain-core?/daemon",
 ]
 eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
 snapshot-testing = ["dep:insta", "dep:sanitize-filename"]
+interchain = [
+  "dep:cw-orch-interchain-core",
+  "dep:cw-orch-interchain-daemon",
+  "dep:cw-orch-interchain-mock",
+  "dep:cw-orch-starship",
+]
 
 [dependencies]
 # Derive
 cw-orch-contract-derive = { workspace = true }
 cw-orch-fns-derive = { workspace = true }
+cw-orch-interchain-core = { workspace = true, optional = true }
+cw-orch-starship = { workspace = true, optional = true }
+cw-orch-interchain-mock = { workspace = true, optional = true }
+cw-orch-interchain-daemon = { workspace = true, optional = true }
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 
 # Daemon deps
 cw-orch-networks = { workspace = true, optional = true }
-tokio = { version = "1.4", features = ["full"], optional = true }
+tokio = { workspace = true, features = ["full"], optional = true }
 cosmrs = { workspace = true, features = [
   "dev",
   "cosmwasm",

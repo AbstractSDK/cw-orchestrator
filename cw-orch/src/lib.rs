@@ -57,3 +57,13 @@ pub mod wasm_protected {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use wasm_protected::*;
+
+#[cfg(feature = "interchain")]
+#[cfg(not(target_arch = "wasm32"))]
+/// Cw-orch interchain capabilites
+pub mod interchain {
+    pub use cw_orch_interchain_core::*;
+    pub use cw_orch_interchain_daemon::*;
+    pub use cw_orch_interchain_mock::*;
+    pub use cw_orch_starship::*;
+}
