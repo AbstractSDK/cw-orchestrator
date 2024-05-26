@@ -2,9 +2,9 @@ use std::marker::PhantomData;
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{core::CloneTestingApp, CloneTesting};
+use clone_cw_multi_test::AddressGenerator;
+use clone_cw_multi_test::CosmosRouter;
 use cosmwasm_std::{ContractInfoResponse, HexBinary};
-use cw_multi_test::AddressGenerator;
-use cw_multi_test::CosmosRouter;
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},

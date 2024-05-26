@@ -22,7 +22,7 @@ pub struct Starship {
 }
 
 impl Starship {
-    ///
+    /// Creates a new instance and connects to a starship deployment
     pub fn new(rt_handle: &Handle, url: Option<&str>) -> Result<Self, CwEnvError> {
         let starship_client = StarshipClient::new(rt_handle.clone(), url)?;
 

@@ -1,12 +1,12 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{to_json_binary, WasmMsg};
-use cosmwasm_std::{Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128};
-use cw_multi_test::{
+use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
     wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
+use cosmwasm_std::{to_json_binary, WasmMsg};
+use cosmwasm_std::{Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{
@@ -40,7 +40,8 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 /// use cw_orch_core::environment::TxHandler;
 ///
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let mock: CloneTesting = CloneTesting::new(chain);
+/// let runtime = tokio::runtime::Runtime::new().unwrap();
+/// let mock: CloneTesting = CloneTesting::new(&runtime, chain.clone()).unwrap();
 /// let sender = mock.sender();
 ///
 /// // set a balance
@@ -59,8 +60,9 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_clone_testing::MockState as CustomState;
 ///
+/// let rt = tokio::runtime::Runtime::new().unwrap();
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let mock: CloneTesting = CloneTesting::new_custom(chain, CustomState::new());
+/// let mock: CloneTesting = CloneTesting::new_custom(&rt, chain.clone(), CustomState::new(&rt.handle(), chain.clone().into(), "mock")).unwrap();
 /// ```
 #[derive(Clone)]
 pub struct CloneTesting<S: StateInterface = MockState> {
@@ -358,8 +360,8 @@ pub struct AppResponse {
     pub data: Option<Binary>,
 }
 
-impl From<cw_multi_test::AppResponse> for AppResponse {
-    fn from(value: cw_multi_test::AppResponse) -> Self {
+impl From<clone_cw_multi_test::AppResponse> for AppResponse {
+    fn from(value: clone_cw_multi_test::AppResponse) -> Self {
         AppResponse {
             events: value.events,
             data: value.data,
@@ -367,9 +369,9 @@ impl From<cw_multi_test::AppResponse> for AppResponse {
     }
 }
 
-impl From<AppResponse> for cw_multi_test::AppResponse {
+impl From<AppResponse> for clone_cw_multi_test::AppResponse {
     fn from(value: AppResponse) -> Self {
-        cw_multi_test::AppResponse {
+        clone_cw_multi_test::AppResponse {
             events: value.events,
             data: value.data,
         }
@@ -428,11 +430,11 @@ mod test {
     use std::{path::PathBuf, str::FromStr};
 
     use crate::core::*;
+    use clone_cw_multi_test::LOCAL_RUST_CODE_OFFSET;
     use cosmwasm_std::{
         to_json_binary, Addr, Coin, Deps, DepsMut, Env, MessageInfo, Response, Uint128,
     };
     use cw20::{BalanceResponse, MinterResponse};
-    use cw_multi_test::LOCAL_RUST_CODE_OFFSET;
     use cw_orch::contract::WasmPath;
     use cw_orch::daemon::networks::JUNO_1;
     use cw_orch::environment::QueryHandler;

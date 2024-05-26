@@ -1,7 +1,7 @@
 [package]
 name = "cw-orch-proto"
 description = "A helper crate for interaction with protos from different chains. Mostly used for handling cw20 coins and ibc transfers"
-version = "0.22.0"
+version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true

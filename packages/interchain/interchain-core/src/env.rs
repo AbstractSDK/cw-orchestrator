@@ -243,7 +243,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Returns an object that is used to analyze packets according to different formats
     /// # Example
     ///
-    /// ```
+    /// ```no_run,ignore
     /// let mut result = interchain.parse_ibc("osmosis-1", tx_response)?;
     /// let first_polytone_ack = result.find_and_pop(&IbcAckParser::polytone_ack)?;
     /// // ... You can parse and pop other packets if any

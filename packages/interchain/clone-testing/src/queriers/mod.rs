@@ -1,6 +1,6 @@
 use crate::{CloneTesting, MockState};
 
-use cw_multi_test::next_block;
+use clone_cw_multi_test::next_block;
 
 use cw_orch_core::{
     environment::{DefaultQueriers, QueryHandler},

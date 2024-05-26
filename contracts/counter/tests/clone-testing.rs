@@ -5,6 +5,9 @@ use cosmwasm_std::Addr;
 use cosmwasm_std::ContractInfoResponse;
 use cosmwasm_std::QueryRequest;
 use cosmwasm_std::WasmQuery;
+use counter_contract::msg::MigrateMsg;
+use counter_contract::CounterContract;
+use counter_contract::CounterQueryMsgFns;
 use cw20::BalanceResponse;
 use cw20::Cw20QueryMsg;
 use cw_orch::daemon::networks::PHOENIX_1;
@@ -16,15 +19,13 @@ use cw_orch::prelude::Uploadable;
 use cw_orch::prelude::*;
 use cw_orch::tokio::runtime::Runtime;
 use cw_orch_clone_testing::CloneTesting;
-use std::path::PathBuf;
-use std::str::FromStr;
 
 use cosmwasm_std::Empty;
 
 /// For those Who don't know, CAVERN PROTOCOL is a money market
 #[test]
 pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
-    env_logger::init();
+    pretty_env_logger::init();
 
     let sender = Addr::unchecked(SENDER);
     let market_addr = Addr::unchecked(MARKET_ADDR);
@@ -73,7 +74,7 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
     let money_market_code_id = contract_info.code_id;
 
     // 1. We migrate
-    let counter_contract = CounterContract::new("abstract:counter-contract", app.clone());
+    let counter_contract = CounterContract::new(app.clone());
     counter_contract.upload().unwrap();
     counter_contract.set_address(&market.address().unwrap());
 
@@ -90,7 +91,7 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
 
     if !err
         .to_string()
-        .contains("counter_contract::state::State not found")
+        .contains("type: counter_contract::state::State;")
     {
         panic!(
             "Error {} should contain counter_contract::state::State not found",
@@ -131,17 +132,6 @@ pub struct CavernMarket;
 
 impl Uploadable for CavernMarket<CloneTesting> {}
 
-#[cw_orch::interface(Empty, Empty, QueryMsg, MigrateMsg)]
-pub struct CounterContract;
-
-impl Uploadable for CounterContract<CloneTesting> {
-    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
-        let path = PathBuf::from_str(env!("CARGO_MANIFEST_DIR")).unwrap();
-        let path = path.join("../../artifacts/counter_contract.wasm");
-        WasmPath::new(path).unwrap()
-    }
-}
-
 #[cosmwasm_schema::cw_serde]
 #[derive(cw_orch::ExecuteFns)] // Function generation
 pub enum CavernExecuteMsg {
@@ -170,11 +160,6 @@ pub enum QueryMsg {
 #[cw_serde]
 pub struct GetCountResponse {
     pub count: i32,
-}
-
-#[cw_serde]
-pub struct MigrateMsg {
-    pub t: String,
 }
 
 const A_CURRENCY: &str = "terra1gwdxyqtu75es0x5l6cd9flqhh87zjtj7qdankayyr0vtt7s9w4ssm7ds8m";

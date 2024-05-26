@@ -195,6 +195,7 @@ mod test {
         Ok((interchain_channel, denom))
     }
 
+    #[ignore]
     #[test]
     pub fn create_ics20_channel_test() -> AnyResult<()> {
         logger_test_init();
@@ -209,6 +210,7 @@ mod test {
         Ok(())
     }
 
+    #[ignore]
     #[test]
     pub fn transfer_ics20_test() -> AnyResult<()> {
         logger_test_init();

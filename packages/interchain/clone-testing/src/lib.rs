@@ -10,17 +10,17 @@ pub use state::MockState;
 
 // We define a new structure to reunite the ContractWrapper objects
 mod contract {
-    use cosmwasm_std::{Deps, DepsMut, Empty, QuerierWrapper};
-    use cw_multi_test::wasm_emulation::storage::storage_wrappers::{
+    use clone_cw_multi_test::wasm_emulation::storage::storage_wrappers::{
         ReadonlyStorageWrapper, StorageWrapper,
     };
-    use cw_multi_test::{
+    use clone_cw_multi_test::{
         wasm_emulation::{
             query::{mock_querier::ForkState, MockQuerier},
             storage::dual_std_storage::DualStorage,
         },
         Contract,
     };
+    use cosmwasm_std::{Deps, DepsMut, Empty, QuerierWrapper};
 
     pub struct CloneTestingContract(Box<dyn cw_orch_mock::cw_multi_test::Contract<Empty, Empty>>);
 

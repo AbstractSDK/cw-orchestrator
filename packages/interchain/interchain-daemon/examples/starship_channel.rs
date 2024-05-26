@@ -2,7 +2,7 @@ use cosmwasm_std::IbcOrder;
 use cw_orch::prelude::*;
 use cw_orch::{daemon::queriers::Ibc, environment::QuerierGetter, tokio};
 use cw_orch_interchain_core::{types::ChannelCreationResult, InterchainEnv};
-use cw_orch_interchain_daemon::ChannelCreator as _;
+use cw_orch_interchain_daemon::ChannelCreator;
 use cw_orch_starship::Starship;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
