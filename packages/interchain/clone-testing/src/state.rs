@@ -40,7 +40,7 @@ impl StateInterface for MockState {
             .ok_or_else(|| CwEnvError::AddrNotInStore(contract_id.to_owned()))
             .map(|val| val.to_owned())
             // If not present, we look for it in the daemon state
-            .or(self.daemon_state.get_address(contract_id))
+            .or_else(|_| self.daemon_state.get_address(contract_id))
     }
 
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
@@ -50,12 +50,13 @@ impl StateInterface for MockState {
 
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
+        println!("{:?}", self.code_ids.get(contract_id));
         self.code_ids
             .get(contract_id)
             .ok_or_else(|| CwEnvError::CodeIdNotInStore(contract_id.to_owned()))
             .map(|val| val.to_owned())
             // If not present, we look for it in the daemon state
-            .or(self.daemon_state.get_code_id(contract_id))
+            .or_else(|_| self.daemon_state.get_code_id(contract_id))
     }
 
     /// Set the locally-saved version of the contract's latest version on this network
