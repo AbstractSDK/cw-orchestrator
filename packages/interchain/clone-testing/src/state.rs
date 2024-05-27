@@ -89,11 +89,10 @@ impl StateInterface for MockState {
 #[cfg(test)]
 mod test {
     use cosmwasm_std::Addr;
-    use cw_orch::daemon::networks::JUNO_1;
-    use cw_orch::prelude::*;
-    use cw_orch::tokio::runtime::Runtime;
-    use cw_orch_core::CwEnvError;
+    use cw_orch_core::{environment::StateInterface, CwEnvError};
+    use cw_orch_daemon::networks::JUNO_1;
     use speculoos::prelude::*;
+    use tokio::runtime::Runtime;
 
     use super::MockState;
 

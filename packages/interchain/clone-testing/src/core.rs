@@ -435,10 +435,10 @@ mod test {
         to_json_binary, Addr, Coin, Deps, DepsMut, Env, MessageInfo, Response, Uint128,
     };
     use cw20::{BalanceResponse, MinterResponse};
-    use cw_orch::contract::WasmPath;
-    use cw_orch::daemon::networks::JUNO_1;
-    use cw_orch::environment::QueryHandler;
-    use cw_orch::mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
+    use cw_orch_core::contract::WasmPath;
+    use cw_orch_core::environment::QueryHandler;
+    use cw_orch_daemon::networks::JUNO_1;
+    use cw_orch_mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
     use serde::Serialize;
     use speculoos::prelude::*;
 
@@ -488,7 +488,7 @@ mod test {
     }
 
     #[test]
-    fn mock() -> cw_orch::anyhow::Result<()> {
+    fn mock() -> anyhow::Result<()> {
         let amount = 1000000u128;
         let denom = "uosmo";
         let chain = JUNO_1;
@@ -573,7 +573,7 @@ mod test {
     }
 
     #[test]
-    fn custom_mock_env() -> cw_orch::anyhow::Result<()> {
+    fn custom_mock_env() -> anyhow::Result<()> {
         let amount = 1000000u128;
         let denom = "uosmo";
         let chain = JUNO_1;
@@ -628,7 +628,7 @@ mod test {
     }
 
     #[test]
-    fn add_balance() -> cw_orch::anyhow::Result<()> {
+    fn add_balance() -> anyhow::Result<()> {
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";

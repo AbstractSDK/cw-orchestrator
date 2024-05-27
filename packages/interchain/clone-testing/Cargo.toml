@@ -31,4 +31,3 @@ cw20 = { workspace = true }
 cw20-base = { workspace = true }
 
 env_logger = "0.10.0"
-cw-orch.workspace = true

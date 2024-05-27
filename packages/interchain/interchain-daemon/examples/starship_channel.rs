@@ -1,6 +1,7 @@
 use cosmwasm_std::IbcOrder;
-use cw_orch::prelude::*;
-use cw_orch::{daemon::queriers::Ibc, environment::QuerierGetter, tokio};
+use cw_orch_core::environment::QuerierGetter;
+use cw_orch_daemon::queriers::Ibc;
+use cw_orch_daemon::Daemon;
 use cw_orch_interchain_core::{types::ChannelCreationResult, InterchainEnv};
 use cw_orch_interchain_daemon::ChannelCreator;
 use cw_orch_starship::Starship;
@@ -10,7 +11,7 @@ fn assert_ordering(
     channel: ChannelCreationResult<Daemon>,
     juno: &Daemon,
     order: IbcOrder,
-) -> cw_orch::anyhow::Result<()> {
+) -> anyhow::Result<()> {
     let ibc_querier: Ibc = juno.querier();
     let channel = channel
         .interchain_channel
@@ -27,7 +28,7 @@ fn assert_ordering(
     Ok(())
 }
 
-fn main() -> cw_orch::anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
     let rt = tokio::runtime::Runtime::new()?;
     let starship = Starship::new(rt.handle(), None)?;
