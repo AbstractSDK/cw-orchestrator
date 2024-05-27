@@ -122,6 +122,9 @@ pub enum DaemonError {
     QuerierNeedRuntime,
     #[error(transparent)]
     Instantiate2Error(#[from] Instantiate2AddressError),
+
+    #[error("Error loading file {0},err: ({1})")]
+    LoadingFile(String, String),
 }
 
 impl DaemonError {
