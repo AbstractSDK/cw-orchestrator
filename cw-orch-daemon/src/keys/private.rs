@@ -88,6 +88,16 @@ impl PrivateKey {
         }
     }
 
+    pub fn from_raw_key<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
+        raw_key: &[u8],
+        account: u32,
+        index: u32,
+        coin_type: u32,
+    ) -> Result<PrivateKey, DaemonError> {
+        Self::gen_private_key_raw(secp, raw_key, account, index, coin_type)
+    }
+
     /// generate the public key for this private key
     pub fn public_key<C: secp256k1::Signing + secp256k1::Context>(
         &self,
@@ -151,10 +161,11 @@ impl PrivateKey {
         )
     }
 
-    pub fn raw_key(&self) -> Vec<u8> {
-        self.private_key.private_key.secret_bytes().to_vec()
+    pub fn raw_key(&self) -> [u8; secp256k1::constants::SECRET_KEY_SIZE] {
+        self.private_key.private_key.secret_bytes()
     }
 
+    // Generate private key from Phrase
     fn gen_private_key_phrase<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         phrase: Phrase,
@@ -164,8 +175,20 @@ impl PrivateKey {
         seed_phrase: &str,
     ) -> Result<PrivateKey, DaemonError> {
         let seed = phrase.to_seed(seed_phrase);
-        let root_private_key =
-            ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
+        let mut private_key =
+            Self::gen_private_key_raw(secp, seed.as_bytes(), account, index, coin_type)?;
+        private_key.mnemonic = Some(phrase);
+        Ok(private_key)
+    }
+
+    fn gen_private_key_raw<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
+        raw_key: &[u8],
+        account: u32,
+        index: u32,
+        coin_type: u32,
+    ) -> Result<PrivateKey, DaemonError> {
+        let root_private_key = ExtendedPrivKey::new_master(Network::Bitcoin, raw_key).unwrap();
         // For injective: https://docs.injective.network/learn/basic-concepts/accounts#injective-accounts
         let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
@@ -175,7 +198,7 @@ impl PrivateKey {
             account,
             index,
             coin_type,
-            mnemonic: Some(phrase),
+            mnemonic: None,
             root_private_key,
             private_key,
         })

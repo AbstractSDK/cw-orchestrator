@@ -158,6 +158,7 @@ fn overwrite_grpc_url(chain: &mut ChainInfoOwned, grpc_url: Option<String>) {
 
 #[cfg(test)]
 mod test {
+    use cw_orch_core::environment::TxHandler;
     use cw_orch_networks::networks::OSMOSIS_1;
 
     use crate::DaemonBuilder;
@@ -226,5 +227,24 @@ mod test {
         assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
 
         assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn hd_index_re_generates_sender() -> anyhow::Result<()> {
+        let daemon = DaemonBuilder::default()
+            .chain(OSMOSIS_1)
+            .mnemonic(DUMMY_MNEMONIC)
+            .build()
+            .unwrap();
+
+        let indexed_daemon = daemon.rebuild().hd_index(56).build().unwrap();
+
+        assert_ne!(
+            daemon.sender().to_string(),
+            indexed_daemon.sender().to_string()
+        );
+
+        Ok(())
     }
 }
