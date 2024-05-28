@@ -16,16 +16,16 @@ daemon = ["dep:cw-orch-daemon"]
 [dependencies]
 base64 = "0.21.3"
 cosmwasm-schema = "1.4.0"
-cosmwasm-std.workspace = true
+cosmwasm-std = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
 cw-orch-daemon = { workspace = true, optional = true }
 futures = "0.3.28"
-ibc-relayer-types.workspace = true
-log.workspace = true
+ibc-relayer-types = { workspace = true }
+log = { workspace = true }
 polytone = "1.0.0"
 prost = "0.12.6"
-serde_json.workspace = true
-thiserror.workspace = true
+serde_json = { workspace = true }
+thiserror = { workspace = true }
 tokio = "1.32.0"
 tonic = { workspace = true, features = ["tls", "tls-roots"] }

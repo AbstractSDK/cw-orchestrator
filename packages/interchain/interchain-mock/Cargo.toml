@@ -18,11 +18,11 @@ cosmwasm-std = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }
 cosmrs = { workspace = true }
-cw-orch-interchain-core.workspace = true
-thiserror.workspace = true
-ibc-relayer-types.workspace = true
-log.workspace = true
-serde_json.workspace = true
+cw-orch-interchain-core = { workspace = true }
+thiserror = { workspace = true }
+ibc-relayer-types = { workspace = true }
+log = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 cw20 = { workspace = true }

@@ -17,12 +17,12 @@ cw-orch-mock = { workspace = true }
 clone-cw-multi-test = { version = "0.1", features = ["cosmwasm_1_2"] }
 cw-utils = { workspace = true }
 serde = { workspace = true }
-log.workspace = true
+log = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 itertools = "0.12.0"
 sha2 = "0.10.8"
-tonic.workspace = true
+tonic = { workspace = true }
 
 [dev-dependencies]
 cosmwasm-schema = "1.4.0"

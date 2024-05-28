@@ -117,5 +117,5 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64" }
 serde_json = { workspace = true }
 dotenv = "0.15.0"
 osmosis-std = "0.24.0"
-prost.workspace = true
-prost-types.workspace = true
+prost = { workspace = true }
+prost-types = { workspace = true }
