@@ -181,6 +181,7 @@ impl PrivateKey {
         Ok(private_key)
     }
 
+    // Generate private key from private key bytes
     fn gen_private_key_raw<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         raw_key: &[u8],
