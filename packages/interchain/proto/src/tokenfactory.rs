@@ -149,8 +149,6 @@ pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Cha
     Ok(tx_results)
 }
 
-/* ####################### STARSHIP specific functions ########################### */
-
 const ICS20_CHANNEL_VERSION: &str = "ics20-1";
 /// Channel creation between the transfer channels of two blockchains of a starship integration
 pub fn create_transfer_channel<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>>(
