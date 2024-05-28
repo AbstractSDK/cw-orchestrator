@@ -123,8 +123,8 @@ pub enum DaemonError {
     #[error(transparent)]
     Instantiate2Error(#[from] Instantiate2AddressError),
 
-    #[error("Error loading file {0},err: ({1})")]
-    LoadingFile(String, String),
+    #[error("Error opening file {0},err: ({1})")]
+    OpenFile(String, String),
 }
 
 impl DaemonError {

@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{core::CloneTestingApp, CloneTesting};
 use clone_cw_multi_test::AddressGenerator;
 use clone_cw_multi_test::CosmosRouter;
-use cosmwasm_std::{ContractInfoResponse, HexBinary};
+use cosmwasm_std::{instantiate2_address, Api, ContractInfoResponse, HexBinary};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
@@ -12,7 +12,6 @@ use cw_orch_core::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use sha2::{Digest, Sha256};
-
 pub struct CloneWasmQuerier<S> {
     app: Rc<RefCell<CloneTestingApp>>,
     _state: PhantomData<S>,
@@ -115,11 +114,20 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
 
     fn instantiate2_addr(
         &self,
-        _code_id: u64,
-        _creator: impl Into<String>,
+        code_id: u64,
+        creator: impl Into<String>,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, Self::Error> {
-        Ok(format!("contract{}", HexBinary::from(salt).to_hex()))
+        // Clone Testing needs mock
+        let checksum = self.code_id_hash(code_id)?;
+        let canon_creator = self.app.borrow().api().addr_canonicalize(&creator.into())?;
+        let canonical_addr = instantiate2_address(checksum.as_slice(), &canon_creator, &salt)?;
+        Ok(self
+            .app
+            .borrow()
+            .api()
+            .addr_humanize(&canonical_addr)?
+            .to_string())
     }
 }
 
