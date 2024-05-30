@@ -223,7 +223,7 @@ You can also [learn more about the interchain daemon implementation](./integrati
 ## With Starship
 
 You can also create you interchain environment using starship, which allows you to test your application against actual nodes and relayers. This time, an additional setup is necessary.
-Check out <a href="https://starship.cosmology.tech/" target="_blank">the official Starship Getting Started guide</a> for more details.
+Check out <a href="https://docs.cosmology.zone/starship" target="_blank">the official Starship Getting Started guide</a> for more details.
 
 Once starship is setup and all the ports forwarded, assuming that starship was run locally, you can execute the following:
 
