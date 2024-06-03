@@ -91,7 +91,6 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
                 // We need to figure out a parameter name for all fields associated to their types
                 // They will be numbered from 0 to n-1
-                
                 let variant_fields: Vec<_> = variant_idents.clone().into_iter()
                     .enumerate()
                     .map(|(i, mut id)| {
