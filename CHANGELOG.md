@@ -11,6 +11,7 @@
 
 - Daemon : Changed return types on daemon queriers to match Cosmwasm std types
 - Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
+- Simplify the generated macros to allow for `impl Into<Type>` on all types
 
 ## 0.22.0
 
