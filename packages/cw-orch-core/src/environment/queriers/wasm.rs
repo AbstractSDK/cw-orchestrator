@@ -1,5 +1,5 @@
 use cosmwasm_std::{from_json, CodeInfoResponse, ContractInfoResponse, HexBinary};
-use cw_storage_plus::Item;
+use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -36,6 +36,18 @@ pub trait WasmQuerier: Querier {
         let current_manager_version = self
             .raw_query(address, item.as_slice().to_vec())
             .map_err(Into::into)?;
+
+        from_json(current_manager_version).map_err(Into::into)
+    }
+
+    fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
+        &self,
+        address: impl Into<String>,
+        map: Map<'a, K, T>,
+        key: K,
+    ) -> Result<T, CwEnvError> {
+        let total_key = map.key(key).to_vec();
+        let current_manager_version = self.raw_query(address, total_key).map_err(Into::into)?;
 
         from_json(current_manager_version).map_err(Into::into)
     }
