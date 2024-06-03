@@ -10,16 +10,21 @@ In order to use `osmosis-test-tube`, the library needs to be able to compile and
 
 1. <a href="https://go.dev/doc/install" target="_blank">Install go</a>
 2. Install the clang library
+
 ```bash
     sudo apt install clang
-``` 
+```
 
 ### Arch Linux
+
 1. Install go
+
 ```bash
     sudo pacman -Sy go
 ```
-2. Instal the clang library
+
+2. Install the clang library
+
 ```bash
     sudo pacman -Sy clang
 ```
@@ -31,22 +36,22 @@ Creating a test environment in cw-orchestrator that leverages `osmosis-test-tube
 ```rust,ignore
     use cw_orch::prelude::*;
     use cosmwasm_std::coins;
-{{#include ../../../cw-orch/examples/osmosis_test_tube.rs:osmosis_test_tube_creation}}
+{{#include ../../../packages/cw-orch-osmosis-test-tube/examples/basic.rs:osmosis_test_tube_creation}}
 ```
 
 This snippet will create a new address, provide it with initial balances and create the `osmosis-test-tube` environment.
-The addresses are not handled like in the `cw-multi-test` environment or in mock tests and can't be decided upon manually. You will learn more later about [handling addresses in the OsmosisTestTube environement](#additional-customization). 
+The addresses are not handled like in the `cw-multi-test` environment or in mock tests and can't be decided upon manually. You will learn more later about [handling addresses in the OsmosisTestTube environement](#additional-customization).
 
 > **_NOTE:_** When using `osmosis-test-tube`, the addresses **are** validated like on a live chain.
 
-> **_NOTE:_** When using `osmosis-test-tube`, gas fees are charged to the sender address. The gas fees don't represent the actual gas fees you will occur when interacting with the actual chain. That's why in the test snippet above, the amount of `uosmo` instantiated with the account is very high. 
+> **_NOTE:_** When using `osmosis-test-tube`, gas fees are charged to the sender address. The gas fees don't represent the actual gas fees you will occur when interacting with the actual chain. That's why in the test snippet above, the amount of `uosmo` instantiated with the account is very high.
 
 ## Interacting with contracts
 
-You can then use the resulting `OsmosisTestTube` variable to interact with your [contracts](../contracts/index.md): 
+You can then use the resulting `OsmosisTestTube` variable to interact with your [contracts](../contracts/index.md):
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/osmosis_test_tube.rs:osmosis_test_tube_usage}}
+{{#include ../../../packages/cw-orch-osmosis-test-tube/examples/basic.rs:osmosis_test_tube_usage}}
 ```
 
 When executing contracts in an `osmosis_test_tube` environment, the messages and sub-messages sent along the Response of an endpoint, will be executed as well. This environment mimics the actual on-chain execution by dispatching the messages inside the actual chain binaries.
@@ -64,7 +69,7 @@ The `OsmosisTestTube` test environment allows you to change application variable
 
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/osmosis_test_tube.rs:osmosis_test_tube_customization}}
+{{#include ../../../packages/cw-orch-osmosis-test-tube/examples/basic.rs:osmosis_test_tube_customization}}
 ```
 
 > **_NOTE:_** With OsmosisTestTube, you can't create accounts with a specific address. Accounts are created by the app directly and you don't have a lot of control over them. As in the example, use `OsmosisTestTube::init_account` to create a new account.
@@ -75,5 +80,5 @@ The `OsmosisTestTube` test environment allows you to change application variable
 As we don't provide wrappers around each and every functionality that `osmosis_test_tube` provides, you can also customize the underlying `osmosis_test_tube::App` object to your specific needs. In the following example, we increase the block time in the test environment:
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/osmosis_test_tube.rs:deep_osmosis_test_tube_customization}}
-````
+{{#include ../../../packages/cw-orch-osmosis-test-tube/examples/basic.rs:deep_osmosis_test_tube_customization}}
+```

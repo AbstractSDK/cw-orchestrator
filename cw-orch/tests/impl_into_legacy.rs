@@ -1,4 +1,3 @@
-// ANCHOR: impl_into
 use cw_orch::interface;
 use cw_orch::prelude::*;
 
@@ -42,12 +41,10 @@ struct Example<Chain>;
 
 impl<Chain: CwEnv> Example<Chain> {
     pub fn test_macro(&self) {
-        // function `bar` is available because of the `impl_into` attribute!
-        self.bar("hello".to_string()).unwrap();
+        // function `bar` is available by default and the impl_into attribute doesn't error
+        self.bar("hello".to_string()).unwrap_err();
 
-        // function `test` is available because of the `impl_into` attribute!
-        self.test(65).unwrap();
+        // function `test` is available by default and the impl_into attribute doesn't error
+        self.test(65u64).unwrap_err();
     }
 }
-
-// ANCHOR_END: impl_into
