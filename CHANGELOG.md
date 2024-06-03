@@ -6,7 +6,7 @@
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 - Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
 - Remove `impl_into`, the old `impl_into` behavior is now the default behavior
-- Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
+- EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
 
 ### Breaking
 
