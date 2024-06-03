@@ -54,7 +54,7 @@ if [[ $num_chains -lt 0 ]]; then
   exit 1
 fi
 for i in $(seq 0 $num_chains); do
-  chain=$(yq -r ".chains[$i].name" ${CONFIGFILE} )
+  chain=$(yq -r ".chains[$i].id" ${CONFIGFILE} )
   localrpc=$(yq -r ".chains[$i].ports.rpc" ${CONFIGFILE} )
   locallcd=$(yq -r ".chains[$i].ports.rest" ${CONFIGFILE} )
   localgrpc=$(yq -r ".chains[$i].ports.grpc" ${CONFIGFILE} )

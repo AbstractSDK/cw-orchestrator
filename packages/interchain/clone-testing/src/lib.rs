@@ -6,6 +6,7 @@ pub mod queriers;
 mod state;
 
 pub use self::core::CloneTesting;
+pub use clone_cw_multi_test as cw_multi_test;
 pub use state::MockState;
 
 // We define a new structure to reunite the ContractWrapper objects
