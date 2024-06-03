@@ -33,11 +33,11 @@ pub trait WasmQuerier: Querier {
         address: impl Into<String>,
         item: Item<T>,
     ) -> Result<T, CwEnvError> {
-        let current_manager_version = self
+        let raw_value = self
             .raw_query(address, item.as_slice().to_vec())
             .map_err(Into::into)?;
 
-        from_json(current_manager_version).map_err(Into::into)
+        from_json(raw_value).map_err(Into::into)
     }
 
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(

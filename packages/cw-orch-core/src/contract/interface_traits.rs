@@ -154,7 +154,15 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
         self.as_instance().query(query_msg)
     }
 
-    /// Query the contract raw state from an item
+    /// Query the contract raw state from an raw binary key
+    fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .raw_query(self.address()?, query_keys)
+            .map_err(Into::into)
+    }
+
+    /// Query the contract raw state from an cw-storage-plus::Item
     fn item_query<T: Serialize + DeserializeOwned>(
         &self,
         query_item: Item<T>,
@@ -164,7 +172,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
             .item_query(self.address()?, query_item)
     }
 
-    /// Query the contract raw state from an item
+    /// Query the contract raw state from a cw-storage-plus::Map
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
         query_map: Map<'a, K, T>,
