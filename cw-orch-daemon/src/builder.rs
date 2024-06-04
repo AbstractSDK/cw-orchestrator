@@ -96,8 +96,6 @@ impl DaemonAsyncBuilder {
     /// Defaults to env variable.
     ///
     /// Variable: STATE_FILE_ENV_NAME.
-    ///
-    /// This field is ignored for rebuilt daemon and path of the original daemon used instead
     pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
         self.state_path = Some(path.to_string());
         self

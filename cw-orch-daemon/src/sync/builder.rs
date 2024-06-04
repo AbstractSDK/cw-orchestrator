@@ -50,8 +50,6 @@ impl DaemonBuilder {
 
     /// Set the deployment id to use for the Daemon interactions
     /// Defaults to `default`
-    ///
-    /// This field is ignored for rebuilt daemon and deployment id of the original daemon used instead
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
         self
@@ -126,8 +124,6 @@ impl DaemonBuilder {
     /// Defaults to env variable.
     ///
     /// Variable: STATE_FILE_ENV_NAME.
-    ///
-    /// This field is ignored for rebuilt daemon and path of the original daemon used instead
     pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
         self.state_path = Some(path.to_string());
         self
