@@ -1,10 +1,7 @@
 extern crate proc_macro;
 use crate::{
     execute_fns::payable,
-    helpers::{
-        has_into, impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching,
-        MsgType,
-    },
+    helpers::{has_into, process_fn_name, process_sorting, LexiographicMatching, MsgType},
     query_fns::parse_query_type,
 };
 use convert_case::{Case, Casing};
@@ -139,6 +136,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
             }
             Fields::Named(variant_fields) => {
                 let is_attributes_sorted = process_sorting(&input.attrs);
+
                 if is_attributes_sorted{
                     // sort fields on field name
                     LexiographicMatching::default().visit_fields_named_mut(variant_fields);
@@ -205,10 +203,8 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
     let bname = Ident::new(&format!("{name}Fns"), name.span());
     let trait_condition = quote!(::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type>);
 
-    let impl_into_depr = impl_into_deprecation(&input.attrs);
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
-        #impl_into_depr
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
         pub trait #bname #cw_orch_generics : #trait_condition #combined_trait_where_clause {
             #(#variant_fns)*

@@ -1,9 +1,9 @@
-use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use proc_macro2::TokenTree;
+use quote::ToTokens;
 use std::cmp::Ordering;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Lit, Meta, NestedMeta,
-    Type,
+    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Meta, MetaList,
+    NestedMeta, Path, Type,
 };
 
 pub enum MsgType {
@@ -15,9 +15,17 @@ pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
     for attr in &v.attrs {
         if let Ok(Meta::List(list)) = attr.parse_meta() {
             if let Some(ident) = list.path.get_ident() {
-                if ident == "fn_name" {
-                    if let Some(NestedMeta::Lit(Lit::Str(lit_str))) = list.nested.last() {
-                        return lit_str.value();
+                if ident == "cw_orch" {
+                    for meta in list.nested {
+                        if let NestedMeta::Meta(Meta::List(MetaList { nested, .. })) = &meta {
+                            if let Some(NestedMeta::Meta(Meta::Path(Path { segments, .. }))) =
+                                nested.last()
+                            {
+                                if let Some(ident) = segments.last() {
+                                    return ident.ident.to_string();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -26,15 +34,8 @@ pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
     v.ident.to_string()
 }
 
-pub(crate) fn process_sorting(attrs: &Vec<Attribute>) -> bool {
-    // If the disable_fields_sorting attribute is enabled, we return false, no sorting should be done
-    for attr in attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "disable_fields_sorting"
-        {
-            return false;
-        }
-    }
-    true
+pub(crate) fn process_sorting(attrs: &[Attribute]) -> bool {
+    !has_cw_orch_attribute(attrs, "disable_fields_sorting")
 }
 
 #[derive(Default)]
@@ -96,25 +97,6 @@ fn is_option(wrapper: &str, ty: &'_ syn::Type) -> bool {
     false
 }
 
-pub(crate) fn has_impl_into(attrs: &Vec<Attribute>) -> bool {
-    for attr in attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "impl_into" {
-            return true;
-        }
-    }
-    false
-}
-
-pub(crate) fn impl_into_deprecation(attrs: &Vec<Attribute>) -> TokenStream {
-    if has_impl_into(attrs) {
-        quote!(
-            #[deprecated = "the `impl_into` attribute is deprecated. You don't need to use it anymore"]
-        )
-    } else {
-        quote!()
-    }
-}
-
 pub(crate) fn is_type_using_into(field_type: &Type) -> bool {
     // We match Strings
     match field_type {
@@ -134,15 +116,25 @@ pub(crate) fn is_type_using_into(field_type: &Type) -> bool {
     }
 }
 
-pub(crate) fn has_force_into(field: &syn::Field) -> bool {
-    for attr in &field.attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "into" {
-            return true;
-        }
-    }
-    false
+pub(crate) fn has_into(field: &syn::Field) -> bool {
+    is_type_using_into(&field.ty) || has_cw_orch_attribute(&field.attrs, "into")
 }
 
-pub(crate) fn has_into(field: &syn::Field) -> bool {
-    is_type_using_into(&field.ty) || has_force_into(field)
+pub(crate) fn has_cw_orch_attribute(attrs: &[Attribute], attribute_name: &str) -> bool {
+    for attr in attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "cw_orch" {
+            // We check the payable attribute is in there
+            for token_tree in attr.tokens.clone() {
+                if let TokenTree::Group(e) = token_tree {
+                    for ident in e.stream() {
+                        if ident.to_string() == attribute_name {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    false
 }

@@ -29,10 +29,10 @@ where
     T: Serialize,
 {
     FirstMessage {},
-    #[payable]
+    #[cw_orch(payable)]
     SecondMessage {
         /// test doc-comment
-        #[into]
+        #[cw_orch(into)]
         t: T,
     },
     /// test doc-comment
@@ -40,11 +40,12 @@ where
         /// test doc-comment
         t: T,
     },
+    #[cw_orch(fn_name(fourth), payable)]
     FourthMessage,
-    #[payable]
+    #[cw_orch(payable, into)]
     FifthMessage,
     SixthMessage(u64, String),
-    #[payable]
+    #[cw_orch(payable)]
     SeventhMessage(Uint128, String),
 }
 
@@ -201,7 +202,7 @@ mod test {
         // We need to check we can still call the execute msgs conveniently
         let sender = Addr::unchecked("sender");
         let mock = Mock::new(&sender);
-        mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
+        mock.set_balance(&sender, coins(156 * 3, "ujuno"))?;
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
@@ -211,7 +212,7 @@ mod test {
             .second_message("s", &coins(156, "ujuno"))
             .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
-        contract.fourth_message().unwrap();
+        contract.fourth(&coins(156, "ujuno")).unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
         contract.sixth_message(45u64, "moneys").unwrap();
 
