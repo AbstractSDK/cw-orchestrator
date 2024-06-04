@@ -56,7 +56,7 @@ cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", versio
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.2.0" }
 
 #Clone Testing
-cw-orch-clone-testing = { version = "0.4.1", path = "packages/interchain/clone-testing" }
+cw-orch-clone-testing = { version = "0.4.1", path = "packages/clone-testing" }
 
 
 thiserror = { version = "1.0.21" }
