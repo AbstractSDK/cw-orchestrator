@@ -5,6 +5,8 @@
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 - Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
+- Add interchain capabilites as well as clone-testing
+- Bumped MSRV to 1.73 because of dependency `cosmwasm-vm@1.5.5`
 - Remove `impl_into`, the old `impl_into` behavior is now the default behavior
 - EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
 - Add `flush_state` method for Local Chain Daemons

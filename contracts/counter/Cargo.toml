@@ -23,6 +23,10 @@ thiserror = { version = "1.0.21" }
 serde = { workspace = true }
 serde_json = "1.0.79"
 cw-orch = { path = "../../cw-orch", features = ["daemon"] }
+# Unused, only there to check for wasm compatibility
+cw-orch-interchain = { path = "../../cw-orch-interchain", features = [
+  "daemon",
+] }
 
 [[example]]
 name = "deploy"
@@ -32,5 +36,11 @@ name = "deploy"
 dotenv = { version = "0.15.0" }
 pretty_env_logger = { version = "0.5.0" }
 cw-orch = { path = "../../cw-orch", features = ["daemon"] }
-cw-orch-osmosis-test-tube = { version = "0.1.0", path = "../../packages/cw-orch-osmosis-test-tube" }
-anyhow.workspace = true
+cw-orch-osmosis-test-tube = { workspace = true }
+anyhow = { workspace = true }
+
+# Clone Testing test
+cw-orch-clone-testing = { workspace = true }
+cw20 = { workspace = true }
+cw20-base = { workspace = true }
+log = { workspace = true }

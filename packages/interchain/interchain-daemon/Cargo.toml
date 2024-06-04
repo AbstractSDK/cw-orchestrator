@@ -1,0 +1,45 @@
+[package]
+name = "cw-orch-interchain-daemon"
+version = "0.2.0"
+description = "An interchain intergration crate for interacting with actual chain nodes (via gRPC)"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cw-orch-daemon = { workspace = true }
+cw-orch-core = { workspace = true }
+
+tokio = { workspace = true }
+
+async-recursion = "1.0.4"
+base64 = "0.21.2"
+cosmwasm-schema = "1.3.1"
+futures = "0.3.28"
+ibc-relayer-types = { workspace = true }
+log = "0.4.19"
+log4rs = "1.2.0"
+thiserror = "1.0.44"
+tonic = { workspace = true }
+cosmrs = { workspace = true }
+futures-util = "0.3.28"
+derive_builder = "0.12.0"
+diff-struct = "0.5.3"
+serde_json = { workspace = true }
+
+cw-orch-interchain-core = { workspace = true, features = ["daemon"] }
+cw-orch-starship = { workspace = true }
+dialoguer = "0.10.4"
+cosmwasm-std = "1.3.3"
+
+[dev-dependencies]
+cosmwasm-std = "1.3.3"
+
+pretty_env_logger = "0.5.0"
+anyhow = { workspace = true }
