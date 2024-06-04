@@ -53,6 +53,9 @@ pub enum InterchainError {
     #[error("Some packets were not parsed by the given parsing functions")]
     RemainingPackets {},
 
+    #[error("No packets were found while following packets")]
+    NoPacketsFound {},
+
     #[error("Failure acknowledgment received: {0:?}")]
     FailedAckReceived(String),
 }
