@@ -32,6 +32,7 @@ where
     #[payable]
     SecondMessage {
         /// test doc-comment
+        #[into]
         t: T,
     },
     /// test doc-comment
@@ -207,7 +208,7 @@ mod test {
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
         contract
-            .second_message("s".to_string(), &coins(156, "ujuno"))
+            .second_message("s", &coins(156, "ujuno"))
             .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
         contract.fourth_message().unwrap();

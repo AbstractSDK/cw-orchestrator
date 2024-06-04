@@ -115,7 +115,7 @@ pub(crate) fn impl_into_deprecation(attrs: &Vec<Attribute>) -> TokenStream {
     }
 }
 
-pub(crate) fn is_type_using_impl_into(field_type: &Type) -> bool {
+pub(crate) fn is_type_using_into(field_type: &Type) -> bool {
     // We match Strings
     match field_type {
         Type::Path(type_path) => {
@@ -132,4 +132,17 @@ pub(crate) fn is_type_using_impl_into(field_type: &Type) -> bool {
         }
         _ => false,
     }
+}
+
+pub(crate) fn has_force_into(field: &syn::Field) -> bool {
+    for attr in &field.attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "into" {
+            return true;
+        }
+    }
+    false
+}
+
+pub(crate) fn has_into(field: &syn::Field) -> bool {
+    is_type_using_into(&field.ty) || has_force_into(field)
 }

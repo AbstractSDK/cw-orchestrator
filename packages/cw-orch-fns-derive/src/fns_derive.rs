@@ -2,8 +2,8 @@ extern crate proc_macro;
 use crate::{
     execute_fns::payable,
     helpers::{
-        impl_into_deprecation, is_type_using_impl_into, process_fn_name, process_sorting,
-        LexiographicMatching, MsgType,
+        has_into, impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching,
+        MsgType,
     },
     query_fns::parse_query_type,
 };
@@ -95,7 +95,8 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                     .iter()
                     .map(|field| {
                         let ident = &field.ident;
-                        if is_type_using_impl_into(&field.ty){
+
+                        if has_into(field){
                             quote!(#ident.into())
                         }else{
                             quote!(#ident)
@@ -107,7 +108,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 let variant_params = variant_fields.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
-                    if is_type_using_impl_into(&field.ty){
+                    if has_into(field){
                         quote! (#field_name: impl Into<#field_type> )
                     }else{
                         quote! (#field_name: #field_type )
@@ -143,16 +144,13 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                     LexiographicMatching::default().visit_fields_named_mut(variant_fields);
                 }
 
-                // remove attributes from fields
-                variant_fields.named.iter_mut().for_each(|f| f.attrs = vec![]);
-
                 // Parse these fields as arguments to function
                 let variant_fields = variant_fields.named.clone();
 
                 // Generate the struct members (This can be kept, it doesn't disturb)
                 let variant_idents = variant_fields.iter().map(|field|{
                     let ident = field.ident.clone().unwrap();
-                    if is_type_using_impl_into(&field.ty){
+                    if has_into(field){
                         quote!(#ident: #ident.into())
                     }else{
                         quote!(#ident)
@@ -163,7 +161,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 let variant_attr = variant_fields.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
-                    if is_type_using_impl_into(&field.ty){
+                    if has_into(field){
                         quote! (#field_name: impl Into<#field_type> )
                     }else{
                         quote! (#field_name: #field_type )
