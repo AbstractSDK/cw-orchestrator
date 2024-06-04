@@ -29,18 +29,20 @@ where
     T: Serialize,
 {
     FirstMessage {},
+    // ANCHOR: into_example
     #[cw_orch(payable)]
     SecondMessage {
         /// test doc-comment
         #[cw_orch(into)]
         t: T,
     },
+    // ANCHOR_END: into_example
     /// test doc-comment
     ThirdMessage {
         /// test doc-comment
         t: T,
     },
-    #[cw_orch(fn_name(fourth), payable)]
+    #[cw_orch(fn_name("fourth"), payable)]
     FourthMessage,
     #[cw_orch(payable, into)]
     FifthMessage,

@@ -7,13 +7,14 @@
 - Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
 - Remove `impl_into`, the old `impl_into` behavior is now the default behavior
 - EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
-- Add `flush_state` method for Local Chain Daemons 
+- Add `flush_state` method for Local Chain Daemons
 
 ### Breaking
 
 - Daemon : Changed return types on daemon queriers to match Cosmwasm std types
 - Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
 - Simplify the generated macros to allow for `impl Into<Type>` on `Uint*` and `String` types.
+- Fns Derive Macros: Namespace the fns derive attributes with `cw-orch(<attribute>)`. For instance, `#[cw_orch(payable)]`.
 
 ## 0.22.0
 
