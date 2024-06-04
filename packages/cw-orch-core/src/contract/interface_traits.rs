@@ -8,6 +8,7 @@ use crate::{
 };
 use cosmwasm_std::{Addr, Binary, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
+use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -151,6 +152,35 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
         query_msg: &Self::QueryMsg,
     ) -> Result<G, CwEnvError> {
         self.as_instance().query(query_msg)
+    }
+
+    /// Query the contract raw state from an raw binary key
+    fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .raw_query(self.address()?, query_keys)
+            .map_err(Into::into)
+    }
+
+    /// Query the contract raw state from an cw-storage-plus::Item
+    fn item_query<T: Serialize + DeserializeOwned>(
+        &self,
+        query_item: Item<T>,
+    ) -> Result<T, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .item_query(self.address()?, query_item)
+    }
+
+    /// Query the contract raw state from a cw-storage-plus::Map
+    fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
+        &self,
+        query_map: Map<'a, K, T>,
+        key: K,
+    ) -> Result<T, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .map_query(self.address()?, query_map, key)
     }
 }
 
