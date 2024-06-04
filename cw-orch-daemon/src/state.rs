@@ -192,8 +192,9 @@ impl StateInterface for DaemonState {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         let value = self
-            .get(&self.deployment_id)?
-            .get(contract_id)
+            .get(&self.deployment_id)
+            .ok()
+            .and_then(|v| v.get(contract_id).cloned())
             .ok_or_else(|| CwEnvError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(Addr::unchecked(value.as_str().unwrap()))
@@ -208,8 +209,9 @@ impl StateInterface for DaemonState {
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
-            .get("code_ids")?
-            .get(contract_id)
+            .get("code_ids")
+            .ok()
+            .and_then(|v| v.get(contract_id).cloned())
             .ok_or_else(|| CwEnvError::CodeIdNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(value.as_u64().unwrap())
