@@ -53,8 +53,6 @@ impl DaemonAsyncBuilder {
 
     /// Set the deployment id to use for the daemon interactions
     /// Defaults to `default`
-    ///
-    /// This field is ignored for rebuilt daemon and deployment id of the original daemon used instead
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
         self
