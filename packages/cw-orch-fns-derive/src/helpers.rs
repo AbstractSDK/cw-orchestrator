@@ -2,9 +2,13 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use std::cmp::Ordering;
 use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed,
-    GenericArgument, GenericParam, Generics, Lit, Meta, NestedMeta,
+    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Lit, Meta, NestedMeta,
 };
+
+pub enum MsgType {
+    Execute,
+    Query,
+}
 
 pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
     for attr in &v.attrs {
@@ -19,21 +23,6 @@ pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
         }
     }
     v.ident.to_string()
-}
-
-pub fn to_generic_arguments(generics: &Generics) -> Punctuated<GenericArgument, Comma> {
-    generics.params.iter().map(to_generic_argument).collect()
-}
-
-pub fn to_generic_argument(p: &GenericParam) -> GenericArgument {
-    match p {
-        GenericParam::Type(t) => {
-            let ident = &t.ident;
-            GenericArgument::Type(parse_quote!(#ident))
-        }
-        GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
-        GenericParam::Const(c) => GenericArgument::Const(parse_quote!(#c)),
-    }
 }
 
 pub(crate) fn process_sorting(attrs: &Vec<Attribute>) -> bool {
