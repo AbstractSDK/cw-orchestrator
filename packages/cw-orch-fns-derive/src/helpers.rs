@@ -2,8 +2,8 @@ use proc_macro2::TokenTree;
 use quote::ToTokens;
 use std::cmp::Ordering;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Meta, MetaList,
-    NestedMeta, Path, Type,
+    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Lit, Meta, MetaList,
+    NestedMeta, Type,
 };
 
 pub enum MsgType {
@@ -18,12 +18,8 @@ pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
                 if ident == "cw_orch" {
                     for meta in list.nested {
                         if let NestedMeta::Meta(Meta::List(MetaList { nested, .. })) = &meta {
-                            if let Some(NestedMeta::Meta(Meta::Path(Path { segments, .. }))) =
-                                nested.last()
-                            {
-                                if let Some(ident) = segments.last() {
-                                    return ident.ident.to_string();
-                                }
+                            if let Some(NestedMeta::Lit(Lit::Str(lit_str))) = nested.last() {
+                                return lit_str.value();
                             }
                         }
                     }
