@@ -2,6 +2,7 @@
 members = [
   "cw-orch",
   "cw-orch-daemon",
+  "cw-orch-interchain",
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
