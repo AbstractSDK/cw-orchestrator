@@ -39,7 +39,7 @@ cw1-whitelist = "1.1.0"
 speculoos.workspace = true
 
 [dev-dependencies]
-cw-orch = { workspace = true }
+cw-orch = { workspace = true, features = ["daemon"] }
 cw-orch-interchain = { path = ".", features = ["daemon"] }
 simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
 simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
