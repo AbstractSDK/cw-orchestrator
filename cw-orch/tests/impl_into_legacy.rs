@@ -42,9 +42,9 @@ struct Example<Chain>;
 impl<Chain: CwEnv> Example<Chain> {
     pub fn test_macro(&self) {
         // function `bar` is available by default and the impl_into attribute doesn't error
-        self.bar("hello".to_string()).unwrap();
+        self.bar("hello").unwrap_err();
 
         // function `test` is available by default and the impl_into attribute doesn't error
-        self.test(65u64).unwrap();
+        self.test(65u64).unwrap_err();
     }
 }

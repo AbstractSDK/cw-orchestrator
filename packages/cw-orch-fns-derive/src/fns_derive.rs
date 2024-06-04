@@ -2,7 +2,7 @@ extern crate proc_macro;
 use crate::{
     execute_fns::payable,
     helpers::{
-        process_fn_name, process_sorting, to_generic_arguments, LexiographicMatching, MsgType,
+        impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching, MsgType,
     },
     query_fns::parse_query_type,
 };
@@ -10,19 +10,10 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::{format_ident, quote};
-use syn::{parse_quote, visit_mut::VisitMut, Fields, Ident, ItemEnum};
+use syn::{parse_quote, visit_mut::VisitMut, Fields, Generics, Ident, ItemEnum, WhereClause};
 
 pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
     let name = &input.ident;
-    let bname = Ident::new(&format!("{name}Fns"), name.span());
-
-    let generics = input.generics.clone();
-    let (_impl_generics, _ty_generics, where_clause) = generics.split_for_impl().clone();
-    let type_generics = to_generic_arguments(&generics);
-
-    let is_attributes_sorted = process_sorting(&input.attrs);
-
-    let variants = input.variants;
 
     let (trait_name, func_name, trait_msg_type, generic_msg_type, chain_trait) = match msg_type {
         MsgType::Execute => (
@@ -44,7 +35,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
         ),
     };
 
-    let variant_fns = variants.into_iter().map( |mut variant|{
+    let variant_fns = input.variants.into_iter().map( |mut variant|{
         let variant_name = variant.ident.clone();
 
         // We rename the variant if it has a fn_name attribute associated with it
@@ -136,6 +127,7 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 )
             }
             Fields::Named(variant_fields) => {
+                let is_attributes_sorted = process_sorting(&input.attrs);
                 if is_attributes_sorted{
                     // sort fields on field name
                     LexiographicMatching::default().visit_fields_named_mut(variant_fields);
@@ -173,22 +165,36 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
         }
     });
 
-    let necessary_trait_where = quote!(#name<#type_generics>: Into<#generic_msg_type>);
-    let combined_trait_where_clause = where_clause
-        .map(|w| {
-            quote!(
-                #w #necessary_trait_where
-            )
-        })
-        .unwrap_or(quote!(
-            where
-                #necessary_trait_where
-        ));
+    // Generics for the Trait
+    let mut cw_orch_generics: Generics = parse_quote!(<Chain: #chain_trait,  #generic_msg_type>);
+    cw_orch_generics
+        .params
+        .extend(input.generics.params.clone());
 
+    // Where clause for the Trait
+    let mut combined_trait_where_clause = {
+        let (_, ty_generics, where_clause) = input.generics.split_for_impl().clone();
+
+        // Adding a where clause for the derive message type to implement into the contract message type
+        let mut clause: WhereClause =
+            parse_quote!(where #name #ty_generics: Into<#generic_msg_type>);
+
+        // Adding eventual where clauses that were present on the original QueryMsg
+        if let Some(w) = where_clause {
+            clause.predicates.extend(w.predicates.clone());
+        }
+        clause
+    };
+
+    let bname = Ident::new(&format!("{name}Fns"), name.span());
+    let trait_condition = quote!(::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type>);
+
+    let impl_into_depr = impl_into_deprecation(&input.attrs);
     let derived_trait = quote!(
         #[cfg(not(target_arch = "wasm32"))]
+        #impl_into_depr
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname<Chain: #chain_trait, #generic_msg_type, #type_generics>: ::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type> #combined_trait_where_clause {
+        pub trait #bname #cw_orch_generics : #trait_condition #combined_trait_where_clause {
             #(#variant_fns)*
         }
 
@@ -199,31 +205,31 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
         }
     );
 
-    // We need to merge the where clauses (rust doesn't support 2 wheres)
-    // If there is no where clause, we simply add the necessary where
-    let necessary_where = quote!(SupportedContract: ::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type >, #necessary_trait_where);
-    let combined_where_clause = where_clause
-        .map(|w| {
-            quote!(
-                #w #necessary_where
-            )
-        })
-        .unwrap_or(quote!(
-            where
-                #necessary_where
-        ));
+    // Generating the generics for the blanket implementation
+    let mut supported_contract_generics = cw_orch_generics.clone();
+    supported_contract_generics
+        .params
+        .push(parse_quote!(SupportedContract));
 
-    let derived_trait_impl = quote!(
+    // Generating the where clause for the blanket implementation
+    combined_trait_where_clause
+        .predicates
+        .push(parse_quote!(SupportedContract: #trait_condition));
+
+    let (support_contract_impl, _, _) = supported_contract_generics.split_for_impl();
+    let (_, cw_orch_generics, _) = cw_orch_generics.split_for_impl();
+
+    let derived_trait_blanket_impl = quote!(
         #[automatically_derived]
-        impl<SupportedContract, Chain: #chain_trait, #generic_msg_type, #type_generics> #bname<Chain, #generic_msg_type, #type_generics> for SupportedContract
-        #combined_where_clause {}
+        impl #support_contract_impl #bname #cw_orch_generics for SupportedContract
+        #combined_trait_where_clause {}
     );
 
     let expand = quote!(
         #derived_trait
 
         #[cfg(not(target_arch = "wasm32"))]
-        #derived_trait_impl
+        #derived_trait_blanket_impl
     );
 
     expand.into()
