@@ -98,7 +98,7 @@ impl Drop for JsonLockedState {
 
 pub fn read(filename: &String) -> Result<Value, DaemonError> {
     let file = File::open(filename)
-        .map_err(|err| DaemonError::OpenFile(filename.to_string(), err.to_string()));
+        .map_err(|err| DaemonError::OpenFile(filename.to_string(), err.to_string()))?;
     let json: serde_json::Value = from_reader(file)?;
     Ok(json)
 }

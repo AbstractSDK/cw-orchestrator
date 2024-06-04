@@ -82,7 +82,7 @@ impl DaemonAsync {
 
     /// Flushes all the state related to the current chain
     /// Only works on Local networks
-    pub fn flush_state(&self) -> Result<(), DaemonError> {
+    pub fn flush_state(&mut self) -> Result<(), DaemonError> {
         self.state.flush()
     }
 }

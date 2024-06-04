@@ -27,10 +27,8 @@ pub struct DaemonState {
     pub json_state: DaemonStateFile,
     /// Deployment identifier
     pub deployment_id: String,
-    /// Chain Id, ex. "osmosis-1"
-    pub chain_id: String,
-    /// Chain Name, ex. "osmosis"
-    pub chain_name: String,
+    /// Information about the chain
+    pub chain_data: ChainInfoOwned,
 }
 
 impl Drop for DaemonState {
@@ -62,8 +60,8 @@ impl DaemonState {
         deployment_id: String,
         read_only: bool,
     ) -> Result<DaemonState, DaemonError> {
-        let chain_id = chain_data.chain_id;
-        let chain_name = chain_data.network_info.chain_name;
+        let chain_id = &chain_data.chain_id;
+        let chain_name = &chain_data.network_info.chain_name;
 
         log::debug!(target: &local_target(), "Using state file : {}", json_file_path);
 
@@ -102,7 +100,7 @@ impl DaemonState {
             lock.insert(json_file_path);
             drop(lock);
 
-            json_file_state.prepare(&chain_id, &chain_name, &deployment_id);
+            json_file_state.prepare(chain_id, chain_name, &deployment_id);
             DaemonStateFile::FullAccess {
                 json_file_state: Arc::new(Mutex::new(json_file_state)),
             }
@@ -111,8 +109,7 @@ impl DaemonState {
         Ok(DaemonState {
             json_state,
             deployment_id,
-            chain_id,
-            chain_name,
+            chain_data,
         })
     }
 
@@ -157,12 +154,15 @@ impl DaemonState {
             DaemonStateFile::ReadOnly { path } => {
                 let j = crate::json_lock::read(path)?;
 
-                j[&self.chain_id][&self.chain_name].clone()
+                j[&self.chain_data.chain_id][&self.chain_data.network_info.chain_name].clone()
             }
             DaemonStateFile::FullAccess { json_file_state } => json_file_state
                 .lock()
                 .unwrap()
-                .get(&self.chain_id, &self.chain_name)
+                .get(
+                    &self.chain_data.chain_id,
+                    &self.chain_data.network_info.chain_name,
+                )
                 .clone(),
         };
         Ok(state)
@@ -189,7 +189,10 @@ impl DaemonState {
         };
 
         let mut json_file_lock = json_file_state.lock().unwrap();
-        let val = json_file_lock.get_mut(&self.chain_id, &self.chain_name);
+        let val = json_file_lock.get_mut(
+            &self.chain_data.chain_id,
+            &self.chain_data.network_info.chain_name,
+        );
         val[key][contract_id] = json!(value);
 
         Ok(())
@@ -209,20 +212,24 @@ impl DaemonState {
 
     /// Flushes all the state related to the current chain
     /// Only works on Local networks
-    pub fn flush(&self) -> Result<(), DaemonError> {
+    pub fn flush(&mut self) -> Result<(), DaemonError> {
         if self.chain_data.kind != ChainKind::Local {
             panic!("Can only flush local chain state");
         }
-        if self.read_only {
-            return Err(DaemonError::StateReadOnly);
-        }
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
 
-        let mut json = self.read_state()?;
+        let mut lock = json_file_state.lock().unwrap();
+        let json = lock.get_mut(
+            &self.chain_data.chain_id,
+            &self.chain_data.network_info.chain_name,
+        );
 
-        json[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id.to_string()] =
-            json!({});
-
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
+        *json = json!({});
         Ok(())
     }
 }

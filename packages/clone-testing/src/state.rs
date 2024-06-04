@@ -21,13 +21,19 @@ pub struct MockState {
 
 impl MockState {
     /// Creates a new empty mock state
+    // TODO: rt unused
+    #[allow(unused)]
     pub fn new(rt: &Handle, chain: ChainInfoOwned, deployment_id: &str) -> Self {
         Self {
             addresses: HashMap::new(),
             code_ids: HashMap::new(),
-            daemon_state: rt
-                .block_on(DaemonState::new(chain, deployment_id.to_string(), true))
-                .unwrap(),
+            daemon_state: DaemonState::new(
+                DaemonState::state_file_path().unwrap(),
+                chain,
+                deployment_id.to_string(),
+                true,
+            )
+            .unwrap(),
         }
     }
 }

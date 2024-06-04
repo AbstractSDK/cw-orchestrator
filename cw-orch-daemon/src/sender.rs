@@ -165,7 +165,8 @@ impl Sender<All> {
 
     /// Construct a new Sender from a raw key with additional options
     pub fn from_raw_key_with_options(
-        daemon_state: &Arc<DaemonState>,
+        chain_info: ChainInfoOwned,
+        channel: Channel,
         raw_key: &[u8],
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
@@ -175,18 +176,19 @@ impl Sender<All> {
             raw_key,
             0,
             options.hd_index.unwrap_or(0),
-            daemon_state.chain_data.network_info.coin_type,
+            chain_info.network_info.coin_type,
         )?;
         let sender = Sender {
-            daemon_state: daemon_state.clone(),
             private_key: p_key,
             secp,
             options,
+            grpc_channel: channel,
+            chain_info,
         };
         log::info!(
             target: &local_target(),
             "Interacting with {} using address: {}",
-            daemon_state.chain_data.chain_id,
+            sender.chain_info.chain_id,
             sender.pub_addr_str()?
         );
         Ok(sender)
@@ -204,7 +206,8 @@ impl Sender<All> {
         if options.hd_index.is_some() {
             // Need to generate new sender as hd_index impacts private key
             let new_sender = Sender::from_raw_key_with_options(
-                &self.daemon_state,
+                self.chain_info.clone(),
+                self.channel(),
                 &self.private_key.raw_key(),
                 options,
             )
