@@ -52,8 +52,8 @@ pub fn write(filename: &String, chain_id: &String, network_id: &String, deploy_i
 }
 
 pub fn read(filename: &String) -> Result<Value, DaemonError> {
-    let file =
-        File::open(filename).unwrap_or_else(|_| panic!("File should be present at {}", filename));
+    let file = File::open(filename)
+        .map_err(|err| DaemonError::OpenFile(filename.to_string(), err.to_string()))?;
     let json: serde_json::Value = from_reader(file)?;
     Ok(json)
 }

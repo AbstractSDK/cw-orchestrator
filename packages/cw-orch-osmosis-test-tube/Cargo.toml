@@ -14,8 +14,8 @@ repository.workspace = true
 osmosis-test-tube = { workspace = true }
 prost-types = { workspace = true }
 prost = { workspace = true }
-cosmwasm-std.workspace = true
-serde.workspace = true
+cosmwasm-std = { workspace = true }
+serde = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
 cw-orch-traits = { workspace = true }

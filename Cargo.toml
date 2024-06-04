@@ -1,5 +1,17 @@
 [workspace]
-members = ["cw-orch", "cw-orch-daemon", "packages/*", "contracts/*"]
+members = [
+  "cw-orch",
+  "cw-orch-daemon",
+  "cw-orch-interchain",
+  "packages/cw-orch-core",
+  "packages/cw-orch-mock",
+  "packages/cw-orch-networks",
+  "packages/cw-orch-osmosis-test-tube",
+  "packages/cw-orch-traits",
+  "contracts/*",
+  "packages/macros/*",
+  "packages/interchain/*",
+]
 resolver = "2"
 
 [workspace.package]
@@ -17,21 +29,35 @@ cw-multi-test = { package = "abstract-cw-multi-test", version = "1.0.0", feature
 cw20 = { package = "abstract-cw20", version = "1.2.2" }
 cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
 
-# Test Tube env deps. We use git dependencies because the crates.io version recompiles every time
 osmosis-test-tube = { version = "24.0.1" }
-
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
+tokio = { version = "1.4", features = ["full"] }
 
 cw-orch = { path = "./cw-orch", version = "0.22.0" }
 cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.22.0" }
 cw-orch-core = { path = "packages/cw-orch-core", version = "1.0.0" }
 cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.22.0" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.22.0" }
-cw-orch-contract-derive = { path = "packages/cw-orch-contract-derive", version = "0.21.0" }
-cw-orch-fns-derive = { path = "packages/cw-orch-fns-derive", version = "0.20.0" }
 cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.22.0" }
+
+# Macros
+cw-orch-contract-derive = { path = "packages/macros/cw-orch-contract-derive", version = "0.21.0" }
+cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0.20.0" }
+
+# Extensions
+cw-orch-osmosis-test-tube = { version = "0.1.0", path = "packages/cw-orch-osmosis-test-tube" }
+
+# Interchain
+cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.2.0" }
+cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.2.0" }
+cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.2.0" }
+cw-orch-starship = { path = "packages/interchain/starship", version = "0.2.0" }
+
+#Clone Testing
+cw-orch-clone-testing = { version = "0.4.1", path = "packages/clone-testing" }
+
 
 thiserror = { version = "1.0.21" }
 sha2 = { version = "0.10.8" }
@@ -45,3 +71,7 @@ speculoos = "0.11.0"
 
 # Logging
 log = "0.4.14"
+
+# Interchain
+ibc-relayer-types = { version = "0.25.0" }
+ibc-chain-registry = { version = "0.25.0" }

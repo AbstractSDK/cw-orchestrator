@@ -122,6 +122,9 @@ pub enum DaemonError {
     QuerierNeedRuntime,
     #[error(transparent)]
     Instantiate2Error(#[from] Instantiate2AddressError),
+
+    #[error("Error opening file {0},err: ({1})")]
+    OpenFile(String, String),
 }
 
 impl DaemonError {
