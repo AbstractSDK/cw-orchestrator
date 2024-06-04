@@ -75,6 +75,12 @@ impl Daemon {
             .sender((*self.daemon.sender).clone());
         builder
     }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush_state(&self) -> Result<(), DaemonError> {
+        self.daemon.flush_state()
+    }
 }
 
 impl ChainState for Daemon {

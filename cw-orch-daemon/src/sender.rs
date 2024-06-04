@@ -163,6 +163,35 @@ impl Sender<All> {
         Ok(sender)
     }
 
+    /// Construct a new Sender from a raw key with additional options
+    pub fn from_raw_key_with_options(
+        daemon_state: &Arc<DaemonState>,
+        raw_key: &[u8],
+        options: SenderOptions,
+    ) -> Result<Sender<All>, DaemonError> {
+        let secp = Secp256k1::new();
+        let p_key: PrivateKey = PrivateKey::from_raw_key(
+            &secp,
+            raw_key,
+            0,
+            options.hd_index.unwrap_or(0),
+            daemon_state.chain_data.network_info.coin_type,
+        )?;
+        let sender = Sender {
+            daemon_state: daemon_state.clone(),
+            private_key: p_key,
+            secp,
+            options,
+        };
+        log::info!(
+            target: &local_target(),
+            "Interacting with {} using address: {}",
+            daemon_state.chain_data.chain_id,
+            sender.pub_addr_str()?
+        );
+        Ok(sender)
+    }
+
     pub fn set_authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
     }
@@ -172,7 +201,18 @@ impl Sender<All> {
     }
 
     pub fn set_options(&mut self, options: SenderOptions) {
-        self.options = options;
+        if options.hd_index.is_some() {
+            // Need to generate new sender as hd_index impacts private key
+            let new_sender = Sender::from_raw_key_with_options(
+                &self.daemon_state,
+                &self.private_key.raw_key(),
+                options,
+            )
+            .unwrap();
+            *self = new_sender
+        } else {
+            self.options = options
+        }
     }
 
     fn cosmos_private_key(&self) -> SigningKey {
@@ -441,9 +481,8 @@ impl Sender<All> {
             fee,
             fee.denom
         );
-        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
 
-        if parsed_balance.amount >= fee.amount {
+        if balance.amount >= fee.amount {
             log::debug!("The wallet has enough balance to deploy");
             return Ok(());
         }
@@ -457,7 +496,7 @@ impl Sender<All> {
             self.address()?,
             fee,
             fee.denom,
-            parsed_balance
+            balance
         );
 
         if CoreEnvVars::manual_interaction() {
@@ -469,14 +508,14 @@ impl Sender<All> {
             } else {
                 Err(DaemonError::NotEnoughBalance {
                     expected: fee.clone(),
-                    current: parsed_balance,
+                    current: balance,
                 })
             }
         } else {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
-                current: parsed_balance,
+                current: balance,
             });
         }
     }

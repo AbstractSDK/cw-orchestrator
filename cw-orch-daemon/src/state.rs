@@ -206,14 +206,34 @@ impl DaemonState {
         json_file_state.lock().unwrap().force_write();
         Ok(())
     }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush(&self) -> Result<(), DaemonError> {
+        if self.chain_data.kind != ChainKind::Local {
+            panic!("Can only flush local chain state");
+        }
+        if self.read_only {
+            return Err(DaemonError::StateReadOnly);
+        }
+
+        let mut json = self.read_state()?;
+
+        json[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id.to_string()] =
+            json!({});
+
+        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
+        Ok(())
+    }
 }
 
 impl StateInterface for DaemonState {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         let value = self
-            .get(&self.deployment_id)?
-            .get(contract_id)
+            .get(&self.deployment_id)
+            .ok()
+            .and_then(|v| v.get(contract_id).cloned())
             .ok_or_else(|| CwEnvError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(Addr::unchecked(value.as_str().unwrap()))
@@ -229,8 +249,9 @@ impl StateInterface for DaemonState {
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
-            .get("code_ids")?
-            .get(contract_id)
+            .get("code_ids")
+            .ok()
+            .and_then(|v| v.get(contract_id).cloned())
             .ok_or_else(|| CwEnvError::CodeIdNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(value.as_u64().unwrap())
