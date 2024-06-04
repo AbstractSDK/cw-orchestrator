@@ -1,8 +1,9 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use std::cmp::Ordering;
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Lit, Meta, NestedMeta,
+    Type,
 };
 
 pub enum MsgType {
@@ -111,5 +112,24 @@ pub(crate) fn impl_into_deprecation(attrs: &Vec<Attribute>) -> TokenStream {
         )
     } else {
         quote!()
+    }
+}
+
+pub(crate) fn is_type_using_impl_into(field_type: &Type) -> bool {
+    // We match Strings
+    match field_type {
+        Type::Path(type_path) => {
+            let path_string = type_path.clone().into_token_stream().to_string();
+
+            if path_string == "String" {
+                return true;
+            }
+
+            if path_string.contains("Uint") {
+                return true;
+            }
+            false
+        }
+        _ => false,
     }
 }

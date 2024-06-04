@@ -7,6 +7,7 @@
 - Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
 - Remove `impl_into`, the old `impl_into` behavior is now the default behavior
 - EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
+- Add `flush_state` method for Local Chain Daemons 
 
 ### Breaking
 

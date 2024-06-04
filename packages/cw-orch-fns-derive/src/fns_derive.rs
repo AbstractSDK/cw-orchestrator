@@ -2,7 +2,8 @@ extern crate proc_macro;
 use crate::{
     execute_fns::payable,
     helpers::{
-        impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching, MsgType,
+        impl_into_deprecation, is_type_using_impl_into, process_fn_name, process_sorting,
+        LexiographicMatching, MsgType,
     },
     query_fns::parse_query_type,
 };
@@ -84,24 +85,33 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 // They will be numbered from 0 to n-1
                 let variant_fields: Vec<_> = variant_idents.clone().into_iter()
                     .enumerate()
-                    .map(|(i, mut id)| {
-                    id.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
-                    id
+                    .map(|(i, mut field)| {
+                    field.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
+                    field
                 }).collect();
 
                 // Generate the struct members (This can be kept, it doesn't disturb)
                 let variant_ident_content_names = variant_fields
                     .iter()
-                    .map(|id| {
-                        let ident = &id.ident;
-                        quote!(#ident.into())
+                    .map(|field| {
+                        let ident = &field.ident;
+                        if is_type_using_impl_into(&field.ty){
+                            quote!(#ident.into())
+                        }else{
+                            quote!(#ident)
+                        }
+
                     });
 
                 // Generate the function arguments (This may be made optional)
                 let variant_params = variant_fields.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
-                    quote! (#field_name: impl Into<#field_type> )
+                    if is_type_using_impl_into(&field.ty){
+                        quote! (#field_name: impl Into<#field_type> )
+                    }else{
+                        quote! (#field_name: #field_type )
+                    }
                 });
 
 
@@ -140,16 +150,24 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                 let variant_fields = variant_fields.named.clone();
 
                 // Generate the struct members (This can be kept, it doesn't disturb)
-                let variant_idents = variant_fields.iter().map(|f|{
-                    let ident = f.ident.clone().unwrap();
-                    quote!(#ident: #ident.into())
+                let variant_idents = variant_fields.iter().map(|field|{
+                    let ident = field.ident.clone().unwrap();
+                    if is_type_using_impl_into(&field.ty){
+                        quote!(#ident: #ident.into())
+                    }else{
+                        quote!(#ident)
+                    }
                 });
 
                 // Generate the function arguments (This may be made optional)
                 let variant_attr = variant_fields.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
-                    quote! (#field_name: impl Into<#field_type> )
+                    if is_type_using_impl_into(&field.ty){
+                        quote! (#field_name: impl Into<#field_type> )
+                    }else{
+                        quote! (#field_name: #field_type )
+                    }
                 });
                 quote!(
                     #variant_doc
