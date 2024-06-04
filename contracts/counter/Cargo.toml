@@ -25,7 +25,7 @@ serde_json = "1.0.79"
 cw-orch = { path = "../../cw-orch", features = ["daemon"] }
 # Unused, only there to check for wasm compatibility
 cw-orch-interchain = { path = "../../cw-orch-interchain", features = [
-    "daemon",
+  "daemon",
 ] }
 
 [[example]]

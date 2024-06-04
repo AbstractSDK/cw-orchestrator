@@ -19,9 +19,9 @@ all-features = true
 default = []
 # enable the optional dependencies
 daemon = [
-    "cw-orch-interchain-core/daemon",
-    "dep:cw-orch-interchain-daemon",
-    "dep:cw-orch-starship",
+  "cw-orch-interchain-core/daemon",
+  "dep:cw-orch-interchain-daemon",
+  "dep:cw-orch-starship",
 ]
 
 
