@@ -121,12 +121,17 @@ money_market.proxy_execute(message_to_execute_via_a_proxy)?;
 
 This is also true for query functions.
 
-### `impl_into` Attribute
+### Nested Messages
 
-For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
+For nested messages (execute and query), you need to do 2 things:
+
+- Derive `ExecuteFns` or `QueryFns` on the underlying structures
+- Implement `From<Underlying>` for your contract message type
+
+In general, every structure that implements the `Into` trait for the contract message will make the function available on the contract. To make that clearer, here's an example:
 
 ```rust,ignore
-{{#include ../../../cw-orch/tests/impl_into.rs:impl_into}}
+{{#include ../../../cw-orch/tests/underlying_into.rs:underlying_into}}
 ```
 
 ### `disable_fields_sorting` Attribute

@@ -1,22 +1,13 @@
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
 use std::cmp::Ordering;
 use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed,
-    GenericArgument, GenericParam, Generics, Lit, Meta, NestedMeta, PathArguments, Type,
+    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Lit, Meta, NestedMeta,
 };
 
-pub(crate) fn impl_into(attrs: &Vec<Attribute>) -> Option<Type> {
-    for attr in attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "impl_into" {
-            return Some(
-                attr.parse_args().unwrap_or_else(|_| {
-                    panic!("impl_into must be followed by the entrypoint type")
-                }),
-            );
-        }
-    }
-    None
+pub enum MsgType {
+    Execute,
+    Query,
 }
 
 pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
@@ -32,41 +23,6 @@ pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
         }
     }
     v.ident.to_string()
-}
-
-pub fn to_generic_argument(p: &GenericParam) -> GenericArgument {
-    match p {
-        GenericParam::Type(t) => {
-            let ident = &t.ident;
-            GenericArgument::Type(parse_quote!(#ident))
-        }
-        GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
-        GenericParam::Const(c) => GenericArgument::Const(parse_quote!(#c)),
-    }
-}
-
-pub(crate) fn process_impl_into(
-    attrs: &Vec<Attribute>,
-    ident: &Ident,
-    generics: Generics,
-) -> (TokenStream, TokenStream, Punctuated<GenericArgument, Comma>) {
-    // Does the struct have an #[impl_into] attribute?
-    let impl_into = impl_into(attrs);
-    // expect empty generics
-    let mut type_generics = generics.params.iter().map(to_generic_argument).collect();
-    // If so, we need to add a .into() to the execute fn and set the entrypoint message message
-    if let Some(entrypoint_msg_type) = impl_into {
-        // extract the type generics
-        if let Type::Path(e) = &entrypoint_msg_type {
-            let type_args = e.path.segments[0].arguments.clone();
-            if let PathArguments::AngleBracketed(argo) = type_args {
-                type_generics = argo.args
-            }
-        };
-        (quote!(.into()), quote!(#entrypoint_msg_type), type_generics)
-    } else {
-        (quote!(), quote!(#ident), type_generics)
-    }
 }
 
 pub(crate) fn process_sorting(attrs: &Vec<Attribute>) -> bool {
@@ -137,4 +93,23 @@ fn is_option(wrapper: &str, ty: &'_ syn::Type) -> bool {
         }
     }
     false
+}
+
+pub(crate) fn has_impl_into(attrs: &Vec<Attribute>) -> bool {
+    for attr in attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "impl_into" {
+            return true;
+        }
+    }
+    false
+}
+
+pub(crate) fn impl_into_deprecation(attrs: &Vec<Attribute>) -> TokenStream {
+    if has_impl_into(attrs) {
+        quote!(
+            #[deprecated = "the `impl_into` attribute is deprecated. You don't need to use it anymore"]
+        )
+    } else {
+        quote!()
+    }
 }
