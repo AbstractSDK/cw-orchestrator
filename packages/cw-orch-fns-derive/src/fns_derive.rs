@@ -1,7 +1,9 @@
 extern crate proc_macro;
 use crate::{
     execute_fns::payable,
-    helpers::{impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching, MsgType},
+    helpers::{
+        impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching, MsgType,
+    },
     query_fns::parse_query_type,
 };
 use convert_case::{Case, Casing};
