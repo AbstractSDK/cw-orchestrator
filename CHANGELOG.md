@@ -10,6 +10,7 @@
 - Remove `impl_into`, the old `impl_into` behavior is now the default behavior
 - EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
 - Add `flush_state` method for Local Chain Daemons
+- cw-orch-interchain now errors on checking transactions for IBC packets if NO packets were found
 
 ### Breaking
 
