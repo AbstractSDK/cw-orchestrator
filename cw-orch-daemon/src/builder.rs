@@ -123,7 +123,12 @@ impl DaemonAsyncBuilder {
             GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
 
         let state = match &self.state {
-            Some(state) => state.clone(),
+            Some(state) => {
+                let mut state = state.clone();
+                state.chain_data = chain_info.clone();
+                state.deployment_id = deployment_id;
+                state
+            }
             None => {
                 // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
                 let json_file_path = self
