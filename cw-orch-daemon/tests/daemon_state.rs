@@ -51,6 +51,7 @@ fn simultaneous_read() {
     }
     // Error if at least one failed
     let _ = maybe_err.unwrap();
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
@@ -91,6 +92,7 @@ fn simultaneous_write() {
     }
     // Error if at least one failed
     maybe_err.unwrap();
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
@@ -132,7 +134,8 @@ fn simultaneous_write_rebuilt() {
         }
     }
     // Error if at least one failed
-    maybe_err.unwrap()
+    maybe_err.unwrap();
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
@@ -173,6 +176,7 @@ fn error_when_another_daemon_holds_it() {
         daemon_res,
         Err(DaemonError::StateAlreadyLocked(_))
     ));
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
@@ -192,7 +196,8 @@ fn does_not_error_when_previous_daemon_dropped_state() {
         .mnemonic(DUMMY_MNEMONIC)
         .build();
 
-    assert!(daemon_res.is_ok(),);
+    assert!(daemon_res.is_ok());
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
@@ -213,4 +218,5 @@ fn does_not_error_when_using_different_files() {
         .build();
 
     assert!(daemon_res.is_ok());
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
