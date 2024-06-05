@@ -4,11 +4,7 @@ use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
 
-use crate::{
-    queriers::Node,
-    senders::{base_sender::Sender, sender_trait::SenderTrait},
-    CosmTxResponse, DaemonError, TxBuilder,
-};
+use crate::{queriers::Node, senders::base_sender::Sender, CosmTxResponse, DaemonError, TxBuilder};
 
 pub type StrategyAction =
     fn(&mut TxBuilder, &Result<TxResponse, DaemonError>) -> Result<(), DaemonError>;

@@ -1,4 +1,4 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{queriers::CosmWasm, DaemonAsyncBuilderBase, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
@@ -81,7 +81,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.sender.grpc_channel.clone()
+        self.sender.grpc_channel()
     }
 
     /// Flushes all the state related to the current chain
@@ -91,7 +91,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
     }
 }
 
-impl ChainState for DaemonAsync {
+impl<SenderGen: SenderTrait> ChainState for DaemonAsyncBase<SenderGen> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -106,19 +106,17 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
         self.sender.address().unwrap()
     }
 
-    // TODO
-    // /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
-    // /// Does not consume the original [`DaemonAsync`].
-    // pub fn rebuild(&self) -> DaemonAsyncBuilderBase<SenderGen> {
-    //     let mut builder = DaemonAsyncBuilder {
-    //     state: Some(self.state()),
-    //     ..Default::default()
-    // };
-    // builder
-    //     .chain(self.sender.chain_info.clone())
-    //     .sender((*self.sender).clone());
-    // builder
-    // }
+    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
+    /// Does not consume the original [`DaemonAsync`].
+    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<SenderGen> {
+        let mut builder = DaemonAsyncBuilder {
+            state: Some(self.state()),
+            ..Default::default()
+        };
+        builder
+            .chain(self.sender.chain_info().clone())
+            .sender(self.sender.clone())
+    }
 
     /// Execute a message on a contract.
     pub async fn execute<E: Serialize>(
@@ -305,7 +303,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = <T as Uploadable>::wasm(&self.sender.chain_info);
+        let wasm_path = <T as Uploadable>::wasm(self.sender.chain_info());
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 

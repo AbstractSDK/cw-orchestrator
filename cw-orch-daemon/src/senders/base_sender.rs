@@ -6,7 +6,6 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    DaemonState, GrpcChannel,
 };
 
 use crate::proto::injective::InjectiveEthAccount;
@@ -44,7 +43,7 @@ use std::{str::FromStr, sync::Arc};
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::{sender_builder::SenderBuilder, sender_trait::SenderTrait};
+use super::sender_trait::SenderTrait;
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -88,6 +87,7 @@ pub struct SenderOptions {
     pub authz_granter: Option<String>,
     pub fee_granter: Option<String>,
     pub hd_index: Option<u32>,
+    pub mnemonic: Option<String>,
 }
 
 impl SenderOptions {
@@ -116,6 +116,7 @@ impl SenderOptions {
 
 impl SenderTrait for Sender<All> {
     type Error = DaemonError;
+    type SenderOptions = SenderOptions;
 
     async fn commit_tx_any(
         &self,
@@ -140,7 +141,7 @@ impl SenderTrait for Sender<All> {
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
-        let tx_builder = TxBuilder::new(tx_body, self.chain_info.chain_id.clone());
+        let tx_builder = TxBuilder::new(tx_body);
 
         // We retry broadcasting the tx, with the following strategies
         // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
@@ -159,22 +160,6 @@ impl SenderTrait for Sender<All> {
         assert_broadcast_code_cosm_response(resp)
     }
 
-    async fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-        let commit = client
-            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
-                tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
-            })
-            .await?;
-
-        let commit = commit.into_inner().tx_response.unwrap();
-        Ok(commit)
-    }
-
     fn address(&self) -> Result<Addr, DaemonError> {
         Ok(Addr::unchecked(self.pub_addr_str()?))
     }
@@ -187,35 +172,45 @@ impl SenderTrait for Sender<All> {
         }
     }
 
-    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error> {
-        // let sender = match self {
-        //     SenderBuilder::Mnemonic(mnemonic) => {
-        //         Sender::from_mnemonic_with_options(&state, &mnemonic, sender_options)?
-        //     }
-        //     SenderBuilder::Sender(mut sender) => {
-        //         sender.set_options(sender_options.clone());
-        //         sender
-        //     }
-        //     SenderBuilder::None => Sender::new_with_options(&state, sender_options)?,
-        // };
-
-        Ok(Sender::new_with_options(&state, sender_options)?)
+    fn chain_info(&self) -> &ChainInfoOwned {
+        &self.chain_info
     }
-}
 
-impl SenderBuilder for Wallet {
-    type Sender = Self;
+    fn grpc_channel(&self) -> Channel {
+        self.channel()
+    }
+
+    fn set_options(&mut self, options: Self::SenderOptions) {
+        if options.hd_index.is_some() {
+            // Need to generate new sender as hd_index impacts private key
+            let new_sender = Sender::from_raw_key_with_options(
+                self.chain_info.clone(),
+                self.channel(),
+                &self.private_key.raw_key(),
+                options,
+            )
+            .unwrap();
+            *self = new_sender
+        } else {
+            self.options = options
+        }
+    }
 
     fn build(
         chain_info: ChainInfoOwned,
         grpc_channel: Channel,
-        sender_options: SenderOptions,
-    ) -> Result<Self::Sender, <Self::Sender as SenderTrait>::Error> {
-        Ok(Arc::new(Sender::new_with_options(
-            chain_info.clone(),
-            grpc_channel,
-            sender_options,
-        )?))
+        sender_options: Self::SenderOptions,
+    ) -> Result<Self, Self::Error> {
+        if let Some(mnemonic) = &sender_options.mnemonic {
+            Sender::from_mnemonic_with_options(
+                chain_info,
+                grpc_channel,
+                &mnemonic.clone(),
+                sender_options,
+            )
+        } else {
+            Sender::new_with_options(chain_info, grpc_channel, sender_options)
+        }
     }
 }
 
@@ -318,22 +313,6 @@ impl Sender<All> {
         self.options.fee_granter = Some(granter.into());
     }
 
-    pub fn set_options(&mut self, options: SenderOptions) {
-        if options.hd_index.is_some() {
-            // Need to generate new sender as hd_index impacts private key
-            let new_sender = Sender::from_raw_key_with_options(
-                self.chain_info.clone(),
-                self.channel(),
-                &self.private_key.raw_key(),
-                options,
-            )
-            .unwrap();
-            *self = new_sender
-        } else {
-            self.options = options
-        }
-    }
-
     fn cosmos_private_key(&self) -> SigningKey {
         SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
     }
@@ -347,6 +326,22 @@ impl Sender<All> {
 
     pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
         Ok(self.pub_addr()?.to_string())
+    }
+
+    pub async fn broadcast_tx(
+        &self,
+        tx: Raw,
+    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
+        let commit = client
+            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
+                tx_bytes: tx.to_bytes()?,
+                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
+            })
+            .await?;
+
+        let commit = commit.into_inner().tx_response.unwrap();
+        Ok(commit)
     }
 
     pub async fn bank_send(
@@ -427,7 +422,7 @@ impl Sender<All> {
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
-        let tx_builder = TxBuilder::new(tx_body, self.chain_info.chain_id.clone());
+        let tx_builder = TxBuilder::new(tx_body);
 
         let gas_needed = tx_builder.simulate(self).await?;
 

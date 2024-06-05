@@ -1,8 +1,8 @@
 use crate::Wallet;
 
-use crate::{error::DaemonError, state::DaemonState, tx_resp::CosmTxResponse};
+use crate::{error::DaemonError, tx_resp::CosmTxResponse};
 
-use cosmrs::{tx::Raw, AccountId, Any};
+use cosmrs::{AccountId, Any};
 use cosmwasm_std::Addr;
 
 use std::sync::{Arc, Mutex};
@@ -19,6 +19,7 @@ pub struct MultipleSender {
 
 impl SenderTrait for MultipleSender {
     type Error = DaemonError;
+    type SenderOptions = SenderOptions;
 
     async fn commit_tx_any(
         &self,
@@ -31,13 +32,6 @@ impl SenderTrait for MultipleSender {
         Ok(CosmTxResponse::default())
     }
 
-    async fn broadcast_tx(
-        &self,
-        _tx: Raw,
-    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error> {
-        unimplemented!()
-    }
-
     fn address(&self) -> Result<Addr, DaemonError> {
         self.sender.address()
     }
@@ -46,11 +40,27 @@ impl SenderTrait for MultipleSender {
         self.sender.msg_sender()
     }
 
-    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error> {
+    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
+        self.sender.chain_info()
+    }
+
+    fn grpc_channel(&self) -> tonic::transport::Channel {
+        self.sender.grpc_channel()
+    }
+
+    fn build(
+        chain_info: cw_orch_core::environment::ChainInfoOwned,
+        grpc_channel: tonic::transport::Channel,
+        sender_options: Self::SenderOptions,
+    ) -> Result<Self, Self::Error> {
         Ok(Self {
             msgs: Default::default(),
-            sender: Wallet::build(sender_options, state)?,
+            sender: Wallet::build(chain_info, grpc_channel, sender_options)?,
         })
+    }
+
+    fn set_options(&mut self, options: Self::SenderOptions) {
+        self.sender.set_options(options)
     }
 }
 

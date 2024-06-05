@@ -1,19 +1,21 @@
-use cosmrs::{
-    tx::{Msg, Raw},
-    AccountId, Any,
-};
+use cosmrs::{tx::Msg, AccountId, Any};
 use cosmwasm_std::Addr;
+use cw_orch_core::environment::ChainInfoOwned;
+use tonic::transport::Channel;
 
-use crate::{CosmTxResponse, DaemonError, DaemonState};
+use crate::{CosmTxResponse, DaemonError};
 use std::sync::Arc;
-
-use super::base_sender::SenderOptions;
 
 pub trait SenderTrait: Clone {
     type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
+    type SenderOptions: Default + Clone;
 
     // TODO: do we want to enforce sync on this function ?
     fn address(&self) -> Result<Addr, Self::Error>;
+
+    fn chain_info(&self) -> &ChainInfoOwned;
+
+    fn grpc_channel(&self) -> Channel;
 
     // TODO: do we want to enforce sync on this function ?
     /// Returns the actual sender of every message sent.
@@ -41,18 +43,18 @@ pub trait SenderTrait: Clone {
         memo: Option<&str>,
     ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send;
 
-    fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> impl std::future::Future<
-        Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>,
-    > + Send;
+    fn set_options(&mut self, options: Self::SenderOptions);
 
-    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error>;
+    fn build(
+        chain_info: ChainInfoOwned,
+        grpc_channel: Channel,
+        sender_options: Self::SenderOptions,
+    ) -> Result<Self, Self::Error>;
 }
 
 impl<T: SenderTrait> SenderTrait for Arc<T> {
     type Error = T::Error;
+    type SenderOptions = T::SenderOptions;
 
     fn address(&self) -> Result<Addr, Self::Error> {
         (**self).address()
@@ -70,16 +72,27 @@ impl<T: SenderTrait> SenderTrait for Arc<T> {
         (**self).commit_tx_any(msgs, memo)
     }
 
-    fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> impl std::future::Future<
-        Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, Self::Error>,
-    > + Send {
-        (**self).broadcast_tx(tx)
+    fn chain_info(&self) -> &ChainInfoOwned {
+        (**self).chain_info()
     }
 
-    fn build(sender_options: SenderOptions, state: &Arc<DaemonState>) -> Result<Self, Self::Error> {
-        Ok(Arc::new(T::build(sender_options, state)?))
+    fn grpc_channel(&self) -> Channel {
+        (**self).grpc_channel()
+    }
+
+    fn build(
+        chain_info: ChainInfoOwned,
+        grpc_channel: Channel,
+        sender_options: Self::SenderOptions,
+    ) -> Result<Self, Self::Error> {
+        Ok(Arc::new(T::build(
+            chain_info,
+            grpc_channel,
+            sender_options,
+        )?))
+    }
+
+    fn set_options(&mut self, options: Self::SenderOptions) {
+        (**self).set_options(options)
     }
 }

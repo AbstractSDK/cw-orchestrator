@@ -59,7 +59,7 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
 
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.daemon.sender.grpc_channel.clone()
+        self.daemon.sender.grpc_channel()
     }
 
     /// Get the channel configured for this Daemon

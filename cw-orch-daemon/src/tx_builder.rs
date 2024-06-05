@@ -25,19 +25,16 @@ pub struct TxBuilder {
     pub(crate) gas_limit: Option<u64>,
     // if defined, use this sequence, else get it from the node
     pub(crate) sequence: Option<SequenceNumber>,
-    /// `chain_id` is the unique identifier of the chain this transaction targets.
-    pub(crate) chain_id: String,
 }
 
 impl TxBuilder {
     /// Create a new TxBuilder with a given body.
-    pub fn new(body: Body, chain_id: String) -> Self {
+    pub fn new(body: Body) -> Self {
         Self {
             body,
             fee_amount: None,
             gas_limit: None,
             sequence: None,
-            chain_id,
         }
     }
     /// Set a fixed fee amount for the tx
@@ -162,7 +159,7 @@ impl TxBuilder {
         let sign_doc = SignDoc::new(
             &self.body,
             &auth_info,
-            &Id::try_from(self.chain_id.clone())?,
+            &Id::try_from(wallet.chain_info.chain_id.to_string())?,
             account_number,
         )?;
         wallet.sign(sign_doc).map_err(Into::into)
