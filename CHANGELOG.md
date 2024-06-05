@@ -11,7 +11,6 @@
 - EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
 - Add `flush_state` method for Local Chain Daemons
 - cw-orch-interchain now errors on checking transactions for IBC packets if NO packets were found
-- Add `state_path` method for `DaemonBuilder` and `DaemonAsyncBuilder` to easier manage different state files for different daemons
 - `DaemonState` removed from `Sender`
 - `Channel` moved from `DaemonState` to `Sender`
 - `DaemonState` write-locks file unless it's read-only, meaning it will panic at initialization if other process holds lock of it

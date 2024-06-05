@@ -96,7 +96,8 @@ impl DaemonAsyncBuilder {
     /// Defaults to env variable.
     ///
     /// Variable: STATE_FILE_ENV_NAME.
-    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
+    #[allow(unused)]
+    pub(crate) fn state_path(&mut self, path: impl ToString) -> &mut Self {
         self.state_path = Some(path.to_string());
         self
     }
@@ -111,10 +112,6 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-
-        // find working grpc channel
-        let grpc_channel =
-            GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
 
         let state = match &self.state {
             Some(state) => {
@@ -139,17 +136,20 @@ impl DaemonAsyncBuilder {
             Some(sender) => match sender {
                 SenderBuilder::Mnemonic(mnemonic) => Sender::from_mnemonic_with_options(
                     chain_info.clone(),
-                    grpc_channel,
+                    GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?,
                     &mnemonic,
                     sender_options,
                 )?,
                 SenderBuilder::Sender(mut sender) => {
                     sender.set_options(self.sender_options.clone());
-                    sender.grpc_channel = grpc_channel;
                     sender
                 }
             },
-            None => Sender::new_with_options(chain_info.clone(), grpc_channel, sender_options)?,
+            None => Sender::new_with_options(
+                chain_info.clone(),
+                GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?,
+                sender_options,
+            )?,
         };
 
         let daemon = DaemonAsync {
