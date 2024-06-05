@@ -12,6 +12,10 @@ pub struct GrpcChannel {}
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
     pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+        if grpc.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
         let mut successful_connections = vec![];
 
         for address in grpc.iter() {

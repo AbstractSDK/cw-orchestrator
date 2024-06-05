@@ -148,29 +148,23 @@ impl DaemonState {
         Ok(state_file_path)
     }
 
-    /// Get the chain state as json
-    fn chain_state(&self) -> Result<serde_json::Value, DaemonError> {
-        let state = match &self.json_state {
+    /// Retrieve a stateful value using the chainId and networkId
+    pub fn get(&self, key: &str) -> Result<Value, DaemonError> {
+        let json = match &self.json_state {
             DaemonStateFile::ReadOnly { path } => {
                 let j = crate::json_lock::read(path)?;
 
-                j[&self.chain_data.chain_id][&self.chain_data.network_info.chain_name].clone()
+                j[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id].clone()
             }
             DaemonStateFile::FullAccess { json_file_state } => json_file_state
                 .lock()
                 .unwrap()
                 .get(
-                    &self.chain_data.chain_id,
                     &self.chain_data.network_info.chain_name,
+                    &self.chain_data.chain_id,
                 )
                 .clone(),
         };
-        Ok(state)
-    }
-
-    /// Retrieve a stateful value using the chainId and networkId
-    pub fn get(&self, key: &str) -> Result<Value, DaemonError> {
-        let json = self.chain_state()?;
         Ok(json[key].clone())
     }
 
@@ -190,8 +184,8 @@ impl DaemonState {
 
         let mut json_file_lock = json_file_state.lock().unwrap();
         let val = json_file_lock.get_mut(
-            &self.chain_data.chain_id,
             &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
         );
         val[key][contract_id] = json!(value);
 
@@ -225,8 +219,8 @@ impl DaemonState {
 
         let mut lock = json_file_state.lock().unwrap();
         let json = lock.get_mut(
-            &self.chain_data.chain_id,
             &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
         );
 
         *json = json!({});

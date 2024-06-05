@@ -326,7 +326,7 @@ impl Sender<All> {
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
-        let tx_builder = TxBuilder::new(tx_body, self.chain_info.chain_id.clone());
+        let tx_builder = TxBuilder::new(tx_body);
 
         let gas_needed = tx_builder.simulate(self).await?;
 
@@ -378,7 +378,7 @@ impl Sender<All> {
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
-        let tx_builder = TxBuilder::new(tx_body, self.chain_info.chain_id.clone());
+        let tx_builder = TxBuilder::new(tx_body);
 
         // We retry broadcasting the tx, with the following strategies
         // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)

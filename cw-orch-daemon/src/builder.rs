@@ -8,7 +8,7 @@ use std::sync::Arc;
 use bitcoin::secp256k1::All;
 
 use super::{error::DaemonError, sender::Sender, state::DaemonState};
-use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
+use cw_orch_core::environment::ChainInfoOwned;
 
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
@@ -112,12 +112,6 @@ impl DaemonAsyncBuilder {
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
 
-        if chain_info.grpc_urls.is_empty() {
-            return Err(DaemonError::GRPCListIsEmpty);
-        }
-
-        log::debug!(target: &connectivity_target(), "Found {} gRPC endpoints", chain_info.grpc_urls.len());
-
         // find working grpc channel
         let grpc_channel =
             GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
@@ -130,7 +124,6 @@ impl DaemonAsyncBuilder {
                 state
             }
             None => {
-                // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
                 let json_file_path = self
                     .state_path
                     .clone()

@@ -69,12 +69,12 @@ impl JsonLockedState {
     }
 
     /// Get a value for read
-    pub fn get(&self, chain_id: &str, network_id: &str) -> &Value {
+    pub fn get(&self, network_id: &str, chain_id: &str) -> &Value {
         &self.json[network_id][chain_id]
     }
 
     /// Give a value to write
-    pub fn get_mut(&mut self, chain_id: &str, network_id: &str) -> &mut Value {
+    pub fn get_mut(&mut self, network_id: &str, chain_id: &str) -> &mut Value {
         self.json[network_id].get_mut(chain_id).unwrap()
     }
 
