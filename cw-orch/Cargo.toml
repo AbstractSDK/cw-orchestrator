@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.22.2"
+version = "0.22.3"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -64,7 +64,7 @@ cw-orch-fns-derive = { workspace = true }
 
 # Daemon deps
 cw-orch-networks = { workspace = true, optional = true }
-tokio = { version = "1.4", features = ["full"], optional = true }
+tokio = { workspace = true, features = ["full"], optional = true }
 cosmrs = { workspace = true, features = [
   "dev",
   "cosmwasm",
@@ -106,5 +106,5 @@ mock-contract-u64 = { path = "../contracts/mock_contract_u64" }
 serde_json = { workspace = true }
 dotenv = "0.15.0"
 osmosis-std = "0.24.0"
-prost.workspace = true
-prost-types.workspace = true
+prost = { workspace = true }
+prost-types = { workspace = true }

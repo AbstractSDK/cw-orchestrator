@@ -146,9 +146,9 @@ impl<Chain> Cw1<Chain> {
 
 The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryResponse)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
-### `impl_into` Attribute
+### Nested types
 
-For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
+For nested messages (execute and query), you just need to derive `ExecuteFns` or `QueryFns` on the underlying structures. In general, every structure that implements the `Into` trait for the contract message will make the function available on the contract. To make that clearer, her's an example:
 
 ```rust,ignore
 use cw_orch::interface;
@@ -163,7 +163,6 @@ pub enum GenericExecuteMsg<T> {
 // A type that will fill the generic.
 #[cosmwasm_schema::cw_serde]
 #[derive(cw_orch::ExecuteFns)]
-#[impl_into(ExecuteMsg)]
 pub enum Foo {
     Bar { a: String },
 }
@@ -183,7 +182,7 @@ struct Example<Chain>;
 
 impl<Chain: CwEnv> Example<Chain> {
     pub fn test_macro(&self) {
-        // Function `bar` is available because of the `impl_into` attribute!
+        // Function `bar` is available because `Foo` implements `Into<GenericExecuteMsg<Foo>>`
         self.bar("hello".to_string()).unwrap();
     }
 }
@@ -191,7 +190,7 @@ impl<Chain: CwEnv> Example<Chain> {
 
 ### Testing with OsmosisTestTube
 
-[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise. 
+[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise.
 
 - Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
 - Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  

@@ -84,6 +84,12 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
     pub fn channel(&self) -> Channel {
         self.state.grpc_channel.clone()
     }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush_state(&self) -> Result<(), DaemonError> {
+        self.state.flush()
+    }
 }
 
 impl ChainState for DaemonAsync {

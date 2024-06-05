@@ -72,11 +72,17 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
     // pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen> {
     //     let mut builder = Self::builder();
     //     builder
-    //         .chain(self.state().chain_data.clone())
-    //         .sender((*self.daemon.sender).clone())
-    //         .deployment_id(&self.state().deployment_id);
+    //     .chain(self.state().chain_data.clone())
+    //     .sender((*self.daemon.sender).clone())
+    //     .deployment_id(&self.state().deployment_id);
     //     builder
     // }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush_state(&self) -> Result<(), DaemonError> {
+        self.daemon.flush_state()
+    }
 }
 
 impl<SenderGen: SenderTrait> ChainState for DaemonBase<SenderGen> {

@@ -15,6 +15,8 @@ pub fn main() -> anyhow::Result<()> {
     let network = networks::LOCAL_JUNO;
     let daemon = DaemonBuilder::default().chain(network).build()?;
 
+    daemon.flush_state()?;
+
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
     let wallet = daemon.wallet();
