@@ -1,4 +1,4 @@
-use std::{fmt::Debug, sync::Arc};
+use std::fmt::Debug;
 
 use super::super::senders::base_sender::Wallet;
 use crate::{
@@ -59,7 +59,7 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
 
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.daemon.state.grpc_channel.clone()
+        self.daemon.sender.grpc_channel.clone()
     }
 
     /// Get the channel configured for this Daemon
@@ -70,23 +70,25 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
     // /// Returns a new [`DaemonBuilder`] with the current configuration.
     // /// Does not consume the original [`Daemon`].
     // pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen> {
-    //     let mut builder = Self::builder();
-    //     builder
-    //     .chain(self.state().chain_data.clone())
-    //     .sender((*self.daemon.sender).clone())
-    //     .deployment_id(&self.state().deployment_id);
-    //     builder
+    //     let mut builder = DaemonBuilder {
+    //     state: Some(self.state()),
+    //     ..Default::default()
+    // };
+    // builder
+    //     .chain(self.daemon.sender.chain_info.clone())
+    //     .sender((*self.daemon.sender).clone());
+    // builder
     // }
 
     /// Flushes all the state related to the current chain
     /// Only works on Local networks
-    pub fn flush_state(&self) -> Result<(), DaemonError> {
+    pub fn flush_state(&mut self) -> Result<(), DaemonError> {
         self.daemon.flush_state()
     }
 }
 
 impl<SenderGen: SenderTrait> ChainState for DaemonBase<SenderGen> {
-    type Out = Arc<DaemonState>;
+    type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()

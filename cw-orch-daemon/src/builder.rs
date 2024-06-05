@@ -1,17 +1,16 @@
 use crate::{
     log::print_if_log_disabled,
     senders::{
-        base_sender::{SenderBuilder, SenderOptions},
-        sender_trait::SenderTrait,
+        base_sender::SenderOptions, sender_builder::SenderBuilder, sender_trait::SenderTrait,
     },
-    DaemonAsync, DaemonAsyncBase, DaemonBuilder, Wallet,
+    DaemonAsync, DaemonAsyncBase, DaemonBuilder, GrpcChannel, Wallet,
 };
-use std::sync::Arc;
+use std::{marker::PhantomData, sync::Arc};
 
 use bitcoin::secp256k1::All;
 
 use super::{error::DaemonError, senders::base_sender::Sender, state::DaemonState};
-use cw_orch_core::environment::ChainInfoOwned;
+use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
@@ -28,37 +27,50 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 ///     .await.unwrap();
 /// # })
 /// ```
-pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait> {
+pub struct DaemonAsyncBuilderBase<
+    SenderGen: SenderTrait = Wallet,
+    SenderBuilderGen: SenderBuilder<Sender = SenderGen> = Wallet,
+> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
     pub(crate) deployment_id: Option<String>,
+    pub(crate) state_path: Option<String>,
 
+    /* Rebuilder related options */
+    pub(crate) state: Option<DaemonState>,
+
+    // Sender options
+
+    // # Optional indicated sender
+    pub(crate) sender_builder: PhantomData<SenderBuilderGen>,
     pub(crate) sender: Option<SenderGen>,
 
-    // TODO, reallow rebuilding
-    // /* Sender related options */
-    // /// Wallet sender
-    // /// Will be used in priority when set
-    // pub(crate) sender: SenderGen::SenderBuilder,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
 }
 
 pub type DaemonAsyncBuilder = DaemonAsyncBuilderBase<Wallet>;
 
-impl<SenderGen: SenderTrait> Default for DaemonAsyncBuilderBase<SenderGen> {
+impl<SenderGen: SenderTrait, SenderBuilderGen: SenderBuilder<Sender = SenderGen>> Default
+    for DaemonAsyncBuilderBase<SenderGen, SenderBuilderGen>
+{
     fn default() -> Self {
         Self {
             chain: Default::default(),
             deployment_id: Default::default(),
             sender_options: Default::default(),
-            sender: None,
+            sender: Default::default(),
+            state_path: Default::default(),
+            state: Default::default(),
+            sender_builder: PhantomData,
         }
     }
 }
 
-impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
+impl<SenderGen: SenderTrait, SenderBuilderGen: SenderBuilder<Sender = SenderGen>>
+    DaemonAsyncBuilderBase<SenderGen, SenderBuilderGen>
+{
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -107,9 +119,18 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
         self
     }
 
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
+        self
+    }
+
     /// Build a daemon
     pub async fn build(&self) -> Result<DaemonAsyncBase<SenderGen>, DaemonError> {
-        let chain = self
+        let chain_info = self
             .chain
             .clone()
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
@@ -118,16 +139,62 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
 
-        let state = Arc::new(DaemonState::new(chain, deployment_id, false).await?);
+        if chain_info.grpc_urls.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
+        log::debug!(target: &connectivity_target(), "Found {} gRPC endpoints", chain_info.grpc_urls.len());
+
+        // find working grpc channel
+        let grpc_channel =
+            GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
+
+        let state = match &self.state {
+            Some(state) => {
+                let mut state = state.clone();
+                state.chain_data = chain_info.clone();
+                state.deployment_id = deployment_id;
+                state
+            }
+            None => {
+                // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
+                let json_file_path = self
+                    .state_path
+                    .clone()
+                    .unwrap_or(DaemonState::state_file_path()?);
+
+                DaemonState::new(json_file_path, chain_info.clone(), deployment_id, false)?
+            }
+        };
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
 
-        let sender = if let Some(sender) = self.sender.clone() {
-            sender
+        let sender = if let Some(sender) = &self.sender {
+            sender.clone()
         } else {
-            SenderGen::build(self.sender_options.clone(), &state).map_err(Into::into)?
+            SenderBuilderGen::build(chain_info, grpc_channel, self.sender_options.clone())
+                .map_err(Into::into)?
         };
 
+        // let sender = match self.sender {
+        //     SenderBuilder::Mnemonic(mnemonic) => Sender::from_mnemonic_with_options(
+        //         chain_info.clone(),
+        //         grpc_channel,
+        //         &mnemonic,
+        //         self.sender_options,
+        //     )?,
+        //     SenderBuilder::DefaultSender(mut sender) => {
+        //         sender.set_options(self.sender_options.clone());
+        //         sender.grpc_channel = grpc_channel;
+        //         sender
+        //     }
+        //     SenderBuilder::Sender(e) => e,
+        //     SenderBuilder::None => {
+        //         Sender::new_with_options(chain_info.clone(), grpc_channel, self.sender_options)?
+        //     }
+        // };
+
         let daemon = DaemonAsyncBase { state, sender };
+
         print_if_log_disabled()?;
         Ok(daemon)
     }
@@ -140,6 +207,9 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             deployment_id: value.deployment_id,
             sender_options: value.sender_options,
             sender: value.sender,
+            state: value.state,
+            state_path: value.state_path,
+            sender_builder: PhantomData,
         }
     }
 }

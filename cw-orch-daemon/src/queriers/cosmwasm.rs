@@ -307,7 +307,7 @@ impl<SenderGen: SenderTrait> WasmQuerier for CosmWasm<SenderGen> {
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(&contract.get_chain().daemon.state.chain_data).checksum()
+        <T as Uploadable>::wasm(&contract.get_chain().daemon.sender.chain_info).checksum()
     }
 }
 

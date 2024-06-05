@@ -13,6 +13,7 @@ pub mod test {
     use mock_contract::MockContract;
 
     #[test]
+    #[serial_test::serial]
     fn instantiate2() -> anyhow::Result<()> {
         let app = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
