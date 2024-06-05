@@ -140,25 +140,6 @@ fn simultaneous_write_rebuilt() {
 
 #[test]
 #[serial_test::serial]
-#[should_panic]
-fn panic_when_someone_holds_json_file() {
-    match unsafe { nix::unistd::fork() } {
-        Ok(nix::unistd::ForkResult::Child) => {
-            // Occur lock for file for 100 millis
-            let _state = JsonLockedState::new(TEST_STATE_FILE);
-            std::thread::sleep(std::time::Duration::from_millis(100));
-        }
-        Ok(nix::unistd::ForkResult::Parent { .. }) => {
-            // Wait a bit for child to occur lock and try to lock already locked file by child
-            std::thread::sleep(std::time::Duration::from_millis(50));
-            let _state = JsonLockedState::new(TEST_STATE_FILE);
-        }
-        Err(_) => (),
-    }
-}
-
-#[test]
-#[serial_test::serial]
 fn error_when_another_daemon_holds_it() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
     let _daemon = DaemonBuilder::default()
@@ -219,4 +200,24 @@ fn does_not_error_when_using_different_files() {
 
     assert!(daemon_res.is_ok());
     std::env::remove_var(STATE_FILE_ENV_NAME);
+}
+
+#[test]
+#[serial_test::serial]
+#[should_panic]
+#[ignore = "Serial don't track forks for some reason, run it manually"]
+fn panic_when_someone_holds_json_file() {
+    match unsafe { nix::unistd::fork() } {
+        Ok(nix::unistd::ForkResult::Child) => {
+            // Occur lock for file for 100 millis
+            let _state = JsonLockedState::new(TEST_STATE_FILE);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        Ok(nix::unistd::ForkResult::Parent { .. }) => {
+            // Wait a bit for child to occur lock and try to lock already locked file by child
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            let _state = JsonLockedState::new(TEST_STATE_FILE);
+        }
+        Err(_) => (),
+    }
 }
