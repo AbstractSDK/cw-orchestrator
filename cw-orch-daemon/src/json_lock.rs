@@ -80,6 +80,7 @@ impl JsonLockedState {
 
     /// Force write to a file
     pub fn force_write(&mut self) {
+        self.lock.file.set_len(0).unwrap();
         self.lock.file.rewind().unwrap();
         serde_json::to_writer_pretty(&self.lock.file, &self.json).unwrap();
     }
