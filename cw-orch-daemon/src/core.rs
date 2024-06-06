@@ -32,6 +32,8 @@ use tonic::transport::Channel;
 
 use crate::senders::sender_trait::SenderTrait;
 
+pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
+
 #[derive(Clone)]
 /**
     Represents a blockchain node.
@@ -197,7 +199,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
         let result = sender
             .commit_tx_any(
                 vec![Any {
-                    type_url: "/cosmwasm.wasm.v1.MsgInstantiateContract2".to_string(),
+                    type_url: INSTANTIATE_2_TYPE_URL.to_string(),
                     value: init_msg.encode_to_vec(),
                 }],
                 None,

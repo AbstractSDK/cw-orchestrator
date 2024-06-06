@@ -1,9 +1,12 @@
-use crate::Wallet;
+use crate::{Wallet, INSTANTIATE_2_TYPE_URL};
 
 use crate::{error::DaemonError, tx_resp::CosmTxResponse};
 
+use cosmrs::proto::cosmwasm::wasm::v1::{MsgInstantiateContract, MsgStoreCode};
 use cosmrs::{AccountId, Any};
 use cosmwasm_std::Addr;
+use cw_orch_core::log::transaction_target;
+use prost::Name;
 
 use std::sync::{Arc, Mutex};
 
@@ -13,6 +16,8 @@ use super::{base_sender::SenderOptions, sender_trait::SenderTrait};
 /// This is the main interface for simulating and signing transactions
 #[derive(Clone)]
 pub struct MultipleSender {
+    /// Contains the different messages to broadcast
+    /// These are behind an Arc Mutex, because `commit_tx_any function` doesn't have access to a mutable reference to the object
     pub msgs: Arc<Mutex<Vec<Any>>>,
     pub sender: Wallet,
 }
@@ -24,12 +29,34 @@ impl SenderTrait for MultipleSender {
     async fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
-        _memo: Option<&str>,
+        memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let mut msg_storage = self.msgs.lock().unwrap();
-        msg_storage.extend(msgs);
+        // We check the type URLS. We can safely put them inside the lock if they DON'T correspond to the following:
+        // - Code Upload
+        // - Contract Instantiation (1 and 2)
 
-        Ok(CosmTxResponse::default())
+        let broadcast_immediately_type_urls = [
+            MsgStoreCode::type_url(),
+            MsgInstantiateContract::type_url(),
+            INSTANTIATE_2_TYPE_URL.to_string(),
+        ];
+
+        let broadcast_immediately = msgs
+            .iter()
+            .any(|msg| broadcast_immediately_type_urls.contains(&msg.type_url));
+
+        if broadcast_immediately {
+            self.sender.commit_tx_any(msgs, memo).await
+        } else {
+            log::info!(
+                target: &transaction_target(),
+                "Transaction not sent, use `DaemonBase::wallet().broadcast(), to broadcast the batched transactions",
+            );
+            let mut msg_storage = self.msgs.lock().unwrap();
+            msg_storage.extend(msgs);
+
+            Ok(CosmTxResponse::default())
+        }
     }
 
     fn address(&self) -> Result<Addr, DaemonError> {
@@ -65,8 +92,21 @@ impl SenderTrait for MultipleSender {
 }
 
 impl MultipleSender {
-    pub async fn flush(&self, memo: Option<&str>) -> Result<CosmTxResponse, DaemonError> {
+    pub async fn broadcast(&self, memo: Option<&str>) -> Result<CosmTxResponse, DaemonError> {
         let msgs = self.msgs.lock().unwrap().to_vec();
-        self.sender.commit_tx_any(msgs, memo).await
+        log::info!(
+            target: &transaction_target(),
+            "[Broadcast] {} msgs in a single transaction",
+            msgs.len()
+        );
+        let tx_result = self.sender.commit_tx_any(msgs, memo).await?;
+        log::info!(
+            target: &transaction_target(),
+            "[Broadcasted] Success",
+        );
+
+        let mut msgs_to_empty = self.msgs.lock().unwrap();
+        *msgs_to_empty = vec![];
+        Ok(tx_result)
     }
 }
