@@ -6,7 +6,6 @@ use cw_orch_core::{
 use cw_orch_daemon::DaemonState;
 use itertools::Itertools;
 use std::collections::HashMap;
-use tokio::runtime::Handle;
 
 #[derive(Clone, Debug)]
 /// Mock state for testing, stores addresses and code-ids.
@@ -21,9 +20,7 @@ pub struct MockState {
 
 impl MockState {
     /// Creates a new empty mock state
-    // TODO: rt unused
-    #[allow(unused)]
-    pub fn new(rt: &Handle, chain: ChainInfoOwned, deployment_id: &str) -> Self {
+    pub fn new(chain: ChainInfoOwned, deployment_id: &str) -> Self {
         Self {
             addresses: HashMap::new(),
             code_ids: HashMap::new(),
@@ -98,7 +95,6 @@ mod test {
     use cw_orch_core::{environment::StateInterface, CwEnvError};
     use cw_orch_daemon::networks::JUNO_1;
     use speculoos::prelude::*;
-    use tokio::runtime::Runtime;
 
     use super::MockState;
 
@@ -106,8 +102,7 @@ mod test {
     const CONTRACT_ADDR: &str = "cosmos123";
     #[test]
     fn mock_state() {
-        let rt = Runtime::new().unwrap();
-        let mut mock = MockState::new(rt.handle(), JUNO_1.into(), "default-id");
+        let mut mock = MockState::new(JUNO_1.into(), "default-id");
         env_logger::init();
 
         let unchecked_address = &Addr::unchecked(CONTRACT_ADDR);
