@@ -118,7 +118,8 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
     /// Defaults to env variable.
     ///
     /// Variable: STATE_FILE_ENV_NAME.
-    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
+    #[allow(unused)]
+    pub(crate) fn state_path(&mut self, path: impl ToString) -> &mut Self {
         self.state_path = Some(path.to_string());
         self
     }
@@ -133,10 +134,6 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-
-        // find working grpc channel
-        let grpc_channel =
-            GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
 
         let state = match &self.state {
             Some(state) => {
@@ -161,8 +158,14 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
             sender.set_options(self.sender_options.clone());
             sender
         } else {
-            SenderGen::build(chain_info, grpc_channel, self.sender_options.clone())
-                .map_err(Into::into)?
+            let chain_id = chain_info.chain_id.clone();
+            let grpc_urls = chain_info.grpc_urls.clone();
+            SenderGen::build(
+                chain_info,
+                GrpcChannel::connect(&grpc_urls, &chain_id).await?,
+                self.sender_options.clone(),
+            )
+            .map_err(Into::into)?
         };
 
         let daemon = DaemonAsyncBase { state, sender };

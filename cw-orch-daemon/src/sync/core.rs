@@ -2,7 +2,8 @@ use std::fmt::Debug;
 
 use super::super::senders::base_sender::Wallet;
 use crate::{
-    queriers::{Bank, CosmWasm, Node}, CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonBuilderBase, DaemonError, DaemonState
+    queriers::{Bank, CosmWasmBase, Node},
+    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonBuilderBase, DaemonError, DaemonState,
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
@@ -210,6 +211,6 @@ impl<SenderGen: SenderTrait> QueryHandler for DaemonBase<SenderGen> {
 
 impl<SenderGen: SenderTrait> DefaultQueriers for DaemonBase<SenderGen> {
     type Bank = Bank;
-    type Wasm = CosmWasm<SenderGen>;
+    type Wasm = CosmWasmBase<SenderGen>;
     type Node = Node;
 }

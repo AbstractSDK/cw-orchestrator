@@ -82,28 +82,9 @@ impl DaemonBuilder {
         self.sender_options.hd_index = Some(index);
         self
     }
-
-    /// Overwrites the gas denom used for broadcasting transactions.
-    /// Behavior :
-    /// - If no gas denom is provided, the first gas denom specified in the `self.chain` is used
-    /// - If no gas fee is provided, the first gas fee specified in the self.chain is used
-    pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
-        self.gas_denom = gas_denom.map(ToString::to_string);
-        self.gas_fee = gas_fee.map(Into::into);
-        self
-    }
 }
 
 impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
-    /// Specifies path to the daemon state file
-    /// Defaults to env variable.
-    ///
-    /// Variable: STATE_FILE_ENV_NAME.
-    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
-        self.state_path = Some(path.to_string());
-        self
-    }
-
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -158,6 +139,26 @@ impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
     /// Overwrites the grpc_url used to interact with the chain
     pub fn grpc_url(&mut self, url: &str) -> &mut Self {
         self.overwrite_grpc_url = Some(url.to_string());
+        self
+    }
+
+    /// Overwrites the gas denom used for broadcasting transactions.
+    /// Behavior :
+    /// - If no gas denom is provided, the first gas denom specified in the `self.chain` is used
+    /// - If no gas fee is provided, the first gas fee specified in the self.chain is used
+    pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
+        self.gas_denom = gas_denom.map(ToString::to_string);
+        self.gas_fee = gas_fee.map(Into::into);
+        self
+    }
+
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    #[allow(unused)]
+    pub(crate) fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
         self
     }
 

@@ -18,13 +18,15 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasm<SenderGen = Wallet> {
+pub struct CosmWasmBase<SenderGen = Wallet> {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
     _sender: PhantomData<SenderGen>,
 }
 
-impl<SenderGen: SenderTrait> CosmWasm<SenderGen> {
+pub type CosmWasm = CosmWasmBase<Wallet>;
+
+impl<SenderGen: SenderTrait> CosmWasmBase<SenderGen> {
     pub fn new(daemon: &DaemonBase<SenderGen>) -> Self {
         Self {
             channel: daemon.channel(),
@@ -48,17 +50,17 @@ impl<SenderGen: SenderTrait> CosmWasm<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> QuerierGetter<CosmWasm<SenderGen>> for DaemonBase<SenderGen> {
-    fn querier(&self) -> CosmWasm<SenderGen> {
-        CosmWasm::new(self)
+impl<SenderGen: SenderTrait> QuerierGetter<CosmWasmBase<SenderGen>> for DaemonBase<SenderGen> {
+    fn querier(&self) -> CosmWasmBase<SenderGen> {
+        CosmWasmBase::new(self)
     }
 }
 
-impl<SenderGen: SenderTrait> Querier for CosmWasm<SenderGen> {
+impl<SenderGen: SenderTrait> Querier for CosmWasmBase<SenderGen> {
     type Error = DaemonError;
 }
 
-impl<SenderGen: SenderTrait> CosmWasm<SenderGen> {
+impl<SenderGen: SenderTrait> CosmWasmBase<SenderGen> {
     /// Query code_id by hash
     pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -230,7 +232,7 @@ impl<SenderGen: SenderTrait> CosmWasm<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> WasmQuerier for CosmWasm<SenderGen> {
+impl<SenderGen: SenderTrait> WasmQuerier for CosmWasmBase<SenderGen> {
     type Chain = DaemonBase<SenderGen>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle

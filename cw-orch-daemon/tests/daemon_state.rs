@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use cw_orch_core::environment::ChainState;
 use cw_orch_daemon::{
-    json_lock::JsonLockedState, networks::OSMOSIS_1, DaemonBuilder, DaemonError, DaemonStateFile,
+    env::STATE_FILE_ENV_NAME, json_lock::JsonLockedState, networks::OSMOSIS_1, DaemonBuilder,
+    DaemonError, DaemonStateFile,
 };
 
 pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
@@ -12,10 +13,10 @@ const TEST2_STATE_FILE: &str = "./tests/test2.json";
 #[test]
 #[serial_test::serial]
 fn simultaneous_read() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
     let daemon = DaemonBuilder::default()
         .chain(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
         .build()
         .unwrap();
 
@@ -50,15 +51,16 @@ fn simultaneous_read() {
     }
     // Error if at least one failed
     let _ = maybe_err.unwrap();
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
 #[serial_test::serial]
 fn simultaneous_write() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
     let daemon = DaemonBuilder::default()
         .chain(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
         .build()
         .unwrap();
 
@@ -90,15 +92,16 @@ fn simultaneous_write() {
     }
     // Error if at least one failed
     maybe_err.unwrap();
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
 #[serial_test::serial]
 fn simultaneous_write_rebuilt() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
     let daemon = DaemonBuilder::default()
         .chain(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
         .build()
         .unwrap();
 
@@ -131,12 +134,78 @@ fn simultaneous_write_rebuilt() {
         }
     }
     // Error if at least one failed
-    maybe_err.unwrap()
+    maybe_err.unwrap();
+    std::env::remove_var(STATE_FILE_ENV_NAME);
+}
+
+#[test]
+#[serial_test::serial]
+fn error_when_another_daemon_holds_it() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
+    let _daemon = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build()
+        .unwrap();
+
+    let daemon_res = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build();
+
+    assert!(matches!(
+        daemon_res,
+        Err(DaemonError::StateAlreadyLocked(_))
+    ));
+    std::env::remove_var(STATE_FILE_ENV_NAME);
+}
+
+#[test]
+#[serial_test::serial]
+fn does_not_error_when_previous_daemon_dropped_state() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
+    let daemon = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build()
+        .unwrap();
+
+    drop(daemon);
+
+    let daemon_res = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build();
+
+    assert!(daemon_res.is_ok());
+    std::env::remove_var(STATE_FILE_ENV_NAME);
+}
+
+#[test]
+#[serial_test::serial]
+fn does_not_error_when_using_different_files() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
+    let _daemon = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build()
+        .unwrap();
+
+    // Different file
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST2_STATE_FILE);
+    let daemon_res = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build();
+
+    assert!(daemon_res.is_ok());
+    std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
 #[test]
 #[serial_test::serial]
 #[should_panic]
+#[ignore = "Serial don't track forks for some reason, run it manually"]
 fn panic_when_someone_holds_json_file() {
     match unsafe { nix::unistd::fork() } {
         Ok(nix::unistd::ForkResult::Child) => {
@@ -151,67 +220,4 @@ fn panic_when_someone_holds_json_file() {
         }
         Err(_) => (),
     }
-}
-
-#[test]
-#[serial_test::serial]
-fn error_when_another_daemon_holds_it() {
-    let _daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
-        .build()
-        .unwrap();
-
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
-        .build();
-
-    assert!(matches!(
-        daemon_res,
-        Err(DaemonError::StateAlreadyLocked(_))
-    ));
-}
-
-#[test]
-#[serial_test::serial]
-fn does_not_error_when_previous_daemon_dropped_state() {
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
-        .build()
-        .unwrap();
-
-    drop(daemon);
-
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
-        .build();
-
-    assert!(daemon_res.is_ok(),);
-}
-
-#[test]
-#[serial_test::serial]
-fn does_not_error_when_using_different_files() {
-    let _daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        .state_path(TEST_STATE_FILE)
-        .build()
-        .unwrap();
-
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        // Different file
-        .state_path(TEST2_STATE_FILE)
-        .build();
-
-    assert!(daemon_res.is_ok());
 }

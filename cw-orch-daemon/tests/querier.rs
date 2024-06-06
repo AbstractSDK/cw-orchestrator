@@ -134,7 +134,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
-        let cw = CosmWasm::<cw_orch_daemon::Wallet>::new_async(channel);
+        let cw = CosmWasm::new_async(channel);
 
         let params = rt.block_on(cw._params());
         asserting!("params is ok").that(&params).is_ok();
@@ -212,7 +212,7 @@ mod queriers {
 
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
-        let cosm_wasm = CosmWasm::<cw_orch_daemon::Wallet>::new_async(channel);
+        let cosm_wasm = CosmWasm::new_async(channel);
         let daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
             .build()

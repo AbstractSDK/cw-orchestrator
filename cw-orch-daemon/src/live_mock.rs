@@ -4,7 +4,6 @@
 use crate::queriers::Bank;
 use crate::queriers::CosmWasm;
 use crate::queriers::Staking;
-use crate::Wallet;
 use crate::RUNTIME;
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::Addr;
@@ -82,7 +81,7 @@ impl WasmMockQuerier {
         let handle = RUNTIME.handle();
         match &request {
             QueryRequest::Wasm(x) => {
-                let querier = CosmWasm::<Wallet>::new_sync(self.channel.clone(), handle);
+                let querier = CosmWasm::new_sync(self.channel.clone(), handle);
                 match x {
                     WasmQuery::Smart { contract_addr, msg } => {
                         // We forward the request to the cosmwasm querier

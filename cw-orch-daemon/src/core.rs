@@ -327,7 +327,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
         let code_id = result.uploaded_code_id().unwrap();
 
         // wait for the node to return the contract information for this upload
-        let wasm = CosmWasm::<Wallet>::new_async(self.channel());
+        let wasm = CosmWasm::new_async(self.channel());
         while wasm._code(code_id).await.is_err() {
             self.next_block().await?;
         }
