@@ -12,6 +12,10 @@ pub struct GrpcChannel {}
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
     pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+        if grpc.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
         let mut successful_connections = vec![];
 
         for address in grpc.iter() {
@@ -98,6 +102,7 @@ mod tests {
     use speculoos::prelude::*;
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn no_connection() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
         let grpcs = &["https://127.0.0.1:99999"];
@@ -117,6 +122,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn network_grpcs_list_is_empty() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
         let grpcs = &[];
