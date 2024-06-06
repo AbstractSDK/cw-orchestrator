@@ -49,21 +49,6 @@ const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
-// /// This enum allows for choosing which sender type will be constructed in a DaemonBuilder
-// #[derive(Clone)]
-// pub enum SenderBuilder<SenderGen> {
-//     Sender(SenderGen),
-//     DefaultSender(Sender<All>),
-//     Mnemonic(String),
-//     None,
-// }
-
-// impl<SenderGen> Default for SenderBuilder<SenderGen> {
-//     fn default() -> Self {
-//         Self::None
-//     }
-// }
-
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
 pub type Wallet = Sender<All>;
 
