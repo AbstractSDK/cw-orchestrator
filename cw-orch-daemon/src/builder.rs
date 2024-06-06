@@ -1,6 +1,6 @@
 use crate::{
-    log::print_if_log_disabled, senders::sender_trait::SenderTrait, DaemonAsyncBase, DaemonBuilder,
-    GrpcChannel, Wallet,
+    log::print_if_log_disabled, senders::sender_trait::SenderTrait, DaemonAsyncBase,
+    DaemonBuilderBase, GrpcChannel, Wallet,
 };
 
 use super::{error::DaemonError, state::DaemonState};
@@ -172,9 +172,11 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
     }
 }
 
-impl From<DaemonBuilder> for DaemonAsyncBuilder {
-    fn from(value: DaemonBuilder) -> Self {
-        DaemonAsyncBuilder {
+impl<SenderGen: SenderTrait> From<DaemonBuilderBase<SenderGen>>
+    for DaemonAsyncBuilderBase<SenderGen>
+{
+    fn from(value: DaemonBuilderBase<SenderGen>) -> Self {
+        DaemonAsyncBuilderBase {
             chain: value.chain,
             deployment_id: value.deployment_id,
             sender_options: value.sender_options,

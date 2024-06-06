@@ -1,13 +1,10 @@
 use crate::senders::sender_trait::SenderTrait;
-use crate::{senders::base_sender::SenderOptions, DaemonAsyncBuilder};
-use crate::{DaemonState, Wallet, RUNTIME};
+use crate::{DaemonAsyncBuilderBase, DaemonBase, DaemonState, Wallet, RUNTIME};
 use cw_orch_core::environment::ChainInfoOwned;
 
-use self::generic::DaemonBuilderBase;
+use super::super::error::DaemonError;
 
-use super::{super::error::DaemonError, core::Daemon};
-
-#[derive(Clone, Default)]
+#[derive(Clone)]
 /// Create [`Daemon`] through [`DaemonBuilder`]
 /// ## Example
 /// ```no_run
@@ -19,7 +16,7 @@ use super::{super::error::DaemonError, core::Daemon};
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct DaemonBuilder {
+pub struct DaemonBuilderBase<SenderGen: SenderTrait> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -30,19 +27,83 @@ pub struct DaemonBuilder {
     pub(crate) gas_fee: Option<f64>,
     pub(crate) state_path: Option<String>,
 
-    pub(crate) sender: Option<Wallet>,
+    pub(crate) sender: Option<SenderGen>,
 
     // /* Sender Options */
     // /// Wallet sender
     // pub(crate) sender: SenderBuilder<All>,
     /// Specify Daemon Sender Options
-    pub(crate) sender_options: SenderOptions,
+    pub(crate) sender_options: SenderGen::SenderOptions,
 
     /* Rebuilder related options */
     pub(crate) state: Option<DaemonState>,
 }
 
+impl<SenderGen: SenderTrait> Default for DaemonBuilderBase<SenderGen> {
+    fn default() -> Self {
+        Self {
+            chain: Default::default(),
+            handle: Default::default(),
+            deployment_id: Default::default(),
+            overwrite_grpc_url: Default::default(),
+            gas_denom: Default::default(),
+            gas_fee: Default::default(),
+            state_path: Default::default(),
+            sender: Default::default(),
+            sender_options: Default::default(),
+            state: Default::default(),
+        }
+    }
+}
+
+pub type DaemonBuilder = DaemonBuilderBase<Wallet>;
+
 impl DaemonBuilder {
+    /// Set the mnemonic to use with this chain.
+    pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
+        self.sender_options.mnemonic = Some(mnemonic.to_string());
+        self
+    }
+
+    /// Specifies wether authz should be used with this daemon
+    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_options.set_authz_granter(granter.to_string());
+        self
+    }
+
+    /// Specifies wether feegrant should be used with this daemon
+    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_options.set_fee_granter(granter.to_string());
+        self
+    }
+
+    /// Specifies the hd_index of the daemon sender
+    pub fn hd_index(&mut self, index: u32) -> &mut Self {
+        self.sender_options.hd_index = Some(index);
+        self
+    }
+
+    /// Overwrites the gas denom used for broadcasting transactions.
+    /// Behavior :
+    /// - If no gas denom is provided, the first gas denom specified in the `self.chain` is used
+    /// - If no gas fee is provided, the first gas fee specified in the self.chain is used
+    pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
+        self.gas_denom = gas_denom.map(ToString::to_string);
+        self.gas_fee = gas_fee.map(Into::into);
+        self
+    }
+}
+
+impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
+        self
+    }
+
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -74,36 +135,24 @@ impl DaemonBuilder {
         self
     }
 
-    //TODO
-    // /// Set the mnemonic to use with this chain.
-    // pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-    //     self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
-    //     self
-    // }
-
-    // /// Specifies a sender to use with this chain
-    // /// This will be used in priority when set on the builder
-    // pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
-    //     self.sender = Some(SenderBuilder::Sender(wallet));
-    //     self
-    // }
-
-    /// Specifies wether authz should be used with this daemon
-    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_options.set_authz_granter(granter.to_string());
-        self
-    }
-
-    /// Specifies wether feegrant should be used with this daemon
-    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_options.set_fee_granter(granter.to_string());
-        self
-    }
-
-    /// Specifies the hd_index of the daemon sender
-    pub fn hd_index(&mut self, index: u32) -> &mut Self {
-        self.sender_options.hd_index = Some(index);
-        self
+    /// Specifies a sender to use with this chain
+    /// This will be used in priority when set on the builder
+    pub fn sender<OtherSenderGen: SenderTrait>(
+        &self,
+        wallet: OtherSenderGen,
+    ) -> DaemonBuilderBase<OtherSenderGen> {
+        DaemonBuilderBase {
+            chain: self.chain.clone(),
+            deployment_id: self.deployment_id.clone(),
+            state_path: self.state_path.clone(),
+            state: self.state.clone(),
+            sender: Some(wallet),
+            sender_options: OtherSenderGen::SenderOptions::default(),
+            handle: self.handle.clone(),
+            overwrite_grpc_url: self.overwrite_grpc_url.clone(),
+            gas_denom: self.gas_denom.clone(),
+            gas_fee: self.gas_fee,
+        }
     }
 
     /// Overwrites the grpc_url used to interact with the chain
@@ -112,39 +161,14 @@ impl DaemonBuilder {
         self
     }
 
-    /// Overwrites the gas denom used for broadcasting transactions.
-    /// Behavior :
-    /// - If no gas denom is provided, the first gas denom specified in the `self.chain` is used
-    /// - If no gas fee is provided, the first gas fee specified in the self.chain is used
-    pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
-        self.gas_denom = gas_denom.map(ToString::to_string);
-        self.gas_fee = gas_fee.map(Into::into);
-        self
-    }
-
-    pub fn set_sender<SenderGen: SenderTrait>(
-        &self,
-        sender: SenderGen,
-    ) -> DaemonBuilderBase<SenderGen> {
-        DaemonBuilderBase::from_wallet_builder(self, sender)
-    }
-    /// Specifies path to the daemon state file
-    /// Defaults to env variable.
-    ///
-    /// Variable: STATE_FILE_ENV_NAME.
-    pub fn state_path(&mut self, path: impl ToString) -> &mut Self {
-        self.state_path = Some(path.to_string());
-        self
-    }
-
     /// Build a Daemon
-    pub fn build(&self) -> Result<Daemon, DaemonError> {
+    pub fn build(&self) -> Result<DaemonBase<SenderGen>, DaemonError> {
         let rt_handle = self
             .handle
             .clone()
             .unwrap_or_else(|| RUNTIME.handle().clone());
 
-        let mut chain = self
+        let chain = self
             .get_built_chain_object()
             .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
 
@@ -152,9 +176,9 @@ impl DaemonBuilder {
         builder.chain = Some(chain);
 
         // build the underlying daemon
-        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build())?;
+        let daemon = rt_handle.block_on(DaemonAsyncBuilderBase::from(builder).build())?;
 
-        Ok(Daemon { rt_handle, daemon })
+        Ok(DaemonBase { rt_handle, daemon })
     }
 
     fn get_built_chain_object(&self) -> Option<ChainInfoOwned> {
@@ -178,37 +202,6 @@ fn overwrite_fee(chain: &mut ChainInfoOwned, denom: Option<String>, amount: Opti
 fn overwrite_grpc_url(chain: &mut ChainInfoOwned, grpc_url: Option<String>) {
     if let Some(grpc_url) = grpc_url {
         chain.grpc_urls = vec![grpc_url.to_string()]
-    }
-}
-
-pub mod generic {
-    use cw_orch_core::environment::ChainInfoOwned;
-
-    use crate::{senders::sender_trait::SenderTrait, DaemonBuilder};
-
-    #[derive(Clone)]
-    #[non_exhaustive] // To avoid building directly
-    /// TODO : doc comments
-    pub struct DaemonBuilderBase<SenderGen: SenderTrait> {
-        // # Required
-        pub(crate) chain: Option<ChainInfoOwned>,
-        // # Optional
-        pub(crate) handle: Option<tokio::runtime::Handle>,
-        pub(crate) deployment_id: Option<String>,
-
-        /* Sender Options */
-        pub(crate) sender: SenderGen,
-    }
-
-    impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
-        pub fn from_wallet_builder(builder: &DaemonBuilder, sender: SenderGen) -> Self {
-            DaemonBuilderBase {
-                chain: builder.get_built_chain_object(),
-                handle: builder.handle.clone(),
-                deployment_id: builder.deployment_id.clone(),
-                sender,
-            }
-        }
     }
 }
 

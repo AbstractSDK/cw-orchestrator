@@ -18,7 +18,7 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasm<SenderGen: SenderTrait = Wallet> {
+pub struct CosmWasm<SenderGen = Wallet> {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
     _sender: PhantomData<SenderGen>,

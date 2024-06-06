@@ -82,7 +82,7 @@ impl WasmMockQuerier {
         let handle = RUNTIME.handle();
         match &request {
             QueryRequest::Wasm(x) => {
-                let querier = CosmWasm::<Wallet>::new_sync(self.channel.clone(), &handle);
+                let querier = CosmWasm::<Wallet>::new_sync(self.channel.clone(), handle);
                 match x {
                     WasmQuery::Smart { contract_addr, msg } => {
                         // We forward the request to the cosmwasm querier

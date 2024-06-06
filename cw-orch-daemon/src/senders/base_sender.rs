@@ -38,7 +38,7 @@ use cw_orch_core::{
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -65,7 +65,7 @@ const SMALL_GAS_BUFFER: f64 = 1.4;
 // }
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
-pub type Wallet = Arc<Sender<All>>;
+pub type Wallet = Sender<All>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions

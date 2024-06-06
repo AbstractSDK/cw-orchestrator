@@ -2,8 +2,7 @@ use std::fmt::Debug;
 
 use super::super::senders::base_sender::Wallet;
 use crate::{
-    queriers::{Bank, CosmWasm, Node},
-    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
+    queriers::{Bank, CosmWasm, Node}, CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonBuilderBase, DaemonError, DaemonState
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
@@ -53,8 +52,8 @@ pub type Daemon = DaemonBase<Wallet>;
 
 impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
     /// Get the daemon builder
-    pub fn builder() -> DaemonBuilder {
-        DaemonBuilder::default()
+    pub fn builder() -> DaemonBuilderBase<SenderGen> {
+        DaemonBuilderBase::default()
     }
 
     /// Get the channel configured for this Daemon
@@ -67,18 +66,17 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
         self.daemon.sender.clone()
     }
 
-    // /// Returns a new [`DaemonBuilder`] with the current configuration.
-    // /// Does not consume the original [`Daemon`].
-    // pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen> {
-    //     let mut builder = DaemonBuilder {
-    //     state: Some(self.state()),
-    //     ..Default::default()
-    // };
-    // builder
-    //     .chain(self.daemon.sender.chain_info.clone())
-    //     .sender((*self.daemon.sender).clone());
-    // builder
-    // }
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen> {
+        let mut builder = DaemonBuilder {
+            state: Some(self.state()),
+            ..Default::default()
+        };
+        builder
+            .chain(self.daemon.sender.chain_info().clone())
+            .sender(self.daemon.sender.clone())
+    }
 
     /// Flushes all the state related to the current chain
     /// Only works on Local networks
