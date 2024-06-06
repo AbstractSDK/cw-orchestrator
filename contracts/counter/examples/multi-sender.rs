@@ -2,11 +2,7 @@
 use counter_contract::{
     msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
-use cw_orch::{
-    anyhow,
-    daemon::{senders::multiple_sender::MultipleSender, DaemonBuilderBase},
-    prelude::*,
-};
+use cw_orch::{anyhow, daemon::senders::multiple_sender::MultiDaemon, prelude::*};
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
@@ -16,9 +12,7 @@ pub fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::LOCAL_JUNO;
-    let chain = DaemonBuilderBase::<MultipleSender>::default()
-        .chain(network)
-        .build()?;
+    let chain = MultiDaemon::builder().chain(network).build()?;
 
     let counter = CounterContract::new(chain.clone());
 

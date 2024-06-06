@@ -1,4 +1,4 @@
-use crate::{Wallet, INSTANTIATE_2_TYPE_URL};
+use crate::{DaemonBase, Wallet, INSTANTIATE_2_TYPE_URL};
 
 use crate::{error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -11,6 +11,8 @@ use prost::Name;
 use std::sync::{Arc, Mutex};
 
 use super::{base_sender::SenderOptions, sender_trait::SenderTrait};
+
+pub type MultiDaemon = DaemonBase<MultipleSender>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
