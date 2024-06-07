@@ -21,7 +21,8 @@
 
 ### Breaking
 
-- Daemon : Changed return types on daemon queriers to match Cosmwasm std types
+- Daemon : Changed return types on daemon queriers to match CosmWasm std types
+- Daemon: Added below second block time.
 - Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
 - Clone-testing : Remove rt in Mock State creation (daemon doesn't need it anymore)
 
