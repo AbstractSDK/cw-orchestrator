@@ -13,7 +13,7 @@ use syn::{parse_macro_input, ItemEnum};
 
 #[proc_macro_derive(
     ExecuteFns,
-    attributes(payable, impl_into, fn_name, disable_fields_sorting)
+    attributes(payable, impl_into, fn_name, disable_fields_sorting, into)
 )]
 pub fn cw_orch_execute(input: TokenStream) -> TokenStream {
     // We only parse and return the modified code if the flag is activated
@@ -23,7 +23,7 @@ pub fn cw_orch_execute(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(
     QueryFns,
-    attributes(returns, impl_into, fn_name, disable_fields_sorting)
+    attributes(returns, impl_into, fn_name, disable_fields_sorting, into)
 )]
 pub fn cw_orch_query(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as ItemEnum);
