@@ -62,7 +62,7 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 ///
 /// let rt = tokio::runtime::Runtime::new().unwrap();
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let mock: CloneTesting = CloneTesting::new_custom(&rt, chain.clone(), CustomState::new(&rt.handle(), chain.clone().into(), "mock")).unwrap();
+/// let mock: CloneTesting = CloneTesting::new_custom(&rt, chain.clone(), CustomState::new(chain.clone().into(), "mock")).unwrap();
 /// ```
 #[derive(Clone)]
 pub struct CloneTesting<S: StateInterface = MockState> {
