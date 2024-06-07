@@ -159,7 +159,7 @@ impl TxBuilder {
         let sign_doc = SignDoc::new(
             &self.body,
             &auth_info,
-            &Id::try_from(wallet.daemon_state.chain_data.chain_id.to_string())?,
+            &Id::try_from(wallet.chain_info.chain_id.to_string())?,
             account_number,
         )?;
         wallet.sign(sign_doc).map_err(Into::into)

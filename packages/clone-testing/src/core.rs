@@ -62,7 +62,7 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 ///
 /// let rt = tokio::runtime::Runtime::new().unwrap();
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let mock: CloneTesting = CloneTesting::new_custom(&rt, chain.clone(), CustomState::new(&rt.handle(), chain.clone().into(), "mock")).unwrap();
+/// let mock: CloneTesting = CloneTesting::new_custom(&rt, chain.clone(), CustomState::new(chain.clone().into(), "mock")).unwrap();
 /// ```
 #[derive(Clone)]
 pub struct CloneTesting<S: StateInterface = MockState> {
@@ -152,7 +152,7 @@ impl CloneTesting<MockState> {
         CloneTesting::new_custom(
             rt,
             chain_data.clone(),
-            MockState::new(rt.handle(), chain_data, DEFAULT_DEPLOYMENT),
+            MockState::new(chain_data, DEFAULT_DEPLOYMENT),
         )
     }
 
@@ -165,7 +165,7 @@ impl CloneTesting<MockState> {
         CloneTesting::new_custom(
             rt,
             chain_data.clone(),
-            MockState::new(rt.handle(), chain_data, deployment_id),
+            MockState::new(chain_data, deployment_id),
         )
     }
 }
@@ -579,7 +579,7 @@ mod test {
         let chain = JUNO_1;
 
         let rt = Runtime::new().unwrap();
-        let mock_state = MockState::new(rt.handle(), JUNO_1.into(), "default_id");
+        let mock_state = MockState::new(JUNO_1.into(), "default_id");
 
         let chain: CloneTesting = CloneTesting::<_>::new_custom(&rt, chain, mock_state)?;
         let recipient = chain.init_account();
@@ -601,12 +601,7 @@ mod test {
         let contract_id = "my_contract";
         let code_id = 1u64;
         let address = &Addr::unchecked("TEST_ADDR");
-        let rt = Runtime::new().unwrap();
-        let mut mock_state = Rc::new(RefCell::new(MockState::new(
-            rt.handle(),
-            JUNO_1.into(),
-            "default_id",
-        )));
+        let mut mock_state = Rc::new(RefCell::new(MockState::new(JUNO_1.into(), "default_id")));
 
         mock_state.set_address(contract_id, address);
         asserting!("that address has been set")

@@ -112,10 +112,6 @@ pub(crate) fn is_type_using_into(field_type: &Type) -> bool {
     }
 }
 
-pub(crate) fn has_into(field: &syn::Field) -> bool {
-    is_type_using_into(&field.ty) || has_cw_orch_attribute(&field.attrs, "into")
-}
-
 pub(crate) fn has_cw_orch_attribute(attrs: &[Attribute], attribute_name: &str) -> bool {
     for attr in attrs {
         if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "cw_orch" {
@@ -133,4 +129,8 @@ pub(crate) fn has_cw_orch_attribute(attrs: &[Attribute], attribute_name: &str) -
     }
 
     false
+}
+
+pub(crate) fn has_into(field: &syn::Field) -> bool {
+    is_type_using_into(&field.ty) || has_cw_orch_attribute(&field.attrs, "into")
 }
