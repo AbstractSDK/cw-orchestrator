@@ -14,7 +14,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{ChainState, IndexResponse},
+    environment::{AsyncWasmQuerier, ChainState, IndexResponse, Querier},
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -319,6 +319,35 @@ impl DaemonAsync {
     /// Set the sender to use with this DaemonAsync to be the given wallet
     pub fn set_sender(&mut self, sender: &Wallet) {
         self.sender = sender.clone();
+    }
+}
+
+impl Querier for DaemonAsync {
+    type Error = DaemonError;
+}
+
+impl AsyncWasmQuerier for DaemonAsync {
+    /// Query a contract.
+    fn smart_query<Q: Serialize, T: DeserializeOwned>(
+        &self,
+        address: impl Into<String> + Send,
+        query_msg: &Q,
+    ) -> impl std::future::Future<Output = Result<T, DaemonError>> + Send
+    where
+        Q: Sync,
+    {
+        let query_data = serde_json::to_vec(&query_msg).unwrap();
+        async {
+            let mut client =
+                cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
+            let resp = client
+                .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                    address: address.into(),
+                    query_data,
+                })
+                .await?;
+            Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
+        }
     }
 }
 
