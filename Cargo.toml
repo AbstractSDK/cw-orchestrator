@@ -6,6 +6,7 @@ members = [
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
+  "packages/clone-testing",
   # "packages/cw-orch-osmosis-test-tube",
   "packages/cw-orch-traits",
   "contracts/*",
@@ -55,8 +56,8 @@ cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", ve
 cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.2.0" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.2.0" }
 
-# #Clone Testing
-# cw-orch-clone-testing = { version = "0.4.1", path = "packages/clone-testing" }
+#Clone Testing
+cw-orch-clone-testing = { version = "0.4.1", path = "packages/clone-testing" }
 
 
 thiserror = { version = "1.0.21" }

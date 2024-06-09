@@ -349,7 +349,7 @@ mod test {
             )
             .unwrap();
 
-        asserting("that exect passed on correctly")
+        asserting("that exec passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
             .is_equal_to(&String::from("mint"));
 
