@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin, Uint128};
-use cw_multi_test::{AppBuilder, MockApiBech32, SimpleAddressGenerator, WasmKeeper};
+use cw_multi_test::{AppBuilder, MockApiBech32};
 use cw_orch_core::{
     environment::{BankQuerier, BankSetter, DefaultQueriers, StateInterface, TxHandler},
     CwEnvError,

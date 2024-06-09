@@ -1,4 +1,4 @@
-use cosmwasm_std::{from_json, Checksum, CodeInfoResponse, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{from_json, Checksum, CodeInfoResponse, ContractInfoResponse};
 use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 
