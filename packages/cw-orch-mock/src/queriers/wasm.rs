@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::testing::MockApi;
-use cosmwasm_std::{instantiate2_address, Api, Checksum};
+
+use cosmwasm_std::{
+    instantiate2_address, Api, Binary, Checksum, ContractResult, StdError, SystemResult,
+};
 use cosmwasm_std::{to_json_binary, ContractInfoResponse, HexBinary};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
@@ -67,21 +70,31 @@ fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<
     Ok(hash.into())
 }
 
+/// Copied implementation from [`cosmwasm_std::QuerierWrapper::query`] but without deserialization
 fn raw_query<A: Api, S: StateInterface>(
     querier: &MockWasmQuerier<A, S>,
     address: impl Into<String>,
     query_data: Vec<u8>,
 ) -> Result<Vec<u8>, CwEnvError> {
-    Ok(querier
-        .app
-        .borrow()
-        .wrap()
-        .query(&cosmwasm_std::QueryRequest::Wasm(
-            cosmwasm_std::WasmQuery::Raw {
-                contract_addr: address.into(),
-                key: query_data.into(),
-            },
-        ))?)
+    let raw = to_json_binary(&cosmwasm_std::QueryRequest::<cosmwasm_std::Empty>::Wasm(
+        cosmwasm_std::WasmQuery::Raw {
+            contract_addr: address.into(),
+            key: query_data.into(),
+        },
+    ))
+    .map_err(|serialize_err| {
+        StdError::generic_err(format!("Serializing QueryRequest: {serialize_err}"))
+    })?;
+    let res: Result<Binary, StdError> = match querier.app.borrow().wrap().raw_query(&raw) {
+        SystemResult::Err(system_err) => Err(StdError::generic_err(format!(
+            "Querier system error: {system_err}"
+        ))),
+        SystemResult::Ok(ContractResult::Err(contract_err)) => Err(StdError::generic_err(format!(
+            "Querier contract error: {contract_err}"
+        ))),
+        SystemResult::Ok(ContractResult::Ok(value)) => Ok(value),
+    };
+    Ok(res?.to_vec())
 }
 
 fn smart_query<A: Api, S: StateInterface, Q, T>(

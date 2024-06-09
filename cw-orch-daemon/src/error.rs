@@ -116,14 +116,18 @@ pub enum DaemonError {
     InsufficientFee(String),
     #[error("Not enough balance, expected {expected}, found {current}")]
     NotEnoughBalance { expected: Coin, current: Coin },
-    #[error("Can't set the daemon state, it's read-only")]
-    StateReadOnly,
+    #[error("Can't set the daemon state, it's read-only {0}")]
+    StateReadOnly(String),
     #[error("You need to pass a runtime to the querier object to do synchronous queries. Use daemon.querier instead")]
     QuerierNeedRuntime,
     #[error(transparent)]
     Instantiate2Error(#[from] Instantiate2AddressError),
     #[error(transparent)]
     CheckSum(#[from] cosmwasm_std::ChecksumError),
+    #[error("Error opening file {0},err: ({1})")]
+    OpenFile(String, String),
+    #[error("State file {0} already locked, use another state file or clone daemon which holds the lock")]
+    StateAlreadyLocked(String),
 }
 
 impl DaemonError {

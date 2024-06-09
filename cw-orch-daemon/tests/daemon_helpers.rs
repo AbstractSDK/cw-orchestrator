@@ -20,10 +20,12 @@ mod tests {
     fn helper_traits() {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder()
+        let mut daemon = Daemon::builder()
             .chain(networks::LOCAL_JUNO)
             .build()
             .unwrap();
+
+        daemon.flush_state().unwrap();
 
         let sender = daemon.sender();
 

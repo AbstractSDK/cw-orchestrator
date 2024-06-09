@@ -1,8 +1,8 @@
-use crate::RUNTIME;
 use crate::{
     sender::{Sender, SenderBuilder, SenderOptions},
     DaemonAsyncBuilder,
 };
+use crate::{DaemonState, RUNTIME};
 use bitcoin::secp256k1::All;
 use cw_orch_core::environment::ChainInfoOwned;
 
@@ -29,12 +29,16 @@ pub struct DaemonBuilder {
     pub(crate) overwrite_grpc_url: Option<String>,
     pub(crate) gas_denom: Option<String>,
     pub(crate) gas_fee: Option<f64>,
+    pub(crate) state_path: Option<String>,
 
     /* Sender Options */
     /// Wallet sender
     pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
+
+    /* Rebuilder related options */
+    pub(crate) state: Option<DaemonState>,
 }
 
 impl DaemonBuilder {
@@ -116,6 +120,16 @@ impl DaemonBuilder {
         self
     }
 
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    #[allow(unused)]
+    pub(crate) fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
+        self
+    }
+
     /// Build a Daemon
     pub fn build(&self) -> Result<Daemon, DaemonError> {
         let rt_handle = self
@@ -158,6 +172,7 @@ fn overwrite_grpc_url(chain: &mut ChainInfoOwned, grpc_url: Option<String>) {
 
 #[cfg(test)]
 mod test {
+    use cw_orch_core::environment::TxHandler;
     use cw_orch_networks::networks::OSMOSIS_1;
 
     use crate::DaemonBuilder;
@@ -175,9 +190,9 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.grpc_urls.len(), 1);
+        assert_eq!(daemon.daemon.sender.chain_info.grpc_urls.len(), 1);
         assert_eq!(
-            daemon.daemon.state.chain_data.grpc_urls[0],
+            daemon.daemon.sender.chain_info.grpc_urls[0],
             OSMOSIS_1.grpc_urls[0].to_string(),
         );
     }
@@ -192,9 +207,9 @@ mod test {
             .gas(None, Some(fee_amount))
             .build()
             .unwrap();
-        println!("chain {:?}", daemon.daemon.state.chain_data);
+        println!("chain {:?}", daemon.daemon.sender.chain_info);
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
+        assert_eq!(daemon.daemon.sender.chain_info.gas_price, fee_amount);
     }
 
     #[test]
@@ -208,7 +223,7 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
+        assert_eq!(daemon.daemon.sender.chain_info.gas_denom, token.to_string());
     }
 
     #[test]
@@ -223,8 +238,27 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_denom, token.to_string());
+        assert_eq!(daemon.daemon.sender.chain_info.gas_denom, token.to_string());
 
-        assert_eq!(daemon.daemon.state.chain_data.gas_price, fee_amount);
+        assert_eq!(daemon.daemon.sender.chain_info.gas_price, fee_amount);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn hd_index_re_generates_sender() -> anyhow::Result<()> {
+        let daemon = DaemonBuilder::default()
+            .chain(OSMOSIS_1)
+            .mnemonic(DUMMY_MNEMONIC)
+            .build()
+            .unwrap();
+
+        let indexed_daemon = daemon.rebuild().hd_index(56).build().unwrap();
+
+        assert_ne!(
+            daemon.sender().to_string(),
+            indexed_daemon.sender().to_string()
+        );
+
+        Ok(())
     }
 }

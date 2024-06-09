@@ -5,7 +5,7 @@ use counter_contract::{
 };
 use cw_orch::prelude::*;
 use cw_orch_traits::Stargate;
-use osmosis_test_tube::osmosis_std::types::{
+use osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
     osmosis::tokenfactory::v1beta1::{
         MsgCreateDenom, MsgCreateDenomResponse, MsgMint, MsgMintResponse,

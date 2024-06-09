@@ -25,7 +25,6 @@ use std::{
     fmt::Debug,
     io::Write,
     str::{from_utf8, FromStr},
-    sync::Arc,
     time::Duration,
 };
 
@@ -67,7 +66,7 @@ pub struct DaemonAsync {
     /// Sender to send transactions to the chain
     pub sender: Wallet,
     /// State of the daemon
-    pub state: Arc<DaemonState>,
+    pub state: DaemonState,
 }
 
 impl DaemonAsync {
@@ -78,12 +77,18 @@ impl DaemonAsync {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.state.grpc_channel.clone()
+        self.sender.grpc_channel.clone()
+    }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush_state(&mut self) -> Result<(), DaemonError> {
+        self.state.flush()
     }
 }
 
 impl ChainState for DaemonAsync {
-    type Out = Arc<DaemonState>;
+    type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
         self.state.clone()
@@ -100,11 +105,13 @@ impl DaemonAsync {
     /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
     /// Does not consume the original [`DaemonAsync`].
     pub fn rebuild(&self) -> DaemonAsyncBuilder {
-        let mut builder = Self::builder();
+        let mut builder = DaemonAsyncBuilder {
+            state: Some(self.state()),
+            ..Default::default()
+        };
         builder
-            .chain(self.state().chain_data.clone())
-            .sender((*self.sender).clone())
-            .deployment_id(&self.state().deployment_id);
+            .chain(self.sender.chain_info.clone())
+            .sender((*self.sender).clone());
         builder
     }
 
@@ -281,7 +288,7 @@ impl DaemonAsync {
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = <T as Uploadable>::wasm(&self.state.chain_data);
+        let wasm_path = <T as Uploadable>::wasm(&self.sender.chain_info);
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 

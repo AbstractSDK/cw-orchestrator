@@ -5,7 +5,19 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
     to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
 };
+use cw_storage_plus::{Item, Map};
 use serde::Serialize;
+
+// Map for testing the querier
+#[cw_serde]
+pub struct TestItem {
+    pub first_item: u64,
+    pub second_item: String,
+}
+const TEST_ITEM: Item<TestItem> = Item::new("test-item");
+// Item for testing the querier
+const TEST_MAP_KEY: &str = "MAP_TEST_KEY";
+const TEST_MAP: Map<String, TestItem> = Map::new("test-map");
 
 #[cw_serde]
 pub struct InstantiateMsg {}
@@ -20,6 +32,7 @@ where
     #[payable]
     SecondMessage {
         /// test doc-comment
+        #[into]
         t: T,
     },
     /// test doc-comment
@@ -65,11 +78,28 @@ pub struct MigrateMsg {
 
 #[cfg_attr(feature = "export", cosmwasm_std::entry_point)]
 pub fn instantiate(
-    _deps: DepsMut,
+    deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
     _msg: InstantiateMsg,
 ) -> StdResult<Response> {
+    cw2::set_contract_version(deps.storage, "mock-contract", "0")?;
+
+    TEST_ITEM.save(
+        deps.storage,
+        &TestItem {
+            first_item: 1,
+            second_item: "test-item".to_string(),
+        },
+    )?;
+    TEST_MAP.save(
+        deps.storage,
+        TEST_MAP_KEY.to_string(),
+        &TestItem {
+            first_item: 2,
+            second_item: "test-map".to_string(),
+        },
+    )?;
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
@@ -163,7 +193,7 @@ pub mod interface {
 mod test {
     use super::MockContract as LocalMockContract;
     use super::*;
-    use cosmwasm_std::coins;
+    use cosmwasm_std::{coins, from_json};
     use cw_orch::prelude::*;
 
     #[test]
@@ -178,21 +208,63 @@ mod test {
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
         contract
-            .second_message("s".to_string(), &coins(156, "ujuno"))
+            .second_message("s", &coins(156, "ujuno"))
             .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
         contract.fourth_message().unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
-        contract.sixth_message(45, "moneys".to_string()).unwrap();
+        contract.sixth_message(45u64, "moneys").unwrap();
 
         contract
-            .seventh_message(156u128.into(), "ujuno".to_string(), &coins(156, "ujuno"))
+            .seventh_message(156u128, "ujuno", &coins(156, "ujuno"))
             .unwrap();
 
         contract.first_query().unwrap();
         contract.second_query("arg".to_string()).unwrap_err();
         contract.third_query("arg".to_string()).unwrap();
-        contract.fourth_query(45u64, "moneys".to_string()).unwrap();
+        contract.fourth_query(45u64, "moneys").unwrap();
+
+        Ok(())
+    }
+
+    #[test]
+    fn raw_query() -> Result<(), CwOrchError> {
+        // We need to check we can still call the execute msgs conveniently
+        let sender = Addr::unchecked("sender");
+        let mock = Mock::new(&sender);
+        mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
+        let contract = LocalMockContract::new("mock-contract", mock.clone());
+
+        contract.upload()?;
+        contract.instantiate(&InstantiateMsg {}, None, None)?;
+
+        let cw2_info: cw2::ContractVersion = from_json(
+            mock.wasm_querier()
+                .raw_query(contract.address()?, b"contract_info".to_vec())?,
+        )?;
+
+        assert_eq!(
+            cw2_info,
+            cw2::ContractVersion {
+                contract: "mock-contract".to_owned(),
+                version: "0".to_owned()
+            }
+        );
+
+        assert_eq!(
+            contract.item_query(TEST_ITEM)?,
+            TestItem {
+                first_item: 1,
+                second_item: "test-item".to_string()
+            }
+        );
+        assert_eq!(
+            contract.map_query(TEST_MAP, TEST_MAP_KEY.to_string())?,
+            TestItem {
+                first_item: 2,
+                second_item: "test-map".to_string()
+            }
+        );
 
         Ok(())
     }

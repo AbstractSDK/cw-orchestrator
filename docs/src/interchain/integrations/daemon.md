@@ -49,9 +49,9 @@ interchain.add_daemons(vec![local_migaloo]);
 
 ### For testing
 
-In some cases (we highly recommand it), you might want to interact with local nodes and relayers to test IBC interactions. To do so, we allow users to leverage <a href="https://starship.cosmology.tech/" target="_blank">Starship</a>. Starship is developed by <a href="https://twitter.com/cosmology_tech" target="_blank">@cosmology_tech</a> and allows developers to spin up a fully simulated mini-cosmos ecosystem. It sets up Cosmos SDK Nodes as well as relayers between them allowing you to focus on your application and less on the testing environment.
+In some cases (we highly recommend it), you might want to interact with local nodes and relayers to test IBC interactions. To do so, we allow users to leverage <a href="https://docs.cosmology.zone/starship" target="_blank">Starship</a>. Starship is developed by <a href="https://twitter.com/cosmology_tech" target="_blank">@cosmology_tech</a> and allows developers to spin up a fully simulated mini-cosmos ecosystem. It sets up Cosmos SDK Nodes as well as relayers between them allowing you to focus on your application and less on the testing environment.
 
-For setup, please refer to <a href="https://starship.cosmology.tech/get-started/step-1" target="_blank">the official Quick Start</a>. When all that is done, the starship adapter that we provide will detect the deployment and create the right `cw-orchestrator` variables and structures for you to interact and test with.
+For setup, please refer to <a href="https://docs.cosmology.zone/starship/get-started/step-1" target="_blank">the official Quick Start</a>. When all that is done, the starship adapter that we provide will detect the deployment and create the right `cw-orchestrator` variables and structures for you to interact and test with.
 
 ```rust,ignore
 use cw_orch_interchain::interchain::{Starship, ChannelCreator};

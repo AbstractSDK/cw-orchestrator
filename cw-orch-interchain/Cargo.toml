@@ -1,0 +1,57 @@
+[package]
+name = "cw-orch-interchain"
+version = "0.1.0"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
+keywords = ["cosmwasm", "blockchain"]
+categories = ["development-tools"]
+
+exclude = [".env"]
+
+[package.metadata.docs.rs]
+# passes all-features to cargo when building the docs.
+all-features = true
+
+[features]
+default = []
+# enable the optional dependencies
+daemon = [
+  "cw-orch-interchain-core/daemon",
+  "dep:cw-orch-interchain-daemon",
+  "dep:cw-orch-starship",
+]
+
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+
+cw-orch-interchain-core = { workspace = true }
+cw-orch-interchain-mock = { workspace = true }
+cw-orch-interchain-daemon = { workspace = true, optional = true }
+cw-orch-starship = { workspace = true, optional = true }
+
+#Used only for testing
+cosmwasm-std.workspace = true
+cw1 = "1.1.0"
+cw1-whitelist = "1.1.0"
+speculoos.workspace = true
+
+[dev-dependencies]
+cw-orch = { workspace = true, features = ["daemon"] }
+cw-orch-interchain = { path = ".", features = ["daemon"] }
+simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
+simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
+clap = { version = "4.4.4", features = ["derive"] }
+dotenv = "0.15.0"
+env_logger = "0.10.0"
+ibc-relayer-types.workspace = true
+log.workspace = true
+speculoos.workspace = true
+tokio = "1.32.0"
+cosmos-sdk-proto = "0.20.0"
+pretty_env_logger = "0.5.0"
+# abstract-cw-orch-polytone = "2.0.0"
+# abstract-polytone-note = "2.0.0"
+# polytone = "1.0.0"

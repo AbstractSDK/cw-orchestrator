@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- Added a test to make sure the derive macros stay compatible with new cw-orch versions
+- Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
+- Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
+- Add interchain capabilites as well as clone-testing
+- Bumped MSRV to 1.73 because of dependency `cosmwasm-vm@1.5.5`
+- Remove `impl_into`, the old `impl_into` behavior is now the default behavior
+- EXCITING FEATURE : Added an item and a map query method to be able to query cw-storage-plus structure outside of contracts easily
+- Add `flush_state` method for Local Chain Daemons
+- cw-orch-interchain now errors on checking transactions for IBC packets if NO packets were found
+- `DaemonState` removed from `Sender`
+- `Channel` moved from `DaemonState` to `Sender`
+- `DaemonState` write-locks file unless it's read-only, meaning it will panic at initialization if other process holds lock of it
+- `DaemonState` now can be safely used between threads and processes
+- Two non-related Daemon's can't use same file for writing simultaneously (cloned or rebuilt are related Daemon)
+- Writing to a file happens when all Daemon's that use same file dropped instead of hot writes
+- `force_write` added to the `DaemonState` to allow force write of the state
+
+### Breaking
+
+- Daemon : Changed return types on daemon queriers to match Cosmwasm std types
+- Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
+- Simplify the generated macros to allow for `impl Into<Type>` on `Uint*` and `String` types.
+- Clone-testing : Remove rt in Mock State creation (daemon doesn't need it anymore)
+
+## 0.22.0
+
 - Updated osmosis test tube to 24.0.1 ,that avoids re-compiling osmosis test tube
 - Added `balance` query at the root of QueryHandler
 - Added DaemonBuilder configuration for grpc url and fee overwriting
