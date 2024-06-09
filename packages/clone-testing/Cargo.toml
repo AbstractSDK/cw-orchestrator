@@ -16,7 +16,7 @@ cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
 # clone-cw-multi-test = { version = "0.1", features = ["cosmwasm_1_2"] }
 clone-cw-multi-test = { git = "https://github.com/abstractsdk/cw-multi-test", branch = "update/local-support-cosmwasm2", features = [
-    "cosmwasm_1_2",
+  "cosmwasm_1_2",
 ] }
 cw-utils = { workspace = true }
 serde = { workspace = true }
