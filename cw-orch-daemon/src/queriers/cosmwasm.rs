@@ -70,19 +70,21 @@ impl CosmWasm {
         let resp = client.contract_info(request).await?.into_inner();
         let contract_info = resp.contract_info.unwrap();
 
-        let mut c = ContractInfoResponse::default();
-        c.code_id = contract_info.code_id;
-        c.creator = contract_info.creator;
-        c.admin = if contract_info.admin.is_empty() {
-            None
-        } else {
-            Some(contract_info.admin)
-        };
-        c.ibc_port = if contract_info.ibc_port_id.is_empty() {
-            None
-        } else {
-            Some(contract_info.ibc_port_id)
-        };
+        let c = ContractInfoResponse::new(
+            contract_info.code_id,
+            Addr::unchecked(&contract_info.creator),
+            if contract_info.admin.is_empty() {
+                None
+            } else {
+                Some(Addr::unchecked(contract_info.admin))
+            },
+            false,
+            if contract_info.ibc_port_id.is_empty() {
+                None
+            } else {
+                Some(contract_info.ibc_port_id)
+            },
+        );
         Ok(c)
     }
 
@@ -302,9 +304,10 @@ impl WasmQuerier for CosmWasm {
 pub fn cosmrs_to_cosmwasm_code_info(
     code_info: cosmrs::proto::cosmwasm::wasm::v1::CodeInfoResponse,
 ) -> CodeInfoResponse {
-    let mut c = CodeInfoResponse::default();
-    c.code_id = code_info.code_id;
-    c.creator = code_info.creator;
-    c.checksum = code_info.data_hash.into();
-    c
+    let checksum: [u8; 32] = code_info.data_hash.try_into().unwrap();
+    CodeInfoResponse::new(
+        code_info.code_id,
+        Addr::unchecked(code_info.creator),
+        Checksum::from(checksum),
+    )
 }

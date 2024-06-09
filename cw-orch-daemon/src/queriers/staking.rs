@@ -327,21 +327,21 @@ pub fn cosmrs_to_cosmwasm_validator(
     validator: cosmrs::proto::cosmos::staking::v1beta1::Validator,
 ) -> Result<cosmwasm_std::Validator, StdError> {
     let comission = validator.commission.unwrap().commission_rates.unwrap();
-    Ok(cosmwasm_std::Validator {
-        address: validator.operator_address,
-        commission: comission.rate.parse()?,
-        max_commission: comission.max_rate.parse()?,
-        max_change_rate: comission.max_change_rate.parse()?,
-    })
+    Ok(cosmwasm_std::Validator::new(
+        validator.operator_address,
+        comission.rate.parse()?,
+        comission.max_rate.parse()?,
+        comission.max_change_rate.parse()?,
+    ))
 }
 
 pub fn cosmrs_to_cosmwasm_delegation(
     delegation_response: cosmrs::proto::cosmos::staking::v1beta1::DelegationResponse,
 ) -> Result<cosmwasm_std::Delegation, StdError> {
     let delegation = delegation_response.delegation.unwrap();
-    Ok(cosmwasm_std::Delegation {
-        delegator: Addr::unchecked(delegation.delegator_address),
-        validator: delegation.validator_address,
-        amount: cosmrs_to_cosmwasm_coin(delegation_response.balance.unwrap())?,
-    })
+    Ok(cosmwasm_std::Delegation::new(
+        Addr::unchecked(delegation.delegator_address),
+        delegation.validator_address,
+        cosmrs_to_cosmwasm_coin(delegation_response.balance.unwrap())?,
+    ))
 }
