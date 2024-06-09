@@ -6,7 +6,7 @@ members = [
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
-  "packages/cw-orch-osmosis-test-tube",
+  # "packages/cw-orch-osmosis-test-tube",
   "packages/cw-orch-traits",
   "contracts/*",
   "packages/macros/*",
@@ -23,6 +23,8 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 [workspace.dependencies]
 cw-utils = { version = "2.0.0" }
 cosmwasm-std = { version = "2.0" }
+cw-storage-plus = { version = "2.0.0" }
+
 cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.0" }
 cw20 = { package = "abstract-cw20", version = "1.2.2" }
 cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
@@ -45,7 +47,7 @@ cw-orch-contract-derive = { path = "packages/macros/cw-orch-contract-derive", ve
 cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0.20.0" }
 
 # Extensions
-cw-orch-osmosis-test-tube = { version = "0.1.0", path = "packages/cw-orch-osmosis-test-tube" }
+# cw-orch-osmosis-test-tube = { version = "0.1.0", path = "packages/cw-orch-osmosis-test-tube" }
 
 # Interchain
 cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.2.0" }

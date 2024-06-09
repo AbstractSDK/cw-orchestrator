@@ -15,7 +15,7 @@ use mock_contract::MockContract;
 fn instantiate2() -> anyhow::Result<()> {
     let app = MockBech32::new("mock");
 
-    let salt = vec![12, 89, 156, 63].into();
+    let salt = vec![12, 89, 156, 63];
     let mock_contract = MockContract::new("mock-contract", app.clone());
 
     mock_contract.upload()?;
@@ -23,10 +23,10 @@ fn instantiate2() -> anyhow::Result<()> {
     let expected_address = app.wasm_querier().instantiate2_addr(
         mock_contract.code_id()?,
         app.sender(),
-        salt.clone(),
+        salt.clone().into(),
     )?;
 
-    mock_contract.instantiate2(&InstantiateMsg {}, None, None, salt.clone())?;
+    mock_contract.instantiate2(&InstantiateMsg {}, None, None, Binary::new(salt.clone()))?;
 
     let addr = mock_contract.address()?;
 

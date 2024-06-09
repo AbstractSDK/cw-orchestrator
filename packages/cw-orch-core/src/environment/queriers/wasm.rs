@@ -43,7 +43,7 @@ pub trait WasmQuerier: Querier {
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
         address: impl Into<String>,
-        map: Map<'a, K, T>,
+        map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
         let total_key = map.key(key).to_vec();

@@ -175,7 +175,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
     /// Query the contract raw state from a cw-storage-plus::Map
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
-        query_map: Map<'a, K, T>,
+        query_map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
         self.get_chain()
