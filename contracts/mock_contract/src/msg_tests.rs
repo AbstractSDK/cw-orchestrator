@@ -95,8 +95,8 @@ mod test {
         contract.instantiate(&Empty {}, None, None)?;
         contract_ordered.instantiate(&Empty {}, None, None)?;
 
-        contract.test(5, "test".to_string())?;
-        contract_ordered.test("test".to_string(), 5)?;
+        contract.test(5u64, "test")?;
+        contract_ordered.test("test".to_string(), 5u64)?;
 
         Ok(())
     }

@@ -2,7 +2,8 @@ extern crate proc_macro;
 use crate::{
     execute_fns::payable,
     helpers::{
-        impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching, MsgType,
+        has_into, impl_into_deprecation, process_fn_name, process_sorting, LexiographicMatching,
+        MsgType,
     },
     query_fns::parse_query_type,
 };
@@ -82,22 +83,43 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
 
                 // We need to figure out a parameter name for all fields associated to their types
                 // They will be numbered from 0 to n-1
-                let variant_ident_content_names = variant_idents
-                    .iter()
+                let variant_fields: Vec<_> = variant_idents.clone().into_iter()
                     .enumerate()
-                    .map(|(i, _)|  Ident::new(&format!("arg{}", i), Span::call_site()));
+                    .map(|(i, mut field)| {
+                    field.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
+                    field
+                }).collect();
 
-                let variant_attr = variant_idents.clone().into_iter()
-                    .enumerate()
-                    .map(|(i, mut id)| {
-                    id.ident = Some(Ident::new(&format!("arg{}", i), Span::call_site()));
-                    id
+                // Generate the struct members (This can be kept, it doesn't disturb)
+                let variant_ident_content_names = variant_fields
+                    .iter()
+                    .map(|field| {
+                        let ident = &field.ident;
+
+                        if has_into(field){
+                            quote!(#ident.into())
+                        }else{
+                            quote!(#ident)
+                        }
+
+                    });
+
+                // Generate the function arguments (This may be made optional)
+                let variant_params = variant_fields.iter().map(|field| {
+                    let field_name = &field.ident;
+                    let field_type = &field.ty;
+                    if has_into(field){
+                        quote! (#field_name: impl Into<#field_type> )
+                    }else{
+                        quote! (#field_name: #field_type )
+                    }
                 });
+
 
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
+                    fn #variant_func_name(&self, #(#variant_params,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name (
                             #(#variant_ident_content_names,)*
                         );
@@ -122,14 +144,29 @@ pub fn fns_derive(msg_type: MsgType, input: ItemEnum) -> TokenStream {
                     LexiographicMatching::default().visit_fields_named_mut(variant_fields);
                 }
 
-                // remove attributes from fields
-                variant_fields.named.iter_mut().for_each(|f| f.attrs = vec![]);
-
                 // Parse these fields as arguments to function
                 let variant_fields = variant_fields.named.clone();
-                let variant_idents = variant_fields.iter().map(|f|f.ident.clone().unwrap());
 
-                let variant_attr = variant_fields.iter();
+                // Generate the struct members (This can be kept, it doesn't disturb)
+                let variant_idents = variant_fields.iter().map(|field|{
+                    let ident = field.ident.clone().unwrap();
+                    if has_into(field){
+                        quote!(#ident: #ident.into())
+                    }else{
+                        quote!(#ident)
+                    }
+                });
+
+                // Generate the function arguments (This may be made optional)
+                let variant_attr = variant_fields.iter().map(|field| {
+                    let field_name = &field.ident;
+                    let field_type = &field.ty;
+                    if has_into(field){
+                        quote! (#field_name: impl Into<#field_type> )
+                    }else{
+                        quote! (#field_name: #field_type )
+                    }
+                });
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]

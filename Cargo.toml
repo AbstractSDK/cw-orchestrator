@@ -44,7 +44,7 @@ cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.22.0" }
 
 # Macros
 cw-orch-contract-derive = { path = "packages/macros/cw-orch-contract-derive", version = "0.21.0" }
-cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0.19.0" }
+cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0.20.0" }
 
 # Extensions
 cw-orch-osmosis-test-tube = { version = "0.1.0", path = "packages/cw-orch-osmosis-test-tube" }

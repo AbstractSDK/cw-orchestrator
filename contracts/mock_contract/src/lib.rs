@@ -32,6 +32,7 @@ where
     #[payable]
     SecondMessage {
         /// test doc-comment
+        #[into]
         t: T,
     },
     /// test doc-comment
@@ -207,21 +208,21 @@ mod test {
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
         contract
-            .second_message("s".to_string(), &coins(156, "ujuno"))
+            .second_message("s", &coins(156, "ujuno"))
             .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
         contract.fourth_message().unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
-        contract.sixth_message(45, "moneys".to_string()).unwrap();
+        contract.sixth_message(45u64, "moneys").unwrap();
 
         contract
-            .seventh_message(156u128.into(), "ujuno".to_string(), &coins(156, "ujuno"))
+            .seventh_message(156u128, "ujuno", &coins(156, "ujuno"))
             .unwrap();
 
         contract.first_query().unwrap();
         contract.second_query("arg".to_string()).unwrap_err();
         contract.third_query("arg".to_string()).unwrap();
-        contract.fourth_query(45u64, "moneys".to_string()).unwrap();
+        contract.fourth_query(45u64, "moneys").unwrap();
 
         Ok(())
     }
