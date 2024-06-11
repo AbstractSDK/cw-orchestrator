@@ -24,6 +24,7 @@
 - Daemon : Changed return types on daemon queriers to match Cosmwasm std types
 - Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
 - Simplify the generated macros to allow for `impl Into<Type>` on `Uint*` and `String` types.
+- Fns Derive Macros: Namespace the fns derive attributes with `cw-orch(<attribute>)`. For instance, `#[cw_orch(payable)]`.
 - Clone-testing : Remove rt in Mock State creation (daemon doesn't need it anymore)
 
 ## 0.22.0
