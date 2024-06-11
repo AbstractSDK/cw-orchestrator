@@ -402,6 +402,21 @@ impl IndexResponse for AppResponse {
             event_type, attr_key
         )))
     }
+
+    fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+        let mut all_results = vec![];
+
+        for event in &self.events {
+            if event.ty == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key {
+                        all_results.push(attr.value.clone());
+                    }
+                }
+            }
+        }
+        all_results
+    }
 }
 
 impl BankSetter for CloneTesting {
