@@ -1,5 +1,5 @@
 // ANCHOR: full_counter_example
-use counter_contract::{msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns};
+use counter_contract::CounterContract;
 use cw_orch::{
     anyhow,
     daemon::senders::manual_sender::{ManualDaemon, ManualSenderOptions},
