@@ -80,5 +80,5 @@ pub trait AsyncWasmQuerier: Querier + Sync {
         &self,
         address: impl Into<String> + Send,
         query_msg: &Q,
-    ) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send
+    ) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
 }
