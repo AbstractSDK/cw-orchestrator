@@ -122,7 +122,7 @@ mod test {
         contract.first_message()?;
         contract.second_message(54u64, &[]).unwrap_err();
         contract.third_message(54u64).unwrap();
-        contract.fourth_message().unwrap();
+        contract.fourth(&[]).unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
         contract.sixth_message(45u64, "moneys").unwrap();
 
