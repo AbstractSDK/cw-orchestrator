@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::testing::MockApi;
-use cosmwasm_std::{instantiate2_address, Api, Binary, ContractResult, StdError, SystemResult};
+
+use cosmwasm_std::{
+    instantiate2_address, Api, Binary, Checksum, ContractResult, StdError, SystemResult,
+};
 use cosmwasm_std::{to_json_binary, ContractInfoResponse, HexBinary};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
@@ -41,7 +44,7 @@ impl<A: Api, S: StateInterface> QuerierGetter<MockWasmQuerier<A, S>> for MockBas
 fn code_id_hash<A: Api, S: StateInterface>(
     querier: &MockWasmQuerier<A, S>,
     code_id: u64,
-) -> Result<HexBinary, CwEnvError> {
+) -> Result<Checksum, CwEnvError> {
     let code_info = querier.app.borrow().wrap().query_wasm_code_info(code_id)?;
     Ok(code_info.checksum)
 }
@@ -60,7 +63,7 @@ fn contract_info<A: Api, S: StateInterface>(
 
 fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<Chain>>(
     contract: &T,
-) -> Result<HexBinary, CwEnvError> {
+) -> Result<Checksum, CwEnvError> {
     // We return the hashed contract-id.
     // This will cause the logic to never re-upload a contract if it has the same contract-id.
     let hash: [u8; 32] = Sha256::digest(contract.id()).into();
@@ -91,7 +94,7 @@ fn raw_query<A: Api, S: StateInterface>(
         ))),
         SystemResult::Ok(ContractResult::Ok(value)) => Ok(value),
     };
-    Ok(res?.0)
+    Ok(res?.to_vec())
 }
 
 fn smart_query<A: Api, S: StateInterface, Q, T>(
@@ -131,7 +134,7 @@ fn code<A: Api, S: StateInterface>(
 impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
     type Chain = MockBase<A, S>;
     /// Returns the hex-encoded checksum of the code.
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, CwEnvError> {
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, CwEnvError> {
         code_id_hash(self, code_id)
     }
 
@@ -146,7 +149,7 @@ impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError> {
+    ) -> Result<Checksum, CwEnvError> {
         local_hash(contract)
     }
 
@@ -183,7 +186,7 @@ impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
         let mock_canonical = MockApi::default().addr_canonicalize(MOCK_ADDR)?;
         let mock_humanized = self.app.borrow().api().addr_humanize(&mock_canonical);
 
-        if mock_humanized.is_ok() && mock_humanized.unwrap() == MOCK_ADDR {
+        if mock_humanized.is_ok() && mock_humanized.unwrap().as_str() == MOCK_ADDR {
             // if regular mock
             Ok(format!(
                 "contract/{}/{}",
@@ -223,12 +226,12 @@ mod tests {
             Box::new(ContractWrapper::new_with_empty(
                 |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
                 |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
-                |_, _, _: Empty| Ok::<_, StdError>(Binary(b"dummy-response".to_vec())),
+                |_, _, _: Empty| Ok::<_, StdError>(b"dummy-response".to_vec().into()),
             )),
         )?;
 
         mock.wasm_querier()
-            .instantiate2_addr(1, mock.sender(), Binary(b"salt-test".to_vec()))?;
+            .instantiate2_addr(1, mock.sender(), b"salt-test".to_vec().into())?;
 
         Ok(())
     }
@@ -246,12 +249,12 @@ mod tests {
             Box::new(ContractWrapper::new_with_empty(
                 |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
                 |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
-                |_, _, _: Empty| Ok::<_, StdError>(Binary(b"dummy-response".to_vec())),
+                |_, _, _: Empty| Ok::<_, StdError>(b"dummy-response".to_vec().into()),
             )),
         )?;
 
         mock.wasm_querier()
-            .instantiate2_addr(1, mock.sender(), Binary(b"salt-test".to_vec()))?;
+            .instantiate2_addr(1, mock.sender(), b"salt-test".to_vec().into())?;
 
         Ok(())
     }
@@ -263,7 +266,7 @@ mod tests {
         let addr = mock.wasm_querier().instantiate2_addr(
             0,
             mock.sender(),
-            Binary(b"salt-test".to_vec()),
+            b"salt-test".to_vec().into(),
         )?;
 
         assert_eq!(

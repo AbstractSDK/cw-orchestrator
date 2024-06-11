@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{core::CloneTestingApp, CloneTesting};
 use clone_cw_multi_test::AddressGenerator;
 use clone_cw_multi_test::CosmosRouter;
-use cosmwasm_std::{instantiate2_address, Api, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{instantiate2_address, Api, Checksum, ContractInfoResponse};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
@@ -38,7 +38,7 @@ impl<S: StateInterface> QuerierGetter<CloneWasmQuerier<S>> for CloneTesting<S> {
 
 impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     type Chain = CloneTesting<S>;
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, CwEnvError> {
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, CwEnvError> {
         let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
         Ok(code_info.checksum)
     }
@@ -55,7 +55,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError> {
+    ) -> Result<Checksum, CwEnvError> {
         // We return the hashed contract-id.
         // This will cause the logic to never re-upload a contract if it has the same contract-id.
         let hash: [u8; 32] = Sha256::digest(contract.id()).into();

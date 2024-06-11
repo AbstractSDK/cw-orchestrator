@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 use cw_multi_test::{
     ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
-    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailing, WasmKeeper,
 };
 use serde::Serialize;
 
@@ -27,7 +27,7 @@ pub type MockApp<A = MockApi> = App<
     DistributionKeeper,
     IbcSimpleModule,
     GovFailingModule,
-    StargateFailingModule,
+    StargateFailing,
 >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
@@ -349,7 +349,7 @@ mod test {
             )
             .unwrap();
 
-        asserting("that exect passed on correctly")
+        asserting("that exec passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
             .is_equal_to(&String::from("mint"));
 

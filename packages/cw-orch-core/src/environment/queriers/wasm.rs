@@ -1,4 +1,4 @@
-use cosmwasm_std::{from_json, CodeInfoResponse, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{from_json, Checksum, CodeInfoResponse, ContractInfoResponse};
 use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -13,7 +13,7 @@ use super::Querier;
 pub trait WasmQuerier: Querier {
     type Chain: ChainState;
 
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error>;
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error>;
 
     /// Query contract info
     fn contract_info(
@@ -43,7 +43,7 @@ pub trait WasmQuerier: Querier {
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
         address: impl Into<String>,
-        map: Map<'a, K, T>,
+        map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
         let total_key = map.key(key).to_vec();
@@ -65,7 +65,7 @@ pub trait WasmQuerier: Querier {
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError>;
+    ) -> Result<Checksum, CwEnvError>;
 
     fn instantiate2_addr(
         &self,

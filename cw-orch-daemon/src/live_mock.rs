@@ -119,17 +119,14 @@ impl WasmMockQuerier {
                     BankQuery::Balance { address, denom } => {
                         let query_result =
                             querier.balance(address, Some(denom.clone())).map(|result| {
-                                to_json_binary(&BalanceResponse {
-                                    amount: result[0].clone(),
-                                })
-                                .unwrap()
+                                to_json_binary(&BalanceResponse::new(result[0].clone())).unwrap()
                             });
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     BankQuery::AllBalances { address } => {
                         let query_result = querier
                             .balance(address, None)
-                            .map(|result| AllBalanceResponse { amount: result })
+                            .map(AllBalanceResponse::new)
                             .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
@@ -146,8 +143,8 @@ impl WasmMockQuerier {
                     StakingQuery::BondedDenom {} => {
                         let query_result = handle
                             .block_on(querier._params())
-                            .map(|result| BondedDenomResponse {
-                                denom: result.params.unwrap().bond_denom,
+                            .map(|result| {
+                                BondedDenomResponse::new(result.params.unwrap().bond_denom)
                             })
                             .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
@@ -158,18 +155,22 @@ impl WasmMockQuerier {
                     StakingQuery::AllDelegations { delegator } => {
                         let query_result = handle
                             .block_on(querier._delegator_delegations(delegator, None))
-                            .map(|result| AllDelegationsResponse {
-                                delegations: result
-                                    .delegation_responses
-                                    .into_iter()
-                                    .filter_map(|delegation| {
-                                        delegation.delegation.map(|d| Delegation {
-                                            delegator: Addr::unchecked(d.delegator_address),
-                                            validator: d.validator_address,
-                                            amount: to_cosmwasm_coin(delegation.balance.unwrap()),
+                            .map(|result| {
+                                AllDelegationsResponse::new(
+                                    result
+                                        .delegation_responses
+                                        .into_iter()
+                                        .filter_map(|delegation| {
+                                            delegation.delegation.map(|d| {
+                                                Delegation::new(
+                                                    Addr::unchecked(d.delegator_address),
+                                                    d.validator_address,
+                                                    to_cosmwasm_coin(delegation.balance.unwrap()),
+                                                )
+                                            })
                                         })
-                                    })
-                                    .collect(),
+                                        .collect(),
+                                )
                             })
                             .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
