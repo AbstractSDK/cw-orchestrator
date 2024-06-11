@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
@@ -98,11 +96,11 @@ impl TxBroadcaster {
                         .await?;
                     log::warn!(
                         target: &transaction_target(),
-                        "Retrying broadcasting TX in {} seconds because of {}",
-                        block_speed,
+                        "Retrying broadcasting TX in {:?} milliseconds because of {}",
+                        block_speed.as_millis(),
                         s.reason
                     );
-                    tokio::time::sleep(Duration::from_secs(block_speed)).await;
+                    tokio::time::sleep(block_speed).await;
 
                     tx_response = broadcast_helper(&mut tx_builder, wallet).await;
                     continue;
