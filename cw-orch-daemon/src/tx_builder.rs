@@ -66,14 +66,11 @@ impl TxBuilder {
         amount: impl Into<u128>,
         denom: &str,
         gas_limit: u64,
-        sender_options: SenderOptions,
+        fee_granter: Option<String>,
     ) -> Result<Fee, DaemonError> {
         let fee = Coin::new(amount.into(), denom).unwrap();
         let mut fee = Fee::from_amount_and_gas(fee, gas_limit);
-        fee.granter = sender_options
-            .fee_granter
-            .map(|g| AccountId::from_str(&g))
-            .transpose()?;
+        fee.granter = fee_granter.map(|g| AccountId::from_str(&g)).transpose()?;
         Ok(fee)
     }
 
@@ -138,7 +135,7 @@ impl TxBuilder {
             tx_fee,
             &wallet.get_fee_token(),
             gas_limit,
-            wallet.options.clone(),
+            wallet.options.fee_granter.clone(),
         )?;
 
         log::debug!(

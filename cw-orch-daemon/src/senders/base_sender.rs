@@ -37,7 +37,7 @@ use cw_orch_core::{
 };
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
-use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
+use bitcoin::secp256k1::{All, Secp256k1, Signing};
 use std::str::FromStr;
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
@@ -55,7 +55,7 @@ pub type Wallet = Sender<All>;
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 #[derive(Clone)]
-pub struct Sender<C: Signing + Context> {
+pub struct Sender<C: Signing + Clone> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
     /// gRPC channel
@@ -373,7 +373,12 @@ impl Sender<All> {
         sequence: u64,
         account_number: u64,
     ) -> Result<u64, DaemonError> {
-        let fee = TxBuilder::build_fee(0u8, &self.chain_info.gas_denom, 0, self.options.clone())?;
+        let fee = TxBuilder::build_fee(
+            0u8,
+            &self.chain_info.gas_denom,
+            0,
+            self.options.fee_granter.clone(),
+        )?;
 
         let auth_info = SignerInfo {
             public_key: self.private_key.get_signer_public_key(&self.secp),
