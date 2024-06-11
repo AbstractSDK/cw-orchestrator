@@ -76,11 +76,9 @@ pub trait WasmQuerier: Querier {
 }
 
 pub trait AsyncWasmQuerier: Querier + Sync {
-    fn smart_query<Q: Serialize, T: DeserializeOwned>(
+    fn smart_query<Q: Serialize + Sync, T: DeserializeOwned>(
         &self,
         address: impl Into<String> + Send,
         query_msg: &Q,
     ) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send
-    where
-        Q: Sync;
 }
