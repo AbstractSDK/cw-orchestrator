@@ -136,6 +136,12 @@ impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
         }
     }
 
+    /// Specifies sender builder options
+    pub fn options(&mut self, options: SenderGen::SenderOptions) -> &mut Self {
+        self.sender_options = options;
+        self
+    }
+
     /// Overwrites the grpc_url used to interact with the chain
     pub fn grpc_url(&mut self, url: &str) -> &mut Self {
         self.overwrite_grpc_url = Some(url.to_string());
