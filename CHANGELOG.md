@@ -18,6 +18,7 @@
 - Two non-related Daemon's can't use same file for writing simultaneously (cloned or rebuilt are related Daemon)
 - Writing to a file happens when all Daemon's that use same file dropped instead of hot writes
 - `force_write` added to the `DaemonState` to allow force write of the state
+- Added async query functions generations with cw_orch::QueryFns
 
 ### Breaking
 
