@@ -1,9 +1,31 @@
 # Supported Chains
 
-cw-orchestrator currently has support for the chains in the following subsections.
+cw-orchestrator currently explicitly supports the chains in this section:
 
-## Support a new CosmWasm Chain
-If you would like to add support for another chain, please feel free to [open a PR](https://github.com/AbstractSDK/cw-orchestrator/compare)!
+- [Archway](./archway.md)
+- [Injective](./injective.md)
+- [Juno](./juno.md)
+- [Kujira](./kujira.md)
+- [Neutron](./neutron.md)
+- [Osmosis](./osmosis.md)
+- [Sei](./sei.md)
+- [Terra](./terra.md)
+- [Rollkit](./rollkit.md)
+- [Xion](./xion.md)
+
+## Support a new Cosmos Chain
+
+Almost all Cosmos Chains can be added to cw-orchestrator. Depending on the on-chain modules (CosmWasm is not available on all chains for instance), action may be forbidden for some chains. However, connection should work out of the box for most of the chains. In order to add a new chain to your project, you can use the following objects:
+
+```rust,ignore
+{{#include ../../../cw-orch/tests/new_chain.rs:NEW_NETWORK_INFO}}
+```
+
+This chain info can then be used inside your project just like any other chain defined inside cw-orch.
+
+Alternatively, we suggest using the <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.grpc_url" target="blank">grpc_url</a> and <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.gas" target="blank">gas</a> methods on the DaemonBuilder for quick and dirty fixes to the grpc url and the gas prices if needed.
+
+If you would like to add explicit support for another chain, please feel free to [open a PR](https://github.com/AbstractSDK/cw-orchestrator/compare)!
 
 
 ## Issues
