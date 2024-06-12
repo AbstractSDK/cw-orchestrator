@@ -1,5 +1,6 @@
 NAME = tutorial
 FILE = examples/starship.yaml
+PORT_FORWARDING_FILE = ../examples/starship.yaml
 
 HELM_REPO = starship
 HELM_CHART = devnet
@@ -49,7 +50,7 @@ delete:
 
 .PHONY: port-forward
 port-forward:
-	bash $(CURDIR)/port-forward.sh --config=$(FILE)
+	bash $(CURDIR)/port-forward.sh --config=$(PORT_FORWARDING_FILE)
 
 .PHONY: stop-forward
 stop-forward:
