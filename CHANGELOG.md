@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+ - Added `remove_{address,code_id}` functions to be able to erase an entry in state. Involves core, mock, daemon, osmosis-test-tube, clone-testing
+
+## Unreleased
+
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
 - Cw-orch mock env info doesn't error when using chain ids that don't match the `osmosis-1` pattern
