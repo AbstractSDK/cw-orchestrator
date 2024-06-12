@@ -51,9 +51,9 @@ cw-orch-osmosis-test-tube = { version = "0.1.0", path = "packages/cw-orch-osmosi
 
 # Interchain
 cw-orch-interchain = { path = "cw-orch-interchain", version = "0.2.0" }
-cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.3.0" }
-cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.3.0" }
-cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.3.0" }
+cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.3.1" }
+cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.3.1" }
+cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.3.1" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.3.0" }
 
 #Clone Testing
