@@ -1,10 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unreleased
-
- - Added `remove_{address,code_id}` functions to be able to erase an entry in state. Involves core, mock, daemon, osmosis-test-tube, clone-testing
-
-## Unreleased
+## 0.23.0
 
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
@@ -23,6 +19,7 @@
 - Writing to a file happens when all Daemon's that use same file dropped instead of hot writes
 - `force_write` added to the `DaemonState` to allow force write of the state
 - Added `event_attr_values` to get all the attribute values corresponding to a key
+- Added `remove_{address,code_id}` functions to be able to erase an entry in state. Involves core, mock, daemon, osmosis-test-tube, clone-testing
 
 ### Breaking
 
