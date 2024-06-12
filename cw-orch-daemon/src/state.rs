@@ -192,6 +192,25 @@ impl DaemonState {
         Ok(())
     }
 
+    /// Remove a stateful value using the chainId and networkId
+    pub fn remove(&mut self, key: &str, contract_id: &str) -> Result<(), DaemonError> {
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
+
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let val = json_file_lock.get_mut(
+            &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
+        );
+        val[key][contract_id] = Value::Null;
+
+        Ok(())
+    }
+
     /// Forcefully write current json to a file
     pub fn force_write(&mut self) -> Result<(), DaemonError> {
         let json_file_state = match &mut self.json_state {
@@ -247,6 +266,11 @@ impl StateInterface for DaemonState {
             .unwrap();
     }
 
+    fn remove_address(&mut self, contract_id: &str) {
+        let deployment_id = self.deployment_id.clone();
+        self.remove(&deployment_id, contract_id).unwrap();
+    }
+
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
@@ -261,6 +285,9 @@ impl StateInterface for DaemonState {
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.set("code_ids", contract_id, code_id).unwrap();
+    }
+    fn remove_code_id(&mut self, contract_id: &str) {
+        self.remove("code_ids", contract_id).unwrap();
     }
 
     /// Get all addresses for deployment id from state file
