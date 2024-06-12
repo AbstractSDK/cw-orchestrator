@@ -28,6 +28,7 @@ use std::time::Duration;
 use tokio::runtime::Handle;
 
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
+#[derive(Clone)]
 pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
     daemons: HashMap<NetworkId, Daemon>,

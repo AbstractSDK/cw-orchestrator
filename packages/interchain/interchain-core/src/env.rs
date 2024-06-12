@@ -70,7 +70,7 @@ pub type ChainId<'a> = &'a str;
 /// - Handling multiple chains in one location (to avoid passing them as arguments each time)
 /// - Creating IBC channels between chains
 /// - Logging packet execution steps for easier debugging (failed acks, timeouts...)
-pub trait InterchainEnv<Chain: IbcQueryHandler> {
+pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     /// Type returned by the internal channel creation function
     /// Examples
     /// Daemon : This is empty, because hermes doesn't return anything after channel creation
