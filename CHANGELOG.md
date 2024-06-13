@@ -19,7 +19,7 @@
 - Writing to a file happens when all Daemon's that use same file dropped instead of hot writes
 - `force_write` added to the `DaemonState` to allow force write of the state
 - Added `event_attr_values` to get all the attribute values corresponding to a key
-- Added `state` to DaemonBuidler to be able to share state between daemons
+- Added `state` to DaemonBuilder to be able to share state between daemons
   
 ### Breaking
 
