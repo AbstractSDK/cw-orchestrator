@@ -42,7 +42,7 @@ install-tiny:
 	$(MAKE) install FILE=$(TINY_FILE)
 
 delete:
-	-helm delete $(NAME)
+	starship stop
 
 ###############################################################################
 ###                                 Port forward                            ###
