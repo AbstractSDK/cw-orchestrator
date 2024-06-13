@@ -92,6 +92,13 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Reuse already existent [`DaemonState`]
+    /// Useful for multi-chain scenarios
+    pub fn state(&mut self, state: DaemonState) -> &mut Self {
+        self.state = Some(state);
+        self
+    }
+
     /// Specifies path to the daemon state file
     /// Defaults to env variable.
     ///
