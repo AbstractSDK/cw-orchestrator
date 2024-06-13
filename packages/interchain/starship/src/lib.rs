@@ -4,7 +4,7 @@
 pub mod client;
 
 use crate::client::StarshipClient;
-use cw_orch_core::environment::{ChainInfoOwned, NetworkInfoOwned};
+use cw_orch_core::environment::{ChainInfoOwned, ChainState, NetworkInfoOwned};
 use cw_orch_core::CwEnvError;
 use cw_orch_daemon::{Daemon, DaemonBuilder};
 use ibc_chain_registry::chain::ChainData;
@@ -26,7 +26,7 @@ impl Starship {
     pub fn new(rt_handle: &Handle, url: Option<&str>) -> Result<Self, CwEnvError> {
         let starship_client = StarshipClient::new(rt_handle.clone(), url)?;
 
-        let mut daemons = HashMap::new();
+        let mut daemons: HashMap<String, Daemon> = HashMap::new();
         for chain in starship_client.chains.iter() {
             let mnemonic = rt_handle.block_on(async {
                 let registry = starship_client.registry().await;
@@ -36,12 +36,17 @@ impl Starship {
                     .unwrap()
             });
 
-            let daemon = DaemonBuilder::default()
+            let mut daemon_builder = DaemonBuilder::default();
+            let mut daemon_builder = daemon_builder
                 .chain(chain_data_conversion(chain.clone()))
                 .mnemonic(mnemonic)
-                .handle(rt_handle)
-                .build()?;
-            daemons.insert(chain.chain_id.to_string(), daemon);
+                .handle(rt_handle);
+
+            if let Some(existing_daemon) = daemons.values().next() {
+                daemon_builder = daemon_builder.state(existing_daemon.state())
+            }
+
+            daemons.insert(chain.chain_id.to_string(), daemon_builder.build()?);
         }
 
         Ok(Self {

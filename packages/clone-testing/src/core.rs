@@ -454,11 +454,8 @@ mod test {
     use cw_orch_core::environment::QueryHandler;
     use cw_orch_daemon::networks::JUNO_1;
     use cw_orch_mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
-    use serde::Serialize;
     use speculoos::prelude::*;
 
-    #[derive(Debug, Serialize)]
-    struct MigrateMsg {}
     pub struct MockCw20;
 
     fn execute(
