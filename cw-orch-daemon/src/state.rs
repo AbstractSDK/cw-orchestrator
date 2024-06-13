@@ -29,7 +29,7 @@ pub struct DaemonState {
     pub deployment_id: String,
     /// Information about the chain
     pub chain_data: ChainInfoOwned,
-    /// Wether to write on every change of the state
+    /// Whether to write on every change of the state
     pub write_on_change: bool,
 }
 

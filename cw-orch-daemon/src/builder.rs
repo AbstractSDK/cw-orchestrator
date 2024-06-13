@@ -99,7 +99,7 @@ impl DaemonAsyncBuilder {
         self
     }
 
-    /// Wether to write on every change of the state
+    /// Whether to write on every change of the state
     /// If `true` - writes to a file on every change
     /// If `false` - writes to a file when all Daemons dropped this [`DaemonState`] or [`DaemonState::force_write`] used
     /// Defaults to `true`
