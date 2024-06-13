@@ -29,6 +29,8 @@ pub struct DaemonState {
     pub deployment_id: String,
     /// Information about the chain
     pub chain_data: ChainInfoOwned,
+    /// Whether to write on every change of the state
+    pub write_on_change: bool,
 }
 
 impl Drop for DaemonState {
@@ -59,6 +61,7 @@ impl DaemonState {
         chain_data: ChainInfoOwned,
         deployment_id: String,
         read_only: bool,
+        write_on_change: bool,
     ) -> Result<DaemonState, DaemonError> {
         let chain_id = &chain_data.chain_id;
         let chain_name = &chain_data.network_info.chain_name;
@@ -110,6 +113,7 @@ impl DaemonState {
             json_state,
             deployment_id,
             chain_data,
+            write_on_change,
         })
     }
 
@@ -189,6 +193,10 @@ impl DaemonState {
         );
         val[key][contract_id] = json!(value);
 
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
+
         Ok(())
     }
 
@@ -207,6 +215,10 @@ impl DaemonState {
             &self.chain_data.chain_id,
         );
         val[key][contract_id] = Value::Null;
+
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
 
         Ok(())
     }
@@ -236,13 +248,17 @@ impl DaemonState {
             DaemonStateFile::FullAccess { json_file_state } => json_file_state,
         };
 
-        let mut lock = json_file_state.lock().unwrap();
-        let json = lock.get_mut(
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let json = json_file_lock.get_mut(
             &self.chain_data.network_info.chain_name,
             &self.chain_data.chain_id,
         );
 
         *json = json!({});
+
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
         Ok(())
     }
 }

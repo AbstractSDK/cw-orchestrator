@@ -32,6 +32,9 @@ pub struct DaemonAsyncBuilder {
     // # Optional
     pub(crate) deployment_id: Option<String>,
     pub(crate) state_path: Option<String>,
+    /// State from rebuild or existing daemon
+    pub(crate) state: Option<DaemonState>,
+    pub(crate) write_on_change: Option<bool>,
 
     /* Sender related options */
     /// Wallet sender
@@ -39,9 +42,6 @@ pub struct DaemonAsyncBuilder {
     pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
-
-    /* Rebuilder related options */
-    pub(crate) state: Option<DaemonState>,
 }
 
 impl DaemonAsyncBuilder {
@@ -99,6 +99,15 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Whether to write on every change of the state
+    /// If `true` - writes to a file on every change
+    /// If `false` - writes to a file when all Daemons dropped this [`DaemonState`] or [`DaemonState::force_write`] used
+    /// Defaults to `true`
+    pub fn write_on_change(&mut self, write_on_change: bool) -> &mut Self {
+        self.write_on_change = Some(write_on_change);
+        self
+    }
+
     /// Specifies path to the daemon state file
     /// Defaults to env variable.
     ///
@@ -125,6 +134,9 @@ impl DaemonAsyncBuilder {
                 let mut state = state.clone();
                 state.chain_data = chain_info.clone();
                 state.deployment_id = deployment_id;
+                if let Some(write_on_change) = self.write_on_change {
+                    state.write_on_change = write_on_change;
+                }
                 state
             }
             None => {
@@ -133,7 +145,13 @@ impl DaemonAsyncBuilder {
                     .clone()
                     .unwrap_or(DaemonState::state_file_path()?);
 
-                DaemonState::new(json_file_path, chain_info.clone(), deployment_id, false)?
+                DaemonState::new(
+                    json_file_path,
+                    chain_info.clone(),
+                    deployment_id,
+                    false,
+                    self.write_on_change.unwrap_or(true),
+                )?
             }
         };
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
@@ -177,6 +195,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             sender: value.sender,
             state: value.state,
             state_path: value.state_path,
+            write_on_change: value.write_on_change,
         }
     }
 }

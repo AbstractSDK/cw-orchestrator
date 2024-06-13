@@ -29,6 +29,7 @@ impl MockState {
                 chain,
                 deployment_id.to_string(),
                 true,
+                false,
             )
             .unwrap(),
         }

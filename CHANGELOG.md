@@ -21,7 +21,8 @@
 - Added `event_attr_values` to get all the attribute values corresponding to a key
 - Added `remove_{address,code_id}` functions to be able to erase an entry in state. Involves core, mock, daemon, osmosis-test-tube, clone-testing
 - Added `state` to DaemonBuilder to be able to share state between daemons
-  
+- Added `write_on_change` flag for writing to a `DaemonState` file on every change
+
 ### Breaking
 
 - Daemon : Changed return types on daemon queriers to match CosmWasm std types
