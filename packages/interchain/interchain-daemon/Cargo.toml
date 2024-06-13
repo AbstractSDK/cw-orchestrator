@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-interchain-daemon"
-version = "0.3.1"
+version = "0.3.2"
 description = "An interchain intergration crate for interacting with actual chain nodes (via gRPC)"
 authors.workspace = true
 edition.workspace = true

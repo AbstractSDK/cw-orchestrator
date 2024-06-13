@@ -90,10 +90,17 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         mnemonic: Option<impl ToString>,
     ) -> IcDaemonResult<()> {
         let mut daemon_builder = Daemon::builder();
-        let daemon_builder = daemon_builder.chain(chain_data.clone()).handle(runtime);
+        let mut daemon_builder = daemon_builder.chain(chain_data.clone()).handle(runtime);
 
-        let daemon_builder = if let Some(mn) = mnemonic {
+        daemon_builder = if let Some(mn) = mnemonic {
             daemon_builder.mnemonic(mn)
+        } else {
+            daemon_builder
+        };
+
+        // State is shared between daemons, so if a daemon already exists, we use its state
+        daemon_builder = if let Some(daemon) = self.daemons.values().next() {
+            daemon_builder.state(daemon.state())
         } else {
             daemon_builder
         };
