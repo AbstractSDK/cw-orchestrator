@@ -14,9 +14,9 @@ pub const CONSTANTINE_3: ChainInfo = ChainInfo {
     chain_id: "constantine-3",
     gas_denom: "aconst",
     gas_price: 1000000000000.0,
-    grpc_urls: &["https://grpc.constantine.archway.tech:443"],
+    grpc_urls: &["https://grpc.constantine.archway.io:443"],
     network_info: ARCHWAY_NETWORK,
-    lcd_url: Some("https://api.constantine.archway.tech"),
+    lcd_url: Some("https://api.constantine.archway.io"),
     fcd_url: None,
 };
 
