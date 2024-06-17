@@ -20,6 +20,7 @@ pub use crate::contract::interface_traits::{
 pub use cw_orch_core::contract::Deploy;
 
 pub use crate::environment::StateInterface;
+pub use crate::environment::ChainState;
 
 // Response trait
 pub use crate::environment::IndexResponse;
