@@ -47,6 +47,11 @@ pub trait ContractInstance<Chain: ChainState> {
         Contract::set_address(self.as_instance(), address)
     }
 
+    /// Removes the address for the contract
+    fn remove_address(&self) {
+        Contract::remove_address(self.as_instance())
+    }
+
     /// Sets a default address for the contract. If the contract already has an address registered in the state, this won't be used.
     /// This is mostly used to ship address with a cw-orch package.
     fn set_default_address(&mut self, address: &Addr) {
@@ -57,6 +62,11 @@ pub trait ContractInstance<Chain: ChainState> {
     /// and not registered in the configured state file.
     fn set_code_id(&self, code_id: u64) {
         Contract::set_code_id(self.as_instance(), code_id)
+    }
+
+    /// Removes the code_id for the contract
+    fn remove_code_id(&self) {
+        Contract::remove_code_id(self.as_instance())
     }
 
     /// Sets a default address for the contract. If the contract already has an address registered in the state, this won't be used.

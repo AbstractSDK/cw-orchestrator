@@ -402,6 +402,21 @@ impl IndexResponse for AppResponse {
             event_type, attr_key
         )))
     }
+
+    fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+        let mut all_results = vec![];
+
+        for event in &self.events {
+            if event.ty == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key {
+                        all_results.push(attr.value.clone());
+                    }
+                }
+            }
+        }
+        all_results
+    }
 }
 
 impl BankSetter for CloneTesting {
@@ -439,11 +454,8 @@ mod test {
     use cw_orch_core::environment::QueryHandler;
     use cw_orch_daemon::networks::JUNO_1;
     use cw_orch_mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
-    use serde::Serialize;
     use speculoos::prelude::*;
 
-    #[derive(Debug, Serialize)]
-    struct MigrateMsg {}
     pub struct MockCw20;
 
     fn execute(

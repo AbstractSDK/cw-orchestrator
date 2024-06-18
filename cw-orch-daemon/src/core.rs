@@ -259,15 +259,15 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
             ._average_block_speed(Some(0.9))
             .await?;
 
-        let wait_time = average_block_speed * amount;
+        let wait_time = average_block_speed.mul_f64(amount as f64);
 
         // now wait for that amount of time
-        tokio::time::sleep(Duration::from_secs(wait_time)).await;
+        tokio::time::sleep(wait_time).await;
         // now check every block until we hit the target
         while last_height < end_height {
             // wait
 
-            tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
+            tokio::time::sleep(average_block_speed).await;
 
             // ping latest block
             last_height = Node::new_async(self.channel())._block_height().await?;

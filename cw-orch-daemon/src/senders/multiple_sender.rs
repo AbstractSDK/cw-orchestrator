@@ -104,11 +104,13 @@ impl MultipleSender {
         let tx_result = self.sender.commit_tx_any(msgs, memo).await?;
         log::info!(
             target: &transaction_target(),
-            "[Broadcasted] Success",
+            "[Broadcasted] Success: {}",
+            tx_result.txhash
         );
 
         let mut msgs_to_empty = self.msgs.lock().unwrap();
         *msgs_to_empty = vec![];
+
         Ok(tx_result)
     }
 }
