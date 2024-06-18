@@ -166,7 +166,16 @@ impl SenderTrait for Sender<All> {
     }
 
     fn set_options(&mut self, options: Self::SenderOptions) {
-        if options.hd_index.is_some() {
+        if let Some(mnemonic) = options.mnemonic.clone() {
+            let new_sender = Sender::from_mnemonic_with_options(
+                self.chain_info.clone(),
+                self.channel(),
+                &mnemonic,
+                options,
+            )
+            .unwrap();
+            *self = new_sender;
+        } else if options.hd_index.is_some() {
             // Need to generate new sender as hd_index impacts private key
             let new_sender = Sender::from_raw_key_with_options(
                 self.chain_info.clone(),
