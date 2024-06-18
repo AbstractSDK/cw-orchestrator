@@ -99,11 +99,14 @@ impl DaemonState {
                 return Err(DaemonError::StateAlreadyLocked(json_file_path));
             }
             let mut json_file_state = JsonLockedState::new(&json_file_path);
-            // Insert and drop mutex lock asap
+            // Insert and drop global mutex lock asap
             lock.insert(json_file_path);
             drop(lock);
 
             json_file_state.prepare(chain_id, chain_name, &deployment_id);
+            if write_on_change {
+                json_file_state.force_write();
+            }
             DaemonStateFile::FullAccess {
                 json_file_state: Arc::new(Mutex::new(json_file_state)),
             }
