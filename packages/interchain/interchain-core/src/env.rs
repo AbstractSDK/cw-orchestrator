@@ -234,7 +234,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
-    ) -> Result<(), InterchainError> {
+    ) -> Result<IbcTxAnalysis<Chain>, InterchainError> {
         let tx_result = self.wait_ibc(chain_id, tx_response).map_err(Into::into)?;
 
         ensure!(
@@ -242,7 +242,9 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
             InterchainError::NoPacketsFound {}
         );
 
-        tx_result.into_result()
+        tx_result.into_result()?;
+
+        Ok(tx_result)
     }
 
     /// Follow every IBC packets sent out during the transaction

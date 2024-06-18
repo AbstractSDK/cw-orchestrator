@@ -11,6 +11,7 @@ use log4rs::{
 };
 
 /// Store the log configuration of the daemon environment
+#[derive(Clone)]
 pub struct InterchainLog {
     handle: log4rs::Handle,
     chain_ids: Vec<String>,

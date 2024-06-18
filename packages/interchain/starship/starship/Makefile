@@ -3,14 +3,14 @@ FILE = ../examples/starship.yaml
 
 HELM_REPO = starship
 HELM_CHART = devnet
-HELM_VERSION = 0.1.46-rc2
+HELM_VERSION = 0.2.3
 
 ###############################################################################
 ###                              All commands                               ###
 ###############################################################################
 
 .PHONY: setup
-setup: setup-helm setup-kind
+setup: setup-deps setup-helm setup-kind
 
 .PHONY: stop
 stop: stop-forward delete
@@ -24,25 +24,24 @@ clean: stop clean-kind
 
 .PHONY: setup-deps
 setup-deps:
-	bash $(CURDIR)/scripts/dev-setup.sh
+	npm install -g @starship-ci/cli
+	starship install
 
 ###############################################################################
 ###                              Helm Charts                                ###
 ###############################################################################
 
 setup-helm:
-	helm repo add $(HELM_REPO) https://cosmology-tech.github.io/starship/
-	helm repo update
-	helm search repo $(HELM_REPO)/$(HELM_CHART) --version $(HELM_VERSION)
+	starship setup
 
 install:
-	helm install -f $(FILE) $(NAME) $(HELM_REPO)/$(HELM_CHART) --version $(HELM_VERSION)
+	starship start --helmFile $(FILE)
 
 install-tiny:
 	$(MAKE) install FILE=$(TINY_FILE)
 
 delete:
-	-helm delete $(NAME)
+	starship stop
 
 ###############################################################################
 ###                                 Port forward                            ###

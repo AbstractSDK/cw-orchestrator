@@ -9,6 +9,8 @@
 use std::{env, path::PathBuf, str::FromStr};
 
 use cosmwasm_std::StdError;
+use regex::Regex;
+use std::time::Duration;
 
 const DEFAULT_TX_QUERY_RETRIES: usize = 50;
 
@@ -72,12 +74,35 @@ impl DaemonEnvVars {
 
     /// Optional - Integer
     /// Defaults to 1
-    /// Minimum block speed in seconds. Useful when the block speeds are varying a lot
-    pub fn min_block_speed() -> u64 {
+    /// Minimum block speed in milliseconds. Useful when the block speeds are varying a lot
+    pub fn min_block_speed() -> Duration {
         if let Ok(str_value) = env::var(MIN_BLOCK_SPEED_ENV_NAME) {
-            parse_with_log(str_value, MIN_BLOCK_SPEED_ENV_NAME)
+            let ms_re = Regex::new(r"(\d+)ms").unwrap();
+            let s_re = Regex::new(r"(\d+)s").unwrap();
+
+            if let Some(caps) = ms_re.captures(&str_value) {
+                if let Some(ms) = caps.get(1) {
+                    let milliseconds: u64 =
+                        parse_with_log(ms.as_str().to_string(), MIN_BLOCK_SPEED_ENV_NAME);
+                    Duration::from_millis(milliseconds)
+                } else {
+                    panic!("Couldn't parse content of env var {MIN_BLOCK_SPEED_ENV_NAME}, error : Didn't find a match for format `{{int}}ms");
+                }
+            } else if let Some(caps) = s_re.captures(&str_value) {
+                if let Some(s) = caps.get(1) {
+                    let seconds: u64 =
+                        parse_with_log(s.as_str().to_string(), MIN_BLOCK_SPEED_ENV_NAME);
+                    Duration::from_secs(seconds)
+                } else {
+                    panic!("Couldn't parse content of env var {MIN_BLOCK_SPEED_ENV_NAME}, error : Didn't find a match for format `{{int}}s");
+                }
+            } else {
+                // Assuming the number is in seconds if no unit is specified
+                let seconds: u64 = parse_with_log(str_value, MIN_BLOCK_SPEED_ENV_NAME);
+                Duration::from_secs(seconds)
+            }
         } else {
-            1
+            Duration::from_secs(1)
         }
     }
 

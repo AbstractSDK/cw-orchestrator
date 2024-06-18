@@ -1,6 +1,11 @@
 # cw-orchestrator Changelog
 
-## Unreleased
+## Unpublished
+
+- Added async query functions generations with cw_orch::QueryFns
+
+
+## 0.23.0
 
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
@@ -18,11 +23,15 @@
 - Two non-related Daemon's can't use same file for writing simultaneously (cloned or rebuilt are related Daemon)
 - Writing to a file happens when all Daemon's that use same file dropped instead of hot writes
 - `force_write` added to the `DaemonState` to allow force write of the state
-- Added async query functions generations with cw_orch::QueryFns
+- Added `event_attr_values` to get all the attribute values corresponding to a key
+- Added `remove_{address,code_id}` functions to be able to erase an entry in state. Involves core, mock, daemon, osmosis-test-tube, clone-testing
+- Added `state` to DaemonBuilder to be able to share state between daemons
+- Added `write_on_change` flag for writing to a `DaemonState` file on every change
 
 ### Breaking
 
-- Daemon : Changed return types on daemon queriers to match Cosmwasm std types
+- Daemon : Changed return types on daemon queriers to match CosmWasm std types
+- Daemon: Added below second block time.
 - Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
 - Simplify the generated macros to allow for `impl Into<Type>` on `Uint*` and `String` types.
 - Fns Derive Macros: Namespace the fns derive attributes with `cw-orch(<attribute>)`. For instance, `#[cw_orch(payable)]`.
