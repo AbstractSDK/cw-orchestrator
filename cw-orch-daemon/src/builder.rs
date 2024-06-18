@@ -112,7 +112,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
             state: self.state.clone(),
             sender: Some(wallet),
             sender_options: OtherSenderGen::SenderOptions::default(),
-            write_on_change: self.write_on_change.clone(),
+            write_on_change: self.write_on_change,
         }
     }
 
