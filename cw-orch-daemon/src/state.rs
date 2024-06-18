@@ -99,7 +99,7 @@ impl DaemonState {
                 return Err(DaemonError::StateAlreadyLocked(json_file_path));
             }
             let mut json_file_state = JsonLockedState::new(&json_file_path);
-            // Insert and drop global mutex lock asap
+            // Insert file to a locked files list and drop global mutex lock asap
             lock.insert(json_file_path);
             drop(lock);
 
