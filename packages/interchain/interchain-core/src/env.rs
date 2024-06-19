@@ -237,11 +237,6 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     ) -> Result<IbcTxAnalysis<Chain>, InterchainError> {
         let tx_result = self.wait_ibc(chain_id, tx_response).map_err(Into::into)?;
 
-        ensure!(
-            !tx_result.get_success_packets()?.is_empty(),
-            InterchainError::NoPacketsFound {}
-        );
-
         tx_result.into_result()?;
 
         Ok(tx_result)
