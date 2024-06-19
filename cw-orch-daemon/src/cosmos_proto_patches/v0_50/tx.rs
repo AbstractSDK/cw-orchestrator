@@ -3,8 +3,7 @@
 pub mod service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use crate::cosmos_modules::tx::GetTxsEventResponse;
-    use crate::cosmos_proto_patch::tx::GetTxsEventRequestv0_50;
-    use tonic::codegen::http::Uri;
+    use crate::cosmos_proto_patches::v0_50::tx::GetTxsEventRequest;
     use tonic::codegen::*;
     #[derive(Debug, Clone)]
     pub struct ServiceClient<T> {
@@ -20,37 +19,6 @@ pub mod service_client {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
-        }
-        pub fn with_origin(inner: T, origin: Uri) -> Self {
-            let inner = tonic::client::Grpc::with_origin(inner, origin);
-            Self { inner }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> ServiceClient<InterceptedService<T, F>>
-        where
-            F: tonic::service::Interceptor,
-            T::ResponseBody: Default,
-            T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
-            >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + Send + Sync,
-        {
-            ServiceClient::new(InterceptedService::new(inner, interceptor))
-        }
-        /// Compress requests with the given encoding.
-        ///
-        /// This requires the server to support it otherwise it might respond with an
-        /// error.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.send_compressed(encoding);
-            self
         }
         /// Enable decompressing responses.
         #[must_use]
@@ -76,7 +44,7 @@ pub mod service_client {
         }
         pub async fn get_txs_event(
             &mut self,
-            request: impl tonic::IntoRequest<GetTxsEventRequestv0_50>,
+            request: impl tonic::IntoRequest<GetTxsEventRequest>,
         ) -> std::result::Result<tonic::Response<GetTxsEventResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -98,14 +66,14 @@ pub mod service_client {
 pub mod service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use crate::cosmos_modules::tx::GetTxsEventResponse;
-    use crate::cosmos_proto_patch::tx::GetTxsEventRequestv0_50;
+    use crate::cosmos_proto_patches::v0_50::tx::GetTxsEventRequest;
     use tonic::codegen::*;
     /// Generated trait containing gRPC methods that should be implemented for use with ServiceServer.
     #[async_trait]
     pub trait Service: Send + Sync + 'static {
         async fn get_txs_event(
             &self,
-            request: tonic::Request<GetTxsEventRequestv0_50>,
+            request: tonic::Request<GetTxsEventRequest>,
         ) -> std::result::Result<tonic::Response<GetTxsEventResponse>, tonic::Status>;
     }
     #[derive(Debug)]
@@ -131,40 +99,6 @@ pub mod service_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
-        where
-            F: tonic::service::Interceptor,
-        {
-            InterceptedService::new(Self::new(inner), interceptor)
-        }
-        /// Enable decompressing requests with the given encoding.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.accept_compression_encodings.enable(encoding);
-            self
-        }
-        /// Compress responses with the given encoding, if the client supports it.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.send_compression_encodings.enable(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.max_decoding_message_size = Some(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.max_encoding_message_size = Some(limit);
-            self
-        }
     }
     impl<T, B> tonic::codegen::Service<http::Request<B>> for ServiceServer<T>
     where
@@ -187,12 +121,12 @@ pub mod service_server {
                 "/cosmos.tx.v1beta1.Service/GetTxsEvent" => {
                     #[allow(non_camel_case_types)]
                     struct GetTxsEventSvc<T: Service>(pub Arc<T>);
-                    impl<T: Service> tonic::server::UnaryService<GetTxsEventRequestv0_50> for GetTxsEventSvc<T> {
+                    impl<T: Service> tonic::server::UnaryService<GetTxsEventRequest> for GetTxsEventSvc<T> {
                         type Response = GetTxsEventResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
-                            request: tonic::Request<GetTxsEventRequestv0_50>,
+                            request: tonic::Request<GetTxsEventRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move { (*inner).get_txs_event(request).await };
@@ -265,7 +199,7 @@ use cosmrs::proto::cosmos::tx::v1beta1::OrderBy;
 /// GetTxsEventRequest is the request type for the Service.TxsByEvents
 /// RPC method.
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetTxsEventRequestv0_50 {
+pub struct GetTxsEventRequest {
     /// events is the list of transaction event type.
     #[prost(string, repeated, tag = "1")]
     pub events: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,

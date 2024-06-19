@@ -25,7 +25,7 @@ pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_
 pub use cw_orch_networks::networks;
 pub use sender::Wallet;
 pub use tx_builder::TxBuilder;
-mod cosmos_proto_patch;
+mod cosmos_proto_patches;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{
