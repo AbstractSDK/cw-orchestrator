@@ -14,6 +14,7 @@ use std::path::PathBuf;
 
 use crate::env::CoreEnvVars;
 use crate::environment::CwEnv;
+use crate::environment::Environment;
 use crate::environment::QueryHandler;
 use crate::CwEnvError;
 
@@ -197,7 +198,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 
         for contract in all_contracts {
             // We set the code_id and/or address of the contract in question if they are not present already
-            let env_info = contract.get_chain().env_info();
+            let env_info = contract.environment().env_info();
             // We load the file
             // We try to get the code_id for the contract
             if contract.code_id().is_err() {

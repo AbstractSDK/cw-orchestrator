@@ -7,6 +7,7 @@ use cosmwasm_std::{
     from_json, instantiate2_address, to_json_binary, CanonicalAddr, CodeInfoResponse,
     ContractInfoResponse, HexBinary,
 };
+use cw_orch_core::environment::Environment;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{Querier, QuerierGetter, WasmQuerier},
@@ -295,7 +296,7 @@ impl WasmQuerier for CosmWasm {
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(&contract.get_chain().daemon.sender.chain_info).checksum()
+        <T as Uploadable>::wasm(&contract.environment().daemon.sender.chain_info).checksum()
     }
 }
 

@@ -1,7 +1,8 @@
 use super::{Contract, WasmPath};
 use crate::{
     environment::{
-        ChainInfoOwned, ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+        ChainInfoOwned, ChainState, CwEnv, Environment, QueryHandler, TxHandler, TxResponse,
+        WasmQuerier,
     },
     error::CwEnvError,
     log::contract_target,
@@ -75,6 +76,9 @@ pub trait ContractInstance<Chain: ChainState> {
         Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
 
+    #[deprecated(
+        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
+    )]
     /// Returns the chain that this contract is deployed on.
     fn get_chain(&self) -> &Chain {
         Contract::get_chain(self.as_instance())
@@ -166,7 +170,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
 
     /// Query the contract raw state from an raw binary key
     fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
-        self.get_chain()
+        self.environment()
             .wasm_querier()
             .raw_query(self.address()?, query_keys)
             .map_err(Into::into)
@@ -177,7 +181,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
         &self,
         query_item: Item<T>,
     ) -> Result<T, CwEnvError> {
-        self.get_chain()
+        self.environment()
             .wasm_querier()
             .item_query(self.address()?, query_item)
     }
@@ -188,9 +192,16 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
         query_map: Map<'a, K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
-        self.get_chain()
+        self.environment()
             .wasm_querier()
             .map_query(self.address()?, query_map, key)
+    }
+}
+
+impl<Chain: ChainState, T: ?Sized + ContractInstance<Chain>> Environment<Chain> for T {
+    fn environment(&self) -> &Chain {
+        #[allow(deprecated)]
+        self.get_chain()
     }
 }
 
@@ -277,12 +288,12 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             return Ok(false);
         };
 
-        let chain = self.get_chain();
+        let chain = self.environment();
         let on_chain_hash = chain
             .wasm_querier()
             .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = self.get_chain().wasm_querier().local_hash(self)?;
+        let local_hash = self.environment().wasm_querier().local_hash(self)?;
 
         Ok(local_hash == on_chain_hash)
     }
@@ -292,7 +303,7 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
-        let chain = self.get_chain();
+        let chain = self.environment();
         let info = chain
             .wasm_querier()
             .contract_info(self.address()?)

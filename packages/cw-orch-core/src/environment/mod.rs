@@ -17,3 +17,8 @@ pub use queriers::{
     DefaultQueriers, Querier, QuerierGetter, QueryHandler,
 };
 pub use state::{ChainState, StateInterface};
+
+pub trait Environment<Chain> {
+    // Required method
+    fn environment(&self) -> &Chain;
+}
