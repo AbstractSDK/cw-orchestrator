@@ -1,5 +1,9 @@
 # cw-orchestrator Changelog
 
+## cw-orch-daemon 0.23.5
+
+- Fixed Get Tx By Events compatibility with Cosmos SDK 0.50+ for Daemon
+
 ## 0.23.0
 
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
