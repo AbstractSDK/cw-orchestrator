@@ -1,7 +1,7 @@
 use crate::{
     log::print_if_log_disabled,
     sender::{SenderBuilder, SenderOptions},
-    DaemonAsync, DaemonBuilder, GrpcChannel,
+    DaemonAsync, DaemonBuilder, DaemonStateFile, GrpcChannel,
 };
 use std::sync::Arc;
 
@@ -136,6 +136,18 @@ impl DaemonAsyncBuilder {
                 state.deployment_id = deployment_id;
                 if let Some(write_on_change) = self.write_on_change {
                     state.write_on_change = write_on_change;
+                }
+                // It's most likely a new chain, need to "prepare" json state for writes
+                if let DaemonStateFile::FullAccess { json_file_state } = &state.json_state {
+                    let mut json_file_lock = json_file_state.lock().unwrap();
+                    json_file_lock.prepare(
+                        &state.chain_data.chain_id,
+                        &state.chain_data.network_info.chain_name,
+                        &state.deployment_id,
+                    );
+                    if state.write_on_change {
+                        json_file_lock.force_write();
+                    }
                 }
                 state
             }
