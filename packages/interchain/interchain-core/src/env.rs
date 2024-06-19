@@ -1,6 +1,6 @@
 //! This module contains the trait definition for an interchain analysis environment
 
-use cosmwasm_std::{ensure, Binary, IbcOrder};
+use cosmwasm_std::{Binary, IbcOrder};
 use cw_orch_core::{
     contract::interface_traits::ContractInstance,
     environment::{CwEnv, IndexResponse, TxHandler},
