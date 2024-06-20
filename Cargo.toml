@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "cw-orch",
+  "cw-orch-cli",
   "cw-orch-daemon",
   "cw-orch-interchain",
   "packages/cw-orch-core",
@@ -63,6 +64,7 @@ cw-orch-clone-testing = { version = "0.5.0", path = "packages/clone-testing" }
 thiserror = { version = "1.0.21" }
 sha2 = { version = "0.10.8" }
 serde_json = "1.0.79"
+base64 = { version = "0.21.0" }
 tonic = { version = "0.10.2" }
 prost-types = "0.12.3"
 prost = "0.12.3"

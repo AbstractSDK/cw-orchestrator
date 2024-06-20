@@ -16,6 +16,7 @@ ignore:
   - "tests"
   - "**/examples"
   - "**/schema.rs"
+  - "cw-orch-cli"
 
 # Make comments less noisy
 comment:
