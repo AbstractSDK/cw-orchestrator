@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-cli"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Buckram <misha@abstract.money>"]
 edition.workspace = true
 license.workspace = true
@@ -10,7 +10,7 @@ description = "Command-line tool for managing Cosmos-based interaction."
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cw-orch = { path = "../cw-orch", features = ["daemon"], version = "0.21" }
+cw-orch = { workspace = true, features = ["daemon"] }
 
 # Logs
 pretty_env_logger = { version = "0.5.0" }
@@ -22,6 +22,7 @@ cw-utils = "1.0.3"
 cw20 = { version = "1" }
 cw-ownable = { version = "0.5.1" }
 cosmrs = { version = "0.15.0", features = ["cosmwasm", "grpc"] }
+ibc-chain-registry = { workspace = true }
 
 # Serde
 serde_json = { workspace = true }

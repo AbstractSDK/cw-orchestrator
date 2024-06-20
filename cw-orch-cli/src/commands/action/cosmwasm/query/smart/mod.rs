@@ -1,10 +1,7 @@
 use cosmrs::proto::cosmwasm::wasm::v1::{
     query_client::QueryClient, QuerySmartContractStateRequest, QuerySmartContractStateResponse,
 };
-use cw_orch::{
-    daemon::{ChainRegistryData, GrpcChannel},
-    tokio::runtime::Runtime,
-};
+use cw_orch::{daemon::GrpcChannel, environment::ChainInfoOwned, tokio::runtime::Runtime};
 
 use crate::{commands::action::CosmosContext, types::CliAddress};
 
@@ -46,13 +43,13 @@ impl QueryWasmOutput {
 
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
-        let chain_data: ChainRegistryData = chain.into();
+        let chain_data: ChainInfoOwned = chain.into();
 
         let rt = Runtime::new()?;
         // TODO: replace by no-signer daemon
         let resp = rt.block_on(async {
             let grpc_channel =
-                GrpcChannel::connect(&chain_data.apis.grpc, chain_data.chain_id.as_str()).await?;
+                GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
             let mut client = QueryClient::new(grpc_channel);
 
             let resp = client

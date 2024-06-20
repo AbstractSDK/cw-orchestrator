@@ -1,7 +1,9 @@
 use cw_orch::{
-    daemon::{ChainInfo, ChainKind, CosmTxResponse, Fetchable},
+    daemon::CosmTxResponse,
+    environment::{ChainInfo, ChainKind},
     tokio::runtime::Runtime,
 };
+use ibc_chain_registry::fetchable::Fetchable;
 
 use crate::fetch::explorers::Explorers;
 
@@ -17,7 +19,7 @@ impl LogOutput for CosmTxResponse {
             let log_explorer_url = || -> cw_orch::anyhow::Result<()> {
                 let rt = Runtime::new()?;
                 let Explorers { explorers } = rt.block_on(Explorers::fetch(
-                    chain_info.network_info.id.to_owned(),
+                    chain_info.network_info.chain_name.to_owned(),
                     None,
                 ))?;
                 for explorer in explorers {

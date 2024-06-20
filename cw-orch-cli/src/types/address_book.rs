@@ -18,7 +18,7 @@ use std::{
 
 use color_eyre::eyre::Context;
 use cosmrs::AccountId;
-use cw_orch::daemon::ChainInfo;
+use cw_orch::environment::ChainInfo;
 use serde_json::{json, Value};
 
 fn address_book_path() -> color_eyre::Result<PathBuf> {
@@ -291,7 +291,7 @@ pub fn cw_orch_state_contracts(
     chain: &ChainInfo,
     deployment_id: &str,
 ) -> color_eyre::Result<serde_json::Map<String, Value>> {
-    let chain_name = chain.network_info.id;
+    let chain_name = chain.network_info.chain_name;
     let chain_id = chain.chain_id;
 
     let json = read_cw_orch_state()?;

@@ -1,6 +1,10 @@
 use crate::{fetch::explorers::Explorers, types::CliLockedChain};
 pub use base64::prelude::BASE64_STANDARD as B64;
-use cw_orch::daemon::{networks::SUPPORTED_NETWORKS as NETWORKS, ChainInfo, ChainKind, Fetchable};
+use cw_orch::{
+    daemon::networks::SUPPORTED_NETWORKS as NETWORKS,
+    environment::{ChainInfo, ChainKind},
+};
+use ibc_chain_registry::fetchable::Fetchable;
 use inquire::{error::InquireResult, InquireError, Select};
 
 pub fn get_cw_cli_exec_path() -> String {
@@ -13,7 +17,7 @@ pub fn select_chain() -> color_eyre::eyre::Result<Option<CliLockedChain>> {
         .map(|network| {
             format!(
                 "{} {}({})",
-                network.network_info.id.to_uppercase(),
+                network.network_info.chain_name.to_uppercase(),
                 network.kind.to_string().to_uppercase(),
                 network.chain_id
             )
@@ -95,14 +99,11 @@ pub fn parse_expiration() -> InquireResult<cw_utils::Expiration> {
     Ok(expiration)
 }
 
-pub async fn show_addr_explorer(
-    chain_info: ChainInfo<'static>,
-    addr: &str,
-) -> color_eyre::eyre::Result<()> {
+pub async fn show_addr_explorer(chain_info: ChainInfo, addr: &str) -> color_eyre::eyre::Result<()> {
     // TODO: should be allowed for any type of chain ORC-119
     if let ChainKind::Mainnet = chain_info.kind {
         let Explorers { explorers } =
-            Explorers::fetch(chain_info.network_info.id.to_owned(), None).await?;
+            Explorers::fetch(chain_info.network_info.chain_name.to_owned(), None).await?;
         for explorer in explorers {
             if let Some(tx_page) = explorer.account_page {
                 let url = tx_page.replace("${accountAddress}", addr);

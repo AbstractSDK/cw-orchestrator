@@ -1,4 +1,4 @@
-use cw_orch::daemon::Fetchable;
+use ibc_chain_registry::fetchable::Fetchable;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

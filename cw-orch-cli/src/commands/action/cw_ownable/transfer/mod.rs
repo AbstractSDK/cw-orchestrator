@@ -91,8 +91,11 @@ impl TransferOwnershipOutput {
             println!("Successfully transferred ownership, waiting for approval by {new_owner}",);
 
             if let Some(seed) = receiver_seed {
-                let receiver_sender =
-                    cw_orch::daemon::sender::Sender::from_mnemonic(&daemon.state, &seed)?;
+                let receiver_sender = cw_orch::daemon::sender::Sender::from_mnemonic(
+                    chain.into(),
+                    daemon.channel(),
+                    &seed,
+                )?;
                 daemon.set_sender(&Wallet::new(receiver_sender));
                 let action = cw_ownable::Action::AcceptOwnership {};
                 let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;

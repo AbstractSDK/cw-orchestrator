@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use cw_orch::environment::default_state_folder;
+use cw_orch::env_vars::default_state_folder;
 
 pub const CLI_FOLDER: &str = "cli";
 
