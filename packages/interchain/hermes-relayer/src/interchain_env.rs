@@ -1,13 +1,13 @@
 use cosmwasm_std::IbcOrder;
-use cw_orch_core::environment::{ChainInfoOwned, ChainState, IndexResponse};
+use cw_orch_core::environment::IndexResponse;
 use cw_orch_daemon::queriers::{Ibc, Node};
 use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
 use cw_orch_interchain_core::InterchainEnv;
 
-use crate::relayer::HermesRelayer;
-use cw_orch_interchain_daemon::packet_inspector::PacketInspector;
+use crate::core::HermesRelayer;
+use crate::packet_inspector::PacketInspector;
 use cw_orch_interchain_daemon::InterchainDaemonError;
 use old_ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use old_ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
@@ -15,15 +15,13 @@ use tokio::time::sleep;
 use tonic::transport::Channel;
 
 use cw_orch_interchain_core::types::{
-    ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult, NetworkId,
+    ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult,
     SimpleIbcPacketAnalysis,
 };
 use cw_orch_interchain_daemon::ChannelCreator;
 use futures::future::try_join4;
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
-use tokio::runtime::Handle;
 
 impl InterchainEnv<Daemon> for HermesRelayer {
     type ChannelCreationResult = ();
@@ -148,7 +146,13 @@ impl InterchainEnv<Daemon> for HermesRelayer {
 
         // We try to relay the packets using the HERMES relayer
 
-        self.force_packet_relay()?;
+        self.force_packet_relay(
+            src_chain,
+            src_port.clone(),
+            src_channel.clone(),
+            dst_chain,
+            sequence,
+        );
 
         // We follow the trail
         let ibc_trail = self.rt_handle.block_on(interchain_env.follow_packet(

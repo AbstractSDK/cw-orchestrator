@@ -24,6 +24,10 @@ log.workspace = true
 cosmrs.workspace = true
 futures = "0.3.30"
 tonic.workspace = true
+cw-orch-traits = { version = "0.22.0", path = "../../cw-orch-traits" }
+futures-util = "0.3.30"
+async-recursion = "1.1.1"
+serde_json.workspace = true
 
 [dev-dependencies]
 cw-orch = { path = "../../../cw-orch", features = ["daemon"] }
@@ -31,4 +35,5 @@ cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
     "daemon",
 ] }
 dotenv = "0.15.0"
+ibc-proto = "0.32.0"
 pretty_env_logger = "0.5.0"

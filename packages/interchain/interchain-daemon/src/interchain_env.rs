@@ -41,6 +41,7 @@ pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
     rt_handle: Handle,
 }
 
+/// Mnemonic type to clarify code
 pub type Mnemonic = String;
 
 impl<C: ChannelCreator> DaemonInterchainEnv<C> {
