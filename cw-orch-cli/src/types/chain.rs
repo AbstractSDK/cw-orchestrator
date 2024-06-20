@@ -37,9 +37,9 @@ impl FromStr for CliLockedChain {
     }
 }
 
-impl ToString for CliLockedChain {
-    fn to_string(&self) -> String {
-        SUPPORTED_NETWORKS[self.0].chain_id.to_owned()
+impl ::std::fmt::Display for CliLockedChain {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", SUPPORTED_NETWORKS[self.0].chain_id)
     }
 }
 
