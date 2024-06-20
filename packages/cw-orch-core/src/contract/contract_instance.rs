@@ -1,10 +1,10 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use super::interface_traits::Uploadable;
 use crate::{
+    env::CoreEnvVars,
     environment::{ChainState, IndexResponse, StateInterface, TxHandler, TxResponse},
     error::CwEnvError,
     log::{contract_target, transaction_target},
-    CwOrchEnvVars,
 };
 
 use crate::environment::QueryHandler;
@@ -71,6 +71,11 @@ impl<Chain: ChainState> Contract<Chain> {
         self.chain.state().set_address(&self.id, address)
     }
 
+    /// Remove state address for contract
+    pub fn remove_address(&self) {
+        self.chain.state().remove_address(&self.id)
+    }
+
     /// Returns state code_id for contract
     pub fn code_id(&self) -> Result<u64, CwEnvError> {
         let state_code_id = self.chain.state().get_code_id(&self.id);
@@ -82,6 +87,10 @@ impl<Chain: ChainState> Contract<Chain> {
     /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
+    }
+    /// Remove state code_id for contract
+    pub fn remove_code_id(&self) {
+        self.chain.state().remove_code_id(&self.id)
     }
 }
 
@@ -334,7 +343,7 @@ impl<Chain: ChainState + QueryHandler> Contract<Chain> {
 
 /// Helper to serialize objects (JSON or Rust DEBUG)
 fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
-    if CwOrchEnvVars::load()?.serialize_json {
+    if CoreEnvVars::serialize_json() {
         Ok(serde_json::to_string(msg)?)
     } else {
         Ok(format!("{:#?}", msg))

@@ -1,5 +1,5 @@
 use crate::{
-    networks::ChainKind,
+    env::DaemonEnvVars,
     proto::injective::ETHEREUM_COIN_TYPE,
     queriers::Bank,
     tx_broadcaster::{
@@ -12,7 +12,6 @@ use super::{
     cosmos_modules::{self, auth::BaseAccount},
     error::DaemonError,
     queriers::Node,
-    state::DaemonState,
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
 };
@@ -31,10 +30,15 @@ use cosmrs::{
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
-use cw_orch_core::{log::local_target, CwOrchEnvVars};
+use cw_orch_core::{
+    environment::{ChainInfoOwned, ChainKind},
+    log::local_target,
+    CoreEnvVars, CwEnvError,
+};
 
+use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
-use std::{convert::TryFrom, str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -59,7 +63,10 @@ pub type Wallet = Arc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
-    pub(crate) daemon_state: Arc<DaemonState>,
+    /// gRPC channel
+    pub grpc_channel: Channel,
+    /// Information about the chain
+    pub chain_info: ChainInfoOwned,
     pub(crate) options: SenderOptions,
 }
 
@@ -97,38 +104,37 @@ impl SenderOptions {
 }
 
 impl Sender<All> {
-    pub fn new(daemon_state: &Arc<DaemonState>) -> Result<Sender<All>, DaemonError> {
-        Self::new_with_options(daemon_state, SenderOptions::default())
+    pub fn new(chain_info: ChainInfoOwned, channel: Channel) -> Result<Sender<All>, DaemonError> {
+        Self::new_with_options(chain_info, channel, SenderOptions::default())
+    }
+
+    pub fn channel(&self) -> Channel {
+        self.grpc_channel.clone()
     }
 
     pub fn new_with_options(
-        daemon_state: &Arc<DaemonState>,
+        chain_info: ChainInfoOwned,
+        channel: Channel,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
-        let kind = ChainKind::from(daemon_state.chain_data.network_type.clone());
-        // NETWORK_MNEMONIC_GROUP
-        let env_variable_name = kind.mnemonic_env_variable_name();
-        let mnemonic = kind.mnemonic().unwrap_or_else(|_| {
-            panic!(
-                "Wallet mnemonic environment variable {} not set.",
-                env_variable_name
-            )
-        });
+        let mnemonic = get_mnemonic_env(&chain_info.kind)?;
 
-        Self::from_mnemonic_with_options(daemon_state, &mnemonic, options)
+        Self::from_mnemonic_with_options(chain_info, channel, &mnemonic, options)
     }
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic(
-        daemon_state: &Arc<DaemonState>,
+        chain_info: ChainInfoOwned,
+        channel: Channel,
         mnemonic: &str,
     ) -> Result<Sender<All>, DaemonError> {
-        Self::from_mnemonic_with_options(daemon_state, mnemonic, SenderOptions::default())
+        Self::from_mnemonic_with_options(chain_info, channel, mnemonic, SenderOptions::default())
     }
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic_with_options(
-        daemon_state: &Arc<DaemonState>,
+        chain_info: ChainInfoOwned,
+        channel: Channel,
         mnemonic: &str,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
@@ -138,10 +144,12 @@ impl Sender<All> {
             mnemonic,
             0,
             options.hd_index.unwrap_or(0),
-            daemon_state.chain_data.slip44,
+            chain_info.network_info.coin_type,
         )?;
+
         let sender = Sender {
-            daemon_state: daemon_state.clone(),
+            chain_info,
+            grpc_channel: channel,
             private_key: p_key,
             secp,
             options,
@@ -149,7 +157,38 @@ impl Sender<All> {
         log::info!(
             target: &local_target(),
             "Interacting with {} using address: {}",
-            daemon_state.chain_data.chain_id,
+            sender.chain_info.chain_id,
+            sender.pub_addr_str()?
+        );
+        Ok(sender)
+    }
+
+    /// Construct a new Sender from a raw key with additional options
+    pub fn from_raw_key_with_options(
+        chain_info: ChainInfoOwned,
+        channel: Channel,
+        raw_key: &[u8],
+        options: SenderOptions,
+    ) -> Result<Sender<All>, DaemonError> {
+        let secp = Secp256k1::new();
+        let p_key: PrivateKey = PrivateKey::from_raw_key(
+            &secp,
+            raw_key,
+            0,
+            options.hd_index.unwrap_or(0),
+            chain_info.network_info.coin_type,
+        )?;
+        let sender = Sender {
+            private_key: p_key,
+            secp,
+            options,
+            grpc_channel: channel,
+            chain_info,
+        };
+        log::info!(
+            target: &local_target(),
+            "Interacting with {} using address: {}",
+            sender.chain_info.chain_id,
             sender.pub_addr_str()?
         );
         Ok(sender)
@@ -164,20 +203,28 @@ impl Sender<All> {
     }
 
     pub fn set_options(&mut self, options: SenderOptions) {
-        self.options = options;
+        if options.hd_index.is_some() {
+            // Need to generate new sender as hd_index impacts private key
+            let new_sender = Sender::from_raw_key_with_options(
+                self.chain_info.clone(),
+                self.channel(),
+                &self.private_key.raw_key(),
+                options,
+            )
+            .unwrap();
+            *self = new_sender
+        } else {
+            self.options = options
+        }
     }
 
     fn cosmos_private_key(&self) -> SigningKey {
         SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
     }
 
-    pub fn channel(&self) -> Channel {
-        self.daemon_state.grpc_channel.clone()
-    }
-
     pub fn pub_addr(&self) -> Result<AccountId, DaemonError> {
         Ok(AccountId::new(
-            &self.daemon_state.chain_data.bech32_prefix,
+            &self.chain_info.network_info.pub_address_prefix,
             &self.private_key.public_key(&self.secp).raw_address.unwrap(),
         )?)
     }
@@ -216,15 +263,13 @@ impl Sender<All> {
     }
 
     pub(crate) fn get_fee_token(&self) -> String {
-        self.daemon_state.chain_data.fees.fee_tokens[0]
-            .denom
-            .clone()
+        self.chain_info.gas_denom.to_string()
     }
 
     /// Compute the gas fee from the expected gas in the transaction
     /// Applies a Gas Buffer for including signature verification
     pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let mut gas_expected = if let Some(gas_buffer) = CwOrchEnvVars::load()?.gas_buffer {
+        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
             gas as f64 * gas_buffer
         } else if gas < BUFFER_THRESHOLD {
             gas as f64 * SMALL_GAS_BUFFER
@@ -232,14 +277,10 @@ impl Sender<All> {
             gas as f64 * GAS_BUFFER
         };
 
-        if let Some(min_gas) = CwOrchEnvVars::load()?.min_gas {
+        if let Some(min_gas) = DaemonEnvVars::min_gas() {
             gas_expected = (min_gas as f64).max(gas_expected);
         }
-        let fee_amount = gas_expected
-            * (self.daemon_state.chain_data.fees.fee_tokens[0]
-                .fixed_min_gas_price
-                .max(self.daemon_state.chain_data.fees.fee_tokens[0].average_gas_price)
-                + 0.00001);
+        let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
 
         Ok((gas_expected as u64, fee_amount as u128))
     }
@@ -251,12 +292,7 @@ impl Sender<All> {
         sequence: u64,
         account_number: u64,
     ) -> Result<u64, DaemonError> {
-        let fee = TxBuilder::build_fee(
-            0u8,
-            &self.daemon_state.chain_data.fees.fee_tokens[0].denom,
-            0,
-            self.options.clone(),
-        )?;
+        let fee = TxBuilder::build_fee(0u8, &self.chain_info.gas_denom, 0, self.options.clone())?;
 
         let auth_info = SignerInfo {
             public_key: self.private_key.get_signer_public_key(&self.secp),
@@ -268,7 +304,7 @@ impl Sender<All> {
         let sign_doc = SignDoc::new(
             tx_body,
             &auth_info,
-            &Id::try_from(self.daemon_state.chain_data.chain_id.to_string())?,
+            &Id::try_from(self.chain_info.chain_id.to_string())?,
             account_number,
         )?;
 
@@ -298,7 +334,7 @@ impl Sender<All> {
         let expected_fee = coin(fee_amount, self.get_fee_token());
         // During simulation, we also make sure the account has enough balance to submit the transaction
         // This is disabled by an env variable
-        if !CwOrchEnvVars::load()?.disable_wallet_balance_assertion {
+        if DaemonEnvVars::wallet_balance_assertion() {
             self.assert_wallet_balance(&expected_fee).await?;
         }
 
@@ -432,9 +468,9 @@ impl Sender<All> {
     /// Allows checking wether the sender has more funds than the provided `fee` argument
     #[async_recursion::async_recursion(?Send)]
     async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
-        let chain_data = self.daemon_state.as_ref().chain_data.clone();
+        let chain_info = self.chain_info.clone();
 
-        let bank = Bank::new_async(self.daemon_state.grpc_channel.clone());
+        let bank = Bank::new_async(self.channel());
         let balance = bank
             ._balance(self.address()?, Some(fee.denom.clone()))
             .await?[0]
@@ -443,14 +479,13 @@ impl Sender<All> {
         log::debug!(
             "Checking balance {} on chain {}, address {}. Expecting {}{}",
             balance.amount,
-            chain_data.chain_id,
+            chain_info.chain_id,
             self.address()?,
             fee,
             fee.denom
         );
-        let parsed_balance = coin(balance.amount.parse()?, balance.denom);
 
-        if parsed_balance.amount >= fee.amount {
+        if balance.amount >= fee.amount {
             log::debug!("The wallet has enough balance to deploy");
             return Ok(());
         }
@@ -460,31 +495,50 @@ impl Sender<All> {
             "Not enough funds on chain {} at address {} to deploy the contract. 
                 Needed: {}{} but only have: {}.
                 Press 'y' when the wallet balance has been increased to resume deployment",
-            self.daemon_state.chain_data.chain_id,
+            chain_info.chain_id,
             self.address()?,
             fee,
             fee.denom,
-            parsed_balance
+            balance
         );
 
-        if !CwOrchEnvVars::load()?.disable_manual_interaction {
+        if CoreEnvVars::manual_interaction() {
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            if input.to_lowercase().contains('y') {
+                // We retry asserting the balance
+                self.assert_wallet_balance(fee).await
+            } else {
+                Err(DaemonError::NotEnoughBalance {
+                    expected: fee.clone(),
+                    current: balance,
+                })
+            }
+        } else {
             println!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
-                current: parsed_balance,
+                current: balance,
             });
         }
+    }
+}
 
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input)?;
-        if input.to_lowercase().contains('y') {
-            // We retry asserting the balance
-            self.assert_wallet_balance(fee).await
-        } else {
-            Err(DaemonError::NotEnoughBalance {
-                expected: fee.clone(),
-                current: parsed_balance,
-            })
-        }
+fn get_mnemonic_env(chain_kind: &ChainKind) -> Result<String, CwEnvError> {
+    match chain_kind {
+        ChainKind::Local => DaemonEnvVars::local_mnemonic(),
+        ChainKind::Testnet => DaemonEnvVars::test_mnemonic(),
+        ChainKind::Mainnet => DaemonEnvVars::main_mnemonic(),
+    }
+    .ok_or(CwEnvError::EnvVarNotPresentNamed(
+        get_mnemonic_env_name(chain_kind).to_string(),
+    ))
+}
+
+fn get_mnemonic_env_name(chain_kind: &ChainKind) -> &str {
+    match chain_kind {
+        ChainKind::Local => LOCAL_MNEMONIC_ENV_NAME,
+        ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
+        ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
     }
 }

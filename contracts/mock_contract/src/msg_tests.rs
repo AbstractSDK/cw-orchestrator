@@ -7,7 +7,7 @@ use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, Std
 // ANCHOR: unordered_msg_def
 #[cw_serde]
 #[derive(cw_orch::ExecuteFns)]
-#[disable_fields_sorting]
+#[cw_orch(disable_fields_sorting)]
 pub enum ExecuteMsg {
     Test { b: u64, a: String },
 }
@@ -63,13 +63,13 @@ mod interface {
     use cw_orch::prelude::*;
 
     impl<Chain> Uploadable for TestContract<Chain> {
-        fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+        fn wrapper() -> <Mock as TxHandler>::ContractSource {
             Box::new(ContractWrapper::new_with_empty(execute, instantiate, query))
         }
     }
 
     impl<Chain> Uploadable for OrderedTestContract<Chain> {
-        fn wrapper(&self) -> <Mock as TxHandler>::ContractSource {
+        fn wrapper() -> <Mock as TxHandler>::ContractSource {
             Box::new(ContractWrapper::new_with_empty(
                 execute_ordered,
                 instantiate,
@@ -95,8 +95,8 @@ mod test {
         contract.instantiate(&Empty {}, None, None)?;
         contract_ordered.instantiate(&Empty {}, None, None)?;
 
-        contract.test(5, "test".to_string())?;
-        contract_ordered.test("test".to_string(), 5)?;
+        contract.test(5u64, "test")?;
+        contract_ordered.test("test".to_string(), 5u64)?;
 
         Ok(())
     }

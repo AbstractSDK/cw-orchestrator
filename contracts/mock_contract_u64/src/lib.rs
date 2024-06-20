@@ -75,6 +75,8 @@ pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> StdResult<Response
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod interface {
+    use cw_orch::environment::ChainInfoOwned;
+
     use super::*;
 
     #[cw_orch::interface(InstantiateMsg, ExecuteMsg<T>, QueryMsg<Q>, MigrateMsg, id = "mock-contract")]
@@ -82,7 +84,6 @@ pub mod interface {
 
     impl<Chain> cw_orch::prelude::Uploadable for MockContract<Chain, u64, u64> {
         fn wrapper(
-            &self,
         ) -> Box<dyn cw_orch::prelude::MockContract<cosmwasm_std::Empty, cosmwasm_std::Empty>>
         {
             Box::new(
@@ -91,7 +92,7 @@ pub mod interface {
             )
         }
 
-        fn wasm(&self) -> cw_orch::prelude::WasmPath {
+        fn wasm(_chain: &ChainInfoOwned) -> cw_orch::prelude::WasmPath {
             use cw_orch::prelude::*;
             artifacts_dir_from_workspace!()
                 .find_wasm_path("mock_contract")
@@ -119,22 +120,20 @@ mod test {
         contract.upload()?;
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
-        contract.second_message(54, &[]).unwrap_err();
-        contract.third_message(54).unwrap();
-        contract.fourth_message().unwrap();
+        contract.second_message(54u64, &[]).unwrap_err();
+        contract.third_message(54u64).unwrap();
+        contract.fourth(&[]).unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
-        contract.sixth_message(45, "moneys".to_string()).unwrap();
+        contract.sixth_message(45u64, "moneys").unwrap();
 
         contract
-            .seventh_message(156u128.into(), "ujuno".to_string(), &coins(156, "ujuno"))
+            .seventh_message(156u128, "ujuno", &coins(156, "ujuno"))
             .unwrap();
 
         contract.first_query().unwrap();
-        contract.second_query(45).unwrap_err();
-        contract.third_query(67).unwrap();
-        contract
-            .fourth_query(45u64, "moneys".to_string())
-            .unwrap_err();
+        contract.second_query(45u64).unwrap_err();
+        contract.third_query(67u64).unwrap();
+        contract.fourth_query(45u64, "moneys").unwrap_err();
 
         Ok(())
     }

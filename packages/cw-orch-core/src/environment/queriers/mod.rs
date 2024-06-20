@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BlockInfo};
+use cosmwasm_std::{Addr, BlockInfo, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 
 use self::{bank::BankQuerier, env::EnvironmentQuerier, node::NodeQuerier, wasm::WasmQuerier};
@@ -29,6 +29,14 @@ pub trait QueryHandler: DefaultQueriers {
         self.node_querier().latest_block()
     }
 
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<Coin>, <Self::Bank as Querier>::Error> {
+        self.bank_querier().balance(address, denom)
+    }
+
     /// Send a QueryMsg to a contract.
     fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
         &self,
@@ -54,7 +62,7 @@ pub trait DefaultQueriers:
     + EnvironmentQuerier
 {
     type Bank: BankQuerier;
-    type Wasm: WasmQuerier;
+    type Wasm: WasmQuerier<Chain = Self>;
     type Node: NodeQuerier;
 
     fn bank_querier(&self) -> Self::Bank {
@@ -76,7 +84,10 @@ pub mod test {
     use serde::Serialize;
 
     use crate::{
-        environment::{DefaultQueriers, EnvironmentQuerier, IndexResponse, NodeQuerier},
+        environment::{
+            ChainState, DefaultQueriers, EnvironmentQuerier, IndexResponse, NodeQuerier,
+            StateInterface,
+        },
         CwEnvError,
     };
 
@@ -87,7 +98,10 @@ pub mod test {
     }
 
     #[derive(Clone)]
-    struct MockHandler {}
+    pub struct MockHandler {}
+
+    #[derive(Clone)]
+    pub struct MockHandlerInterface {}
 
     impl BankQuerier for MockQuerier {
         fn balance(
@@ -108,6 +122,7 @@ pub mod test {
         }
     }
     impl WasmQuerier for MockQuerier {
+        type Chain = MockHandler;
         fn code_id_hash(&self, _code_id: u64) -> Result<cosmwasm_std::HexBinary, Self::Error> {
             unimplemented!()
         }
@@ -145,6 +160,16 @@ pub mod test {
             _creator: impl Into<String>,
             _salt: cosmwasm_std::Binary,
         ) -> Result<String, Self::Error> {
+            unimplemented!()
+        }
+
+        fn local_hash<
+            T: crate::contract::interface_traits::Uploadable
+                + crate::contract::interface_traits::ContractInstance<MockHandler>,
+        >(
+            &self,
+            _contract: &T,
+        ) -> Result<cosmwasm_std::HexBinary, CwEnvError> {
             unimplemented!()
         }
     }
@@ -228,6 +253,42 @@ pub mod test {
         }
 
         fn next_block(&self) -> Result<(), Self::Error> {
+            unimplemented!()
+        }
+    }
+
+    impl ChainState for MockHandler {
+        type Out = MockHandlerInterface;
+
+        fn state(&self) -> Self::Out {
+            unimplemented!()
+        }
+    }
+
+    impl StateInterface for MockHandlerInterface {
+        fn get_address(&self, _contract_id: &str) -> Result<cosmwasm_std::Addr, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_address(&mut self, _contract_id: &str, _address: &cosmwasm_std::Addr) {
+            unimplemented!()
+        }
+
+        fn get_code_id(&self, _contract_id: &str) -> Result<u64, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn set_code_id(&mut self, _contract_id: &str, _code_id: u64) {
+            unimplemented!()
+        }
+
+        fn get_all_addresses(
+            &self,
+        ) -> Result<std::collections::HashMap<String, cosmwasm_std::Addr>, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
             unimplemented!()
         }
     }

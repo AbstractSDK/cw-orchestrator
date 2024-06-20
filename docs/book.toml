@@ -19,9 +19,6 @@ git-repository-url = "https://github.com/AbstractSDK/cw-orchestrator"
 git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/docs/{path}"
 
-[output.linkcheck]
-
-
 [extern]
 # Define the external crate and its features
 cw-orch = { path = "../cw-orch", features = ["daemon"] }

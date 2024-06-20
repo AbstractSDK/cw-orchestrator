@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-networks"
-version = "0.20.4"
+version = "0.22.2"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -15,4 +15,3 @@ exclude = [".env"]
 [dependencies]
 cw-orch-core = { workspace = true }
 serde = { workspace = true }
-ibc-chain-registry = { workspace = true }

@@ -1,60 +1,75 @@
 use super::error::DaemonError;
-use crate::{channel::GrpcChannel, networks::ChainKind};
+use crate::env::{default_state_folder, DaemonEnvVars};
+use crate::{json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
-use cw_orch_core::{
-    env::default_state_folder,
-    environment::StateInterface,
-    log::{connectivity_target, local_target},
-    CwEnvError, CwOrchEnvVars,
-};
-use ibc_chain_registry::chain::ChainData;
+use cw_orch_core::environment::ChainInfoOwned;
+use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
+use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, fs::File, path::Path};
-use tonic::transport::Channel;
+use std::sync::Arc;
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+    sync::Mutex,
+};
+
+/// Global state to track which files are already open by other daemons from other threads
+/// This is necessary because File lock will allow same process to lock file how many times as process wants
+pub(crate) static LOCKED_FILES: Lazy<Mutex<HashSet<String>>> =
+    Lazy::new(|| Mutex::new(HashSet::new()));
 
 /// Stores the chain information and deployment state.
 /// Uses a simple JSON file to store the deployment information locally.
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct DaemonState {
-    /// this is passed via env var STATE_FILE
-    pub json_file_path: String,
+    pub json_state: DaemonStateFile,
     /// Deployment identifier
     pub deployment_id: String,
-    /// gRPC channel
-    pub grpc_channel: Channel,
     /// Information about the chain
-    pub chain_data: ChainData,
-    /// Flag to set the daemon state readonly and not pollute the env file
-    pub read_only: bool,
+    pub chain_data: ChainInfoOwned,
+    /// Whether to write on every change of the state
+    pub write_on_change: bool,
+}
+
+impl Drop for DaemonState {
+    fn drop(&mut self) {
+        if let DaemonStateFile::FullAccess { json_file_state } = &self.json_state {
+            let json_lock = json_file_state.lock().unwrap();
+            let mut locked_files = LOCKED_FILES.lock().unwrap();
+            locked_files.remove(json_lock.path());
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum DaemonStateFile {
+    ReadOnly {
+        path: String,
+    },
+    FullAccess {
+        json_file_state: Arc<Mutex<JsonLockedState>>,
+    },
 }
 
 impl DaemonState {
     /// Creates a new state from the given chain data and deployment id.
     /// Attempts to connect to any of the provided gRPC endpoints.
-    pub async fn new(
-        mut chain_data: ChainData,
+    pub fn new(
+        mut json_file_path: String,
+        chain_data: ChainInfoOwned,
         deployment_id: String,
         read_only: bool,
+        write_on_change: bool,
     ) -> Result<DaemonState, DaemonError> {
-        if chain_data.apis.grpc.is_empty() {
-            return Err(DaemonError::GRPCListIsEmpty);
-        }
-
-        log::debug!(target: &connectivity_target(), "Found {} gRPC endpoints", chain_data.apis.grpc.len());
-
-        // find working grpc channel
-        let grpc_channel =
-            GrpcChannel::connect(&chain_data.apis.grpc, chain_data.chain_id.as_str()).await?;
-
-        // If the path is relative, we dis-ambiguate it and take the root at $HOME/$CW_ORCH_STATE_FOLDER
-        let mut json_file_path = Self::state_file_path()?;
+        let chain_id = &chain_data.chain_id;
+        let chain_name = &chain_data.network_info.chain_name;
 
         log::debug!(target: &local_target(), "Using state file : {}", json_file_path);
 
         // if the network we are connecting is a local kind, add it to the fn
-        if chain_data.network_type == ChainKind::Local.to_string() {
+        if chain_data.kind == ChainKind::Local {
             let name = Path::new(&json_file_path)
                 .file_stem()
                 .unwrap()
@@ -69,53 +84,46 @@ impl DaemonState {
             json_file_path = format!("{folder}/{name}_local.json");
         }
 
-        // Try to get the standard fee token (probably shortest denom)
-        let shortest_denom_token = chain_data.fees.fee_tokens.iter().fold(
-            chain_data.fees.fee_tokens[0].clone(),
-            |acc, item| {
-                if item.denom.len() < acc.denom.len() {
-                    item.clone()
-                } else {
-                    acc
-                }
-            },
-        );
-        // set a single fee token
-        chain_data.fees.fee_tokens = vec![shortest_denom_token];
-
-        // build daemon state
-        let state = DaemonState {
-            json_file_path,
-            deployment_id,
-            grpc_channel,
-            chain_data,
-            read_only,
-        };
-
-        if !read_only {
+        let json_state = if read_only {
+            DaemonStateFile::ReadOnly {
+                path: json_file_path,
+            }
+        } else {
             log::info!(
                 target: &local_target(),
-                "Writing daemon state JSON file: {:#?}",
-                state.json_file_path
+                "Writing daemon state JSON file: {json_file_path:#?}",
             );
 
-            // write json state file
-            crate::json_file::write(
-                &state.json_file_path,
-                &state.chain_data.chain_id.to_string(),
-                &state.chain_data.chain_name,
-                &state.deployment_id,
-            );
-        }
+            let mut lock = LOCKED_FILES.lock().unwrap();
+            if lock.contains(&json_file_path) {
+                return Err(DaemonError::StateAlreadyLocked(json_file_path));
+            }
+            let mut json_file_state = JsonLockedState::new(&json_file_path);
+            // Insert file to a locked files list and drop global mutex lock asap
+            lock.insert(json_file_path);
+            drop(lock);
 
-        // finish
-        Ok(state)
+            json_file_state.prepare(chain_id, chain_name, &deployment_id);
+            if write_on_change {
+                json_file_state.force_write();
+            }
+            DaemonStateFile::FullAccess {
+                json_file_state: Arc::new(Mutex::new(json_file_state)),
+            }
+        };
+
+        Ok(DaemonState {
+            json_state,
+            deployment_id,
+            chain_data,
+            write_on_change,
+        })
     }
 
     /// Returns the path of the file where the state of `cw-orchestrator` is stored.
     pub fn state_file_path() -> Result<String, DaemonError> {
         // check if STATE_FILE en var is configured, default to state.json
-        let env_file_path = CwOrchEnvVars::load()?.state_file;
+        let env_file_path = DaemonEnvVars::state_file();
         let state_file_path = if env_file_path.is_relative() {
             // If it's relative, we check if it start with "."
             let first_path_component = env_file_path
@@ -146,34 +154,114 @@ impl DaemonState {
 
         Ok(state_file_path)
     }
-    /// Get the state filepath and read it as json
-    fn read_state(&self) -> Result<serde_json::Value, DaemonError> {
-        crate::json_file::read(&self.json_file_path)
-    }
 
     /// Retrieve a stateful value using the chainId and networkId
     pub fn get(&self, key: &str) -> Result<Value, DaemonError> {
-        let json = self.read_state()?;
-        Ok(json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key].clone())
+        let json = match &self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                let j = crate::json_lock::read(path)?;
+
+                j[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id].clone()
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state
+                .lock()
+                .unwrap()
+                .get(
+                    &self.chain_data.network_info.chain_name,
+                    &self.chain_data.chain_id,
+                )
+                .clone(),
+        };
+        Ok(json[key].clone())
     }
 
     /// Set a stateful value using the chainId and networkId
     pub fn set<T: Serialize>(
-        &self,
+        &mut self,
         key: &str,
         contract_id: &str,
         value: T,
     ) -> Result<(), DaemonError> {
-        if self.read_only {
-            return Err(DaemonError::StateReadOnly);
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
+
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let val = json_file_lock.get_mut(
+            &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
+        );
+        val[key][contract_id] = json!(value);
+
+        if self.write_on_change {
+            json_file_lock.force_write();
         }
 
-        let mut json = self.read_state()?;
+        Ok(())
+    }
 
-        json[&self.chain_data.chain_name][&self.chain_data.chain_id.to_string()][key]
-            [contract_id] = json!(value);
+    /// Remove a stateful value using the chainId and networkId
+    pub fn remove(&mut self, key: &str, contract_id: &str) -> Result<(), DaemonError> {
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
 
-        serde_json::to_writer_pretty(File::create(&self.json_file_path).unwrap(), &json)?;
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let val = json_file_lock.get_mut(
+            &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
+        );
+        val[key][contract_id] = Value::Null;
+
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
+
+        Ok(())
+    }
+
+    /// Forcefully write current json to a file
+    pub fn force_write(&mut self) -> Result<(), DaemonError> {
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
+        json_file_state.lock().unwrap().force_write();
+        Ok(())
+    }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush(&mut self) -> Result<(), DaemonError> {
+        if self.chain_data.kind != ChainKind::Local {
+            panic!("Can only flush local chain state");
+        }
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
+
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let json = json_file_lock.get_mut(
+            &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
+        );
+
+        *json = json!({});
+
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
         Ok(())
     }
 }
@@ -182,8 +270,9 @@ impl StateInterface for DaemonState {
     /// Read address for contract in deployment id from state file
     fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError> {
         let value = self
-            .get(&self.deployment_id)?
-            .get(contract_id)
+            .get(&self.deployment_id)
+            .ok()
+            .and_then(|v| v.get(contract_id).cloned())
             .ok_or_else(|| CwEnvError::AddrNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(Addr::unchecked(value.as_str().unwrap()))
@@ -191,15 +280,22 @@ impl StateInterface for DaemonState {
 
     /// Set address for contract in deployment id in state file
     fn set_address(&mut self, contract_id: &str, address: &Addr) {
-        self.set(&self.deployment_id, contract_id, address.as_str())
+        let deployment_id = self.deployment_id.clone();
+        self.set(&deployment_id, contract_id, address.as_str())
             .unwrap();
+    }
+
+    fn remove_address(&mut self, contract_id: &str) {
+        let deployment_id = self.deployment_id.clone();
+        self.remove(&deployment_id, contract_id).unwrap();
     }
 
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
-            .get("code_ids")?
-            .get(contract_id)
+            .get("code_ids")
+            .ok()
+            .and_then(|v| v.get(contract_id).cloned())
             .ok_or_else(|| CwEnvError::CodeIdNotInStore(contract_id.to_owned()))?
             .clone();
         Ok(value.as_u64().unwrap())
@@ -208,6 +304,9 @@ impl StateInterface for DaemonState {
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.set("code_ids", contract_id, code_id).unwrap();
+    }
+    fn remove_code_id(&mut self, contract_id: &str) {
+        self.remove("code_ids", contract_id).unwrap();
     }
 
     /// Get all addresses for deployment id from state file
@@ -236,9 +335,7 @@ impl StateInterface for DaemonState {
 pub mod test {
     use std::env;
 
-    use cw_orch_core::env::STATE_FILE_ENV_NAME;
-
-    use crate::DaemonState;
+    use crate::{env::STATE_FILE_ENV_NAME, DaemonState};
 
     #[test]
     fn test_env_variable_state_path() -> anyhow::Result<()> {
@@ -287,6 +384,7 @@ pub mod test {
             parent_and_relative_state_path
         );
 
+        std::env::remove_var(STATE_FILE_ENV_NAME);
         Ok(())
     }
 }

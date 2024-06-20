@@ -1,11 +1,14 @@
 use super::{Contract, WasmPath};
 use crate::{
-    environment::{ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier},
+    environment::{
+        ChainInfoOwned, ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+    },
     error::CwEnvError,
     log::contract_target,
 };
 use cosmwasm_std::{Addr, Binary, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
+use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
@@ -44,6 +47,11 @@ pub trait ContractInstance<Chain: ChainState> {
         Contract::set_address(self.as_instance(), address)
     }
 
+    /// Removes the address for the contract
+    fn remove_address(&self) {
+        Contract::remove_address(self.as_instance())
+    }
+
     /// Sets a default address for the contract. If the contract already has an address registered in the state, this won't be used.
     /// This is mostly used to ship address with a cw-orch package.
     fn set_default_address(&mut self, address: &Addr) {
@@ -54,6 +62,11 @@ pub trait ContractInstance<Chain: ChainState> {
     /// and not registered in the configured state file.
     fn set_code_id(&self, code_id: u64) {
         Contract::set_code_id(self.as_instance(), code_id)
+    }
+
+    /// Removes the code_id for the contract
+    fn remove_code_id(&self) {
+        Contract::remove_code_id(self.as_instance())
     }
 
     /// Sets a default address for the contract. If the contract already has an address registered in the state, this won't be used.
@@ -150,6 +163,35 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
     ) -> Result<G, CwEnvError> {
         self.as_instance().query(query_msg)
     }
+
+    /// Query the contract raw state from an raw binary key
+    fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .raw_query(self.address()?, query_keys)
+            .map_err(Into::into)
+    }
+
+    /// Query the contract raw state from an cw-storage-plus::Item
+    fn item_query<T: Serialize + DeserializeOwned>(
+        &self,
+        query_item: Item<T>,
+    ) -> Result<T, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .item_query(self.address()?, query_item)
+    }
+
+    /// Query the contract raw state from a cw-storage-plus::Map
+    fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
+        &self,
+        query_map: Map<'a, K, T>,
+        key: K,
+    ) -> Result<T, CwEnvError> {
+        self.get_chain()
+            .wasm_querier()
+            .map_query(self.address()?, query_map, key)
+    }
 }
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: QueryHandler + ChainState>
@@ -176,12 +218,12 @@ impl<T: MigratableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchMi
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
     /// Return an object that can be used to upload the contract to a WASM-supported environment.
-    fn wasm(&self) -> WasmPath {
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
         unimplemented!("no wasm file provided for this contract")
     }
 
     /// Return the wrapper object for the contract, only works for non-custom mock environments
-    fn wrapper(&self) -> Box<dyn MockContract<Empty, Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
         unimplemented!("no wrapper function implemented for this contract")
     }
 }
@@ -240,7 +282,8 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             .wasm_querier()
             .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = Chain::Wasm::local_hash(self)?;
+        let local_hash = self.get_chain().wasm_querier().local_hash(self)?;
+
         Ok(local_hash == on_chain_hash)
     }
 

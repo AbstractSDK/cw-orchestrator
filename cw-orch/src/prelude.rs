@@ -19,6 +19,7 @@ pub use crate::contract::interface_traits::{
 
 pub use cw_orch_core::contract::Deploy;
 
+pub use crate::environment::ChainState;
 pub use crate::environment::StateInterface;
 
 // Response trait
@@ -30,12 +31,11 @@ pub use crate::environment::{
     NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
 };
 
+// Chains
+pub use crate::environment::{ChainInfo, ChainInfoOwned};
+
 // Mock for testing
 pub use crate::mock::{Mock, MockBech32};
-
-// OsmosisTestTube for testing
-#[cfg(feature = "osmosis-test-tube")]
-pub use crate::osmosis_test_tube::OsmosisTestTube;
 
 // error
 pub use crate::error::CwOrchError;

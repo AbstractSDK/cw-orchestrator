@@ -53,7 +53,7 @@ Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]
 
 - The function created will have the snake_case name of the variant and will take the same arguments as the variant.
 - The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature.
-- If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
+- If coins need to be sent along with the message you can add `#[cw_orch(payable)]` to the variant and the function will take a `Vec<Coin>` as the last argument.
 - The `cw_orch::QueryFns` macro needs your `QueryMsg` struct to have the <a href="https://docs.rs/cosmwasm-schema/1.4.1/cosmwasm_schema/trait.QueryResponses.html" target="_blank">`cosmwasm_schema::QueryResponses`</a> macro implemented (this is good practice even outside of use with `cw-orch`).
 
 ## Additional configuration
@@ -66,7 +66,7 @@ Let's see an example for executing a message (from a money market for instance).
     money_market.deposit_stable()?;
 ```
 
-There's a problem with the above function. The money market only knows how much you deposit into it by looking at the funds you send along with the transaction. Cw-orchestrator doesn't ask for funds by default. However, to allow attaching funds to a transaction, you can add the `#[payable]` attribute on your enum variant like so:
+There's a problem with the above function. The money market only knows how much you deposit into it by looking at the funds you send along with the transaction. Cw-orchestrator doesn't ask for funds by default. However, to allow attaching funds to a transaction, you can add the `#[cw_orch(payable)]` attribute on your enum variant like so:
 
 ```rust,ignore
     #[derive(ExecuteFns)]
@@ -74,7 +74,7 @@ There's a problem with the above function. The money market only knows how much 
         UpdateConfig{
             config_field: String
         },
-        #[payable]
+        #[cw_orch(payable)]
         DepositStable{}
         ...
     }
@@ -110,7 +110,7 @@ This can happen in numerous cases actually, when using reserved keywords of cw-o
 ```rust,ignore
 #[derive(cw_orch::ExecuteFns)] 
 pub enum ExecuteMsg{
-    #[fn_name("proxy_execute")]
+    #[cw_orch(fn_name("proxy_execute"))]
     Execute{
         msg: CosmoMsg
     }
@@ -121,12 +121,30 @@ money_market.proxy_execute(message_to_execute_via_a_proxy)?;
 
 This is also true for query functions.
 
-### `impl_into` Attribute
+### Nested Messages
 
-For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
+For nested messages (execute and query), you need to do 2 things:
+
+- Derive `ExecuteFns` or `QueryFns` on the underlying structures
+- Implement `From<Underlying>` for your contract message type
+
+In general, every structure that implements the `Into` trait for the contract message will make the function available on the contract. To make that clearer, here's an example:
 
 ```rust,ignore
-{{#include ../../../cw-orch/tests/impl_into.rs:impl_into}}
+{{#include ../../../cw-orch/tests/underlying_into.rs:underlying_into}}
+```
+
+### Into
+
+`String` and `Uint*` (e.g. `Uint128`) types will have relaxed trait bounds on the argument that the generated function receives. This allows for easier handling of the cw-orch generated functions. For other types, you can add the `#[cw_orch(into)]` attribute on a field to also accept structures that implement `Into` the field type. For instance:
+
+```rust,ignore
+pub enum ExecuteMsg<T>{
+{{#include ../../../contracts/mock_contract/src/lib.rs:into_example}}
+}
+
+// Will produce:
+fn second_message<T>(&self, t: impl Into<T>, funds: &[Coin]){}
 ```
 
 ### `disable_fields_sorting` Attribute
