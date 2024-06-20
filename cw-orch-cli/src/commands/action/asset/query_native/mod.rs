@@ -42,52 +42,22 @@ impl QueryNativeOutput {
         rt.block_on(async {
             let grpc_channel =
                 GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
-            let mut client = QueryClient::new(grpc_channel);
+            let bank = cw_orch::daemon::queriers::Bank::new_async(grpc_channel);
             if let Some(denom) = denom {
-                let response: QueryBalanceResponse = client
-                    .balance(QueryBalanceRequest {
-                        address: account_id.to_string(),
-                        denom: denom.clone(),
-                    })
+                let balance = bank
+                    ._balance(account_id.to_string(), Some(denom))
                     .await?
-                    .into_inner();
-                let balance =
-                    response
-                        .balance
-                        .map(proto_coin_to_std)
-                        .unwrap_or(cosmwasm_std::Coin {
-                            denom,
-                            amount: Default::default(),
-                        });
+                    .swap_remove(0);
                 println!("balance: {balance}")
             } else {
-                let response: QueryAllBalancesResponse = client
-                    .all_balances(QueryAllBalancesRequest {
-                        address: account_id.to_string(),
-                        pagination: None,
-                    })
-                    .await?
-                    .into_inner();
-                let balances: Vec<cosmwasm_std::Coin> = response
-                    .balances
-                    .into_iter()
-                    .map(proto_coin_to_std)
-                    .collect();
+                let balances = bank._balance(account_id.to_string(), None).await?;
                 // `cosmwasm_std::Coins` have nice display
                 let coins = cosmwasm_std::Coins::try_from(balances).unwrap();
                 println!("balances: {coins}")
             }
-
             color_eyre::Result::<(), color_eyre::Report>::Ok(())
         })?;
 
         Ok(QueryNativeOutput)
-    }
-}
-
-fn proto_coin_to_std(proto: Coin) -> cosmwasm_std::Coin {
-    cosmwasm_std::Coin {
-        denom: proto.denom,
-        amount: proto.amount.parse().unwrap(),
     }
 }
