@@ -1,10 +1,3 @@
-use cosmrs::proto::cosmos::{
-    bank::v1beta1::{
-        query_client::QueryClient, QueryAllBalancesRequest, QueryAllBalancesResponse,
-        QueryBalanceRequest, QueryBalanceResponse,
-    },
-    base::v1beta1::Coin,
-};
 use cw_orch::{daemon::GrpcChannel, environment::ChainInfoOwned, tokio::runtime::Runtime};
 
 use crate::types::{CliAddress, CliSkippable};
