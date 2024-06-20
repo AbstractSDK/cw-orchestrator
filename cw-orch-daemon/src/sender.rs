@@ -218,6 +218,10 @@ impl Sender<All> {
         }
     }
 
+    pub fn options(&self) -> &SenderOptions {
+        &self.options
+    }
+
     fn cosmos_private_key(&self) -> SigningKey {
         SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
     }

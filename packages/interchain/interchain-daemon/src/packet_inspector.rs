@@ -30,7 +30,7 @@ use std::collections::HashMap;
 /// This struct is safe to be sent between threads
 /// In contrary to InterchainStructure that holds Daemon in its definition which is not sendable
 #[derive(Default, Clone)]
-pub(crate) struct PacketInspector {
+pub struct PacketInspector {
     registered_chains: HashMap<NetworkId, Channel>,
 }
 

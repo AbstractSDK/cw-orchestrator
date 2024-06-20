@@ -1,0 +1,34 @@
+[package]
+name = "hermes-relayer"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+cosmwasm-std.workspace = true
+cw-orch-interchain-core = { version = "0.3.3", path = "../interchain-core" }
+cw-orch-interchain-daemon = { version = "0.3.2", path = "../interchain-daemon" }
+cw-orch-networks = { version = "0.22.2", path = "../../cw-orch-networks" }
+cw-orch-core = { version = "1.1.1", path = "../../cw-orch-core" }
+hdpath = "0.6.3"
+ibc-relayer = "0.28.0"
+ibc-relayer-cli = "1.9.0"
+ibc-relayer-types = { version = "0.28.0" }
+old-ibc-relayer-types = { package = "ibc-relayer-types", version = "0.25.0" }
+tokio.workspace = true
+cw-orch-daemon = { version = "0.23.5", path = "../../../cw-orch-daemon" }
+log.workspace = true
+cosmrs.workspace = true
+futures = "0.3.30"
+tonic.workspace = true
+
+[dev-dependencies]
+cw-orch = { path = "../../../cw-orch", features = ["daemon"] }
+cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
+    "daemon",
+] }
+dotenv = "0.15.0"
+pretty_env_logger = "0.5.0"
