@@ -133,7 +133,7 @@ impl InterchainEnv<Daemon> for HermesRelayer {
         let ibc_packet_results = sent_packets
             .iter()
             .map(|packet| {
-                self.clone().follow_packet(
+                self.follow_packet(
                     chain_id,
                     packet.src_port.clone(),
                     packet.src_channel.clone(),
@@ -211,7 +211,6 @@ impl InterchainEnv<Daemon> for HermesRelayer {
         ))?;
 
         // We try to relay the packets using the HERMES relayer
-
         self.force_packet_relay(
             src_chain,
             src_port.clone(),
