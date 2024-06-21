@@ -32,7 +32,7 @@ serde_json.workspace = true
 [dev-dependencies]
 cw-orch = { path = "../../../cw-orch", features = ["daemon"] }
 cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
-    "daemon",
+  "daemon",
 ] }
 dotenv = "0.15.0"
 ibc-proto = "0.32.0"
