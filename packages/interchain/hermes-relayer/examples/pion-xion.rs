@@ -84,17 +84,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
         None,
     )?;
 
-    relayer.follow_packet(
-        "xion-testnet-1",
-        PortId::transfer(),
-        channel
-            .interchain_channel
-            .get_chain("xion-testnet-1")?
-            .channel
-            .unwrap(),
-        "pion-1",
-        1.into(),
-    )?;
+    relayer.check_ibc("xion-testnet-1", response)?;
 
     Ok(())
 }

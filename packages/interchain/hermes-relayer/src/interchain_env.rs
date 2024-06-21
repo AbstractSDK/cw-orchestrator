@@ -4,10 +4,12 @@ use cw_orch_daemon::queriers::{Ibc, Node};
 use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
+use cw_orch_interchain_core::types::{FullIbcPacketAnalysis, IbcPacketOutcome, TxId};
 use cw_orch_interchain_core::InterchainEnv;
+use cw_orch_interchain_daemon::packet_inspector::find_ibc_packets_sent_in_tx;
+use cw_orch_interchain_daemon::packet_inspector::PacketInspector;
 
 use crate::core::HermesRelayer;
-use crate::packet_inspector::PacketInspector;
 use cw_orch_interchain_daemon::InterchainDaemonError;
 use old_ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use old_ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
@@ -117,17 +119,81 @@ impl InterchainEnv<Daemon> for HermesRelayer {
             tx_response.txhash
         );
 
-        // We crate an interchain env object that is safe to send between threads
-        let interchain_env = self.rt_handle.block_on(PacketInspector::new(
-            self.daemons.values().map(|(d, _, _)| d).collect(),
+        // 1. Getting IBC related events for the current tx + finding all IBC packets sent out in the transaction
+        let daemon_1 = self.chain(chain_id)?;
+        let grpc_channel1 = daemon_1.channel();
+
+        let sent_packets = daemon_1.rt_handle.block_on(find_ibc_packets_sent_in_tx(
+            chain_id.to_string(),
+            grpc_channel1.clone(),
+            tx_response.clone(),
         ))?;
 
-        // We follow the trail
-        let ibc_trail = self
-            .rt_handle
-            .block_on(interchain_env.wait_ibc(chain_id.to_string(), tx_response))?;
+        // 2. We follow the packet history for each packet found inside the transaction
+        let ibc_packet_results = sent_packets
+            .iter()
+            .map(|packet| {
+                self.clone().follow_packet(
+                    chain_id,
+                    packet.src_port.clone(),
+                    packet.src_channel.clone(),
+                    &packet.dst_chain_id,
+                    packet.sequence,
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(ibc_trail)
+        let send_tx_id = TxId {
+            chain_id: chain_id.to_string(),
+            response: tx_response,
+        };
+
+        // We follow all results from outgoing packets in the resulting transactions
+        let full_results = ibc_packet_results
+            .into_iter()
+            .map(|ibc_result| {
+                let txs_to_analyze = match ibc_result.outcome.clone() {
+                    IbcPacketOutcome::Timeout { timeout_tx } => vec![timeout_tx],
+                    IbcPacketOutcome::Success {
+                        receive_tx, ack_tx, ..
+                    } => vec![receive_tx, ack_tx],
+                };
+
+                let txs_results = txs_to_analyze
+                    .iter()
+                    .map(|tx| {
+                        let chain_id = tx.chain_id.clone();
+                        let response = tx.response.clone();
+                        self.wait_ibc(&chain_id, response)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                let analyzed_outcome = match ibc_result.outcome {
+                    IbcPacketOutcome::Timeout { .. } => IbcPacketOutcome::Timeout {
+                        timeout_tx: txs_results[0].clone(),
+                    },
+                    IbcPacketOutcome::Success { ack, .. } => IbcPacketOutcome::Success {
+                        ack: ack.clone(),
+                        receive_tx: txs_results[0].clone(),
+                        ack_tx: txs_results[1].clone(),
+                    },
+                };
+
+                let analyzed_result = FullIbcPacketAnalysis {
+                    send_tx: Some(send_tx_id.clone()),
+                    outcome: analyzed_outcome,
+                };
+
+                Ok::<_, InterchainDaemonError>(analyzed_result.clone())
+            })
+            .collect::<Result<_, _>>()?;
+
+        let tx_identification = IbcTxAnalysis {
+            tx_id: send_tx_id.clone(),
+            packets: full_results,
+        };
+
+        Ok(tx_identification)
     }
 
     // This function follow the execution of an IBC packet across the chain

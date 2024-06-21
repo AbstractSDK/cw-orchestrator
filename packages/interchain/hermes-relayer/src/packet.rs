@@ -1,11 +1,8 @@
-use crate::{config::KEY_NAME, core::HermesRelayer, keys::restore_key};
+use crate::core::HermesRelayer;
 use cw_orch_core::environment::QuerierGetter;
 use cw_orch_daemon::queriers::Ibc;
 use cw_orch_interchain_core::env::ChainId;
-use ibc_relayer::{
-    chain::handle::ChainHandle,
-    link::{Link, LinkParameters},
-};
+use ibc_relayer::link::{Link, LinkParameters};
 use ibc_relayer_cli::cli_utils::ChainHandlePair;
 use ibc_relayer_types::core::{ics04_channel, ics24_host::identifier};
 use old_ibc_relayer_types::core::{
@@ -72,12 +69,11 @@ impl HermesRelayer {
         let sequence: u64 = sequence.into();
         let sequence = ics04_channel::packet::Sequence::from(sequence);
 
-        let res = link
-            .relay_recv_packet_and_timeout_messages_with_packet_data_query_height(
-                vec![sequence..=sequence],
-                None,
-            )
-            .unwrap();
+        link.relay_recv_packet_and_timeout_messages_with_packet_data_query_height(
+            vec![sequence..=sequence],
+            None,
+        )
+        .unwrap();
     }
 
     pub fn ack_packet(
@@ -126,11 +122,10 @@ impl HermesRelayer {
         let sequence: u64 = sequence.into();
         let sequence = ics04_channel::packet::Sequence::from(sequence);
 
-        let res = link
-            .relay_ack_packet_messages_with_packet_data_query_height(
-                vec![sequence..=sequence],
-                None,
-            )
-            .unwrap();
+        link.relay_ack_packet_messages_with_packet_data_query_height(
+            vec![sequence..=sequence],
+            None,
+        )
+        .unwrap();
     }
 }

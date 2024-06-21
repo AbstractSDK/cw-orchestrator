@@ -1,10 +1,6 @@
-use crate::config::KEY_NAME;
 use crate::core::HermesRelayer;
-use crate::keys::restore_key;
 use cosmwasm_std::IbcOrder;
-use cw_orch_core::environment::ChainState;
 use cw_orch_interchain_core::env::ChainId;
-use cw_orch_interchain_core::InterchainEnv;
 use cw_orch_interchain_daemon::ChannelCreator;
 use cw_orch_interchain_daemon::InterchainDaemonError;
 use ibc_relayer::chain::requests::{IncludeProof, QueryClientStateRequest, QueryConnectionRequest};
@@ -27,21 +23,10 @@ impl ChannelCreator for HermesRelayer {
         version: &str,
         order: Option<IbcOrder>,
     ) -> Result<String, InterchainDaemonError> {
-        // TODO connection should be a parameter
         let src_connection = self
             .connection_ids
             .get(&(src_chain.to_string(), dst_chain.to_string()))
             .unwrap();
-
-        let (src_daemon, _, _) = self.daemons.get(src_chain).unwrap();
-        let src_chain_data = &src_daemon.state().chain_data;
-        let src_hd_path = src_daemon.wallet().options().hd_index;
-
-        let (dst_daemon, _, _) = self.daemons.get(dst_chain).unwrap();
-        let dst_chain_data = &dst_daemon.state().chain_data;
-        let dst_hd_path = dst_daemon.wallet().options().hd_index;
-
-        let mnemonic = std::env::var("TEST_MNEMONIC").unwrap();
 
         let config = self.duplex_config(src_chain, dst_chain);
 
@@ -89,7 +74,7 @@ impl ChannelCreator for HermesRelayer {
 
         let connection = Connection::find(client_a, client_b, &identified_end).unwrap();
 
-        let channel = Channel::new(
+        Channel::new(
             connection,
             cosmwasm_to_hermes_order(order),
             src_port.to_string().parse().unwrap(),
@@ -102,7 +87,10 @@ impl ChannelCreator for HermesRelayer {
     }
 
     fn interchain_env(&self) -> cw_orch_interchain_daemon::DaemonInterchainEnv<Self> {
-        unimplemented!()
+        unimplemented!("
+            The Hermes Relayer is a channel creator as well as an Interchain env. 
+            You don't need to use this function, you can simply await packets directly on this structure"
+        )
     }
 }
 

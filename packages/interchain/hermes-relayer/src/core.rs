@@ -4,7 +4,6 @@ use cw_orch_core::environment::ChainInfoOwned;
 use cw_orch_core::environment::ChainState;
 use cw_orch_daemon::Daemon;
 use cw_orch_interchain_core::env::ChainId;
-use cw_orch_interchain_core::InterchainEnv;
 use cw_orch_interchain_daemon::{IcDaemonResult, Mnemonic};
 use ibc_relayer::chain::handle::ChainHandle;
 use tokio::runtime::Handle;
@@ -136,7 +135,7 @@ impl HermesRelayer {
     pub fn add_key(&self, chain: &impl ChainHandle) {
         let chain_id = chain.config().unwrap().id().to_string();
 
-        let (daemon, _, rpc) = self.daemons.get(&chain_id).unwrap();
+        let (daemon, _, _) = self.daemons.get(&chain_id).unwrap();
 
         let chain_data = &daemon.state().chain_data;
         let hd_path = daemon.wallet().options().hd_index;
