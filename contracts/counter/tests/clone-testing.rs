@@ -139,7 +139,7 @@ pub enum CavernExecuteMsg {
     /// User operations
     ////////////////////
     /// Deposit stable asset to get interest
-    #[payable]
+    #[cw_orch(payable)]
     DepositStable {},
 }
 

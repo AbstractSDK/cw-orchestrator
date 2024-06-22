@@ -21,6 +21,27 @@ This simple script actually hides another parameter which is the `LOCAL_MNEMONIC
 >
 > Under the hood, the `DaemonBuilder` struct creates a `tokio::Runtime`. Be careful because this builder is not usable in an `async` function. In such function, you can use <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.DaemonAsync.html" target="_blank">`DaemonAsync`</a>
 
+<div class="warning">
+
+When using multiple Daemons with the same state file, you should re-use a single Daemon State to avoid conflicts and panics: 
+
+```rust,ignore
+let daemon1 = Daemon::builder()
+  .chain(OSMOSIS_1)
+  .build()?;
+// If you don't use the `state` method here, this will fail with:
+// State file <file-name> already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder
+let daemon2 = Daemon::builder()
+  .chain(JUNO_1)
+  .state(daemon1.state())
+  .build()?;
+```
+
+
+</div>
+
+
+
 ## Interacting with contracts
 
 You can then use the resulting `Daemon` variable to interact with your [contracts](../contracts/index.md):

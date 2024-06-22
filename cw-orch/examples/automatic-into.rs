@@ -106,30 +106,22 @@ pub fn main() -> anyhow::Result<()> {
     contract.upload()?;
     contract.instantiate(&Empty {}, None, None)?;
 
-    contract.mint(150_100u128.into(), "nicoco".to_string())?;
-    contract.send(
-        150_100u128.into(),
-        "nicoco".to_string(),
-        Binary::from_base64("cXNk")?,
-    )?;
+    contract.mint(150_100u128, "nicoco")?;
+    contract.send(150_100u128, "nicoco", Binary::from_base64("cXNk")?)?;
     let minter_response = contract.minter()?;
-    let balance = contract.balance("nicoco".to_string())?;
+    let balance = contract.balance("nicoco")?;
     assert_eq!(minter_response.minter, "minter");
     assert_eq!(balance.balance.u128(), 167);
 
     let contract = Cw20Minter::new("cw20_minter", mock.clone());
     contract.upload()?;
     contract.instantiate(&Empty {}, None, None)?;
-    contract.mint(150_100u128.into(), "nicoco".to_string())?;
+    contract.mint(150_100u128, "nicoco")?;
 
     let contract = Cw20Base::new("cw20_base", mock.clone());
     contract.upload()?;
     contract.instantiate(&Empty {}, None, None)?;
-    contract.send(
-        150_100u128.into(),
-        "nicoco".to_string(),
-        Binary::from_base64("cXNk")?,
-    )?;
+    contract.send(150_100u128, "nicoco", Binary::from_base64("cXNk")?)?;
 
     Ok(())
 }

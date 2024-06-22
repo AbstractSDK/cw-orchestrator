@@ -163,7 +163,7 @@ pub fn create_transfer_channel<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>
             &PortId::transfer(),
             &PortId::transfer(),
             ICS20_CHANNEL_VERSION,
-            Some(cosmwasm_std::IbcOrder::Ordered),
+            Some(cosmwasm_std::IbcOrder::Unordered),
         )
         .unwrap();
 

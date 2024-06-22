@@ -255,16 +255,12 @@ mod test {
     };
     use cw_multi_test::ContractWrapper;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler};
-    use serde::Serialize;
     use speculoos::prelude::*;
 
     use crate::core::*;
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
-
-    #[derive(Debug, Serialize)]
-    struct MigrateMsg {}
 
     fn execute(
         _deps: DepsMut,

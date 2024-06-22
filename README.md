@@ -120,7 +120,7 @@ pub enum ExecuteMsg {
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
     /// the `payable` attribute can be used to add a `coins` argument to the generated function.
-    #[payable]
+    #[cw_orch(payable)]
     Deposit {}
 }
 ```

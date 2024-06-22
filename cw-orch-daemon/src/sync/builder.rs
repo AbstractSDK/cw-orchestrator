@@ -30,15 +30,15 @@ pub struct DaemonBuilder {
     pub(crate) gas_denom: Option<String>,
     pub(crate) gas_fee: Option<f64>,
     pub(crate) state_path: Option<String>,
+    /// State from rebuild or existing daemon
+    pub(crate) state: Option<DaemonState>,
+    pub(crate) write_on_change: Option<bool>,
 
     /* Sender Options */
     /// Wallet sender
     pub(crate) sender: Option<SenderBuilder<All>>,
     /// Specify Daemon Sender Options
     pub(crate) sender_options: SenderOptions,
-
-    /* Rebuilder related options */
-    pub(crate) state: Option<DaemonState>,
 }
 
 impl DaemonBuilder {
@@ -117,6 +117,22 @@ impl DaemonBuilder {
     pub fn gas(&mut self, gas_denom: Option<&str>, gas_fee: Option<f64>) -> &mut Self {
         self.gas_denom = gas_denom.map(ToString::to_string);
         self.gas_fee = gas_fee.map(Into::into);
+        self
+    }
+
+    /// Reuse already existent [`DaemonState`]
+    /// Useful for multi-chain scenarios
+    pub fn state(&mut self, state: DaemonState) -> &mut Self {
+        self.state = Some(state);
+        self
+    }
+
+    /// Whether to write on every change of the state
+    /// If `true` - writes to a file on every change
+    /// If `false` - writes to a file when all Daemons dropped this [`DaemonState`] or [`DaemonState::force_write`] used
+    /// Defaults to `true`
+    pub fn write_on_change(&mut self, write_on_change: bool) -> &mut Self {
+        self.write_on_change = Some(write_on_change);
         self
     }
 

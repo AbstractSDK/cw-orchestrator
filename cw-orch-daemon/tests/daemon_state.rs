@@ -2,8 +2,10 @@ use std::sync::Arc;
 
 use cw_orch_core::environment::ChainState;
 use cw_orch_daemon::{
-    env::STATE_FILE_ENV_NAME, json_lock::JsonLockedState, networks::OSMOSIS_1, DaemonBuilder,
-    DaemonError, DaemonStateFile,
+    env::STATE_FILE_ENV_NAME,
+    json_lock::JsonLockedState,
+    networks::{JUNO_1, OSMOSIS_1},
+    DaemonBuilder, DaemonError, DaemonStateFile,
 };
 
 pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
@@ -195,6 +197,26 @@ fn does_not_error_when_using_different_files() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST2_STATE_FILE);
     let daemon_res = DaemonBuilder::default()
         .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build();
+
+    assert!(daemon_res.is_ok());
+    std::env::remove_var(STATE_FILE_ENV_NAME);
+}
+
+#[test]
+#[serial_test::serial]
+fn reuse_same_state_multichain() {
+    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
+    let daemon = DaemonBuilder::default()
+        .chain(OSMOSIS_1)
+        .mnemonic(DUMMY_MNEMONIC)
+        .build()
+        .unwrap();
+
+    let daemon_res = DaemonBuilder::default()
+        .chain(JUNO_1)
+        .state(daemon.state())
         .mnemonic(DUMMY_MNEMONIC)
         .build();
 

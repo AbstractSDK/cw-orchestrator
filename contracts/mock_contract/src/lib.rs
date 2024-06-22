@@ -29,21 +29,25 @@ where
     T: Serialize,
 {
     FirstMessage {},
-    #[payable]
+    // ANCHOR: into_example
+    #[cw_orch(payable)]
     SecondMessage {
         /// test doc-comment
+        #[cw_orch(into)]
         t: T,
     },
+    // ANCHOR_END: into_example
     /// test doc-comment
     ThirdMessage {
         /// test doc-comment
         t: T,
     },
+    #[cw_orch(fn_name("fourth"), payable)]
     FourthMessage,
-    #[payable]
+    #[cw_orch(payable, into)]
     FifthMessage,
     SixthMessage(u64, String),
-    #[payable]
+    #[cw_orch(payable)]
     SeventhMessage(Uint128, String),
 }
 
@@ -200,28 +204,28 @@ mod test {
         // We need to check we can still call the execute msgs conveniently
         let sender = Addr::unchecked("sender");
         let mock = Mock::new(&sender);
-        mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
+        mock.set_balance(&sender, coins(156 * 3, "ujuno"))?;
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
         contract
-            .second_message("s".to_string(), &coins(156, "ujuno"))
+            .second_message("s", &coins(156, "ujuno"))
             .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
-        contract.fourth_message().unwrap();
+        contract.fourth(&coins(156, "ujuno")).unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
-        contract.sixth_message(45, "moneys".to_string()).unwrap();
+        contract.sixth_message(45u64, "moneys").unwrap();
 
         contract
-            .seventh_message(156u128.into(), "ujuno".to_string(), &coins(156, "ujuno"))
+            .seventh_message(156u128, "ujuno", &coins(156, "ujuno"))
             .unwrap();
 
         contract.first_query().unwrap();
         contract.second_query("arg".to_string()).unwrap_err();
         contract.third_query("arg".to_string()).unwrap();
-        contract.fourth_query(45u64, "moneys".to_string()).unwrap();
+        contract.fourth_query(45u64, "moneys").unwrap();
 
         Ok(())
     }

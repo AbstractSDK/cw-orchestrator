@@ -227,6 +227,29 @@ impl<Chain: CwEnv> IndexResponse for IbcTxAnalysis<Chain> {
             })
     }
 
+    fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+        let mut all_results = self.tx_id.response.event_attr_values(event_type, attr_key);
+
+        all_results.extend(self.packets.iter().flat_map(|packet_result| {
+            match &packet_result.outcome {
+                IbcPacketOutcome::Timeout { timeout_tx } => {
+                    timeout_tx.event_attr_values(event_type, attr_key)
+                }
+                IbcPacketOutcome::Success {
+                    receive_tx,
+                    ack_tx,
+                    ack: _,
+                } => [
+                    receive_tx.event_attr_values(event_type, attr_key),
+                    ack_tx.event_attr_values(event_type, attr_key),
+                ]
+                .concat(),
+            }
+        }));
+
+        all_results
+    }
+
     fn data(&self) -> Option<Binary> {
         unimplemented!("No data fields on Ibc Tx Analysis")
     }
