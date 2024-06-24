@@ -31,6 +31,7 @@ cw-orch-interchain-core = { workspace = true }
 cw-orch-interchain-mock = { workspace = true }
 cw-orch-interchain-daemon = { workspace = true, optional = true }
 cw-orch-starship = { workspace = true, optional = true }
+ibc-relayer-types.workspace = true
 
 #Used only for testing
 cosmwasm-std.workspace = true
