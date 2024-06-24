@@ -76,6 +76,9 @@ pub trait ContractInstance<Chain: ChainState> {
         Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
 
+    #[deprecated(
+        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
+    )]
     /// Returns the chain that this contract is deployed on.
     fn get_chain(&self) -> &Chain {
         self.as_instance().environment()
