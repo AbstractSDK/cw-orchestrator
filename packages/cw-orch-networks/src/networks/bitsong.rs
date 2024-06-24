@@ -23,7 +23,7 @@ pub const BOBNET: ChainInfo = ChainInfo {
     chain_id: "bobnet",
     gas_denom: "ubtsg",
     gas_price: 0.025,
-    grpc_urls: &["http://grpc-testnet.explorebitsong.com::443"],
+    grpc_urls: &["http://grpc-testnet.explorebitsong.com:443"],
     network_info: BITSONG_NETWORK,
     lcd_url: None,
     fcd_url: None,
