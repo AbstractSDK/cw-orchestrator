@@ -31,6 +31,7 @@ cw-orch-interchain-core = { workspace = true }
 cw-orch-interchain-mock = { workspace = true }
 cw-orch-interchain-daemon = { workspace = true, optional = true }
 cw-orch-starship = { workspace = true, optional = true }
+ibc-relayer-types.workspace = true
 
 #Used only for testing
 cosmwasm-std.workspace = true
@@ -55,6 +56,3 @@ pretty_env_logger = "0.5.0"
 abstract-cw-orch-polytone = "2.0.0"
 abstract-polytone-note = "2.0.0"
 polytone = "1.0.0"
-
-[dependencies]
-ibc-relayer-types.workspace = true
