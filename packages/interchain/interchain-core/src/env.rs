@@ -1,6 +1,6 @@
 //! This module contains the trait definition for an interchain analysis environment
 
-use cosmwasm_std::{ensure, Binary, IbcOrder};
+use cosmwasm_std::{Binary, IbcOrder};
 use cw_orch_core::{
     contract::interface_traits::ContractInstance,
     environment::{CwEnv, IndexResponse, TxHandler},
@@ -234,15 +234,12 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
-    ) -> Result<(), InterchainError> {
+    ) -> Result<IbcTxAnalysis<Chain>, InterchainError> {
         let tx_result = self.wait_ibc(chain_id, tx_response).map_err(Into::into)?;
 
-        ensure!(
-            !tx_result.get_success_packets()?.is_empty(),
-            InterchainError::NoPacketsFound {}
-        );
+        tx_result.into_result()?;
 
-        tx_result.into_result()
+        Ok(tx_result)
     }
 
     /// Follow every IBC packets sent out during the transaction

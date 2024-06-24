@@ -64,10 +64,15 @@ Changes the number of tx queries (~1 query per block) before it fails if it does
 
 ### CW_ORCH_MIN_BLOCK_SPEED
 
-Optional, accepted value: integer in seconds
-Defaults to `1`.
+Optional, accepted values:
 
-Minimum block speed in seconds. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block speeds are varying a lot
+- `(integer)ms` (e.g. 57ms), to indicate the min block speed in milliseconds
+- `(integer)s` (e.g. 57s), to indicate the min block speed in seconds
+- `(integer)` (e.g. 57), to indicate the min block speed in seconds
+
+Defaults to `1s`.
+
+Minimum block speed. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block speeds are varying a lot.
 
 ### CW_ORCH_WALLET_BALANCE_ASSERTION
 

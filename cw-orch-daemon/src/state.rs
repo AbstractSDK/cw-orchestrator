@@ -29,6 +29,8 @@ pub struct DaemonState {
     pub deployment_id: String,
     /// Information about the chain
     pub chain_data: ChainInfoOwned,
+    /// Whether to write on every change of the state
+    pub write_on_change: bool,
 }
 
 impl Drop for DaemonState {
@@ -59,6 +61,7 @@ impl DaemonState {
         chain_data: ChainInfoOwned,
         deployment_id: String,
         read_only: bool,
+        write_on_change: bool,
     ) -> Result<DaemonState, DaemonError> {
         let chain_id = &chain_data.chain_id;
         let chain_name = &chain_data.network_info.chain_name;
@@ -96,11 +99,14 @@ impl DaemonState {
                 return Err(DaemonError::StateAlreadyLocked(json_file_path));
             }
             let mut json_file_state = JsonLockedState::new(&json_file_path);
-            // Insert and drop mutex lock asap
+            // Insert file to a locked files list and drop global mutex lock asap
             lock.insert(json_file_path);
             drop(lock);
 
             json_file_state.prepare(chain_id, chain_name, &deployment_id);
+            if write_on_change {
+                json_file_state.force_write();
+            }
             DaemonStateFile::FullAccess {
                 json_file_state: Arc::new(Mutex::new(json_file_state)),
             }
@@ -110,6 +116,7 @@ impl DaemonState {
             json_state,
             deployment_id,
             chain_data,
+            write_on_change,
         })
     }
 
@@ -189,6 +196,33 @@ impl DaemonState {
         );
         val[key][contract_id] = json!(value);
 
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
+
+        Ok(())
+    }
+
+    /// Remove a stateful value using the chainId and networkId
+    pub fn remove(&mut self, key: &str, contract_id: &str) -> Result<(), DaemonError> {
+        let json_file_state = match &mut self.json_state {
+            DaemonStateFile::ReadOnly { path } => {
+                return Err(DaemonError::StateReadOnly(path.clone()))
+            }
+            DaemonStateFile::FullAccess { json_file_state } => json_file_state,
+        };
+
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let val = json_file_lock.get_mut(
+            &self.chain_data.network_info.chain_name,
+            &self.chain_data.chain_id,
+        );
+        val[key][contract_id] = Value::Null;
+
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
+
         Ok(())
     }
 
@@ -217,13 +251,17 @@ impl DaemonState {
             DaemonStateFile::FullAccess { json_file_state } => json_file_state,
         };
 
-        let mut lock = json_file_state.lock().unwrap();
-        let json = lock.get_mut(
+        let mut json_file_lock = json_file_state.lock().unwrap();
+        let json = json_file_lock.get_mut(
             &self.chain_data.network_info.chain_name,
             &self.chain_data.chain_id,
         );
 
         *json = json!({});
+
+        if self.write_on_change {
+            json_file_lock.force_write();
+        }
         Ok(())
     }
 }
@@ -247,6 +285,11 @@ impl StateInterface for DaemonState {
             .unwrap();
     }
 
+    fn remove_address(&mut self, contract_id: &str) {
+        let deployment_id = self.deployment_id.clone();
+        self.remove(&deployment_id, contract_id).unwrap();
+    }
+
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         let value = self
@@ -261,6 +304,9 @@ impl StateInterface for DaemonState {
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.set("code_ids", contract_id, code_id).unwrap();
+    }
+    fn remove_code_id(&mut self, contract_id: &str) {
+        self.remove("code_ids", contract_id).unwrap();
     }
 
     /// Get all addresses for deployment id from state file

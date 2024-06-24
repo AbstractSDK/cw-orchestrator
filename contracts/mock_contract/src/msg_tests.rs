@@ -7,7 +7,7 @@ use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, Std
 // ANCHOR: unordered_msg_def
 #[cw_serde]
 #[derive(cw_orch::ExecuteFns)]
-#[disable_fields_sorting]
+#[cw_orch(disable_fields_sorting)]
 pub enum ExecuteMsg {
     Test { b: u64, a: String },
 }
@@ -95,8 +95,8 @@ mod test {
         contract.instantiate(&Empty {}, None, None)?;
         contract_ordered.instantiate(&Empty {}, None, None)?;
 
-        contract.test(5, "test".to_string())?;
-        contract_ordered.test("test".to_string(), 5)?;
+        contract.test(5u64, "test")?;
+        contract_ordered.test("test".to_string(), 5u64)?;
 
         Ok(())
     }

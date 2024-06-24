@@ -120,22 +120,20 @@ mod test {
         contract.upload()?;
         contract.instantiate(&InstantiateMsg {}, None, None)?;
         contract.first_message()?;
-        contract.second_message(54, &[]).unwrap_err();
-        contract.third_message(54).unwrap();
-        contract.fourth_message().unwrap();
+        contract.second_message(54u64, &[]).unwrap_err();
+        contract.third_message(54u64).unwrap();
+        contract.fourth(&[]).unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
-        contract.sixth_message(45, "moneys".to_string()).unwrap();
+        contract.sixth_message(45u64, "moneys").unwrap();
 
         contract
-            .seventh_message(156u128.into(), "ujuno".to_string(), &coins(156, "ujuno"))
+            .seventh_message(156u128, "ujuno", &coins(156, "ujuno"))
             .unwrap();
 
         contract.first_query().unwrap();
-        contract.second_query(45).unwrap_err();
-        contract.third_query(67).unwrap();
-        contract
-            .fourth_query(45u64, "moneys".to_string())
-            .unwrap_err();
+        contract.second_query(45u64).unwrap_err();
+        contract.third_query(67u64).unwrap();
+        contract.fourth_query(45u64, "moneys").unwrap_err();
 
         Ok(())
     }

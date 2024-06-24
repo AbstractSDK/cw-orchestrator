@@ -21,11 +21,23 @@ pub trait StateInterface: Clone {
     /// Set the address of a contract using the specified contract id.
     fn set_address(&mut self, contract_id: &str, address: &Addr);
 
+    /// Removes the address of a contract using the specified contract id.
+    fn remove_address(&mut self, _contract_id: &str) {
+        // Using default impl to avoid breaking changes
+        unimplemented!()
+    }
+
     /// Get the code id for a contract with the specified contract id.
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError>;
 
     /// Set the code id for a contract with the specified contract id.
     fn set_code_id(&mut self, contract_id: &str, code_id: u64);
+
+    /// Removes the code id for a contract with the specified contract id.
+    fn remove_code_id(&mut self, _contract_id: &str) {
+        // Using default impl to avoid breaking changes
+        unimplemented!()
+    }
 
     /// Get all addresses related to this deployment.
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError>;
@@ -57,6 +69,14 @@ impl<S: StateInterface> StateInterface for Rc<RefCell<S>> {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).borrow().get_all_code_ids()
+    }
+
+    fn remove_address(&mut self, contract_id: &str) {
+        (**self).borrow_mut().remove_address(contract_id)
+    }
+
+    fn remove_code_id(&mut self, contract_id: &str) {
+        (**self).borrow_mut().remove_code_id(contract_id)
     }
 }
 

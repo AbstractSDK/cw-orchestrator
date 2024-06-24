@@ -11,20 +11,24 @@ use proc_macro::TokenStream;
 
 use syn::{parse_macro_input, ItemEnum};
 
-#[proc_macro_derive(
-    ExecuteFns,
-    attributes(payable, impl_into, fn_name, disable_fields_sorting)
-)]
+/// Available attributes are :
+/// payable - The Execute function can accept funds
+/// fn_name - Modify the generated function name (useful for query or execute variants for instance)
+/// disable_fields_sorting - By default the fields are sorted on named variants. Disabled this behavior
+/// into - The field can be indicated in the generated function with a type that implements `Into` the field type
+#[proc_macro_derive(ExecuteFns, attributes(cw_orch))]
 pub fn cw_orch_execute(input: TokenStream) -> TokenStream {
     // We only parse and return the modified code if the flag is activated
     let ast = parse_macro_input!(input as ItemEnum);
     fns_derive::fns_derive(MsgType::Execute, ast)
 }
 
-#[proc_macro_derive(
-    QueryFns,
-    attributes(returns, impl_into, fn_name, disable_fields_sorting)
-)]
+/// Available attributes are :
+/// returns - The return type of the query
+/// fn_name - Modify the generated function name (useful for query or execute variants for instance)
+/// disable_fields_sorting - By default the fields are sorted on named variants. Disabled this behavior
+/// into - The field can be indicated in the generated function with a type that implements `Into` the field type
+#[proc_macro_derive(QueryFns, attributes(cw_orch))]
 pub fn cw_orch_query(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as ItemEnum);
     fns_derive::fns_derive(MsgType::Query, ast)

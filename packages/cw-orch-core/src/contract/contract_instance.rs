@@ -71,6 +71,11 @@ impl<Chain: ChainState> Contract<Chain> {
         self.chain.state().set_address(&self.id, address)
     }
 
+    /// Remove state address for contract
+    pub fn remove_address(&self) {
+        self.chain.state().remove_address(&self.id)
+    }
+
     /// Returns state code_id for contract
     pub fn code_id(&self) -> Result<u64, CwEnvError> {
         let state_code_id = self.chain.state().get_code_id(&self.id);
@@ -82,6 +87,10 @@ impl<Chain: ChainState> Contract<Chain> {
     /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
+    }
+    /// Remove state code_id for contract
+    pub fn remove_code_id(&self) {
+        self.chain.state().remove_code_id(&self.id)
     }
 }
 
