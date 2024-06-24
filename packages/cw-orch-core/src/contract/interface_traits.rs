@@ -76,12 +76,9 @@ pub trait ContractInstance<Chain: ChainState> {
         Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
 
-    #[deprecated(
-        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
-    )]
     /// Returns the chain that this contract is deployed on.
     fn get_chain(&self) -> &Chain {
-        Contract::get_chain(self.as_instance())
+        self.as_instance().environment()
     }
 }
 
@@ -200,8 +197,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
 
 impl<Chain: ChainState, T: ?Sized + ContractInstance<Chain>> Environment<Chain> for T {
     fn environment(&self) -> &Chain {
-        #[allow(deprecated)]
-        self.get_chain()
+        self.as_instance().environment()
     }
 }
 

@@ -18,7 +18,8 @@ pub use queriers::{
 };
 pub use state::{ChainState, StateInterface};
 
+/// Describes a structure that contains an underlying execution environment
 pub trait Environment<Chain> {
-    // Required method
+    /// Returns the chain that this structure executes on
     fn environment(&self) -> &Chain;
 }
