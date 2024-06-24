@@ -37,11 +37,20 @@ pub type MockBase<A> = cw_orch_mock::MockBase<A, MockState>;
 
 /// Interchain environment for cw_multi_test Mock environment
 /// This leverages Abstract's fork of cw_multi_test enabling IBC interactions
-#[derive(Clone)]
+
 pub struct MockInterchainEnvBase<A: Api> {
     /// Mock chains registered within the structure
     pub mocks: HashMap<String, MockBase<A>>,
 }
+
+impl<A: Api> Clone for MockInterchainEnvBase<A> {
+    fn clone(&self) -> Self {
+        Self {
+            mocks: self.mocks.clone(),
+        }
+    }
+}
+
 impl<A: Api> MockInterchainEnvBase<A> {
     /// Create an interchain structure from mocks
     pub fn from_mocks(chains: Vec<MockBase<A>>) -> Self {
@@ -108,7 +117,7 @@ impl MockInterchainEnvBase<MockApiBech32> {
     }
 }
 
-impl<A: Api + Clone> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
+impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
     type ChannelCreationResult = ChannelCreationResult;
 
     type Error = InterchainMockError;

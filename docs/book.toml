@@ -7,9 +7,15 @@ title = "cw-orchestrator documentation"
 
 [preprocessor.keeper]
 command = "mdbook-keeper"
-manifest_dir = "../cw-orch/"
-# target_dir = "../target/"
-externs = ["cw_orch", "cosmwasm_schema", "cosmwasm_std", "counter_contract"]
+manifest_dir = "../"
+externs = [
+    "cw_orch",
+    "cosmwasm_schema",
+    "cosmwasm_std",
+    "counter_contract",
+    "cw_orch_interchain",
+    "anyhow",
+]
 
 [output.html]
 default-theme = "light"
@@ -21,4 +27,4 @@ edit-url-template = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/do
 
 [extern]
 # Define the external crate and its features
-cw-orch = { path = "../cw-orch", features = ["daemon"] }
+cw-orch-interchain = { path = "../cw-orch-interchain", features = ["daemon"] }
