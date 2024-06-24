@@ -264,7 +264,7 @@ impl<T: CwOrchExecute<Chain> + ContractInstance<Chain> + Clone, Chain: TxHandler
 pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
     /// Only upload the contract if it is not uploaded yet (checksum does not match)
     fn upload_if_needed(&self) -> Result<Option<TxResponse<Chain>>, CwEnvError> {
-        if self.latest_is_uploaded()? {
+        if let Ok(true) = self.latest_is_uploaded() {
             Ok(None)
         } else {
             Some(self.upload()).transpose().map_err(Into::into)
