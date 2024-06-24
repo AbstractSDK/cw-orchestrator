@@ -9,12 +9,12 @@ title = "cw-orchestrator documentation"
 command = "mdbook-keeper"
 manifest_dir = "../"
 externs = [
-    "cw_orch",
-    "cosmwasm_schema",
-    "cosmwasm_std",
-    "counter_contract",
-    "cw_orch_interchain",
-    "anyhow",
+  "cw_orch",
+  "cosmwasm_schema",
+  "cosmwasm_std",
+  "counter_contract",
+  "cw_orch_interchain",
+  "anyhow",
 ]
 
 [output.html]
