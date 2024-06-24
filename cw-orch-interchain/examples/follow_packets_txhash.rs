@@ -3,7 +3,6 @@ use cw_orch::{
     environment::{ChainInfo, NetworkInfo},
     prelude::networks::osmosis::OSMOSIS_1,
 };
-use cw_orch_interchain_core::IbcAckParser;
 use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchainEnv};
 use tokio::runtime::Runtime;
 
@@ -36,32 +35,12 @@ fn follow_by_tx_hash() -> cw_orch::anyhow::Result<()> {
         &ChannelCreationValidator,
     )?;
 
-    let mut result = interchain
-        .wait_ibc_from_txhash(
+    interchain
+        .follow_packets_from_txhash(
             src_chain.chain_id,
             "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
         )?
-        .analyze()?;
-
-    result.find_and_pop(&IbcAckParser::ics20_ack)?;
-
-    let mut result = interchain
-        .wait_ibc_from_txhash(
-            src_chain.chain_id,
-            "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
-        )?
-        .analyze()?;
-    result
-        .find_and_pop(&IbcAckParser::polytone_ack)
-        .unwrap_err();
-
-    let mut result = interchain
-        .wait_ibc_from_txhash(
-            src_chain.chain_id,
-            "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
-        )?
-        .analyze()?;
-    result.find_and_pop(&IbcAckParser::ics004_ack).unwrap_err();
+        .into_result()?;
 
     Ok(())
 }

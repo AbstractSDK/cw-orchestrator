@@ -163,7 +163,7 @@ mod test {
         InterchainChannel<<Chain as IbcQueryHandler>::Handler>,
         String,
     )> {
-        let chain1 = interchain.chain(chain_id1).unwrap();
+        let chain1 = interchain.get_chain(chain_id1).unwrap();
 
         let sender = chain1.sender().to_string();
 

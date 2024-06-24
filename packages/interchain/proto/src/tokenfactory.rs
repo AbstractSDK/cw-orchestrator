@@ -143,7 +143,7 @@ pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Cha
 
     // We wait for the IBC tx to stop successfully
     let tx_results = interchain_env
-        .wait_ibc(&source_port.chain_id, send_tx)
+        .follow_packets(&source_port.chain_id, send_tx)
         .unwrap();
 
     Ok(tx_results)

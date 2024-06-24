@@ -11,7 +11,7 @@ use ibc_relayer_types::core::{
 };
 
 use crate::{
-    ack_parser::{AckParser, IbcAckParser},
+    ack_parser::IbcAckParser,
     channel::{IbcPort, InterchainChannel},
     types::{
         parse::SuccessIbcPacket, ChannelCreationResult, ChannelCreationTransactionsResult,
@@ -81,9 +81,10 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     type Error: 'static + Into<InterchainError> + std::fmt::Debug + std::error::Error + Sync + Send;
 
     /// Returns a chain if it's registered in the environment
+    /// Using `get_chain` to avoid confusions with the `Iterator::chain` function
     /// Returns an error if the provided chain doesn't exist
     /// The chain_id doesn't have to be the actual chain_id of the chain. The way this id is handled is implementation specific
-    fn chain(&self, chain_id: impl ToString) -> Result<Chain, Self::Error>;
+    fn get_chain(&self, chain_id: impl ToString) -> Result<Chain, Self::Error>;
 
     /// This triggers channel creation between 2 chains
     /// Returns a channel creation receipt as well as as the connection_id on the src_chain side
@@ -131,14 +132,14 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
         // We create the temporary InterchainChannel Object
         let mut ibc_channel = InterchainChannel::new(
             IbcPort {
-                chain: self.chain(src_chain).map_err(Into::into)?.ibc_handler(),
+                chain: self.get_chain(src_chain).map_err(Into::into)?.ibc_handler(),
                 chain_id: src_chain.to_string(),
                 connection_id: Some(src_connection_id),
                 port: src_port.clone(),
                 channel: None,
             },
             IbcPort {
-                chain: self.chain(dst_chain).map_err(Into::into)?.ibc_handler(),
+                chain: self.get_chain(dst_chain).map_err(Into::into)?.ibc_handler(),
                 chain_id: dst_chain.to_string(),
                 connection_id: None,
                 port: dst_port.clone(),
@@ -164,13 +165,13 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
 
         // We follow all packets that were created in these transactions
         let packet_results = (
-            self.wait_ibc(src_chain, channel_creation_txs.init)
+            self.follow_packets(src_chain, channel_creation_txs.init)
                 .map_err(Into::into)?,
-            self.wait_ibc(dst_chain, channel_creation_txs.r#try)
+            self.follow_packets(dst_chain, channel_creation_txs.r#try)
                 .map_err(Into::into)?,
-            self.wait_ibc(src_chain, channel_creation_txs.ack)
+            self.follow_packets(src_chain, channel_creation_txs.ack)
                 .map_err(Into::into)?,
-            self.wait_ibc(dst_chain, channel_creation_txs.confirm)
+            self.follow_packets(dst_chain, channel_creation_txs.confirm)
                 .map_err(Into::into)?,
         );
 
@@ -217,10 +218,8 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Follows every IBC packets sent out during a transaction
     /// This returns a packet analysis.
     ///
-    /// For easier handling of the Interchain response, please use [`Self::check_ibc`]
-    ///
-    /// For more control over the ack parsing, please use [`Self::parse_ibc`]
-    fn wait_ibc(
+    /// For easier handling of the Interchain response, please use [`Self::follow_and_check_packets`]
+    fn follow_packets(
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
@@ -229,43 +228,25 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Follow every IBC packets sent out during the transaction
     /// Parses the acks according to usual ack formats (ICS20, Polytone, ICS-004)
     /// Errors if the acks and't be parsed, correspond to a failed result or there is a timeout
-    /// If you only want to await without validation, use [`Self::wait_ibc`]
-    fn check_ibc(
+    /// If you only want to await without validation, use [`Self::follow_packets`]
+    fn follow_and_check_packets(
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
-    ) -> Result<IbcTxAnalysis<Chain>, InterchainError> {
-        let tx_result = self.wait_ibc(chain_id, tx_response).map_err(Into::into)?;
+    ) -> Result<(), InterchainError> {
+        let tx_result = self
+            .follow_packets(chain_id, tx_response)
+            .map_err(Into::into)?;
 
         tx_result.into_result()?;
 
-        Ok(tx_result)
-    }
-
-    /// Follow every IBC packets sent out during the transaction
-    /// Returns an object that is used to analyze packets according to different formats
-    /// # Example
-    ///
-    /// ```no_run,ignore
-    /// let mut result = interchain.parse_ibc("osmosis-1", tx_response)?;
-    /// let first_polytone_ack = result.find_and_pop(&IbcAckParser::polytone_ack)?;
-    /// // ... You can parse and pop other packets if any
-    /// // This final call allows you to make sure you haven't forgotten to parse any packets
-    /// result.stop()?;
-    /// ```
-    fn parse_ibc(
-        &self,
-        chain_id: ChainId,
-        tx_response: <Chain as TxHandler>::Response,
-    ) -> Result<AckParser<Chain>, InterchainError> {
-        let tx_result = self.wait_ibc(chain_id, tx_response).map_err(Into::into)?;
-        tx_result.analyze()
+        Ok(())
     }
 
     /// Follow the execution of a single IBC packet across the chain.
     /// It won't follow additional packets sent out during the transmission of this packet
     /// This is usually not used outside of the structure implementation, but is still available if needed
-    fn follow_packet(
+    fn follow_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,
@@ -285,7 +266,6 @@ pub fn contract_port<Chain: CwEnv>(contract: &dyn ContractInstance<Chain>) -> Po
 impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
     /// Tries to parses all acknowledgements into polytone, ics20 and ics004 acks.
     /// Errors if some packet doesn't conform to those results.
-    /// Use [`InterchainEnv::parse_ibc`] if you want to handle your own acks
     pub fn into_result(&self) -> Result<(), InterchainError> {
         self.packets.iter().try_for_each(|p| p.into_result())?;
         Ok(())
@@ -325,9 +305,9 @@ impl<Chain: CwEnv> FullIbcPacketAnalysis<Chain> {
         }
     }
 
-    pub(crate) fn get_success_packets(
-        &self,
-    ) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
+    /// Returns all successful packets gathered during the packet following procedure
+    /// Doesn't error if a packet has timed-out
+    pub fn get_success_packets(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
         match &self.outcome {
             IbcPacketOutcome::Success {
                 ack,
@@ -340,6 +320,27 @@ impl<Chain: CwEnv> FullIbcPacketAnalysis<Chain> {
                 }],
                 receive_tx.get_success_packets()?,
                 ack_tx.get_success_packets()?,
+            ]
+            .concat()),
+            IbcPacketOutcome::Timeout { .. } => Ok(vec![]),
+        }
+    }
+
+    /// Returns all successful packets gathered during the packet following procedure
+    /// Errors if a packet has timed-out
+    pub fn assert_no_timeout(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
+        match &self.outcome {
+            IbcPacketOutcome::Success {
+                ack,
+                receive_tx,
+                ack_tx,
+            } => Ok([
+                vec![SuccessIbcPacket {
+                    send_tx: self.send_tx.clone().unwrap(),
+                    packet_ack: ack.clone(),
+                }],
+                receive_tx.assert_no_timeout()?,
+                ack_tx.assert_no_timeout()?,
             ]
             .concat()),
             IbcPacketOutcome::Timeout { .. } => Err(InterchainError::PacketTimeout {}),

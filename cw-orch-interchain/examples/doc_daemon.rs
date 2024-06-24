@@ -15,8 +15,8 @@ fn create_daemon_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchainEnv)
         &ChannelCreationValidator,
     )?;
 
-    let _local_juno: Daemon = interchain.chain("testing")?;
-    let _local_osmo: Daemon = interchain.chain("localosmosis")?;
+    let _local_juno: Daemon = interchain.get_chain("testing")?;
+    let _local_osmo: Daemon = interchain.get_chain("localosmosis")?;
 
     let local_migaloo = DaemonBuilder::default()
         .handle(rt.handle())
@@ -32,8 +32,8 @@ fn create_starship_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchainEn
     let starship = Starship::new(rt.handle(), None)?;
     let interchain = starship.interchain_env();
 
-    let _local_juno: Daemon = interchain.chain("juno-1")?;
-    let _local_osmo: Daemon = interchain.chain("osmosis-1")?;
+    let _local_juno: Daemon = interchain.get_chain("juno-1")?;
+    let _local_osmo: Daemon = interchain.get_chain("osmosis-1")?;
 
     Ok((rt, interchain))
 }

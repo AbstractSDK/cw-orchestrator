@@ -149,7 +149,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     type Error = InterchainDaemonError;
 
     /// Get the daemon for a network-id in the interchain.
-    fn chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
+    fn get_chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
         self.daemons
             .get(&chain_id.to_string())
             .ok_or(InterchainDaemonError::DaemonNotFound(chain_id.to_string()))
@@ -226,7 +226,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 
     // This function follows every IBC packet sent out in a tx result
-    fn wait_ibc(
+    fn follow_packets(
         &self,
         chain_id: ChainId,
         tx_response: CosmTxResponse,
@@ -251,7 +251,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 
     // This function follow the execution of an IBC packet across the chain
-    fn follow_packet(
+    fn follow_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,
@@ -280,18 +280,18 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
 impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
-    pub fn wait_ibc_from_txhash(
+    pub fn follow_packets_from_txhash(
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,
     ) -> Result<IbcTxAnalysis<Daemon>, InterchainDaemonError> {
-        let grpc_channel1 = self.chain(chain_id)?.channel();
+        let grpc_channel1 = self.get_chain(chain_id)?.channel();
 
         let tx = self.rt_handle.block_on(
             Node::new_async(grpc_channel1.clone())._find_tx(packet_send_tx_hash.clone()),
         )?;
 
-        let ibc_trail = self.wait_ibc(chain_id, tx)?;
+        let ibc_trail = self.follow_packets(chain_id, tx)?;
 
         Ok(ibc_trail)
     }

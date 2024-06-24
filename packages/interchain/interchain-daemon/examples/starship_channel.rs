@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<()> {
     let starship = Starship::new(rt.handle(), None)?;
     let interchain_env = starship.interchain_env();
 
-    let juno = interchain_env.chain("juno-1")?;
+    let juno = interchain_env.get_chain("juno-1")?;
 
     let channel_created = interchain_env.create_channel(
         "juno-1",

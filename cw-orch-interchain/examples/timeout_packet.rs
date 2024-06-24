@@ -63,7 +63,7 @@ fn main() -> cw_orch::anyhow::Result<()> {
         None,
     )?;
 
-    let result = interchain.wait_ibc("juno-1", tx_resp)?;
+    let result = interchain.follow_packets("juno-1", tx_resp)?;
 
     match &result.packets[0].outcome {
         cw_orch_interchain_core::types::IbcPacketOutcome::Timeout { .. } => {}
