@@ -4,7 +4,7 @@ use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 pub const BITSONG_NETWORK: NetworkInfo = NetworkInfo {
     chain_name: "bitsong",
     pub_address_prefix: "bitsong",
-    coin_type: 118u32,
+    coin_type: 639u32,
 };
 
 pub const BITSONG_1: ChainInfo = ChainInfo {
