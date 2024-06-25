@@ -1,36 +1,67 @@
 extern crate proc_macro;
 use crate::{
     execute_fns::payable,
-    helpers::{has_into, process_fn_name, process_sorting, LexiographicMatching, MsgType},
+    helpers::{
+        has_into, process_fn_name, process_sorting, LexiographicMatching, MsgType, SyncType,
+    },
     query_fns::parse_query_type,
 };
 use convert_case::{Case, Casing};
-use proc_macro::TokenStream;
 use proc_macro2::Span;
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{parse_quote, visit_mut::VisitMut, Fields, Generics, Ident, ItemEnum, WhereClause};
 
-pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
+pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -> TokenStream {
     let name = &input.ident;
 
-    let (trait_name, func_name, trait_msg_type, generic_msg_type, chain_trait) = match msg_type {
+    let (
+        trait_name,
+        func_name,
+        trait_msg_type,
+        generic_msg_type,
+        generic_msg_type_bounds,
+        chain_trait,
+    ) = match msg_type {
         MsgType::Execute => (
             quote!(CwOrchExecute),
             quote!(execute),
             quote!(ExecuteMsg),
             quote!(CwOrchExecuteMsgType),
+            None,
             quote!(::cw_orch::core::environment::TxHandler),
         ),
         MsgType::Query => (
-            quote!(CwOrchQuery),
-            quote!(query),
+            match sync_type {
+                SyncType::Sync => quote!(CwOrchQuery),
+                SyncType::Async => quote!(AsyncCwOrchQuery),
+            },
+            match sync_type {
+                SyncType::Sync => quote!(query),
+                SyncType::Async => quote!(async_query),
+            },
             quote!(QueryMsg),
             quote!(CwOrchQueryMsgType),
-            quote!(
-                ::cw_orch::core::environment::QueryHandler
-                    + ::cw_orch::core::environment::ChainState
-            ),
+            match sync_type {
+                SyncType::Sync => None,
+                SyncType::Async => Some(quote!(: Sync)),
+            },
+            match sync_type {
+                SyncType::Sync => quote!(
+                    ::cw_orch::core::environment::QueryHandler
+                        + ::cw_orch::core::environment::ChainState
+                ),
+                SyncType::Async => quote!(
+                    ::cw_orch::core::environment::AsyncWasmQuerier
+                        + ::cw_orch::core::environment::ChainState
+                ),
+            },
         ),
+    };
+
+    let (sync_trait_prefix, async_fn_prefix, await_suffix, async_fn_name_suffix) = match sync_type {
+        SyncType::Sync => ("", None, None, ""),
+        SyncType::Async => ("Async", Some(quote!(async)), Some(quote!(.await)), "_async"),
     };
 
     let variant_fns = input.variants.into_iter().map( |mut variant|{
@@ -38,7 +69,7 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
 
         // We rename the variant if it has a fn_name attribute associated with it
         let mut variant_func_name =
-                format_ident!("{}", process_fn_name(&variant).to_case(Case::Snake));
+                format_ident!("{}{async_fn_name_suffix}", process_fn_name(&variant).to_case(Case::Snake));
         variant_func_name.set_span(variant_name.span());
 
 
@@ -116,11 +147,11 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_params,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
+                    #async_fn_prefix fn #variant_func_name(&self, #(#variant_params,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name (
                             #(#variant_ident_content_names,)*
                         );
-                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)#await_suffix
                     }
                 )
             },
@@ -128,9 +159,9 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
 
                 quote!(
                     #variant_doc
-                    fn #variant_func_name(&self, #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
+                    #async_fn_prefix fn #variant_func_name(&self, #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name;
-                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)#await_suffix
                     }
                 )
             }
@@ -168,11 +199,11 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
                 quote!(
                     #variant_doc
                     #[allow(clippy::too_many_arguments)]
-                    fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
+                    #async_fn_prefix fn #variant_func_name(&self, #(#variant_attr,)* #maybe_coins_attr) -> Result<#response, ::cw_orch::core::CwEnvError> {
                         let msg = #name::#variant_name {
                             #(#variant_idents,)*
                         };
-                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)
+                        <Self as ::cw_orch::core::contract::interface_traits::#trait_name<Chain>>::#func_name(self, &msg.into(),#passed_coins)#await_suffix
                     }
                 )
             }
@@ -180,7 +211,8 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
     });
 
     // Generics for the Trait
-    let mut cw_orch_generics: Generics = parse_quote!(<Chain: #chain_trait,  #generic_msg_type>);
+    let mut cw_orch_generics: Generics =
+        parse_quote!(<Chain: #chain_trait,  #generic_msg_type #generic_msg_type_bounds>);
 
     // Adding some constraints to the generics to make sure we're able to use them with cw-orch (especially in responses)
     let debug_bound: syn::TypeParamBound = syn::parse_quote!(std::fmt::Debug);
@@ -217,7 +249,7 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
         clause
     };
 
-    let bname = Ident::new(&format!("{name}Fns"), name.span());
+    let bname = Ident::new(&format!("{}{name}Fns", sync_trait_prefix), name.span());
     let trait_condition = quote!(::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type>);
 
     let derived_trait = quote!(
@@ -261,5 +293,5 @@ pub fn fns_derive(msg_type: MsgType, mut input: ItemEnum) -> TokenStream {
         #derived_trait_blanket_impl
     );
 
-    expand.into()
+    expand
 }
