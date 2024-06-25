@@ -2,9 +2,9 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract,
 };
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
+use cw_orch::{
+    environment::Environment,
+    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler},
 };
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
@@ -35,7 +35,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
+        Some(&counter.environment().sender()),
         None,
     );
     assert!(init_res.is_ok());

@@ -17,3 +17,9 @@ pub use queriers::{
     DefaultQueriers, Querier, QuerierGetter, QueryHandler,
 };
 pub use state::{ChainState, StateInterface};
+
+/// Describes a structure that contains an underlying execution environment
+pub trait Environment<Chain> {
+    /// Returns the chain that this structure executes on
+    fn environment(&self) -> &Chain;
+}

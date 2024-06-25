@@ -3,6 +3,7 @@
 
 use cosmrs::proto::ibc::core::channel::v1::State;
 use cw_orch_core::contract::interface_traits::ContractInstance;
+use cw_orch_core::environment::Environment;
 use cw_orch_daemon::queriers::{Ibc, Node};
 use cw_orch_daemon::Daemon;
 use cw_orch_interchain_core::env::contract_port;
@@ -94,7 +95,7 @@ pub trait IbcPacketLogger {
 /// Allows logging all packets that are related to this contract
 impl<T: ContractInstance<Daemon>> IbcPacketLogger for T {
     fn log_ibc_packets(&self) -> Result<(), Box<dyn Error>> {
-        let daemon = self.get_chain();
+        let daemon = self.environment();
         let config = IbcTrackerConfigBuilder::default()
             .ibc_state(IbcPortState::new(contract_port(self)))
             .build()?;
