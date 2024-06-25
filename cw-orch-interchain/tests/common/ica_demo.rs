@@ -146,7 +146,7 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
     )?;
 
     let chain_id = controller
-        .get_chain()
+        .environment()
         .block_info()
         .map_err(Into::into)?
         .chain_id
