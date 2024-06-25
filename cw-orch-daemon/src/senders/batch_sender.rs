@@ -12,19 +12,19 @@ use std::sync::{Arc, Mutex};
 
 use super::{base_sender::SenderOptions, sender_trait::SenderTrait};
 
-pub type MultiDaemon = DaemonBase<MultipleSender>;
+pub type BatchDaemon = DaemonBase<BatchSender>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 #[derive(Clone)]
-pub struct MultipleSender {
+pub struct BatchSender {
     /// Contains the different messages to broadcast
     /// These are behind an Arc Mutex, because `commit_tx_any function` doesn't have access to a mutable reference to the object
     pub msgs: Arc<Mutex<Vec<Any>>>,
     pub sender: Wallet,
 }
 
-impl SenderTrait for MultipleSender {
+impl SenderTrait for BatchSender {
     type Error = DaemonError;
     type SenderOptions = SenderOptions;
 
@@ -93,7 +93,7 @@ impl SenderTrait for MultipleSender {
     }
 }
 
-impl MultipleSender {
+impl BatchSender {
     pub async fn broadcast(&self, memo: Option<&str>) -> Result<CosmTxResponse, DaemonError> {
         let msgs = self.msgs.lock().unwrap().to_vec();
         log::info!(
