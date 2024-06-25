@@ -12,7 +12,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{parse_quote, visit_mut::VisitMut, Fields, Generics, Ident, ItemEnum, WhereClause};
 
-pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, input: ItemEnum) -> TokenStream {
+pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -> TokenStream {
     let name = &input.ident;
 
     let (
@@ -213,6 +213,23 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, input: ItemEnum) -> To
     // Generics for the Trait
     let mut cw_orch_generics: Generics =
         parse_quote!(<Chain: #chain_trait,  #generic_msg_type #generic_msg_type_bounds>);
+
+    // Adding some constraints to the generics to make sure we're able to use them with cw-orch (especially in responses)
+    let debug_bound: syn::TypeParamBound = syn::parse_quote!(std::fmt::Debug);
+    let serde_serialize_bound: syn::TypeParamBound =
+        syn::parse_quote!(::cosmwasm_schema::serde::Serialize);
+    let serde_deserialize_bound: syn::TypeParamBound =
+        syn::parse_quote!(::cosmwasm_schema::serde::de::DeserializeOwned);
+
+    // Add the `Debug` bound to each generic parameter
+    for param in &mut input.generics.params {
+        if let syn::GenericParam::Type(type_param) = param {
+            type_param.bounds.push(debug_bound.clone());
+            type_param.bounds.push(serde_serialize_bound.clone());
+            type_param.bounds.push(serde_deserialize_bound.clone());
+        }
+    }
+
     cw_orch_generics
         .params
         .extend(input.generics.params.clone());

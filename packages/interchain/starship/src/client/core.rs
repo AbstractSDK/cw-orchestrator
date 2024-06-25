@@ -129,14 +129,20 @@ impl StarshipClient {
         }
 
         // now execute on the pod
-        let _execute_channel_create = Command::new("kubectl")
+        let mut execute_channel_command = Command::new("kubectl");
+        let execute_channel_command = execute_channel_command
             .arg("exec")
             .arg(&pod_id)
             .arg("--")
-            .args(command)
-            .output()
-            .await
-            .unwrap();
+            .args(command);
+
+        if log::log_enabled!(log::Level::Debug) {
+            // We don't catch the command output in case of a debug log
+            execute_channel_command.status().await.unwrap();
+        } else {
+            // Else, we catch the output
+            execute_channel_command.output().await.unwrap();
+        }
 
         Ok(src_connection_id.to_string())
     }
