@@ -225,7 +225,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
     }
 
     // This function follows every IBC packet sent out in a tx result
-    fn follow_packets(
+    fn await_packets(
         &self,
         chain_id: ChainId,
         tx_response: AppResponse,
@@ -241,7 +241,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         let packet_analysis = packets
             .iter()
             .map(|packet| {
-                let ibc_result = self.follow_single_packet(
+                let ibc_result = self.await_single_packet(
                     chain_id,
                     packet.src_port.clone(),
                     packet.src_channel.clone(),
@@ -261,7 +261,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                     .map(|tx| {
                         let chain_id = tx.chain_id.clone();
                         let response = tx.response.clone();
-                        self.follow_packets(&chain_id, response)
+                        self.await_packets(&chain_id, response)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
 
@@ -297,7 +297,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
 
     // This function follow the execution of an IBC packet across the chain
     /// In mock, it also relays the packet
-    fn follow_single_packet(
+    fn await_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,

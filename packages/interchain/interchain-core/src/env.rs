@@ -165,13 +165,13 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
 
         // We follow all packets that were created in these transactions
         let packet_results = (
-            self.follow_packets(src_chain, channel_creation_txs.init)
+            self.await_packets(src_chain, channel_creation_txs.init)
                 .map_err(Into::into)?,
-            self.follow_packets(dst_chain, channel_creation_txs.r#try)
+            self.await_packets(dst_chain, channel_creation_txs.r#try)
                 .map_err(Into::into)?,
-            self.follow_packets(src_chain, channel_creation_txs.ack)
+            self.await_packets(src_chain, channel_creation_txs.ack)
                 .map_err(Into::into)?,
-            self.follow_packets(dst_chain, channel_creation_txs.confirm)
+            self.await_packets(dst_chain, channel_creation_txs.confirm)
                 .map_err(Into::into)?,
         );
 
@@ -218,8 +218,8 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Follows every IBC packets sent out during a transaction
     /// This returns a packet analysis.
     ///
-    /// For easier handling of the Interchain response, please use [`Self::follow_and_check_packets`]
-    fn follow_packets(
+    /// For easier handling of the Interchain response, please use [`Self::await_and_check_packets`]
+    fn await_packets(
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
@@ -228,14 +228,14 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Follow every IBC packets sent out during the transaction
     /// Parses the acks according to usual ack formats (ICS20, Polytone, ICS-004)
     /// Errors if the acks and't be parsed, correspond to a failed result or there is a timeout
-    /// If you only want to await without validation, use [`Self::follow_packets`]
-    fn follow_and_check_packets(
+    /// If you only want to await without validation, use [`Self::await_packets`]
+    fn await_and_check_packets(
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
     ) -> Result<(), InterchainError> {
         let tx_result = self
-            .follow_packets(chain_id, tx_response)
+            .await_packets(chain_id, tx_response)
             .map_err(Into::into)?;
 
         tx_result.into_result()?;
@@ -246,7 +246,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Follow the execution of a single IBC packet across the chain.
     /// It won't follow additional packets sent out during the transmission of this packet
     /// This is usually not used outside of the structure implementation, but is still available if needed
-    fn follow_single_packet(
+    fn await_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,

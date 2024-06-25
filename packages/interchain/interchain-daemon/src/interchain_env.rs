@@ -240,7 +240,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 
     // This function follows every IBC packet sent out in a tx result
-    fn follow_packets(
+    fn await_packets(
         &self,
         chain_id: ChainId,
         tx_response: CosmTxResponse,
@@ -265,7 +265,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 
     // This function follow the execution of an IBC packet across the chain
-    fn follow_single_packet(
+    fn await_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,
@@ -294,7 +294,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
 impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
-    pub fn follow_packets_from_txhash(
+    pub fn await_packets_for_txhash(
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,
@@ -305,7 +305,7 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
             Node::new_async(grpc_channel1.clone())._find_tx(packet_send_tx_hash.clone()),
         )?;
 
-        let ibc_trail = self.follow_packets(chain_id, tx)?;
+        let ibc_trail = self.await_packets(chain_id, tx)?;
 
         Ok(ibc_trail)
     }

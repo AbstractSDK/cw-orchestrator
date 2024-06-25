@@ -99,7 +99,7 @@ Starship will most likely crash after at most 1 day of usage. Don't forget to `m
 
 ## General Usage
 
-All interchain environments are centered around the `follow_single_packet` function. In the Daemon case (be it for testing or for scripting), this function is responsible for tracking the relayer interactions associated with the packet lifetime. The lifetime steps of this function are:
+All interchain environments are centered around the `await_single_packet` function. In the Daemon case (be it for testing or for scripting), this function is responsible for tracking the relayer interactions associated with the packet lifetime. The lifetime steps of this function are:
 
 1. <span style="color:purple">⬤</span> On the `source chain`, identify the packet and the destination chain. If the destination chain id is not registered in the `interchain` environment, it will error. Please make sure all the chains your are trying to inspect are included in the environment.
 2. Then, it follows the timeline of a packet. A packet can either timeout or be transmitted successfully. The function concurrently does the following steps. If one step returns successfully, the other step will be aborted (as a packet can only have one outcome).
@@ -112,9 +112,9 @@ All interchain environments are centered around the `follow_single_packet` funct
 If you have followed the usage closely, you see that this function doesn't error when the acknowledgement is an error, has a wrong format or if the packet timeouts. However, the function might error if either of the timeout/successful cycle takes too long. You can customize the wait time in the [cw-orchestrator environment variables](../../contracts/env-variable.md). 
 
 
-The `follow_packets` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will also not error as long as either a timeout or a successful cycle can be identified before `cw-orchestrator` query function timeouts. This function is recursive as it will also look for packets inside the receive/ack/timeout transactions and also follow their IBC cycle. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete.
+The `await_packets` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will also not error as long as either a timeout or a successful cycle can be identified before `cw-orchestrator` query function timeouts. This function is recursive as it will also look for packets inside the receive/ack/timeout transactions and also follow their IBC cycle. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete.
 
-Finally the `follow_and_check_packets` function allows to follow all packet execution and assert that the acknowledgements received for each correspond to a successful execution. Because there is no standard for signaling a successful IBC transaction, you might need to customize your ack assertion logic if you are using un-common acknowledgment formats. Supported acks are the following:
+Finally the `await_and_check_packets` function allows to follow all packet execution and assert that the acknowledgements received for each correspond to a successful execution. Because there is no standard for signaling a successful IBC transaction, you might need to customize your ack assertion logic if you are using un-common acknowledgment formats. Supported acks are the following:
 
 - [ICS20 packets](https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md#data-structures)
 - [ICS04 compatible packets](https://github.com/cosmos/ibc/blob/main/spec/core/ics-004-channel-and-packet-semantics/README.md#acknowledgement-envelope)
@@ -122,8 +122,8 @@ Finally the `follow_and_check_packets` function allows to follow all packet exec
 
 ## Analysis Usage
 
-The `follow_single_packet` and `follow_packets` function were coded for scripting usage in mind. They allow to await and repeatedly query Cosmos SDK Nodes until the cycle is complete. However, it is also possible to inspect past transactions using those tools.
-Using the `DaemonInterchainEnv::follow_packets_from_txhash` function, one can inspect the history of packets linked to a transaction from a transaction hash only. This enables all kinds of analysis usage, here are some:
+The `await_single_packet` and `await_packets` function were coded for scripting usage in mind. They allow to await and repeatedly query Cosmos SDK Nodes until the cycle is complete. However, it is also possible to inspect past transactions using those tools.
+Using the `DaemonInterchainEnv::await_packets_for_txhash` function, one can inspect the history of packets linked to a transaction from a transaction hash only. This enables all kinds of analysis usage, here are some:
 
 - Relayer activity
 - Analysis of past transactions for fund recovery

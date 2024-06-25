@@ -53,7 +53,7 @@ You can also add mocks manually to the `interchain` object, after instantiation:
 
 ## General Usage
 
-All interchain environments are centered around the `follow_single_packet` function. In the `Mock` case, this function is responsible for relaying the packets between the different chains. Using the exact same interface as with other environments, it takes care of all packet relaying procedures.
+All interchain environments are centered around the `await_single_packet` function. In the `Mock` case, this function is responsible for relaying the packets between the different chains. Using the exact same interface as with other environments, it takes care of all packet relaying procedures.
 
 This function will relay a packets successfully from the receiving chain back the the source chain. Here is what the full cycle looks like:
 
@@ -61,7 +61,7 @@ This function will relay a packets successfully from the receiving chain back th
 2. <span style="color:red">⬤</span> On the `destination chain`, it triggers a receive transaction for that packet.
 3. <span style="color:purple">⬤</span> On the `source chain`, it finally triggers an acknowledgement transaction with the data the `destination_chain` returned.
 
-The `follow_packets` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will never return a timeout transaction. This function is recursive as it will also look for packets inside the receive/ack transactions and also follow their IBC cycle. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete.
+The `await_packets` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will never return a timeout transaction. This function is recursive as it will also look for packets inside the receive/ack transactions and also follow their IBC cycle. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete.
 
 ## IBC Channel creation
 

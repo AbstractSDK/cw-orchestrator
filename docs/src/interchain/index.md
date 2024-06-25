@@ -21,7 +21,7 @@ let transaction_response = controller.send_msgs("channel-16", vec![
 
 // This function won't return before the packet is relayed successfully or timeouts. 
 // In case of a timeout, it will error
-interchain.follow_and_check_packets(
+interchain.await_and_check_packets(
     "akash",
     transaction_response
 )?;
@@ -43,7 +43,7 @@ This is mostly useful for packet analysis of certain channels, ports or connecti
 # fn main() -> anyhow::Result<()>{
     # let interchain = cw_orch_interchain::MockInterchainEnv::new(vec![]);    
     # #[allow(unused)]
-    let packet_lifetime = interchain.follow_single_packet(
+    let packet_lifetime = interchain.await_single_packet(
         "juno",
         "transfer".parse()?,
         "channel-16".parse()?,

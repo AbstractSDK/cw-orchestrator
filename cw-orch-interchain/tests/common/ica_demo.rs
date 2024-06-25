@@ -153,7 +153,7 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
         .to_string();
 
     // Follow the transaction execution
-    interchain.follow_and_check_packets(&chain_id, burn_response)?;
+    interchain.await_and_check_packets(&chain_id, burn_response)?;
 
     // check that the balance became 0
     let balance = juno
