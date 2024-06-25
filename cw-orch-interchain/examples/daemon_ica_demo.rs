@@ -2,7 +2,6 @@ use clap::Parser;
 use clap::ValueEnum;
 
 use common::ica_demo::full_ica_test;
-use cw_orch::tokio;
 use cw_orch_interchain::prelude::*;
 
 // Integrating the test inside the example
@@ -42,8 +41,7 @@ fn main() {
     // Depending on binary arguments, we se starship or a rpc based solution (with manual channel creation)
     let args = Arguments::parse();
 
-    let rt: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
-    let starship = Starship::new(rt.handle(), None).unwrap();
+    let starship = Starship::new(None).unwrap();
     if let Err(ref err) = match args.channel_creation_type {
         ChannelCreationType::Starship => {
             let interchain = starship.interchain_env();
@@ -51,7 +49,6 @@ fn main() {
         }
         ChannelCreationType::Manual => {
             let interchain = DaemonInterchainEnv::from_daemons(
-                rt.handle(),
                 starship.daemons.values().cloned().collect(),
                 &ChannelCreationValidator,
             );

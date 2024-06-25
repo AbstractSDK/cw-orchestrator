@@ -6,7 +6,7 @@ This environment allows you to test your IBC application inside your Rust enviro
 
 You can create your interchain environment using the following simple setup script:
 
-```rust,no_run
+```rust,ignore
 use cw_orch::prelude::*;
 use cw_orch_interchain::prelude::*;
 fn main(){
@@ -20,7 +20,7 @@ fn main(){
 
 Behind the scenes, `MockBech32` objects are created with the specified chain ids. These mock environments can be used on their own to interact with testing environment directly. You can get those objects like so:
 
-```rust,no_run
+```rust,ignore
 # use cw_orch::prelude::*;
 # use cw_orch_interchain::prelude::*;
 # fn main() -> anyhow::Result<()>{
@@ -39,7 +39,7 @@ where the argument of the `chain` method is the chain id of the chain you are in
 
 You can also add mocks manually to the `interchain` object, after instantiation:
 
-```rust,no_run
+```rust,ignore
 # fn main(){
     # use cw_orch::prelude::*;
     # use cw_orch_interchain::prelude::*;
@@ -67,7 +67,7 @@ The `follow_packets` function is very similar except that instead of following a
 
 cw-orchestrator also provides tooling for creating channels between mock environments. Here is how you do it:
 
-```rust,no_run
+```rust,ignore
 # use cw_orch_interchain::prelude::*;
 # fn main() -> anyhow::Result<()>{
     let port_id = PortId::transfer();

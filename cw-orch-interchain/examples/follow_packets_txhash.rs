@@ -4,7 +4,6 @@ use cw_orch::{
     prelude::networks::osmosis::OSMOSIS_1,
 };
 use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchainEnv};
-use tokio::runtime::Runtime;
 
 pub const NOBLE: NetworkInfo = NetworkInfo {
     chain_name: "noble",
@@ -24,13 +23,11 @@ pub const NOBLE_1: ChainInfo = ChainInfo {
 
 fn follow_by_tx_hash() -> cw_orch::anyhow::Result<()> {
     dotenv::dotenv()?;
-    let rt = Runtime::new()?;
 
     let dst_chain = ARCHWAY_1;
     let src_chain = OSMOSIS_1;
 
     let interchain = DaemonInterchainEnv::new(
-        rt.handle(),
         vec![(src_chain.clone(), None), (dst_chain, None)],
         &ChannelCreationValidator,
     )?;

@@ -1,7 +1,7 @@
 use cosmwasm_std::IbcOrder;
 use cw_orch_core::environment::{ChainInfoOwned, ChainState, IndexResponse};
 use cw_orch_daemon::queriers::{Ibc, Node};
-use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
+use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError, RUNTIME};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
 use cw_orch_interchain_core::InterchainEnv;
@@ -44,12 +44,26 @@ pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
 type Mnemonic = String;
 
 impl<C: ChannelCreator> DaemonInterchainEnv<C> {
-    /// Builds a new `InterchainEnv` instance.
-    /// For use with starship, we advise to use `Starship::interchain_env` instead
-    pub fn new<T>(
-        runtime: &Handle,
+    /// Builds a new [`DaemonInterchainEnv`] instance.
+    /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
+    /// channel_creator allows you to specify an object that is able to create channels
+    /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
+    pub fn new<T>(chains: Vec<(T, Option<Mnemonic>)>, channel_creator: &C) -> IcDaemonResult<Self>
+    where
+        T: Into<ChainInfoOwned>,
+    {
+        Self::new_with_runtime(chains, channel_creator, RUNTIME.handle())
+    }
+
+    /// Builds a new [`DaemonInterchainEnv`] instance.
+    /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
+    /// channel_creator allows you to specify an object that is able to create channels
+    /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
+    /// runtime allows you to control the async runtime (for advanced devs)
+    pub fn new_with_runtime<T>(
         chains: Vec<(T, Option<Mnemonic>)>,
         channel_creator: &C,
+        runtime: &Handle,
     ) -> IcDaemonResult<Self>
     where
         T: Into<ChainInfoOwned>,
@@ -67,8 +81,8 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     /// This creates an interchain environment from existing daemon instances
     /// The `channel_creator` argument will be responsible for creation interchain channel
     /// If using starship, prefer using Starship::interchain_env for environment creation
-    pub fn from_daemons(rt: &Handle, daemons: Vec<Daemon>, channel_creator: &C) -> Self {
-        let mut env = Self::raw(rt, channel_creator);
+    pub fn from_daemons(daemons: Vec<Daemon>, channel_creator: &C) -> Self {
+        let mut env = Self::raw(&daemons.first().unwrap().rt_handle, channel_creator);
         env.add_daemons(daemons);
         env
     }

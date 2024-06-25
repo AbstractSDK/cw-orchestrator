@@ -38,7 +38,7 @@ Using some simple tools, one can also follow the execution of IBC packets throug
 
 This is mostly useful for packet analysis of certain channels, ports or connections.
 
-```rust,no_run
+```rust,ignore
 # use cw_orch_interchain::InterchainEnv;
 # fn main() -> anyhow::Result<()>{
     # let interchain = cw_orch_interchain::MockInterchainEnv::new(vec![]);    

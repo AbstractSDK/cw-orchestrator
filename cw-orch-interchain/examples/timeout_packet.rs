@@ -9,7 +9,6 @@ use cosmos_sdk_proto::{
 use cw_orch::{
     environment::{QueryHandler, TxHandler},
     prelude::Stargate,
-    tokio::runtime::Runtime,
 };
 use cw_orch_interchain_core::InterchainEnv;
 use cw_orch_interchain_daemon::ChannelCreator as _;
@@ -18,8 +17,7 @@ use ibc_relayer_types::core::ics24_host::identifier::PortId;
 fn main() -> cw_orch::anyhow::Result<()> {
     pretty_env_logger::init();
 
-    let runtime = Runtime::new()?;
-    let starship = Starship::new(runtime.handle(), None)?;
+    let starship = Starship::new(None)?;
     let interchain = starship.interchain_env();
 
     let channel = interchain.create_channel(
