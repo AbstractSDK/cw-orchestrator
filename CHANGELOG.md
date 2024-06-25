@@ -2,6 +2,7 @@
 
 ## Unpublished
 
+- Added async query functions generations with cw_orch::QueryFns
 - Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
 
 ## cw-orch-daemon 0.23.5

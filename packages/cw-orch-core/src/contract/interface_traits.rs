@@ -1,8 +1,8 @@
 use super::{Contract, WasmPath};
 use crate::{
     environment::{
-        ChainInfoOwned, ChainState, CwEnv, Environment, QueryHandler, TxHandler, TxResponse,
-        WasmQuerier,
+        AsyncWasmQuerier, ChainInfoOwned, ChainState, CwEnv, Environment, QueryHandler, TxHandler,
+        TxResponse, WasmQuerier,
     },
     error::CwEnvError,
     log::contract_target,
@@ -197,6 +197,24 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
             .map_query(self.address()?, query_map, key)
     }
 }
+/// Smart contract query entry point.
+pub trait AsyncCwOrchQuery<Chain: AsyncWasmQuerier + ChainState>:
+    QueryableContract + ContractInstance<Chain>
+where
+    <Self as QueryableContract>::QueryMsg: Sync,
+{
+    /// Query the contract.
+    fn async_query<'a, G: Serialize + DeserializeOwned + Debug>(
+        &'a self,
+        query_msg: &Self::QueryMsg,
+    ) -> impl std::future::Future<Output = Result<G, CwEnvError>> + Send
+    where
+        Chain: 'a,
+    {
+        let instance = self.as_instance();
+        async { instance.async_query(query_msg).await }
+    }
+}
 
 impl<Chain: ChainState, T: ?Sized + ContractInstance<Chain>> Environment<Chain> for T {
     fn environment(&self) -> &Chain {
@@ -206,6 +224,13 @@ impl<Chain: ChainState, T: ?Sized + ContractInstance<Chain>> Environment<Chain> 
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: QueryHandler + ChainState>
     CwOrchQuery<Chain> for T
+{
+}
+
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: AsyncWasmQuerier + ChainState>
+    AsyncCwOrchQuery<Chain> for T
+where
+    <T as QueryableContract>::QueryMsg: std::marker::Sync,
 {
 }
 
