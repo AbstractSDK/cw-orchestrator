@@ -6,7 +6,7 @@ use cw_orch::{
     prelude::*,
 };
 
-// THis is a test with a manual sender, to verify everything works, nothing is broadcasted
+// This is a test with a manual sender, to verify everything works, nothing is broadcasted
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
 pub fn main() -> anyhow::Result<()> {
