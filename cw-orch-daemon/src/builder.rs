@@ -51,7 +51,7 @@ impl<SenderGen: SenderTrait> Default for DaemonAsyncBuilderBase<SenderGen> {
             sender: Default::default(),
             state_path: Default::default(),
             state: Default::default(),
-            write_on_change: None,
+            write_on_change: Default::default(),
         }
     }
 }
