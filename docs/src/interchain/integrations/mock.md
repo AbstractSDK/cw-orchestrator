@@ -10,7 +10,7 @@ You can create your interchain environment using the following simple setup scri
 use cw_orch::prelude::*;
 use cw_orch_interchain::prelude::*;
 fn main(){
-    // Here `juno-1` is the chain-id and `osmo` is the address prefix for this chain    
+    // Here `juno-1` is the chain-id and `juno` is the address prefix for this chain    
     # #[allow(unused)]
     let interchain = MockBech32InterchainEnv::new(
         vec![("juno-1", "juno"), ("osmosis-1", "osmo")],
@@ -68,17 +68,26 @@ The `follow_packets` function is very similar except that instead of following a
 cw-orchestrator also provides tooling for creating channels between mock environments. Here is how you do it:
 
 ```rust,no_run
-fn main() -> anyhow::Result<()>{
-    use cw_orch_interchain::prelude::*;
-    let src_chain = "juno-1".to_string();
-    let dst_chain = "juno-1".to_string();
+# use cw_orch_interchain::prelude::*;
+# fn main() -> anyhow::Result<()>{
     let port_id = PortId::transfer();
+    # let mut interchain = MockBech32InterchainEnv::new(
+    #    vec![("juno-1", "juno"), ("osmosis-1", "osmosis")],
+    # );
     let ChannelCreationResult {
         interchain_channel,
         channel_creation_txs,
-    } = interchain.create_channel(&src_chain, &dst_chain, None, &port_id, &port_id, "ics20-1")?;
-    Ok(())
-}
+    } = interchain
+        .create_channel(
+            "juno-1", 
+            "osmosis-1", 
+            &port_id, 
+            &port_id, 
+            "ics20-1",
+            Some(cosmwasm_std::IbcOrder::Unordered)
+        )?;
+    # Ok(())
+# }
 ```
 
 - The resulting `interchain_channel` object allows you to identify the channel that was just created. It can be useful to retrieve the channel identifiers for instance

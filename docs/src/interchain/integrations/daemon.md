@@ -1,7 +1,6 @@
 # Daemon Interchain Environment
 
-This environment allows to interact with actual COSMOS SDK Nodes. Let's see how that work in details: 
-
+This environment allows to interact with actual *Cosmos-SDK* Nodes. Let's see how that work in details:
 
 ## Environment creation
 
@@ -9,11 +8,11 @@ This environment allows to interact with actual COSMOS SDK Nodes. Let's see how 
 
 When scripting with `cw-orch-interchain`, developers don't have to create chain `Daemon` objects on their own. You can simply pass chain data to the interchain constructor, and it will create the daemons for you. Like so:
 
-```rust,ignore
+```rust,no_run
 use cw_orch::prelude::*;
 use cw_orch::tokio::runtime::Runtime;
 use cw_orch::prelude::networks::{LOCAL_JUNO, LOCAL_OSMO};
-use cw_orch_interchain::interchain::{ChannelCreationValidator,DaemonInterchainEnv};
+use cw_orch_interchain::prelude::*;
 # fn main(){
     let rt = Runtime::new()?;
     let mut interchain = DaemonInterchainEnv::new(vec![
@@ -29,8 +28,8 @@ You can then access individual `Daemon` objects like so:
 use cw_orch::prelude::*;
 use cw_orch_interchain::interchain::InterchainEnv;
 # fn main(){
-    let local_juno: Daemon = interchain.chain("testing")?;
-    let local_osmo: Daemon = interchain.chain("localosmosis")?;
+    let local_juno = interchain.chain("testing")?;
+    let local_osmo = interchain.chain("localosmosis")?;
 #  }
 ```
 
@@ -41,11 +40,25 @@ where the argument of the `chain` method is the chain id of the chain you are in
 You can also add daemons manually to the `interchain` object:
 
 ```rust,ignore
-let local_migaloo = DaemonBuilder::default()
+let local_migaloo = Daemon::builder()
     .chain(LOCAL_MIGALOO)
     .build()?;
 interchain.add_daemons(vec![local_migaloo]);
 ```
+
+<div class="warning">
+    When working with multiple `Daemon` object that share the same state file, you need to make sure that the `Daemon` object use the same underlying `DaemonState` object, otherwise you might get conflicts at runtime. Here's how you do it:
+
+```rust,ignore
+let local_migaloo = Daemon::builder()
+    .chain(LOCAL_MIGALOO)
+    .build()?;
+let local_juno = Daemon::builder()
+    .chain(LOCAL_JUNO)
+    .state(local_migaloo.state())
+    .build()?;
+```
+</div>
 
 ### For testing
 
