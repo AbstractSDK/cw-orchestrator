@@ -66,16 +66,16 @@ pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContra
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsyncBase<SenderGen: SenderTrait = Wallet> {
+pub struct DaemonAsyncBase<Sender: SenderTrait = Wallet> {
     /// Sender to send transactions to the chain
-    pub sender: SenderGen,
+    pub sender: Sender,
     /// State of the daemon
     pub state: DaemonState,
 }
 
 pub type DaemonAsync = DaemonAsyncBase<Wallet>;
 
-impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
+impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
@@ -93,7 +93,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> ChainState for DaemonAsyncBase<SenderGen> {
+impl<Sender: SenderTrait> ChainState for DaemonAsyncBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -102,7 +102,7 @@ impl<SenderGen: SenderTrait> ChainState for DaemonAsyncBase<SenderGen> {
 }
 
 // Execute on the real chain, returns tx response.
-impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
+impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -110,7 +110,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
 
     /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
     /// Does not consume the original [`DaemonAsync`].
-    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<SenderGen> {
+    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<Sender> {
         let mut builder = DaemonAsyncBuilder {
             state: Some(self.state()),
             ..Default::default()
@@ -337,10 +337,10 @@ impl<SenderGen: SenderTrait> DaemonAsyncBase<SenderGen> {
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender<SenderGen2: SenderTrait>(
+    pub fn set_sender<NewSender: SenderTrait>(
         self,
-        sender: SenderGen2,
-    ) -> DaemonAsyncBase<SenderGen2> {
+        sender: NewSender,
+    ) -> DaemonAsyncBase<NewSender> {
         DaemonAsyncBase {
             sender,
             state: self.state,

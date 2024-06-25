@@ -16,7 +16,7 @@ use cw_orch_core::environment::ChainInfoOwned;
 use prost::Message;
 use tonic::transport::Channel;
 
-use std::io::{self, BufRead};
+use std::io::{self, Write};
 
 use super::sender_trait::SenderTrait;
 
@@ -45,22 +45,24 @@ impl SenderTrait for ManualSender {
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
+        // We print the any messages to broadcast
+        println!("Here is the transaction to sign and broadcast: ");
+        println!("{:?}", msgs);
         // We simulate
         let gas_needed = self.simulate(msgs, memo).await?;
-
-        log::info!("Here is the transaction to sign and broadcast: ");
-        log::info!("Gas needed: {}", gas_needed);
-
-        log::info!("Enter the txhash to proceed");
-        let stdin = io::stdin();
-        let txhash = stdin.lock().lines().next().unwrap().unwrap();
-
-        // We print the any messages to broadcast
+        println!("Gas needed: {}", gas_needed);
 
         // We wait for the txhash as input to be able to continue the execution
+        println!("Enter the txhash to proceed");
+        let mut txhash = String::new();
+        io::stdout().flush().unwrap(); // Ensure the prompt is displayed
+        io::stdin()
+            .read_line(&mut txhash)
+            .expect("Failed to read line");
+        let txhash = txhash.trim_end();
 
         let resp = Node::new_async(self.grpc_channel())
-            ._find_tx(txhash)
+            ._find_tx(txhash.to_string())
             .await?;
 
         assert_broadcast_code_cosm_response(resp)

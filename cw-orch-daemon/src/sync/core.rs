@@ -43,17 +43,17 @@ use crate::senders::sender_trait::SenderTrait;
     Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
 */
-pub struct DaemonBase<SenderGen: SenderTrait> {
-    pub daemon: DaemonAsyncBase<SenderGen>,
+pub struct DaemonBase<Sender: SenderTrait> {
+    pub daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
 }
 
 pub type Daemon = DaemonBase<Wallet>;
 
-impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> DaemonBase<Sender> {
     /// Get the daemon builder
-    pub fn builder() -> DaemonBuilderBase<SenderGen> {
+    pub fn builder() -> DaemonBuilderBase<Sender> {
         DaemonBuilderBase::default()
     }
 
@@ -63,13 +63,13 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
     }
 
     /// Get the channel configured for this Daemon
-    pub fn wallet(&self) -> SenderGen {
+    pub fn wallet(&self) -> Sender {
         self.daemon.sender.clone()
     }
 
     /// Returns a new [`DaemonBuilder`] with the current configuration.
     /// Does not consume the original [`Daemon`].
-    pub fn rebuild(&self) -> DaemonBuilderBase<SenderGen> {
+    pub fn rebuild(&self) -> DaemonBuilderBase<Sender> {
         let mut builder = DaemonBuilder {
             state: Some(self.state()),
             ..Default::default()
@@ -86,7 +86,7 @@ impl<SenderGen: SenderTrait> DaemonBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> ChainState for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> ChainState for DaemonBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -95,11 +95,11 @@ impl<SenderGen: SenderTrait> ChainState for DaemonBase<SenderGen> {
 }
 
 // Execute on the real chain, returns tx response
-impl<SenderGen: SenderTrait> TxHandler for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> TxHandler for DaemonBase<Sender> {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
-    type Sender = SenderGen;
+    type Sender = Sender;
 
     fn sender(&self) -> Addr {
         self.daemon.sender.address().unwrap()
@@ -165,7 +165,7 @@ impl<SenderGen: SenderTrait> TxHandler for DaemonBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> Stargate for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> Stargate for DaemonBase<Sender> {
     fn commit_any<R>(
         &self,
         msgs: Vec<prost_types::Any>,
@@ -187,7 +187,7 @@ impl<SenderGen: SenderTrait> Stargate for DaemonBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> QueryHandler for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> QueryHandler for DaemonBase<Sender> {
     type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
@@ -209,8 +209,8 @@ impl<SenderGen: SenderTrait> QueryHandler for DaemonBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> DefaultQueriers for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> DefaultQueriers for DaemonBase<Sender> {
     type Bank = Bank;
-    type Wasm = CosmWasmBase<SenderGen>;
+    type Wasm = CosmWasmBase<Sender>;
     type Node = Node;
 }

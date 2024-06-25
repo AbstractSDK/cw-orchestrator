@@ -13,7 +13,7 @@ pub struct Bank {
 }
 
 impl Bank {
-    pub fn new<SenderGen: SenderTrait>(daemon: &DaemonBase<SenderGen>) -> Self {
+    pub fn new<Sender: SenderTrait>(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
@@ -31,7 +31,7 @@ impl Querier for Bank {
     type Error = DaemonError;
 }
 
-impl<SenderGen: SenderTrait> QuerierGetter<Bank> for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> QuerierGetter<Bank> for DaemonBase<Sender> {
     fn querier(&self) -> Bank {
         Bank::new(self)
     }

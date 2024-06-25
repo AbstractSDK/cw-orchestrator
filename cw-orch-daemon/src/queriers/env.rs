@@ -2,7 +2,7 @@ use cw_orch_core::environment::{EnvironmentInfo, EnvironmentQuerier};
 
 use crate::{senders::sender_trait::SenderTrait, DaemonBase};
 
-impl<SenderGen: SenderTrait> EnvironmentQuerier for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> EnvironmentQuerier for DaemonBase<Sender> {
     fn env_info(&self) -> EnvironmentInfo {
         EnvironmentInfo {
             chain_id: self.daemon.sender.chain_info().chain_id.clone(),

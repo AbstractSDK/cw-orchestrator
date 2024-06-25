@@ -99,7 +99,7 @@ impl SenderOptions {
     }
 }
 
-impl SenderTrait for Sender<All> {
+impl SenderTrait for Wallet {
     type Error = DaemonError;
     type SenderOptions = SenderOptions;
 
@@ -208,8 +208,8 @@ impl SenderTrait for Sender<All> {
     }
 }
 
-impl Sender<All> {
-    pub fn new(chain_info: ChainInfoOwned, channel: Channel) -> Result<Sender<All>, DaemonError> {
+impl Wallet {
+    pub fn new(chain_info: ChainInfoOwned, channel: Channel) -> Result<Wallet, DaemonError> {
         Self::new_with_options(chain_info, channel, SenderOptions::default())
     }
 
@@ -221,7 +221,7 @@ impl Sender<All> {
         chain_info: ChainInfoOwned,
         channel: Channel,
         options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
+    ) -> Result<Wallet, DaemonError> {
         let mnemonic = get_mnemonic_env(&chain_info.kind)?;
 
         Self::from_mnemonic_with_options(chain_info, channel, &mnemonic, options)
@@ -232,7 +232,7 @@ impl Sender<All> {
         chain_info: ChainInfoOwned,
         channel: Channel,
         mnemonic: &str,
-    ) -> Result<Sender<All>, DaemonError> {
+    ) -> Result<Wallet, DaemonError> {
         Self::from_mnemonic_with_options(chain_info, channel, mnemonic, SenderOptions::default())
     }
 
@@ -242,7 +242,7 @@ impl Sender<All> {
         channel: Channel,
         mnemonic: &str,
         options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
+    ) -> Result<Wallet, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey = PrivateKey::from_words(
             &secp,
@@ -274,7 +274,7 @@ impl Sender<All> {
         channel: Channel,
         raw_key: &[u8],
         options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
+    ) -> Result<Wallet, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey = PrivateKey::from_raw_key(
             &secp,

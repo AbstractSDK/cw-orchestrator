@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use bitcoin::secp256k1::All;
 use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::AccountId;
 use cosmrs::{
@@ -11,7 +10,9 @@ use cosmrs::{
 };
 use cw_orch_core::log::transaction_target;
 
-use super::{senders::base_sender::Sender, DaemonError};
+use crate::Wallet;
+
+use super::DaemonError;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]
@@ -73,7 +74,7 @@ impl TxBuilder {
     }
 
     /// Simulates the transaction and returns the necessary gas fee returned by the simulation on a node
-    pub async fn simulate(&self, wallet: &Sender<All>) -> Result<u64, DaemonError> {
+    pub async fn simulate(&self, wallet: &Wallet) -> Result<u64, DaemonError> {
         // get the account number of the wallet
         let BaseAccount {
             account_number,
@@ -91,7 +92,7 @@ impl TxBuilder {
 
     /// Builds the raw tx with a given body and fee and signs it.
     /// Sets the TxBuilder's gas limit to its simulated amount for later use.
-    pub async fn build(&mut self, wallet: &Sender<All>) -> Result<Raw, DaemonError> {
+    pub async fn build(&mut self, wallet: &Wallet) -> Result<Raw, DaemonError> {
         // get the account number of the wallet
         let BaseAccount {
             account_number,

@@ -18,16 +18,16 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasmBase<SenderGen = Wallet> {
+pub struct CosmWasmBase<Sender = Wallet> {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
-    _sender: PhantomData<SenderGen>,
+    _sender: PhantomData<Sender>,
 }
 
 pub type CosmWasm = CosmWasmBase<Wallet>;
 
-impl<SenderGen: SenderTrait> CosmWasmBase<SenderGen> {
-    pub fn new(daemon: &DaemonBase<SenderGen>) -> Self {
+impl<Sender: SenderTrait> CosmWasmBase<Sender> {
+    pub fn new(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
@@ -50,17 +50,17 @@ impl<SenderGen: SenderTrait> CosmWasmBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> QuerierGetter<CosmWasmBase<SenderGen>> for DaemonBase<SenderGen> {
-    fn querier(&self) -> CosmWasmBase<SenderGen> {
+impl<Sender: SenderTrait> QuerierGetter<CosmWasmBase<Sender>> for DaemonBase<Sender> {
+    fn querier(&self) -> CosmWasmBase<Sender> {
         CosmWasmBase::new(self)
     }
 }
 
-impl<SenderGen: SenderTrait> Querier for CosmWasmBase<SenderGen> {
+impl<Sender: SenderTrait> Querier for CosmWasmBase<Sender> {
     type Error = DaemonError;
 }
 
-impl<SenderGen: SenderTrait> CosmWasmBase<SenderGen> {
+impl<Sender: SenderTrait> CosmWasmBase<Sender> {
     /// Query code_id by hash
     pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -232,8 +232,8 @@ impl<SenderGen: SenderTrait> CosmWasmBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> WasmQuerier for CosmWasmBase<SenderGen> {
-    type Chain = DaemonBase<SenderGen>;
+impl<Sender: SenderTrait> WasmQuerier for CosmWasmBase<Sender> {
+    type Chain = DaemonBase<Sender>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
@@ -304,7 +304,7 @@ impl<SenderGen: SenderTrait> WasmQuerier for CosmWasmBase<SenderGen> {
 
     fn local_hash<
         T: cw_orch_core::contract::interface_traits::Uploadable
-            + cw_orch_core::contract::interface_traits::ContractInstance<DaemonBase<SenderGen>>,
+            + cw_orch_core::contract::interface_traits::ContractInstance<DaemonBase<Sender>>,
     >(
         &self,
         contract: &T,

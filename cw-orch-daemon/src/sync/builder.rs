@@ -16,7 +16,7 @@ use super::super::error::DaemonError;
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct DaemonBuilderBase<SenderGen: SenderTrait> {
+pub struct DaemonBuilderBase<Sender: SenderTrait> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -30,14 +30,14 @@ pub struct DaemonBuilderBase<SenderGen: SenderTrait> {
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
 
-    pub(crate) sender: Option<SenderGen>,
+    pub(crate) sender: Option<Sender>,
 
     // /* Sender Options */
     /// Specify Daemon Sender Options
-    pub(crate) sender_options: SenderGen::SenderOptions,
+    pub(crate) sender_options: Sender::SenderOptions,
 }
 
-impl<SenderGen: SenderTrait> Default for DaemonBuilderBase<SenderGen> {
+impl<Sender: SenderTrait> Default for DaemonBuilderBase<Sender> {
     fn default() -> Self {
         Self {
             chain: Default::default(),
@@ -83,7 +83,7 @@ impl DaemonBuilder {
     }
 }
 
-impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
+impl<Sender: SenderTrait> DaemonBuilderBase<Sender> {
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -117,17 +117,17 @@ impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
 
     /// Specifies a sender to use with this chain
     /// This will be used in priority when set on the builder
-    pub fn sender<OtherSenderGen: SenderTrait>(
+    pub fn sender<OtherSender: SenderTrait>(
         &self,
-        wallet: OtherSenderGen,
-    ) -> DaemonBuilderBase<OtherSenderGen> {
+        wallet: OtherSender,
+    ) -> DaemonBuilderBase<OtherSender> {
         DaemonBuilderBase {
             chain: self.chain.clone(),
             deployment_id: self.deployment_id.clone(),
             state_path: self.state_path.clone(),
             state: self.state.clone(),
             sender: Some(wallet),
-            sender_options: OtherSenderGen::SenderOptions::default(),
+            sender_options: OtherSender::SenderOptions::default(),
             handle: self.handle.clone(),
             overwrite_grpc_url: self.overwrite_grpc_url.clone(),
             gas_denom: self.gas_denom.clone(),
@@ -137,7 +137,7 @@ impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
     }
 
     /// Specifies sender builder options
-    pub fn options(&mut self, options: SenderGen::SenderOptions) -> &mut Self {
+    pub fn options(&mut self, options: Sender::SenderOptions) -> &mut Self {
         self.sender_options = options;
         self
     }
@@ -185,7 +185,7 @@ impl<SenderGen: SenderTrait> DaemonBuilderBase<SenderGen> {
     }
 
     /// Build a Daemon
-    pub fn build(&self) -> Result<DaemonBase<SenderGen>, DaemonError> {
+    pub fn build(&self) -> Result<DaemonBase<Sender>, DaemonError> {
         let rt_handle = self
             .handle
             .clone()

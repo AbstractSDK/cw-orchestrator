@@ -29,7 +29,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new<SenderGen: SenderTrait>(daemon: &DaemonBase<SenderGen>) -> Self {
+    pub fn new<Sender: SenderTrait>(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
@@ -43,7 +43,7 @@ impl Node {
     }
 }
 
-impl<SenderGen: SenderTrait> QuerierGetter<Node> for DaemonBase<SenderGen> {
+impl<Sender: SenderTrait> QuerierGetter<Node> for DaemonBase<Sender> {
     fn querier(&self) -> Node {
         Node::new(self)
     }

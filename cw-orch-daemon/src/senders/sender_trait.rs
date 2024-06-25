@@ -9,14 +9,12 @@ pub trait SenderTrait: Clone {
     type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
     type SenderOptions: Default + Clone;
 
-    // TODO: do we want to enforce sync on this function ?
     fn address(&self) -> Result<Addr, Self::Error>;
 
     fn chain_info(&self) -> &ChainInfoOwned;
 
     fn grpc_channel(&self) -> Channel;
 
-    // TODO: do we want to enforce sync on this function ?
     /// Returns the actual sender of every message sent.
     /// If an authz granter is set, returns the authz granter
     /// Else, returns the address associated with the current private key

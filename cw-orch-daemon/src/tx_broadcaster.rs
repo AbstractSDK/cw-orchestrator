@@ -1,8 +1,7 @@
-use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
 
-use crate::{queriers::Node, senders::base_sender::Sender, CosmTxResponse, DaemonError, TxBuilder};
+use crate::{queriers::Node, CosmTxResponse, DaemonError, TxBuilder, Wallet};
 
 pub type StrategyAction =
     fn(&mut TxBuilder, &Result<TxResponse, DaemonError>) -> Result<(), DaemonError>;
@@ -68,7 +67,7 @@ impl TxBroadcaster {
     pub async fn broadcast(
         mut self,
         mut tx_builder: TxBuilder,
-        wallet: &Sender<All>,
+        wallet: &Wallet,
     ) -> Result<TxResponse, DaemonError> {
         let mut tx_retry = true;
 
@@ -123,7 +122,7 @@ fn strategy_condition_met(
 
 async fn broadcast_helper(
     tx_builder: &mut TxBuilder,
-    wallet: &Sender<All>,
+    wallet: &Wallet,
 ) -> Result<TxResponse, DaemonError> {
     let tx = tx_builder.build(wallet).await?;
     let tx_response = wallet.broadcast_tx(tx).await?;

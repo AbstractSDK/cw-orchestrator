@@ -21,7 +21,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 ///     .await.unwrap();
 /// # })
 /// ```
-pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait = Wallet> {
+pub struct DaemonAsyncBuilderBase<Sender: SenderTrait = Wallet> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -34,15 +34,15 @@ pub struct DaemonAsyncBuilderBase<SenderGen: SenderTrait = Wallet> {
     // Sender options
 
     // # Optional indicated sender
-    pub(crate) sender: Option<SenderGen>,
+    pub(crate) sender: Option<Sender>,
 
     /// Specify Daemon Sender Options
-    pub(crate) sender_options: SenderGen::SenderOptions,
+    pub(crate) sender_options: Sender::SenderOptions,
 }
 
 pub type DaemonAsyncBuilder = DaemonAsyncBuilderBase<Wallet>;
 
-impl<SenderGen: SenderTrait> Default for DaemonAsyncBuilderBase<SenderGen> {
+impl<Sender: SenderTrait> Default for DaemonAsyncBuilderBase<Sender> {
     fn default() -> Self {
         Self {
             chain: Default::default(),
@@ -85,7 +85,7 @@ impl DaemonAsyncBuilder {
     }
 }
 
-impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
+impl<Sender: SenderTrait> DaemonAsyncBuilderBase<Sender> {
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -101,17 +101,17 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
 
     /// Specifies a sender to use with this chain
     /// This will be used in priority when set on the builder
-    pub fn sender<OtherSenderGen: SenderTrait>(
+    pub fn sender<NewSender: SenderTrait>(
         &self,
-        wallet: OtherSenderGen,
-    ) -> DaemonAsyncBuilderBase<OtherSenderGen> {
+        wallet: NewSender,
+    ) -> DaemonAsyncBuilderBase<NewSender> {
         DaemonAsyncBuilderBase {
             chain: self.chain.clone(),
             deployment_id: self.deployment_id.clone(),
             state_path: self.state_path.clone(),
             state: self.state.clone(),
             sender: Some(wallet),
-            sender_options: OtherSenderGen::SenderOptions::default(),
+            sender_options: NewSender::SenderOptions::default(),
             write_on_change: self.write_on_change,
         }
     }
@@ -143,7 +143,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
     }
 
     /// Build a daemon
-    pub async fn build(&self) -> Result<DaemonAsyncBase<SenderGen>, DaemonError> {
+    pub async fn build(&self) -> Result<DaemonAsyncBase<Sender>, DaemonError> {
         let chain_info = self
             .chain
             .clone()
@@ -199,7 +199,7 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
         } else {
             let chain_id = chain_info.chain_id.clone();
             let grpc_urls = chain_info.grpc_urls.clone();
-            SenderGen::build(
+            Sender::build(
                 chain_info,
                 GrpcChannel::connect(&grpc_urls, &chain_id).await?,
                 self.sender_options.clone(),
@@ -214,10 +214,8 @@ impl<SenderGen: SenderTrait> DaemonAsyncBuilderBase<SenderGen> {
     }
 }
 
-impl<SenderGen: SenderTrait> From<DaemonBuilderBase<SenderGen>>
-    for DaemonAsyncBuilderBase<SenderGen>
-{
-    fn from(value: DaemonBuilderBase<SenderGen>) -> Self {
+impl<Sender: SenderTrait> From<DaemonBuilderBase<Sender>> for DaemonAsyncBuilderBase<Sender> {
+    fn from(value: DaemonBuilderBase<Sender>) -> Self {
         DaemonAsyncBuilderBase {
             chain: value.chain,
             deployment_id: value.deployment_id,
