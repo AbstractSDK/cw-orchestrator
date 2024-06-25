@@ -3,7 +3,7 @@
 use cosmwasm_std::{Binary, IbcOrder};
 use cw_orch_core::{
     contract::interface_traits::ContractInstance,
-    environment::{CwEnv, IndexResponse, TxHandler},
+    environment::{CwEnv, Environment, IndexResponse, TxHandler},
 };
 use ibc_relayer_types::core::{
     ics04_channel::packet::Sequence,
@@ -202,8 +202,8 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
         version: &str,
         order: Option<IbcOrder>,
     ) -> Result<ChannelCreationResult<Chain>, InterchainError> {
-        let src_chain = src_contract.get_chain().chain_id();
-        let dst_chain = dst_contract.get_chain().chain_id();
+        let src_chain = src_contract.environment().chain_id();
+        let dst_chain = dst_contract.environment().chain_id();
 
         let src_port = contract_port(src_contract);
         let dst_port = contract_port(dst_contract);
