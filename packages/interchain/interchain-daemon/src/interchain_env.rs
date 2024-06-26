@@ -294,6 +294,26 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
 impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
+    ///
+    /// ```rust,no_run
+    /// use cw_orch::prelude::*;
+    /// use cw_orch::daemon::networks::{OSMOSIS_1, ARCHWAY_1};
+    /// use cw_orch_interchain::prelude::*;
+    ///
+    /// let dst_chain = ARCHWAY_1;
+    /// let src_chain = OSMOSIS_1;
+    ///
+    /// let interchain = DaemonInterchainEnv::new(
+    ///     vec![(src_chain.clone(), None), (dst_chain, None)],
+    ///     &ChannelCreationValidator,
+    /// ).unwrap();
+    ///
+    /// interchain
+    ///     .await_packets_for_txhash(
+    ///         src_chain.chain_id,
+    ///         "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
+    ///     ).unwrap().into_result().unwrap();
+    /// ```
     pub fn await_packets_for_txhash(
         &self,
         chain_id: ChainId,
