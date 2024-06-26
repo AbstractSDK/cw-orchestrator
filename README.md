@@ -16,9 +16,9 @@ The documentation here gives you a brief overview of the functionality that cw-o
 
 Interacting with a [CosmWasm](https://cosmwasm.com/) contract involves calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
 
-## Erasing for wasm
+## WASM flagging
 
-The cw-orch capabilities cannot be used inside smart contracts. In order to still be able to integrate it inside your smart-contract, the library erases itself when building your WASMs. If you see errors like this popping up during the build process, you might want to `target-flag` the related code:
+Cw-orch cannot be used *inside* smart contracts. In order to prevent you from having to add feature flags inside your smart-contract, the library excludes itself when building for the WASM target architecture. If you see errors during the build process like shown below, you will want to `target-flag` the related code:
 
 ```bash
 error[E0432]: unresolved import `cw_orch::prelude`
