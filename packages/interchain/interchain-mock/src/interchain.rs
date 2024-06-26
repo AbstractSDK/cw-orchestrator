@@ -224,7 +224,6 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         })
     }
 
-    // This function follows every IBC packet sent out in a tx result
     fn await_packets(
         &self,
         chain_id: ChainId,

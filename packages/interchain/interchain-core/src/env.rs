@@ -59,17 +59,55 @@ pub type ChainId<'a> = &'a str;
 /// This trait allows to extend `cw_orch::prelude::CwEnv` with interchain capabilities
 /// The center of those capabilities is the ability to follow the execution of outgoing IBC packets
 /// This enables users to script chain execution even throughout IBC executions which are more asynchronous than usual transactions.
-/// With the following simple syntax,
-/// ```ignore
-///     let ibc_execution = interchain.wait_ibc("juno", tx_response).await?;
-/// ```
-/// users are even able to await and analyze the execution of all packets submitted in a single transactions
+/// With the following simple syntax, users are even able to await and analyze the execution of all packets submitted in a single transactions
 /// without having to deal with validator addresses, packet sequences, channels_ids or whatever other IBC jargon.
 /// Everything is analyzed automatically and transmitted back to them in a simple analysis structure.
 /// Other capabilities are offered, including :
 /// - Handling multiple chains in one location (to avoid passing them as arguments each time)
 /// - Creating IBC channels between chains
 /// - Logging packet execution steps for easier debugging (failed acks, timeouts...)
+///
+/// ``` rust
+/// use cosmwasm_std::{coin, CosmosMsg, IbcMsg, IbcTimeout, IbcTimeoutBlock};
+/// use cw_orch::prelude::*;
+/// use cw_orch::mock::cw_multi_test::Executor;
+/// use cw_orch_interchain::prelude::*;
+/// use ibc_relayer_types::core::ics24_host::identifier::PortId;
+
+/// let interchain = MockInterchainEnv::new(vec![("juno-1", "sender"), ("stargaze-1", "sender")]);
+
+/// let channel = interchain.create_channel(
+///     "juno-1",
+///     "stargaze-1",
+///     &PortId::transfer(),
+///     &PortId::transfer(),
+///     "ics20-1",
+///     None,
+/// ).unwrap();
+/// let juno = interchain.get_chain("juno-1").unwrap();
+/// let stargaze = interchain.get_chain("stargaze-1").unwrap();
+
+/// let channel = channel
+///     .interchain_channel
+///     .get_ordered_ports_from("juno-1").unwrap();
+
+/// juno.add_balance(juno.sender().to_string(), vec![coin(100_000, "ujuno")]).unwrap();
+/// let tx_resp = juno.app.borrow_mut().execute(
+///     juno.sender(),
+///     CosmosMsg::Ibc(IbcMsg::Transfer {
+///         channel_id: channel.0.channel.unwrap().to_string(),
+///         to_address: stargaze.sender().to_string(),
+///         amount: coin(100_000, "ujuno"),
+///         timeout: IbcTimeout::with_block(IbcTimeoutBlock {
+///             revision: 1,
+///             height: stargaze.block_info().unwrap().height + 1,
+///         }),
+///     }),
+/// ).unwrap();
+
+/// // This makes sure that the packets arrive successfully and present a success ack
+/// let result = interchain.await_and_check_packets("juno-1", tx_resp).unwrap();
+/// ```    
 pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Type returned by the internal channel creation function
     /// Examples
@@ -84,6 +122,19 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Using `get_chain` to avoid confusions with the `Iterator::chain` function
     /// Returns an error if the provided chain doesn't exist
     /// The chain_id doesn't have to be the actual chain_id of the chain. The way this id is handled is implementation specific
+    /// ``` rust
+    /// use cw_orch::prelude::*;
+    /// use cw_orch_interchain::prelude::*;
+    /// use counter_contract::CounterContract;
+    /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
+    ///
+    /// let osmosis = interchain.get_chain("osmosis-1").unwrap();
+    ///
+    /// // The given chain object can be used directly with a contract instance for example
+    /// let contract = CounterContract::new(osmosis);
+    /// contract.upload().unwrap();
+    ///
+    /// ```
     fn get_chain(&self, chain_id: impl ToString) -> Result<Chain, Self::Error>;
 
     /// This triggers channel creation between 2 chains
@@ -102,6 +153,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Queries channel creation txs as well
     /// Fills the connection_id field of the destination chain in the ibc_channel object
     /// Returns the channel ids as well as the transaction responses involved in the channel creation
+    /// In general, this function is not used outside of the trait implementation
     fn get_channel_creation_txs(
         &self,
         src_chain: ChainId,
@@ -112,6 +164,19 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Creates a channel and returns the 4 transactions hashes for channel creation
     /// This function should be used in code to make sure the channel creation (+ eventual packet relaying) is awaited before continuing
     /// This shouldn't need to be re-implemented.
+    /// ``` rust
+    /// use cw_orch_interchain::prelude::*;
+    /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
+    /// // This creates a channel between 2 chains to transfer tokens
+    /// interchain.create_channel(
+    ///     "osmosis-1",
+    ///     "archway-1",
+    ///     &PortId::transfer(),
+    ///     &PortId::transfer(),
+    ///     "ics20-1",
+    ///     Some(cosmwasm_std::IbcOrder::Unordered),
+    /// ).unwrap();
+    /// ```
     fn create_channel(
         &self,
         src_chain: ChainId,
@@ -195,7 +260,30 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
         })
     }
 
-    /// This function creates a channel and returns the 4 transactions hashes for channel creation
+    /// This function creates a channel between 2 wasm contracts.
+    ///
+    /// This is a wrapper around [`Self::create_channel`] that gets its information from the contract objects
+    /// ```rust,no_run
+    /// use cw_orch_interchain::prelude::*;
+    /// // Those 2 imports are solely used so that this doc compiles, the Host and Controller contract need to be defined
+    /// // You can find the implementation here : https://github.com/confio/cw-ibc-demo/
+    /// use counter_contract::CounterContract as Host;
+    /// use counter_contract::CounterContract as Controller;
+    ///
+    /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
+    /// let osmosis = interchain.get_chain("osmosis-1").unwrap();
+    /// let archway = interchain.get_chain("archway-1").unwrap();
+    ///
+    /// let ica_host = Host::new(osmosis);
+    /// let ica_controller = Controller::new(archway);
+    /// // This creates a channel between 2 chains to transfer tokens
+    /// interchain.create_contract_channel(
+    ///     &ica_controller,
+    ///     &ica_host,
+    ///     "simple-ica-v2",
+    ///     Some(cosmwasm_std::IbcOrder::Unordered),
+    /// ).unwrap();
+    /// ```
     fn create_contract_channel(
         &self,
         src_contract: &dyn ContractInstance<Chain>,
@@ -219,6 +307,59 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// This returns a packet analysis.
     ///
     /// For easier handling of the Interchain response, please use [`Self::await_and_check_packets`]
+    /// ``` rust,no_run
+    /// use cw_orch::prelude::*;
+    /// use cw_orch_interchain::prelude::*;
+    /// use cosmos_sdk_proto::{
+    ///     ibc::{
+    ///         applications::transfer::v1::{MsgTransfer, MsgTransferResponse},
+    ///         core::client::v1::Height,
+    ///     },
+    ///     traits::{Message, Name},
+    ///     Any,
+    /// };
+    /// let starship = Starship::new(None).unwrap();
+    /// let interchain = starship.interchain_env();
+    /// // This creates a channel between 2 chains to transfer tokens
+    /// let channel = interchain.create_channel(
+    ///     "osmosis-1",
+    ///     "archway-1",
+    ///     &PortId::transfer(),
+    ///     &PortId::transfer(),
+    ///     "ics20-1",
+    ///     Some(cosmwasm_std::IbcOrder::Unordered),
+    /// ).unwrap();
+    ///
+    /// let src_channel = channel
+    ///     .interchain_channel
+    ///     .get_ordered_ports_from("osmosis-1").unwrap();
+    ///
+    /// let osmosis = interchain.get_chain("osmosis-1").unwrap();
+    /// let archway = interchain.get_chain("archway-1").unwrap();
+    /// let tx_resp = osmosis.commit_any::<MsgTransferResponse>(
+    ///     vec![
+    ///         Any {
+    ///             value: MsgTransfer {
+    ///                 source_port: src_channel.0.port.to_string(),
+    ///                 source_channel: src_channel.0.channel.unwrap().to_string(),
+    ///                 token: Some(cosmos_sdk_proto::cosmos::base::v1beta1::Coin {
+    ///                     amount: "100_000".to_string(),
+    ///                     denom: "osmo".to_string(),
+    ///                 }),
+    ///                 sender: osmosis.sender().to_string(),
+    ///                 receiver: archway.sender().to_string(),
+    ///                 timeout_height: None,
+    ///                 timeout_timestamp: osmosis.block_info().unwrap().time.plus_seconds(600).nanos(),
+    ///             }.encode_to_vec(),
+    ///             type_url: MsgTransfer::type_url(),
+    ///         }
+    ///     ],
+    /// None,
+    /// ).unwrap();
+    ///
+    /// // This simply checks that the packets have been successfully relayed but doesn't check wether the ack was a success
+    /// interchain.await_packets("osmosis-1", tx_resp).unwrap();
+    /// ```
     fn await_packets(
         &self,
         chain_id: ChainId,
@@ -229,6 +370,48 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// Parses the acks according to usual ack formats (ICS20, Polytone, ICS-004)
     /// Errors if the acks and't be parsed, correspond to a failed result or there is a timeout
     /// If you only want to await without validation, use [`Self::await_packets`]
+    ///
+    /// ``` rust
+    /// use cosmwasm_std::{coin, CosmosMsg, IbcMsg, IbcTimeout, IbcTimeoutBlock};
+    /// use cw_orch::prelude::*;
+    /// use cw_orch::mock::cw_multi_test::Executor;
+    /// use cw_orch_interchain::prelude::*;
+    /// use ibc_relayer_types::core::ics24_host::identifier::PortId;
+
+    /// let interchain = MockInterchainEnv::new(vec![("juno-1", "sender"), ("stargaze-1", "sender")]);
+
+    /// let channel = interchain.create_channel(
+    ///     "juno-1",
+    ///     "stargaze-1",
+    ///     &PortId::transfer(),
+    ///     &PortId::transfer(),
+    ///     "ics20-1",
+    ///     None,
+    /// ).unwrap();
+    /// let juno = interchain.get_chain("juno-1").unwrap();
+    /// let stargaze = interchain.get_chain("stargaze-1").unwrap();
+
+    /// let channel = channel
+    ///     .interchain_channel
+    ///     .get_ordered_ports_from("juno-1").unwrap();
+
+    /// juno.add_balance(juno.sender().to_string(), vec![coin(100_000, "ujuno")]).unwrap();
+    /// let tx_resp = juno.app.borrow_mut().execute(
+    ///     juno.sender(),
+    ///     CosmosMsg::Ibc(IbcMsg::Transfer {
+    ///         channel_id: channel.0.channel.unwrap().to_string(),
+    ///         to_address: stargaze.sender().to_string(),
+    ///         amount: coin(100_000, "ujuno"),
+    ///         timeout: IbcTimeout::with_block(IbcTimeoutBlock {
+    ///             revision: 1,
+    ///             height: stargaze.block_info().unwrap().height + 1,
+    ///         }),
+    ///     }),
+    /// ).unwrap();
+
+    /// // This makes sure that the packets arrive successfully and present a success ack
+    /// let result = interchain.await_and_check_packets("juno-1", tx_resp).unwrap();
+    /// ```    
     fn await_and_check_packets(
         &self,
         chain_id: ChainId,
