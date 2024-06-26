@@ -74,3 +74,11 @@ pub trait WasmQuerier: Querier {
         salt: cosmwasm_std::Binary,
     ) -> Result<String, Self::Error>;
 }
+
+pub trait AsyncWasmQuerier: Querier + Sync {
+    fn smart_query<Q: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        address: impl Into<String> + Send,
+        query_msg: &Q,
+    ) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
+}
