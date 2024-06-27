@@ -148,7 +148,7 @@ pub(crate) fn assert_broadcast_code_response(
 }
 
 /// Tx Responses with a non 0 code, should also error with the raw loq
-pub(crate) fn assert_broadcast_code_cosm_response(
+pub fn assert_broadcast_code_cosm_response(
     tx_response: CosmTxResponse,
 ) -> Result<CosmTxResponse, DaemonError> {
     // if tx result != 0 then the tx failed, so we return an error

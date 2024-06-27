@@ -74,6 +74,7 @@ regex = "1.10.4"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
+cw-orch = { path = "../cw-orch", features = ["daemon"] }
 uid = "0.1.7"
 env_logger = "0.11.2"
 cw20 = { version = "1" }
@@ -94,3 +95,6 @@ tokio-test = "0.4.3"
 
 # File lock test
 nix = { version = "0.28.0", features = ["process"] }
+counter-contract = { path = "../contracts/counter" }
+dotenv = "0.15.0"
+pretty_env_logger = "0.5.0"

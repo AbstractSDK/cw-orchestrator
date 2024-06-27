@@ -61,7 +61,7 @@ impl TxBuilder {
         )
     }
 
-    pub(crate) fn build_fee(
+    pub fn build_fee(
         amount: impl Into<u128>,
         denom: &str,
         gas_limit: u64,

@@ -1,9 +1,11 @@
-use crate::proto::injective::InjectiveEthAccount;
-use crate::queriers::Node;
-use crate::tx_broadcaster::assert_broadcast_code_cosm_response;
-use crate::{cosmos_modules, DaemonBase, TxBuilder};
+// This file illustrates an example for custom sender inside Daemon
 
-use crate::{error::DaemonError, tx_resp::CosmTxResponse};
+use cw_orch_daemon::proto::injective::InjectiveEthAccount;
+use cw_orch_daemon::queriers::Node;
+use cw_orch_daemon::tx_broadcaster::assert_broadcast_code_cosm_response;
+use cw_orch_daemon::{DaemonBase, TxBuilder};
+
+use cw_orch_daemon::{error::DaemonError, tx_resp::CosmTxResponse};
 
 use cosmrs::proto::cosmos;
 use cosmrs::proto::cosmos::auth::v1beta1::BaseAccount;
@@ -12,13 +14,42 @@ use cosmrs::tendermint::chain::Id;
 use cosmrs::tx::{ModeInfo, Raw, SignDoc, SignMode, SignerInfo};
 use cosmrs::{AccountId, Any};
 use cosmwasm_std::Addr;
+use cw_orch::prelude::*;
 use cw_orch_core::environment::ChainInfoOwned;
 use prost::Message;
+use std::io::{self, Write};
 use tonic::transport::Channel;
 
-use std::io::{self, Write};
+// ANCHOR: full_counter_example
+use counter_contract::CounterContract;
 
-use super::sender_trait::SenderTrait;
+// This is a test with a manual sender, to verify everything works, nothing is broadcasted
+
+pub fn main() -> anyhow::Result<()> {
+    dotenv::dotenv().ok(); // Used to load the `.env` file if any
+    pretty_env_logger::init(); // Used to log contract and chain interactions
+
+    let network = cw_orch_networks::networks::JUNO_1;
+    let sender = "juno1xjf5xscdk08c5es2m7epmerrpqmkmc3n98650t";
+    let chain = ManualDaemon::builder()
+        .options(ManualSenderOptions {
+            sender_address: Some(sender.to_string()),
+        })
+        .chain(network)
+        .build()?;
+
+    let counter = CounterContract::new(chain.clone());
+
+    // Example tx hash that succeed (correspond to a code upload tx)
+    // 58AA802705BEE4597A560FBC67F6C86400E66F5FCBD0F08AA37FB140BCD65B6D
+    // If not found, try to find the latests juno code uploaded (4380+)
+    // https://www.mintscan.io/juno/wasm/code/4380
+    counter.upload()?;
+
+    Ok(())
+}
+
+use cw_orch_daemon::senders::sender_trait::SenderTrait;
 
 pub type ManualDaemon = DaemonBase<ManualSender>;
 
@@ -153,10 +184,12 @@ impl ManualSender {
     async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.address()?.to_string();
 
-        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.grpc_channel());
+        let mut client = cosmrs::proto::cosmos::auth::v1beta1::query_client::QueryClient::new(
+            self.grpc_channel(),
+        );
 
         let resp = client
-            .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
+            .account(cosmrs::proto::cosmos::auth::v1beta1::QueryAccountRequest { address: addr })
             .await?
             .into_inner();
 
