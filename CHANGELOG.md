@@ -4,6 +4,13 @@
 
 - Added async query functions generations with cw_orch::QueryFns
 - Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
+- Changed cw-orch-interchain InterchainEnv API
+  - `chain` --> `get_chain`
+  - `follow_packet` --> `await_single_packet`
+  - `wait_ibc` --> `await_packets`
+  - `check_ibc` --> `await_and_check_packets`
+  - `follow_packets_from_tx_hash` --> `await_packets_for_txhash`
+- Better Docs for interchain, cw-orch and clone-testing
 
 ## cw-orch-daemon 0.23.5
 
