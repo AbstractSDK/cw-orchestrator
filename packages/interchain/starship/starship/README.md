@@ -17,10 +17,7 @@ To start starship, use :
 make install
 ```
 
-Once all nodes are up (see next section to check status) forward all the ports : 
-```bash
-make port-forward
-```
+Once all nodes are up (see next section to check status) you are readi to use starship using cw-orchestrator.
 
 **Check status**
 
@@ -36,9 +33,13 @@ make watch-pods
 ```
 
 **Stop Infrastructure**
+
+
 ```bash
 make stop
 ```
+
+Starship will crash when running for around a day. You will need to restart it from time to time to make sure everything is working. To do so, just stop the infrastructure, verify everything is stopped and `make install` it again 
 
 **Delete Infrastructure**
 

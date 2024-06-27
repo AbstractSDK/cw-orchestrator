@@ -5,25 +5,10 @@ Cw-orch simplifies those tasks by providing developers tools, full testing envir
 
 Here are a few examples of what cw-orchestrator allows:
 
-## Interchain packet following
-
-Using some simple tools, one can follow the execution of IBC packets through their whole lifetime (*Receive*, *Acknowledge* or *Timeout*).
-This is mostly useful for packet analysis of certain channels, ports or connections.
-
-```rust,ignore
-let packet_lifetime = interchain.follow_packet(
-    "juno",
-    "transfer",
-    "channel-16",
-    "akash",
-    3u64.into()
-).await?;
-```
-
 ## Interchain transaction waiting
 
-To further simplify the developer experience and provide simple syntax, cw-orchestrator allows developers to await execution of transactions that create IBC packets.
-This is mostly useful when interacting with existing contracts in a script to simplify the execution pipeline.
+To simplify the developer experience and provide simple syntax, cw-orchestrator allows developers to await the whole packet IBC lifecycle (*Receive*, *Acknowledge* or *Timeout*) from transactions that create IBC packets.
+This is mostly useful when interacting with existing contracts or modules in a script to simplify the execution pipeline.
 
 ```rust,ignore
 // We order an ICA controller to burn some funds on juno from akash
@@ -35,26 +20,43 @@ let transaction_response = controller.send_msgs("channel-16", vec![
     ])?;
 
 // This function won't return before the packet is relayed successfully or timeouts. 
-let packet_lifetime = interchain.wait_ibc(
+// In case of a timeout, it will error
+interchain.await_and_check_packets(
     "akash",
     transaction_response
-).await?;
-
-// You can analyze the packet lifetime
-match packet_lifetime.packets[0].outcome{
-    IbcPacketOutcome::Success(_) => {},
-    _ => panic!("Expected packet to be successfully transmitted")
-};
+)?;
 
 // You can safely continue with the rest of your application, the packet has been successfully relayed
 ```
 
 This namely removes the need for pausing the program and resuming manually or with a timer.
-This also allows to automatically get extra information about the relayed packet.
+This also allows to automatically get extra information about the relayed packet and assert the IBC-cycle ended successfuly.
+
+## Interchain packet following
+
+Using some simple tools, one can also follow the execution of IBC packets through their whole lifetime (*Receive*, *Acknowledge* or *Timeout*). This is a little more advanced, because you need to know and get more details about the packet manually.
+
+This is mostly useful for packet analysis of certain channels, ports or connections.
+
+```rust,ignore
+# use cw_orch_interchain::InterchainEnv;
+# fn main() -> anyhow::Result<()>{
+    # let interchain = cw_orch_interchain::MockInterchainEnv::new(vec![]);    
+    # #[allow(unused)]
+    let packet_lifetime = interchain.await_single_packet(
+        "juno",
+        "transfer".parse()?,
+        "channel-16".parse()?,
+        "akash",
+        3u64.into()
+    )?;
+    # Ok(())
+# }
+```
 
 ## Interchain application testing
 
-Cw-orch allows developers to test their IBC applications and smart-contracts using a common interface. As we know that setting an IBC testing environment is heavy on resources and can be time-consuming, we provide 2 testing environments that will help them streamline their development process:
+Cw-orch allows developers to test their IBC applications and smart-contracts using a common interface. As we know that setting an IBC testing environment is heavy on resources and can be time-consuming, we provide 3 testing environments that will help them streamline their development process:
 
 ### [Rust-only](./integrations/mock.md)
 
@@ -73,7 +75,3 @@ Visit the dedicated [Starship](./integrations/daemon.md#for-testing) page for mo
 The `DaemonInterchainEnvironment` object allows developers to script, deploy and manage their application on running chains with attention to IBC functionalities. This enhances the developer experience with more tooling, more useful logging. This is the all-in-one toolbox cor the cosmwasm IBC developer.
 
 Visit the dedicated [Daemon Interchain](./integrations/daemon.md#for-scripting) page for more details and code snippets.
-
-## Access
-
-The interchain features of cw-orchestrator are not open-source and freely available to all users. <a href="https://abstract.money/orchestrator" target="_blank">Learn more about pricing on our dedicated page</a>.

@@ -21,8 +21,8 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
         "ics20-1",
         None,
     )?;
-    let juno = interchain.chain("juno-1")?;
-    let stargaze = interchain.chain("stargaze-1")?;
+    let juno = interchain.get_chain("juno-1")?;
+    let stargaze = interchain.get_chain("stargaze-1")?;
 
     let stargaze_height = stargaze.block_info()?;
     let channel = channel
@@ -43,7 +43,7 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
         }),
     )?;
 
-    let result = interchain.wait_ibc("juno-1", tx_resp)?;
+    let result = interchain.await_packets("juno-1", tx_resp)?;
 
     match &result.packets[0].outcome {
         cw_orch_interchain_core::types::IbcPacketOutcome::Timeout { .. } => {}

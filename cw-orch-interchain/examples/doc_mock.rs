@@ -6,8 +6,8 @@ fn crate_mock_env() -> cw_orch::anyhow::Result<MockInterchainEnv> {
     let sender = "sender";
     let mut interchain = MockInterchainEnv::new(vec![("juno-1", sender), ("osmosis-1", sender)]);
 
-    let _test_juno: Mock = interchain.chain("juno-1")?;
-    let _test_osmo: Mock = interchain.chain("osmosis-1")?;
+    let _test_juno: Mock = interchain.get_chain("juno-1")?;
+    let _test_osmo: Mock = interchain.get_chain("osmosis-1")?;
 
     let test_migaloo = Mock::new(sender);
     interchain.add_mocks(vec![test_migaloo]);

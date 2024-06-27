@@ -30,11 +30,10 @@ fn assert_ordering(
 
 fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
-    let rt = tokio::runtime::Runtime::new()?;
-    let starship = Starship::new(rt.handle(), None)?;
+    let starship = Starship::new(None)?;
     let interchain_env = starship.interchain_env();
 
-    let juno = interchain_env.chain("juno-1")?;
+    let juno = interchain_env.get_chain("juno-1")?;
 
     let channel_created = interchain_env.create_channel(
         "juno-1",

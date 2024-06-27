@@ -6,7 +6,7 @@ pub mod client;
 use crate::client::StarshipClient;
 use cw_orch_core::environment::{ChainInfoOwned, ChainState, NetworkInfoOwned};
 use cw_orch_core::CwEnvError;
-use cw_orch_daemon::{Daemon, DaemonBuilder};
+use cw_orch_daemon::{Daemon, DaemonBuilder, RUNTIME};
 use ibc_chain_registry::chain::ChainData;
 use std::collections::HashMap;
 use tokio::runtime::Handle;
@@ -23,7 +23,13 @@ pub struct Starship {
 
 impl Starship {
     /// Creates a new instance and connects to a starship deployment
-    pub fn new(rt_handle: &Handle, url: Option<&str>) -> Result<Self, CwEnvError> {
+    pub fn new(url: Option<&str>) -> Result<Self, CwEnvError> {
+        let runtime = RUNTIME.handle();
+        Self::new_with_runtime(runtime, url)
+    }
+
+    /// Creates a new instance and connects to a starship deployment
+    pub fn new_with_runtime(rt_handle: &Handle, url: Option<&str>) -> Result<Self, CwEnvError> {
         let starship_client = StarshipClient::new(rt_handle.clone(), url)?;
 
         let mut daemons: HashMap<String, Daemon> = HashMap::new();

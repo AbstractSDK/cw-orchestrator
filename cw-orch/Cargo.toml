@@ -17,9 +17,6 @@ exclude = [".env"]
 all-features = true
 
 [[example]]
-name = "mock_test"
-
-[[example]]
 name = "local_daemon"
 required-features = ["daemon"]
 

@@ -1,15 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{ensure, from_json, Binary};
+use cosmwasm_std::{from_json, Binary};
 use cw_orch_core::environment::CwEnv;
 use polytone::ack::Callback;
 use prost::Message;
 
 use crate::{
     env::decode_ack_error,
-    types::{
-        parse::{ParsedIbcPacket, SuccessIbcPacket},
-        IbcTxAnalysis,
-    },
+    types::{parse::SuccessIbcPacket, IbcTxAnalysis},
     InterchainError,
 };
 
@@ -96,22 +93,21 @@ pub enum FungibleTokenPacketAcknowledgement {
     Error(String),
 }
 
-pub struct AckParser<Chain: CwEnv> {
-    pub packets: Vec<SuccessIbcPacket<Chain>>,
-}
-
 impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
-    /// Start an in-dept analysis of the IBC packet result
-    /// This collects all transactions with packets and prepares them for analysis
-    pub fn analyze(self) -> Result<AckParser<Chain>, InterchainError> {
-        Ok(AckParser {
-            packets: self.get_success_packets()?,
-        })
+    /// Assert that all packets were not timeout
+    pub fn assert_no_timeout(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
+        Ok(self
+            .packets
+            .iter()
+            .map(|p| p.assert_no_timeout())
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect())
     }
 
-    pub(crate) fn get_success_packets(
-        &self,
-    ) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
+    /// Returns all packets that were successful without asserting there was no timeout
+    pub fn get_success_packets(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
         Ok(self
             .packets
             .iter()
@@ -120,40 +116,6 @@ impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
             .into_iter()
             .flatten()
             .collect())
-    }
-}
-
-impl<Chain: CwEnv> AckParser<Chain> {
-    /// Adds a new parser for the current analysis instance
-    pub fn find_and_pop<T: 'static>(
-        &mut self,
-        parser: &'static impl Fn(&Binary) -> Result<T, InterchainError>,
-    ) -> Result<ParsedIbcPacket<Chain, T>, InterchainError> {
-        let el_to_pop = self
-            .packets
-            .iter()
-            .map(|v| {
-                Ok(ParsedIbcPacket {
-                    send_tx: v.send_tx.clone(),
-                    packet_ack: parser(&v.packet_ack)?,
-                })
-            })
-            .enumerate()
-            .find(|(_, maybe_parsed)| maybe_parsed.is_ok());
-
-        if let Some((index_to_pop, result)) = el_to_pop {
-            self.packets.remove(index_to_pop);
-            return result;
-        }
-        Err(InterchainError::NoMatchingPacketFound())
-    }
-
-    pub fn stop(&self) -> Result<(), InterchainError> {
-        ensure!(
-            self.packets.is_empty(),
-            InterchainError::RemainingPackets {}
-        );
-        Ok(())
     }
 }
 

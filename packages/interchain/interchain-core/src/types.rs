@@ -267,36 +267,18 @@ pub mod parse {
     pub struct SuccessIbcPacket<Chain: CwEnv> {
         /// Identification of the transaction
         pub send_tx: TxId<Chain>,
-        /// Result of following a packet + Recursive Analysis of the resulting transactions for additional IBC packets
+        /// Raw bytes returned during the acknowledgement
         pub packet_ack: Binary,
-    }
-
-    /// Contains parsed packet information after it was successfully acknowledged on the sending chain
-    #[derive(Clone)]
-    pub struct ParsedIbcPacket<Chain: CwEnv, T> {
-        /// Identification of the transaction
-        pub send_tx: TxId<Chain>,
-        /// Result of following a packet + Recursive Analysis of the resulting transactions for additional IBC packets
-        pub packet_ack: T,
     }
 
     mod debug {
         use cw_orch_core::environment::CwEnv;
 
-        use super::{ParsedIbcPacket, SuccessIbcPacket};
+        use super::SuccessIbcPacket;
 
         impl<C: CwEnv> std::fmt::Debug for SuccessIbcPacket<C> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.debug_struct("SuccessIbcPacket")
-                    .field("sent_tx", &self.send_tx)
-                    .field("packet_ack", &self.packet_ack)
-                    .finish()
-            }
-        }
-
-        impl<C: CwEnv, T: std::fmt::Debug> std::fmt::Debug for ParsedIbcPacket<C, T> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.debug_struct("ParsedIbcPacket")
                     .field("sent_tx", &self.send_tx)
                     .field("packet_ack", &self.packet_ack)
                     .finish()

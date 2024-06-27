@@ -1,8 +1,6 @@
-# Fork Testing
+# Clone Testing
 
-> **NOTE**: This feature is not publicly available yet. If you want preview access to this testing feature, please reach out via our <a href="https://abstract.money" target="_blank">website</a>.
-
-Cw-orchestrator supports testing in a forked environment. With this feature, you can execute the application you are developing on a blockchain environment without having to spin up a node yourself and create a fork locally. All the code and application you will be running during the test will be rust code and the storage needed to execute is minimal as only the necessary data is downloaded from actual blockchain nodes.
+Cw-orchestrator supports testing in a forked environment. With this feature, you can execute the application you are developing on a blockchain environment without having to spin up a node yourself and create a fork locally. This means that it will simulate having the same state as mainnet, but it will run locally inside your Rust code. All the code and application you will be running during the test will be rust code and the storage needed to execute is minimal as only the necessary data is downloaded from actual blockchain nodes.
 
 ## Brief Overview
 
@@ -10,16 +8,20 @@ We leverage the beautiful <a href="https://github.com/CosmWasm/cw-multi-test/" t
 
 ### Setup
 
+Before using clone testing, import the following crate <a href="https://crates.io/crates/cw-orch-clone-testing" target="_blank">`cw-orch-clone-testing`</a>
+
 Setting up the environment is really easy and only requires feeding a `ChainData` object to the struct constructor:
 
 ```rust,ignore
 use cw_orch::networks::JUNO_1;
-use cw_orch::CloneTesting;
+use cw_orch_clone_testing::CloneTesting;
 
 let app = CloneTesting::new(JUNO_1)?;
 ```
 
 With this, you are ready to upload, instantiate, migrate and interact with on-chain contracts...
+
+You can find an <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/packages/clone-testing/tests/clone-testing.rs" target="_blank">advanced example</a> in the cw-orch repository.
 
 ### Execution Flow
 
@@ -29,7 +31,10 @@ This execution environment has a mixed behavior.
 
 The blockchain modules logic is implemented in rust. Every module that is not standard has to be present and implemented in rust to be available. Because we are based on `cw-multi-test`, our application is compatible with cw-multi-test modules. For now:
 
-- The Wasm module is implemented locally via the `cosmwasm-vm` package that handles wasm execution.
+- The Wasm module is implemented locally via a mixed approach that allows execution of:
+  - Rust Code via `cw-multi-test`
+  - Wasm binaries via the `cosmwasm-vm` package.
+  
 - The Bank module is implemented by `cw-multi-test` and available in this environment.
 - The Staking module is not fully implemented because distant storage is more difficult to query. It's the next module we wish to implement.
 
@@ -95,8 +100,22 @@ You use this fork environment as you would use the `Mock` environment, with a fe
     let new_sender: Addr = fork.init_account();
     ```
 
-2. The environment doesn't allow (yet) contracts to be defined using its functions (just like the [`Mock`](./cw-multi-test.md) can). A contract in this environment is executed through its compiled wasm. When testing with this environment, make sure that you compile your project before running the tests[^mock-wasm].
+2. The environment allows for using contracts defined using its functions (just like the [`Mock`](./cw-multi-test.md) can) **AND** compiled WASM contracts. By default, the Rust `wrapper` method is used to upload the contract in the environment. The following code will use this wrapper. This makes it really easy and fast to iterate on your contracts (for migrating, debugging...):
+
+    ```rust,ignore
+    use cw_orch::prelude::*;
+{{#include ../../../packages/clone-testing/tests/wasm-upload.rs:clone_testing_setup}}
+{{#include ../../../packages/clone-testing/tests/wasm-upload.rs:counter_contract_setup}}
+{{#include ../../../packages/clone-testing/tests/wasm-upload.rs:upload}}
+    ```
+
+    If you prefer using Wasm compiled smart contracts, use the following snippet: 
+
+    ```rust,ignore
+    use cw_orch::prelude::*;
+{{#include ../../../packages/clone-testing/tests/wasm-upload.rs:clone_testing_setup}}
+{{#include ../../../packages/clone-testing/tests/wasm-upload.rs:counter_contract_setup}}
+{{#include ../../../packages/clone-testing/tests/wasm-upload.rs:upload_wasm}}
+    ```
 
 [^storage-cache]: In the future, we might leverage a local storage cache to avoid querying distant RPCs too much (for more speed and less data consumption).
-
-[^mock-wasm]: We are aware that this is not very easy on the user and we are working on being able to accept both structures that implement the `Contract` trait **AND** wasm files for testing with this for environment.

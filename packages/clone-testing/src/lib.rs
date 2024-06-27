@@ -1,12 +1,14 @@
 //! Integration testing execution environment backed by a [cw-multi-test](cw_multi_test) App.
 //! It has an associated state that stores deployment information for easy retrieval and contract interactions.
 
+mod contract_instance;
 mod core;
 pub mod queriers;
 mod state;
 
 pub use self::core::CloneTesting;
 pub use clone_cw_multi_test as cw_multi_test;
+pub use contract_instance::WasmUpload;
 pub use state::MockState;
 
 // We define a new structure to reunite the ContractWrapper objects
