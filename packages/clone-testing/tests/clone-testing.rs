@@ -2,9 +2,6 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_schema::QueryResponses;
 use cosmwasm_std::coins;
 use cosmwasm_std::Addr;
-use cosmwasm_std::ContractInfoResponse;
-use cosmwasm_std::QueryRequest;
-use cosmwasm_std::WasmQuery;
 use counter_contract::msg::MigrateMsg;
 use counter_contract::CounterContract;
 use counter_contract::CounterQueryMsgFns;
@@ -17,12 +14,11 @@ use cw_orch::prelude::CwOrchMigrate;
 use cw_orch::prelude::CwOrchUpload;
 use cw_orch::prelude::Uploadable;
 use cw_orch::prelude::*;
-use cw_orch::tokio::runtime::Runtime;
 use cw_orch_clone_testing::CloneTesting;
 
 use cosmwasm_std::Empty;
 
-/// For those Who don't know, CAVERN PROTOCOL is a money market
+/// For those Who don't know, CAVERN PROTOCOL was a money market
 #[test]
 pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
     pretty_env_logger::init();
@@ -31,8 +27,7 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
     let market_addr = Addr::unchecked(MARKET_ADDR);
 
     // Instantiation of the fork platform is a breeze.
-    let runtime = Runtime::new()?;
-    let mut app = CloneTesting::new(&runtime, PHOENIX_1)?;
+    let mut app = CloneTesting::new(PHOENIX_1)?;
     app.set_sender(sender.clone());
 
     // We add some funds to the sender, because they need some, for what we are about to do.
@@ -62,14 +57,8 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
 
     // 0. We start by saving some useful information for later (admin for migration (1.) + code id for remigration (3.))
 
-    let contract_info: ContractInfoResponse = app
-        .app
-        .borrow()
-        .wrap()
-        .query(&QueryRequest::Wasm(WasmQuery::ContractInfo {
-            contract_addr: market_addr.to_string(),
-        }))
-        .unwrap();
+    let contract_info = app.wasm_querier().contract_info(market_addr.to_string())?;
+
     let money_market_admin = Addr::unchecked(contract_info.admin.unwrap());
     let money_market_code_id = contract_info.code_id;
 
@@ -102,8 +91,7 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
     // 3. Now we migrate back and deposit again to verify migration is possible back and forth (from off-chain to on-chain contracts)
     market
         .call_as(&money_market_admin)
-        .migrate(&Empty {}, money_market_code_id)
-        .unwrap();
+        .migrate(&Empty {}, money_market_code_id)?;
     market.deposit_stable(&coins(10_000, CURRENCY))?;
 
     // We query to verify the state changed
@@ -178,8 +166,7 @@ fn query_a_currency_balance(chain: &CloneTesting) -> cw_orch::anyhow::Result<Bal
 
 #[test]
 fn query_hash() -> cw_orch::anyhow::Result<()> {
-    let runtime = Runtime::new()?;
-    let app = CloneTesting::new(&runtime, PHOENIX_1)?;
+    let app = CloneTesting::new(PHOENIX_1)?;
     let market = CavernMarket::new("cavern:money-market", app.clone());
     let market_addr = Addr::unchecked(MARKET_ADDR);
     market.set_address(&market_addr);
@@ -191,8 +178,7 @@ fn query_hash() -> cw_orch::anyhow::Result<()> {
 
 #[test]
 fn query_contract_info() -> cw_orch::anyhow::Result<()> {
-    let runtime = Runtime::new()?;
-    let app = CloneTesting::new(&runtime, PHOENIX_1)?;
+    let app = CloneTesting::new(PHOENIX_1)?;
     let market = CavernMarket::new("cavern:money-market", app.clone());
     let market_addr = Addr::unchecked(MARKET_ADDR);
     market.set_address(&market_addr);

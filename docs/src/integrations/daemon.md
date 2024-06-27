@@ -4,11 +4,17 @@
 
 ## Quick Start
 
+Before starting, here are a few examples utilizing the daemon structure:
+
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/testnet_daemon.rs" target="_blank">Interacting with a Testnet</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/complex_testnet_daemon.rs" target="_blank">Sending any message with a Daemon</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/async_daemon.rs" target="_blank">Using Daemon in an async context</a>
+
+
 Interacting with the `daemon` is really straightforward. Creating a daemon instance is shown below:
 
 ```rust,ignore
     use cw_orch::prelude::*;
-    use tokio::runtime::Runtime;
 {{#include ../../../cw-orch/examples/local_daemon.rs:daemon_creation}}
 ```
 
