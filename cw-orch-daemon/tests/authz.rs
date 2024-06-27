@@ -63,6 +63,7 @@ mod tests {
             authorization: Some(authorization.clone()),
             expiration: Some(expiration.clone()),
         };
+
         // We start by granting authz to an account
         daemon.commit_any::<MsgGrantResponse>(
             vec![Any {

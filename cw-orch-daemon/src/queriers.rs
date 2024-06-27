@@ -56,7 +56,7 @@ mod staking;
 
 pub use authz::Authz;
 pub use bank::{cosmrs_to_cosmwasm_coins, Bank};
-pub use cosmwasm::CosmWasm;
+pub use cosmwasm::{CosmWasm, CosmWasmBase};
 pub use feegrant::FeeGrant;
 pub use ibc::Ibc;
 pub use node::Node;

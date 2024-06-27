@@ -1,8 +1,8 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{queriers::CosmWasm, DaemonAsyncBuilderBase, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
-    sender::Wallet, tx_resp::CosmTxResponse,
+    senders::base_sender::Wallet, tx_resp::CosmTxResponse,
 };
 
 use cosmrs::{
@@ -29,6 +29,10 @@ use std::{
 };
 
 use tonic::transport::Channel;
+
+use crate::senders::sender_trait::SenderTrait;
+
+pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
 
 #[derive(Clone)]
 /**
@@ -62,14 +66,16 @@ use tonic::transport::Channel;
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsync {
+pub struct DaemonAsyncBase<Sender: SenderTrait = Wallet> {
     /// Sender to send transactions to the chain
-    pub sender: Wallet,
+    pub sender: Sender,
     /// State of the daemon
     pub state: DaemonState,
 }
 
-impl DaemonAsync {
+pub type DaemonAsync = DaemonAsyncBase<Wallet>;
+
+impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
@@ -77,7 +83,7 @@ impl DaemonAsync {
 
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.sender.grpc_channel.clone()
+        self.sender.grpc_channel()
     }
 
     /// Flushes all the state related to the current chain
@@ -87,7 +93,7 @@ impl DaemonAsync {
     }
 }
 
-impl ChainState for DaemonAsync {
+impl<Sender: SenderTrait> ChainState for DaemonAsyncBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -96,7 +102,7 @@ impl ChainState for DaemonAsync {
 }
 
 // Execute on the real chain, returns tx response.
-impl DaemonAsync {
+impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -104,15 +110,14 @@ impl DaemonAsync {
 
     /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
     /// Does not consume the original [`DaemonAsync`].
-    pub fn rebuild(&self) -> DaemonAsyncBuilder {
+    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<Sender> {
         let mut builder = DaemonAsyncBuilder {
             state: Some(self.state()),
             ..Default::default()
         };
         builder
-            .chain(self.sender.chain_info.clone())
-            .sender((*self.sender).clone());
-        builder
+            .chain(self.sender.chain_info().clone())
+            .sender(self.sender.clone())
     }
 
     /// Execute a message on a contract.
@@ -123,12 +128,16 @@ impl DaemonAsync {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
         };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let result = self
+            .sender
+            .commit_tx(vec![exec_msg], None)
+            .await
+            .map_err(Into::into)?;
         log::info!(target: &transaction_target(), "Execution done: {:?}", result.txhash);
 
         Ok(result)
@@ -149,12 +158,15 @@ impl DaemonAsync {
             code_id,
             label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
 
-        let result = sender.commit_tx(vec![init_msg], None).await?;
+        let result = sender
+            .commit_tx(vec![init_msg], None)
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
@@ -177,7 +189,7 @@ impl DaemonAsync {
             code_id,
             label: label.unwrap_or("instantiate_contract").to_string(),
             admin: admin.map(Into::into).unwrap_or_default(),
-            sender: sender.address()?.to_string(),
+            sender: sender.address().map_err(Into::into)?.to_string(),
             msg: serde_json::to_vec(&init_msg)?,
             funds: proto_parse_cw_coins(coins)?,
             salt: salt.to_vec(),
@@ -187,12 +199,13 @@ impl DaemonAsync {
         let result = sender
             .commit_tx_any(
                 vec![Any {
-                    type_url: "/cosmwasm.wasm.v1.MsgInstantiateContract2".to_string(),
+                    type_url: INSTANTIATE_2_TYPE_URL.to_string(),
                     value: init_msg.encode_to_vec(),
                 }],
                 None,
             )
-            .await?;
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
 
@@ -224,12 +237,16 @@ impl DaemonAsync {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
         };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
+        let result = self
+            .sender
+            .commit_tx(vec![exec_msg], None)
+            .await
+            .map_err(Into::into)?;
         Ok(result)
     }
 
@@ -288,7 +305,7 @@ impl DaemonAsync {
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
         let sender = &self.sender;
-        let wasm_path = <T as Uploadable>::wasm(&self.sender.chain_info);
+        let wasm_path = <T as Uploadable>::wasm(self.sender.chain_info());
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
@@ -297,12 +314,15 @@ impl DaemonAsync {
         e.write_all(&file_contents)?;
         let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender.msg_sender().map_err(Into::into)?,
             wasm_byte_code,
             instantiate_permission: None,
         };
 
-        let result = sender.commit_tx(vec![store_msg], None).await?;
+        let result = sender
+            .commit_tx(vec![store_msg], None)
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 
@@ -317,8 +337,14 @@ impl DaemonAsync {
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender(&mut self, sender: &Wallet) {
-        self.sender = sender.clone();
+    pub fn set_sender<NewSender: SenderTrait>(
+        self,
+        sender: NewSender,
+    ) -> DaemonAsyncBase<NewSender> {
+        DaemonAsyncBase {
+            sender,
+            state: self.state,
+        }
     }
 }
 
