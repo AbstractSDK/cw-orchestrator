@@ -46,7 +46,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
+        Some(&counter.environment().sender()),
         None,
     );
     assert!(init_res.is_ok());

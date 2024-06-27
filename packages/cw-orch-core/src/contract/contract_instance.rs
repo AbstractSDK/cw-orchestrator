@@ -2,7 +2,9 @@
 use super::interface_traits::Uploadable;
 use crate::{
     env::CoreEnvVars,
-    environment::{ChainState, IndexResponse, StateInterface, TxHandler, TxResponse},
+    environment::{
+        AsyncWasmQuerier, ChainState, IndexResponse, StateInterface, TxHandler, TxResponse,
+    },
     error::CwEnvError,
     log::{contract_target, transaction_target},
 };
@@ -38,8 +40,18 @@ impl<Chain> Contract<Chain> {
         }
     }
 
+    #[deprecated(
+        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
+    )]
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
     pub fn get_chain(&self) -> &Chain {
+        self.environment()
+    }
+
+    // This should use the `Environment` trait, but it's not possible due to
+    // `downstream crates may implement trait `contract::interface_traits::ContractInstance<_>` for type `contract::contract_instance::Contract<_>`
+    /// Retrieves the underlying chain used for execution
+    pub fn environment(&self) -> &Chain {
         &self.chain
     }
 
@@ -328,6 +340,40 @@ impl<Chain: ChainState + QueryHandler> Contract<Chain> {
         let resp = self
             .chain
             .query(query_msg, &self.address()?)
+            .map_err(Into::into)?;
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Queried][{}] response {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(&resp)?
+        );
+        Ok(resp)
+    }
+}
+
+impl<Chain: AsyncWasmQuerier + ChainState> Contract<Chain> {
+    /// Query the contract
+    pub async fn async_query<
+        Q: Serialize + Debug + Sync,
+        T: Serialize + DeserializeOwned + Debug,
+    >(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, CwEnvError> {
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Query][{}] {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(query_msg)?
+        );
+
+        let resp = self
+            .chain
+            .smart_query(&self.address()?, query_msg)
+            .await
             .map_err(Into::into)?;
 
         log::debug!(

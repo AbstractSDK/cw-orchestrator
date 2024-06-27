@@ -310,16 +310,18 @@ impl Node {
         retry_on_empty: bool,
         retries: usize,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        let mut client =
-            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+        let mut client = crate::cosmos_proto_patches::v0_50::tx::service_client::ServiceClient::new(
+            self.channel.clone(),
+        );
 
         #[allow(deprecated)]
-        let request = cosmos_modules::tx::GetTxsEventRequest {
+        let request = crate::cosmos_proto_patches::v0_50::tx::GetTxsEventRequest {
             events: events.clone(),
+            pagination: None,
+            order_by: order_by.unwrap_or(OrderBy::Desc).into(),
             page: page.unwrap_or(0),
             limit: 100,
-            pagination: None, // This is not used, so good.
-            order_by: order_by.unwrap_or(OrderBy::Desc).into(),
+            query: events.join(" AND "),
         };
 
         for _ in 0..retries {

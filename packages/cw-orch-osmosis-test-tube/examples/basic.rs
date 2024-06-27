@@ -4,8 +4,8 @@ use counter_contract::{
     CounterContract,
 };
 
-use cw_orch::prelude::{CallAs, ContractInstance};
 use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload};
+use cw_orch::{environment::Environment, prelude::CallAs};
 use cw_orch_osmosis_test_tube::OsmosisTestTube;
 
 pub fn main() {
@@ -26,7 +26,7 @@ pub fn main() {
     let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);
     assert!(exec_res.is_ok());
 
-    let sender = contract_counter.as_instance().get_chain().sender.clone();
+    let sender = contract_counter.environment().sender.clone();
 
     let exec_call_as = contract_counter
         .call_as(&sender)

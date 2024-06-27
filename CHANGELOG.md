@@ -1,5 +1,15 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- Added async query functions generations with cw_orch::QueryFns
+- Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
+
+## cw-orch-daemon 0.23.5
+
+- Fixed Get Tx By Events compatibility with Cosmos SDK 0.50+ for Daemon
+- Fix Generics on QueryMsg and Return types
+
 ## 0.23.0
 
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions

@@ -1,4 +1,4 @@
-use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, ThirdReturn};
 
 use cosmwasm_std::{
     entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
@@ -57,7 +57,7 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg<u64>) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_json_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery { .. } => to_json_binary("third query passed"),
+        QueryMsg::ThirdQuery { .. } => to_json_binary(&ThirdReturn { t: 0u64 }),
         QueryMsg::FourthQuery(_, _) => to_json_binary("fourth query passed"),
     }
 }

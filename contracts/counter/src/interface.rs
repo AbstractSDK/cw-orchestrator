@@ -41,7 +41,7 @@ use cw_orch::anyhow::Result;
 impl CounterContract<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> Result<()> {
-        let daemon = self.get_chain();
+        let daemon = self.environment();
 
         // Get the node query client, there are a lot of other clients available.
         let node: Node = daemon.querier();
