@@ -1,9 +1,9 @@
 use super::error::DaemonError;
 use crate::networks::ChainKind;
 
-#[cfg(feature="grpc")]
+#[cfg(feature = "grpc")]
 use crate::grpc_channel::GrpcChannel;
-#[cfg(feature="rpc")]
+#[cfg(feature = "rpc")]
 use crate::rpc_channel::RpcChannel;
 
 use cosmwasm_std::Addr;
@@ -25,21 +25,25 @@ pub struct DaemonState {
     /// Deployment identifier
     pub deployment_id: String,
     /// Transport channel
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     pub transport_channel: tonic::transport::Channel,
-    #[cfg(feature="rpc")]
+    #[cfg(feature = "rpc")]
     pub transport_channel: cosmrs::rpc::HttpClient,
     /// Information about the chain
     pub chain_data: ChainData,
 }
 
-#[cfg(feature="grpc")]
-pub async fn create_transport_channel(chain_data: &ChainData) -> Result<tonic::transport::Channel, DaemonError>{
+#[cfg(feature = "grpc")]
+pub async fn create_transport_channel(
+    chain_data: &ChainData,
+) -> Result<tonic::transport::Channel, DaemonError> {
     GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await
 }
 
-#[cfg(feature="rpc")]
-pub async fn create_transport_channel(chain_data: &ChainData) -> Result<cosmrs::rpc::HttpClient, DaemonError>{
+#[cfg(feature = "rpc")]
+pub async fn create_transport_channel(
+    chain_data: &ChainData,
+) -> Result<cosmrs::rpc::HttpClient, DaemonError> {
     RpcChannel::connect(&chain_data.apis.rpc, &chain_data.chain_id).await
 }
 

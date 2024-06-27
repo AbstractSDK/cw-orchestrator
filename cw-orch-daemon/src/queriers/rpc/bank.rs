@@ -1,6 +1,8 @@
-use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query, queriers::DaemonQuerier};
-use cosmrs::{proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin}, rpc::HttpClient};
-
+use crate::{cosmos_modules, cosmos_rpc_query, error::DaemonError, queriers::DaemonQuerier};
+use cosmrs::{
+    proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin},
+    rpc::HttpClient,
+};
 
 /// Queries for Cosmos Bank Module
 pub struct Bank {
@@ -100,8 +102,13 @@ impl Bank {
 
     /// Query params
     pub async fn params(&self) -> Result<cosmos_modules::bank::Params, DaemonError> {
-        let params = 
-            cosmos_rpc_query!(self, bank, "/cosmos.bank.v1beta1.Query/Params", QueryParamsRequest {}, QueryParamsResponse,);
+        let params = cosmos_rpc_query!(
+            self,
+            bank,
+            "/cosmos.bank.v1beta1.Query/Params",
+            QueryParamsRequest {},
+            QueryParamsResponse,
+        );
         Ok(params.params.unwrap())
     }
 
@@ -136,7 +143,7 @@ impl Bank {
             QueryDenomsMetadataRequest {
                 pagination: pagination
             },
-            QueryDenomsMetadataResponse,      
+            QueryDenomsMetadataResponse,
         );
         Ok(denoms_metadata.metadatas)
     }

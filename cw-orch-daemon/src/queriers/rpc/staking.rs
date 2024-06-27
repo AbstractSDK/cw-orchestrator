@@ -1,4 +1,4 @@
-use crate::{cosmos_modules, error::DaemonError, cosmos_rpc_query};
+use crate::{cosmos_modules, cosmos_rpc_query, error::DaemonError};
 use cosmrs::{proto::cosmos::base::query::v1beta1::PageRequest, rpc::HttpClient};
 
 use crate::queriers::DaemonQuerier;
@@ -255,8 +255,13 @@ impl Staking {
 
     /// Query the pool info
     pub async fn pool(&self) -> Result<cosmos_modules::staking::QueryPoolResponse, DaemonError> {
-        let pool =
-        cosmos_rpc_query!(self, staking, "/cosmos.staking.v1beta1.Query/Pool", QueryPoolRequest {}, QueryPoolResponse,);
+        let pool = cosmos_rpc_query!(
+            self,
+            staking,
+            "/cosmos.staking.v1beta1.Query/Pool",
+            QueryPoolRequest {},
+            QueryPoolResponse,
+        );
         Ok(pool)
     }
 
@@ -264,8 +269,13 @@ impl Staking {
     pub async fn params(
         &self,
     ) -> Result<cosmos_modules::staking::QueryParamsResponse, DaemonError> {
-        let params =
-        cosmos_rpc_query!(self, staking, "/cosmos.staking.v1beta1.Query/Params", QueryParamsRequest {}, QueryParamsResponse,);
+        let params = cosmos_rpc_query!(
+            self,
+            staking,
+            "/cosmos.staking.v1beta1.Query/Params",
+            QueryParamsRequest {},
+            QueryParamsResponse,
+        );
         Ok(params)
     }
 }

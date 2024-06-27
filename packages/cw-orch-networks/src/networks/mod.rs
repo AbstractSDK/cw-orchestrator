@@ -11,6 +11,7 @@ pub mod neutron;
 pub mod osmosis;
 pub mod sei;
 pub mod terra;
+pub mod wasm;
 
 pub use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
@@ -22,6 +23,7 @@ pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use osmosis::{LOCAL_OSMO, OSMO_5};
 pub use sei::{ATLANTIC_2, LOCAL_SEI, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
+pub use wasm::LOCAL_WASMD;
 
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///

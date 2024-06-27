@@ -1,10 +1,9 @@
 // Only a simple implementation to not overload the tx builder
 
-use cosmrs::{tx::Raw, proto::cosmos::base::abci::v1beta1::TxResponse};
+use cosmrs::{proto::cosmos::base::abci::v1beta1::TxResponse, tx::Raw};
 use tonic::transport::Channel;
 
-use crate::{queriers::DaemonQuerier, DaemonError, cosmos_modules};
-
+use crate::{cosmos_modules, queriers::DaemonQuerier, DaemonError};
 
 /// Queries for Cosmos Bank Module
 pub struct Tx {
@@ -17,16 +16,11 @@ impl DaemonQuerier for Tx {
     }
 }
 
-impl Tx{
-
+impl Tx {
     /// Query spendable balance for address
-    pub async fn broadcast(
-        &self,
-        tx: Raw,
-    ) -> Result<TxResponse, DaemonError> {
-
+    pub async fn broadcast(&self, tx: Raw) -> Result<TxResponse, DaemonError> {
         let mut client =
-        cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
 
         let resp = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
@@ -35,7 +29,6 @@ impl Tx{
             })
             .await?
             .into_inner();
-
 
         Ok(resp.tx_response.unwrap())
     }

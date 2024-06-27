@@ -44,6 +44,7 @@ macro_rules! cosmos_query {
 };
 }
 
+mod auth;
 mod bank;
 mod cosmwasm;
 mod feegrant;
@@ -51,18 +52,16 @@ mod gov;
 mod ibc;
 mod node;
 mod staking;
-mod auth;
 mod tx;
 
+pub use auth::Auth;
 pub use bank::Bank;
 pub use cosmwasm::CosmWasm;
 pub use feegrant::Feegrant;
 pub use ibc::Ibc;
 pub use node::Node;
-pub use auth::Auth;
 pub use tx::Tx;
 
 // this two containt structs that are helpers for the queries
 pub use gov::*;
 pub use staking::*;
-

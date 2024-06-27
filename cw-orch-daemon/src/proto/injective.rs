@@ -2,7 +2,10 @@
 
 use crate::DaemonError;
 use cosmrs::tx::SignDoc;
-use cosmrs::{proto::traits::TypeUrl, tx::Raw};
+use cosmrs::{
+    proto::traits::{Message, Name},
+    tx::Raw,
+};
 
 #[cfg(feature = "eth")]
 use crate::keys::private::PrivateKey;
@@ -26,8 +29,9 @@ pub struct InjectivePubKey {
     pub key: Vec<u8>,
 }
 
-impl TypeUrl for InjectivePubKey {
-    const TYPE_URL: &'static str = "/injective.crypto.v1beta1.ethsecp256k1.PubKey";
+impl Name for InjectivePubKey {
+    const NAME: &'static str = "PubKey";
+    const PACKAGE: &'static str = "/injective.crypto.v1beta1.ethsecp256k1";
 }
 
 pub trait InjectiveSigner {

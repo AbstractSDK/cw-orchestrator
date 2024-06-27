@@ -19,12 +19,12 @@ pub enum DaemonError {
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]
     AnyError(#[from] ::anyhow::Error),
-    
-    #[cfg(feature="grpc")]
+
+    #[cfg(feature = "grpc")]
     #[error(transparent)]
     Status(#[from] ::tonic::Status),
 
-    #[cfg(feature="grpc")]
+    #[cfg(feature = "grpc")]
     #[error(transparent)]
     TransportError(#[from] ::tonic::transport::Error),
 
@@ -104,6 +104,8 @@ pub enum DaemonError {
     NewNetwork(String),
     #[error("Can not connect to any grpc endpoint that was provided.")]
     CannotConnectGRPC,
+    #[error("Can not connect to any rpc endpoint that was provided.")]
+    CannotConnectRPC,
     #[error("tx failed: {reason} with code {code}")]
     TxFailed { code: usize, reason: String },
     #[error("The list of grpc endpoints is empty")]
