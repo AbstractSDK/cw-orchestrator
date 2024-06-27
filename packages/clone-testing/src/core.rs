@@ -45,8 +45,7 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 /// use cw_orch_core::environment::TxHandler;
 ///
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let runtime = tokio::runtime::Runtime::new().unwrap();
-/// let mock: CloneTesting = CloneTesting::new(&runtime, chain.clone()).unwrap();
+/// let mock: CloneTesting = CloneTesting::new(chain.clone()).unwrap();
 /// let sender = mock.sender();
 ///
 /// // set a balance
