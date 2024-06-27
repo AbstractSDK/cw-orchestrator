@@ -16,6 +16,43 @@ The documentation here gives you a brief overview of the functionality that cw-o
 
 Interacting with a [CosmWasm](https://cosmwasm.com/) contract involves calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
 
+## WASM flagging
+
+Cw-orch cannot be used *inside* smart contracts. In order to prevent you from having to add feature flags inside your smart-contract, the library excludes itself when building for the WASM target architecture. If you see errors during the build process like shown below, you will want to `target-flag` the related code:
+
+```bash
+error[E0432]: unresolved import `cw_orch::prelude`
+ --> contracts/counter/src/interface.rs:4:26
+  |
+4 | use cw_orch::{interface, prelude::*};
+  |                          ^^^^^^^ could not find `prelude` in `cw_orch`
+
+error[E0432]: unresolved import `cw_orch::anyhow`
+  --> contracts/counter/src/interface.rs:38:14
+   |
+38 | use cw_orch::anyhow::Result;
+   |              ^^^^^^ could not find `anyhow` in `cw_orch`
+
+error: cannot find macro `artifacts_dir_from_workspace` in this scope
+  --> contracts/counter/src/interface.rs:19:9
+   |
+19 |         artifacts_dir_from_workspace!()
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0405]: cannot find trait `Uploadable` in this scope
+  --> contracts/counter/src/interface.rs:16:13
+   |
+16 | impl<Chain> Uploadable for CounterContract<Chain> {
+   |             ^^^^^^^^^^ not found in this scope
+```
+
+Just add the `#[cfg(not(target_arch = "wasm32"))]` to not include the code inside wasm builds:
+
+```rust,ignore
+#[cfg(not(target_arch = "wasm32"))]
+mod interface;
+```
+
 ## Maintained Interfaces
 
 We maintain a small set of interfaces ourselves that we use in our own projects. These interfaces are maintained by the Abstract team and are a good reference for how to use the library.
@@ -108,14 +145,13 @@ fn example_test() {
 
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
 
-The `ExecuteFns` macro would only run on the Msg when compiled for non-wasm target. Optionally you can ensure it by the `interface` feature, like in the following example:
+The `ExecuteFns` macro will only be applied on the Msg when compiled for non-wasm target. 
 
 ```rust,ignore
 use cw_orch::prelude::*;
 
 #[cosmwasm_schema::cw_serde]
-// ⬇️ This feature flag prevents cw-orchestrator from entering your contract.
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
+#[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsg {
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
