@@ -1,5 +1,7 @@
 use std::str::FromStr;
+use std::time::Duration;
 
+use crate::service::{DaemonChannel, MyRetryPolicy};
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
@@ -14,6 +16,8 @@ use cw_orch_core::{
 };
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
+use tower::retry::RetryLayer;
+use tower::{Service, ServiceBuilder};
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
@@ -160,7 +164,20 @@ impl CosmWasm {
         pagination: Option<PageRequest>,
     ) -> Result<Vec<CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let retry_policy = MyRetryPolicy {
+            max_retries: 3, // Maximum number of retries
+            backoff: Duration::from_secs(1), // Backoff duration
+        };
+    
+        let retry_layer = RetryLayer::new(retry_policy);
+
+        
+        let service = ServiceBuilder::new()
+        .layer(retry_layer)
+        .service(DaemonChannel::new(self.channel.clone()));
+    
+        let mut client = QueryClient::new(service);
+
         let request = QueryCodesRequest { pagination };
         let response = client.codes(request).await?.into_inner().code_infos;
 

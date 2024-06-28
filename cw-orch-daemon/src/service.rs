@@ -1,16 +1,17 @@
-use std::{sync::Arc, task::{Context, Poll}};
+use std::{future::{ready, Ready}, sync::Arc, task::{Context, Poll}, time::Duration};
 
 use tonic::{body::BoxBody, client::GrpcService, transport::{channel, Channel}, Request};
-use tower::{Service, ServiceBuilder};
+use tower::{retry::{Policy, RetryLayer}, Service, ServiceBuilder};
 
 use crate::DaemonState;
 
-struct DaemonChannel {
+#[derive(Clone)]
+pub struct DaemonChannel {
     svs: Channel,
 }
 
 impl DaemonChannel {
-    fn new(channel: Channel) -> Self {
+    pub fn new(channel: Channel) -> Self {
         Self {
             svs: channel
         }
@@ -34,3 +35,33 @@ impl Service<http::Request<BoxBody>> for DaemonChannel {
 // Is automatically implemented by Tonic ! 
 // impl GrpcService<tonic::body::BoxBody> for DaemonChannel {
 // }
+
+
+/// Retry policy that retries on all errors up to a maximum number of retries.
+#[derive(Debug, Clone)]
+pub struct MyRetryPolicy {
+    pub max_retries: usize,
+    pub backoff: Duration,
+}
+
+impl<E> Policy<http::Request<BoxBody>, http::Response<hyper::Body>, E> for MyRetryPolicy
+where
+    E: Into<Box<dyn std::error::Error + Send + Sync>>,
+{
+    type Future = Ready<Self>;
+
+    fn retry(&self, _req: &http::Request<BoxBody>, result: Result<&http::Response<hyper::Body>, &E>) -> Option<Self::Future> {
+        if self.max_retries > 0 && result.is_err() {
+            Some(ready(MyRetryPolicy {
+                max_retries: self.max_retries - 1,
+                backoff: self.backoff,
+            }))
+        } else {
+            None
+        }
+    }
+
+    fn clone_request(&self, req: &http::Request<BoxBody>) -> Option<http::Request<BoxBody>> {
+        None
+    }
+}
