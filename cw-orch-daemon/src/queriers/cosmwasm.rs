@@ -164,14 +164,13 @@ impl CosmWasm {
         pagination: Option<PageRequest>,
     ) -> Result<Vec<CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
+        
         let retry_policy = MyRetryPolicy {
             max_retries: 3, // Maximum number of retries
             backoff: Duration::from_secs(1), // Backoff duration
         };
-    
         let retry_layer = RetryLayer::new(retry_policy);
 
-        
         let service = ServiceBuilder::new()
         .layer(retry_layer)
         .service(DaemonChannel::new(self.channel.clone()));
