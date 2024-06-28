@@ -14,14 +14,15 @@ use tonic::{
     Request,
 };
 use tower::{
-    retry::{Policy, RetryLayer}, Layer, MakeService, Service, ServiceBuilder
+    retry::{Policy, Retry, RetryLayer},
+    Layer, MakeService, Service, ServiceBuilder,
 };
 
 use crate::DaemonState;
 
 #[derive(Clone)]
 pub struct DaemonChannel {
-    pub (crate) svs: Channel,
+    pub(crate) svs: Channel,
 }
 
 impl DaemonChannel {
@@ -50,8 +51,9 @@ impl Service<http::Request<BoxBody>> for DaemonChannel {
 
 pub struct DaemonChannelFactory {}
 
-impl Service<String> for DaemonChannelFactory {
-    type Response = DaemonChannel;
+// TODO: take different type than channel
+impl Service<Channel> for DaemonChannelFactory {
+    type Response = Retry<MyRetryPolicy, DaemonChannel>;
     type Error = Box<dyn Error + Send + Sync>;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
@@ -59,16 +61,19 @@ impl Service<String> for DaemonChannelFactory {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, request: String) -> Self::Future {
+    fn call(&mut self, request: Channel) -> Self::Future {
         let endpoint = request;
         let fut = async move {
-            let channel = Channel::from_shared(endpoint)
-                .expect("valid URI")
-                .connect()
-                .await
-                .map_err(|e| e.into())
-                .map(|channel| DaemonChannel::new(channel));
-            channel
+            // Create the Reconnect layer with the factory
+            let retry_policy = MyRetryPolicy {
+                max_retries: 3,                  // Maximum number of retries
+                backoff: Duration::from_secs(1), // Backoff duration
+            };
+            let retry_layer = RetryLayer::new(retry_policy);
+            let a = ServiceBuilder::new()
+                .layer(retry_layer)
+                .service(DaemonChannel::new(request));
+            Ok(a)
         };
         Box::pin(fut)
     }
