@@ -57,12 +57,11 @@ impl Service<Channel> for DaemonChannelFactory {
     type Error = Box<dyn Error + Send + Sync>;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
     fn call(&mut self, request: Channel) -> Self::Future {
-        let endpoint = request;
         let fut = async move {
             // Create the Reconnect layer with the factory
             let retry_policy = MyRetryPolicy {
