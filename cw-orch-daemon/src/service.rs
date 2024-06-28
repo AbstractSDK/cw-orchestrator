@@ -50,14 +50,6 @@ impl Service<http::Request<BoxBody>> for DaemonChannel {
 
 pub struct DaemonChannelFactory {}
 
-impl Layer<Channel> for DaemonChannel {
-    type Service = DaemonChannel;
-
-    fn layer(&self, inner: Channel) -> Self::Service {
-        DaemonChannel::new(inner)
-    }
-}
-
 impl Service<String> for DaemonChannelFactory {
     type Response = DaemonChannel;
     type Error = Box<dyn Error + Send + Sync>;

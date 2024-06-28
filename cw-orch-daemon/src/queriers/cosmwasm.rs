@@ -166,8 +166,6 @@ impl CosmWasm {
     ) -> Result<Vec<CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
 
-        let endpoint = Endpoint::from_static("http://localhost:50051");
-
         let cc = DaemonChannel::new(self.channel.clone());
 
         // Create the Reconnect layer with the factory
@@ -178,18 +176,15 @@ impl CosmWasm {
         let retry_layer = RetryLayer::new(retry_policy);
 
         let reconnect_service: Reconnect<DaemonChannelFactory, String> =
-            Reconnect::new::<_, _>(DaemonChannelFactory{},"http://localhost:50051".into());
+            Reconnect::new::<DaemonChannel, String>(DaemonChannelFactory{},"http://localhost:50051".into());
 
         // Build your service stack
         let service = ServiceBuilder::new()
-            .layer(reconnect_service)
-            // .layer(retry_layer)
-            .service_fn(|cc| DaemonChannelFactory{}.make_service(cc));
+        .service(reconnect_service);
 
-        let service = ServiceBuilder::new()
-            .layer(reconnect_service)
+        let retry = ServiceBuilder::new()
             .layer(retry_layer)
-            .service_fn(|cc| async { Ok(cc.clone()) });
+            .service(cc);
 
         let mut client = QueryClient::new(service);
 
