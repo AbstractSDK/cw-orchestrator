@@ -1,4 +1,5 @@
 use cw_orch::daemon::queriers::Node;
+use cw_orch::environment::ChainInfoOwned;
 // ANCHOR: custom_interface
 use cw_orch::{interface, prelude::*};
 
@@ -6,18 +7,21 @@ use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 pub const CONTRACT_ID: &str = "counter_contract";
 
+// ANCHOR: interface_macro
 #[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg, id = CONTRACT_ID)]
 pub struct CounterContract;
+// ANCHOR_END: interface_macro
 
-impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
+// ANCHOR: uploadable_impl
+impl<Chain> Uploadable for CounterContract<Chain> {
     /// Return the path to the wasm file corresponding to the contract
-    fn wasm(&self) -> WasmPath {
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
         artifacts_dir_from_workspace!()
             .find_wasm_path("counter_contract")
             .unwrap()
     }
     /// Returns a CosmWasm contract wrapper
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 crate::contract::execute,
@@ -28,6 +32,7 @@ impl<Chain: CwEnv> Uploadable for CounterContract<Chain> {
         )
     }
 }
+// ANCHOR_END: uploadable_impl
 // ANCHOR_END: custom_interface
 
 use cw_orch::anyhow::Result;
@@ -36,7 +41,7 @@ use cw_orch::anyhow::Result;
 impl CounterContract<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> Result<()> {
-        let daemon = self.get_chain();
+        let daemon = self.environment();
 
         // Get the node query client, there are a lot of other clients available.
         let node: Node = daemon.querier();

@@ -90,6 +90,33 @@ impl CosmTxResponse {
 
     /// get the list of event types from a TX record
     pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
+        let log_events = self.get_events_from_logs(event_type);
+        // In case log events are empty, we fetch the events from the .events field
+        if log_events.is_empty() {
+            let events_filtered = self
+                .events
+                .iter()
+                .filter(|event| event.r#type == event_type)
+                .map(|event| TxResultBlockEvent {
+                    s_type: event.r#type.clone(),
+                    attributes: event
+                        .attributes
+                        .iter()
+                        .map(|attr| TxResultBlockAttribute {
+                            key: parse_attribute_bytes(&attr.key),
+                            value: parse_attribute_bytes(&attr.value),
+                        })
+                        .collect(),
+                })
+                .collect::<Vec<_>>();
+
+            events_filtered
+        } else {
+            log_events
+        }
+    }
+
+    fn get_events_from_logs(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
         let mut response: Vec<TxResultBlockEvent> = Default::default();
 
         for log_part in &self.logs {
@@ -179,6 +206,21 @@ impl IndexResponse for CosmTxResponse {
         Err(StdError::generic_err(format!(
             "event of type {event_type} does not have a value at key {attr_key}"
         )))
+    }
+
+    fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+        let mut all_results = vec![];
+
+        for event in &self.events {
+            if event.r#type == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key {
+                        all_results.push(parse_attribute_bytes(&attr.value));
+                    }
+                }
+            }
+        }
+        all_results
     }
 }
 

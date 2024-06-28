@@ -1,6 +1,8 @@
 use std::{cmp::min, time::Duration};
 
-use crate::{cosmos_modules, error::DaemonError, tx_resp::CosmTxResponse, Daemon};
+use crate::{
+    cosmos_modules, env::DaemonEnvVars, error::DaemonError, tx_resp::CosmTxResponse, Daemon,
+};
 
 use cosmrs::{
     proto::cosmos::{
@@ -13,7 +15,6 @@ use cosmwasm_std::BlockInfo;
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter},
     log::query_target,
-    CwOrchEnvVars,
 };
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -110,7 +111,10 @@ impl Node {
 
     /// Return the average block time for the last 50 blocks or since inception
     /// This is used to estimate the time when a tx will be included in a block
-    pub async fn _average_block_speed(&self, multiplier: Option<f32>) -> Result<u64, DaemonError> {
+    pub async fn _average_block_speed(
+        &self,
+        multiplier: Option<f32>,
+    ) -> Result<Duration, DaemonError> {
         // get latest block time and height
         let mut latest_block = self._latest_block().await?;
         let latest_block_time = latest_block.header.time;
@@ -134,15 +138,15 @@ impl Node {
 
         // calculate average block time
         let average_block_time = latest_block_time.duration_since(block_avg_period_ago_time)?;
-        let average_block_time = average_block_time.as_secs() / avg_period;
+        let average_block_time = average_block_time.div_f64(avg_period as f64);
 
         // multiply by multiplier if provided
         let average_block_time = match multiplier {
-            Some(multiplier) => (average_block_time as f32 * multiplier) as u64,
+            Some(multiplier) => average_block_time.mul_f32(multiplier),
             None => average_block_time,
         };
 
-        Ok(std::cmp::max(average_block_time, 1))
+        Ok(average_block_time)
     }
 
     /// Returns latests validator set
@@ -220,7 +224,7 @@ impl Node {
 
     /// Find TX by hash
     pub async fn _find_tx(&self, hash: String) -> Result<CosmTxResponse, DaemonError> {
-        self._find_tx_with_retries(hash, CwOrchEnvVars::load()?.max_tx_query_retries)
+        self._find_tx_with_retries(hash, DaemonEnvVars::max_tx_query_retries())
             .await
     }
 
@@ -235,21 +239,21 @@ impl Node {
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self._average_block_speed(Some(0.7)).await?;
-        block_speed = block_speed.max(CwOrchEnvVars::load()?.min_block_speed);
+        block_speed = block_speed.max(DaemonEnvVars::min_block_speed());
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
                 Ok(tx) => {
-                    let resp = tx.into_inner().tx_response.unwrap();
+                    let resp = tx.into_inner().tx_response.unwrap().into();
                     log::debug!(target: &query_target(), "TX found: {:?}", resp);
-                    return Ok(resp.into());
+                    return Ok(resp);
                 }
                 Err(err) => {
                     // increase wait time
-                    block_speed = (block_speed as f64 * 1.6) as u64;
+                    block_speed = block_speed.mul_f64(1.6);
                     log::debug!(target: &query_target(), "TX not found with error: {:?}", err);
-                    log::debug!(target: &query_target(), "Waiting {block_speed} seconds");
-                    tokio::time::sleep(Duration::from_secs(block_speed)).await;
+                    log::debug!(target: &query_target(), "Waiting {} milli-seconds", block_speed.as_millis());
+                    tokio::time::sleep(block_speed).await;
                 }
             }
         }
@@ -270,7 +274,7 @@ impl Node {
             page,
             order_by,
             false,
-            CwOrchEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::max_tx_query_retries(),
         )
         .await
     }
@@ -289,7 +293,7 @@ impl Node {
             page,
             order_by,
             true,
-            CwOrchEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::max_tx_query_retries(),
         )
         .await
     }
@@ -305,16 +309,18 @@ impl Node {
         retry_on_empty: bool,
         retries: usize,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        let mut client =
-            cosmos_modules::tx::service_client::ServiceClient::new(self.channel.clone());
+        let mut client = crate::cosmos_proto_patches::v0_50::tx::service_client::ServiceClient::new(
+            self.channel.clone(),
+        );
 
         #[allow(deprecated)]
-        let request = cosmos_modules::tx::GetTxsEventRequest {
+        let request = crate::cosmos_proto_patches::v0_50::tx::GetTxsEventRequest {
             events: events.clone(),
+            pagination: None,
+            order_by: order_by.unwrap_or(OrderBy::Desc).into(),
             page: page.unwrap_or(0),
             limit: 100,
-            pagination: None, // This is not used, so good.
-            order_by: order_by.unwrap_or(OrderBy::Desc).into(),
+            query: events.join(" AND "),
         };
 
         for _ in 0..retries {
@@ -344,7 +350,7 @@ impl Node {
         // return error if tx not found by now
         Err(DaemonError::TXNotFound(
             format!("with events {:?}", events),
-            CwOrchEnvVars::load()?.max_tx_query_retries,
+            DaemonEnvVars::max_tx_query_retries(),
         ))
     }
 }

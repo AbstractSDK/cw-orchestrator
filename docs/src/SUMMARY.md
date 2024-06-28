@@ -9,9 +9,10 @@
 - [Contracts](./contracts/index.md)
   - [Interfaces](./contracts/interfaces.md)
   - [Entry Point Function Generation](./contracts/entry-points.md)
+  - [Wasm Compilation](./contracts/wasm-compilation.md)
+  - [Integration Tests](./contracts/integration-tests.md)
   - [Environment Vars](./contracts/env-variable.md)
   - [Scripting](./contracts/scripting.md)
-  - [Integration Tests](./contracts/integration-tests.md)
 
 - [Project Setup](./setup/index.md)
   - [Single Contract](./setup/single-contract.md)
@@ -25,7 +26,7 @@
   - [Cw Multi Test](./integrations/cw-multi-test.md)
   - [Osmosis Test Tube](./integrations/osmosis-test-tube.md)
   - [Unit tests](./integrations/unit-tests.md)
-  - [Fork Testing](./integrations/fork-testing.md)
+  - [Fork Testing](./integrations/clone-testing.md)
 
 - [IBC](./interchain/index.md)
   - [Quick Start](./interchain/quick-start.md)
@@ -43,6 +44,8 @@
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
+  - [Rollkit](./chains/rollkit.md)
+  - [XION](./chains/xion.md)
 
 # Extras
 

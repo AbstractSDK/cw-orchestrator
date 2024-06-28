@@ -12,8 +12,9 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-use crate::env::CwOrchEnvVars;
+use crate::env::CoreEnvVars;
 use crate::environment::CwEnv;
+use crate::environment::Environment;
 use crate::environment::QueryHandler;
 use crate::CwEnvError;
 
@@ -27,7 +28,7 @@ use super::interface_traits::ContractInstance;
 /// use cw_plus_orchestrate::Cw20Base;
 /// use cw20::Cw20Coin;
 ///
-/// pub struct MyApplication<Chain: CwEnv> {
+/// pub struct MyApplication<Chain> {
 ///   pub token: Cw20Base<Chain>
 /// }
 ///
@@ -116,7 +117,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
                 .collect()
         } else {
             // There is not deployment file, we make sure the user wants to deploy to multiple chains
-            if !CwOrchEnvVars::load()?.disable_manual_interaction {
+            if CoreEnvVars::manual_interaction() {
                 println!(
                     "Do you want to deploy to {:?}? Use 'n' to abort, 'y' to continue ",
                     &hash_networks.keys().cloned().collect::<Vec<String>>()
@@ -197,7 +198,7 @@ pub trait Deploy<Chain: CwEnv>: Sized {
 
         for contract in all_contracts {
             // We set the code_id and/or address of the contract in question if they are not present already
-            let env_info = contract.get_chain().env_info();
+            let env_info = contract.environment().env_info();
             // We load the file
             // We try to get the code_id for the contract
             if contract.code_id().is_err() {

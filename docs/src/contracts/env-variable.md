@@ -16,12 +16,12 @@ You can provide mnemonics directly to the `Daemon` using the following environme
 
 ## Saving and Loading State
 
-### STATE_FILE_ENV_NAME
+### STATE_FILE
 
 Optional, accepted values: Path to a valid file
 Default value: `~./cw-orchestrator/state.json`
 
-This environment variable indicates the location of the state file that `cw-orch` will use to save on-chain state (addresses and code ids). Here is the behavior of this env variable :
+This environment variable indicates the location of the state file that `cw-orch` will use to save on-chain state (addresses and code ids). Here is the behavior of this env variable:
 
 - `folder/file.json` will resolve to `~/.cw-orchestrator/folder/file.json`
 - `./folder/file.json` will resolve `$pwd/folder/file.json`
@@ -33,7 +33,7 @@ This environment variable indicates the location of the state file that `cw-orch
 Optional, accepted values: Path to a valid directory
 
 Path where the wasms will be fetched. This is used by `ArtifactsDir::env()` inside the code.
-This is used in case you are using different tools than what is produced by <a href="https://github.com/CosmWasm/rust-optimizer" target="_blank">rust-optimizer</a>. Prefer using the following macro if you are using `wasm`s produced by `rust-optimizer` :
+This is used in case you are using different tools than what is produced by <a href="https://github.com/CosmWasm/rust-optimizer" target="_blank">rust-optimizer</a>. Prefer using the following macro if you are using `wasm`s produced by `rust-optimizer`:
 
 ```rust,ignore
 artifacts_dir_from_workspace!()
@@ -64,48 +64,56 @@ Changes the number of tx queries (~1 query per block) before it fails if it does
 
 ### CW_ORCH_MIN_BLOCK_SPEED
 
-Optional, accepted value: integer in seconds
-Defaults to `1`.
+Optional, accepted values:
 
-Minimum block speed in seconds. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block speeds are varying a lot
+- `(integer)ms` (e.g. 57ms), to indicate the min block speed in milliseconds
+- `(integer)s` (e.g. 57s), to indicate the min block speed in seconds
+- `(integer)` (e.g. 57), to indicate the min block speed in seconds
 
-### CW_ORCH_DISABLE_WALLET_BALANCE_ASSERTION
+Defaults to `1s`.
+
+Minimum block speed. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block speeds are varying a lot.
+
+### CW_ORCH_WALLET_BALANCE_ASSERTION
 
 Optional, accepted values: `true`, `false`
-Defaults to `false`
+Defaults to `true`
 
 By default, `cw-orch` verifies that the account has sufficient balance to pay for gas fees. If it detects that the balance is too low, it propmts the user to fill up their wallet with gas tokens and allows for retrying at the press of a button.
 
-If set to `true`, it won't check the user has enough balance before broadcasting transactions.
+If set to `false`, it won't check the user has enough balance before broadcasting transactions.
 
-### CW_ORCH_DISABLE_MANUAL_INTERACTION
+### CW_ORCH_MANUAL_INTERACTION
 
 Optional, accepted values: `true`, `false`
-Defaults to `false`
+Defaults to `true`
 
-Some actions require user-intervention. If set to true, this disables those interventions. Useful when working in scripts that can't handle user-intervention.
+Some actions require user-intervention. If set to `false`, this disables those interventions. Useful when working in scripts that can't handle user-intervention.
 
-Supported actions :
+Supported actions:
 
-- Balance checks. When set to `true`, if the gas token balance is too low to submit a transaction, it will error. See [Disable balance assertion](#cw_orch_disable_wallet_balance_assertion).
-- Deployment checks. When set to `true`, if no deployment file is detected when deploying a structure using the `Deploy::multi_deploy` function, it will deploy to all provided chains without asking for approval.
+- Balance checks. When set to `false`, if the gas token balance is too low to submit a transaction, it will error. See [Disable balance assertion](#cw_orch_disable_wallet_balance_assertion).
+- Deployment checks. When set to `false`, if no deployment file is detected when deploying a structure using the `Deploy::multi_deploy` function, it will deploy to all provided chains without asking for approval.
 
 ## Logging
 
 ### RUST_LOG
 
-Optional, accepted values : `debug`, `error`, `info`, `warn`,  `trace`
+Optional, accepted values: `debug`, `error`, `info`, `warn`,  `trace`
 
  `RUST_LOG` defines the Log level for the application. This is actually a `Rust` flag that we use inside `cw-orch`. If working with this environment variable, don't forget to also initialize a logger at the beginning of you application to be able to see the output. You can work with <a href="https://crates.io/crates/pretty_env_logger/" target="_blank">pretty_env_logger</a> for instance.
 
 ### CW_ORCH_SERIALIZE_JSON
 
-Optional, accepted values : `false`, `true`
+Optional, accepted values: `false`, `true`
+Defaults to `false`
 
 If equals to `true`, in the output logs, cw-orch will serialize the contract messages (instantiate, execute, query,... ) as JSON. This replaces the standard Rust Debug formatting and allows for easy copying and sharing of the executed messages.
 
-### CW_ORCH_DISABLE_LOGS_ACTIVATION_MESSAGE
+### CW_ORCH_LOGS_ACTIVATION_MESSAGE
 
-Optional, accepted values : `false`, `true`
+Optional, accepted values: `false`, `true`
 
-By default if the logs are not enabled, `cw-orch` wil print a warning message to invite users to activate the logging capabilities of cw-orch. if equals to `true`, this env variable disables the warning message.
+Defaults to `true`
+
+By default if the logs are not enabled, `cw-orch` wil print a warning message to invite users to activate the logging capabilities of cw-orch. if equals to `false`, the warning message is disabled.

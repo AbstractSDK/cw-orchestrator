@@ -12,7 +12,7 @@ We'll present in this guide how projects can provide this kind of information to
 
 ## State File
 
-In order for your users to get access to the state of your application (addresses and cods_ids), you need to implement the `deployed_state_file` method on the `Deploy` trait :
+In order for your users to get access to the state of your application (addresses and cods_ids), you need to implement the `deployed_state_file` method on the `Deploy` trait:
 
 ```rust,ignore
 fn deployed_state_file_path(&self) -> Option<String> {
@@ -48,7 +48,7 @@ where `Self::new` simply creates the contract structures. You don't need to reim
 
 You can customize the `Deploy::deployed_state_file_path` and `Deploy::load_from` methods, be we recommend doing something similar to what we show above to avoid mistakes and errors.
 
-For visual learners, the workspace looks something like this : 
+For visual learners, the workspace looks something like this: 
 
 ```path
 .

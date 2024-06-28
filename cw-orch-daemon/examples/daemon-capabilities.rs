@@ -6,17 +6,20 @@ use cosmwasm_std::coins;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
 
+// From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
 
     let network = networks::LOCAL_JUNO;
-    let daemon = DaemonBuilder::default().chain(network).build()?;
+    let mut daemon = DaemonBuilder::default().chain(network).build()?;
+
+    daemon.flush_state()?;
 
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
     let wallet = daemon.wallet();
-    let rt = daemon.rt_handle;
+    let rt = daemon.rt_handle.clone();
     rt.block_on(wallet.bank_send("<address-of-my-sister>", coins(345, "ujunox")))?;
     // ANCHOR_END: send_tx
 

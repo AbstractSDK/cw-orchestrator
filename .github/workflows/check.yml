@@ -79,7 +79,7 @@ jobs:
     # https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
     strategy:
       matrix:
-        msrv: [1.72.0] # dep/feat syntax fixed with co-exist dep
+        msrv: [1.75.0] # dep/feat syntax fixed with co-exist dep
     name: ubuntu / ${{ matrix.msrv }}
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
       - name: Build Artifacts
         run: |
           docker run --rm -v "$(pwd)":/code \
-          --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+          --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
           --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-          cosmwasm/workspace-optimizer:0.14.0
+          cosmwasm/optimizer:0.15.0
           tar -zcvf cosmwasm-artifacts.tar.gz artifacts

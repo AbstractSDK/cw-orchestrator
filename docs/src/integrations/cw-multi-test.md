@@ -35,7 +35,7 @@ This environment mocks the actual on-chain execution exactly.
 
 > - This environment uses the actual functions of your contract **without** having to compile them into WASM. When you are calling `upload` with this environment, no wasm files are included in the test environment. This allows for better debugging of your contract code.
 >
-> - If you are using the customizable Interface Macro, you will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function wil allow you to "connect" your contract endpoints to your `Contract` struct [See the dedicated page for more details](../contracts/interfaces.md#customizable-interface-macro).
+> - You will need to have implemented the `wrapper` function for interacting the the `Mock` environment. This function will allow you to "connect" your contract endpoints to your `Contract` struct. [See the dedicated page for more details](../contracts/interfaces.md#creating-an-interface).
 >
 > - **_NOTE:_** Keep in mind that `cw-multi-test` is based solely in rust and that a lot of actual blockchain modules are not mocked in the environment. The main cosmos modules are there (Bank, Staking), but some very useful ones (tokenfactory, ibc) as well as Stargate messages are not supported by the environment.
 
@@ -43,6 +43,30 @@ This environment mocks the actual on-chain execution exactly.
 
 When cloning a cw_multi_test environment, you are not cloning the entire environment, but instead you are creating a new `Mock` typed variable with the same underlying `cw_multi_test::App` object reference. This is useful for objects that require to pass the chain as an object rather than by reference.
 The underlying `cw_multi_test::App` object is however not clonable.
+
+## Bech32
+
+When testing your smart contracts, you may need to use valid bech32 addresses instead of arbitrary strings. Notably Bech32 addresses are a requirment whenever `instantiate2` is used in your codebase. Therefore `cw-orch` allows this behavior using the `MockBech32` struct. This structure has the same features as the above described `Mock` with the following differences:
+
+- The constructor now takes the bech32 prefix instead of the sender. Under the hood, the environment creates an address that will be used as the default sender for actions executed on that environment:
+
+  ```rust,ignore
+  let mock = MockBech32::new("<chain-prefix>");
+  // For instance: 
+  let mock = MockBech32::new("juno");
+  // With chain id: 
+  let mock = MockBech32::new_with_chain_id("juno", "juno-1");
+  // Default sender address for this env
+  let sender = mock.sender();
+  ```
+
+- To facilitate the creation of additional valid bech32 addresses, we have added an `addr_make` function. This function uses its string argument to create a new address. That way you can create a new address without having to care about bech32 encoding/decoding yourself:
+
+   ```rust,ignore
+    let named_sender = mock.addr_make("sender");
+    /// This creates a new address with some funds inside of it
+    let rich_sender = mock.addr_make_with_balance("sender_with_funds", coins(100_000_000_000_000, "ujuno"));
+   ```
 
 ## Snapshot testing
 

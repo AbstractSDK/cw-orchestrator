@@ -4,7 +4,7 @@ Interfaces are virtual wrappers around CosmWasm contracts. They allow you to int
 
 > **Reminder**: You can find the code for this example in the <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter" target="_blank">cw-orch counter-contract folder</a>.
 >
-> If you are a fast or visual learner, you can find a <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..64623d2141c04e4ba42dc6f9ef1a1daccc932d4a" target="_blank">**Before**-**After**</a> view of the `cw-orch` integration process in the sample contract.
+> If you are a fast or visual learner, you can find a <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..17f505758734fd3cfe3b4f7cede341376c930e98" target="_blank">**Before**-**After**</a> view of the `cw-orch` integration process in the sample contract.
 
 ## Creating an Interface
 

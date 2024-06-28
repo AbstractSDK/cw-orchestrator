@@ -34,7 +34,7 @@ pub trait TxHandler: ChainState + Clone {
     // Actions
 
     /// Uploads a contract to the chain.
-    fn upload(&self, contract_source: &impl Uploadable) -> Result<Self::Response, Self::Error>;
+    fn upload<T: Uploadable>(&self, contract_source: &T) -> Result<Self::Response, Self::Error>;
 
     /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(
@@ -142,9 +142,9 @@ mod tests {
 
         fn set_sender(&mut self, _sender: Self::Sender) {}
 
-        fn upload(
+        fn upload<T: Uploadable>(
             &self,
-            _contract_source: &impl Uploadable,
+            _contract_source: &T,
         ) -> Result<Self::Response, Self::Error> {
             unimplemented!()
         }
@@ -198,7 +198,6 @@ mod tests {
         t.instantiate(0, &Empty {}, None, None, &[])?;
         Ok(())
     }
-
     #[test]
     fn tx_handler_error_usable_on_anyhow() -> anyhow::Result<()> {
         associated_error(MockHandler {})?;

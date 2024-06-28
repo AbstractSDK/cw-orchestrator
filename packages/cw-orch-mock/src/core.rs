@@ -5,9 +5,8 @@ use cosmwasm_std::{
     to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
 };
 use cw_multi_test::{
-    addons::MockApiBech32, ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract,
-    DistributionKeeper, Executor, FailingModule, GovFailingModule, StakeKeeper, StargateFailing,
-    WasmKeeper,
+    ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
 };
 use serde::Serialize;
 
@@ -28,7 +27,7 @@ pub type MockApp<A = MockApi> = App<
     DistributionKeeper,
     IbcSimpleModule,
     GovFailingModule,
-    StargateFailing,
+    StargateFailingModule,
 >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
@@ -143,8 +142,8 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
         self.sender = sender;
     }
 
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+    fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
+        let code_id = self.app.borrow_mut().store_code(T::wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -256,16 +255,12 @@ mod test {
     };
     use cw_multi_test::ContractWrapper;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler};
-    use serde::Serialize;
     use speculoos::prelude::*;
 
     use crate::core::*;
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
-
-    #[derive(Debug, Serialize)]
-    struct MigrateMsg {}
 
     fn execute(
         _deps: DepsMut,

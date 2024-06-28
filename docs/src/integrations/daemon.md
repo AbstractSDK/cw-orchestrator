@@ -4,7 +4,7 @@
 
 ## Quick Start
 
-Interacting with the `daemon` is really straightforward. How to creating a daemon instance is shown below:
+Interacting with the `daemon` is really straightforward. Creating a daemon instance is shown below:
 
 ```rust,ignore
     use cw_orch::prelude::*;
@@ -15,31 +15,32 @@ Interacting with the `daemon` is really straightforward. How to creating a daemo
 - The `chain` parameter allows you to specify which chain you want to interact with. The chains that are officially supported can be found in the `cw_orch::daemon::networks` module.
   You can also add additional chains yourself by simply defining a variable of type <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.ChainInfo.html" target="_blank">`ChainInfo`</a> and using it in your script. Don't hesitate to open a PR on the <a href="https://github.com/AbstractSDK/cw-orchestrator" target="_blank">cw-orchestrator repo</a>, if you would like us to include a chain by default. The variables needed for creating the variable can be found in the documentation of the chain you want to connect to or in the <a href="https://cosmos.directory" target="_blank">Cosmos Directory</a>.
 
-- The `handle` parameter is a *tokio runtime handle*. 
-  <details>
-    <summary>If you <strong>don't know</strong> what that means</summary>
-    
-    
-  You don't need to know all the intricacies of <a href="https://rust-lang.github.io/async-book/" target="_blank">tokio and rust-async</a> to use daemons. If you don't have time to learn more, you can simply use the snippet above and not touch the runtime creation. However for more advanced `daemon` usage and also for your culture, don't hesitate to learn about those wonderful processes and their management.
-        
-  </details>
-
-  <details>
-    <summary>If you <strong>know</strong> what that means</summary>
-
-  This handler is used because all the front-facing daemon methods are synchronous. However everything that's happening in the background is asynchronous. This handle is used exclusively to await asynchronous function: 
-  ```rust,ignore
-      runtime.block_on(...)
-
-  ```
-  Because creating runtimes is a costly process, we leave the handler creation and management to the user.
-        
-  </details>
-
-
 This simple script actually hides another parameter which is the `LOCAL_MNEMONIC` environment variable. This variable is used when interacting with local chains. See the part dedicated to [Environment Vars](../contracts/env-variable.md) for more details.
 
 > **_NOTE:_** When using `daemon`, you are interacting directly with a live chain. The program won't ask you for your permission at each step of the script. We advise you to test **ALL** your deployments on test chain before deploying to mainnet.
+>
+> Under the hood, the `DaemonBuilder` struct creates a `tokio::Runtime`. Be careful because this builder is not usable in an `async` function. In such function, you can use <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.DaemonAsync.html" target="_blank">`DaemonAsync`</a>
+
+<div class="warning">
+
+When using multiple Daemons with the same state file, you should re-use a single Daemon State to avoid conflicts and panics: 
+
+```rust,ignore
+let daemon1 = Daemon::builder()
+  .chain(OSMOSIS_1)
+  .build()?;
+// If you don't use the `state` method here, this will fail with:
+// State file <file-name> already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder
+let daemon2 = Daemon::builder()
+  .chain(JUNO_1)
+  .state(daemon1.state())
+  .build()?;
+```
+
+
+</div>
+
+
 
 ## Interacting with contracts
 
@@ -101,7 +102,7 @@ Here are the available options and fields you can use in the builder object:
 
 - `chain` (*required*) specifies the chain the `daemon` object will interact with. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.chain" target="_blank">Documentation Link</a>
 - `deployment_id` (*optional*) is used when loading and saving blockchain state (addresses and code-ids). It is useful when you have multiple instances of the same contract on a single chain. It will allow you to keep those multiple instances in the same state file without overriding state.<a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.deployment_id" target="_blank">Documentation Link</a>
-- `handle` (*required*) is the `tokio` runtime handled used to await async functions. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.handle" target="_blank">Documentation Link</a>
+- `handle` (*optional*) is the `tokio` runtime handled used to await async functions. `cw-orch` provides a default runtime if not specified. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.handle" target="_blank">Documentation Link</a>
 - `mnemonic` (*optional*) is the mnemonic that will be used to create the sender associated with the resulting `Daemon` Object. It is not compatible with the `sender` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>
 - `sender` (*optional*) is the sender that will be uses with the `resulting` Daemon Object. It is not compatible with the `mnemonic` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>
 - `authz_granter` (*optional*) allows you to use the authz module. If this field is specified, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.authz_granter" target="_blank">Documentation Link</a>
