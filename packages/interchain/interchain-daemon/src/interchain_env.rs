@@ -31,7 +31,8 @@ use tokio::runtime::Handle;
     since = "0.3.2",
     note = "Please use `DaemonInterchain` instead"
 )]
-pub type DaemonInterchainEnv<ChannelCreationValidator> = DaemonInterchain<ChannelCreationValidator>;
+/// Represents a set of locally running blockchain nodes and a Hermes relayer.
+pub type DaemonInterchainEnv<C = ChannelCreationValidator> = DaemonInterchain<C>;
 
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
 #[derive(Clone)]
