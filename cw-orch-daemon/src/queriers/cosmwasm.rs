@@ -166,8 +166,8 @@ impl CosmWasm {
     ) -> Result<Vec<CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
 
-        let reconnect_service: Reconnect<DaemonChannelFactory, String> =
-            Reconnect::new::<DaemonChannel, String>(DaemonChannelFactory {}, self.channel);
+        let reconnect_service: Reconnect<DaemonChannelFactory, Channel> =
+            Reconnect::new::<DaemonChannel, Channel>(DaemonChannelFactory {}, self.channel.clone());
 
         // Build your service stack
         let service = ServiceBuilder::new().service(reconnect_service);
