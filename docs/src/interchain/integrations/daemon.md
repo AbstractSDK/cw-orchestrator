@@ -13,10 +13,10 @@ When scripting with `cw-orch-interchain`, developers don't have to create chain 
 use cw_orch::prelude::*;
 use cw_orch::tokio::runtime::Runtime;
 use cw_orch::prelude::networks::{LOCAL_JUNO, LOCAL_OSMO};
-use cw_orch_interchain::interchain::{ChannelCreationValidator,DaemonInterchainEnv};
+use cw_orch_interchain::interchain::{ChannelCreationValidator,DaemonInterchain};
 # fn main(){
     let rt = Runtime::new()?;
-    let mut interchain = DaemonInterchainEnv::new(vec![
+    let mut interchain = DaemonInterchain::new(vec![
         (LOCAL_JUNO, None),
         (LOCAL_OSMO, None)
     ], &ChannelCreationValidator)?;
@@ -88,7 +88,7 @@ The `wait_ibc` function is very similar except that instead of following a singl
 ## Analysis Usage
 
 The `follow_packet` and `wait_ibc` function were coded for scripting usage in mind. They allow to await and repeatedly query Cosmos SDK Nodes until the cycle is complete. However, it is also possible to inspect past transactions using those tools.
-Using the `DaemonInterchainEnv::wait_ibc_from_txhash` function, one can inspect the history of packets linked to a transaction from a transaction hash only. This enables all kinds of analysis usage, here are some:
+Using the `DaemonInterchain::wait_ibc_from_txhash` function, one can inspect the history of packets linked to a transaction from a transaction hash only. This enables all kinds of analysis usage, here are some:
 
 - Relayer activity
 - Analysis of past transactions for fund recovery
@@ -99,7 +99,7 @@ Using the `DaemonInterchainEnv::wait_ibc_from_txhash` function, one can inspect 
 
 cw-orchestrator doesn't provide[^documentation_date] relayer capabilities. We only provide tools to analyze IBC activity based on packet relaying mechanism that only relayers can provide. However, when testing your implementation with Starship, you might want to automatically create channels on your test setup.
 
-This is what the second argument of the `DaemonInterchainEnv::new` function is used for. You provide an object which will be responsible for creating an IBC channel between two ports. We provide 2 such structures, you can obviously create your own if your needs differ:
+This is what the second argument of the `DaemonInterchain::new` function is used for. You provide an object which will be responsible for creating an IBC channel between two ports. We provide 2 such structures, you can obviously create your own if your needs differ:
 
 1. `cw_orch_interchain::interchain::ChannelCreationValidator`
     This is used when you want to have full control over the channel creation. When `interchain.create_channel` is called, the script will stop and prompt you to create a channel with external tools. Once the channel creation process is done on your side, you simply have to input the connection-id on which you created the channel to be able to resume execution. This solution is not ideal at all but allows you to script on actual nodes without having to separate your scripts into multiple parts or change the syntax you coded for your tests.

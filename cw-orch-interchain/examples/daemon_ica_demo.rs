@@ -50,7 +50,7 @@ fn main() {
             full_ica_test(&interchain, JUNO, STARGAZE, JUNO_FUNDS_DENOM)
         }
         ChannelCreationType::Manual => {
-            let interchain = DaemonInterchainEnv::from_daemons(
+            let interchain = DaemonInterchain::from_daemons(
                 rt.handle(),
                 starship.daemons.values().cloned().collect(),
                 &ChannelCreationValidator,

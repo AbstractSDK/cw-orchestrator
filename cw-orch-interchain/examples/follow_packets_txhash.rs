@@ -4,7 +4,7 @@ use cw_orch::{
     prelude::networks::osmosis::OSMOSIS_1,
 };
 use cw_orch_interchain_core::IbcAckParser;
-use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchainEnv};
+use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchain};
 use tokio::runtime::Runtime;
 
 pub const NOBLE: NetworkInfo = NetworkInfo {
@@ -30,7 +30,7 @@ fn follow_by_tx_hash() -> cw_orch::anyhow::Result<()> {
     let dst_chain = ARCHWAY_1;
     let src_chain = OSMOSIS_1;
 
-    let interchain = DaemonInterchainEnv::new(
+    let interchain = DaemonInterchain::new(
         rt.handle(),
         vec![(src_chain.clone(), None), (dst_chain, None)],
         &ChannelCreationValidator,

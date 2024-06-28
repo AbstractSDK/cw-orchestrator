@@ -27,9 +27,15 @@ use std::str::FromStr;
 use std::time::Duration;
 use tokio::runtime::Handle;
 
+#[deprecated(
+    since = "0.3.2",
+    note = "Please use `DaemonInterchain` instead"
+)]
+pub type DaemonInterchainEnv<ChannelCreationValidator> = DaemonInterchain<ChannelCreationValidator>;
+
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
 #[derive(Clone)]
-pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
+pub struct DaemonInterchain<C: ChannelCreator = ChannelCreationValidator> {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
     daemons: HashMap<NetworkId, Daemon>,
 
@@ -43,7 +49,7 @@ pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
 
 type Mnemonic = String;
 
-impl<C: ChannelCreator> DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> DaemonInterchain<C> {
     /// Builds a new `InterchainEnv` instance.
     /// For use with starship, we advise to use `Starship::interchain_env` instead
     pub fn new<T>(
@@ -143,7 +149,7 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     }
 }
 
-impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
     type ChannelCreationResult = ();
 
     type Error = InterchainDaemonError;
@@ -277,7 +283,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 }
 
-impl<C: ChannelCreator> DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> DaemonInterchain<C> {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
     pub fn wait_ibc_from_txhash(

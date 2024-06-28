@@ -3,13 +3,13 @@ use cw_orch::prelude::*;
 /// For create daemon env
 use cw_orch::tokio::runtime::Runtime;
 use cw_orch_interchain::{
-    ChannelCreationValidator, ChannelCreator, DaemonInterchainEnv, InterchainEnv, Starship,
+    ChannelCreationValidator, ChannelCreator, DaemonInterchain, InterchainEnv, Starship,
 };
 /// Others
 
-fn create_daemon_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchainEnv)> {
+fn create_daemon_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchain)> {
     let rt = Runtime::new()?;
-    let mut interchain = DaemonInterchainEnv::new(
+    let mut interchain = DaemonInterchain::new(
         rt.handle(),
         vec![(LOCAL_JUNO, None), (LOCAL_OSMO, None)],
         &ChannelCreationValidator,
@@ -27,7 +27,7 @@ fn create_daemon_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchainEnv)
     Ok((rt, interchain))
 }
 
-fn create_starship_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchainEnv<Starship>)> {
+fn create_starship_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchain<Starship>)> {
     let rt = Runtime::new()?;
     let starship = Starship::new(rt.handle(), None)?;
     let interchain = starship.interchain_env();

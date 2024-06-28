@@ -208,7 +208,7 @@ let osmosis = Daemon::builder()
         .unwrap();
 
 // This will allow us to follow packets execution between juno and osmosis
-let interchain = DaemonInterchainEnv::from_daemons(
+let interchain = DaemonInterchain::from_daemons(
     vec![juno, osmosis],
     &ChannelCreationValidator,
 );
