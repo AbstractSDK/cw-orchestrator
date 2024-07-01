@@ -1,33 +1,54 @@
 use std::{
-    error::Error,
-    future::{ready, Future, Ready},
-    pin::Pin,
-    sync::Arc,
-    task::{Context, Poll},
-    time::Duration,
+    cell::RefCell, error::Error, future::{ready, Future, Ready}, pin::Pin, rc::Rc, sync::Arc, task::{Context, Poll}, time::Duration
 };
 
+use cw_orch_core::environment::ChainInfoOwned;
 use tonic::{
     body::BoxBody,
     client::GrpcService,
-    transport::{channel, Channel},
+    transport::{channel, Channel, Endpoint},
     Request,
 };
 use tower::{
-    retry::{Policy, Retry, RetryLayer},
-    Layer, MakeService, Service, ServiceBuilder,
+    reconnect::Reconnect, retry::{Policy, Retry, RetryLayer}, Layer, MakeService, Service, ServiceBuilder, ServiceExt
 };
 
-use crate::DaemonState;
+use crate::{DaemonError, GrpcChannel};
+
+/// Daemon Service is a wrapper around the [`Reconnect`] layer that can be shared within a thread. 
+/// This allows our services to scale between different threads while still being error-tolerant.
+/// A signing daemon will have two DaemonService instances, one for transactions and one for queries.
+pub type DaemonService = Rc<RefCell<Reconnect<DaemonChannelFactory, Channel>>>;
+
+pub trait DaemonServiceCreation {
+    /// Create a new `Rc<RefCell<Reconnect<...>>>` service for interacting with chain.
+    async fn new_service(&self, chain_info: &ChainInfoOwned) -> Result<DaemonService, DaemonError> {
+        let channel = GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?;
+        Ok(DaemonService::new(RefCell::new(Reconnect::new::<DaemonChannel, Channel>(DaemonChannelFactory {}, channel))));
+    }
+
+    /// Get a new service for interacting with the chain.
+    async fn channel(&self) -> Result<&mut Reconnect<DaemonChannelFactory, Channel>, DaemonError>;
+}
 
 #[derive(Clone)]
 pub struct DaemonChannel {
-    pub(crate) svs: Channel,
+    // Service that retries on failures
+    pub(crate) svs: Retry<MyRetryPolicy, Channel>,
 }
 
 impl DaemonChannel {
     pub fn new(channel: Channel) -> Self {
-        Self { svs: channel }
+        // Create the Reconnect layer with the factory
+        let retry_policy = MyRetryPolicy {
+            max_retries: 3,                  // Maximum number of retries
+            backoff: Duration::from_secs(1), // Backoff duration
+        };
+        let retry_layer = RetryLayer::new(retry_policy);
+        let a: Retry<MyRetryPolicy, Channel> = ServiceBuilder::new()
+            .layer(retry_layer)
+            .service(channel);
+        Self { svs: a }
     }
 }
 
@@ -45,10 +66,6 @@ impl Service<http::Request<BoxBody>> for DaemonChannel {
     }
 }
 
-// Is automatically implemented by Tonic !
-// impl GrpcService<tonic::body::BoxBody> for DaemonChannel {
-// }
-
 pub struct DaemonChannelFactory {}
 
 // TODO: take different type than channel
@@ -63,16 +80,7 @@ impl Service<Channel> for DaemonChannelFactory {
 
     fn call(&mut self, request: Channel) -> Self::Future {
         let fut = async move {
-            // Create the Reconnect layer with the factory
-            let retry_policy = MyRetryPolicy {
-                max_retries: 3,                  // Maximum number of retries
-                backoff: Duration::from_secs(1), // Backoff duration
-            };
-            let retry_layer = RetryLayer::new(retry_policy);
-            let a = ServiceBuilder::new()
-                .layer(retry_layer)
-                .service(DaemonChannel::new(request));
-            Ok(a)
+            Ok(DaemonChannel::new(request))
         };
         Box::pin(fut)
     }

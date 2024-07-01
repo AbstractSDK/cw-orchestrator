@@ -82,7 +82,7 @@ impl WasmMockQuerier {
         match &request {
             QueryRequest::Wasm(x) => {
                 let querier = CosmWasm {
-                    channel: self.channel.clone(),
+                    service: self.channel.clone(),
                     rt_handle: Some(handle.clone()),
                 };
                 match x {

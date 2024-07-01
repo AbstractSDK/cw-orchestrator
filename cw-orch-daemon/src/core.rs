@@ -1,4 +1,4 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{queriers::CosmWasm, service::DaemonService, DaemonState};
 
 use super::{
     builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
@@ -75,9 +75,9 @@ impl DaemonAsync {
         DaemonAsyncBuilder::default()
     }
 
-    /// Get the channel configured for this DaemonAsync.
-    pub fn channel(&self) -> Channel {
-        self.sender.grpc_channel.clone()
+    /// Get the communication service configured for this Daemon.
+    pub async fn service(&self) -> Result<DaemonService, DaemonError> {
+        self.state.service().await
     }
 
     /// Flushes all the state related to the current chain

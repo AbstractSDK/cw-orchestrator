@@ -1,4 +1,4 @@
-use crate::{cosmos_modules, error::DaemonError, Daemon};
+use crate::{cosmos_modules, error::DaemonError, service::DaemonService, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
@@ -7,21 +7,21 @@ use tonic::transport::Channel;
 /// Queries for Cosmos AuthZ Module
 /// All the async function are prefixed with `_`
 pub struct Authz {
-    pub channel: Channel,
+    pub service: DaemonService,
     pub rt_handle: Option<Handle>,
 }
 
 impl Authz {
-    pub fn new(daemon: &Daemon) -> Self {
-        Self {
-            channel: daemon.channel(),
-            rt_handle: Some(daemon.rt_handle.clone()),
-        }
+    pub fn new(daemon: &Daemon) -> Result<Self, DaemonError> {
+        Ok(Self {
+                    service: daemon.service()?,
+                    rt_handle: Some(daemon.rt_handle.clone()),
+                })
     }
 
-    pub fn new_async(channel: Channel) -> Self {
+    pub fn new_async(service: DaemonService) -> Self {
         Self {
-            channel,
+            service,
             rt_handle: None,
         }
     }

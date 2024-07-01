@@ -2,8 +2,7 @@ use std::fmt::Debug;
 
 use super::super::{sender::Wallet, DaemonAsync};
 use crate::{
-    queriers::{Bank, CosmWasm, Node},
-    CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
+    queriers::{Bank, CosmWasm, Node}, service::DaemonService, CosmTxResponse, DaemonBuilder, DaemonError, DaemonState
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
@@ -53,9 +52,9 @@ impl Daemon {
         DaemonBuilder::default()
     }
 
-    /// Get the channel configured for this Daemon
-    pub fn channel(&self) -> Channel {
-        self.daemon.sender.grpc_channel.clone()
+    /// Get the service to interact with a daemon
+    pub fn service(&self) -> Result<DaemonService, DaemonError> {
+        self.rt_handle.block_on(self.daemon.service())
     }
 
     /// Get the channel configured for this Daemon

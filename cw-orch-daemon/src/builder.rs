@@ -173,7 +173,6 @@ impl DaemonAsyncBuilder {
             Some(sender) => match sender {
                 SenderBuilder::Mnemonic(mnemonic) => Sender::from_mnemonic_with_options(
                     chain_info.clone(),
-                    GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?,
                     &mnemonic,
                     sender_options,
                 )?,
@@ -184,7 +183,6 @@ impl DaemonAsyncBuilder {
             },
             None => Sender::new_with_options(
                 chain_info.clone(),
-                GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?,
                 sender_options,
             )?,
         };
