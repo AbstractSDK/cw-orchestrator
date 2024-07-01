@@ -1,12 +1,10 @@
-use crate::{error::DaemonError, tx_resp::CosmTxResponse, DaemonBase, GrpcChannel};
+use crate::{error::DaemonError, DaemonBase, GrpcChannel};
 
-use cosmrs::{AccountId, Any};
-use cosmwasm_std::Addr;
 use cw_orch_core::environment::ChainInfoOwned;
 
 use tonic::transport::Channel;
 
-use super::{builder::SenderBuilder, query::QuerySender, tx::TxSender};
+use super::{builder::SenderBuilder, query::QuerySender};
 
 /// Daemon that does not support signing.
 /// Will err on any attempt to sign a transaction or retrieve a sender address.
@@ -55,7 +53,6 @@ mod tests {
     use cw_orch_networks::networks::JUNO_1;
 
     use crate::DaemonBuilder;
-
 
     #[test]
     fn build() {

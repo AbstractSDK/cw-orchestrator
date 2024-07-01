@@ -105,6 +105,7 @@ impl<Sender> DaemonAsyncBase<Sender> {
             deployment_id: Some(self.state.deployment_id.clone()),
             state_path: None,
             write_on_change: None,
+            mnemonic: None,
         }
     }
 }

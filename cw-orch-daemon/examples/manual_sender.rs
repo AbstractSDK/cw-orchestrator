@@ -2,6 +2,8 @@
 
 use cw_orch_daemon::proto::injective::InjectiveEthAccount;
 use cw_orch_daemon::queriers::Node;
+use cw_orch_daemon::senders::builder::SenderBuilder;
+use cw_orch_daemon::senders::query::QuerySender;
 use cw_orch_daemon::tx_broadcaster::assert_broadcast_code_cosm_response;
 use cw_orch_daemon::{DaemonBase, TxBuilder};
 
@@ -67,10 +69,46 @@ pub struct ManualSender {
     pub grpc_channel: Channel,
 }
 
-impl TxSender for ManualSender {
+impl SenderBuilder for ManualSender {
     type Error = DaemonError;
     type Options = ManualSenderOptions;
 
+    fn build(
+        chain_info: cw_orch_core::environment::ChainInfoOwned,
+        grpc_channel: tonic::transport::Channel,
+        sender_options: Self::Options,
+    ) -> Result<Self, Self::Error> {
+        Ok(Self {
+            chain_info,
+            grpc_channel,
+            sender: Addr::unchecked(
+                sender_options
+                    .sender_address
+                    .expect("Manual sender needs an address"),
+            ),
+        })
+    }
+}
+
+impl QuerySender for ManualSender {
+    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
+        &self.chain_info
+    }
+
+    fn grpc_channel(&self) -> tonic::transport::Channel {
+        self.grpc_channel.clone()
+    }
+
+    fn set_options(&mut self, options: Self::Options) {
+        self.sender = Addr::unchecked(
+            options
+                .sender_address
+                .expect("Manual sender needs an address"),
+        )
+    }
+}
+
+impl TxSender for ManualSender {
     async fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
@@ -105,38 +143,6 @@ impl TxSender for ManualSender {
 
     fn msg_sender(&self) -> Result<AccountId, DaemonError> {
         self.sender.clone().to_string().parse().map_err(Into::into)
-    }
-
-    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
-        &self.chain_info
-    }
-
-    fn grpc_channel(&self) -> tonic::transport::Channel {
-        self.grpc_channel.clone()
-    }
-
-    fn build(
-        chain_info: cw_orch_core::environment::ChainInfoOwned,
-        grpc_channel: tonic::transport::Channel,
-        sender_options: Self::Options,
-    ) -> Result<Self, Self::Error> {
-        Ok(Self {
-            chain_info,
-            grpc_channel,
-            sender: Addr::unchecked(
-                sender_options
-                    .sender_address
-                    .expect("Manual sender needs an address"),
-            ),
-        })
-    }
-
-    fn set_options(&mut self, options: Self::Options) {
-        self.sender = Addr::unchecked(
-            options
-                .sender_address
-                .expect("Manual sender needs an address"),
-        )
     }
 }
 

@@ -1,8 +1,8 @@
 use cw_orch_core::environment::{EnvironmentInfo, EnvironmentQuerier};
 
-use crate::{senders::tx::TxSender, DaemonBase};
+use crate::{senders::query::QuerySender, DaemonBase};
 
-impl<Sender: TxSender> EnvironmentQuerier for DaemonBase<Sender> {
+impl<Sender: QuerySender> EnvironmentQuerier for DaemonBase<Sender> {
     fn env_info(&self) -> EnvironmentInfo {
         EnvironmentInfo {
             chain_id: self.daemon.sender.chain_info().chain_id.clone(),

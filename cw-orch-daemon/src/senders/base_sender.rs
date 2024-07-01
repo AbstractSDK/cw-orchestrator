@@ -6,7 +6,7 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    Daemon, DaemonAsyncBuilder, DaemonBuilder, GrpcChannel,
+    Daemon, GrpcChannel,
 };
 
 use crate::proto::injective::InjectiveEthAccount;

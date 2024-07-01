@@ -1,7 +1,4 @@
-use cosmrs::{tx::Msg, AccountId, Any};
-use cosmwasm_std::Addr;
 use cw_orch_core::environment::ChainInfoOwned;
-use tonic::transport::Channel;
 
 use crate::DaemonError;
 
@@ -13,8 +10,8 @@ pub trait SenderBuilder: Clone {
     type Options: Default + Clone;
 
     /// Build a new `Sender`.
-    async fn build(
+    fn build(
         chain_info: ChainInfoOwned,
         sender_options: Self::Options,
-    ) -> Result<Self, Self::Error>;
+    ) -> impl std::future::Future<Output = Result<Self, Self::Error>> + Send;
 }

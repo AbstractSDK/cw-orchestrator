@@ -2,7 +2,9 @@ use std::fmt::Debug;
 
 use super::super::senders::base_sender::Wallet;
 use crate::{
-    queriers::{Bank, CosmWasm, Node}, senders::query::QuerySender, CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState
+    queriers::{Bank, CosmWasmBase, Node},
+    senders::query::QuerySender,
+    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
@@ -50,10 +52,10 @@ pub struct DaemonBase<Sender> {
 
 pub type Daemon = DaemonBase<Wallet>;
 
-impl<Sender> DaemonBase<Sender> {
-    /// Get the daemon builder
-    pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonBuilder {
-        DaemonBuilder::new(chain)
+impl<Sender: QuerySender> DaemonBase<Sender> {
+    /// Get the channel configured for this Daemon
+    pub fn wallet(&self) -> Sender {
+        self.daemon.sender.clone()
     }
 
     /// Get the channel configured for this Daemon
@@ -61,17 +63,8 @@ impl<Sender> DaemonBase<Sender> {
         self.daemon.sender.grpc_channel()
     }
 
-    /// Get the channel configured for this Daemon
-    pub fn sender(&self) -> Sender {
-        self.daemon.sender.clone()
-    }
-
-    /// Get the mutable Sender object
-    pub fn sender_mut(&mut self) -> &mut Sender {
-        self.daemon.sender_mut()
-    }
-
     /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// **Does not copy the `Sender`**
     /// Does not consume the original [`Daemon`].
     pub fn rebuild(&self) -> DaemonBuilder {
         DaemonBuilder {
@@ -81,7 +74,20 @@ impl<Sender> DaemonBase<Sender> {
             state_path: None,
             write_on_change: None,
             handle: Some(self.rt_handle.clone()),
+            mnemonic: None,
         }
+    }
+}
+
+impl<Sender> DaemonBase<Sender> {
+    /// Get the daemon builder
+    pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonBuilder {
+        DaemonBuilder::new(chain)
+    }
+
+    /// Get the mutable Sender object
+    pub fn sender_mut(&mut self) -> &mut Sender {
+        self.daemon.sender_mut()
     }
 
     /// Flushes all the state related to the current chain
@@ -178,7 +184,7 @@ impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle
             .block_on(
-                self.sender().commit_tx_any(
+                self.wallet().commit_tx_any(
                     msgs.iter()
                         .map(|msg| cosmrs::Any {
                             type_url: msg.type_url.clone(),
@@ -216,6 +222,6 @@ impl<Sender: QuerySender> QueryHandler for DaemonBase<Sender> {
 
 impl<Sender: QuerySender> DefaultQueriers for DaemonBase<Sender> {
     type Bank = Bank;
-    type Wasm = CosmWasm;
+    type Wasm = CosmWasmBase<Sender>;
     type Node = Node;
 }

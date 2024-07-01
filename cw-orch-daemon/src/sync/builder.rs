@@ -1,5 +1,5 @@
 use crate::senders::builder::SenderBuilder;
-use crate::senders::no_sender::NoSender;
+
 use crate::senders::tx::TxSender;
 use crate::{DaemonAsyncBuilder, DaemonBase, DaemonState, Wallet, RUNTIME};
 use cw_orch_core::environment::ChainInfoOwned;
@@ -29,6 +29,8 @@ pub struct DaemonBuilder {
     /// State from rebuild or existing daemon
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
+
+    pub(crate) mnemonic: Option<String>,
 }
 
 impl DaemonBuilder {
@@ -40,6 +42,7 @@ impl DaemonBuilder {
             state_path: None,
             state: None,
             write_on_change: None,
+            mnemonic: None,
         }
     }
 
@@ -71,6 +74,12 @@ impl DaemonBuilder {
     /// Overwrites the grpc_url used to interact with the chain
     pub fn grpc_url(&mut self, url: impl Into<String>) -> &mut Self {
         (&mut self.chain).grpc_urls = vec![url.into()];
+        self
+    }
+
+    /// Set the mnemonic used for the default Cosmos wallet
+    pub fn mnemonic(&mut self, mnemonic: impl Into<String>) -> &mut Self {
+        self.mnemonic = Some(mnemonic.into());
         self
     }
 
@@ -122,7 +131,7 @@ impl DaemonBuilder {
             .clone()
             .unwrap_or_else(|| RUNTIME.handle().clone());
 
-        let mut builder = self.clone();
+        let builder = self.clone();
 
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build())?;
@@ -143,7 +152,8 @@ impl DaemonBuilder {
         let builder = self.clone();
 
         // build the underlying daemon
-        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build_sender(sender_options))?;
+        let daemon =
+            rt_handle.block_on(DaemonAsyncBuilder::from(builder).build_sender(sender_options))?;
 
         Ok(DaemonBase { rt_handle, daemon })
     }

@@ -1,9 +1,7 @@
 use cosmrs::{tx::Msg, AccountId, Any};
 use cosmwasm_std::Addr;
-use cw_orch_core::environment::ChainInfoOwned;
-use tonic::transport::Channel;
 
-use crate::{CosmTxResponse, DaemonError};
+use crate::CosmTxResponse;
 
 use super::query::QuerySender;
 

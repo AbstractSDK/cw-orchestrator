@@ -1,12 +1,9 @@
 use crate::{
     log::print_if_log_disabled,
     senders::{
-        base_sender::{CosmosOptions, Sender},
-        builder::SenderBuilder,
-        query::QuerySender,
-        tx::TxSender,
+        base_sender::CosmosOptions, builder::SenderBuilder, query::QuerySender, tx::TxSender,
     },
-    DaemonAsyncBase, DaemonBuilder, DaemonStateFile, GrpcChannel, Wallet,
+    DaemonAsyncBase, DaemonBuilder, DaemonStateFile, Wallet,
 };
 
 use super::{error::DaemonError, state::DaemonState};
@@ -36,6 +33,8 @@ pub struct DaemonAsyncBuilder {
     /// State from rebuild or existing daemon
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
+
+    pub(crate) mnemonic: Option<String>,
 }
 
 impl DaemonAsyncBuilder {
@@ -46,6 +45,7 @@ impl DaemonAsyncBuilder {
             state_path: None,
             state: None,
             write_on_change: None,
+            mnemonic: None,
         }
     }
 
@@ -69,6 +69,12 @@ impl DaemonAsyncBuilder {
     /// Defaults to `true`
     pub fn write_on_change(&mut self, write_on_change: bool) -> &mut Self {
         self.write_on_change = Some(write_on_change);
+        self
+    }
+
+    /// Set the mnemonic used for the default Cosmos wallet
+    pub fn mnemonic(&mut self, mnemonic: impl Into<String>) -> &mut Self {
+        self.mnemonic = Some(mnemonic.into());
         self
     }
 
@@ -130,14 +136,18 @@ impl DaemonAsyncBuilder {
         Ok(state)
     }
 
-    /// Build a daemon with env-var mnemonic
+    /// Build a daemon with provided mnemonic or env-var mnemonic
     pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
         let chain_info = self.chain.clone();
 
         let state = self.build_state()?;
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
 
-        let sender = Wallet::build(chain_info, CosmosOptions::default()).await?;
+        let options = CosmosOptions {
+            mnemonic: self.mnemonic.clone(),
+            ..Default::default()
+        };
+        let sender = Wallet::build(chain_info, options).await?;
 
         let daemon = DaemonAsyncBase { state, sender };
 
@@ -173,6 +183,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             state: value.state,
             state_path: value.state_path,
             write_on_change: value.write_on_change,
+            mnemonic: value.mnemonic,
         }
     }
 }
