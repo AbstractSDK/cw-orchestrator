@@ -19,6 +19,7 @@ pub mod keys;
 pub mod live_mock;
 mod log;
 pub mod queriers;
+pub mod service;
 pub mod tx_broadcaster;
 pub mod tx_builder;
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};

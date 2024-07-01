@@ -1,11 +1,8 @@
 use crate::{
-    env::DaemonEnvVars,
-    proto::injective::ETHEREUM_COIN_TYPE,
-    queriers::Bank,
-    tx_broadcaster::{
+    env::DaemonEnvVars, proto::injective::ETHEREUM_COIN_TYPE, queriers::Bank, service::{DaemonChannel, DaemonChannelFactory, DaemonService, DaemonServiceCreation}, tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
-    },
+    }, GrpcChannel
 };
 
 use super::{
@@ -63,8 +60,6 @@ pub type Wallet = Arc<Sender<All>>;
 pub struct Sender<C: Signing + Context> {
     pub private_key: PrivateKey,
     pub secp: Secp256k1<C>,
-    /// gRPC channel
-    pub grpc_channel: Channel,
     /// Information about the chain
     pub chain_info: ChainInfoOwned,
     pub(crate) options: SenderOptions,
@@ -104,37 +99,30 @@ impl SenderOptions {
 }
 
 impl Sender<All> {
-    pub fn new(chain_info: ChainInfoOwned, channel: Channel) -> Result<Sender<All>, DaemonError> {
-        Self::new_with_options(chain_info, channel, SenderOptions::default())
-    }
-
-    pub fn channel(&self) -> Channel {
-        self.grpc_channel.clone()
+    pub fn new(chain_info: ChainInfoOwned) -> Result<Sender<All>, DaemonError> {
+        Self::new_with_options(chain_info, SenderOptions::default())
     }
 
     pub fn new_with_options(
         chain_info: ChainInfoOwned,
-        channel: Channel,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
         let mnemonic = get_mnemonic_env(&chain_info.kind)?;
 
-        Self::from_mnemonic_with_options(chain_info, channel, &mnemonic, options)
+        Self::from_mnemonic_with_options(chain_info, &mnemonic, options)
     }
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic(
         chain_info: ChainInfoOwned,
-        channel: Channel,
         mnemonic: &str,
     ) -> Result<Sender<All>, DaemonError> {
-        Self::from_mnemonic_with_options(chain_info, channel, mnemonic, SenderOptions::default())
+        Self::from_mnemonic_with_options(chain_info, mnemonic, SenderOptions::default())
     }
 
     /// Construct a new Sender from a mnemonic with additional options
     pub fn from_mnemonic_with_options(
         chain_info: ChainInfoOwned,
-        channel: Channel,
         mnemonic: &str,
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
@@ -149,7 +137,6 @@ impl Sender<All> {
 
         let sender = Sender {
             chain_info,
-            grpc_channel: channel,
             private_key: p_key,
             secp,
             options,
@@ -166,7 +153,6 @@ impl Sender<All> {
     /// Construct a new Sender from a raw key with additional options
     pub fn from_raw_key_with_options(
         chain_info: ChainInfoOwned,
-        channel: Channel,
         raw_key: &[u8],
         options: SenderOptions,
     ) -> Result<Sender<All>, DaemonError> {
@@ -182,7 +168,6 @@ impl Sender<All> {
             private_key: p_key,
             secp,
             options,
-            grpc_channel: channel,
             chain_info,
         };
         log::info!(
@@ -207,7 +192,6 @@ impl Sender<All> {
             // Need to generate new sender as hd_index impacts private key
             let new_sender = Sender::from_raw_key_with_options(
                 self.chain_info.clone(),
-                self.channel(),
                 &self.private_key.raw_key(),
                 options,
             )
@@ -310,7 +294,7 @@ impl Sender<All> {
 
         let tx_raw = self.sign(sign_doc)?;
 
-        Node::new_async(self.channel())
+        Node::new_async(self.channel()?)
             ._simulate_tx(tx_raw.to_bytes()?)
             .await
     }
@@ -322,7 +306,7 @@ impl Sender<All> {
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<(u64, Coin), DaemonError> {
-        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
+        let timeout_height = Node::new_async(self.channel()?)._block_height().await? + 10u64;
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
@@ -360,7 +344,7 @@ impl Sender<All> {
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
+        let timeout_height = Node::new_async(self.channel()?)._block_height().await? + 10u64;
 
         let msgs = if self.options.authz_granter.is_some() {
             // We wrap authz messages
@@ -390,7 +374,7 @@ impl Sender<All> {
             .broadcast(tx_builder, self)
             .await?;
 
-        let resp = Node::new_async(self.channel())
+        let resp = Node::new_async(self.channel()?)
             ._find_tx(tx_response.txhash)
             .await?;
 
@@ -415,7 +399,7 @@ impl Sender<All> {
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.pub_addr().unwrap().to_string();
 
-        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel());
+        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel()?);
 
         let resp = client
             .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
@@ -444,7 +428,7 @@ impl Sender<All> {
         &self,
         tx: Raw,
     ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel()?);
         let commit = client
             .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
                 tx_bytes: tx.to_bytes()?,
@@ -470,7 +454,7 @@ impl Sender<All> {
     async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
         let chain_info = self.chain_info.clone();
 
-        let bank = Bank::new_async(self.channel());
+        let bank = Bank::new_async(self.channel()?);
         let balance = bank
             ._balance(self.address()?, Some(fee.denom.clone()))
             .await?[0]
@@ -521,6 +505,13 @@ impl Sender<All> {
                 current: balance,
             });
         }
+    }
+}
+
+impl DaemonServiceCreation for Sender<All> {
+    async fn channel(&self) -> Result<DaemonService, DaemonError> {
+        let channel = GrpcChannel::connect(&self.chain_info.grpc_urls, &self.chain_info.chain_id).await?;
+        Ok(DaemonService::new::<DaemonChannel, Channel>(DaemonChannelFactory {}, channel))
     }
 }
 

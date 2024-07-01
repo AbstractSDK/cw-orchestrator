@@ -1,5 +1,7 @@
 use super::error::DaemonError;
 use crate::env::{default_state_folder, DaemonEnvVars};
+use crate::service::{DaemonChannel, DaemonChannelFactory, DaemonService, DaemonServiceCreation};
+use crate::GrpcChannel;
 use crate::{json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
@@ -8,6 +10,7 @@ use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
+use tonic::transport::Channel;
 use std::sync::Arc;
 use std::{
     collections::{HashMap, HashSet},

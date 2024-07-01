@@ -12,21 +12,21 @@ use super::bank::cosmrs_to_cosmwasm_coin;
 /// Querier for the Cosmos Staking module
 /// All the async function are prefixed with `_`
 pub struct Staking {
-    pub channel: Channel,
+    pub service: DaemonService,
     pub rt_handle: Option<Handle>,
 }
 
 impl Staking {
-    pub fn new(daemon: &Daemon) -> Self {
-        Self {
-            channel: daemon.channel(),
-            rt_handle: Some(daemon.rt_handle.clone()),
-        }
+    pub fn new(daemon: &Daemon) -> Result<Self, DaemonError> {
+        Ok(Self {
+                    service: daemon.service()?,
+                    rt_handle: Some(daemon.rt_handle.clone()),
+                })
     }
 
-    pub fn new_async(channel: Channel) -> Self {
+    pub fn new_async(service: DaemonService) -> Self {
         Self {
-            channel,
+            service,
             rt_handle: None,
         }
     }
