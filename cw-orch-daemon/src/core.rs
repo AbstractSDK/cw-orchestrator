@@ -1,8 +1,12 @@
-use crate::{queriers::CosmWasm, DaemonAsyncBuilderBase, DaemonState};
+use crate::{
+    queriers::CosmWasm,
+    senders::{builder::SenderBuilder, query::QuerySender},
+    DaemonAsyncBuilder, DaemonState,
+};
 
 use super::{
-    builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
-    senders::base_sender::Wallet, tx_resp::CosmTxResponse,
+    cosmos_modules, error::DaemonError, queriers::Node, senders::base_sender::Wallet,
+    tx_resp::CosmTxResponse,
 };
 
 use cosmrs::{
@@ -14,7 +18,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{AsyncWasmQuerier, ChainState, IndexResponse, Querier},
+    environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -66,24 +70,24 @@ pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContra
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsyncBase<Sender: TxSender = Wallet> {
+pub struct DaemonAsyncBase<Sender = Wallet> {
     /// Sender to send transactions to the chain
-    pub sender: Sender,
+    pub(crate) sender: Sender,
     /// State of the daemon
-    pub state: DaemonState,
+    pub(crate) state: DaemonState,
 }
 
 pub type DaemonAsync = DaemonAsyncBase<Wallet>;
 
-impl<Sender: TxSender> DaemonAsyncBase<Sender> {
+impl<Sender> DaemonAsyncBase<Sender> {
     /// Get the daemon builder
-    pub fn builder() -> DaemonAsyncBuilder {
-        DaemonAsyncBuilder::default()
+    pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonAsyncBuilder {
+        DaemonAsyncBuilder::new(chain)
     }
 
-    /// Get the channel configured for this DaemonAsync.
-    pub fn channel(&self) -> Channel {
-        self.sender.grpc_channel()
+    /// Get the mutable Sender object
+    pub fn sender_mut(&mut self) -> &mut Sender {
+        &mut self.sender
     }
 
     /// Flushes all the state related to the current chain
@@ -91,9 +95,94 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     pub fn flush_state(&mut self) -> Result<(), DaemonError> {
         self.state.flush()
     }
+
+    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
+    /// Does not consume the original [`DaemonAsync`].
+    pub fn rebuild(&self) -> DaemonAsyncBuilder {
+        DaemonAsyncBuilder {
+            state: Some(self.state()),
+            chain: self.state.chain_data.clone(),
+            deployment_id: Some(self.state.deployment_id.clone()),
+            state_path: None,
+            write_on_change: None,
+        }
+    }
 }
 
-impl<Sender: TxSender> ChainState for DaemonAsyncBase<Sender> {
+impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
+    /// Get the channel configured for this DaemonAsync.
+    pub fn channel(&self) -> Channel {
+        self.sender.grpc_channel()
+    }
+
+    /// Query a contract.
+    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+        &self,
+        query_msg: &Q,
+        contract_address: &Addr,
+    ) -> Result<T, DaemonError> {
+        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
+        let resp = client
+            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                address: contract_address.to_string(),
+                query_data: serde_json::to_vec(&query_msg)?,
+            })
+            .await?;
+
+        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
+    }
+
+    /// Wait for a given amount of blocks.
+    pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
+        let mut last_height = Node::new_async(self.channel())._block_height().await?;
+        let end_height = last_height + amount;
+
+        let average_block_speed = Node::new_async(self.channel())
+            ._average_block_speed(Some(0.9))
+            .await?;
+
+        let wait_time = average_block_speed.mul_f64(amount as f64);
+
+        // now wait for that amount of time
+        tokio::time::sleep(wait_time).await;
+        // now check every block until we hit the target
+        while last_height < end_height {
+            // wait
+
+            tokio::time::sleep(average_block_speed).await;
+
+            // ping latest block
+            last_height = Node::new_async(self.channel())._block_height().await?;
+        }
+        Ok(())
+    }
+
+    /// Wait for a given amount of seconds.
+    pub async fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
+        tokio::time::sleep(Duration::from_secs(secs)).await;
+
+        Ok(())
+    }
+
+    /// Wait for the next block.
+    pub async fn next_block(&self) -> Result<(), DaemonError> {
+        self.wait_blocks(1).await
+    }
+
+    /// Get the current block info.
+    pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
+        let block = Node::new_async(self.channel())._latest_block().await?;
+        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
+        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
+        Ok(cosmwasm_std::BlockInfo {
+            height: block.header.height.value(),
+            time,
+            chain_id: block.header.chain_id.to_string(),
+        })
+    }
+}
+
+impl<Sender> ChainState for DaemonAsyncBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -106,18 +195,6 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
-    }
-
-    /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
-    /// Does not consume the original [`DaemonAsync`].
-    pub fn rebuild(&self) -> DaemonAsyncBuilderBase<Sender> {
-        let mut builder = DaemonAsyncBuilder {
-            state: Some(self.state()),
-            ..Default::default()
-        };
-        builder
-            .chain(self.sender.chain_info().clone())
-            .sender(self.sender.clone())
     }
 
     /// Execute a message on a contract.
@@ -212,23 +289,6 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         Ok(result)
     }
 
-    /// Query a contract.
-    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
-        let resp = client
-            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-                address: contract_address.to_string(),
-                query_data: serde_json::to_vec(&query_msg)?,
-            })
-            .await?;
-
-        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
-    }
-
     /// Migration a contract.
     pub async fn migrate<M: Serialize + Debug>(
         &self,
@@ -248,55 +308,6 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             .await
             .map_err(Into::into)?;
         Ok(result)
-    }
-
-    /// Wait for a given amount of blocks.
-    pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = Node::new_async(self.channel())._block_height().await?;
-        let end_height = last_height + amount;
-
-        let average_block_speed = Node::new_async(self.channel())
-            ._average_block_speed(Some(0.9))
-            .await?;
-
-        let wait_time = average_block_speed.mul_f64(amount as f64);
-
-        // now wait for that amount of time
-        tokio::time::sleep(wait_time).await;
-        // now check every block until we hit the target
-        while last_height < end_height {
-            // wait
-
-            tokio::time::sleep(average_block_speed).await;
-
-            // ping latest block
-            last_height = Node::new_async(self.channel())._block_height().await?;
-        }
-        Ok(())
-    }
-
-    /// Wait for a given amount of seconds.
-    pub async fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        tokio::time::sleep(Duration::from_secs(secs)).await;
-
-        Ok(())
-    }
-
-    /// Wait for the next block.
-    pub async fn next_block(&self) -> Result<(), DaemonError> {
-        self.wait_blocks(1).await
-    }
-
-    /// Get the current block info.
-    pub async fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = Node::new_async(self.channel())._latest_block().await?;
-        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
-        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
-        Ok(cosmwasm_std::BlockInfo {
-            height: block.header.height.value(),
-            time,
-            chain_id: block.header.chain_id.to_string(),
-        })
     }
 
     /// Upload a contract to the chain.
@@ -337,10 +348,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender<NewSender: TxSender>(
-        self,
-        sender: NewSender,
-    ) -> DaemonAsyncBase<NewSender> {
+    pub fn set_sender<NewSender: TxSender>(self, sender: NewSender) -> DaemonAsyncBase<NewSender> {
         DaemonAsyncBase {
             sender,
             state: self.state,

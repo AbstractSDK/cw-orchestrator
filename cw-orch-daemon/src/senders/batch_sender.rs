@@ -10,7 +10,9 @@ use prost::Name;
 
 use std::sync::{Arc, Mutex};
 
-use super::{base_sender::SenderOptions, tx::TxSender};
+use super::builder::SenderBuilder;
+use super::query::QuerySender;
+use super::{base_sender::CosmosOptions, tx::TxSender};
 
 pub type BatchDaemon = DaemonBase<BatchSender>;
 
@@ -24,10 +26,36 @@ pub struct BatchSender {
     pub sender: Wallet,
 }
 
-impl TxSender for BatchSender {
+impl SenderBuilder for BatchSender {
     type Error = DaemonError;
-    type SenderOptions = SenderOptions;
+    type Options = CosmosOptions;
 
+    async fn build(
+        chain_info: cw_orch_core::environment::ChainInfoOwned,
+        sender_options: Self::Options,
+    ) -> Result<Self, Self::Error> {
+        Ok(Self {
+            msgs: Default::default(),
+            sender: Wallet::build(chain_info, sender_options).await?,
+        })
+    }
+}
+
+impl QuerySender for BatchSender {
+    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
+        self.sender.chain_info()
+    }
+
+    fn grpc_channel(&self) -> tonic::transport::Channel {
+        self.sender.grpc_channel()
+    }
+
+    fn set_options(&mut self, options: Self::Options) {
+        self.sender.set_options(options)
+    }
+}
+
+impl TxSender for BatchSender {
     async fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
@@ -67,29 +95,6 @@ impl TxSender for BatchSender {
 
     fn msg_sender(&self) -> Result<AccountId, DaemonError> {
         self.sender.msg_sender()
-    }
-
-    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
-        self.sender.chain_info()
-    }
-
-    fn grpc_channel(&self) -> tonic::transport::Channel {
-        self.sender.grpc_channel()
-    }
-
-    fn build(
-        chain_info: cw_orch_core::environment::ChainInfoOwned,
-        grpc_channel: tonic::transport::Channel,
-        sender_options: Self::SenderOptions,
-    ) -> Result<Self, Self::Error> {
-        Ok(Self {
-            msgs: Default::default(),
-            sender: Wallet::build(chain_info, grpc_channel, sender_options)?,
-        })
-    }
-
-    fn set_options(&mut self, options: Self::SenderOptions) {
-        self.sender.set_options(options)
     }
 }
 

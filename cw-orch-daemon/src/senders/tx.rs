@@ -5,29 +5,11 @@ use tonic::transport::Channel;
 
 use crate::{CosmTxResponse, DaemonError};
 
-pub trait TxSender: Clone {
-    type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
-    /// Options for the sender
-    type SenderOptions: Default + Clone;
-    
-    /// Build a new `Sender`.
-    fn build(
-        chain_info: ChainInfoOwned,
-        grpc_channel: Channel,
-        sender_options: Self::SenderOptions,
-    ) -> Result<Self, Self::Error>;
+use super::query::QuerySender;
 
-    /// Set the Sender options
-    fn set_options(&mut self, options: Self::SenderOptions);
-
+pub trait TxSender: QuerySender {
     /// Get the address of the sender.
     fn address(&self) -> Result<Addr, Self::Error>;
-
-    /// Get the chain_information for the sender
-    fn chain_info(&self) -> &ChainInfoOwned;
-
-    /// Get the channel for the sender (TODO: return mut ref to Retry Sender)
-    fn grpc_channel(&self) -> Channel;
 
     /// Returns the `AccountId` of the sender.
     /// If an authz granter is set, returns the authz granter
@@ -55,5 +37,4 @@ pub trait TxSender: Clone {
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send;
-
 }

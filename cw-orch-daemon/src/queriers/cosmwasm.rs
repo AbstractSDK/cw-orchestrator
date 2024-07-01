@@ -1,8 +1,6 @@
 use std::{marker::PhantomData, str::FromStr};
 
-use crate::{
-    cosmos_modules, error::DaemonError, senders::tx::TxSender, DaemonBase, Wallet,
-};
+use crate::{cosmos_modules, error::DaemonError, senders::tx::TxSender, DaemonBase, Wallet};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{

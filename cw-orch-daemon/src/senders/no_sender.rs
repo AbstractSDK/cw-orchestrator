@@ -1,4 +1,4 @@
-use crate::{error::DaemonError, tx_resp::CosmTxResponse, DaemonBase};
+use crate::{error::DaemonError, tx_resp::CosmTxResponse, DaemonBase, GrpcChannel};
 
 use cosmrs::{AccountId, Any};
 use cosmwasm_std::Addr;
@@ -6,9 +6,9 @@ use cw_orch_core::environment::ChainInfoOwned;
 
 use tonic::transport::Channel;
 
-use super::tx::TxSender;
+use super::{builder::SenderBuilder, query::QuerySender, tx::TxSender};
 
-/// Daemon that does not support signing. 
+/// Daemon that does not support signing.
 /// Will err on any attempt to sign a transaction or retrieve a sender address.
 pub type QueryOnlyDaemon = DaemonBase<NoSender>;
 
@@ -16,49 +16,36 @@ pub type QueryOnlyDaemon = DaemonBase<NoSender>;
 #[derive(Clone)]
 pub struct NoSender {
     /// gRPC channel
-    pub grpc_channel: Channel,
+    pub channel: Channel,
     /// Information about the chain
     pub chain_info: ChainInfoOwned,
 }
 
-impl TxSender for NoSender {
+impl SenderBuilder for NoSender {
     type Error = DaemonError;
-    type SenderOptions = ();
+    type Options = ();
 
-    async fn commit_tx_any(
-        &self,
-        _msgs: Vec<Any>,
-        _memo: Option<&str>,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        unimplemented!("You used the DaemonQuerier, which can't send transactions");
+    async fn build(
+        chain_info: ChainInfoOwned,
+        _sender_options: Self::Options,
+    ) -> Result<Self, Self::Error> {
+        let channel = GrpcChannel::from_chain_info(&chain_info).await?;
+
+        Ok(NoSender {
+            channel,
+            chain_info,
+        })
     }
+}
 
-    fn address(&self) -> Result<Addr, DaemonError> {
-        unimplemented!("You used the DaemonQuerier, which doesn't have an associated address");
-    }
-
-    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
-        unimplemented!("You used the DaemonQuerier, which doesn't have an associated msg sender");
-    }
-
+impl QuerySender for NoSender {
     fn chain_info(&self) -> &ChainInfoOwned {
         &self.chain_info
     }
 
     fn grpc_channel(&self) -> Channel {
-        self.grpc_channel.clone()
+        self.channel.clone()
     }
 
-    fn set_options(&mut self, _options: Self::SenderOptions) {}
-
-    fn build(
-        chain_info: ChainInfoOwned,
-        grpc_channel: Channel,
-        _sender_options: Self::SenderOptions,
-    ) -> Result<Self, Self::Error> {
-        Ok(NoSender {
-            grpc_channel,
-            chain_info,
-        })
-    }
+    fn set_options(&mut self, _options: Self::Options) {}
 }

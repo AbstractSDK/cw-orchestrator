@@ -69,7 +69,7 @@ pub struct ManualSender {
 
 impl TxSender for ManualSender {
     type Error = DaemonError;
-    type SenderOptions = ManualSenderOptions;
+    type Options = ManualSenderOptions;
 
     async fn commit_tx_any(
         &self,
@@ -118,7 +118,7 @@ impl TxSender for ManualSender {
     fn build(
         chain_info: cw_orch_core::environment::ChainInfoOwned,
         grpc_channel: tonic::transport::Channel,
-        sender_options: Self::SenderOptions,
+        sender_options: Self::Options,
     ) -> Result<Self, Self::Error> {
         Ok(Self {
             chain_info,
@@ -131,7 +131,7 @@ impl TxSender for ManualSender {
         })
     }
 
-    fn set_options(&mut self, options: Self::SenderOptions) {
+    fn set_options(&mut self, options: Self::Options) {
         self.sender = Addr::unchecked(
             options
                 .sender_address

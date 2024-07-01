@@ -1,7 +1,7 @@
 use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
     service_client::ServiceClient, GetNodeInfoRequest,
 };
-use cw_orch_core::log::connectivity_target;
+use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 use tonic::transport::{Channel, ClientTlsConfig};
 
 use super::error::DaemonError;
@@ -90,6 +90,11 @@ impl GrpcChannel {
 
         Ok(successful_connections.pop().unwrap())
     }
+
+    /// Create a gRPC channel from the chain info
+    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Result<Channel, DaemonError> {
+        GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await
+    }
 }
 
 #[cfg(test)]
@@ -108,8 +113,7 @@ mod tests {
         let grpcs = &["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
-        let build_res = DaemonAsync::builder()
-            .chain(chain)
+        let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
             .build()
             .await;
@@ -128,8 +132,7 @@ mod tests {
         let grpcs = &[];
         chain.grpc_urls = grpcs;
 
-        let build_res = DaemonAsync::builder()
-            .chain(chain)
+        let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
             .build()
             .await;

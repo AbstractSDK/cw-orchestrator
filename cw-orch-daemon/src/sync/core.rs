@@ -3,12 +3,12 @@ use std::fmt::Debug;
 use super::super::senders::base_sender::Wallet;
 use crate::{
     queriers::{Bank, CosmWasmBase, Node},
-    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonBuilderBase, DaemonError, DaemonState,
+    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{ChainState, DefaultQueriers, QueryHandler, TxHandler},
+    environment::{ChainInfoOwned, ChainState, DefaultQueriers, QueryHandler, TxHandler},
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::Serialize;
@@ -44,7 +44,7 @@ use crate::senders::tx::TxSender;
     See [Querier](crate::queriers) for examples.
 */
 pub struct DaemonBase<Sender: TxSender> {
-    pub daemon: DaemonAsyncBase<Sender>,
+    pub(crate) daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
 }
@@ -53,8 +53,8 @@ pub type Daemon = DaemonBase<Wallet>;
 
 impl<Sender: TxSender> DaemonBase<Sender> {
     /// Get the daemon builder
-    pub fn builder() -> DaemonBuilderBase<Sender> {
-        DaemonBuilderBase::default()
+    pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonBuilder {
+        DaemonBuilder::new(chain)
     }
 
     /// Get the channel configured for this Daemon
@@ -63,20 +63,26 @@ impl<Sender: TxSender> DaemonBase<Sender> {
     }
 
     /// Get the channel configured for this Daemon
-    pub fn wallet(&self) -> Sender {
+    pub fn sender(&self) -> Sender {
         self.daemon.sender.clone()
+    }
+
+    /// Get the mutable Sender object
+    pub fn sender_mut(&mut self) -> &mut Sender {
+        self.daemon.sender_mut()
     }
 
     /// Returns a new [`DaemonBuilder`] with the current configuration.
     /// Does not consume the original [`Daemon`].
-    pub fn rebuild(&self) -> DaemonBuilderBase<Sender> {
-        let mut builder = DaemonBuilder {
+    pub fn rebuild(&self) -> DaemonBuilder {
+        DaemonBuilder {
             state: Some(self.state()),
-            ..Default::default()
-        };
-        builder
-            .chain(self.daemon.sender.chain_info().clone())
-            .sender(self.daemon.sender.clone())
+            chain: self.daemon.sender.chain_info().clone(),
+            deployment_id: Some(self.daemon.state.deployment_id.clone()),
+            state_path: None,
+            write_on_change: None,
+            handle: Some(self.rt_handle.clone()),
+        }
     }
 
     /// Flushes all the state related to the current chain
@@ -173,7 +179,7 @@ impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle
             .block_on(
-                self.wallet().commit_tx_any(
+                self.sender().commit_tx_any(
                     msgs.iter()
                         .map(|msg| cosmrs::Any {
                             type_url: msg.type_url.clone(),

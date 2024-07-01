@@ -6,6 +6,7 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
+    Daemon, DaemonAsyncBuilder, DaemonBuilder, GrpcChannel,
 };
 
 use crate::proto::injective::InjectiveEthAccount;
@@ -43,7 +44,7 @@ use std::str::FromStr;
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::tx::TxSender;
+use super::{builder::SenderBuilder, query::QuerySender, tx::TxSender};
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -62,20 +63,20 @@ pub struct Sender<C: Signing + Clone> {
     pub grpc_channel: Channel,
     /// Information about the chain
     pub chain_info: ChainInfoOwned,
-    pub(crate) options: SenderOptions,
+    pub(crate) options: CosmosOptions,
 }
 
 /// Options for how txs should be constructed for this sender.
 #[derive(Default, Clone)]
 #[non_exhaustive]
-pub struct SenderOptions {
+pub struct CosmosOptions {
     pub authz_granter: Option<String>,
     pub fee_granter: Option<String>,
     pub hd_index: Option<u32>,
     pub mnemonic: Option<String>,
 }
 
-impl SenderOptions {
+impl CosmosOptions {
     pub fn authz_granter(mut self, granter: impl ToString) -> Self {
         self.authz_granter = Some(granter.to_string());
         self
@@ -99,10 +100,79 @@ impl SenderOptions {
     }
 }
 
-impl TxSender for Wallet {
-    type Error = DaemonError;
-    type SenderOptions = SenderOptions;
+impl Daemon {
+    /// Specifies wether authz should be used with this daemon
+    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_mut().set_authz_granter(granter.to_string());
+        self
+    }
 
+    /// Specifies wether feegrant should be used with this daemon
+    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_mut().set_fee_granter(granter.to_string());
+        self
+    }
+}
+
+impl SenderBuilder for Wallet {
+    type Error = DaemonError;
+    type Options = CosmosOptions;
+
+    async fn build(
+        chain_info: ChainInfoOwned,
+        sender_options: Self::Options,
+    ) -> Result<Self, Self::Error> {
+        let channel = GrpcChannel::from_chain_info(&chain_info).await?;
+
+        if let Some(mnemonic) = &sender_options.mnemonic {
+            Sender::from_mnemonic_with_options(
+                chain_info,
+                channel,
+                &mnemonic.clone(),
+                sender_options,
+            )
+        } else {
+            Sender::new_with_options(chain_info, channel, sender_options)
+        }
+    }
+}
+
+impl QuerySender for Wallet {
+    fn chain_info(&self) -> &ChainInfoOwned {
+        &self.chain_info
+    }
+
+    fn grpc_channel(&self) -> Channel {
+        self.channel()
+    }
+
+    fn set_options(&mut self, options: Self::Options) {
+        if let Some(mnemonic) = options.mnemonic.clone() {
+            let new_sender = Sender::from_mnemonic_with_options(
+                self.chain_info.clone(),
+                self.channel(),
+                &mnemonic,
+                options,
+            )
+            .unwrap();
+            *self = new_sender;
+        } else if options.hd_index.is_some() {
+            // Need to generate new sender as hd_index impacts private key
+            let new_sender = Sender::from_raw_key_with_options(
+                self.chain_info.clone(),
+                self.channel(),
+                &self.private_key.raw_key(),
+                options,
+            )
+            .unwrap();
+            *self = new_sender
+        } else {
+            self.options = options
+        }
+    }
+}
+
+impl TxSender for Wallet {
     async fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
@@ -156,61 +226,11 @@ impl TxSender for Wallet {
             self.pub_addr()
         }
     }
-
-    fn chain_info(&self) -> &ChainInfoOwned {
-        &self.chain_info
-    }
-
-    fn grpc_channel(&self) -> Channel {
-        self.channel()
-    }
-
-    fn set_options(&mut self, options: Self::SenderOptions) {
-        if let Some(mnemonic) = options.mnemonic.clone() {
-            let new_sender = Sender::from_mnemonic_with_options(
-                self.chain_info.clone(),
-                self.channel(),
-                &mnemonic,
-                options,
-            )
-            .unwrap();
-            *self = new_sender;
-        } else if options.hd_index.is_some() {
-            // Need to generate new sender as hd_index impacts private key
-            let new_sender = Sender::from_raw_key_with_options(
-                self.chain_info.clone(),
-                self.channel(),
-                &self.private_key.raw_key(),
-                options,
-            )
-            .unwrap();
-            *self = new_sender
-        } else {
-            self.options = options
-        }
-    }
-
-    fn build(
-        chain_info: ChainInfoOwned,
-        grpc_channel: Channel,
-        sender_options: Self::SenderOptions,
-    ) -> Result<Self, Self::Error> {
-        if let Some(mnemonic) = &sender_options.mnemonic {
-            Sender::from_mnemonic_with_options(
-                chain_info,
-                grpc_channel,
-                &mnemonic.clone(),
-                sender_options,
-            )
-        } else {
-            Sender::new_with_options(chain_info, grpc_channel, sender_options)
-        }
-    }
 }
 
 impl Wallet {
     pub fn new(chain_info: ChainInfoOwned, channel: Channel) -> Result<Wallet, DaemonError> {
-        Self::new_with_options(chain_info, channel, SenderOptions::default())
+        Self::new_with_options(chain_info, channel, CosmosOptions::default())
     }
 
     pub fn channel(&self) -> Channel {
@@ -220,7 +240,7 @@ impl Wallet {
     pub fn new_with_options(
         chain_info: ChainInfoOwned,
         channel: Channel,
-        options: SenderOptions,
+        options: CosmosOptions,
     ) -> Result<Wallet, DaemonError> {
         let mnemonic = get_mnemonic_env(&chain_info.kind)?;
 
@@ -233,7 +253,7 @@ impl Wallet {
         channel: Channel,
         mnemonic: &str,
     ) -> Result<Wallet, DaemonError> {
-        Self::from_mnemonic_with_options(chain_info, channel, mnemonic, SenderOptions::default())
+        Self::from_mnemonic_with_options(chain_info, channel, mnemonic, CosmosOptions::default())
     }
 
     /// Construct a new Sender from a mnemonic with additional options
@@ -241,7 +261,7 @@ impl Wallet {
         chain_info: ChainInfoOwned,
         channel: Channel,
         mnemonic: &str,
-        options: SenderOptions,
+        options: CosmosOptions,
     ) -> Result<Wallet, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey = PrivateKey::from_words(
@@ -273,7 +293,7 @@ impl Wallet {
         chain_info: ChainInfoOwned,
         channel: Channel,
         raw_key: &[u8],
-        options: SenderOptions,
+        options: CosmosOptions,
     ) -> Result<Wallet, DaemonError> {
         let secp = Secp256k1::new();
         let p_key: PrivateKey = PrivateKey::from_raw_key(
