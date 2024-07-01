@@ -15,7 +15,7 @@ use serde::Serialize;
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
-use crate::senders::sender_trait::SenderTrait;
+use crate::senders::tx::TxSender;
 
 #[derive(Clone)]
 /**
@@ -43,7 +43,7 @@ use crate::senders::sender_trait::SenderTrait;
     Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
 */
-pub struct DaemonBase<Sender: SenderTrait> {
+pub struct DaemonBase<Sender: TxSender> {
     pub daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
@@ -51,7 +51,7 @@ pub struct DaemonBase<Sender: SenderTrait> {
 
 pub type Daemon = DaemonBase<Wallet>;
 
-impl<Sender: SenderTrait> DaemonBase<Sender> {
+impl<Sender: TxSender> DaemonBase<Sender> {
     /// Get the daemon builder
     pub fn builder() -> DaemonBuilderBase<Sender> {
         DaemonBuilderBase::default()
@@ -86,7 +86,7 @@ impl<Sender: SenderTrait> DaemonBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> ChainState for DaemonBase<Sender> {
+impl<Sender: TxSender> ChainState for DaemonBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -95,7 +95,7 @@ impl<Sender: SenderTrait> ChainState for DaemonBase<Sender> {
 }
 
 // Execute on the real chain, returns tx response
-impl<Sender: SenderTrait> TxHandler for DaemonBase<Sender> {
+impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
@@ -165,7 +165,7 @@ impl<Sender: SenderTrait> TxHandler for DaemonBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> Stargate for DaemonBase<Sender> {
+impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
     fn commit_any<R>(
         &self,
         msgs: Vec<prost_types::Any>,
@@ -187,7 +187,7 @@ impl<Sender: SenderTrait> Stargate for DaemonBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> QueryHandler for DaemonBase<Sender> {
+impl<Sender: TxSender> QueryHandler for DaemonBase<Sender> {
     type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
@@ -209,7 +209,7 @@ impl<Sender: SenderTrait> QueryHandler for DaemonBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> DefaultQueriers for DaemonBase<Sender> {
+impl<Sender: TxSender> DefaultQueriers for DaemonBase<Sender> {
     type Bank = Bank;
     type Wasm = CosmWasmBase<Sender>;
     type Node = Node;

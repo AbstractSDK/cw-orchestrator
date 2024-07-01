@@ -10,7 +10,7 @@ use prost::Name;
 
 use std::sync::{Arc, Mutex};
 
-use super::{base_sender::SenderOptions, sender_trait::SenderTrait};
+use super::{base_sender::SenderOptions, tx::TxSender};
 
 pub type BatchDaemon = DaemonBase<BatchSender>;
 
@@ -24,7 +24,7 @@ pub struct BatchSender {
     pub sender: Wallet,
 }
 
-impl SenderTrait for BatchSender {
+impl TxSender for BatchSender {
     type Error = DaemonError;
     type SenderOptions = SenderOptions;
 

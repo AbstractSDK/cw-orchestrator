@@ -3,7 +3,7 @@ use std::str::FromStr;
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
 use cosmwasm_std::coins;
 // ANCHOR: full_counter_example
-use cw_orch_daemon::senders::sender_trait::SenderTrait;
+use cw_orch_daemon::senders::tx::TxSender;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
 

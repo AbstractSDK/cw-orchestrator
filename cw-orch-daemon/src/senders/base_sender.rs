@@ -43,7 +43,7 @@ use std::str::FromStr;
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::sender_trait::SenderTrait;
+use super::tx::TxSender;
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -99,7 +99,7 @@ impl SenderOptions {
     }
 }
 
-impl SenderTrait for Wallet {
+impl TxSender for Wallet {
     type Error = DaemonError;
     type SenderOptions = SenderOptions;
 

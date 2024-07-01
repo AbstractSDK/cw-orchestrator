@@ -6,12 +6,13 @@ use cw_orch_core::environment::ChainInfoOwned;
 
 use tonic::transport::Channel;
 
-use super::sender_trait::SenderTrait;
+use super::tx::TxSender;
 
-pub type QuerierDaemon = DaemonBase<NoSender>;
+/// Daemon that does not support signing. 
+/// Will err on any attempt to sign a transaction or retrieve a sender address.
+pub type QueryOnlyDaemon = DaemonBase<NoSender>;
 
 /// Signer of the transactions and helper for address derivation
-/// This is the main interface for simulating and signing transactions
 #[derive(Clone)]
 pub struct NoSender {
     /// gRPC channel
@@ -20,7 +21,7 @@ pub struct NoSender {
     pub chain_info: ChainInfoOwned,
 }
 
-impl SenderTrait for NoSender {
+impl TxSender for NoSender {
     type Error = DaemonError;
     type SenderOptions = ();
 

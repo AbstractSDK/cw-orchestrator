@@ -30,7 +30,7 @@ use std::{
 
 use tonic::transport::Channel;
 
-use crate::senders::sender_trait::SenderTrait;
+use crate::senders::tx::TxSender;
 
 pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
 
@@ -66,7 +66,7 @@ pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContra
     If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
     Use a Mutex on top of this DaemonAsync to avoid such errors.
 */
-pub struct DaemonAsyncBase<Sender: SenderTrait = Wallet> {
+pub struct DaemonAsyncBase<Sender: TxSender = Wallet> {
     /// Sender to send transactions to the chain
     pub sender: Sender,
     /// State of the daemon
@@ -75,7 +75,7 @@ pub struct DaemonAsyncBase<Sender: SenderTrait = Wallet> {
 
 pub type DaemonAsync = DaemonAsyncBase<Wallet>;
 
-impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
+impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     /// Get the daemon builder
     pub fn builder() -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::default()
@@ -93,7 +93,7 @@ impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> ChainState for DaemonAsyncBase<Sender> {
+impl<Sender: TxSender> ChainState for DaemonAsyncBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -102,7 +102,7 @@ impl<Sender: SenderTrait> ChainState for DaemonAsyncBase<Sender> {
 }
 
 // Execute on the real chain, returns tx response.
-impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
+impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     /// Get the sender address
     pub fn sender(&self) -> Addr {
         self.sender.address().unwrap()
@@ -337,7 +337,7 @@ impl<Sender: SenderTrait> DaemonAsyncBase<Sender> {
     }
 
     /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender<NewSender: SenderTrait>(
+    pub fn set_sender<NewSender: TxSender>(
         self,
         sender: NewSender,
     ) -> DaemonAsyncBase<NewSender> {

@@ -1,5 +1,5 @@
 use crate::{
-    log::print_if_log_disabled, senders::sender_trait::SenderTrait, DaemonAsyncBase,
+    log::print_if_log_disabled, senders::tx::TxSender, DaemonAsyncBase,
     DaemonBuilderBase, DaemonStateFile, GrpcChannel, Wallet,
 };
 
@@ -21,7 +21,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 ///     .await.unwrap();
 /// # })
 /// ```
-pub struct DaemonAsyncBuilderBase<Sender: SenderTrait = Wallet> {
+pub struct DaemonAsyncBuilderBase<Sender: TxSender = Wallet> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -42,7 +42,7 @@ pub struct DaemonAsyncBuilderBase<Sender: SenderTrait = Wallet> {
 
 pub type DaemonAsyncBuilder = DaemonAsyncBuilderBase<Wallet>;
 
-impl<Sender: SenderTrait> Default for DaemonAsyncBuilderBase<Sender> {
+impl<Sender: TxSender> Default for DaemonAsyncBuilderBase<Sender> {
     fn default() -> Self {
         Self {
             chain: Default::default(),
@@ -85,7 +85,7 @@ impl DaemonAsyncBuilder {
     }
 }
 
-impl<Sender: SenderTrait> DaemonAsyncBuilderBase<Sender> {
+impl<Sender: TxSender> DaemonAsyncBuilderBase<Sender> {
     /// Set the chain the daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -101,7 +101,7 @@ impl<Sender: SenderTrait> DaemonAsyncBuilderBase<Sender> {
 
     /// Specifies a sender to use with this chain
     /// This will be used in priority when set on the builder
-    pub fn sender<NewSender: SenderTrait>(
+    pub fn sender<NewSender: TxSender>(
         &self,
         wallet: NewSender,
     ) -> DaemonAsyncBuilderBase<NewSender> {
@@ -214,7 +214,7 @@ impl<Sender: SenderTrait> DaemonAsyncBuilderBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> From<DaemonBuilderBase<Sender>> for DaemonAsyncBuilderBase<Sender> {
+impl<Sender: TxSender> From<DaemonBuilderBase<Sender>> for DaemonAsyncBuilderBase<Sender> {
     fn from(value: DaemonBuilderBase<Sender>) -> Self {
         DaemonAsyncBuilderBase {
             chain: value.chain,

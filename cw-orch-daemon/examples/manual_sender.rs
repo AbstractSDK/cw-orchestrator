@@ -49,7 +49,7 @@ pub fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-use cw_orch_daemon::senders::sender_trait::SenderTrait;
+use cw_orch_daemon::senders::tx::TxSender;
 
 pub type ManualDaemon = DaemonBase<ManualSender>;
 
@@ -67,7 +67,7 @@ pub struct ManualSender {
     pub grpc_channel: Channel,
 }
 
-impl SenderTrait for ManualSender {
+impl TxSender for ManualSender {
     type Error = DaemonError;
     type SenderOptions = ManualSenderOptions;
 

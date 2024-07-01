@@ -1,4 +1,4 @@
-use crate::senders::sender_trait::SenderTrait;
+use crate::senders::tx::TxSender;
 use crate::{DaemonAsyncBuilderBase, DaemonBase, DaemonState, Wallet, RUNTIME};
 use cw_orch_core::environment::ChainInfoOwned;
 
@@ -16,7 +16,7 @@ use super::super::error::DaemonError;
 ///         .build()
 ///         .unwrap();
 /// ```
-pub struct DaemonBuilderBase<Sender: SenderTrait> {
+pub struct DaemonBuilderBase<Sender: TxSender> {
     // # Required
     pub(crate) chain: Option<ChainInfoOwned>,
     // # Optional
@@ -37,7 +37,7 @@ pub struct DaemonBuilderBase<Sender: SenderTrait> {
     pub(crate) sender_options: Sender::SenderOptions,
 }
 
-impl<Sender: SenderTrait> Default for DaemonBuilderBase<Sender> {
+impl<Sender: TxSender> Default for DaemonBuilderBase<Sender> {
     fn default() -> Self {
         Self {
             chain: Default::default(),
@@ -83,7 +83,7 @@ impl DaemonBuilder {
     }
 }
 
-impl<Sender: SenderTrait> DaemonBuilderBase<Sender> {
+impl<Sender: TxSender> DaemonBuilderBase<Sender> {
     /// Set the chain the Daemon will connect to
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = Some(chain.into());
@@ -117,7 +117,7 @@ impl<Sender: SenderTrait> DaemonBuilderBase<Sender> {
 
     /// Specifies a sender to use with this chain
     /// This will be used in priority when set on the builder
-    pub fn sender<OtherSender: SenderTrait>(
+    pub fn sender<OtherSender: TxSender>(
         &self,
         wallet: OtherSender,
     ) -> DaemonBuilderBase<OtherSender> {

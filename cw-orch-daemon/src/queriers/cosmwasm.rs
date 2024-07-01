@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, str::FromStr};
 
 use crate::{
-    cosmos_modules, error::DaemonError, senders::sender_trait::SenderTrait, DaemonBase, Wallet,
+    cosmos_modules, error::DaemonError, senders::tx::TxSender, DaemonBase, Wallet,
 };
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
@@ -27,7 +27,7 @@ pub struct CosmWasmBase<Sender = Wallet> {
 
 pub type CosmWasm = CosmWasmBase<Wallet>;
 
-impl<Sender: SenderTrait> CosmWasmBase<Sender> {
+impl<Sender: TxSender> CosmWasmBase<Sender> {
     pub fn new(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
@@ -51,17 +51,17 @@ impl<Sender: SenderTrait> CosmWasmBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> QuerierGetter<CosmWasmBase<Sender>> for DaemonBase<Sender> {
+impl<Sender: TxSender> QuerierGetter<CosmWasmBase<Sender>> for DaemonBase<Sender> {
     fn querier(&self) -> CosmWasmBase<Sender> {
         CosmWasmBase::new(self)
     }
 }
 
-impl<Sender: SenderTrait> Querier for CosmWasmBase<Sender> {
+impl<Sender: TxSender> Querier for CosmWasmBase<Sender> {
     type Error = DaemonError;
 }
 
-impl<Sender: SenderTrait> CosmWasmBase<Sender> {
+impl<Sender: TxSender> CosmWasmBase<Sender> {
     /// Query code_id by hash
     pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -233,7 +233,7 @@ impl<Sender: SenderTrait> CosmWasmBase<Sender> {
     }
 }
 
-impl<Sender: SenderTrait> WasmQuerier for CosmWasmBase<Sender> {
+impl<Sender: TxSender> WasmQuerier for CosmWasmBase<Sender> {
     type Chain = DaemonBase<Sender>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
