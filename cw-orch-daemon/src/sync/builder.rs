@@ -1,3 +1,4 @@
+use crate::senders::builder::SenderBuilder;
 use crate::senders::no_sender::NoSender;
 use crate::senders::tx::TxSender;
 use crate::{DaemonAsyncBuilder, DaemonBase, DaemonState, Wallet, RUNTIME};
@@ -125,6 +126,24 @@ impl DaemonBuilder {
 
         // build the underlying daemon
         let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build())?;
+
+        Ok(DaemonBase { rt_handle, daemon })
+    }
+
+    /// Build a daemon
+    pub fn build_sender<Sender: SenderBuilder>(
+        &self,
+        sender_options: Sender::Options,
+    ) -> Result<DaemonBase<Sender>, DaemonError> {
+        let rt_handle = self
+            .handle
+            .clone()
+            .unwrap_or_else(|| RUNTIME.handle().clone());
+
+        let builder = self.clone();
+
+        // build the underlying daemon
+        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build_sender(sender_options))?;
 
         Ok(DaemonBase { rt_handle, daemon })
     }

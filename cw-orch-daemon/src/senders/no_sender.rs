@@ -49,3 +49,16 @@ impl QuerySender for NoSender {
 
     fn set_options(&mut self, _options: Self::Options) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use cw_orch_networks::networks::JUNO_1;
+
+    use crate::DaemonBuilder;
+
+
+    #[test]
+    fn build() {
+        let builder: QueryOnlyDaemon = DaemonBuilder::new(JUNO_1).build_sender(())?;
+    }
+}

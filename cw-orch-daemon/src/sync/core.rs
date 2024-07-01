@@ -2,8 +2,7 @@ use std::fmt::Debug;
 
 use super::super::senders::base_sender::Wallet;
 use crate::{
-    queriers::{Bank, CosmWasmBase, Node},
-    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
+    queriers::{Bank, CosmWasm, Node}, senders::query::QuerySender, CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState
 };
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
@@ -43,7 +42,7 @@ use crate::senders::tx::TxSender;
     Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
     See [Querier](crate::queriers) for examples.
 */
-pub struct DaemonBase<Sender: TxSender> {
+pub struct DaemonBase<Sender> {
     pub(crate) daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
@@ -51,7 +50,7 @@ pub struct DaemonBase<Sender: TxSender> {
 
 pub type Daemon = DaemonBase<Wallet>;
 
-impl<Sender: TxSender> DaemonBase<Sender> {
+impl<Sender> DaemonBase<Sender> {
     /// Get the daemon builder
     pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonBuilder {
         DaemonBuilder::new(chain)
@@ -92,7 +91,7 @@ impl<Sender: TxSender> DaemonBase<Sender> {
     }
 }
 
-impl<Sender: TxSender> ChainState for DaemonBase<Sender> {
+impl<Sender> ChainState for DaemonBase<Sender> {
     type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
@@ -193,7 +192,7 @@ impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
     }
 }
 
-impl<Sender: TxSender> QueryHandler for DaemonBase<Sender> {
+impl<Sender: QuerySender> QueryHandler for DaemonBase<Sender> {
     type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
@@ -215,8 +214,8 @@ impl<Sender: TxSender> QueryHandler for DaemonBase<Sender> {
     }
 }
 
-impl<Sender: TxSender> DefaultQueriers for DaemonBase<Sender> {
+impl<Sender: QuerySender> DefaultQueriers for DaemonBase<Sender> {
     type Bank = Bank;
-    type Wasm = CosmWasmBase<Sender>;
+    type Wasm = CosmWasm;
     type Node = Node;
 }

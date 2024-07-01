@@ -83,7 +83,7 @@ impl DaemonAsyncBuilder {
     }
 
     /// Returns a built state
-    pub(crate) fn build_state(&self) -> Result<DaemonState, DaemonError> {
+    pub fn build_state(&self) -> Result<DaemonState, DaemonError> {
         let deployment_id = self
             .deployment_id
             .clone()
