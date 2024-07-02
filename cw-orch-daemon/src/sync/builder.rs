@@ -118,16 +118,6 @@ impl DaemonBuilder {
         self
     }
 
-    /// Specifies path to the daemon state file
-    /// Defaults to env variable.
-    ///
-    /// Variable: STATE_FILE_ENV_NAME.
-    #[allow(unused)]
-    pub(crate) fn state_path(&mut self, path: impl ToString) -> &mut Self {
-        self.state_path = Some(path.to_string());
-        self
-    }
-
     /// Build a Daemon with the default [`Wallet`] implementation.
     pub fn build(&self) -> Result<DaemonBase<Wallet>, DaemonError> {
         let rt_handle = self
@@ -160,6 +150,16 @@ impl DaemonBuilder {
             rt_handle.block_on(DaemonAsyncBuilder::from(builder).build_sender(sender_options))?;
 
         Ok(DaemonBase { rt_handle, daemon })
+    }
+
+    /// Specifies path to the daemon state file
+    /// Defaults to env variable.
+    ///
+    /// Variable: STATE_FILE_ENV_NAME.
+    #[allow(unused)]
+    pub(crate) fn state_path(&mut self, path: impl ToString) -> &mut Self {
+        self.state_path = Some(path.to_string());
+        self
     }
 }
 
