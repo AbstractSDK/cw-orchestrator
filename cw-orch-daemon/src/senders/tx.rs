@@ -1,25 +1,20 @@
 use cosmrs::{tx::Msg, AccountId, Any};
 use cosmwasm_std::Addr;
-use cw_orch_core::environment::ChainInfoOwned;
-use tonic::transport::Channel;
 
-use crate::{CosmTxResponse, DaemonError};
+use crate::CosmTxResponse;
 
-pub trait SenderTrait: Clone {
-    type Error: Into<DaemonError> + std::error::Error + std::fmt::Debug + Send + Sync + 'static;
-    type SenderOptions: Default + Clone;
+use super::query::QuerySender;
 
+pub trait TxSender: QuerySender {
+    /// Get the address of the sender.
     fn address(&self) -> Result<Addr, Self::Error>;
 
-    fn chain_info(&self) -> &ChainInfoOwned;
-
-    fn grpc_channel(&self) -> Channel;
-
-    /// Returns the actual sender of every message sent.
+    /// Returns the `AccountId` of the sender.
     /// If an authz granter is set, returns the authz granter
     /// Else, returns the address associated with the current private key
     fn msg_sender(&self) -> Result<AccountId, Self::Error>;
 
+    /// Commit a transaction to the chain using this sender.
     fn commit_tx<T: Msg>(
         &self,
         msgs: Vec<T>,
@@ -34,17 +29,10 @@ pub trait SenderTrait: Clone {
         self.commit_tx_any(msgs, memo)
     }
 
+    /// Commit a proto `Any` message to the chain using this sender.
     fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send;
-
-    fn set_options(&mut self, options: Self::SenderOptions);
-
-    fn build(
-        chain_info: ChainInfoOwned,
-        grpc_channel: Channel,
-        sender_options: Self::SenderOptions,
-    ) -> Result<Self, Self::Error>;
 }

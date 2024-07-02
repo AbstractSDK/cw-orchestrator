@@ -3,7 +3,7 @@ use std::str::FromStr;
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
 use cosmwasm_std::coins;
 // ANCHOR: full_counter_example
-use cw_orch_daemon::senders::sender_trait::SenderTrait;
+use cw_orch_daemon::senders::tx::TxSender;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
 
@@ -13,7 +13,7 @@ pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
 
     let network = networks::LOCAL_JUNO;
-    let mut daemon = DaemonBuilder::default().chain(network).build()?;
+    let mut daemon = DaemonBuilder::new(network).build()?;
 
     daemon.flush_state()?;
 

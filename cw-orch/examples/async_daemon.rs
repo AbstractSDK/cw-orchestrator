@@ -18,9 +18,7 @@ pub async fn main() -> anyhow::Result<()> {
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
-    let daemon = DaemonAsync::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+    let daemon = DaemonAsync::builder(cw_orch::daemon::networks::UNI_6) // set the network to use
         .build()
         .await?;
 

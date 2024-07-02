@@ -12,8 +12,7 @@
 //! use cw_orch_daemon::{queriers::Node, DaemonAsync, networks};
 //! # tokio_test::block_on(async {
 //! // call the builder and configure it as you need
-//! let daemon = DaemonAsync::builder()
-//!     .chain(networks::LOCAL_JUNO)
+//! let daemon = DaemonAsync::builder(networks::LOCAL_JUNO)
 //!     .build()
 //!     .await.unwrap();
 //! // now you can use the Node querier:

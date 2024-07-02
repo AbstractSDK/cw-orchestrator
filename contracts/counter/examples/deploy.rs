@@ -13,7 +13,7 @@ pub fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::LOCAL_JUNO;
-    let chain = DaemonBuilder::default().chain(network).build()?;
+    let chain = DaemonBuilder::new(network).build()?;
     // ANCHOR_END: chain_construction
 
     // ANCHOR: contract_interaction
