@@ -78,6 +78,12 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Overwrite the chain info
+    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
+        self.chain = chain.into();
+        self
+    }
+
     /// Specifies path to the daemon state file
     /// Defaults to env variable.
     ///

@@ -53,6 +53,7 @@ mod tests {
     use cw_orch_networks::networks::JUNO_1;
 
     use crate::DaemonBuilder;
+    use super::QueryOnlyDaemon;
 
     #[test]
     fn build() {
