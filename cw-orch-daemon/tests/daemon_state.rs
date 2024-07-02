@@ -16,8 +16,7 @@ const TEST2_STATE_FILE: &str = "./tests/test2.json";
 #[serial_test::serial]
 fn simultaneous_read() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
@@ -60,8 +59,7 @@ fn simultaneous_read() {
 #[serial_test::serial]
 fn simultaneous_write() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
@@ -101,8 +99,7 @@ fn simultaneous_write() {
 #[serial_test::serial]
 fn simultaneous_write_rebuilt() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
@@ -144,14 +141,12 @@ fn simultaneous_write_rebuilt() {
 #[serial_test::serial]
 fn error_when_another_daemon_holds_it() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let _daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let _daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
 
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon_res = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build();
 
@@ -166,16 +161,14 @@ fn error_when_another_daemon_holds_it() {
 #[serial_test::serial]
 fn does_not_error_when_previous_daemon_dropped_state() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
 
     drop(daemon);
 
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon_res = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build();
 
@@ -187,16 +180,14 @@ fn does_not_error_when_previous_daemon_dropped_state() {
 #[serial_test::serial]
 fn does_not_error_when_using_different_files() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let _daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let _daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
 
     // Different file
     std::env::set_var(STATE_FILE_ENV_NAME, TEST2_STATE_FILE);
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon_res = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build();
 
@@ -208,14 +199,12 @@ fn does_not_error_when_using_different_files() {
 #[serial_test::serial]
 fn reuse_same_state_multichain() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
 
-    let daemon_res = DaemonBuilder::default()
-        .chain(JUNO_1)
+    let daemon_res = DaemonBuilder::new(JUNO_1)
         .state(daemon.state())
         .mnemonic(DUMMY_MNEMONIC)
         .build();

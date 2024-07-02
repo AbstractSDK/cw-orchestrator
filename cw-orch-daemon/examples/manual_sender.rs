@@ -5,7 +5,7 @@ use cw_orch_daemon::queriers::Node;
 use cw_orch_daemon::senders::builder::SenderBuilder;
 use cw_orch_daemon::senders::query::QuerySender;
 use cw_orch_daemon::tx_broadcaster::assert_broadcast_code_cosm_response;
-use cw_orch_daemon::{DaemonBase, TxBuilder};
+use cw_orch_daemon::{DaemonBase, GrpcChannel, TxBuilder};
 
 use cw_orch_daemon::{error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -33,12 +33,9 @@ pub fn main() -> anyhow::Result<()> {
 
     let network = cw_orch_networks::networks::JUNO_1;
     let sender = "juno1xjf5xscdk08c5es2m7epmerrpqmkmc3n98650t";
-    let chain = ManualDaemon::builder()
-        .options(ManualSenderOptions {
-            sender_address: Some(sender.to_string()),
-        })
-        .chain(network)
-        .build()?;
+    let chain: ManualDaemon = ManualDaemon::builder(network).build_sender(ManualSenderOptions {
+        sender_address: Some(sender.to_string()),
+    })?;
 
     let counter = CounterContract::new(chain.clone());
 
@@ -73,19 +70,19 @@ impl SenderBuilder for ManualSender {
     type Error = DaemonError;
     type Options = ManualSenderOptions;
 
-    fn build(
+    async fn build(
         chain_info: cw_orch_core::environment::ChainInfoOwned,
-        grpc_channel: tonic::transport::Channel,
         sender_options: Self::Options,
     ) -> Result<Self, Self::Error> {
+        let grpc_channel = GrpcChannel::from_chain_info(&chain_info).await?;
         Ok(Self {
             chain_info,
-            grpc_channel,
             sender: Addr::unchecked(
                 sender_options
                     .sender_address
                     .expect("Manual sender needs an address"),
             ),
+            grpc_channel,
         })
     }
 }

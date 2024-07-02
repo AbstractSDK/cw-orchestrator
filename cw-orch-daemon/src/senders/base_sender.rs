@@ -76,6 +76,7 @@ pub struct CosmosOptions {
     pub mnemonic: Option<String>,
 }
 
+// TODO: builder
 impl CosmosOptions {
     pub fn authz_granter(mut self, granter: impl ToString) -> Self {
         self.authz_granter = Some(granter.to_string());

@@ -13,7 +13,7 @@ pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
 
     let network = networks::LOCAL_JUNO;
-    let mut daemon = DaemonBuilder::default().chain(network).build()?;
+    let mut daemon = DaemonBuilder::new(network).build()?;
 
     daemon.flush_state()?;
 

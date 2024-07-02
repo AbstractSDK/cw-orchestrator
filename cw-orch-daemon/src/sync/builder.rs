@@ -1,6 +1,5 @@
 use crate::senders::builder::SenderBuilder;
 
-use crate::senders::tx::TxSender;
 use crate::{DaemonAsyncBuilder, DaemonBase, DaemonState, Wallet, RUNTIME};
 use cw_orch_core::environment::ChainInfoOwned;
 
@@ -164,7 +163,7 @@ mod test {
     use cw_orch_core::environment::TxHandler;
     use cw_orch_networks::networks::OSMOSIS_1;
 
-    use crate::DaemonBuilder;
+    use crate::{senders::base_sender::CosmosOptions, DaemonBase, DaemonBuilder, Wallet};
     pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
 
     #[test]
@@ -172,8 +171,7 @@ mod test {
     fn grpc_override() {
         let mut chain = OSMOSIS_1;
         chain.grpc_urls = &[];
-        let daemon = DaemonBuilder::default()
-            .chain(chain)
+        let daemon = DaemonBuilder::new(chain)
             .mnemonic(DUMMY_MNEMONIC)
             .grpc_url(OSMOSIS_1.grpc_urls[0])
             .build()
@@ -190,8 +188,7 @@ mod test {
     #[serial_test::serial]
     fn fee_amount_override() {
         let fee_amount = 1.3238763;
-        let daemon = DaemonBuilder::default()
-            .chain(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(OSMOSIS_1)
             .mnemonic(DUMMY_MNEMONIC)
             .gas(None, Some(fee_amount))
             .build()
@@ -205,8 +202,7 @@ mod test {
     #[serial_test::serial]
     fn fee_denom_override() {
         let token = "my_token";
-        let daemon = DaemonBuilder::default()
-            .chain(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(OSMOSIS_1)
             .mnemonic(DUMMY_MNEMONIC)
             .gas(Some(token), None)
             .build()
@@ -220,8 +216,7 @@ mod test {
     fn fee_override() {
         let fee_amount = 1.3238763;
         let token = "my_token";
-        let daemon = DaemonBuilder::default()
-            .chain(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(OSMOSIS_1)
             .mnemonic(DUMMY_MNEMONIC)
             .gas(Some(token), Some(fee_amount))
             .build()
@@ -235,13 +230,15 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn hd_index_re_generates_sender() -> anyhow::Result<()> {
-        let daemon = DaemonBuilder::default()
-            .chain(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(OSMOSIS_1)
             .mnemonic(DUMMY_MNEMONIC)
             .build()
             .unwrap();
 
-        let indexed_daemon = daemon.rebuild().hd_index(56).build().unwrap();
+        let indexed_daemon: DaemonBase<Wallet> = daemon.rebuild().build_sender(CosmosOptions {
+            hd_index: Some(56),
+            ..Default::default()
+        })?;
 
         assert_ne!(
             daemon.sender().to_string(),

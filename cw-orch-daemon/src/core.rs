@@ -1,8 +1,4 @@
-use crate::{
-    queriers::CosmWasm,
-    senders::{builder::SenderBuilder, query::QuerySender},
-    DaemonAsyncBuilder, DaemonState,
-};
+use crate::{queriers::CosmWasm, senders::query::QuerySender, DaemonAsyncBuilder, DaemonState};
 
 use super::{
     cosmos_modules, error::DaemonError, queriers::Node, senders::base_sender::Wallet,

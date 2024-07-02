@@ -52,11 +52,13 @@ impl QuerySender for NoSender {
 mod tests {
     use cw_orch_networks::networks::JUNO_1;
 
-    use crate::DaemonBuilder;
     use super::QueryOnlyDaemon;
+    use crate::DaemonBuilder;
 
     #[test]
+    #[serial_test::serial]
     fn build() {
-        let builder: QueryOnlyDaemon = DaemonBuilder::new(JUNO_1).build_sender(())?;
+        let _query_only_daemon: QueryOnlyDaemon =
+            DaemonBuilder::new(JUNO_1).build_sender(()).unwrap();
     }
 }

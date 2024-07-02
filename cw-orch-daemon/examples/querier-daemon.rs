@@ -11,7 +11,7 @@ pub fn main() -> anyhow::Result<()> {
 
     let network = networks::LOCAL_JUNO;
     // There is no need to register a mnemonic to use this daemon querier
-    let chain = QueryOnlyDaemon::builder().chain(network).build()?;
+    let chain: QueryOnlyDaemon = QueryOnlyDaemon::builder(network).build_sender(())?;
 
     let balances = chain.bank_querier().balance(LOCAL_JUNO_SENDER, None)?;
     assert!(!balances.is_empty());

@@ -1,8 +1,6 @@
 use crate::{
     log::print_if_log_disabled,
-    senders::{
-        base_sender::CosmosOptions, builder::SenderBuilder, query::QuerySender, tx::TxSender,
-    },
+    senders::{base_sender::CosmosOptions, builder::SenderBuilder},
     DaemonAsyncBase, DaemonBuilder, DaemonStateFile, Wallet,
 };
 

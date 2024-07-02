@@ -12,7 +12,7 @@ pub fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::LOCAL_JUNO;
-    let chain = BatchDaemon::builder().chain(network).build()?;
+    let chain: BatchDaemon = BatchDaemon::builder(network).build_sender(Default::default())?;
 
     let counter = CounterContract::new(chain.clone());
 
