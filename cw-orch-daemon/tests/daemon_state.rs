@@ -5,7 +5,7 @@ use cw_orch_daemon::{
     env::STATE_FILE_ENV_NAME,
     json_lock::JsonLockedState,
     networks::{JUNO_1, OSMOSIS_1},
-    DaemonBuilder, DaemonError, DaemonStateFile,
+    Daemon, DaemonBuilder, DaemonError, DaemonStateFile,
 };
 
 pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
@@ -107,7 +107,10 @@ fn simultaneous_write_rebuilt() {
     let mut handles = vec![];
     // Note this one has lower iterations since rebuild is pretty long process
     for i in 0..10 {
-        let daemon = daemon.rebuild().build().unwrap();
+        let daemon: Daemon = daemon
+            .rebuild()
+            .build_sender(daemon.wallet().options())
+            .unwrap();
         let mut daemon_state = daemon.state();
         let handle = std::thread::spawn(move || {
             if let DaemonStateFile::FullAccess { json_file_state } = &daemon_state.json_state {

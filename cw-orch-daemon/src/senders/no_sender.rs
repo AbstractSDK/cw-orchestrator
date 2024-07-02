@@ -27,7 +27,7 @@ impl SenderBuilder for NoSender {
         chain_info: ChainInfoOwned,
         _sender_options: Self::Options,
     ) -> Result<Self, Self::Error> {
-        let channel = GrpcChannel::from_chain_info(&chain_info).await?;
+        let channel = GrpcChannel::from_chain_info(chain_info.clone()).await?;
 
         Ok(NoSender {
             channel,

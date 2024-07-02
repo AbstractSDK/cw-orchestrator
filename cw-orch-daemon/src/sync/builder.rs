@@ -11,8 +11,7 @@ use super::super::error::DaemonError;
 /// ```no_run
 ///     use cw_orch_daemon::{networks, DaemonBuilder};
 ///
-///     let Daemon = DaemonBuilder::default()
-///         .chain(networks::LOCAL_JUNO)
+///     let Daemon = DaemonBuilder::new(networks::LOCAL_JUNO)
 ///         .deployment_id("v0.1.0")
 ///         .build()
 ///         .unwrap();
@@ -56,10 +55,10 @@ impl DaemonBuilder {
     ///
     /// ## Example
     /// ```no_run
-    /// use cw_orch_daemon::Daemon;
+    /// use cw_orch_daemon::{Daemon, networks};
     /// use tokio::runtime::Runtime;
     /// let rt = Runtime::new().unwrap();
-    /// let Daemon = Daemon::builder()
+    /// let Daemon = Daemon::builder(networks::LOCAL_JUNO)
     ///     .handle(rt.handle())
     ///     // ...
     ///     .build()
@@ -237,7 +236,7 @@ mod test {
 
         let indexed_daemon: DaemonBase<Wallet> = daemon
             .rebuild()
-            .build_sender(daemon.wallet().options.hd_index(56))?;
+            .build_sender(daemon.wallet().options().hd_index(56))?;
 
         assert_ne!(
             daemon.sender().to_string(),

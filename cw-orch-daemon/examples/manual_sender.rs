@@ -74,7 +74,7 @@ impl SenderBuilder for ManualSender {
         chain_info: cw_orch_core::environment::ChainInfoOwned,
         sender_options: Self::Options,
     ) -> Result<Self, Self::Error> {
-        let grpc_channel = GrpcChannel::from_chain_info(&chain_info).await?;
+        let grpc_channel = GrpcChannel::from_chain_info(chain_info.clone()).await?;
         Ok(Self {
             chain_info,
             sender: Addr::unchecked(

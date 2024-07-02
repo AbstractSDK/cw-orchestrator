@@ -15,8 +15,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 /// ```no_run
 /// # tokio_test::block_on(async {
 /// use cw_orch_daemon::{DaemonAsyncBuilder, networks};
-/// let daemon = DaemonAsyncBuilder::default()
-///     .chain(networks::LOCAL_JUNO)
+/// let daemon = DaemonAsyncBuilder::new(networks::LOCAL_JUNO)
 ///     .deployment_id("v0.1.0")
 ///     .build()
 ///     .await.unwrap();

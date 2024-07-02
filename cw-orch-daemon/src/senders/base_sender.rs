@@ -137,7 +137,7 @@ impl SenderBuilder for Wallet {
         chain_info: ChainInfoOwned,
         sender_options: Self::Options,
     ) -> Result<Self, Self::Error> {
-        let channel = GrpcChannel::from_chain_info(&chain_info).await?;
+        let channel = GrpcChannel::from_chain_info(chain_info.clone()).await?;
 
         if let Some(mnemonic) = &sender_options.mnemonic {
             Sender::from_mnemonic_with_options(
@@ -250,6 +250,10 @@ impl Wallet {
 
     pub fn channel(&self) -> Channel {
         self.grpc_channel.clone()
+    }
+
+    pub fn options(&self) -> CosmosOptions {
+        self.options.clone()
     }
 
     pub fn new_with_options(

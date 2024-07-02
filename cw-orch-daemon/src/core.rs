@@ -44,8 +44,7 @@ pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContra
     # tokio_test::block_on(async {
     use cw_orch_daemon::{DaemonAsync, networks};
 
-    let daemon: DaemonAsync = DaemonAsync::builder()
-        .chain(networks::JUNO_1)
+    let daemon: DaemonAsync = DaemonAsync::builder(networks::JUNO_1)
         .build()
         .await.unwrap();
     # })

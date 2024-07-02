@@ -30,8 +30,7 @@ use crate::senders::tx::TxSender;
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new().unwrap();
-    let daemon: Daemon = Daemon::builder()
-        .chain(networks::JUNO_1)
+    let daemon: Daemon = Daemon::builder(networks::JUNO_1)
         .build()
         .unwrap();
     ```
