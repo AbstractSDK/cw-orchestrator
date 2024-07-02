@@ -72,7 +72,7 @@ impl DaemonBuilder {
 
     /// Overwrites the grpc_url used to interact with the chain
     pub fn grpc_url(&mut self, url: impl Into<String>) -> &mut Self {
-        (&mut self.chain).grpc_urls = vec![url.into()];
+        self.chain.grpc_urls = vec![url.into()];
         self
     }
 
@@ -88,10 +88,10 @@ impl DaemonBuilder {
     /// - If no gas fee is provided, the first gas fee specified in the self.chain is used
     pub fn gas(&mut self, gas_denom: Option<&str>, gas_price: Option<f64>) -> &mut Self {
         if let Some(denom) = gas_denom {
-            (&mut self.chain).gas_denom = denom.to_string()
+            self.chain.gas_denom = denom.to_string()
         }
         if let Some(price) = gas_price {
-            (&mut self.chain).gas_price = price;
+            self.chain.gas_price = price;
         }
 
         self
