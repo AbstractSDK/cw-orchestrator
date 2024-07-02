@@ -82,22 +82,36 @@ impl CosmosOptions {
         self.authz_granter = Some(granter.to_string());
         self
     }
+
     pub fn fee_granter(mut self, granter: impl ToString) -> Self {
         self.fee_granter = Some(granter.to_string());
         self
     }
+
     pub fn hd_index(mut self, index: u32) -> Self {
         self.hd_index = Some(index);
         self
     }
+
+    pub fn mnemonic(mut self, mnemonic: impl ToString) -> Self {
+        self.mnemonic = Some(mnemonic.to_string());
+        self
+    }
+
     pub fn set_authz_granter(&mut self, granter: impl ToString) {
         self.authz_granter = Some(granter.to_string());
     }
+
     pub fn set_fee_granter(&mut self, granter: impl ToString) {
         self.fee_granter = Some(granter.to_string());
     }
+
     pub fn set_hd_index(&mut self, index: u32) {
         self.hd_index = Some(index);
+    }
+
+    pub fn set_mnemonic(&mut self, mnemonic: impl ToString) {
+        self.mnemonic = Some(mnemonic.to_string())
     }
 }
 

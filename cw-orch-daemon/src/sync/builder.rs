@@ -163,7 +163,7 @@ mod test {
     use cw_orch_core::environment::TxHandler;
     use cw_orch_networks::networks::OSMOSIS_1;
 
-    use crate::{senders::base_sender::CosmosOptions, DaemonBase, DaemonBuilder, Wallet};
+    use crate::{DaemonBase, DaemonBuilder, Wallet};
     pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
 
     #[test]
@@ -235,10 +235,9 @@ mod test {
             .build()
             .unwrap();
 
-        let indexed_daemon: DaemonBase<Wallet> = daemon.rebuild().build_sender(CosmosOptions {
-            hd_index: Some(56),
-            ..Default::default()
-        })?;
+        let indexed_daemon: DaemonBase<Wallet> = daemon
+            .rebuild()
+            .build_sender(daemon.wallet().options.hd_index(56))?;
 
         assert_ne!(
             daemon.sender().to_string(),

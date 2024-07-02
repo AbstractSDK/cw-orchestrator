@@ -213,10 +213,7 @@ mod queriers {
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
         let cosm_wasm = CosmWasm::new_async(channel);
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .build()
-            .unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
         let sender = daemon.sender();
 
