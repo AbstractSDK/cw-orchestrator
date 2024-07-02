@@ -91,8 +91,46 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Build a daemon with provided mnemonic or env-var mnemonic
+    pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
+        let chain_info = self.chain.clone();
+
+        let state = self.build_state()?;
+        // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
+
+        let options = CosmosOptions {
+            mnemonic: self.mnemonic.clone(),
+            ..Default::default()
+        };
+        let sender = Wallet::build(chain_info, options).await?;
+
+        let daemon = DaemonAsyncBase { state, sender };
+
+        print_if_log_disabled()?;
+        Ok(daemon)
+    }
+
+    /// Build a daemon
+    pub async fn build_sender<Sender: SenderBuilder>(
+        &self,
+        sender_options: Sender::Options,
+    ) -> Result<DaemonAsyncBase<Sender>, DaemonError> {
+        let chain_info = self.chain.clone();
+
+        let state = self.build_state()?;
+
+        let sender = Sender::build(chain_info, sender_options)
+            .await
+            .map_err(Into::into)?;
+
+        let daemon = DaemonAsyncBase { state, sender };
+
+        print_if_log_disabled()?;
+        Ok(daemon)
+    }
+
     /// Returns a built state
-    pub fn build_state(&self) -> Result<DaemonState, DaemonError> {
+    fn build_state(&self) -> Result<DaemonState, DaemonError> {
         let deployment_id = self
             .deployment_id
             .clone()
@@ -137,44 +175,6 @@ impl DaemonAsyncBuilder {
             }
         };
         Ok(state)
-    }
-
-    /// Build a daemon with provided mnemonic or env-var mnemonic
-    pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
-        let chain_info = self.chain.clone();
-
-        let state = self.build_state()?;
-        // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
-
-        let options = CosmosOptions {
-            mnemonic: self.mnemonic.clone(),
-            ..Default::default()
-        };
-        let sender = Wallet::build(chain_info, options).await?;
-
-        let daemon = DaemonAsyncBase { state, sender };
-
-        print_if_log_disabled()?;
-        Ok(daemon)
-    }
-
-    /// Build a daemon
-    pub async fn build_sender<Sender: SenderBuilder>(
-        &self,
-        sender_options: Sender::Options,
-    ) -> Result<DaemonAsyncBase<Sender>, DaemonError> {
-        let chain_info = self.chain.clone();
-
-        let state = self.build_state()?;
-
-        let sender = Sender::build(chain_info, sender_options)
-            .await
-            .map_err(Into::into)?;
-
-        let daemon = DaemonAsyncBase { state, sender };
-
-        print_if_log_disabled()?;
-        Ok(daemon)
     }
 }
 

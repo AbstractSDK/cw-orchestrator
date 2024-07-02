@@ -44,13 +44,6 @@ impl DaemonBuilder {
         }
     }
 
-    /// Set the deployment id to use for the Daemon interactions
-    /// Defaults to `default`
-    pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
-        self.deployment_id = Some(deployment_id.into());
-        self
-    }
-
     /// Set a custom tokio runtime handle to use for the Daemon
     ///
     /// ## Example
@@ -66,6 +59,13 @@ impl DaemonBuilder {
     /// ```
     pub fn handle(&mut self, handle: &tokio::runtime::Handle) -> &mut Self {
         self.handle = Some(handle.clone());
+        self
+    }
+
+    /// Set the deployment id to use for the Daemon interactions
+    /// Defaults to `default`
+    pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
+        self.deployment_id = Some(deployment_id.into());
         self
     }
 
@@ -109,6 +109,12 @@ impl DaemonBuilder {
     /// Defaults to `true`
     pub fn write_on_change(&mut self, write_on_change: bool) -> &mut Self {
         self.write_on_change = Some(write_on_change);
+        self
+    }
+
+    /// Overwrite the chain info
+    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
+        self.chain = chain.into();
         self
     }
 
