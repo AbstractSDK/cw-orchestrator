@@ -3,7 +3,7 @@ mod common;
 mod tests {
 
     use cw_orch_core::environment::TxHandler;
-    use cw_orch_daemon::{senders::base_sender::CosmosOptions, Daemon};
+    use cw_orch_daemon::{senders::CosmosOptions, Daemon};
 
     #[test]
     #[serial_test::serial]

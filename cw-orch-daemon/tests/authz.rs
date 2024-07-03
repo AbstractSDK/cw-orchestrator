@@ -15,7 +15,7 @@ mod tests {
     use cosmwasm_std::coins;
     use cw_orch_core::environment::QuerierGetter;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler, TxHandler};
-    use cw_orch_daemon::{queriers::Authz, senders::base_sender::CosmosOptions, Daemon};
+    use cw_orch_daemon::{queriers::Authz, senders::CosmosOptions, Daemon};
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
     use prost::Message;
