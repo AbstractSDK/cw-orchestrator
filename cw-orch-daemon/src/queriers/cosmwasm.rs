@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, str::FromStr};
 
-use crate::senders::no_sender::NoSender;
 use crate::senders::query::QuerySender;
+use crate::senders::QueryOnlySender;
 use crate::{cosmos_modules, error::DaemonError, DaemonBase};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
@@ -19,13 +19,13 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasmBase<Sender = NoSender> {
+pub struct CosmWasmBase<Sender = QueryOnlySender> {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
     _sender: PhantomData<Sender>,
 }
 
-pub type CosmWasm = CosmWasmBase<NoSender>;
+pub type CosmWasm = CosmWasmBase<QueryOnlySender>;
 
 impl<Sender: QuerySender> CosmWasmBase<Sender> {
     pub fn new(daemon: &DaemonBase<Sender>) -> Self {
@@ -310,7 +310,7 @@ impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(contract.environment().daemon.sender.chain_info()).checksum()
+        <T as Uploadable>::wasm(contract.environment().daemon.sender().chain_info()).checksum()
     }
 }
 
