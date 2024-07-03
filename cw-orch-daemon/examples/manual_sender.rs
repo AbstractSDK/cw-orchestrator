@@ -138,7 +138,7 @@ impl TxSender for ManualSender {
         Ok(self.sender.clone())
     }
 
-    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
+    fn account_id(&self) -> Result<AccountId, DaemonError> {
         self.sender.clone().to_string().parse().map_err(Into::into)
     }
 }
