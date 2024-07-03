@@ -1,6 +1,8 @@
+use std::sync::{Arc, Mutex, RwLock};
+
 use crate::{
     log::print_if_log_disabled,
-    senders::{base_sender::CosmosOptions, builder::SenderBuilder},
+    senders::{builder::SenderBuilder, CosmosOptions, CosmosWalletKey},
     DaemonAsyncBase, DaemonBuilder, DaemonStateFile, Wallet,
 };
 
@@ -93,37 +95,40 @@ impl DaemonAsyncBuilder {
 
     /// Build a daemon with provided mnemonic or env-var mnemonic
     pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
-        let chain_info = self.chain.clone();
+        let chain_info = Arc::new(self.chain.clone());
 
         let state = self.build_state()?;
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
 
         let options = CosmosOptions {
-            mnemonic: self.mnemonic.clone(),
+            key: self.mnemonic.as_ref().map_or(CosmosWalletKey::Env, |m| {
+                CosmosWalletKey::Mnemonic(m.clone())
+            }),
             ..Default::default()
         };
-        let sender = Wallet::build(chain_info, options).await?;
+        let sender = options.build(&chain_info).await?;
 
-        let daemon = DaemonAsyncBase { state, sender };
+        let daemon = DaemonAsyncBase::new(sender, state);
 
         print_if_log_disabled()?;
         Ok(daemon)
     }
 
     /// Build a daemon
-    pub async fn build_sender<Sender: SenderBuilder>(
+    pub async fn build_sender<T: SenderBuilder>(
         &self,
-        sender_options: Sender::Options,
-    ) -> Result<DaemonAsyncBase<Sender>, DaemonError> {
-        let chain_info = self.chain.clone();
+        sender_options: T,
+    ) -> Result<DaemonAsyncBase<T::Sender>, DaemonError> {
+        let chain_info = Arc::new(self.chain.clone());
 
         let state = self.build_state()?;
 
-        let sender = Sender::build(chain_info, sender_options)
+        let sender = sender_options
+            .build(&chain_info)
             .await
             .map_err(Into::into)?;
 
-        let daemon = DaemonAsyncBase { state, sender };
+        let daemon = DaemonAsyncBase::new(sender, state);
 
         print_if_log_disabled()?;
         Ok(daemon)
@@ -135,7 +140,7 @@ impl DaemonAsyncBuilder {
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let chain_info = self.chain.clone();
+        let chain_info = Arc::new(self.chain.clone());
 
         let state = match &self.state {
             Some(state) => {
@@ -167,7 +172,7 @@ impl DaemonAsyncBuilder {
 
                 DaemonState::new(
                     json_file_path,
-                    chain_info,
+                    &chain_info,
                     deployment_id,
                     false,
                     self.write_on_change.unwrap_or(true),

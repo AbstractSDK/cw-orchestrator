@@ -134,10 +134,10 @@ impl DaemonBuilder {
     }
 
     /// Build a daemon
-    pub fn build_sender<Sender: SenderBuilder>(
+    pub fn build_sender<T: SenderBuilder>(
         &self,
-        sender_options: Sender::Options,
-    ) -> Result<DaemonBase<Sender>, DaemonError> {
+        sender_options: T,
+    ) -> Result<DaemonBase<T::Sender>, DaemonError> {
         let rt_handle = self
             .handle
             .clone()
@@ -182,9 +182,9 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.sender.chain_info.grpc_urls.len(), 1);
+        assert_eq!(daemon.daemon.sender().chain_info.grpc_urls.len(), 1);
         assert_eq!(
-            daemon.daemon.sender.chain_info.grpc_urls[0],
+            daemon.daemon.sender().chain_info.grpc_urls[0],
             OSMOSIS_1.grpc_urls[0].to_string(),
         );
     }
@@ -198,9 +198,9 @@ mod test {
             .gas(None, Some(fee_amount))
             .build()
             .unwrap();
-        println!("chain {:?}", daemon.daemon.sender.chain_info);
+        println!("chain {:?}", daemon.daemon.sender().chain_info);
 
-        assert_eq!(daemon.daemon.sender.chain_info.gas_price, fee_amount);
+        assert_eq!(daemon.daemon.sender().chain_info.gas_price, fee_amount);
     }
 
     #[test]
@@ -213,7 +213,10 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.sender.chain_info.gas_denom, token.to_string());
+        assert_eq!(
+            daemon.daemon.sender().chain_info.gas_denom,
+            token.to_string()
+        );
     }
 
     #[test]
@@ -227,9 +230,12 @@ mod test {
             .build()
             .unwrap();
 
-        assert_eq!(daemon.daemon.sender.chain_info.gas_denom, token.to_string());
+        assert_eq!(
+            daemon.daemon.sender().chain_info.gas_denom,
+            token.to_string()
+        );
 
-        assert_eq!(daemon.daemon.sender.chain_info.gas_price, fee_amount);
+        assert_eq!(daemon.daemon.sender().chain_info.gas_price, fee_amount);
     }
 
     #[test]
