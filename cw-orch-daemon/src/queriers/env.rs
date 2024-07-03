@@ -4,8 +4,7 @@ use crate::{senders::query::QuerySender, DaemonBase};
 
 impl<Sender: QuerySender> EnvironmentQuerier for DaemonBase<Sender> {
     fn env_info(&self) -> EnvironmentInfo {
-        let binding = self.daemon.sender();
-        let info = binding.chain_info();
+        let info = self.daemon.chain_info();
         EnvironmentInfo {
             chain_id: info.chain_id.clone(),
             chain_name: info.network_info.chain_name.clone(),

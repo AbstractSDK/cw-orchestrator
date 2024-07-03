@@ -80,7 +80,7 @@ impl<Sender> DaemonBase<Sender> {
 
     /// Return the chain info for this daemon
     pub fn chain_info(&self) -> &ChainInfoOwned {
-        self.daemon.state.chain_data.as_ref()
+        self.daemon.chain_info()
     }
 }
 
@@ -96,7 +96,7 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
     pub fn rebuild(&self) -> DaemonBuilder {
         DaemonBuilder {
             state: Some(self.state()),
-            chain: self.daemon.sender().chain_info().clone(),
+            chain: self.daemon.chain_info().clone(),
             deployment_id: Some(self.daemon.state.deployment_id.clone()),
             state_path: None,
             write_on_change: None,

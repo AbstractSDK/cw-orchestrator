@@ -310,7 +310,7 @@ impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(contract.environment().daemon.sender().chain_info()).checksum()
+        <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum()
     }
 }
 

@@ -88,20 +88,9 @@ impl SenderBuilder for ManualSender {
 }
 
 impl QuerySender for ManualSender {
-    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
-        &self.chain_info
-    }
 
     fn channel(&self) -> tonic::transport::Channel {
         self.grpc_channel.clone()
-    }
-
-    fn set_options(&mut self, options: Self::Options) {
-        self.sender = Addr::unchecked(
-            options
-                .sender_address
-                .expect("Manual sender needs an address"),
-        )
     }
 }
 

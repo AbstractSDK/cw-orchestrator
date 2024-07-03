@@ -84,10 +84,6 @@ impl QuerySender for CosmosBatchSender {
     type Error = DaemonError;
     type Options = CosmosBatchOptions;
 
-    fn chain_info(&self) -> &cw_orch_core::environment::ChainInfoOwned {
-        self.sender.chain_info()
-    }
-
     fn channel(&self) -> tonic::transport::Channel {
         self.sender.channel()
     }

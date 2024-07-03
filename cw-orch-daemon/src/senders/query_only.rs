@@ -41,10 +41,6 @@ impl QuerySender for QueryOnlySender {
     type Error = DaemonError;
     type Options = QueryOnlySenderOptions;
 
-    fn chain_info(&self) -> &ChainInfoOwned {
-        &self.chain_info
-    }
-
     fn channel(&self) -> Channel {
         self.channel.clone()
     }

@@ -84,6 +84,10 @@ impl<Sender> DaemonAsyncBase<Sender> {
         }
     }
 
+    pub fn chain_info(&self) -> &ChainInfoOwned {
+        self.state.chain_data.as_ref()
+    }
+
     /// Get the daemon builder
     pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonAsyncBuilder {
         DaemonAsyncBuilder::new(chain)
@@ -323,8 +327,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         &self,
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let sender = self.sender();
-        let wasm_path = <T as Uploadable>::wasm(sender.chain_info());
+        let wasm_path = <T as Uploadable>::wasm(self.chain_info());
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
@@ -333,12 +336,10 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         e.write_all(&file_contents)?;
         let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: sender.account_id(),
+            sender: self.sender().account_id(),
             wasm_byte_code,
             instantiate_permission: None,
         };
-
-        drop(sender);
 
         let result = self
             .sender_mut()

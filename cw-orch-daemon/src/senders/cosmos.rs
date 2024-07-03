@@ -397,10 +397,6 @@ impl QuerySender for Wallet {
     type Error = DaemonError;
     type Options = CosmosOptions;
 
-    fn chain_info(&self) -> &ChainInfoOwned {
-        self.chain_info.as_ref()
-    }
-
     fn channel(&self) -> Channel {
         self.channel()
     }
