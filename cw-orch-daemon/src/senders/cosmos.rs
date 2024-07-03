@@ -6,7 +6,7 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    Daemon, GrpcChannel,
+    CosmosOptions, Daemon, GrpcChannel,
 };
 
 use crate::proto::injective::InjectiveEthAccount;
@@ -39,213 +39,95 @@ use cw_orch_core::{
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Secp256k1, Signing};
-use std::str::FromStr;
+use std::{rc::Rc, str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::{builder::SenderBuilder, query::QuerySender, tx::TxSender};
+use super::{
+    builder::SenderBuilder, cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender,
+};
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
-pub type Wallet = Sender<All>;
+pub type Wallet = CosmosSender<All>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 #[derive(Clone)]
-pub struct Sender<C: Signing + Clone> {
+pub struct CosmosSender<C: Signing + Clone> {
     pub private_key: PrivateKey,
-    pub secp: Secp256k1<C>,
     /// gRPC channel
     pub grpc_channel: Channel,
     /// Information about the chain
-    pub chain_info: ChainInfoOwned,
+    pub chain_info: Arc<ChainInfoOwned>,
     pub(crate) options: CosmosOptions,
-}
-
-/// Options for how txs should be constructed for this sender.
-#[derive(Default, Clone)]
-#[non_exhaustive]
-pub struct CosmosOptions {
-    pub authz_granter: Option<String>,
-    pub fee_granter: Option<String>,
-    pub hd_index: Option<u32>,
-    pub mnemonic: Option<String>,
-}
-
-// TODO: builder
-impl CosmosOptions {
-    pub fn authz_granter(mut self, granter: impl ToString) -> Self {
-        self.authz_granter = Some(granter.to_string());
-        self
-    }
-
-    pub fn fee_granter(mut self, granter: impl ToString) -> Self {
-        self.fee_granter = Some(granter.to_string());
-        self
-    }
-
-    pub fn hd_index(mut self, index: u32) -> Self {
-        self.hd_index = Some(index);
-        self
-    }
-
-    pub fn mnemonic(mut self, mnemonic: impl ToString) -> Self {
-        self.mnemonic = Some(mnemonic.to_string());
-        self
-    }
-
-    pub fn set_authz_granter(&mut self, granter: impl ToString) {
-        self.authz_granter = Some(granter.to_string());
-    }
-
-    pub fn set_fee_granter(&mut self, granter: impl ToString) {
-        self.fee_granter = Some(granter.to_string());
-    }
-
-    pub fn set_hd_index(&mut self, index: u32) {
-        self.hd_index = Some(index);
-    }
-
-    pub fn set_mnemonic(&mut self, mnemonic: impl ToString) {
-        self.mnemonic = Some(mnemonic.to_string())
-    }
-}
-
-impl Daemon {
-    /// Specifies wether authz should be used with this daemon
-    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_mut().set_authz_granter(granter.to_string());
-        self
-    }
-
-    /// Specifies wether feegrant should be used with this daemon
-    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_mut().set_fee_granter(granter.to_string());
-        self
-    }
-}
-
-impl SenderBuilder for Wallet {
-    type Error = DaemonError;
-    type Options = CosmosOptions;
-
-    async fn build(
-        chain_info: ChainInfoOwned,
-        sender_options: Self::Options,
-    ) -> Result<Self, Self::Error> {
-        let channel = GrpcChannel::from_chain_info(chain_info.clone()).await?;
-
-        if let Some(mnemonic) = &sender_options.mnemonic {
-            Sender::from_mnemonic_with_options(
-                chain_info,
-                channel,
-                &mnemonic.clone(),
-                sender_options,
-            )
-        } else {
-            Sender::new_with_options(chain_info, channel, sender_options)
-        }
-    }
-}
-
-impl QuerySender for Wallet {
-    fn chain_info(&self) -> &ChainInfoOwned {
-        &self.chain_info
-    }
-
-    fn grpc_channel(&self) -> Channel {
-        self.channel()
-    }
-
-    fn set_options(&mut self, options: Self::Options) {
-        if let Some(mnemonic) = options.mnemonic.clone() {
-            let new_sender = Sender::from_mnemonic_with_options(
-                self.chain_info.clone(),
-                self.channel(),
-                &mnemonic,
-                options,
-            )
-            .unwrap();
-            *self = new_sender;
-        } else if options.hd_index.is_some() {
-            // Need to generate new sender as hd_index impacts private key
-            let new_sender = Sender::from_raw_key_with_options(
-                self.chain_info.clone(),
-                self.channel(),
-                &self.private_key.raw_key(),
-                options,
-            )
-            .unwrap();
-            *self = new_sender
-        } else {
-            self.options = options
-        }
-    }
-}
-
-impl TxSender for Wallet {
-    async fn commit_tx_any(
-        &self,
-        msgs: Vec<Any>,
-        memo: Option<&str>,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
-
-        let msgs = if self.options.authz_granter.is_some() {
-            // We wrap authz messages
-            vec![Any {
-                type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
-                value: MsgExec {
-                    grantee: self.pub_addr_str()?,
-                    msgs,
-                }
-                .encode_to_vec(),
-            }]
-        } else {
-            msgs
-        };
-
-        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
-
-        let tx_builder = TxBuilder::new(tx_body);
-
-        // We retry broadcasting the tx, with the following strategies
-        // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
-        // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
-        // 3. In case there is an other error, we fail
-        let tx_response = TxBroadcaster::default()
-            .add_strategy(insufficient_fee_strategy())
-            .add_strategy(account_sequence_strategy())
-            .broadcast(tx_builder, self)
-            .await?;
-
-        let resp = Node::new_async(self.channel())
-            ._find_tx(tx_response.txhash)
-            .await?;
-
-        assert_broadcast_code_cosm_response(resp)
-    }
-
-    fn address(&self) -> Result<Addr, DaemonError> {
-        Ok(Addr::unchecked(self.pub_addr_str()?))
-    }
-
-    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
-        if let Some(sender) = &self.options.authz_granter {
-            Ok(sender.parse()?)
-        } else {
-            self.pub_addr()
-        }
-    }
+    pub secp: Secp256k1<C>,
+    // Private field to ensure the struct is not constructible outside of this module
+    _private: (),
 }
 
 impl Wallet {
-    pub fn new(chain_info: ChainInfoOwned, channel: Channel) -> Result<Wallet, DaemonError> {
-        Self::new_with_options(chain_info, channel, CosmosOptions::default())
+    pub async fn new(
+        chain_info: &Arc<ChainInfoOwned>,
+        options: CosmosOptions,
+    ) -> Result<Wallet, DaemonError> {
+        let secp = Secp256k1::new();
+
+        let pk_from_mnemonic = |mnemonic: &str| -> Result<PrivateKey, DaemonError> {
+            PrivateKey::from_words(
+                &secp,
+                mnemonic,
+                0,
+                options.hd_index.unwrap_or(0),
+                chain_info.network_info.coin_type,
+            )
+        };
+
+        let pk: PrivateKey = match &options.key {
+            CosmosWalletKey::Mnemonic(mnemonic) => pk_from_mnemonic(mnemonic)?,
+            CosmosWalletKey::Env => {
+                let mnemonic = get_mnemonic_env(&chain_info.kind)?;
+                pk_from_mnemonic(&mnemonic)?
+            }
+            CosmosWalletKey::RawKey(bytes) => PrivateKey::from_raw_key(
+                &secp,
+                bytes,
+                0,
+                options.hd_index.unwrap_or(0),
+                chain_info.network_info.coin_type,
+            )?,
+        };
+
+        // ensure address is valid
+        AccountId::new(
+            &chain_info.network_info.pub_address_prefix,
+            &pk.public_key(&secp).raw_address.unwrap(),
+        )?;
+
+        Ok(Self {
+            chain_info: chain_info.clone(),
+            grpc_channel: GrpcChannel::from_chain_info(chain_info.as_ref()).await?,
+            private_key: pk,
+            secp,
+            options,
+            _private: (),
+        })
+    }
+
+    /// Construct a new Sender from a mnemonic
+    pub async fn from_mnemonic(
+        chain_info: &Arc<ChainInfoOwned>,
+        mnemonic: &str,
+    ) -> Result<Wallet, DaemonError> {
+        let options = CosmosOptions {
+            key: CosmosWalletKey::Mnemonic(mnemonic.to_string()),
+            ..Default::default()
+        };
+        Self::new(chain_info, options).await
     }
 
     pub fn channel(&self) -> Channel {
@@ -256,88 +138,6 @@ impl Wallet {
         self.options.clone()
     }
 
-    pub fn new_with_options(
-        chain_info: ChainInfoOwned,
-        channel: Channel,
-        options: CosmosOptions,
-    ) -> Result<Wallet, DaemonError> {
-        let mnemonic = get_mnemonic_env(&chain_info.kind)?;
-
-        Self::from_mnemonic_with_options(chain_info, channel, &mnemonic, options)
-    }
-
-    /// Construct a new Sender from a mnemonic with additional options
-    pub fn from_mnemonic(
-        chain_info: ChainInfoOwned,
-        channel: Channel,
-        mnemonic: &str,
-    ) -> Result<Wallet, DaemonError> {
-        Self::from_mnemonic_with_options(chain_info, channel, mnemonic, CosmosOptions::default())
-    }
-
-    /// Construct a new Sender from a mnemonic with additional options
-    pub fn from_mnemonic_with_options(
-        chain_info: ChainInfoOwned,
-        channel: Channel,
-        mnemonic: &str,
-        options: CosmosOptions,
-    ) -> Result<Wallet, DaemonError> {
-        let secp = Secp256k1::new();
-        let p_key: PrivateKey = PrivateKey::from_words(
-            &secp,
-            mnemonic,
-            0,
-            options.hd_index.unwrap_or(0),
-            chain_info.network_info.coin_type,
-        )?;
-
-        let sender = Sender {
-            chain_info,
-            grpc_channel: channel,
-            private_key: p_key,
-            secp,
-            options,
-        };
-        log::info!(
-            target: &local_target(),
-            "Interacting with {} using address: {}",
-            sender.chain_info.chain_id,
-            sender.pub_addr_str()?
-        );
-        Ok(sender)
-    }
-
-    /// Construct a new Sender from a raw key with additional options
-    pub fn from_raw_key_with_options(
-        chain_info: ChainInfoOwned,
-        channel: Channel,
-        raw_key: &[u8],
-        options: CosmosOptions,
-    ) -> Result<Wallet, DaemonError> {
-        let secp = Secp256k1::new();
-        let p_key: PrivateKey = PrivateKey::from_raw_key(
-            &secp,
-            raw_key,
-            0,
-            options.hd_index.unwrap_or(0),
-            chain_info.network_info.coin_type,
-        )?;
-        let sender = Sender {
-            private_key: p_key,
-            secp,
-            options,
-            grpc_channel: channel,
-            chain_info,
-        };
-        log::info!(
-            target: &local_target(),
-            "Interacting with {} using address: {}",
-            sender.chain_info.chain_id,
-            sender.pub_addr_str()?
-        );
-        Ok(sender)
-    }
-
     pub fn set_authz_granter(&mut self, granter: impl Into<String>) {
         self.options.authz_granter = Some(granter.into());
     }
@@ -346,19 +146,8 @@ impl Wallet {
         self.options.fee_granter = Some(granter.into());
     }
 
-    fn cosmos_private_key(&self) -> SigningKey {
-        SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
-    }
-
-    pub fn pub_addr(&self) -> Result<AccountId, DaemonError> {
-        Ok(AccountId::new(
-            &self.chain_info.network_info.pub_address_prefix,
-            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
-        )?)
-    }
-
-    pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
-        Ok(self.pub_addr()?.to_string())
+    pub fn pub_addr_str(&self) -> String {
+        self.account_id().to_string()
     }
 
     pub async fn broadcast_tx(
@@ -378,40 +167,17 @@ impl Wallet {
     }
 
     pub async fn bank_send(
-        &self,
+        &mut self,
         recipient: &str,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let msg_send = MsgSend {
-            from_address: self.msg_sender()?,
+            from_address: self.account_id(),
             to_address: AccountId::from_str(recipient)?,
             amount: parse_cw_coins(&coins)?,
         };
 
         self.commit_tx(vec![msg_send], Some("sending tokens")).await
-    }
-
-    pub(crate) fn get_fee_token(&self) -> String {
-        self.chain_info.gas_denom.to_string()
-    }
-
-    /// Compute the gas fee from the expected gas in the transaction
-    /// Applies a Gas Buffer for including signature verification
-    pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
-            gas as f64 * gas_buffer
-        } else if gas < BUFFER_THRESHOLD {
-            gas as f64 * SMALL_GAS_BUFFER
-        } else {
-            gas as f64 * GAS_BUFFER
-        };
-
-        if let Some(min_gas) = DaemonEnvVars::min_gas() {
-            gas_expected = (min_gas as f64).max(gas_expected);
-        }
-        let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
-
-        Ok((gas_expected as u64, fee_amount as u128))
     }
 
     /// Computes the gas needed for submitting a transaction
@@ -476,7 +242,7 @@ impl Wallet {
     }
 
     pub async fn commit_tx<T: Msg>(
-        &self,
+        &mut self,
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
@@ -505,7 +271,7 @@ impl Wallet {
     }
 
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
-        let addr = self.pub_addr().unwrap().to_string();
+        let addr = self.address().to_string();
 
         let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel());
 
@@ -548,7 +314,7 @@ impl Wallet {
 
         let bank = Bank::new_async(self.channel());
         let balance = bank
-            ._balance(self.address()?, Some(fee.denom.clone()))
+            ._balance(self.address(), Some(fee.denom.clone()))
             .await?[0]
             .clone();
 
@@ -556,7 +322,7 @@ impl Wallet {
             "Checking balance {} on chain {}, address {}. Expecting {}{}",
             balance.amount,
             chain_info.chain_id,
-            self.address()?,
+            self.address(),
             fee,
             fee.denom
         );
@@ -572,7 +338,7 @@ impl Wallet {
                 Needed: {}{} but only have: {}.
                 Press 'y' when the wallet balance has been increased to resume deployment",
             chain_info.chain_id,
-            self.address()?,
+            self.address(),
             fee,
             fee.denom,
             balance
@@ -597,6 +363,99 @@ impl Wallet {
                 current: balance,
             });
         }
+    }
+
+    pub(crate) fn get_fee_token(&self) -> String {
+        self.chain_info.gas_denom.to_string()
+    }
+
+    fn cosmos_private_key(&self) -> SigningKey {
+        SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
+    }
+
+    /// Compute the gas fee from the expected gas in the transaction
+    /// Applies a Gas Buffer for including signature verification
+    pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
+        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
+            gas as f64 * gas_buffer
+        } else if gas < BUFFER_THRESHOLD {
+            gas as f64 * SMALL_GAS_BUFFER
+        } else {
+            gas as f64 * GAS_BUFFER
+        };
+
+        if let Some(min_gas) = DaemonEnvVars::min_gas() {
+            gas_expected = (min_gas as f64).max(gas_expected);
+        }
+        let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
+
+        Ok((gas_expected as u64, fee_amount as u128))
+    }
+}
+
+impl QuerySender for Wallet {
+    type Error = DaemonError;
+    type Options = CosmosOptions;
+
+    fn chain_info(&self) -> &ChainInfoOwned {
+        self.chain_info.as_ref()
+    }
+
+    fn grpc_channel(&self) -> Channel {
+        self.channel()
+    }
+}
+
+impl TxSender for Wallet {
+    async fn commit_tx_any(
+        &mut self,
+        msgs: Vec<Any>,
+        memo: Option<&str>,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
+
+        let msgs = if self.options.authz_granter.is_some() {
+            // We wrap authz messages
+            vec![Any {
+                type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
+                value: MsgExec {
+                    grantee: self.pub_addr_str(),
+                    msgs,
+                }
+                .encode_to_vec(),
+            }]
+        } else {
+            msgs
+        };
+
+        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
+
+        let tx_builder = TxBuilder::new(tx_body);
+
+        // We retry broadcasting the tx, with the following strategies
+        // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
+        // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
+        // 3. In case there is an other error, we fail
+        let tx_response = TxBroadcaster::default()
+            .add_strategy(insufficient_fee_strategy())
+            .add_strategy(account_sequence_strategy())
+            .broadcast(tx_builder, self)
+            .await?;
+
+        let resp = Node::new_async(self.channel())
+            ._find_tx(tx_response.txhash)
+            .await?;
+
+        assert_broadcast_code_cosm_response(resp)
+    }
+
+    fn account_id(&self) -> AccountId {
+        AccountId::new(
+            &self.chain_info.network_info.pub_address_prefix,
+            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+        )
+        // unwrap as address is validated on construction
+        .unwrap()
     }
 }
 
