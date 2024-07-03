@@ -3,9 +3,9 @@ use std::{str::FromStr, sync::Arc};
 use cosmrs::AccountId;
 use cw_orch_core::environment::ChainInfoOwned;
 
-use crate::{CosmosSender, DaemonError, Wallet};
+use crate::{DaemonError, Wallet};
 
-use super::builder::SenderBuilder;
+use super::{builder::SenderBuilder, CosmosSender};
 
 /// Options for how txs should be constructed for this sender.
 #[derive(Default, Clone)]
@@ -18,17 +18,12 @@ pub struct CosmosOptions {
     pub(crate) key: CosmosWalletKey,
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub enum CosmosWalletKey {
     Mnemonic(String),
     RawKey(Vec<u8>),
+    #[default]
     Env,
-}
-
-impl Default for CosmosWalletKey {
-    fn default() -> Self {
-        CosmosWalletKey::Env
-    }
 }
 
 impl CosmosOptions {

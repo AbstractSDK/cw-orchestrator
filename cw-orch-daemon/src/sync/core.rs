@@ -1,5 +1,4 @@
 use std::{
-    borrow::BorrowMut,
     fmt::Debug,
     ops::DerefMut,
     sync::{RwLockReadGuard, RwLockWriteGuard},
@@ -108,6 +107,10 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
 
 // Helpers for Daemon with [`Wallet`] sender.
 impl Daemon {
+    pub fn sender_addr(&self) -> Addr {
+        self.daemon.sender_addr()
+    }
+
     /// Specifies wether authz should be used with this daemon
     pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
         self.sender_mut().set_authz_granter(granter.to_string());

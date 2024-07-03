@@ -11,7 +11,8 @@ mod query_only;
 
 pub use {
     cosmos::{CosmosSender, Wallet},
-    cosmos_batch::{options::CosmosBatchOptions, CosmosBatchSender},
     cosmos_options::{CosmosOptions, CosmosWalletKey},
-    query_only::{QueryOnlyDaemon, QueryOnlySender},
+
+    cosmos_batch::{options::CosmosBatchOptions, CosmosBatchSender, BatchDaemon},
+    query_only::{QueryOnlyDaemon, QueryOnlySender, QueryOnlySenderOptions},
 };

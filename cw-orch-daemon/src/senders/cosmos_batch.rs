@@ -18,6 +18,8 @@ use super::cosmos::Wallet;
 use super::query::QuerySender;
 use super::tx::TxSender;
 
+pub type BatchDaemon = DaemonBase<CosmosBatchSender>;
+
 pub mod options {
     use super::super::CosmosOptions;
 
@@ -35,8 +37,6 @@ pub mod options {
         }
     }
 }
-
-pub type BatchDaemon = DaemonBase<CosmosBatchSender>;
 
 /// Signer of Message batch transactions
 /// This is a wrapper around the `Wallet` struct, with the addition of a `msgs` field that cache messages before they are sent.

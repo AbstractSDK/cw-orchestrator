@@ -248,10 +248,10 @@ mod test {
 
         let indexed_daemon: DaemonBase<Wallet> = daemon
             .rebuild()
-            .build_sender(daemon.wallet().options().hd_index(56))?;
+            .build_sender(daemon.sender().options().hd_index(56))?;
 
         assert_ne!(
-            daemon.sender().to_string(),
+            daemon.sender_addr(),
             indexed_daemon.sender().to_string()
         );
 

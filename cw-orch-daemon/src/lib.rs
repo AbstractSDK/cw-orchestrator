@@ -1,3 +1,5 @@
+// TODO: Figure out better mutex locking for senders
+#![allow(clippy::await_holding_lock)]
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
@@ -24,7 +26,7 @@ mod tx_resp;
 
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
-pub use senders::Wallet;
+pub use senders::{Wallet, CosmosOptions, tx::TxSender, query::QuerySender};
 pub use tx_builder::TxBuilder;
 mod cosmos_proto_patches;
 

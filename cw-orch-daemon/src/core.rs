@@ -21,7 +21,6 @@ use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
-    borrow::BorrowMut,
     fmt::Debug,
     io::Write,
     ops::Deref,
