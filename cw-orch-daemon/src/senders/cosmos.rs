@@ -6,7 +6,7 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    CosmosOptions, Daemon, GrpcChannel,
+    CosmosOptions, GrpcChannel,
 };
 
 use crate::proto::injective::InjectiveEthAccount;
@@ -30,23 +30,20 @@ use cosmrs::{
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId, Any,
 };
-use cosmwasm_std::{coin, Addr, Coin};
+use cosmwasm_std::{coin, Coin};
 use cw_orch_core::{
     environment::{ChainInfoOwned, ChainKind},
-    log::local_target,
     CoreEnvVars, CwEnvError,
 };
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Secp256k1, Signing};
-use std::{rc::Rc, str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::{
-    builder::SenderBuilder, cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender,
-};
+use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;

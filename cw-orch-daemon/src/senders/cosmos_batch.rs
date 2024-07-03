@@ -11,12 +11,12 @@ use options::CosmosBatchOptions;
 use prost::Name;
 
 use std::mem::take;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use super::builder::SenderBuilder;
 use super::cosmos::Wallet;
 use super::query::QuerySender;
-use super::{tx::TxSender, CosmosOptions};
+use super::tx::TxSender;
 
 pub mod options {
     use super::super::CosmosOptions;

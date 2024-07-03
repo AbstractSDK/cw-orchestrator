@@ -26,7 +26,7 @@ use std::{
     io::Write,
     ops::Deref,
     str::{from_utf8, FromStr},
-    sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
+    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
     time::Duration,
 };
 

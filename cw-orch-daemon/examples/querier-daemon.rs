@@ -1,7 +1,7 @@
 // ANCHOR: full_counter_example
 
 use cw_orch::{anyhow, prelude::*};
-use cw_orch_daemon::senders::no_sender::QueryOnlyDaemon;
+use cw_orch_daemon::senders::QueryOnlyDaemon;
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L1
 pub const LOCAL_JUNO_SENDER: &str = "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y";

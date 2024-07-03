@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Arc;
 
 use crate::{
     log::print_if_log_disabled,

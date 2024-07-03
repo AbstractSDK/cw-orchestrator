@@ -88,7 +88,6 @@ impl SenderBuilder for ManualSender {
 }
 
 impl QuerySender for ManualSender {
-
     fn channel(&self) -> tonic::transport::Channel {
         self.grpc_channel.clone()
     }
@@ -176,9 +175,8 @@ impl ManualSender {
     async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
         let addr = self.address()?.to_string();
 
-        let mut client = cosmrs::proto::cosmos::auth::v1beta1::query_client::QueryClient::new(
-            self.channel(),
-        );
+        let mut client =
+            cosmrs::proto::cosmos::auth::v1beta1::query_client::QueryClient::new(self.channel());
 
         let resp = client
             .account(cosmrs::proto::cosmos::auth::v1beta1::QueryAccountRequest { address: addr })
