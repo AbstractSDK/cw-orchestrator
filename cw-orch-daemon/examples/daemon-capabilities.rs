@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use std::str::FromStr;
 
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
@@ -19,7 +20,9 @@ pub fn main() -> anyhow::Result<()> {
 
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
-    let wallet = daemon.wallet();
+    let mut lock = daemon.sender_mut();
+    let wallet = lock.deref_mut();
+
     let rt = daemon.rt_handle.clone();
     rt.block_on(wallet.bank_send("<address-of-my-sister>", coins(345, "ujunox")))?;
     // ANCHOR_END: send_tx

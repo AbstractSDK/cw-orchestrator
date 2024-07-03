@@ -7,7 +7,7 @@ use cw_orch_daemon::senders::query::QuerySender;
 use cw_orch_daemon::tx_broadcaster::assert_broadcast_code_cosm_response;
 use cw_orch_daemon::{DaemonBase, GrpcChannel, TxBuilder};
 
-use cw_orch_daemon::{error::DaemonError, tx_resp::CosmTxResponse};
+use cw_orch_daemon::{CosmTxResponse, DaemonError};
 
 use cosmrs::proto::cosmos;
 use cosmrs::proto::cosmos::auth::v1beta1::BaseAccount;

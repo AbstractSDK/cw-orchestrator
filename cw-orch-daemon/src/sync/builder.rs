@@ -252,7 +252,7 @@ mod test {
 
         assert_ne!(
             daemon.sender_addr(),
-            indexed_daemon.sender().to_string()
+            indexed_daemon.sender_addr().to_string()
         );
 
         Ok(())

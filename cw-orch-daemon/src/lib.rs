@@ -26,7 +26,7 @@ mod tx_resp;
 
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
-pub use senders::{Wallet, CosmosOptions, tx::TxSender, query::QuerySender};
+pub use senders::{query::QuerySender, tx::TxSender, CosmosOptions, Wallet};
 pub use tx_builder::TxBuilder;
 mod cosmos_proto_patches;
 

@@ -109,10 +109,7 @@ fn simultaneous_write_rebuilt() {
     let mut handles = vec![];
     // Note this one has lower iterations since rebuild is pretty long process
     for i in 0..10 {
-        let daemon: Daemon = daemon
-            .rebuild()
-            .build_sender(options.clone())
-            .unwrap();
+        let daemon: Daemon = daemon.rebuild().build_sender(options.clone()).unwrap();
         let mut daemon_state = daemon.state();
         let handle = std::thread::spawn(move || {
             if let DaemonStateFile::FullAccess { json_file_state } = &daemon_state.json_state {
