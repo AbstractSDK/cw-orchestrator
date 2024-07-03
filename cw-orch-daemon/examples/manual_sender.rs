@@ -92,7 +92,7 @@ impl QuerySender for ManualSender {
         &self.chain_info
     }
 
-    fn grpc_channel(&self) -> tonic::transport::Channel {
+    fn channel(&self) -> tonic::transport::Channel {
         self.grpc_channel.clone()
     }
 
@@ -127,7 +127,7 @@ impl TxSender for ManualSender {
             .expect("Failed to read line");
         let txhash = txhash.trim_end();
 
-        let resp = Node::new_async(self.grpc_channel())
+        let resp = Node::new_async(self.channel())
             ._find_tx(txhash.to_string())
             .await?;
 
@@ -145,7 +145,7 @@ impl TxSender for ManualSender {
 
 impl ManualSender {
     pub async fn simulate(&self, msgs: Vec<Any>, memo: Option<&str>) -> Result<u64, DaemonError> {
-        let timeout_height = Node::new_async(self.grpc_channel())._block_height().await? + 10u64;
+        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
 
         let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
 
@@ -179,7 +179,7 @@ impl ManualSender {
         }
         .into();
 
-        Node::new_async(self.grpc_channel())
+        Node::new_async(self.channel())
             ._simulate_tx(tx_raw.to_bytes()?)
             .await
     }
@@ -188,7 +188,7 @@ impl ManualSender {
         let addr = self.address()?.to_string();
 
         let mut client = cosmrs::proto::cosmos::auth::v1beta1::query_client::QueryClient::new(
-            self.grpc_channel(),
+            self.channel(),
         );
 
         let resp = client

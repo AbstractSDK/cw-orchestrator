@@ -401,7 +401,7 @@ impl QuerySender for Wallet {
         self.chain_info.as_ref()
     }
 
-    fn grpc_channel(&self) -> Channel {
+    fn channel(&self) -> Channel {
         self.channel()
     }
 }

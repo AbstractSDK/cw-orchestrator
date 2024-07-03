@@ -88,8 +88,8 @@ impl QuerySender for CosmosBatchSender {
         self.sender.chain_info()
     }
 
-    fn grpc_channel(&self) -> tonic::transport::Channel {
-        self.sender.grpc_channel()
+    fn channel(&self) -> tonic::transport::Channel {
+        self.sender.channel()
     }
 }
 

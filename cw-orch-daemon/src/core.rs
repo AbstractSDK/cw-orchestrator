@@ -122,7 +122,7 @@ impl<Sender> DaemonAsyncBase<Sender> {
 impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
     /// Get the channel configured for this DaemonAsync.
     pub fn channel(&self) -> Channel {
-        self.sender().grpc_channel()
+        self.sender().channel()
     }
 
     /// Query a contract.

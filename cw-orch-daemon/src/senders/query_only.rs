@@ -45,7 +45,7 @@ impl QuerySender for QueryOnlySender {
         &self.chain_info
     }
 
-    fn grpc_channel(&self) -> Channel {
+    fn channel(&self) -> Channel {
         self.channel.clone()
     }
 }

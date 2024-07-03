@@ -77,12 +77,17 @@ impl<Sender> DaemonBase<Sender> {
     pub fn flush_state(&mut self) -> Result<(), DaemonError> {
         self.daemon.flush_state()
     }
+
+    /// Return the chain info for this daemon
+    pub fn chain_info(&self) -> &ChainInfoOwned {
+        self.daemon.state.chain_data.as_ref()
+    }
 }
 
 impl<Sender: QuerySender> DaemonBase<Sender> {
     /// Get the channel configured for this Daemon
     pub fn channel(&self) -> Channel {
-        self.daemon.sender().grpc_channel()
+        self.daemon.sender().channel()
     }
 
     /// Returns a new [`DaemonBuilder`] with the current configuration.
