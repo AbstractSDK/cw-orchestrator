@@ -1,6 +1,11 @@
-use std::fmt::Debug;
+use std::{
+    borrow::BorrowMut,
+    fmt::Debug,
+    ops::DerefMut,
+    sync::{RwLockReadGuard, RwLockWriteGuard},
+};
 
-use super::super::senders::base_sender::Wallet;
+use super::super::senders::Wallet;
 use crate::{
     queriers::{Bank, CosmWasmBase, Node},
     senders::query::QuerySender,
@@ -18,64 +23,37 @@ use tonic::transport::Channel;
 
 use crate::senders::tx::TxSender;
 
+pub type Daemon = DaemonBase<Wallet>;
+
 #[derive(Clone)]
 /**
-    Represents a blockchain node.
-    Is constructed with the [DaemonBuilder].
+Represents a blockchain node.
+Is constructed with the [DaemonBuilder].
 
-    ## Usage
+## Usage
 
-    ```rust,no_run
-    use cw_orch_daemon::{Daemon, networks};
-    use tokio::runtime::Runtime;
+```rust,no_run
+use cw_orch_daemon::{Daemon, networks};
+use tokio::runtime::Runtime;
 
-    let rt = Runtime::new().unwrap();
-    let daemon: Daemon = Daemon::builder(networks::JUNO_1)
-        .build()
-        .unwrap();
-    ```
-    ## Environment Execution
+let rt = Runtime::new().unwrap();
+let daemon: Daemon = Daemon::builder(networks::JUNO_1)
+    .build()
+    .unwrap();
+```
+## Environment Execution
 
-    The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
+The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
 
-    ## Querying
+## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
-    See [Querier](crate::queriers) for examples.
+Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
+See [Querier](crate::queriers) for examples.
 */
 pub struct DaemonBase<Sender> {
     pub(crate) daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
-}
-
-pub type Daemon = DaemonBase<Wallet>;
-
-impl<Sender: QuerySender> DaemonBase<Sender> {
-    /// Get the channel configured for this Daemon
-    pub fn wallet(&self) -> Sender {
-        self.daemon.sender.clone()
-    }
-
-    /// Get the channel configured for this Daemon
-    pub fn channel(&self) -> Channel {
-        self.daemon.sender.grpc_channel()
-    }
-
-    /// Returns a new [`DaemonBuilder`] with the current configuration.
-    /// **Does not copy the `Sender`**
-    /// Does not consume the original [`Daemon`].
-    pub fn rebuild(&self) -> DaemonBuilder {
-        DaemonBuilder {
-            state: Some(self.state()),
-            chain: self.daemon.sender.chain_info().clone(),
-            deployment_id: Some(self.daemon.state.deployment_id.clone()),
-            state_path: None,
-            write_on_change: None,
-            handle: Some(self.rt_handle.clone()),
-            mnemonic: None,
-        }
-    }
 }
 
 impl<Sender> DaemonBase<Sender> {
@@ -85,14 +63,56 @@ impl<Sender> DaemonBase<Sender> {
     }
 
     /// Get the mutable Sender object
-    pub fn sender_mut(&mut self) -> &mut Sender {
+    pub fn sender_mut(&self) -> RwLockWriteGuard<Sender> {
         self.daemon.sender_mut()
+    }
+
+    /// Get the channel configured for this Daemon
+    pub fn sender(&self) -> RwLockReadGuard<Sender> {
+        self.daemon.sender()
     }
 
     /// Flushes all the state related to the current chain
     /// Only works on Local networks
     pub fn flush_state(&mut self) -> Result<(), DaemonError> {
         self.daemon.flush_state()
+    }
+}
+
+impl<Sender: QuerySender> DaemonBase<Sender> {
+    /// Get the channel configured for this Daemon
+    pub fn channel(&self) -> Channel {
+        self.daemon.sender().grpc_channel()
+    }
+
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// **Does not copy the `Sender`**
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilder {
+        DaemonBuilder {
+            state: Some(self.state()),
+            chain: self.daemon.sender().chain_info().clone(),
+            deployment_id: Some(self.daemon.state.deployment_id.clone()),
+            state_path: None,
+            write_on_change: None,
+            handle: Some(self.rt_handle.clone()),
+            mnemonic: None,
+        }
+    }
+}
+
+// Helpers for Daemon with [`Wallet`] sender.
+impl Daemon {
+    /// Specifies wether authz should be used with this daemon
+    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_mut().set_authz_granter(granter.to_string());
+        self
+    }
+
+    /// Specifies wether feegrant should be used with this daemon
+    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_mut().set_fee_granter(granter.to_string());
+        self
     }
 }
 
@@ -112,11 +132,12 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
     type Sender = Sender;
 
     fn sender(&self) -> Addr {
-        self.daemon.sender.address().unwrap()
+        self.daemon.sender_addr()
     }
 
     fn set_sender(&mut self, sender: Self::Sender) {
-        self.daemon.sender = sender
+        let mut daemon_sender = self.daemon.sender_mut();
+        (*daemon_sender.deref_mut()) = sender;
     }
 
     fn upload<T: Uploadable>(&self, uploadable: &T) -> Result<Self::Response, DaemonError> {
@@ -183,7 +204,7 @@ impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle
             .block_on(
-                self.wallet().commit_tx_any(
+                self.sender_mut().commit_tx_any(
                     msgs.iter()
                         .map(|msg| cosmrs::Any {
                             type_url: msg.type_url.clone(),
