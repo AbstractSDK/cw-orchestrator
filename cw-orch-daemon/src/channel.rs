@@ -92,10 +92,7 @@ impl GrpcChannel {
     }
 
     /// Create a gRPC channel from the chain info
-    pub async fn from_chain_info(
-        chain_info: impl Into<ChainInfoOwned>,
-    ) -> Result<Channel, DaemonError> {
-        let chain_info: ChainInfoOwned = chain_info.into();
+    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Result<Channel, DaemonError> {
         GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await
     }
 }
