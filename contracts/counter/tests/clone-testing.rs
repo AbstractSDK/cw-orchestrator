@@ -25,7 +25,9 @@ use cosmwasm_std::Empty;
 /// For those Who don't know, CAVERN PROTOCOL is a money market
 #[test]
 pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
-    pretty_env_logger::init();
+    let _ = pretty_env_logger::formatted_builder()
+        .is_test(true)
+        .try_init();
 
     let sender = Addr::unchecked(SENDER);
     let market_addr = Addr::unchecked(MARKET_ADDR);
@@ -199,4 +201,31 @@ fn query_contract_info() -> cw_orch::anyhow::Result<()> {
 
     app.wasm_querier().contract_info(market.address()?)?;
     Ok(())
+}
+
+mod benchmark {
+    use std::time::Duration;
+
+    use criterion::Criterion;
+
+    use super::*;
+
+    #[test]
+    #[ignore = "benchmark"]
+    fn criterion_benchmark() {
+        let mut criterion = Criterion::default()
+            .sample_size(10)
+            .measurement_time(Duration::from_secs(100));
+        criterion.bench_function("wasm caching", |b| {
+            b.iter(|| cavern_integration_test().unwrap())
+        });
+
+        std::env::set_var("WASM_CACHE", "false");
+
+        criterion.bench_function("no wasm caching", |b| {
+            b.iter(|| cavern_integration_test().unwrap())
+        });
+
+        criterion.final_summary();
+    }
 }

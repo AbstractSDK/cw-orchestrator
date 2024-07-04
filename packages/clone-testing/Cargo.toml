@@ -14,7 +14,10 @@ cosmwasm-std = { workspace = true }
 cw-orch-daemon = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
-clone-cw-multi-test = { version = "0.1", features = ["cosmwasm_1_2"] }
+# clone-cw-multi-test = { version = "0.4", features = ["cosmwasm_1_2"] }
+clone-cw-multi-test = { version = "0.4", features = [
+    "cosmwasm_1_2",
+], git = "https://github.com/Buckram123/cw-multi-test-fork", branch = "buckram/wasm-cache-benchmark" }
 cw-utils = { workspace = true }
 serde = { workspace = true }
 log = { workspace = true }

@@ -44,3 +44,6 @@ cw-orch-clone-testing = { workspace = true }
 cw20 = { workspace = true }
 cw20-base = { workspace = true }
 log = { workspace = true }
+
+# Benchmark
+criterion = { version = "0.5" }
