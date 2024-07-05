@@ -227,8 +227,11 @@ mod tests {
             )),
         )?;
 
-        mock.wasm_querier()
-            .instantiate2_addr(1, mock.sender_addr(), Binary(b"salt-test".to_vec()))?;
+        mock.wasm_querier().instantiate2_addr(
+            1,
+            mock.sender_addr(),
+            Binary(b"salt-test".to_vec()),
+        )?;
 
         Ok(())
     }
@@ -250,8 +253,11 @@ mod tests {
             )),
         )?;
 
-        mock.wasm_querier()
-            .instantiate2_addr(1, mock.sender_addr(), Binary(b"salt-test".to_vec()))?;
+        mock.wasm_querier().instantiate2_addr(
+            1,
+            mock.sender_addr(),
+            Binary(b"salt-test".to_vec()),
+        )?;
 
         Ok(())
     }

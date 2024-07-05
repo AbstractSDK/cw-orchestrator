@@ -446,12 +446,12 @@ impl TxSender for Wallet {
     }
 
     fn account_id(&self) -> AccountId {
-            AccountId::new(
-                &self.chain_info.network_info.pub_address_prefix,
-                &self.private_key.public_key(&self.secp).raw_address.unwrap(),
-            )
-            // unwrap as address is validated on construction
-            .unwrap()
+        AccountId::new(
+            &self.chain_info.network_info.pub_address_prefix,
+            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+        )
+        // unwrap as address is validated on construction
+        .unwrap()
     }
 }
 
