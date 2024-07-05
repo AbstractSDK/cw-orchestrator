@@ -49,8 +49,8 @@ fn main() -> cw_orch::anyhow::Result<()> {
                     amount: "100_000".to_string(),
                     denom: "ujuno".to_string(),
                 }),
-                sender: juno.sender().to_string(),
-                receiver: stargaze.sender().to_string(),
+                sender: juno.sender_addr().to_string(),
+                receiver: stargaze.sender_addr().to_string(),
                 timeout_height: Some(Height {
                     revision_number: 1,
                     revision_height: stargaze_height.height,

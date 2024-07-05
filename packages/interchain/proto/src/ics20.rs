@@ -165,7 +165,7 @@ mod test {
     )> {
         let chain1 = interchain.chain(chain_id1).unwrap();
 
-        let sender = chain1.sender().to_string();
+        let sender = chain1.sender_addr().to_string();
 
         let token_subdenom = format!(
             "{}{}",

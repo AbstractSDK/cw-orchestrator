@@ -12,13 +12,13 @@ mod tests {
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
-        let daemon_sender = daemon.sender().to_string();
+        let daemon_sender = daemon.sender_addr().to_string();
         let indexed_daemon: Daemon = daemon
             .rebuild()
             .build_sender(CosmosOptions::default().hd_index(56))
             .unwrap();
 
-        assert_ne!(daemon_sender, indexed_daemon.sender().to_string());
+        assert_ne!(daemon_sender, indexed_daemon.sender_addr().to_string());
 
         Ok(())
     }

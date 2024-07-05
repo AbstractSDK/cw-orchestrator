@@ -30,7 +30,7 @@ mod tests {
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
-        let sender = daemon.sender().to_string();
+        let sender = daemon.sender().address().to_string();
 
         let second_daemon: Daemon = daemon
             .rebuild()
@@ -43,7 +43,7 @@ mod tests {
 
         let runtime = daemon.rt_handle.clone();
 
-        let grantee = second_daemon.sender().to_string();
+        let grantee = second_daemon.sender().address().to_string();
 
         let current_timestamp = daemon.block_info()?.time;
 
@@ -118,14 +118,14 @@ mod tests {
         // The we send some funds to the account
         runtime.block_on(
             daemon
-                .wallet()
+                .sender()
                 .bank_send(&grantee, coins(1_000_000, LOCAL_JUNO.gas_denom)),
         )?;
 
         // And send a large amount of tokens on their behalf
         runtime.block_on(
             second_daemon
-                .wallet()
+                .sender()
                 .bank_send(&grantee, coins(5_000_000, LOCAL_JUNO.gas_denom)),
         )?;
 

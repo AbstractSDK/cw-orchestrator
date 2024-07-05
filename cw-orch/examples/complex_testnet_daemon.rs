@@ -63,7 +63,7 @@ pub fn main() {
     let query_res = counter.get_count();
     assert!(query_res.is_ok());
 
-    let sender_addr = daemon.sender().to_string();
+    let sender_addr = daemon.sender_addr().to_string();
     // We create a denom
     daemon
         .commit_any::<MsgCreateDenomResponse>(
