@@ -20,14 +20,11 @@ mod tests {
     fn helper_traits() {
         use cw_orch_networks::networks;
 
-        let mut daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .build()
-            .unwrap();
+        let mut daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
         daemon.flush_state().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
         let contract = mock_contract::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),
@@ -118,12 +115,9 @@ mod tests {
     fn cw_orch_interface_traits() {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .build()
-            .unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
         let contract = mock_contract::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),

@@ -3,6 +3,11 @@ use std::time::Duration;
 
 use crate::service::{DaemonChannel, DaemonChannelFactory, DaemonService, MyRetryPolicy};
 use crate::{cosmos_modules, error::DaemonError, Daemon};
+use std::{marker::PhantomData, str::FromStr};
+
+use crate::senders::query::QuerySender;
+use crate::senders::QueryOnlySender;
+use crate::{cosmos_modules, error::DaemonError, DaemonBase};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
@@ -22,37 +27,49 @@ use tower::{MakeService as _, Service, ServiceBuilder};
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasm {
+pub struct CosmWasmBase<Sender = QueryOnlySender> {
     pub service: DaemonService,
     pub rt_handle: Option<Handle>,
+    _sender: PhantomData<Sender>,
 }
 
-impl CosmWasm {
-    pub fn new(daemon: &Daemon) -> Self {
+pub type CosmWasm = CosmWasmBase<QueryOnlySender>;
+
+impl<Sender: QuerySender> CosmWasmBase<Sender> {
+    pub fn new(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             service: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
+            _sender: PhantomData,
         }
     }
     pub fn new_async(service: DaemonService) -> Self {
         Self {
             service: channel,
             rt_handle: None,
+            _sender: PhantomData,
+        }
+    }
+    pub fn new_sync(service: DaemonService, handle: &Handle) -> Self {
+        Self {
+            service,
+            rt_handle: Some(handle.clone()),
+            _sender: PhantomData,
         }
     }
 }
 
-impl QuerierGetter<CosmWasm> for Daemon {
-    fn querier(&self) -> CosmWasm {
-        CosmWasm::new(self)
+impl<Sender: QuerySender> QuerierGetter<CosmWasmBase<Sender>> for DaemonBase<Sender> {
+    fn querier(&self) -> CosmWasmBase<Sender> {
+        CosmWasmBase::new(self)
     }
 }
 
-impl Querier for CosmWasm {
+impl<Sender> Querier for CosmWasmBase<Sender> {
     type Error = DaemonError;
 }
 
-impl CosmWasm {
+impl<Sender: QuerySender> CosmWasmBase<Sender> {
     /// Query code_id by hash
     pub async fn _code_id_hash(&mut self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -241,8 +258,8 @@ impl CosmWasm {
     }
 }
 
-impl WasmQuerier for CosmWasm {
-    type Chain = Daemon;
+impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
+    type Chain = DaemonBase<Sender>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
@@ -313,12 +330,12 @@ impl WasmQuerier for CosmWasm {
 
     fn local_hash<
         T: cw_orch_core::contract::interface_traits::Uploadable
-            + cw_orch_core::contract::interface_traits::ContractInstance<Daemon>,
+            + cw_orch_core::contract::interface_traits::ContractInstance<DaemonBase<Sender>>,
     >(
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(&contract.environment().daemon.sender.chain_info).checksum()
+        <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum()
     }
 }
 

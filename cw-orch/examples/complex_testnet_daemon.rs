@@ -31,9 +31,7 @@ pub fn main() {
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
-    let daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+    let daemon = Daemon::builder(cw_orch::daemon::networks::UNI_6) // set the network to use
         .build()
         .unwrap();
 
@@ -46,7 +44,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.environment().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());
@@ -65,7 +63,7 @@ pub fn main() {
     let query_res = counter.get_count();
     assert!(query_res.is_ok());
 
-    let sender_addr = daemon.sender().to_string();
+    let sender_addr = daemon.sender_addr().to_string();
     // We create a denom
     daemon
         .commit_any::<MsgCreateDenomResponse>(
@@ -105,8 +103,7 @@ pub fn main() {
         .rt_handle
         .block_on(
             daemon
-                .daemon
-                .sender
+                .sender()
                 .bank_send(&contract_addr, coins(50_000, denom.clone())),
         )
         .unwrap();

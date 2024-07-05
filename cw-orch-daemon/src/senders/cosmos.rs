@@ -2,17 +2,18 @@ use crate::{
     env::DaemonEnvVars, proto::injective::ETHEREUM_COIN_TYPE, queriers::Bank, service::{DaemonChannel, DaemonChannelFactory, DaemonService, DaemonServiceCreation}, tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
-    }, GrpcChannel
+    },
+    CosmosOptions, GrpcChannel,
 };
 
-use super::{
+use crate::proto::injective::InjectiveEthAccount;
+use crate::{
     cosmos_modules::{self, auth::BaseAccount},
     error::DaemonError,
     queriers::Node,
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
 };
-use crate::proto::injective::InjectiveEthAccount;
 
 #[cfg(feature = "eth")]
 use crate::proto::injective::InjectiveSigner;
@@ -26,157 +27,106 @@ use cosmrs::{
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId, Any,
 };
-use cosmwasm_std::{coin, Addr, Coin};
+use cosmwasm_std::{coin, Coin};
 use cw_orch_core::{
     environment::{ChainInfoOwned, ChainKind},
-    log::local_target,
     CoreEnvVars, CwEnvError,
 };
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
-use bitcoin::secp256k1::{All, Context, Secp256k1, Signing};
+use bitcoin::secp256k1::{All, Secp256k1, Signing};
 use std::{str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
+use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
+
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
 const SMALL_GAS_BUFFER: f64 = 1.4;
 
-/// This enum allows for choosing which sender type will be constructed in a DaemonBuilder
-#[derive(Clone)]
-pub enum SenderBuilder<C: Signing + Context> {
-    Sender(Sender<C>),
-    Mnemonic(String),
-}
-
 /// A wallet is a sender of transactions, can be safely cloned and shared within the same thread.
-pub type Wallet = Arc<Sender<All>>;
+pub type Wallet = CosmosSender<All>;
 
 /// Signer of the transactions and helper for address derivation
 /// This is the main interface for simulating and signing transactions
 #[derive(Clone)]
-pub struct Sender<C: Signing + Context> {
+pub struct CosmosSender<C: Signing + Clone> {
     pub private_key: PrivateKey,
-    pub secp: Secp256k1<C>,
+    /// gRPC channel
+    pub grpc_channel: Channel,
     /// Information about the chain
-    pub chain_info: ChainInfoOwned,
-    pub(crate) options: SenderOptions,
+    pub chain_info: Arc<ChainInfoOwned>,
+    pub(crate) options: CosmosOptions,
+    pub secp: Secp256k1<C>,
 }
 
-/// Options for how txs should be constructed for this sender.
-#[derive(Default, Clone)]
-#[non_exhaustive]
-pub struct SenderOptions {
-    pub authz_granter: Option<String>,
-    pub fee_granter: Option<String>,
-    pub hd_index: Option<u32>,
-}
-
-impl SenderOptions {
-    pub fn authz_granter(mut self, granter: impl ToString) -> Self {
-        self.authz_granter = Some(granter.to_string());
-        self
-    }
-    pub fn fee_granter(mut self, granter: impl ToString) -> Self {
-        self.fee_granter = Some(granter.to_string());
-        self
-    }
-    pub fn hd_index(mut self, index: u32) -> Self {
-        self.hd_index = Some(index);
-        self
-    }
-    pub fn set_authz_granter(&mut self, granter: impl ToString) {
-        self.authz_granter = Some(granter.to_string());
-    }
-    pub fn set_fee_granter(&mut self, granter: impl ToString) {
-        self.fee_granter = Some(granter.to_string());
-    }
-    pub fn set_hd_index(&mut self, index: u32) {
-        self.hd_index = Some(index);
-    }
-}
-
-impl Sender<All> {
-    pub fn new(chain_info: ChainInfoOwned) -> Result<Sender<All>, DaemonError> {
-        Self::new_with_options(chain_info, SenderOptions::default())
-    }
-
-    pub fn new_with_options(
-        chain_info: ChainInfoOwned,
-        options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
-        let mnemonic = get_mnemonic_env(&chain_info.kind)?;
-
-        Self::from_mnemonic_with_options(chain_info, &mnemonic, options)
-    }
-
-    /// Construct a new Sender from a mnemonic with additional options
-    pub fn from_mnemonic(
-        chain_info: ChainInfoOwned,
-        mnemonic: &str,
-    ) -> Result<Sender<All>, DaemonError> {
-        Self::from_mnemonic_with_options(chain_info, mnemonic, SenderOptions::default())
-    }
-
-    /// Construct a new Sender from a mnemonic with additional options
-    pub fn from_mnemonic_with_options(
-        chain_info: ChainInfoOwned,
-        mnemonic: &str,
-        options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
+impl Wallet {
+    pub async fn new(
+        chain_info: &Arc<ChainInfoOwned>,
+        options: CosmosOptions,
+    ) -> Result<Wallet, DaemonError> {
         let secp = Secp256k1::new();
-        let p_key: PrivateKey = PrivateKey::from_words(
-            &secp,
-            mnemonic,
-            0,
-            options.hd_index.unwrap_or(0),
-            chain_info.network_info.coin_type,
+
+        let pk_from_mnemonic = |mnemonic: &str| -> Result<PrivateKey, DaemonError> {
+            PrivateKey::from_words(
+                &secp,
+                mnemonic,
+                0,
+                options.hd_index.unwrap_or(0),
+                chain_info.network_info.coin_type,
+            )
+        };
+
+        let pk: PrivateKey = match &options.key {
+            CosmosWalletKey::Mnemonic(mnemonic) => pk_from_mnemonic(mnemonic)?,
+            CosmosWalletKey::Env => {
+                let mnemonic = get_mnemonic_env(&chain_info.kind)?;
+                pk_from_mnemonic(&mnemonic)?
+            }
+            CosmosWalletKey::RawKey(bytes) => PrivateKey::from_raw_key(
+                &secp,
+                bytes,
+                0,
+                options.hd_index.unwrap_or(0),
+                chain_info.network_info.coin_type,
+            )?,
+        };
+
+        // ensure address is valid
+        AccountId::new(
+            &chain_info.network_info.pub_address_prefix,
+            &pk.public_key(&secp).raw_address.unwrap(),
         )?;
 
-        let sender = Sender {
-            chain_info,
-            private_key: p_key,
+        Ok(Self {
+            chain_info: chain_info.clone(),
+            grpc_channel: GrpcChannel::from_chain_info(chain_info.as_ref()).await?,
+            private_key: pk,
             secp,
             options,
-        };
-        log::info!(
-            target: &local_target(),
-            "Interacting with {} using address: {}",
-            sender.chain_info.chain_id,
-            sender.pub_addr_str()?
-        );
-        Ok(sender)
+        })
     }
 
-    /// Construct a new Sender from a raw key with additional options
-    pub fn from_raw_key_with_options(
-        chain_info: ChainInfoOwned,
-        raw_key: &[u8],
-        options: SenderOptions,
-    ) -> Result<Sender<All>, DaemonError> {
-        let secp = Secp256k1::new();
-        let p_key: PrivateKey = PrivateKey::from_raw_key(
-            &secp,
-            raw_key,
-            0,
-            options.hd_index.unwrap_or(0),
-            chain_info.network_info.coin_type,
-        )?;
-        let sender = Sender {
-            private_key: p_key,
-            secp,
-            options,
-            chain_info,
+    /// Construct a new Sender from a mnemonic
+    pub async fn from_mnemonic(
+        chain_info: &Arc<ChainInfoOwned>,
+        mnemonic: &str,
+    ) -> Result<Wallet, DaemonError> {
+        let options = CosmosOptions {
+            key: CosmosWalletKey::Mnemonic(mnemonic.to_string()),
+            ..Default::default()
         };
-        log::info!(
-            target: &local_target(),
-            "Interacting with {} using address: {}",
-            sender.chain_info.chain_id,
-            sender.pub_addr_str()?
-        );
-        Ok(sender)
+        Self::new(chain_info, options).await
+    }
+
+    pub fn channel(&self) -> Channel {
+        self.grpc_channel.clone()
+    }
+
+    pub fn options(&self) -> CosmosOptions {
+        self.options.clone()
     }
 
     pub fn set_authz_granter(&mut self, granter: impl Into<String>) {
@@ -187,49 +137,24 @@ impl Sender<All> {
         self.options.fee_granter = Some(granter.into());
     }
 
-    pub fn set_options(&mut self, options: SenderOptions) {
-        if options.hd_index.is_some() {
-            // Need to generate new sender as hd_index impacts private key
-            let new_sender = Sender::from_raw_key_with_options(
-                self.chain_info.clone(),
-                &self.private_key.raw_key(),
-                options,
-            )
-            .unwrap();
-            *self = new_sender
-        } else {
-            self.options = options
-        }
+    pub fn pub_addr_str(&self) -> String {
+        self.account_id().to_string()
     }
 
-    fn cosmos_private_key(&self) -> SigningKey {
-        SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
-    }
+    pub async fn broadcast_tx(
+        &self,
+        tx: Raw,
+    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
+        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
+        let commit = client
+            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
+                tx_bytes: tx.to_bytes()?,
+                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
+            })
+            .await?;
 
-    pub fn pub_addr(&self) -> Result<AccountId, DaemonError> {
-        Ok(AccountId::new(
-            &self.chain_info.network_info.pub_address_prefix,
-            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
-        )?)
-    }
-
-    pub fn address(&self) -> Result<Addr, DaemonError> {
-        Ok(Addr::unchecked(self.pub_addr_str()?))
-    }
-
-    pub fn pub_addr_str(&self) -> Result<String, DaemonError> {
-        Ok(self.pub_addr()?.to_string())
-    }
-
-    /// Returns the actual sender of every message sent.
-    /// If an authz granter is set, returns the authz granter
-    /// Else, returns the address associated with the current private key
-    pub fn msg_sender(&self) -> Result<AccountId, DaemonError> {
-        if let Some(sender) = &self.options.authz_granter {
-            Ok(sender.parse()?)
-        } else {
-            self.pub_addr()
-        }
+        let commit = commit.into_inner().tx_response.unwrap();
+        Ok(commit)
     }
 
     pub async fn bank_send(
@@ -237,36 +162,19 @@ impl Sender<All> {
         recipient: &str,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
+        let acc_id = if let Some(granter) = self.options.authz_granter.as_ref() {
+            AccountId::from_str(granter).unwrap()
+        } else {
+            self.account_id()
+        };
+
         let msg_send = MsgSend {
-            from_address: self.msg_sender()?,
+            from_address: acc_id,
             to_address: AccountId::from_str(recipient)?,
             amount: parse_cw_coins(&coins)?,
         };
 
         self.commit_tx(vec![msg_send], Some("sending tokens")).await
-    }
-
-    pub(crate) fn get_fee_token(&self) -> String {
-        self.chain_info.gas_denom.to_string()
-    }
-
-    /// Compute the gas fee from the expected gas in the transaction
-    /// Applies a Gas Buffer for including signature verification
-    pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
-        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
-            gas as f64 * gas_buffer
-        } else if gas < BUFFER_THRESHOLD {
-            gas as f64 * SMALL_GAS_BUFFER
-        } else {
-            gas as f64 * GAS_BUFFER
-        };
-
-        if let Some(min_gas) = DaemonEnvVars::min_gas() {
-            gas_expected = (min_gas as f64).max(gas_expected);
-        }
-        let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
-
-        Ok((gas_expected as u64, fee_amount as u128))
     }
 
     /// Computes the gas needed for submitting a transaction
@@ -276,7 +184,12 @@ impl Sender<All> {
         sequence: u64,
         account_number: u64,
     ) -> Result<u64, DaemonError> {
-        let fee = TxBuilder::build_fee(0u8, &self.chain_info.gas_denom, 0, self.options.clone())?;
+        let fee = TxBuilder::build_fee(
+            0u8,
+            &self.chain_info.gas_denom,
+            0,
+            self.options.fee_granter.clone(),
+        )?;
 
         let auth_info = SignerInfo {
             public_key: self.private_key.get_signer_public_key(&self.secp),
@@ -339,7 +252,155 @@ impl Sender<All> {
         self.commit_tx_any(msgs, memo).await
     }
 
-    pub async fn commit_tx_any(
+    pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
+        let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(not(feature = "eth"))]
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+            #[cfg(feature = "eth")]
+            self.private_key.sign_injective(sign_doc)?
+        } else {
+            sign_doc.sign(&self.cosmos_private_key())?
+        };
+        Ok(tx_raw)
+    }
+
+    pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
+        let addr = self.address().to_string();
+
+        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel());
+
+        let resp = client
+            .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
+            .await?
+            .into_inner();
+
+        let account = resp.account.unwrap().value;
+
+        let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
+            acc
+        } else if let Ok(acc) = PeriodicVestingAccount::decode(account.as_ref()) {
+            // try vesting account, (used by Terra2)
+            acc.base_vesting_account.unwrap().base_account.unwrap()
+        } else if let Ok(acc) = InjectiveEthAccount::decode(account.as_ref()) {
+            acc.base_account.unwrap()
+        } else {
+            return Err(DaemonError::StdErr(
+                "Unknown account type returned from QueryAccountRequest".into(),
+            ));
+        };
+
+        Ok(acc)
+    }
+
+    /// Allows for checking wether the sender is able to broadcast a transaction that necessitates the provided `gas`
+    pub async fn has_enough_balance_for_gas(&self, gas: u64) -> Result<(), DaemonError> {
+        let (_gas_expected, fee_amount) = self.get_fee_from_gas(gas)?;
+        let fee_denom = self.get_fee_token();
+
+        self.assert_wallet_balance(&coin(fee_amount, fee_denom))
+            .await
+    }
+
+    /// Allows checking wether the sender has more funds than the provided `fee` argument
+    #[async_recursion::async_recursion(?Send)]
+    async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
+        let chain_info = self.chain_info.clone();
+
+        let bank = Bank::new_async(self.channel());
+        let balance = bank
+            ._balance(self.address(), Some(fee.denom.clone()))
+            .await?[0]
+            .clone();
+
+        log::debug!(
+            "Checking balance {} on chain {}, address {}. Expecting {}{}",
+            balance.amount,
+            chain_info.chain_id,
+            self.address(),
+            fee,
+            fee.denom
+        );
+
+        if balance.amount >= fee.amount {
+            log::debug!("The wallet has enough balance to deploy");
+            return Ok(());
+        }
+
+        // If there is not enough asset balance, we need to warn the user
+        println!(
+            "Not enough funds on chain {} at address {} to deploy the contract. 
+                Needed: {}{} but only have: {}.
+                Press 'y' when the wallet balance has been increased to resume deployment",
+            chain_info.chain_id,
+            self.address(),
+            fee,
+            fee.denom,
+            balance
+        );
+
+        if CoreEnvVars::manual_interaction() {
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input)?;
+            if input.to_lowercase().contains('y') {
+                // We retry asserting the balance
+                self.assert_wallet_balance(fee).await
+            } else {
+                Err(DaemonError::NotEnoughBalance {
+                    expected: fee.clone(),
+                    current: balance,
+                })
+            }
+        } else {
+            println!("No Manual Interactions, defaulting to 'no'");
+            return Err(DaemonError::NotEnoughBalance {
+                expected: fee.clone(),
+                current: balance,
+            });
+        }
+    }
+
+    pub(crate) fn get_fee_token(&self) -> String {
+        self.chain_info.gas_denom.to_string()
+    }
+
+    fn cosmos_private_key(&self) -> SigningKey {
+        SigningKey::from_slice(&self.private_key.raw_key()).unwrap()
+    }
+
+    /// Compute the gas fee from the expected gas in the transaction
+    /// Applies a Gas Buffer for including signature verification
+    pub(crate) fn get_fee_from_gas(&self, gas: u64) -> Result<(u64, u128), DaemonError> {
+        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
+            gas as f64 * gas_buffer
+        } else if gas < BUFFER_THRESHOLD {
+            gas as f64 * SMALL_GAS_BUFFER
+        } else {
+            gas as f64 * GAS_BUFFER
+        };
+
+        if let Some(min_gas) = DaemonEnvVars::min_gas() {
+            gas_expected = (min_gas as f64).max(gas_expected);
+        }
+        let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
+
+        Ok((gas_expected as u64, fee_amount as u128))
+    }
+}
+
+impl QuerySender for Wallet {
+    type Error = DaemonError;
+    type Options = CosmosOptions;
+
+    fn channel(&self) -> Channel {
+        self.channel()
+    }
+}
+
+impl TxSender for Wallet {
+    async fn commit_tx_any(
         &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
@@ -351,7 +412,7 @@ impl Sender<All> {
             vec![Any {
                 type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
                 value: MsgExec {
-                    grantee: self.pub_addr_str()?,
+                    grantee: self.pub_addr_str(),
                     msgs,
                 }
                 .encode_to_vec(),
@@ -381,130 +442,13 @@ impl Sender<All> {
         assert_broadcast_code_cosm_response(resp)
     }
 
-    pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
-        let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
-            #[cfg(not(feature = "eth"))]
-            panic!(
-                "Coin Type {} not supported without eth feature",
-                ETHEREUM_COIN_TYPE
-            );
-            #[cfg(feature = "eth")]
-            self.private_key.sign_injective(sign_doc)?
-        } else {
-            sign_doc.sign(&self.cosmos_private_key())?
-        };
-        Ok(tx_raw)
-    }
-
-    pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
-        let addr = self.pub_addr().unwrap().to_string();
-
-        let mut client = cosmos_modules::auth::query_client::QueryClient::new(self.channel()?);
-
-        let resp = client
-            .account(cosmos_modules::auth::QueryAccountRequest { address: addr })
-            .await?
-            .into_inner();
-
-        let account = resp.account.unwrap().value;
-
-        let acc = if let Ok(acc) = BaseAccount::decode(account.as_ref()) {
-            acc
-        } else if let Ok(acc) = PeriodicVestingAccount::decode(account.as_ref()) {
-            // try vesting account, (used by Terra2)
-            acc.base_vesting_account.unwrap().base_account.unwrap()
-        } else if let Ok(acc) = InjectiveEthAccount::decode(account.as_ref()) {
-            acc.base_account.unwrap()
-        } else {
-            return Err(DaemonError::StdErr(
-                "Unknown account type returned from QueryAccountRequest".into(),
-            ));
-        };
-
-        Ok(acc)
-    }
-
-    pub async fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel()?);
-        let commit = client
-            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
-                tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
-            })
-            .await?;
-
-        let commit = commit.into_inner().tx_response.unwrap();
-        Ok(commit)
-    }
-
-    /// Allows for checking wether the sender is able to broadcast a transaction that necessitates the provided `gas`
-    pub async fn has_enough_balance_for_gas(&self, gas: u64) -> Result<(), DaemonError> {
-        let (_gas_expected, fee_amount) = self.get_fee_from_gas(gas)?;
-        let fee_denom = self.get_fee_token();
-
-        self.assert_wallet_balance(&coin(fee_amount, fee_denom))
-            .await
-    }
-
-    /// Allows checking wether the sender has more funds than the provided `fee` argument
-    #[async_recursion::async_recursion(?Send)]
-    async fn assert_wallet_balance(&self, fee: &Coin) -> Result<(), DaemonError> {
-        let chain_info = self.chain_info.clone();
-
-        let bank = Bank::new_async(self.channel()?);
-        let balance = bank
-            ._balance(self.address()?, Some(fee.denom.clone()))
-            .await?[0]
-            .clone();
-
-        log::debug!(
-            "Checking balance {} on chain {}, address {}. Expecting {}{}",
-            balance.amount,
-            chain_info.chain_id,
-            self.address()?,
-            fee,
-            fee.denom
-        );
-
-        if balance.amount >= fee.amount {
-            log::debug!("The wallet has enough balance to deploy");
-            return Ok(());
-        }
-
-        // If there is not enough asset balance, we need to warn the user
-        println!(
-            "Not enough funds on chain {} at address {} to deploy the contract. 
-                Needed: {}{} but only have: {}.
-                Press 'y' when the wallet balance has been increased to resume deployment",
-            chain_info.chain_id,
-            self.address()?,
-            fee,
-            fee.denom,
-            balance
-        );
-
-        if CoreEnvVars::manual_interaction() {
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input)?;
-            if input.to_lowercase().contains('y') {
-                // We retry asserting the balance
-                self.assert_wallet_balance(fee).await
-            } else {
-                Err(DaemonError::NotEnoughBalance {
-                    expected: fee.clone(),
-                    current: balance,
-                })
-            }
-        } else {
-            println!("No Manual Interactions, defaulting to 'no'");
-            return Err(DaemonError::NotEnoughBalance {
-                expected: fee.clone(),
-                current: balance,
-            });
-        }
+    fn account_id(&self) -> AccountId {
+        AccountId::new(
+            &self.chain_info.network_info.pub_address_prefix,
+            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+        )
+        // unwrap as address is validated on construction
+        .unwrap()
     }
 }
 
