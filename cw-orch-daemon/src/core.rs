@@ -1,4 +1,8 @@
-use crate::{queriers::CosmWasm, senders::query::QuerySender, DaemonAsyncBuilder, DaemonState};
+use crate::{
+    queriers::CosmWasm,
+    senders::{builder::SenderBuilder, query::QuerySender},
+    DaemonAsyncBuilder, DaemonState,
+};
 
 use super::{
     cosmos_modules, error::DaemonError, queriers::Node, senders::Wallet, tx_resp::CosmTxResponse,
@@ -88,7 +92,15 @@ impl<Sender> DaemonAsyncBase<Sender> {
     }
 
     /// Set the Sender for use with this Daemon
-    pub fn set_sender<NewSender>(self, sender: NewSender) -> DaemonAsyncBase<NewSender> {
+    /// The sender will be configured with the chain's data.
+    pub async fn new_sender<T: SenderBuilder>(
+        self,
+        sender_options: T,
+    ) -> DaemonAsyncBase<T::Sender> {
+        let sender = sender_options
+            .build(&self.state.chain_data)
+            .await
+            .expect("Failed to build sender");
         DaemonAsyncBase {
             sender,
             state: self.state,

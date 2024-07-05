@@ -3,7 +3,7 @@ use std::{fmt::Debug, ops::DerefMut};
 use super::super::senders::Wallet;
 use crate::{
     queriers::{Bank, CosmWasmBase, Node},
-    senders::query::QuerySender,
+    senders::{builder::SenderBuilder, query::QuerySender},
     CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
 };
 use cosmwasm_std::{Addr, Coin};
@@ -65,6 +65,21 @@ impl<Sender> DaemonBase<Sender> {
     /// Get the channel configured for this Daemon
     pub fn sender(&self) -> &Sender {
         self.daemon.sender()
+    }
+
+    /// Set the Sender for use with this Daemon
+    /// The sender will be configured with the chain's data.
+    pub fn new_sender<T: SenderBuilder>(
+        self,
+        sender_options: T,
+    ) -> DaemonBase<<T as SenderBuilder>::Sender> {
+        let new_daemon = self
+            .rt_handle
+            .block_on(self.daemon.new_sender(sender_options));
+        DaemonBase {
+            daemon: new_daemon,
+            rt_handle: self.rt_handle.clone(),
+        }
     }
 
     /// Flushes all the state related to the current chain
@@ -139,6 +154,8 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         self.daemon.sender_addr()
     }
 
+    /// Overwrite the sender manually, could result in unexpected behavior.
+    /// Use native [`Daemon::new_sender`] instead!
     fn set_sender(&mut self, sender: Self::Sender) {
         let mut daemon_sender = self.daemon.sender_mut();
         (*daemon_sender.deref_mut()) = sender;
