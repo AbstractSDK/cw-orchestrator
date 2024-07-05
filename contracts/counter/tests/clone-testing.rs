@@ -212,10 +212,10 @@ mod benchmark {
 
     #[test]
     #[ignore = "benchmark"]
-    fn criterion_benchmark() {
+    fn clone_test_benchmark() {
         let mut criterion = Criterion::default()
             .sample_size(10)
-            .measurement_time(Duration::from_secs(100));
+            .measurement_time(Duration::from_secs(200));
         criterion.bench_function("wasm caching", |b| {
             b.iter(|| cavern_integration_test().unwrap())
         });
