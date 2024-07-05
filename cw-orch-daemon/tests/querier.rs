@@ -208,6 +208,7 @@ mod queriers {
     #[serial_test::serial]
     fn contract_info() {
         use crate::common::Id;
+        use cw_orch_daemon::TxSender;
         use cw_orch_networks::networks;
 
         let rt = Runtime::new().unwrap();

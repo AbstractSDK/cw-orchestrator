@@ -44,7 +44,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.environment().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());
@@ -103,7 +103,7 @@ pub fn main() {
         .rt_handle
         .block_on(
             daemon
-                .wallet()
+                .sender()
                 .bank_send(&contract_addr, coins(50_000, denom.clone())),
         )
         .unwrap();

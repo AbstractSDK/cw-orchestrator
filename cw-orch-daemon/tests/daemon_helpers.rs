@@ -24,7 +24,7 @@ mod tests {
 
         daemon.flush_state().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
         let contract = mock_contract::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),
@@ -117,7 +117,7 @@ mod tests {
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
         let contract = mock_contract::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),

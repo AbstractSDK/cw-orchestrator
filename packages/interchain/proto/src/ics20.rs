@@ -227,7 +227,7 @@ mod test {
         // This should pass ok, the timeout was set right
         let success_outcome = transfer_tokens(
             chain1,
-            chain2.sender().as_str(),
+            chain2.sender_addr().as_str(),
             &coin(TEST_AMOUNT / 2, denom.clone()),
             &interchain,
             &interchain_channel,
@@ -244,7 +244,7 @@ mod test {
         // This should timeout
         let timeout_outcome = transfer_tokens(
             chain1,
-            chain2.sender().as_str(),
+            chain2.sender_addr().as_str(),
             &coin(TEST_AMOUNT / 2, denom),
             &interchain,
             &interchain_channel,

@@ -150,7 +150,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
     type ContractSource = WasmPath;
     type Sender = Sender;
 
-    fn sender(&self) -> Addr {
+    fn sender_addr(&self) -> Addr {
         self.daemon.sender_addr()
     }
 

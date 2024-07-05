@@ -134,7 +134,7 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
-    fn sender(&self) -> Addr {
+    fn sender_addr(&self) -> Addr {
         self.sender.clone()
     }
 

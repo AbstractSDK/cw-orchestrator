@@ -30,7 +30,7 @@ mod tests {
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
-        let sender = daemon.sender().address().to_string();
+        let sender = daemon.sender_addr().to_string();
 
         let second_daemon: Daemon = daemon
             .rebuild()
@@ -43,7 +43,7 @@ mod tests {
 
         let runtime = daemon.rt_handle.clone();
 
-        let grantee = second_daemon.sender().address().to_string();
+        let grantee = second_daemon.sender_addr().to_string();
 
         let current_timestamp = daemon.block_info()?.time;
 
