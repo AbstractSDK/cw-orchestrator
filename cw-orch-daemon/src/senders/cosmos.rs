@@ -165,8 +165,14 @@ impl Wallet {
         recipient: &str,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
+        let acc_id = if let Some(granter) = self.options.authz_granter.as_ref() {
+            AccountId::from_str(granter).unwrap()
+        } else {
+            self.account_id()
+        };
+
         let msg_send = MsgSend {
-            from_address: self.account_id(),
+            from_address: acc_id,
             to_address: AccountId::from_str(recipient)?,
             amount: parse_cw_coins(&coins)?,
         };
@@ -440,12 +446,12 @@ impl TxSender for Wallet {
     }
 
     fn account_id(&self) -> AccountId {
-        AccountId::new(
-            &self.chain_info.network_info.pub_address_prefix,
-            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
-        )
-        // unwrap as address is validated on construction
-        .unwrap()
+            AccountId::new(
+                &self.chain_info.network_info.pub_address_prefix,
+                &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+            )
+            // unwrap as address is validated on construction
+            .unwrap()
     }
 }
 

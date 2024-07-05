@@ -119,23 +119,23 @@ mod tests {
         runtime.block_on(
             daemon
                 .sender()
-                .bank_send(&grantee, coins(1_000_000, LOCAL_JUNO.gas_denom)),
+                .bank_send(&grantee, coins(100_000, LOCAL_JUNO.gas_denom)),
         )?;
 
         // And send a large amount of tokens on their behalf
         runtime.block_on(
             second_daemon
                 .sender()
-                .bank_send(&grantee, coins(5_000_000, LOCAL_JUNO.gas_denom)),
+                .bank_send(&grantee, coins(500_000, LOCAL_JUNO.gas_denom)),
         )?;
 
-        // the balance of the grantee whould be 6_000_000 or close
+        // the balance of the grantee whould be 600_000 or close
 
         let grantee_balance = daemon
             .bank_querier()
             .balance(grantee.clone(), Some(LOCAL_JUNO.gas_denom.to_string()))?;
 
-        assert_eq!(grantee_balance.first().unwrap().amount.u128(), 6_000_000);
+        assert_eq!(grantee_balance.first().unwrap().amount.u128(), 600_000);
 
         Ok(())
     }

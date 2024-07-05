@@ -201,6 +201,7 @@ fn does_not_error_when_using_different_files() {
 #[serial_test::serial]
 fn reuse_same_state_multichain() {
     std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
+
     let daemon = DaemonBuilder::new(OSMOSIS_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
