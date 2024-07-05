@@ -48,7 +48,7 @@ impl QuerySender for QueryOnlySender {
 
 #[cfg(test)]
 mod tests {
-    use cw_orch_networks::networks::JUNO_1;
+    use cw_orch_networks::networks::OSMOSIS_1;
 
     use super::{QueryOnlyDaemon, QueryOnlySenderOptions};
     use crate::DaemonBuilder;
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn build() {
-        let _query_only_daemon: QueryOnlyDaemon = DaemonBuilder::new(JUNO_1)
+        let _query_only_daemon: QueryOnlyDaemon = DaemonBuilder::new(OSMOSIS_1)
             .build_sender(QueryOnlySenderOptions {})
             .unwrap();
     }

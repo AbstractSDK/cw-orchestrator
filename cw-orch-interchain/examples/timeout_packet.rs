@@ -8,7 +8,7 @@ use cosmos_sdk_proto::{
 };
 use cw_orch::{
     environment::QueryHandler,
-    prelude::Stargate,
+    prelude::*,
     tokio::runtime::Runtime,
 };
 use cw_orch_interchain_core::InterchainEnv;

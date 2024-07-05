@@ -166,6 +166,7 @@ impl DaemonBuilder {
 #[cfg(test)]
 mod test {
     use cw_orch_networks::networks::OSMOSIS_1;
+    use cw_orch_core::environment::TxHandler;
 
     use crate::{DaemonBase, DaemonBuilder, Wallet};
     pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";

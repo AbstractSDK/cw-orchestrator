@@ -46,7 +46,6 @@ default = []
 # enable the optional dependencies
 daemon = [
   "dep:tokio",
-  # "dep:tonic",
   "dep:cosmrs",
   "dep:cw-orch-daemon",
   "dep:cw-orch-networks",
@@ -58,7 +57,6 @@ snapshot-testing = ["dep:insta", "dep:sanitize-filename"]
 # Derive
 cw-orch-contract-derive = { workspace = true }
 cw-orch-fns-derive = { workspace = true }
-
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 

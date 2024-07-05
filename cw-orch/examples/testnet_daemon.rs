@@ -4,7 +4,7 @@ use counter_contract::{
 };
 use cw_orch::{
     environment::Environment,
-    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon},
+    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler},
 };
 
 /// In order to use this script, you need to set the following env variables

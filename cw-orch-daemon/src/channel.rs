@@ -103,7 +103,7 @@ mod tests {
         This test asserts breaking issues around the GRPC connection
     */
 
-    use crate::DaemonAsync;
+    use crate::{senders::QueryOnlySenderOptions, DaemonAsync};
     use speculoos::prelude::*;
 
     #[tokio::test]
@@ -115,7 +115,7 @@ mod tests {
 
         let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
-            .build()
+            .build_sender(QueryOnlySenderOptions {})
             .await;
 
         asserting!("there is no GRPC connection")
@@ -134,7 +134,7 @@ mod tests {
 
         let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
-            .build()
+            .build_sender(QueryOnlySenderOptions {})
             .await;
 
         asserting!("GRPC list is empty")

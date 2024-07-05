@@ -212,6 +212,8 @@ mod test {
     #[ignore]
     #[test]
     pub fn transfer_ics20_test() -> AnyResult<()> {
+        use cw_orch_core::environment::TxHandler;
+
         logger_test_init();
 
         let rt = Runtime::new().unwrap();
