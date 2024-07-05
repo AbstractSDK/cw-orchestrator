@@ -10,8 +10,7 @@ use cw_orch_core::log::transaction_target;
 use options::CosmosBatchOptions;
 use prost::Name;
 
-use std::mem::take;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use super::builder::SenderBuilder;
 use super::cosmos::Wallet;
@@ -23,6 +22,7 @@ pub type BatchDaemon = DaemonBase<CosmosBatchSender>;
 pub mod options {
     use super::super::CosmosOptions;
 
+    #[derive(Clone, Default)]
     pub struct CosmosBatchOptions(pub(crate) CosmosOptions);
 
     impl From<CosmosOptions> for CosmosBatchOptions {
@@ -43,15 +43,14 @@ pub mod options {
 #[derive(Clone)]
 pub struct CosmosBatchSender {
     /// Contains the different messages to broadcast
-    pub msgs: Vec<Any>,
+    pub msgs: Arc<Mutex<Vec<Any>>>,
     pub sender: Wallet,
 }
 
 impl CosmosBatchSender {
     /// Broadcast the cached messages in a transaction.
-    pub async fn broadcast(&mut self, memo: Option<&str>) -> Result<CosmTxResponse, DaemonError> {
-        let msgs = take(&mut self.msgs);
-
+    pub async fn broadcast(&self, memo: Option<&str>) -> Result<CosmTxResponse, DaemonError> {
+        let msgs = self.msgs.lock().unwrap().to_vec();
         log::info!(
             target: &transaction_target(),
             "[Broadcast] {} msgs in a single transaction",
@@ -63,6 +62,9 @@ impl CosmosBatchSender {
             "[Broadcasted] Success: {}",
             tx_result.txhash
         );
+
+        let mut msgs_to_empty = self.msgs.lock().unwrap();
+        *msgs_to_empty = vec![];
 
         Ok(tx_result)
     }
@@ -91,7 +93,7 @@ impl QuerySender for CosmosBatchSender {
 
 impl TxSender for CosmosBatchSender {
     async fn commit_tx_any(
-        &mut self,
+        &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
@@ -116,7 +118,8 @@ impl TxSender for CosmosBatchSender {
                 target: &transaction_target(),
                 "Transaction not sent, use `DaemonBase::wallet().broadcast(), to broadcast the batched transactions",
             );
-            self.msgs.extend(msgs);
+            let mut msg_storage = self.msgs.lock().unwrap();
+            msg_storage.extend(msgs);
 
             Ok(CosmTxResponse::default())
         }

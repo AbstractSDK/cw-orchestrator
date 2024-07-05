@@ -63,8 +63,6 @@ pub struct CosmosSender<C: Signing + Clone> {
     pub chain_info: Arc<ChainInfoOwned>,
     pub(crate) options: CosmosOptions,
     pub secp: Secp256k1<C>,
-    // Private field to ensure the struct is not constructible outside of this module
-    _private: (),
 }
 
 impl Wallet {
@@ -111,7 +109,6 @@ impl Wallet {
             private_key: pk,
             secp,
             options,
-            _private: (),
         })
     }
 
@@ -164,7 +161,7 @@ impl Wallet {
     }
 
     pub async fn bank_send(
-        &mut self,
+        &self,
         recipient: &str,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
@@ -239,7 +236,7 @@ impl Wallet {
     }
 
     pub async fn commit_tx<T: Msg>(
-        &mut self,
+        &self,
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {
@@ -401,7 +398,7 @@ impl QuerySender for Wallet {
 
 impl TxSender for Wallet {
     async fn commit_tx_any(
-        &mut self,
+        &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> Result<CosmTxResponse, DaemonError> {

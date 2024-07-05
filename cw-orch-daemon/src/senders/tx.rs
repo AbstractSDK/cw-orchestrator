@@ -1,9 +1,7 @@
-use std::{future::Future, str::FromStr};
-
-use cosmrs::{bank::MsgSend, tx::Msg, AccountId, Any};
+use cosmrs::{tx::Msg, AccountId, Any};
 use cosmwasm_std::Addr;
 
-use crate::{parse_cw_coins, CosmTxResponse, DaemonError};
+use crate::CosmTxResponse;
 
 use super::query::QuerySender;
 
@@ -13,7 +11,7 @@ pub trait TxSender: QuerySender {
 
     /// Commit a proto `Any` message to the chain using this sender.
     fn commit_tx_any(
-        &mut self,
+        &self,
         msgs: Vec<Any>,
         memo: Option<&str>,
     ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send;
@@ -25,7 +23,7 @@ pub trait TxSender: QuerySender {
 
     /// Commit a transaction to the chain using this sender.
     fn commit_tx<T: Msg>(
-        &mut self,
+        &self,
         msgs: Vec<T>,
         memo: Option<&str>,
     ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send {
