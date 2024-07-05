@@ -25,7 +25,6 @@ use std::{
     io::Write,
     ops::Deref,
     str::{from_utf8, FromStr},
-    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
     time::Duration,
 };
 
@@ -63,12 +62,11 @@ pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContra
 
     This daemon is thread safe and can be used between threads.
     However, please make sure that you are not trying to broadcast multiple transactions at once when using this Daemon on different threads.
-    If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
-    Use a Mutex on top of this DaemonAsync to avoid such errors.
+    If you do so, you will get account sequence errors and your transactions won't get broadcasted.
 */
 pub struct DaemonAsyncBase<Sender = Wallet> {
     /// Sender to send transactions to the chain
-    sender: Arc<RwLock<Sender>>,
+    sender: Sender,
     /// State of the daemon
     pub(crate) state: DaemonState,
 }
@@ -77,10 +75,7 @@ pub type DaemonAsync = DaemonAsyncBase<Wallet>;
 
 impl<Sender> DaemonAsyncBase<Sender> {
     pub(crate) fn new(sender: Sender, state: DaemonState) -> Self {
-        Self {
-            sender: Arc::new(RwLock::new(sender)),
-            state,
-        }
+        Self { sender, state }
     }
 
     pub fn chain_info(&self) -> &ChainInfoOwned {
@@ -92,14 +87,22 @@ impl<Sender> DaemonAsyncBase<Sender> {
         DaemonAsyncBuilder::new(chain)
     }
 
+    /// Set the Sender for use with this Daemon
+    pub fn set_sender<NewSender>(self, sender: NewSender) -> DaemonAsyncBase<NewSender> {
+        DaemonAsyncBase {
+            sender,
+            state: self.state,
+        }
+    }
+
     /// Get a mutable Sender
-    pub fn sender_mut(&self) -> RwLockWriteGuard<Sender> {
-        self.sender.write().unwrap()
+    pub fn sender_mut(&mut self) -> &mut Sender {
+        &mut self.sender
     }
 
     // Get a read-only Sender
-    pub fn sender(&self) -> RwLockReadGuard<Sender> {
-        self.sender.read().unwrap()
+    pub fn sender(&self) -> &Sender {
+        &self.sender
     }
 
     /// Flushes all the state related to the current chain
@@ -224,7 +227,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             funds: parse_cw_coins(coins)?,
         };
         let result = self
-            .sender_mut()
+            .sender()
             .commit_tx(vec![exec_msg], None)
             .await
             .map_err(Into::into)?;
@@ -252,7 +255,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         };
 
         let result = self
-            .sender_mut()
+            .sender()
             .commit_tx(vec![init_msg], None)
             .await
             .map_err(Into::into)?;
@@ -284,7 +287,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         };
 
         let result = self
-            .sender_mut()
+            .sender()
             .commit_tx_any(
                 vec![Any {
                     type_url: INSTANTIATE_2_TYPE_URL.to_string(),
@@ -314,7 +317,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             code_id: new_code_id,
         };
         let result = self
-            .sender_mut()
+            .sender()
             .commit_tx(vec![exec_msg], None)
             .await
             .map_err(Into::into)?;
@@ -341,7 +344,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         };
 
         let result = self
-            .sender_mut()
+            .sender()
             .commit_tx(vec![store_msg], None)
             .await
             .map_err(Into::into)?;
@@ -356,14 +359,6 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             self.next_block().await?;
         }
         Ok(result)
-    }
-
-    /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender<NewSender: TxSender>(self, sender: NewSender) -> DaemonAsyncBase<NewSender> {
-        DaemonAsyncBase {
-            sender: Arc::new(RwLock::new(sender)),
-            state: self.state,
-        }
     }
 }
 

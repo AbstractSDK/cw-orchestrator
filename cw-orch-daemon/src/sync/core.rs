@@ -1,8 +1,4 @@
-use std::{
-    fmt::Debug,
-    ops::DerefMut,
-    sync::{RwLockReadGuard, RwLockWriteGuard},
-};
+use std::{fmt::Debug, ops::DerefMut};
 
 use super::super::senders::Wallet;
 use crate::{
@@ -62,12 +58,12 @@ impl<Sender> DaemonBase<Sender> {
     }
 
     /// Get the mutable Sender object
-    pub fn sender_mut(&self) -> RwLockWriteGuard<Sender> {
+    pub fn sender_mut(&mut self) -> &mut Sender {
         self.daemon.sender_mut()
     }
 
     /// Get the channel configured for this Daemon
-    pub fn sender(&self) -> RwLockReadGuard<Sender> {
+    pub fn sender(&self) -> &Sender {
         self.daemon.sender()
     }
 
@@ -212,7 +208,7 @@ impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle
             .block_on(
-                self.sender_mut().commit_tx_any(
+                self.sender().commit_tx_any(
                     msgs.iter()
                         .map(|msg| cosmrs::Any {
                             type_url: msg.type_url.clone(),
