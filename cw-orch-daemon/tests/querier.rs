@@ -4,7 +4,6 @@ mod common;
 mod queriers {
 
     use cw_orch_core::contract::interface_traits::*;
-    use cw_orch_core::environment::TxHandler;
     use cw_orch_daemon::{queriers::Bank, GrpcChannel};
     use cw_orch_networks::networks;
     use mock_contract::InstantiateMsg;
