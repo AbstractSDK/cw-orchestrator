@@ -1,4 +1,4 @@
-use std::ops::DerefMut;
+
 use std::str::FromStr;
 
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};

@@ -165,7 +165,6 @@ impl DaemonBuilder {
 
 #[cfg(test)]
 mod test {
-    use cw_orch_core::environment::TxHandler;
     use cw_orch_networks::networks::OSMOSIS_1;
 
     use crate::{DaemonBase, DaemonBuilder, Wallet};

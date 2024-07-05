@@ -4,7 +4,7 @@ use counter_contract::{
 };
 use cw_orch::{
     environment::Environment,
-    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler},
+    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon},
 };
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2

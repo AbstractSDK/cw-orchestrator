@@ -308,7 +308,7 @@ mod test {
 
         asserting("sender is correct")
             .that(&sender.to_string())
-            .is_equal_to(chain.sender().to_string());
+            .is_equal_to(chain.sender_addr().to_string());
 
         let contract_source = Box::new(
             ContractWrapper::new(execute, cw20_base::contract::instantiate, query)

@@ -508,7 +508,7 @@ mod test {
         let rt = Runtime::new().unwrap();
         let chain = CloneTesting::new(&rt, chain)?;
 
-        let sender = chain.sender();
+        let sender = chain.sender_addr();
         let recipient = &chain.init_account();
 
         chain
@@ -522,7 +522,7 @@ mod test {
 
         asserting("sender is correct")
             .that(&sender)
-            .is_equal_to(chain.sender());
+            .is_equal_to(chain.sender_addr());
 
         let init_res = chain.upload(&MockCw20).unwrap();
         let code_id = (1 + LOCAL_RUST_CODE_OFFSET) as u64;

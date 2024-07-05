@@ -7,7 +7,7 @@ use cosmos_sdk_proto::{
     Any,
 };
 use cw_orch::{
-    environment::{QueryHandler, TxHandler},
+    environment::QueryHandler,
     prelude::Stargate,
     tokio::runtime::Runtime,
 };

@@ -31,7 +31,7 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
 
     juno.add_balance(juno.sender_addr().to_string(), vec![coin(100_000, "ujuno")])?;
     let tx_resp = juno.app.borrow_mut().execute(
-        juno.sender(),
+        juno.sender_addr(),
         CosmosMsg::Ibc(IbcMsg::Transfer {
             channel_id: channel.0.channel.unwrap().to_string(),
             to_address: stargaze.sender_addr().to_string(),
