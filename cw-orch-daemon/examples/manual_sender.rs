@@ -20,6 +20,7 @@ use cw_orch::prelude::*;
 use cw_orch_core::environment::ChainInfoOwned;
 use prost::Message;
 use std::io::{self, Write};
+use std::sync::Arc;
 use tonic::transport::Channel;
 
 // ANCHOR: full_counter_example
@@ -34,7 +35,7 @@ pub fn main() -> anyhow::Result<()> {
     let network = cw_orch_networks::networks::JUNO_1;
     let sender = "juno1xjf5xscdk08c5es2m7epmerrpqmkmc3n98650t";
     let chain: ManualDaemon = ManualDaemon::builder(network).build_sender(ManualSenderOptions {
-        sender_address: Some(sender.to_string()),
+        sender_address: sender.to_string(),
     })?;
 
     let counter = CounterContract::new(chain.clone());
@@ -54,7 +55,7 @@ pub type ManualDaemon = DaemonBase<ManualSender>;
 
 #[derive(Clone, Default)]
 pub struct ManualSenderOptions {
-    pub sender_address: Option<String>,
+    pub sender_address: String,
 }
 
 /// Signer of the transactions and helper for address derivation
@@ -62,32 +63,28 @@ pub struct ManualSenderOptions {
 #[derive(Clone)]
 pub struct ManualSender {
     pub sender: Addr,
-    pub chain_info: ChainInfoOwned,
+    pub chain_info: Arc<ChainInfoOwned>,
     pub grpc_channel: Channel,
 }
 
-impl SenderBuilder for ManualSender {
+impl SenderBuilder for ManualSenderOptions {
     type Error = DaemonError;
-    type Options = ManualSenderOptions;
+    type Sender = ManualSender;
 
-    async fn build(
-        chain_info: cw_orch_core::environment::ChainInfoOwned,
-        sender_options: Self::Options,
-    ) -> Result<Self, Self::Error> {
-        let grpc_channel = GrpcChannel::from_chain_info(chain_info.clone()).await?;
-        Ok(Self {
-            chain_info,
-            sender: Addr::unchecked(
-                sender_options
-                    .sender_address
-                    .expect("Manual sender needs an address"),
-            ),
+    async fn build(&self, chain_info: &Arc<ChainInfoOwned>) -> Result<ManualSender, Self::Error> {
+        let grpc_channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await?;
+        Ok(ManualSender {
+            chain_info: chain_info.clone(),
+            sender: Addr::unchecked(self.sender_address.clone()),
             grpc_channel,
         })
     }
 }
 
 impl QuerySender for ManualSender {
+    type Error = DaemonError;
+    type Options = ManualSenderOptions;
+
     fn channel(&self) -> tonic::transport::Channel {
         self.grpc_channel.clone()
     }
@@ -122,12 +119,8 @@ impl TxSender for ManualSender {
         assert_broadcast_code_cosm_response(resp)
     }
 
-    fn address(&self) -> Result<Addr, DaemonError> {
-        Ok(self.sender.clone())
-    }
-
-    fn account_id(&self) -> Result<AccountId, DaemonError> {
-        self.sender.clone().to_string().parse().map_err(Into::into)
+    fn account_id(&self) -> AccountId {
+        self.sender.clone().to_string().parse().unwrap()
     }
 }
 
@@ -173,7 +166,7 @@ impl ManualSender {
     }
 
     async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
-        let addr = self.address()?.to_string();
+        let addr = self.address().to_string();
 
         let mut client =
             cosmrs::proto::cosmos::auth::v1beta1::query_client::QueryClient::new(self.channel());

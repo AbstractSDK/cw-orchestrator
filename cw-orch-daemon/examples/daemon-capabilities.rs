@@ -20,8 +20,7 @@ pub fn main() -> anyhow::Result<()> {
 
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
-    let mut lock = daemon.sender_mut();
-    let wallet = lock.deref_mut();
+    let wallet = daemon.sender();
 
     let rt = daemon.rt_handle.clone();
     rt.block_on(wallet.bank_send("<address-of-my-sister>", coins(345, "ujunox")))?;
