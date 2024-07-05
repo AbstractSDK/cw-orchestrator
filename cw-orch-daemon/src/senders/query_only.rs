@@ -48,14 +48,13 @@ impl QuerySender for QueryOnlySender {
 mod tests {
     use cw_orch_networks::networks::OSMOSIS_1;
 
-    use super::{QueryOnlyDaemon, QueryOnlySenderOptions};
+    use super::QueryOnlyDaemon;
     use crate::DaemonBuilder;
 
     #[test]
     #[serial_test::serial]
     fn build() {
-        let _query_only_daemon: QueryOnlyDaemon = DaemonBuilder::new(OSMOSIS_1)
-            .build_sender(())
-            .unwrap();
+        let _query_only_daemon: QueryOnlyDaemon =
+            DaemonBuilder::new(OSMOSIS_1).build_sender(()).unwrap();
     }
 }

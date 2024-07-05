@@ -103,7 +103,7 @@ mod tests {
         This test asserts breaking issues around the GRPC connection
     */
 
-    use crate::{senders::QueryOnlySenderOptions, DaemonAsync};
+    use crate::DaemonAsync;
     use speculoos::prelude::*;
 
     #[tokio::test]

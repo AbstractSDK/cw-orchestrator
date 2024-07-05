@@ -13,5 +13,5 @@ pub use {
     cosmos::{CosmosSender, Wallet},
     cosmos_batch::{options::CosmosBatchOptions, BatchDaemon, CosmosBatchSender},
     cosmos_options::{CosmosOptions, CosmosWalletKey},
-    query_only::{QueryOnlyDaemon, QueryOnlySender, QueryOnlySenderOptions},
+    query_only::{QueryOnlyDaemon, QueryOnlySender},
 };
