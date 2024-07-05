@@ -115,7 +115,7 @@ mod tests {
 
         let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
-            .build_sender(QueryOnlySenderOptions {})
+            .build_sender(())
             .await;
 
         asserting!("there is no GRPC connection")
@@ -134,7 +134,7 @@ mod tests {
 
         let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
-            .build_sender(QueryOnlySenderOptions {})
+            .build_sender(())
             .await;
 
         asserting!("GRPC list is empty")

@@ -12,8 +12,6 @@ use super::{builder::SenderBuilder, query::QuerySender};
 /// Will err on any attempt to sign a transaction or retrieve a sender address.
 pub type QueryOnlyDaemon = DaemonBase<QueryOnlySender>;
 
-pub struct QueryOnlySenderOptions {}
-
 /// Signer of the transactions and helper for address derivation
 #[derive(Clone)]
 pub struct QueryOnlySender {
@@ -23,7 +21,7 @@ pub struct QueryOnlySender {
     pub chain_info: Arc<ChainInfoOwned>,
 }
 
-impl SenderBuilder for QueryOnlySenderOptions {
+impl SenderBuilder for () {
     type Error = DaemonError;
     type Sender = QueryOnlySender;
 
@@ -39,7 +37,7 @@ impl SenderBuilder for QueryOnlySenderOptions {
 
 impl QuerySender for QueryOnlySender {
     type Error = DaemonError;
-    type Options = QueryOnlySenderOptions;
+    type Options = ();
 
     fn channel(&self) -> Channel {
         self.channel.clone()
@@ -57,7 +55,7 @@ mod tests {
     #[serial_test::serial]
     fn build() {
         let _query_only_daemon: QueryOnlyDaemon = DaemonBuilder::new(OSMOSIS_1)
-            .build_sender(QueryOnlySenderOptions {})
+            .build_sender(())
             .unwrap();
     }
 }
