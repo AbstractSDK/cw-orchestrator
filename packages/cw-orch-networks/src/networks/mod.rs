@@ -15,6 +15,7 @@ pub mod rollkit;
 pub mod sei;
 pub mod terra;
 pub mod xion;
+pub mod landslide;
 
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
@@ -30,6 +31,7 @@ pub use rollkit::{LOCAL_ROLLKIT, ROLLKIT_TESTNET};
 pub use sei::{ATLANTIC_2, LOCAL_SEI, PACIFIC_1, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 pub use xion::XION_TESTNET_1;
+pub use landslide::LOCAL_LANDSLIDE;
 /// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
 ///
 /// ## Example
@@ -75,4 +77,5 @@ pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     PACIFIC_1,
     XION_TESTNET_1,
     ROLLKIT_TESTNET,
+    LOCAL_LANDSLIDE,
 ];
