@@ -1,7 +1,8 @@
 use std::{cmp::min, time::Duration};
 
 use crate::{
-    cosmos_modules, env::DaemonEnvVars, error::DaemonError, senders::query::QuerySender, service::DaemonService, tx_resp::CosmTxResponse, DaemonBase
+    cosmos_modules, env::DaemonEnvVars, error::DaemonError, senders::query::QuerySender,
+    service::DaemonService, tx_resp::CosmTxResponse, DaemonBase,
 };
 
 use cosmrs::{

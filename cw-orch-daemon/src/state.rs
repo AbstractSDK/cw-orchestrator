@@ -10,13 +10,13 @@ use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
-use tonic::transport::Channel;
 use std::sync::Arc;
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
     sync::Mutex,
 };
+use tonic::transport::Channel;
 
 /// Global state to track which files are already open by other daemons from other threads
 /// This is necessary because File lock will allow same process to lock file how many times as process wants

@@ -24,9 +24,9 @@ pub struct Ibc {
 impl Ibc {
     pub fn new(daemon: &Daemon) -> Result<Self, DaemonError> {
         Ok(Self {
-                    service: daemon.service()?,
-                    rt_handle: Some(daemon.rt_handle.clone()),
-                })
+            service: daemon.service()?,
+            rt_handle: Some(daemon.rt_handle.clone()),
+        })
     }
 
     pub fn new_async(service: DaemonService) -> Self {

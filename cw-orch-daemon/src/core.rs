@@ -86,7 +86,7 @@ impl<Sender> DaemonAsyncBase<Sender> {
     pub async fn service(&self) -> Result<DaemonService, DaemonError> {
         self.state.service().await
     }
-    
+
     pub fn chain_info(&self) -> &ChainInfoOwned {
         self.state.chain_data.as_ref()
     }

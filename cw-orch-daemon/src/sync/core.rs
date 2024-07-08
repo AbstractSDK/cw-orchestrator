@@ -66,7 +66,7 @@ impl<Sender> DaemonBase<Sender> {
     pub fn service(&self) -> Result<DaemonService, DaemonError> {
         self.rt_handle.block_on(self.daemon.service())
     }
-    
+
     /// Get the channel configured for this Daemon
     pub fn sender(&self) -> &Sender {
         self.daemon.sender()

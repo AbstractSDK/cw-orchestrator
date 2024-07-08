@@ -1,5 +1,9 @@
 use crate::{
-    env::DaemonEnvVars, proto::injective::ETHEREUM_COIN_TYPE, queriers::Bank, service::{DaemonChannel, DaemonChannelFactory, DaemonService, DaemonServiceCreation}, tx_broadcaster::{
+    env::DaemonEnvVars,
+    proto::injective::ETHEREUM_COIN_TYPE,
+    queriers::Bank,
+    service::{DaemonChannel, DaemonChannelFactory, DaemonService, DaemonServiceCreation},
+    tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
@@ -454,8 +458,12 @@ impl TxSender for Wallet {
 
 impl DaemonServiceCreation for Sender<All> {
     async fn channel(&self) -> Result<DaemonService, DaemonError> {
-        let channel = GrpcChannel::connect(&self.chain_info.grpc_urls, &self.chain_info.chain_id).await?;
-        Ok(DaemonService::new::<DaemonChannel, Channel>(DaemonChannelFactory {}, channel))
+        let channel =
+            GrpcChannel::connect(&self.chain_info.grpc_urls, &self.chain_info.chain_id).await?;
+        Ok(DaemonService::new::<DaemonChannel, Channel>(
+            DaemonChannelFactory {},
+            channel,
+        ))
     }
 }
 

@@ -11,8 +11,8 @@ pub mod env;
 pub mod keys;
 pub mod live_mock;
 pub mod queriers;
-pub mod service;
 pub mod senders;
+pub mod service;
 pub mod tx_broadcaster;
 pub mod tx_builder;
 
