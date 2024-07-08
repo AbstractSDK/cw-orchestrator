@@ -26,7 +26,20 @@ pub trait TxHandler: ChainState + Clone {
     type Sender: Clone;
 
     /// Gets the address of the current wallet used to sign transactions.
-    fn sender(&self) -> Addr;
+    #[deprecated(
+        since = "1.1.2",
+        note = "Please use `sender_addr` instead. This method will be changed in the next release."
+    )]
+    // TODO: return &Self::Sender here in the next breaking release
+    fn sender(&self) -> Addr {
+        self.sender_addr()
+    }
+
+    /// Gets the address of the current wallet used to sign transactions.
+    fn sender_addr(&self) -> Addr {
+        // TODO: remove this default implementation in the next breaking release
+        unimplemented!("implement `sender_addr` for your chain handler");
+    }
 
     /// Sets wallet to sign transactions.
     fn set_sender(&mut self, sender: Self::Sender);
@@ -136,7 +149,7 @@ mod tests {
 
         type Sender = ();
 
-        fn sender(&self) -> Addr {
+        fn sender_addr(&self) -> Addr {
             unimplemented!()
         }
 

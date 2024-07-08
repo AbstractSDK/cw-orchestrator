@@ -19,9 +19,7 @@ pub fn main() {
     // ANCHOR: daemon_creation
 
     // We start by creating a daemon. This daemon will be used to interact with the chain.
-    let daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
+    let daemon = Daemon::builder(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
         .build()
         .unwrap();
 
@@ -35,7 +33,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.environment().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());

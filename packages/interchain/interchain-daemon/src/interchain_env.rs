@@ -87,10 +87,10 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         &mut self,
         runtime: &Handle,
         chain_data: ChainInfoOwned,
-        mnemonic: Option<impl ToString>,
+        mnemonic: Option<impl Into<String>>,
     ) -> IcDaemonResult<()> {
-        let mut daemon_builder = Daemon::builder();
-        let mut daemon_builder = daemon_builder.chain(chain_data.clone()).handle(runtime);
+        let mut daemon_builder = Daemon::builder(chain_data);
+        let mut daemon_builder = daemon_builder.handle(runtime);
 
         daemon_builder = if let Some(mn) = mnemonic {
             daemon_builder.mnemonic(mn)

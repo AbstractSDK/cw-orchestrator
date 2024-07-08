@@ -65,7 +65,7 @@ fn test_migrate() {
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&chain.sender()), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender_addr()), None)
         .unwrap();
 
     contract

@@ -28,7 +28,7 @@ fn setup<Chain: CwEnv>(chain: Chain) -> CounterContract<Chain> {
     // Instantiate the contract
     let msg = InstantiateMsg { count: 1i32 };
     let init_resp = contract
-        .instantiate(&msg, Some(&chain.sender()), None)
+        .instantiate(&msg, Some(&chain.sender_addr()), None)
         .unwrap();
 
     // Get the address from the response

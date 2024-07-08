@@ -41,9 +41,7 @@ where the argument of the `chain` method is the chain id of the chain you are in
 You can also add daemons manually to the `interchain` object:
 
 ```rust,ignore
-let local_migaloo = DaemonBuilder::default()
-    .chain(LOCAL_MIGALOO)
-    .build()?;
+let local_migaloo = DaemonBuilder::default(LOCAL_MIGALOO).build()?;
 interchain.add_daemons(vec![local_migaloo]);
 ```
 

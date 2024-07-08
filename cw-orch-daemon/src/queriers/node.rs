@@ -1,7 +1,8 @@
 use std::{cmp::min, time::Duration};
 
 use crate::{
-    cosmos_modules, env::DaemonEnvVars, error::DaemonError, tx_resp::CosmTxResponse, Daemon,
+    cosmos_modules, env::DaemonEnvVars, error::DaemonError, senders::query::QuerySender,
+    service::DaemonService, tx_resp::CosmTxResponse, DaemonBase,
 };
 
 use cosmrs::{
@@ -23,26 +24,26 @@ use tonic::transport::Channel;
 /// Supports queries for block and tx information
 /// All the async function are prefixed with `_`
 pub struct Node {
-    pub channel: Channel,
+    pub service: DaemonService,
     pub rt_handle: Option<Handle>,
 }
 
 impl Node {
-    pub fn new(daemon: &Daemon) -> Self {
+    pub fn new<Sender: QuerySender>(daemon: &DaemonBase<Sender>) -> Self {
         Self {
-            channel: daemon.channel(),
+            service: daemon.service()?,
             rt_handle: Some(daemon.rt_handle.clone()),
         }
     }
-    pub fn new_async(channel: Channel) -> Self {
+    pub fn new_async(service: DaemonService) -> Self {
         Self {
-            channel,
+            service,
             rt_handle: None,
         }
     }
 }
 
-impl QuerierGetter<Node> for Daemon {
+impl<Sender: QuerySender> QuerierGetter<Node> for DaemonBase<Sender> {
     fn querier(&self) -> Node {
         Node::new(self)
     }

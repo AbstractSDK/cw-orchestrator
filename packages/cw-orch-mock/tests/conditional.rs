@@ -97,7 +97,7 @@ mod tests {
     #[test]
     fn cw_orch_interface_traits() {
         let chain = Mock::new("sender");
-        let sender = chain.sender();
+        let sender = chain.sender_addr();
 
         let contract = mock_contract::MockContract::new("test:mock_contract", chain.clone());
 

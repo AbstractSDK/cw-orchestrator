@@ -196,14 +196,12 @@ use cw_orch::tokio;
 let rt = tokio::runtime::Runtime::new().unwrap();
 
 // We create the daemons ourselves to interact with actual running chains (testnet here)
-let juno = Daemon::builder()
-        .chain(cw_orch::daemon::networks::UNI_6)
+let juno = Daemon::builder(cw_orch::daemon::networks::UNI_6)
         .build()
         .unwrap(); 
 
 // We create the daemons ourselves to interact with actual running chains (testnet here)
-let osmosis = Daemon::builder()
-        .chain(cw_orch::daemon::networks::OSMO_5)
+let osmosis = Daemon::builder(cw_orch::daemon::networks::OSMO_5)
         .build()
         .unwrap();
 

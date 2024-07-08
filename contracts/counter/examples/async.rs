@@ -13,7 +13,7 @@ pub async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::LOCAL_JUNO;
-    let chain = DaemonAsyncBuilder::default().chain(network).build().await?;
+    let chain = DaemonAsyncBuilder::new(network).build().await?;
 
     let counter = CounterContract::new(chain);
 

@@ -129,7 +129,6 @@ mod test {
 
     use anyhow::Result as AnyResult;
     use cosmwasm_std::coin;
-    use cw_orch_core::environment::TxHandler;
 
     use crate::tokenfactory::{
         create_denom, create_transfer_channel, get_denom, mint, transfer_tokens,
@@ -165,7 +164,7 @@ mod test {
     )> {
         let chain1 = interchain.chain(chain_id1).unwrap();
 
-        let sender = chain1.sender().to_string();
+        let sender = chain1.sender_addr().to_string();
 
         let token_subdenom = format!(
             "{}{}",
@@ -213,6 +212,8 @@ mod test {
     #[ignore]
     #[test]
     pub fn transfer_ics20_test() -> AnyResult<()> {
+        use cw_orch_core::environment::TxHandler;
+
         logger_test_init();
 
         let rt = Runtime::new().unwrap();
@@ -227,7 +228,7 @@ mod test {
         // This should pass ok, the timeout was set right
         let success_outcome = transfer_tokens(
             chain1,
-            chain2.sender().as_str(),
+            chain2.sender_addr().as_str(),
             &coin(TEST_AMOUNT / 2, denom.clone()),
             &interchain,
             &interchain_channel,
@@ -244,7 +245,7 @@ mod test {
         // This should timeout
         let timeout_outcome = transfer_tokens(
             chain1,
-            chain2.sender().as_str(),
+            chain2.sender_addr().as_str(),
             &coin(TEST_AMOUNT / 2, denom),
             &interchain,
             &interchain_channel,

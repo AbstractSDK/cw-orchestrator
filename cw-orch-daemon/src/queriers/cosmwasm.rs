@@ -1,6 +1,13 @@
 use std::str::FromStr;
+use std::time::Duration;
 
+use crate::service::{DaemonChannel, DaemonChannelFactory, DaemonService, MyRetryPolicy};
 use crate::{cosmos_modules, error::DaemonError, Daemon};
+use std::{marker::PhantomData, str::FromStr};
+
+use crate::senders::query::QuerySender;
+use crate::senders::QueryOnlySender;
+use crate::{cosmos_modules, error::DaemonError, DaemonBase};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
@@ -13,45 +20,62 @@ use cw_orch_core::{
     environment::{Querier, QuerierGetter, WasmQuerier},
 };
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
+use tonic::transport::{Channel, Endpoint};
+use tower::reconnect::Reconnect;
+use tower::retry::RetryLayer;
+use tower::{MakeService as _, Service, ServiceBuilder};
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasm {
-    pub channel: Channel,
+pub struct CosmWasmBase<Sender = QueryOnlySender> {
+    pub service: DaemonService,
     pub rt_handle: Option<Handle>,
+    _sender: PhantomData<Sender>,
 }
 
-impl CosmWasm {
-    pub fn new(daemon: &Daemon) -> Self {
+pub type CosmWasm = CosmWasmBase<QueryOnlySender>;
+
+impl<Sender: QuerySender> CosmWasmBase<Sender> {
+    pub fn new(daemon: &DaemonBase<Sender>) -> Self {
         Self {
-            channel: daemon.channel(),
+            service: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
+            _sender: PhantomData,
         }
     }
-    pub fn new_async(channel: Channel) -> Self {
+    pub fn new_async(service: DaemonService) -> Self {
         Self {
-            channel,
+            service: channel,
             rt_handle: None,
+            _sender: PhantomData,
+        }
+    }
+    pub fn new_sync(service: DaemonService, handle: &Handle) -> Self {
+        Self {
+            service,
+            rt_handle: Some(handle.clone()),
+            _sender: PhantomData,
         }
     }
 }
 
-impl QuerierGetter<CosmWasm> for Daemon {
-    fn querier(&self) -> CosmWasm {
-        CosmWasm::new(self)
+impl<Sender: QuerySender> QuerierGetter<CosmWasmBase<Sender>> for DaemonBase<Sender> {
+    fn querier(&self) -> CosmWasmBase<Sender> {
+        CosmWasmBase::new(self)
     }
 }
 
-impl Querier for CosmWasm {
+impl<Sender> Querier for CosmWasmBase<Sender> {
     type Error = DaemonError;
 }
 
-impl CosmWasm {
+impl<Sender: QuerySender> CosmWasmBase<Sender> {
     /// Query code_id by hash
-    pub async fn _code_id_hash(&self, code_id: u64) -> Result<HexBinary, DaemonError> {
+    pub async fn _code_id_hash(&mut self, code_id: u64) -> Result<HexBinary, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+
+        let mut client = QueryClient::new(&mut self.service);
+
         let request = QueryCodeRequest { code_id };
         let resp = client.code(request).await?.into_inner();
         let contract_hash = resp.code_info.unwrap().data_hash;
@@ -64,7 +88,7 @@ impl CosmWasm {
         address: impl Into<String>,
     ) -> Result<ContractInfoResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryContractInfoRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryContractInfoRequest {
             address: address.into(),
         };
@@ -94,7 +118,7 @@ impl CosmWasm {
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::cosmwasm::QueryContractHistoryResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryContractHistoryRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryContractHistoryRequest {
             address: address.into(),
             pagination,
@@ -109,7 +133,7 @@ impl CosmWasm {
         query_data: Vec<u8>,
     ) -> Result<Vec<u8>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QuerySmartContractStateRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QuerySmartContractStateRequest {
             address: address.into(),
             query_data,
@@ -128,7 +152,7 @@ impl CosmWasm {
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::cosmwasm::QueryAllContractStateResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryAllContractStateRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryAllContractStateRequest {
             address: address.into(),
             pagination,
@@ -139,7 +163,7 @@ impl CosmWasm {
     /// Query code
     pub async fn _code(&self, code_id: u64) -> Result<CodeInfoResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryCodeRequest { code_id };
         let response = client.code(request).await?.into_inner().code_info.unwrap();
 
@@ -149,7 +173,7 @@ impl CosmWasm {
     /// Query code bytes
     pub async fn _code_data(&self, code_id: u64) -> Result<Vec<u8>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryCodeRequest { code_id };
         Ok(client.code(request).await?.into_inner().data)
     }
@@ -160,7 +184,15 @@ impl CosmWasm {
         pagination: Option<PageRequest>,
     ) -> Result<Vec<CodeInfoResponse>, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodesRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+
+        let reconnect_service: Reconnect<DaemonChannelFactory, Channel> =
+            Reconnect::new::<DaemonChannel, Channel>(DaemonChannelFactory {}, self.service.clone());
+
+        // Build your service stack
+        let service = ServiceBuilder::new().service(reconnect_service);
+
+        let mut client = QueryClient::new(service);
+
         let request = QueryCodesRequest { pagination };
         let response = client.codes(request).await?.into_inner().code_infos;
 
@@ -175,7 +207,7 @@ impl CosmWasm {
         &self,
     ) -> Result<cosmos_modules::cosmwasm::QueryPinnedCodesResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryPinnedCodesRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryPinnedCodesRequest { pagination: None };
         Ok(client.pinned_codes(request).await?.into_inner())
     }
@@ -186,7 +218,7 @@ impl CosmWasm {
         code_id: u64,
     ) -> Result<cosmos_modules::cosmwasm::QueryContractsByCodeResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryContractsByCodeRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryContractsByCodeRequest {
             code_id,
             pagination: None,
@@ -201,7 +233,7 @@ impl CosmWasm {
         query_data: Vec<u8>,
     ) -> Result<cosmos_modules::cosmwasm::QueryRawContractStateResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryRawContractStateRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+        let mut client: QueryClient<Channel> = QueryClient::new(self.service.clone());
         let request = QueryRawContractStateRequest {
             address: address.into(),
             query_data,
@@ -214,13 +246,20 @@ impl CosmWasm {
         &self,
     ) -> Result<cosmos_modules::cosmwasm::QueryParamsResponse, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryParamsRequest};
-        let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+
+        let reconnect_service: Reconnect<DaemonChannelFactory, Channel> =
+            Reconnect::new::<DaemonChannel, Channel>(DaemonChannelFactory {}, self.service.clone());
+
+        // Build your service stack
+        let service = ServiceBuilder::new().service(reconnect_service);
+
+        let mut client = QueryClient::new(service);
         Ok(client.params(QueryParamsRequest {}).await?.into_inner())
     }
 }
 
-impl WasmQuerier for CosmWasm {
-    type Chain = Daemon;
+impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
+    type Chain = DaemonBase<Sender>;
     fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
@@ -291,12 +330,12 @@ impl WasmQuerier for CosmWasm {
 
     fn local_hash<
         T: cw_orch_core::contract::interface_traits::Uploadable
-            + cw_orch_core::contract::interface_traits::ContractInstance<Daemon>,
+            + cw_orch_core::contract::interface_traits::ContractInstance<DaemonBase<Sender>>,
     >(
         &self,
         contract: &T,
     ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(&contract.environment().daemon.sender.chain_info).checksum()
+        <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum()
     }
 }
 

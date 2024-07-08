@@ -211,7 +211,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Response = AppResponse;
     type Sender = Rc<SigningAccount>;
 
-    fn sender(&self) -> Addr {
+    fn sender_addr(&self) -> Addr {
         Addr::unchecked(self.sender.address())
     }
 

@@ -56,7 +56,7 @@ chrono = { version = "0.4" }
 base16 = { version = "0.2.1" }
 ring = { version = "0.17.3" }
 dirs = "5.0.1"
-
+tower = { version = "0.4", features = ["retry", "reconnect"] }
 
 # Injective dependencies
 ethers-signers = { version = "2.0.7", optional = true }
@@ -66,6 +66,8 @@ async-recursion = "1.0.5"
 # Gzip
 flate2 = { version = "1.0.26" }
 lazy_static = "1.4.0"
+http = "0.2.11"
+hyper = "0.14.27"
 
 # Lock daemon
 file-lock = { version = "2.1.10" }
@@ -74,6 +76,7 @@ regex = "1.10.4"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
+cw-orch = { path = "../cw-orch", features = ["daemon"] }
 uid = "0.1.7"
 env_logger = "0.11.2"
 cw20 = { version = "1" }
@@ -94,3 +97,6 @@ tokio-test = "0.4.3"
 
 # File lock test
 nix = { version = "0.28.0", features = ["process"] }
+counter-contract = { path = "../contracts/counter" }
+dotenv = "0.15.0"
+pretty_env_logger = "0.5.0"

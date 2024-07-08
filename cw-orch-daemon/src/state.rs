@@ -1,5 +1,7 @@
 use super::error::DaemonError;
 use crate::env::{default_state_folder, DaemonEnvVars};
+use crate::service::{DaemonChannel, DaemonChannelFactory, DaemonService, DaemonServiceCreation};
+use crate::GrpcChannel;
 use crate::{json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
@@ -14,6 +16,7 @@ use std::{
     path::Path,
     sync::Mutex,
 };
+use tonic::transport::Channel;
 
 /// Global state to track which files are already open by other daemons from other threads
 /// This is necessary because File lock will allow same process to lock file how many times as process wants
@@ -28,7 +31,7 @@ pub struct DaemonState {
     /// Deployment identifier
     pub deployment_id: String,
     /// Information about the chain
-    pub chain_data: ChainInfoOwned,
+    pub chain_data: Arc<ChainInfoOwned>,
     /// Whether to write on every change of the state
     pub write_on_change: bool,
 }
@@ -58,7 +61,7 @@ impl DaemonState {
     /// Attempts to connect to any of the provided gRPC endpoints.
     pub fn new(
         mut json_file_path: String,
-        chain_data: ChainInfoOwned,
+        chain_data: &Arc<ChainInfoOwned>,
         deployment_id: String,
         read_only: bool,
         write_on_change: bool,
@@ -115,7 +118,7 @@ impl DaemonState {
         Ok(DaemonState {
             json_state,
             deployment_id,
-            chain_data,
+            chain_data: chain_data.clone(),
             write_on_change,
         })
     }
