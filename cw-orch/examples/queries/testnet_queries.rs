@@ -8,8 +8,7 @@ pub const TEST_MNEMONIC: &str="scare silent genuine cheese monitor industry item
 
 pub fn main() -> AnyResult<()> {
     // We start by creating a daemon. This daemon will be used to interact with the chain.
-    let daemon = Daemon::builder()
-        .chain(cw_orch::daemon::networks::JUNO_1) // chain parameter
+    let daemon = Daemon::builder(cw_orch::daemon::networks::JUNO_1) // chain parameter
         .mnemonic(TEST_MNEMONIC)
         .build()?;
 

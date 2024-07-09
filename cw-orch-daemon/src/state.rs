@@ -28,7 +28,7 @@ pub struct DaemonState {
     /// Deployment identifier
     pub deployment_id: String,
     /// Information about the chain
-    pub chain_data: ChainInfoOwned,
+    pub chain_data: Arc<ChainInfoOwned>,
     /// Whether to write on every change of the state
     pub write_on_change: bool,
 }
@@ -58,7 +58,7 @@ impl DaemonState {
     /// Attempts to connect to any of the provided gRPC endpoints.
     pub fn new(
         mut json_file_path: String,
-        chain_data: ChainInfoOwned,
+        chain_data: &Arc<ChainInfoOwned>,
         deployment_id: String,
         read_only: bool,
         write_on_change: bool,
@@ -115,7 +115,7 @@ impl DaemonState {
         Ok(DaemonState {
             json_state,
             deployment_id,
-            chain_data,
+            chain_data: chain_data.clone(),
             write_on_change,
         })
     }

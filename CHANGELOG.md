@@ -4,6 +4,14 @@
 
 - Added async query functions generations with cw_orch::QueryFns
 - Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
+- Deprecate cw-orch-core `TxHandler::sender` in favor of `TxHandler::sender_addr`
+- Implement `SenderBuilder`, `QuerySender` and `TxSender` which allow for customizing the transaction commitment logic.
+- Can now easily build `QueryOnlyDaemon` which will only expose query functions.
+
+### Breaking
+
+- Refactor `Daemon` builder pattern to allow for custom senders.
+- Update `Daemon` / `DaemonAsync` implementations to reflect customizable sender.
 
 ## cw-orch-daemon 0.23.5
 

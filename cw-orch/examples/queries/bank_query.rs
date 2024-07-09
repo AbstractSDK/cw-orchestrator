@@ -5,8 +5,7 @@ use cw_orch::prelude::QuerierGetter;
 use cw_orch_daemon::queriers::Bank;
 pub fn main() {
     // We can now create a daemon. This daemon will be used to interact with the chain.
-    let daemon = Daemon::builder()
-        .chain(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
+    let daemon = Daemon::builder(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
         .build()
         .unwrap();
 

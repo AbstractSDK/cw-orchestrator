@@ -20,14 +20,11 @@ mod tests {
     fn helper_traits() {
         use cw_orch_networks::networks;
 
-        let mut daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .build()
-            .unwrap();
+        let mut daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
         daemon.flush_state().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
         let contract = mock_contract::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),
@@ -89,41 +86,14 @@ mod tests {
             .is_ok();
     }
 
-    // #[test]
-    // #[serial_test::serial]
-    // fn wrong_min_fee() {
-    //     use cw_orch::prelude::networks;
-
-    //     let runtime = tokio::runtime::Runtime::new().unwrap();
-
-    //     let mut chain = networks::UNI_6;
-    //     chain.gas_price = 0.00001;
-
-    //     let daemon = Daemon::builder()
-    //         .chain(chain)
-    //         .mnemonic("tide genuine angle mass fall promote blind skull swim army maximum add peasant fringe uncle october female crisp voyage blind extend jeans give wrap")
-    //         .build()
-    //         .unwrap();
-
-    //     let contract = mock_contract::MockContract::new(
-    //         format!("test:mock_contract:{}", Id::new()),
-    //         daemon.clone(),
-    //     );
-
-    //     contract.upload().unwrap();
-    // }
-
     #[test]
     #[serial_test::serial]
     fn cw_orch_interface_traits() {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .build()
-            .unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
         let contract = mock_contract::MockContract::new(
             format!("test:mock_contract:{}", Id::new()),

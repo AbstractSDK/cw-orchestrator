@@ -18,9 +18,8 @@ fn create_daemon_env() -> cw_orch::anyhow::Result<(Runtime, DaemonInterchainEnv)
     let _local_juno: Daemon = interchain.chain("testing")?;
     let _local_osmo: Daemon = interchain.chain("localosmosis")?;
 
-    let local_migaloo = DaemonBuilder::default()
+    let local_migaloo = DaemonBuilder::new(LOCAL_MIGALOO)
         .handle(rt.handle())
-        .chain(LOCAL_MIGALOO)
         .build()?;
     interchain.add_daemons(vec![local_migaloo]);
 

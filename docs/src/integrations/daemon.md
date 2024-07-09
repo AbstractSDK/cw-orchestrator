@@ -26,13 +26,10 @@ This simple script actually hides another parameter which is the `LOCAL_MNEMONIC
 When using multiple Daemons with the same state file, you should re-use a single Daemon State to avoid conflicts and panics: 
 
 ```rust,ignore
-let daemon1 = Daemon::builder()
-  .chain(OSMOSIS_1)
-  .build()?;
+let daemon1 = Daemon::builder(OSMOSIS_1).build()?;
 // If you don't use the `state` method here, this will fail with:
 // State file <file-name> already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder
-let daemon2 = Daemon::builder()
-  .chain(JUNO_1)
+let daemon2 = Daemon::builder(JUNO_1)
   .state(daemon1.state())
   .build()?;
 ```
