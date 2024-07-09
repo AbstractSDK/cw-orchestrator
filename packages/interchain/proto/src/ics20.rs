@@ -140,7 +140,6 @@ mod test {
     use cw_orch_starship::Starship;
     use cw_orch_traits::FullNode;
     use speculoos::{assert_that, vec::VecAssertions};
-    use tokio::runtime::Runtime;
 
     const JUNO: &str = "juno-1";
     const STARGAZE: &str = "stargaze-1";
@@ -162,7 +161,7 @@ mod test {
         InterchainChannel<<Chain as IbcQueryHandler>::Handler>,
         String,
     )> {
-        let chain1 = interchain.chain(chain_id1).unwrap();
+        let chain1 = interchain.get_chain(chain_id1).unwrap();
 
         let sender = chain1.sender_addr().to_string();
 
@@ -199,9 +198,7 @@ mod test {
     pub fn create_ics20_channel_test() -> AnyResult<()> {
         logger_test_init();
 
-        let rt = Runtime::new().unwrap();
-
-        let starship = Starship::new(rt.handle(), None).unwrap();
+        let starship = Starship::new(None).unwrap();
         let interchain = starship.interchain_env();
 
         create_ics20_channel(&interchain, JUNO, STARGAZE)?;
@@ -216,9 +213,7 @@ mod test {
 
         logger_test_init();
 
-        let rt = Runtime::new().unwrap();
-
-        let starship = Starship::new(rt.handle(), None).unwrap();
+        let starship = Starship::new(None).unwrap();
         let interchain = starship.interchain_env();
         let (interchain_channel, denom) = create_ics20_channel(&interchain, JUNO, STARGAZE)?;
 

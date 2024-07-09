@@ -1,12 +1,17 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
 
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
-    wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
+    wasm_emulation::{
+        channel::RemoteChannel,
+        contract::{LocalWasmContract, WasmContract},
+        storage::analyzer::StorageAnalyzer,
+    },
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
 use cosmwasm_std::{to_json_binary, WasmMsg};
 use cosmwasm_std::{Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128};
+use cw_orch_core::contract::interface_traits::ContractInstance;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{
@@ -15,7 +20,7 @@ use cw_orch_core::{
     },
     CwEnvError,
 };
-use cw_orch_daemon::queriers::Node;
+use cw_orch_daemon::{queriers::Node, RUNTIME};
 use cw_orch_daemon::{GrpcChannel, DEFAULT_DEPLOYMENT};
 use cw_utils::NativeBalance;
 use serde::Serialize;
@@ -40,8 +45,7 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 /// use cw_orch_core::environment::TxHandler;
 ///
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let runtime = tokio::runtime::Runtime::new().unwrap();
-/// let mock: CloneTesting = CloneTesting::new(&runtime, chain.clone()).unwrap();
+/// let mock: CloneTesting = CloneTesting::new(chain.clone()).unwrap();
 /// let sender = mock.sender();
 ///
 /// // set a balance
@@ -143,11 +147,44 @@ impl CloneTesting {
     ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         self.bank_querier().balance(address, None)
     }
+
+    pub fn upload_wasm<T: Uploadable + ContractInstance<CloneTesting>>(
+        &self,
+        contract: &T,
+    ) -> Result<<Self as TxHandler>::Response, CwEnvError> {
+        let mut file = std::fs::File::open(T::wasm(&self.chain).path())?;
+        let mut wasm = Vec::<u8>::new();
+        file.read_to_end(&mut wasm)?;
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_wasm_code(WasmContract::Local(LocalWasmContract { code: wasm }));
+
+        contract.set_code_id(code_id);
+
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
+    }
 }
 
 impl CloneTesting<MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new(rt: &Runtime, chain: impl Into<ChainInfoOwned>) -> Result<Self, CwEnvError> {
+    pub fn new(chain: impl Into<ChainInfoOwned>) -> Result<Self, CwEnvError> {
+        Self::new_with_runtime(&RUNTIME, chain)
+    }
+
+    /// Create a mock environment with the default mock state.
+    /// It uses a custom runtime object to control async requests
+    pub fn new_with_runtime(
+        rt: &Runtime,
+        chain: impl Into<ChainInfoOwned>,
+    ) -> Result<Self, CwEnvError> {
         let chain_data = chain.into();
         CloneTesting::new_custom(
             rt,
@@ -503,10 +540,9 @@ mod test {
     fn mock() -> anyhow::Result<()> {
         let amount = 1000000u128;
         let denom = "uosmo";
-        let chain = JUNO_1;
+        let chain_info = JUNO_1;
 
-        let rt = Runtime::new().unwrap();
-        let chain = CloneTesting::new(&rt, chain)?;
+        let chain = CloneTesting::new(chain_info)?;
 
         let sender = chain.sender_addr();
         let recipient = &chain.init_account();
@@ -639,10 +675,9 @@ mod test {
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
-        let chain = JUNO_1;
+        let chain_info = JUNO_1;
 
-        let rt = Runtime::new().unwrap();
-        let chain = CloneTesting::new(&rt, chain)?;
+        let chain = CloneTesting::new(chain_info)?;
         let recipient = &chain.init_account();
 
         chain
