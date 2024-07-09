@@ -6,7 +6,7 @@ use cosmos_sdk_proto::{
     traits::{Message, Name},
     Any,
 };
-use cw_orch::{environment::QueryHandler, prelude::*, tokio::runtime::Runtime};
+use cw_orch::{environment::QueryHandler, prelude::*};
 use cw_orch_interchain_core::InterchainEnv;
 use cw_orch_interchain_daemon::ChannelCreator as _;
 use cw_orch_starship::Starship;

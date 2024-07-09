@@ -16,7 +16,6 @@ fn create_daemon_env() -> cw_orch::anyhow::Result<DaemonInterchainEnv> {
 
     let local_migaloo = DaemonBuilder::new(LOCAL_MIGALOO)
         .state(local_juno.state())
-        .handle(rt.handle())
         .build()?;
     interchain.add_daemons(vec![local_migaloo]);
 
