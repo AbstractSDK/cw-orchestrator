@@ -3,6 +3,7 @@ use std::str::FromStr;
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
 use cosmwasm_std::coins;
 // ANCHOR: full_counter_example
+use cw_orch_daemon::senders::tx::TxSender;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
 
@@ -12,13 +13,14 @@ pub fn main() -> anyhow::Result<()> {
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
 
     let network = networks::LOCAL_JUNO;
-    let mut daemon = DaemonBuilder::default().chain(network).build()?;
+    let mut daemon = DaemonBuilder::new(network).build()?;
 
     daemon.flush_state()?;
 
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
-    let wallet = daemon.wallet();
+    let wallet = daemon.sender();
+
     let rt = daemon.rt_handle.clone();
     rt.block_on(wallet.bank_send("<address-of-my-sister>", coins(345, "ujunox")))?;
     // ANCHOR_END: send_tx

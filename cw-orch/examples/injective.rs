@@ -18,9 +18,7 @@ pub fn main() {
     env_logger::init();
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
-    let res = Daemon::builder()
-        // set the network to use
-        .chain(networks::INJECTIVE_888)
+    let res = Daemon::builder(networks::INJECTIVE_888) // set the network to use
         .mnemonic(TESTNET_MNEMONIC)
         .build();
 
@@ -35,7 +33,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.environment().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());

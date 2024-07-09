@@ -15,10 +15,7 @@ pub mod test {
     #[test]
     #[serial_test::serial]
     fn instantiate2() -> anyhow::Result<()> {
-        let app = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
-            .build()
-            .unwrap();
+        let app = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
 
         let salt = Binary(vec![12, 89, 156, 63]);
         let mock_contract = MockContract::new("mock-contract", app.clone());

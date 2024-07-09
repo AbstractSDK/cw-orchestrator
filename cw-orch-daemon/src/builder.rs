@@ -1,26 +1,23 @@
-use crate::{
-    log::print_if_log_disabled,
-    sender::{SenderBuilder, SenderOptions},
-    DaemonAsync, DaemonBuilder, DaemonStateFile, GrpcChannel,
-};
 use std::sync::Arc;
 
-use bitcoin::secp256k1::All;
+use crate::{
+    log::print_if_log_disabled,
+    senders::{builder::SenderBuilder, CosmosOptions, CosmosWalletKey},
+    DaemonAsyncBase, DaemonBuilder, DaemonStateFile, Wallet,
+};
 
-use super::{error::DaemonError, sender::Sender, state::DaemonState};
+use super::{error::DaemonError, state::DaemonState};
 use cw_orch_core::environment::ChainInfoOwned;
-
 /// The default deployment id if none is provided
 pub const DEFAULT_DEPLOYMENT: &str = "default";
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 /// Create [`DaemonAsync`] through [`DaemonAsyncBuilder`]
 /// ## Example
 /// ```no_run
 /// # tokio_test::block_on(async {
 /// use cw_orch_daemon::{DaemonAsyncBuilder, networks};
-/// let daemon = DaemonAsyncBuilder::default()
-///     .chain(networks::LOCAL_JUNO)
+/// let daemon = DaemonAsyncBuilder::new(networks::LOCAL_JUNO)
 ///     .deployment_id("v0.1.0")
 ///     .build()
 ///     .await.unwrap();
@@ -28,7 +25,7 @@ pub const DEFAULT_DEPLOYMENT: &str = "default";
 /// ```
 pub struct DaemonAsyncBuilder {
     // # Required
-    pub(crate) chain: Option<ChainInfoOwned>,
+    pub(crate) chain: ChainInfoOwned,
     // # Optional
     pub(crate) deployment_id: Option<String>,
     pub(crate) state_path: Option<String>,
@@ -36,59 +33,25 @@ pub struct DaemonAsyncBuilder {
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
 
-    /* Sender related options */
-    /// Wallet sender
-    /// Will be used in priority when set
-    pub(crate) sender: Option<SenderBuilder<All>>,
-    /// Specify Daemon Sender Options
-    pub(crate) sender_options: SenderOptions,
+    pub(crate) mnemonic: Option<String>,
 }
 
 impl DaemonAsyncBuilder {
-    /// Set the chain the daemon will connect to
-    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
-        self.chain = Some(chain.into());
-        self
+    pub fn new(chain: impl Into<ChainInfoOwned>) -> Self {
+        Self {
+            chain: chain.into(),
+            deployment_id: None,
+            state_path: None,
+            state: None,
+            write_on_change: None,
+            mnemonic: None,
+        }
     }
 
     /// Set the deployment id to use for the daemon interactions
     /// Defaults to `default`
     pub fn deployment_id(&mut self, deployment_id: impl Into<String>) -> &mut Self {
         self.deployment_id = Some(deployment_id.into());
-        self
-    }
-
-    /// Set the mnemonic to use with this chain.
-    /// Defaults to env variable depending on the environment.  
-    ///
-    /// Variables: LOCAL_MNEMONIC, TEST_MNEMONIC and MAIN_MNEMONIC
-    pub fn mnemonic(&mut self, mnemonic: impl ToString) -> &mut Self {
-        self.sender = Some(SenderBuilder::Mnemonic(mnemonic.to_string()));
-        self
-    }
-
-    /// Specifies a sender to use with this chain
-    /// This will be used in priority when set on the builder
-    pub fn sender(&mut self, wallet: Sender<All>) -> &mut Self {
-        self.sender = Some(SenderBuilder::Sender(wallet));
-        self
-    }
-
-    /// Specifies whether authz should be used with this daemon
-    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_options.set_authz_granter(granter);
-        self
-    }
-
-    /// Specifies whether a fee grant should be used with this daemon
-    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_options.set_fee_granter(granter);
-        self
-    }
-
-    /// Specifies the hd_index of the daemon sender
-    pub fn hd_index(&mut self, index: u32) -> &mut Self {
-        self.sender_options.hd_index = Some(index);
         self
     }
 
@@ -108,6 +71,18 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Set the mnemonic used for the default Cosmos wallet
+    pub fn mnemonic(&mut self, mnemonic: impl Into<String>) -> &mut Self {
+        self.mnemonic = Some(mnemonic.into());
+        self
+    }
+
+    /// Overwrite the chain info
+    pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
+        self.chain = chain.into();
+        self
+    }
+
     /// Specifies path to the daemon state file
     /// Defaults to env variable.
     ///
@@ -118,21 +93,59 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Build a daemon with provided mnemonic or env-var mnemonic
+    pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
+        let chain_info = Arc::new(self.chain.clone());
+
+        let state = self.build_state()?;
+        // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
+
+        let options = CosmosOptions {
+            key: self.mnemonic.as_ref().map_or(CosmosWalletKey::Env, |m| {
+                CosmosWalletKey::Mnemonic(m.clone())
+            }),
+            ..Default::default()
+        };
+        let sender = options.build(&chain_info).await?;
+
+        let daemon = DaemonAsyncBase::new(sender, state);
+
+        print_if_log_disabled()?;
+        Ok(daemon)
+    }
+
     /// Build a daemon
-    pub async fn build(&self) -> Result<DaemonAsync, DaemonError> {
-        let chain_info = self
-            .chain
-            .clone()
-            .ok_or(DaemonError::BuilderMissing("chain information".into()))?;
+    pub async fn build_sender<T: SenderBuilder>(
+        &self,
+        sender_options: T,
+    ) -> Result<DaemonAsyncBase<T::Sender>, DaemonError> {
+        let chain_info = Arc::new(self.chain.clone());
+
+        let state = self.build_state()?;
+
+        let sender = sender_options
+            .build(&chain_info)
+            .await
+            .map_err(Into::into)?;
+
+        let daemon = DaemonAsyncBase::new(sender, state);
+
+        print_if_log_disabled()?;
+        Ok(daemon)
+    }
+
+    /// Returns a built state
+    fn build_state(&self) -> Result<DaemonState, DaemonError> {
         let deployment_id = self
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
+        let chain_info = Arc::new(self.chain.clone());
 
         let state = match &self.state {
             Some(state) => {
                 let mut state = state.clone();
-                state.chain_data = chain_info.clone();
+                state.chain_data = chain_info;
                 state.deployment_id = deployment_id;
                 if let Some(write_on_change) = self.write_on_change {
                     state.write_on_change = write_on_change;
@@ -159,42 +172,14 @@ impl DaemonAsyncBuilder {
 
                 DaemonState::new(
                     json_file_path,
-                    chain_info.clone(),
+                    &chain_info,
                     deployment_id,
                     false,
                     self.write_on_change.unwrap_or(true),
                 )?
             }
         };
-        // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
-        let sender_options = self.sender_options.clone();
-
-        let sender = match self.sender.clone() {
-            Some(sender) => match sender {
-                SenderBuilder::Mnemonic(mnemonic) => Sender::from_mnemonic_with_options(
-                    chain_info.clone(),
-                    GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?,
-                    &mnemonic,
-                    sender_options,
-                )?,
-                SenderBuilder::Sender(mut sender) => {
-                    sender.set_options(self.sender_options.clone());
-                    sender
-                }
-            },
-            None => Sender::new_with_options(
-                chain_info.clone(),
-                GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await?,
-                sender_options,
-            )?,
-        };
-
-        let daemon = DaemonAsync {
-            state,
-            sender: Arc::new(sender),
-        };
-        print_if_log_disabled()?;
-        Ok(daemon)
+        Ok(state)
     }
 }
 
@@ -203,11 +188,10 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
         DaemonAsyncBuilder {
             chain: value.chain,
             deployment_id: value.deployment_id,
-            sender_options: value.sender_options,
-            sender: value.sender,
             state: value.state,
             state_path: value.state_path,
             write_on_change: value.write_on_change,
+            mnemonic: value.mnemonic,
         }
     }
 }

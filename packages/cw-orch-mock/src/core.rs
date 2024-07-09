@@ -134,7 +134,7 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
-    fn sender(&self) -> Addr {
+    fn sender_addr(&self) -> Addr {
         self.sender.clone()
     }
 
@@ -308,7 +308,7 @@ mod test {
 
         asserting("sender is correct")
             .that(&sender.to_string())
-            .is_equal_to(chain.sender().to_string());
+            .is_equal_to(chain.sender_addr().to_string());
 
         let contract_source = Box::new(
             ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
