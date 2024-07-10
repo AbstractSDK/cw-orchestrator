@@ -2,6 +2,10 @@
 
 ## Unpublished
 
+### Breaking
+
+## 0.24.0
+
 - Added async query functions generations with cw_orch::QueryFns
 - Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
 - Deprecate cw-orch-core `TxHandler::sender` in favor of `TxHandler::sender_addr`
