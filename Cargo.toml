@@ -55,6 +55,7 @@ cw-orch-interchain-core = { path = "packages/interchain/interchain-core", versio
 cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.4.0" }
 cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.4.0" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.4.0" }
+cw-orch-proto = { path = "packages/interchain/proto", version = "0.4.0" }
 
 #Clone Testing
 cw-orch-clone-testing = { version = "0.6.0", path = "packages/clone-testing" }
