@@ -29,3 +29,10 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = "1.32.0"
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
+
+# These dev dependencies used only for doc tests. Comment them for publish
+[dev-dependencies]
+counter-contract = { path = "../../../contracts/counter" }
+cw-orch-interchain = { workspace = true, features = ["daemon"] }
+cw-orch = { workspace = true }
+cosmos-sdk-proto = "0.20.0"
