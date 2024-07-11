@@ -51,13 +51,13 @@ impl DaemonEnvVars {
     }
 
     /// Optional - Integer
-    /// Defaults to None
+    /// Defaults to 150_000
     /// Minimum gas amount. Useful when transaction still won't pass even when setting a high gas_buffer or for mixed transaction scripts
-    pub fn min_gas() -> Option<u64> {
+    pub fn min_gas() -> u64 {
         if let Ok(str_value) = env::var(MIN_GAS_ENV_NAME) {
-            Some(parse_with_log(str_value, MIN_GAS_ENV_NAME))
+            parse_with_log(str_value, MIN_GAS_ENV_NAME)
         } else {
-            None
+            150_000
         }
     }
 
