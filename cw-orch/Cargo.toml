@@ -94,7 +94,7 @@ cw-orch-mock = { workspace = true }
 [dev-dependencies]
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
 env_logger = "0.11.2"
-cosmwasm-schema = "1.2"
+cosmwasm-schema = "2.1"
 counter-contract = { path = "../contracts/counter" }
 mock-contract = { path = "../contracts/mock_contract" }
 mock-contract-u64 = { path = "../contracts/mock_contract_u64" }
