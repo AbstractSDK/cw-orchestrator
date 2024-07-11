@@ -240,7 +240,13 @@ impl Node {
 
         let request = cosmos_modules::tx::GetTxRequest { hash: hash.clone() };
         let mut block_speed = self._average_block_speed(Some(0.7)).await?;
-        block_speed = block_speed.max(DaemonEnvVars::min_block_speed());
+        let max_block_time = DaemonEnvVars::max_block_time();
+        if let Some(max_time) = max_block_time {
+            block_speed = block_speed.min(max_time);
+        } else {
+            let min_block_time = DaemonEnvVars::min_block_time();
+            block_speed = block_speed.max(min_block_time);
+        }
 
         for _ in 0..retries {
             match client.get_tx(request.clone()).await {
@@ -252,6 +258,9 @@ impl Node {
                 Err(err) => {
                     // increase wait time
                     block_speed = block_speed.mul_f64(1.6);
+                    if let Some(max_time) = max_block_time {
+                        block_speed = block_speed.max(max_time)
+                    }
                     log::debug!(target: &query_target(), "TX not found with error: {:?}", err);
                     log::debug!(target: &query_target(), "Waiting {} milli-seconds", block_speed.as_millis());
                     tokio::time::sleep(block_speed).await;
