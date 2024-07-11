@@ -102,7 +102,7 @@ Some actions require user-intervention. If set to `false`, this disables those i
 
 Supported actions:
 
-- Balance checks. When set to `false`, if the gas token balance is too low to submit a transaction, it will error. See [Disable balance assertion](#cw_orch_disable_wallet_balance_assertion).
+- Balance checks. When set to `false`, if the gas token balance is too low to submit a transaction, it will error.
 - Deployment checks. When set to `false`, if no deployment file is detected when deploying a structure using the `Deploy::multi_deploy` function, it will deploy to all provided chains without asking for approval.
 
 ## Logging
