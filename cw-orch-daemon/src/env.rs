@@ -196,13 +196,13 @@ fn parse_block_time_duration(raw_duration: &str) -> Duration {
 
     let duration: u64 = match digits.parse() {
         Ok(duration) => duration,
-        Err(e) => panic!("Couldn't parse content of block time error: {e}"),
+        Err(e) => panic!("Couldn't parse content of block time, error: {e}"),
     };
 
     match duration_specifier {
         "s" => Duration::from_secs(duration),
         "ms" => Duration::from_millis(duration),
-        _ => panic!("Couldn't parse content of block time error: unexpected token after digits"),
+        _ => panic!("Couldn't parse content of block time, error: unexpected token after digits"),
     }
 }
 
