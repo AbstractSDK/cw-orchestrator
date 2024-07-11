@@ -135,7 +135,8 @@ mod tests {
             .bank_querier()
             .balance(grantee.clone(), Some(LOCAL_JUNO.gas_denom.to_string()))?;
 
-        assert_eq!(grantee_balance.first().unwrap().amount.u128(), 600_000);
+        // One coin eaten by gas
+        assert_eq!(grantee_balance.first().unwrap().amount.u128(), 600_000 - 1);
 
         Ok(())
     }

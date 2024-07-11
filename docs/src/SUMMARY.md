@@ -46,6 +46,7 @@
   - [Terra](./chains/terra.md)
   - [Rollkit](./chains/rollkit.md)
   - [XION](./chains/xion.md)
+  - [Landslide](./chains/landslide.md)
 
 # Extras
 

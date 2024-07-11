@@ -70,7 +70,6 @@ lazy_static = "1.4.0"
 # Lock daemon
 file-lock = { version = "2.1.10" }
 once_cell = { version = "1.19.0" }
-regex = "1.10.4"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

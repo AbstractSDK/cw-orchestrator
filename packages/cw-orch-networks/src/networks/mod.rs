@@ -7,6 +7,7 @@ pub mod doravota;
 pub mod injective;
 pub mod juno;
 pub mod kujira;
+pub mod landslide;
 pub mod migaloo;
 pub mod neutron;
 pub mod nibiru;
@@ -22,6 +23,7 @@ pub use doravota::{VOTA_ASH, VOTA_TESTNET};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
 pub use kujira::HARPOON_4;
+pub use landslide::LOCAL_LANDSLIDE;
 pub use migaloo::{LOCAL_MIGALOO, MIGALOO_1, NARWHAL_1};
 pub use neutron::{LOCAL_NEUTRON, NEUTRON_1, PION_1};
 pub use nibiru::NIBIRU_ITN_2;
@@ -75,4 +77,5 @@ pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     PACIFIC_1,
     XION_TESTNET_1,
     ROLLKIT_TESTNET,
+    LOCAL_LANDSLIDE,
 ];
