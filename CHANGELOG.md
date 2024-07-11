@@ -27,7 +27,6 @@
 - Update `Daemon` / `DaemonAsync` implementations to reflect customizable sender.
 - Deprecated `CW_ORCH_MIN_BLOCK_SPEED` in favor of `CW_ORCH_MIN_BLOCK_TIME`
 
-
 ## cw-orch-daemon 0.23.5
 
 - Fixed Get Tx By Events compatibility with Cosmos SDK 0.50+ for Daemon
