@@ -259,7 +259,7 @@ impl Node {
                     // increase wait time
                     block_speed = block_speed.mul_f64(1.6);
                     if let Some(max_time) = max_block_time {
-                        block_speed = block_speed.max(max_time)
+                        block_speed = block_speed.min(max_time)
                     }
                     log::debug!(target: &query_target(), "TX not found with error: {:?}", err);
                     log::debug!(target: &query_target(), "Waiting {} milli-seconds", block_speed.as_millis());
