@@ -62,17 +62,27 @@ Defaults to `50`.
 
 Changes the number of tx queries (~1 query per block) before it fails if it doesn't find any result. Useful if the chain is slow or if the transaction has low gas price.
 
-### CW_ORCH_MIN_BLOCK_SPEED
+### CW_ORCH_MIN_BLOCK_TIME
 
 Optional, accepted values:
 
-- `(integer)ms` (e.g. 57ms), to indicate the min block speed in milliseconds
-- `(integer)s` (e.g. 57s), to indicate the min block speed in seconds
-- `(integer)` (e.g. 57), to indicate the min block speed in seconds
+- `(integer)ms` (e.g. 57ms), to indicate the min block time in milliseconds
+- `(integer)s` (e.g. 57s), to indicate the min block time in seconds
+- `(integer)` (e.g. 57), to indicate the min block time in seconds
 
 Defaults to `1s`.
 
-Minimum block speed. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block speeds are varying a lot.
+Minimum block time. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block time are varying a lot.
+
+### CW_ORCH_MAX_BLOCK_TIME
+
+Optional, accepted values:
+
+- `(integer)ms` (e.g. 57ms), to indicate the max block time in milliseconds
+- `(integer)s` (e.g. 57s), to indicate the max block time in seconds
+- `(integer)` (e.g. 57), to indicate the max block time in seconds
+
+Maximum block time. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block time are varying a lot.
 
 ### CW_ORCH_WALLET_BALANCE_ASSERTION
 

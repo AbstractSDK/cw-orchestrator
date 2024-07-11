@@ -18,11 +18,14 @@
   - `check_ibc` --> `await_and_check_packets`
   - `follow_packets_from_tx_hash` --> `await_packets_for_txhash`
 - Better Docs for interchain, cw-orch and clone-testing
+- Added max block time environment variable `CW_ORCH_MAX_BLOCK_TIME`
 
 ### Breaking
 
 - Refactor `Daemon` builder pattern to allow for custom senders.
 - Update `Daemon` / `DaemonAsync` implementations to reflect customizable sender.
+- Deprecated `CW_ORCH_MIN_BLOCK_SPEED` in favor of `CW_ORCH_MIN_BLOCK_TIME`
+
 
 ## cw-orch-daemon 0.23.5
 
