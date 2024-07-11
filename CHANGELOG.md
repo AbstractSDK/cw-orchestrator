@@ -2,6 +2,10 @@
 
 ## Unpublished
 
+- `CW_ORCH_MIN_GAS` Now defaults to 150_000 instead of 0, making it more reliable for txs that cost little gas
+
+## Unpublished
+
 - Added async query functions generations with cw_orch::QueryFns
 - Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
 - Deprecate cw-orch-core `TxHandler::sender` in favor of `TxHandler::sender_addr`

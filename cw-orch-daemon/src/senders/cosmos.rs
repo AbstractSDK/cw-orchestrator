@@ -384,9 +384,9 @@ impl Wallet {
             gas as f64 * GAS_BUFFER
         };
 
-        if let Some(min_gas) = DaemonEnvVars::min_gas() {
-            gas_expected = (min_gas as f64).max(gas_expected);
-        }
+        let min_gas = DaemonEnvVars::min_gas();
+        gas_expected = (min_gas as f64).max(gas_expected);
+
         let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
 
         Ok((gas_expected as u64, fee_amount as u128))
