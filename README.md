@@ -242,6 +242,7 @@ Cw-orchestrator supports the following chains natively:
 - Terra 🟥🟦🟩
 - Rollkit 🟥🟦
 - Xion 🟦
+- Landslide 🟥
 
 Additional chains can easily be integrated by creating a new [`ChainInfo`](./packages/cw-orch-networks/src/chain_info.rs) structure. This can be done in your script directly. If you have additional time, don't hesitate to open a PR on this repository.
 
