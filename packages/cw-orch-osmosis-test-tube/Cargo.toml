@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-osmosis-test-tube"
-version = "0.1.1"
+version = "0.2.2"
 description = "Cw-orch environment adapter for osmosis-test-tube"
 authors.workspace = true
 edition.workspace = true

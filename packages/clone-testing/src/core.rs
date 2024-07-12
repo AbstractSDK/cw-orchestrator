@@ -277,6 +277,10 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
+    fn sender(&self) -> Addr {
+        self.sender_addr()
+    }
+
     fn sender_addr(&self) -> Addr {
         self.sender.clone()
     }

@@ -31,14 +31,13 @@ pub trait TxHandler: ChainState + Clone {
         note = "Please use `sender_addr` instead. This method will be changed in the next release."
     )]
     // TODO: return &Self::Sender here in the next breaking release
-    fn sender(&self) -> Addr {
-        self.sender_addr()
-    }
+    fn sender(&self) -> Addr;
 
     /// Gets the address of the current wallet used to sign transactions.
+    // TODO: remove this default implementation in the next breaking release
     fn sender_addr(&self) -> Addr {
-        // TODO: remove this default implementation in the next breaking release
-        unimplemented!("implement `sender_addr` for your chain handler");
+        #[allow(deprecated)]
+        self.sender()
     }
 
     /// Sets wallet to sign transactions.
@@ -148,6 +147,10 @@ mod tests {
         type ContractSource = ();
 
         type Sender = ();
+
+        fn sender(&self) -> Addr {
+            unimplemented!()
+        }
 
         fn sender_addr(&self) -> Addr {
             unimplemented!()

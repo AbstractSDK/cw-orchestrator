@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-interchain-core"
-version = "0.3.3"
+version = "0.4.2"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -32,6 +32,8 @@ tonic = { workspace = true, features = ["tls", "tls-roots"] }
 
 [dev-dependencies]
 counter-contract = { path = "../../../contracts/counter" }
-cw-orch-interchain = { workspace = true, features = ["daemon"] }
+cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
+  "daemon",
+] }
 cw-orch = { workspace = true }
 cosmos-sdk-proto = "0.20.0"
