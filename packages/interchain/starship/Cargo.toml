@@ -16,7 +16,7 @@ serde_json = "1.0.102"
 ibc-chain-registry = { workspace = true }
 ibc-relayer-types = { workspace = true }
 thiserror = "1.0.43"
-cosmwasm-std = "1.2.7"
+cosmwasm-std = "2.1.0"
 
 cw-orch-daemon = { workspace = true }
 cw-orch-core = { workspace = true }
