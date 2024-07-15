@@ -2,7 +2,7 @@ use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: sei
 pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
-    id: "sei",
+    chain_name: "sei",
     pub_address_prefix: "sei",
     coin_type: 118u32,
 };
@@ -38,6 +38,17 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
     gas_price: 0.1,
     grpc_urls: &["http://sei-testnet-grpc.polkachu.com:11990"],
     rpc_urls: &[],
+    network_info: SEI_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+
+pub const PACIFIC_1: ChainInfo = ChainInfo {
+    kind: ChainKind::Mainnet,
+    chain_id: "pacific-1",
+    gas_denom: "usei",
+    gas_price: 0.1,
+    grpc_urls: &["http://sei-grpc.polkachu.com:11990"],
     network_info: SEI_NETWORK,
     lcd_url: None,
     fcd_url: None,

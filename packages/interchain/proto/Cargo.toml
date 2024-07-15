@@ -1,0 +1,32 @@
+[package]
+name = "cw-orch-proto"
+description = "A helper crate for interaction with protos from different chains. Mostly used for handling cw20 coins and ibc transfers"
+version = "0.4.1"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cw-orch-interchain-core = { workspace = true }
+cw-orch-traits = { workspace = true }
+cw-orch-core = { workspace = true }
+
+anyhow = { workspace = true }
+
+cosmrs = { workspace = true }
+cosmwasm-std = { workspace = true }
+ibc-relayer-types = { workspace = true }
+log = { workspace = true }
+prost = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+osmosis-std = { version = "0.21.0" }
+
+[dev-dependencies]
+cw-orch-starship = { workspace = true }
+cw-orch-interchain-daemon = { workspace = true }
+env_logger = "0.10.0"
+speculoos = { workspace = true }

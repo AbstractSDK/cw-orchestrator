@@ -1,23 +1,45 @@
-use crate::{cosmos_modules, error::DaemonError};
+use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cw_orch_core::environment::{Querier, QuerierGetter};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
-use crate::queriers::DaemonQuerier;
-
 /// Querier for the Cosmos Gov module
-pub struct Feegrant {
-    channel: Channel,
+/// All the async function are prefixed with `_`
+pub struct FeeGrant {
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
-impl DaemonQuerier for Feegrant {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl FeeGrant {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+
+    pub fn new_async(channel: Channel) -> Self {
+        Self {
+            channel,
+            rt_handle: None,
+        }
     }
 }
 
-impl Feegrant {
+impl Querier for FeeGrant {
+    type Error = DaemonError;
+}
+
+impl QuerierGetter<FeeGrant> for Daemon {
+    fn querier(&self) -> FeeGrant {
+        FeeGrant::new(self)
+    }
+}
+
+impl FeeGrant {
     /// Query all allowances granted to the grantee address by a granter address
-    pub async fn allowance(
+    pub async fn _allowance(
         &self,
         granter: impl Into<String>,
         grantee: impl Into<String>,
@@ -37,7 +59,7 @@ impl Feegrant {
     /// Query allowances for grantee address with a given pagination
     ///
     /// see [PageRequest] for pagination
-    pub async fn allowances(
+    pub async fn _allowances(
         &self,
         grantee: impl Into<String>,
         pagination: Option<PageRequest>,

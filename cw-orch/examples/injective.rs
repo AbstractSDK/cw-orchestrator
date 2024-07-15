@@ -1,13 +1,14 @@
 use counter_contract::{
-    contract::CounterContract,
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
+    CounterContract,
 };
-use cw_orch::prelude::{
-    networks, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload,
-    Daemon, TxHandler,
+use cw_orch::{
+    environment::Environment,
+    prelude::{
+        networks, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler,
+    },
 };
 
-use tokio::runtime::Runtime;
 const TESTNET_MNEMONIC: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
 
 pub fn main() {
@@ -15,14 +16,9 @@ pub fn main() {
     // in async code (e.g. tokio), which enables multi-threaded and non-blocking code.
 
     env_logger::init();
-    // We start by creating a runtime, which is required for a sync daemon.
-    let runtime = Runtime::new().unwrap();
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
-    let res = Daemon::builder()
-        // set the network to use
-        .chain(networks::INJECTIVE_888)
-        .handle(runtime.handle())
+    let res = Daemon::builder(networks::INJECTIVE_888) // set the network to use
         .mnemonic(TESTNET_MNEMONIC)
         .build();
 
@@ -30,14 +26,14 @@ pub fn main() {
         panic!("Error: {}", res.err().unwrap());
     };
 
-    let counter = CounterContract::new("local:counter", daemon.clone());
+    let counter = CounterContract::new(daemon.clone());
 
     let upload_res = counter.upload();
     assert!(upload_res.is_ok());
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());

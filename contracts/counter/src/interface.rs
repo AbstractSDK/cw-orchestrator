@@ -1,30 +1,27 @@
-#![allow(unused)]
+use cw_orch::daemon::queriers::Node;
+use cw_orch::environment::ChainInfoOwned;
 // ANCHOR: custom_interface
-use cw_orch::{
-    anyhow::Result,
-    interface,
-    prelude::{queriers::Node, *},
-};
+use cw_orch::{interface, prelude::*};
 
-use crate::{
-    contract::CONTRACT_NAME,
-    msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
-    CounterContract,
-};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
-#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Counter;
+pub const CONTRACT_ID: &str = "counter_contract";
 
-impl<Chain: CwEnv> Uploadable for Counter<Chain> {
-    // Return the path to the wasm file
-    fn wasm(&self) -> WasmPath {
-        let crate_path = env!("CARGO_MANIFEST_DIR");
-        let wasm_path = format!("{}/../artifacts/{}", crate_path, "mock.wasm");
+// ANCHOR: interface_macro
+#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg, id = CONTRACT_ID)]
+pub struct CounterContract;
+// ANCHOR_END: interface_macro
 
-        WasmPath::new(wasm_path).unwrap()
+// ANCHOR: uploadable_impl
+impl<Chain> Uploadable for CounterContract<Chain> {
+    /// Return the path to the wasm file corresponding to the contract
+    fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
+        artifacts_dir_from_workspace!()
+            .find_wasm_path("counter_contract")
+            .unwrap()
     }
-    // Return a CosmWasm contract wrapper
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+    /// Returns a CosmWasm contract wrapper
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 crate::contract::execute,
@@ -35,28 +32,28 @@ impl<Chain: CwEnv> Uploadable for Counter<Chain> {
         )
     }
 }
+// ANCHOR_END: uploadable_impl
 // ANCHOR_END: custom_interface
 
+use cw_orch::anyhow::Result;
+
 // ANCHOR: daemon
-impl Counter<Daemon> {
+impl CounterContract<Daemon> {
     /// Deploys the counter contract at a specific block height
     pub fn await_launch(&self) -> Result<()> {
-        let daemon = self.get_chain();
-        let rt = daemon.rt_handle.clone();
+        let daemon = self.environment();
 
-        rt.block_on(async {
-            // Get the node query client, there are a lot of other clients available.
-            let node = daemon.query_client::<Node>();
-            let mut latest_block = node.latest_block().await.unwrap();
+        // Get the node query client, there are a lot of other clients available.
+        let node: Node = daemon.querier();
+        let mut latest_block = node.latest_block().unwrap();
 
-            while latest_block.header.height.value() < 100 {
-                // wait for the next block
-                daemon.next_block().unwrap();
-                latest_block = node.latest_block().await.unwrap();
-            }
-        });
+        while latest_block.height < 100 {
+            // wait for the next block
+            daemon.next_block().unwrap();
+            latest_block = node.latest_block().unwrap();
+        }
 
-        let contract = CounterContract::new(CONTRACT_NAME, daemon.clone());
+        let contract = CounterContract::new(daemon.clone());
 
         // Upload the contract
         contract.upload().unwrap();

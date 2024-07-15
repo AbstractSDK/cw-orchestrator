@@ -1,83 +1,137 @@
-use std::{fmt::Debug, rc::Rc, time::Duration};
+use std::{fmt::Debug, ops::DerefMut};
 
-use super::super::{sender::Wallet, DaemonAsync};
+use super::super::senders::Wallet;
 use crate::{
-    queriers::{DaemonQuerier, Node},
-    CosmTxResponse, DaemonBuilder, DaemonError, DaemonState,
+    queriers::{Bank, CosmWasmBase, Node},
+    senders::{builder::SenderBuilder, query::QuerySender},
+    CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
 };
-
-use cosmrs::tendermint::Time;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
-    environment::{ChainState, TxHandler},
+    environment::{ChainInfoOwned, ChainState, DefaultQueriers, QueryHandler, TxHandler},
 };
-use serde::{de::DeserializeOwned, Serialize};
+use cw_orch_traits::stargate::Stargate;
+use serde::Serialize;
 use tokio::runtime::Handle;
+
+use crate::senders::tx::TxSender;
+
+pub type Daemon = DaemonBase<Wallet>;
 
 #[derive(Clone)]
 /**
-    Represents a blockchain node.
-    Is constructed with the [DaemonBuilder].
+Represents a blockchain node.
+Is constructed with the [DaemonBuilder].
 
-    ## Usage
+## Usage
 
-    ```rust,no_run
-    use cw_orch_daemon::{Daemon, networks};
-    use tokio::runtime::Runtime;
+```rust,no_run
+use cw_orch_daemon::{Daemon, networks};
+use tokio::runtime::Runtime;
 
-    let rt = Runtime::new().unwrap();
-    let daemon: Daemon = Daemon::builder()
-        .chain(networks::JUNO_1)
-        .handle(rt.handle())
-        .build()
-        .unwrap();
-    ```
-    ## Environment Execution
+let rt = Runtime::new().unwrap();
+let daemon: Daemon = Daemon::builder(networks::JUNO_1)
+    .build()
+    .unwrap();
+```
+## Environment Execution
 
-    The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
+The Daemon implements [`TxHandler`] which allows you to perform transactions on the chain.
 
-    ## Querying
+## Querying
 
-    Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
-    See [Querier](crate::queriers) for examples.
+Different Cosmos SDK modules can be queried through the daemon by calling the [`Daemon.query_client<Querier>`] method with a specific querier.
+See [Querier](crate::queriers) for examples.
 */
-pub struct Daemon {
-    pub daemon: DaemonAsync,
+pub struct DaemonBase<Sender> {
+    pub(crate) daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
 }
 
-impl Daemon {
+impl<Sender> DaemonBase<Sender> {
     /// Get the daemon builder
-    pub fn builder() -> DaemonBuilder {
-        DaemonBuilder::default()
+    pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonBuilder {
+        DaemonBuilder::new(chain)
     }
 
-    /// Perform a query with a given querier
-    /// See [Querier](crate::queriers) for examples.
-    pub fn query_client<Querier: DaemonQuerier>(&self) -> Querier {
-        self.daemon.query_client()
-    }
-
-    /// Get the channel configured for this Daemon
-    #[cfg(feature = "grpc")]
-    pub fn channel(&self) -> tonic::transport::Channel {
-        self.daemon.state.transport_channel.clone()
-    }
-    #[cfg(feature = "rpc")]
-    pub fn channel(&self) -> cosmrs::rpc::HttpClient {
-        self.daemon.state.transport_channel.clone()
+    /// Get the mutable Sender object
+    pub fn sender_mut(&mut self) -> &mut Sender {
+        self.daemon.sender_mut()
     }
 
     /// Get the channel configured for this Daemon
-    pub fn wallet(&self) -> Wallet {
-        self.daemon.sender.clone()
+    pub fn sender(&self) -> &Sender {
+        self.daemon.sender()
+    }
+
+    /// Set the Sender for use with this Daemon
+    /// The sender will be configured with the chain's data.
+    pub fn new_sender<T: SenderBuilder>(
+        self,
+        sender_options: T,
+    ) -> DaemonBase<<T as SenderBuilder>::Sender> {
+        let new_daemon = self
+            .rt_handle
+            .block_on(self.daemon.new_sender(sender_options));
+        DaemonBase {
+            daemon: new_daemon,
+            rt_handle: self.rt_handle.clone(),
+        }
+    }
+
+    /// Flushes all the state related to the current chain
+    /// Only works on Local networks
+    pub fn flush_state(&mut self) -> Result<(), DaemonError> {
+        self.daemon.flush_state()
+    }
+
+    /// Return the chain info for this daemon
+    pub fn chain_info(&self) -> &ChainInfoOwned {
+        self.daemon.chain_info()
     }
 }
 
-impl ChainState for Daemon {
-    type Out = Rc<DaemonState>;
+impl<Sender: QuerySender> DaemonBase<Sender> {
+    /// Get the channel configured for this Daemon
+    pub fn channel(&self) -> Channel {
+        self.daemon.sender().channel()
+    }
+
+    /// Returns a new [`DaemonBuilder`] with the current configuration.
+    /// **Does not copy the `Sender`**
+    /// Does not consume the original [`Daemon`].
+    pub fn rebuild(&self) -> DaemonBuilder {
+        DaemonBuilder {
+            state: Some(self.state()),
+            chain: self.daemon.chain_info().clone(),
+            deployment_id: Some(self.daemon.state.deployment_id.clone()),
+            state_path: None,
+            write_on_change: None,
+            handle: Some(self.rt_handle.clone()),
+            mnemonic: None,
+        }
+    }
+}
+
+// Helpers for Daemon with [`Wallet`] sender.
+impl Daemon {
+    /// Specifies wether authz should be used with this daemon
+    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_mut().set_authz_granter(granter.to_string());
+        self
+    }
+
+    /// Specifies wether feegrant should be used with this daemon
+    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
+        self.sender_mut().set_fee_granter(granter.to_string());
+        self
+    }
+}
+
+impl<Sender> ChainState for DaemonBase<Sender> {
+    type Out = DaemonState;
 
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
@@ -85,21 +139,28 @@ impl ChainState for Daemon {
 }
 
 // Execute on the real chain, returns tx response
-impl TxHandler for Daemon {
+impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
     type Response = CosmTxResponse;
     type Error = DaemonError;
     type ContractSource = WasmPath;
-    type Sender = Wallet;
+    type Sender = Sender;
 
     fn sender(&self) -> Addr {
-        self.daemon.sender.address().unwrap()
+        self.sender_addr()
     }
 
+    fn sender_addr(&self) -> Addr {
+        self.daemon.sender_addr()
+    }
+
+    /// Overwrite the sender manually, could result in unexpected behavior.
+    /// Use native [`Daemon::new_sender`] instead!
     fn set_sender(&mut self, sender: Self::Sender) {
-        self.daemon.sender = sender
+        let mut daemon_sender = self.daemon.sender_mut();
+        (*daemon_sender.deref_mut()) = sender;
     }
 
-    fn upload(&self, uploadable: &impl Uploadable) -> Result<Self::Response, DaemonError> {
+    fn upload<T: Uploadable>(&self, uploadable: &T) -> Result<Self::Response, DaemonError> {
         self.rt_handle.block_on(self.daemon.upload(uploadable))
     }
 
@@ -127,15 +188,6 @@ impl TxHandler for Daemon {
         )
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
-        &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        self.rt_handle
-            .block_on(self.daemon.query(query_msg, contract_address))
-    }
-
     fn migrate<M: Serialize + Debug>(
         &self,
         migrate_msg: &M,
@@ -148,61 +200,68 @@ impl TxHandler for Daemon {
         )
     }
 
+    fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: cosmwasm_std::Binary,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle.block_on(
+            self.daemon
+                .instantiate2(code_id, init_msg, label, admin, coins, salt),
+        )
+    }
+}
+
+impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
+    fn commit_any<R>(
+        &self,
+        msgs: Vec<prost_types::Any>,
+        memo: Option<&str>,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle
+            .block_on(
+                self.sender().commit_tx_any(
+                    msgs.iter()
+                        .map(|msg| cosmrs::Any {
+                            type_url: msg.type_url.clone(),
+                            value: msg.value.clone(),
+                        })
+                        .collect(),
+                    memo,
+                ),
+            )
+            .map_err(Into::into)
+    }
+}
+
+impl<Sender: QuerySender> QueryHandler for DaemonBase<Sender> {
+    type Error = DaemonError;
+
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().block_height())?;
-        let end_height = last_height + amount;
+        self.rt_handle.block_on(self.daemon.wait_blocks(amount))?;
 
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query_client::<Node>().block_height())?;
-        }
         Ok(())
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        self.rt_handle
-            .block_on(tokio::time::sleep(Duration::from_secs(secs)));
+        self.rt_handle.block_on(self.daemon.wait_seconds(secs))?;
 
         Ok(())
     }
 
     fn next_block(&self) -> Result<(), DaemonError> {
-        let mut last_height = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().block_height())?;
-        let end_height = last_height + 1;
+        self.rt_handle.block_on(self.daemon.next_block())?;
 
-        while last_height < end_height {
-            // wait
-            self.rt_handle
-                .block_on(tokio::time::sleep(Duration::from_secs(4)));
-
-            // ping latest block
-            last_height = self
-                .rt_handle
-                .block_on(self.query_client::<Node>().block_height())?;
-        }
         Ok(())
     }
+}
 
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, DaemonError> {
-        let block = self
-            .rt_handle
-            .block_on(self.query_client::<Node>().latest_block())?;
-        let since_epoch = block.header.time.duration_since(Time::unix_epoch())?;
-        let time = cosmwasm_std::Timestamp::from_nanos(since_epoch.as_nanos() as u64);
-        Ok(cosmwasm_std::BlockInfo {
-            height: block.header.height.value(),
-            time,
-            chain_id: block.header.chain_id.to_string(),
-        })
-    }
+impl<Sender: QuerySender> DefaultQueriers for DaemonBase<Sender> {
+    type Bank = Bank;
+    type Wasm = CosmWasmBase<Sender>;
+    type Node = Node;
 }

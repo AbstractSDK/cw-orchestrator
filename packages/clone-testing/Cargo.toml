@@ -1,0 +1,36 @@
+[package]
+name = "cw-orch-clone-testing"
+version = "0.6.2"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Adapter for interacting with cw-multi-test via the cw-orchestrator tool"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cw-orch-daemon = { workspace = true }
+cw-orch-core = { workspace = true }
+cw-orch-mock = { workspace = true }
+clone-cw-multi-test = { version = "0.1", features = ["cosmwasm_1_2"] }
+cw-utils = { workspace = true }
+serde = { workspace = true }
+log = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+itertools = "0.12.0"
+sha2 = "0.10.8"
+tonic = { workspace = true }
+
+[dev-dependencies]
+cosmwasm-schema = "1.4.0"
+speculoos = { workspace = true }
+cw20 = { workspace = true }
+cw20-base = { workspace = true }
+
+env_logger = "0.10.0"
+counter-contract = { path = "../../contracts/counter" }
+cw-orch = { path = "../../cw-orch", features = ["daemon"] }
+pretty_env_logger = "0.5.0"

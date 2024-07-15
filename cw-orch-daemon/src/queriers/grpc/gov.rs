@@ -1,23 +1,45 @@
-use crate::{cosmos_modules, error::DaemonError};
+use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cw_orch_core::environment::{Querier, QuerierGetter};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
-use crate::queriers::DaemonQuerier;
-
 /// Querier for the Cosmos Gov module
+/// All the async function are prefixed with `_`
 pub struct Gov {
-    channel: Channel,
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
-impl DaemonQuerier for Gov {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl Gov {
+    pub fn new(daemon: &Daemon) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+
+    pub fn new_async(channel: Channel) -> Self {
+        Self {
+            channel,
+            rt_handle: None,
+        }
+    }
+}
+
+impl Querier for Gov {
+    type Error = DaemonError;
+}
+
+impl QuerierGetter<Gov> for Daemon {
+    fn querier(&self) -> Gov {
+        Gov::new(self)
     }
 }
 
 impl Gov {
     /// Query proposal details by proposal id
-    pub async fn proposal(
+    pub async fn _proposal(
         &self,
         proposal_id: u64,
     ) -> Result<cosmos_modules::gov::Proposal, DaemonError> {
@@ -35,7 +57,7 @@ impl Gov {
     /// Query proposals based on given status
     ///
     /// see [PageRequest] for pagination
-    pub async fn proposals(
+    pub async fn _proposals(
         &self,
         proposal_status: GovProposalStatus,
         voter: impl Into<String>,
@@ -57,7 +79,7 @@ impl Gov {
     }
 
     /// Query voted information based on proposal_id for voter address
-    pub async fn vote(
+    pub async fn _vote(
         &self,
         proposal_id: u64,
         voter: impl Into<String>,
@@ -77,7 +99,7 @@ impl Gov {
     /// Query votes of a given proposal
     ///
     /// see [PageRequest] for pagination
-    pub async fn votes(
+    pub async fn _votes(
         &self,
         proposal_id: impl Into<u64>,
         pagination: Option<PageRequest>,
@@ -95,7 +117,7 @@ impl Gov {
     }
 
     /// Query all parameters of the gov module
-    pub async fn params(
+    pub async fn _params(
         &self,
         params_type: impl Into<String>,
     ) -> Result<cosmos_modules::gov::QueryParamsResponse, DaemonError> {
@@ -111,7 +133,7 @@ impl Gov {
     }
 
     /// Query deposit information using proposal_id and depositor address
-    pub async fn deposit(
+    pub async fn _deposit(
         &self,
         proposal_id: u64,
         depositor: impl Into<String>,
@@ -131,7 +153,7 @@ impl Gov {
     /// Query deposits of a proposal
     ///
     /// see [PageRequest] for pagination
-    pub async fn deposits(
+    pub async fn _deposits(
         &self,
         proposal_id: u64,
         pagination: Option<PageRequest>,
@@ -149,7 +171,7 @@ impl Gov {
     }
 
     /// TallyResult queries the tally of a proposal vote.
-    pub async fn tally_result(
+    pub async fn _tally_result(
         &mut self,
         proposal_id: u64,
     ) -> Result<cosmos_modules::gov::TallyResult, DaemonError> {

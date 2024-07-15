@@ -1,8 +1,7 @@
 use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
     service_client::ServiceClient, GetNodeInfoRequest,
 };
-use ibc_chain_registry::chain::Grpc;
-use ibc_relayer_types::core::ics24_host::identifier::ChainId;
+use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 use tonic::transport::{Channel, ClientTlsConfig};
 
 use super::error::DaemonError;
@@ -12,11 +11,15 @@ pub struct GrpcChannel {}
 
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
-    pub async fn connect(grpc: &[Grpc], chain_id: &ChainId) -> Result<Channel, DaemonError> {
+    pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+        if grpc.is_empty() {
+            return Err(DaemonError::GRPCListIsEmpty);
+        }
+
         let mut successful_connections = vec![];
 
-        for Grpc { address, .. } in grpc.iter() {
-            log::info!("Trying to connect to endpoint: {}", address);
+        for address in grpc.iter() {
+            log::debug!(target: &connectivity_target(), "Trying to connect to endpoint: {}", address);
 
             // get grpc endpoint
             let endpoint = Channel::builder(address.clone().try_into().unwrap());
@@ -40,7 +43,7 @@ impl GrpcChannel {
                     continue;
                 };
 
-                log::info!("Attempting to connect with TLS");
+                log::debug!(target: &connectivity_target(), "Attempting to connect with TLS");
 
                 // re attempt to connect
                 let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
@@ -66,16 +69,14 @@ impl GrpcChannel {
                 .into_inner();
 
             // local juno does not return a proper ChainId with epoch format
-            if ChainId::is_epoch_format(&node_info.default_node_info.as_ref().unwrap().network) {
-                // verify we are connected to the spected network
-                if node_info.default_node_info.as_ref().unwrap().network != chain_id.as_str() {
-                    log::error!(
-                        "Network mismatch: connection:{} != config:{}",
-                        node_info.default_node_info.as_ref().unwrap().network,
-                        chain_id.as_str()
-                    );
-                    continue;
-                }
+            // verify we are connected to the expected network
+            if node_info.default_node_info.as_ref().unwrap().network != chain_id {
+                log::error!(
+                    "Network mismatch: connection:{} != config:{}",
+                    node_info.default_node_info.as_ref().unwrap().network,
+                    chain_id
+                );
+                continue;
             }
 
             // add endpoint to succesful connections
@@ -89,6 +90,11 @@ impl GrpcChannel {
 
         Ok(successful_connections.pop().unwrap())
     }
+
+    /// Create a gRPC channel from the chain info
+    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Result<Channel, DaemonError> {
+        GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await
+    }
 }
 
 #[cfg(test)]
@@ -101,15 +107,15 @@ mod tests {
     use speculoos::prelude::*;
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn no_connection() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
-        let grpcs = &vec!["https://127.0.0.1:99999"];
+        let grpcs = &["https://127.0.0.1:99999"];
         chain.grpc_urls = grpcs;
 
-        let build_res = DaemonAsync::builder()
-            .chain(chain)
+        let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
-            .build()
+            .build_sender(())
             .await;
 
         asserting!("there is no GRPC connection")
@@ -120,15 +126,15 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn network_grpcs_list_is_empty() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
-        let grpcs: &Vec<&str> = &vec![];
+        let grpcs = &[];
         chain.grpc_urls = grpcs;
 
-        let build_res = DaemonAsync::builder()
-            .chain(chain)
+        let build_res = DaemonAsync::builder(chain)
             .deployment_id("v0.1.0")
-            .build()
+            .build_sender(())
             .await;
 
         asserting!("GRPC list is empty")

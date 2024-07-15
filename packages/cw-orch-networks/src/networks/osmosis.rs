@@ -1,19 +1,19 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: osmosis
 pub const OSMO_NETWORK: NetworkInfo = NetworkInfo {
-    id: "osmosis",
+    chain_name: "osmosis",
     pub_address_prefix: "osmo",
     coin_type: 118u32,
 };
 
 pub const OSMOSIS_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
-    chain_id: "osmois-1",
+    chain_id: "osmosis-1",
     gas_denom: "uosmo",
     gas_price: 0.025,
-    grpc_urls: &["http://grpc.osmosis.zone:9090"],
-    rpc_urls: &[],
+    grpc_urls: &["https://grpc.osmosis.zone:443"],
+    
     network_info: OSMO_NETWORK,
     lcd_url: None,
     fcd_url: None,

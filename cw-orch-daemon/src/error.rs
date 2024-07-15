@@ -1,10 +1,13 @@
 #![allow(missing_docs)]
 
+use cosmwasm_std::{Coin, Instantiate2AddressError};
 use cw_orch_core::CwEnvError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DaemonError {
+    #[error(transparent)]
+    CosmwasmStd(#[from] cosmwasm_std::StdError),
     #[error("Reqwest HTTP(s) Error")]
     ReqwestError(#[from] ::reqwest::Error),
     #[error("JSON Conversion Error")]
@@ -12,9 +15,11 @@ pub enum DaemonError {
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
+    ParseFloatError(#[from] std::num::ParseFloatError),
+    #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
     #[error(transparent)]
-    Secp256k1(#[from] ::secp256k1::Error),
+    Secp256k1(#[from] bitcoin::secp256k1::Error),
     #[error(transparent)]
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]
@@ -36,6 +41,8 @@ pub enum DaemonError {
     ProseEncoreError(#[from] prost::EncodeError),
     #[error(transparent)]
     CwEnvError(#[from] ::cw_orch_core::CwEnvError),
+    #[error(transparent)]
+    StripPrefixPath(#[from] std::path::StripPrefixError),
     #[error("Bech32 Decode Error")]
     Bech32DecodeErr,
     #[error("Bech32 Decode Error: Key Failed prefix {0} or length {1} Wanted:{2}/{3}")]
@@ -118,6 +125,18 @@ pub enum DaemonError {
     IbcError(String),
     #[error("insufficient fee, check gas price: {0}")]
     InsufficientFee(String),
+    #[error("Not enough balance, expected {expected}, found {current}")]
+    NotEnoughBalance { expected: Coin, current: Coin },
+    #[error("Can't set the daemon state, it's read-only {0}")]
+    StateReadOnly(String),
+    #[error("You need to pass a runtime to the querier object to do synchronous queries. Use daemon.querier instead")]
+    QuerierNeedRuntime,
+    #[error(transparent)]
+    Instantiate2Error(#[from] Instantiate2AddressError),
+    #[error("Error opening file {0},err: ({1})")]
+    OpenFile(String, String),
+    #[error("State file {0} already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder")]
+    StateAlreadyLocked(String),
 }
 
 impl DaemonError {

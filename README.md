@@ -1,6 +1,6 @@
 <!-- add bg image -->
 <div align="center">
-  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/orchestrator_bg2.png", width = "230px"/>
+  <img src="https://raw.githubusercontent.com/AbstractSDK/assets/mainline/v1/orchestrator_bg2.png", width = "230px"/>
 
 # cw-orchestrator
 
@@ -14,7 +14,7 @@ The documentation here gives you a brief overview of the functionality that cw-o
 
 ## How it works
 
-Interacting with a [CosmWasm](https://cosmwasm.com/) contract is done by calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
+Interacting with a [CosmWasm](https://cosmwasm.com/) contract involves calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
 
 ## Maintained Interfaces
 
@@ -23,18 +23,17 @@ We maintain a small set of interfaces ourselves that we use in our own projects.
 | Codebase | Latest Version |
 |---|---|
 | [cw-plus](https://github.com/AbstractSDK/cw-plus) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/cw-plus"> |
-| [wyndex](https://github.com/AbstractSDK/integration-bundles) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/integration-bundles"> |
 | [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-interface) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-interface"> |
 
 ## Creating an Interface
 
-In order to generate a typed interface to your contract you can either pass the contract's message types into the `contract` macro or you can add the `interface` macro to your endpoint function exports!
+In order to generate a typed interface to your contract you can pass the contract's message types into the `cw_orch::interface` macro.
 
-### The `contract` Macro
+### The `interface` Macro
 
 Provide your messages to a new struct that's named after your contract.
 
-```rust
+```rust,ignore
 use cw_orch::interface;
 use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
 
@@ -45,38 +44,18 @@ pub struct Cw20;
 
 The macro will generate a `new` function that takes the contract name and the chain that you want to interact with. You can then use this interface to interact with the contract.
 
-### The `interface_entry_point` Macro
-
-You create a contract interface by adding the `interface_entry_point` macro to your contract endpoints. The name of the generated interface will be the crate name in PascalCase.
-
-```ts
-use cw_orch::interface_entry_point;
-
-#[cw_orch::interface_entry_point]
-fn instantiate(...)
-
-#[cw_orch::interface_entry_point]
-fn execute(...)
-```
-
-You now have a contract interface that you can use to interact with your contract.
-
 ### Usage
 
-You can use this interface to interact with the contract:
+You can use this interface to deploy and interact with the contract:
 
-```rust
+```rust,ignore
 use cw_orch::interface;
 use cw_orch::prelude::*;
 use cw20::{Cw20Coin, BalanceResponse};
-use cw20_base::msg::{InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg};
-
-#[interface(InstantiateMsg, ExecuteMsg, QueryMsg, MigrateMsg)]
-pub struct Cw20;
 
 // Implement the Uploadable trait so it can be uploaded to the mock. 
-impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
-    fn wrapper(&self) -> Box<dyn MockContract<Empty>> {
+impl <Chain> Uploadable for Cw20<Chain> {
+    fn wrapper() -> Box<dyn MockContract<Empty>> {
         Box::new(
             ContractWrapper::new_with_empty(
                 cw20_base::contract::execute,
@@ -88,51 +67,50 @@ impl <Chain: CwEnv> Uploadable for Cw20<Chain> {
     }
 }
 
-// ## Environment setup ##
 
-let sender = Addr::unchecked("sender");
-// Create a new mock chain (backed by cw-multi-test)
-let chain = Mock::new(&sender);
+fn example_test() {
+  let sender = Addr::unchecked("sender");
+  // Create a new mock chain (backed by cw-multi-test)
+  let chain = Mock::new(&sender);
+  
+  // Create a new Cw20 interface
+  let cw20_base: Cw20<Mock> = Cw20::new("my_token", chain);
+  
+  // Upload the contract
+  cw20_base.upload().unwrap();
 
-// Create a new Cw20 interface
-let cw20_base: Cw20<Mock> = Cw20::new("my_token", chain);
+  // Instantiate a CW20 token
+  let cw20_init_msg = InstantiateMsg {
+      decimals: 6,
+      name: "Test Token".to_string(),
+      initial_balances: vec![Cw20Coin {
+          address: sender.to_string(),
+          amount: 10u128.into(),
+      }],
+      marketing: None,
+      mint: None,
+      symbol: "TEST".to_string(),
+  };
+  cw20_base.instantiate(&cw20_init_msg, None, None).unwrap();
 
-// Upload the contract
-cw20_base.upload().unwrap();
+  // Query the balance
+  let balance: BalanceResponse = cw20_base.query(&QueryMsg::Balance { address: sender.to_string() }).unwrap();
 
-// Instantiate a CW20 token
-let cw20_init_msg = InstantiateMsg {
-    decimals: 6,
-    name: "Test Token".to_string(),
-    initial_balances: vec![Cw20Coin {
-        address: sender.to_string(),
-        amount: 10u128.into(),
-    }],
-    marketing: None,
-    mint: None,
-    symbol: "TEST".to_string(),
-};
-cw20_base.instantiate(&cw20_init_msg, None, None).unwrap();
-
-// Query the balance
-let balance: BalanceResponse = cw20_base.query(&QueryMsg::Balance { address: sender.to_string() }).unwrap();
-
-assert_eq!(balance.balance.u128(), 10u128);
+  assert_eq!(balance.balance.u128(), 10u128);
+}
 ```
 
 ## Features
 
-cw-orchestrator provides two additional macros that can be used to improve the scripting experience.
+`cw-orchestrator` provides two additional macros that can be used to improve the scripting experience.
 
 ### ExecuteFns
 
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
 
-The macros should only be added to the structs when the "interface" trait is enable. This is ensured by the `interface` feature in the following example
+The `ExecuteFns` macro will only be applied on the Msg when compiled for non-wasm target. 
 
-Example:
-
-```rust
+```rust,ignore
 use cw_orch::prelude::*;
 
 #[cosmwasm_schema::cw_serde]
@@ -140,17 +118,22 @@ use cw_orch::prelude::*;
 pub enum ExecuteMsg {
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
-    /// the `payable` attribute will add a `coins` argument to the generated function
-    #[payable]
+    /// the `payable` attribute can be used to add a `coins` argument to the generated function.
+    #[cw_orch(payable)]
     Deposit {}
 }
+```
 
+The generated functions can then be used for any interface that uses this `ExecuteMsg`.
+
+```rust,ignore
 // Define the interface, which is generic over the CosmWasm environment (Chain)
 #[cw_orch::interface(Empty,ExecuteMsg,Empty,Empty)]
 struct Cw1<Chain>;
 
-impl<Chain: CwEnv> Cw1<Chain> {
+impl<Chain> Cw1<Chain> {
     pub fn test_macro(&self) {
+        // Enjoy the nice API! 
         self.freeze().unwrap();
         self.update_admins(vec!["new_admin".to_string()]).unwrap();
         self.deposit(&[Coin::new(13,"juno")]).unwrap();
@@ -158,17 +141,15 @@ impl<Chain: CwEnv> Cw1<Chain> {
 }
 ```
 
-> We recommend shielding the `ExecuteMsgFns` macro behind a feature flag to avoid pulling in `cw-orchestrator` by default.
-
 ### QueryFns
 
 The `QueryFns` derive macro works in the same way as the `ExecuteFns` macro but it also uses the `#[returns(QueryResponse)]` attribute from `cosmwasm-schema` to generate the queries with the correct response types.
 
-### `impl_into` Attribute
+### Nested types
 
-For nested messages (execute and query) you can add an `impl_into` attribute. This expects the enum to implement the `Into` trait for the provided type. This is extremely useful when working with generic messages:
+For nested messages (execute and query), you just need to derive `ExecuteFns` or `QueryFns` on the underlying structures. In general, every structure that implements the `Into` trait for the contract message will make the function available on the contract. To make that clearer, her's an example:
 
-```rust
+```rust,ignore
 use cw_orch::interface;
 use cw_orch::prelude::*;
 
@@ -178,16 +159,17 @@ pub enum GenericExecuteMsg<T> {
     Generic(T),
 }
 
-// Now the following is possible:
-type ExecuteMsg = GenericExecuteMsg<Foo>;
-
+// A type that will fill the generic.
 #[cosmwasm_schema::cw_serde]
 #[derive(cw_orch::ExecuteFns)]
-#[impl_into(ExecuteMsg)]
 pub enum Foo {
     Bar { a: String },
 }
 
+
+// Now we construct the concrete type with `Foo` in place of the generic.
+type ExecuteMsg = GenericExecuteMsg<Foo>;
+// And we implement the `From` trait (which auto-implements `Into`).
 impl From<Foo> for ExecuteMsg {
     fn from(msg: Foo) -> Self {
         ExecuteMsg::Generic(msg)
@@ -199,15 +181,81 @@ struct Example<Chain>;
 
 impl<Chain: CwEnv> Example<Chain> {
     pub fn test_macro(&self) {
-        // function `bar` is available because of the `impl_into` attribute!
+        // Function `bar` is available because `Foo` implements `Into<GenericExecuteMsg<Foo>>`
         self.bar("hello".to_string()).unwrap();
     }
 }
 ```
 
+
+## WASM flagging
+
+Cw-orch cannot be used *inside* smart contracts. In order to prevent you from having to add feature flags inside your smart-contract, the library excludes itself when building for the WASM target architecture. If you see errors during the build process like shown below, you will want to `target-flag` the related code:
+
+```bash
+error[E0432]: unresolved import `cw_orch::prelude`
+ --> contracts/counter/src/interface.rs:4:26
+  |
+4 | use cw_orch::{interface, prelude::*};
+  |                          ^^^^^^^ could not find `prelude` in `cw_orch`
+
+error[E0432]: unresolved import `cw_orch::anyhow`
+  --> contracts/counter/src/interface.rs:38:14
+   |
+38 | use cw_orch::anyhow::Result;
+   |              ^^^^^^ could not find `anyhow` in `cw_orch`
+
+error: cannot find macro `artifacts_dir_from_workspace` in this scope
+  --> contracts/counter/src/interface.rs:19:9
+   |
+19 |         artifacts_dir_from_workspace!()
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0405]: cannot find trait `Uploadable` in this scope
+  --> contracts/counter/src/interface.rs:16:13
+   |
+16 | impl<Chain> Uploadable for CounterContract<Chain> {
+   |             ^^^^^^^^^^ not found in this scope
+```
+
+Just add the `#[cfg(not(target_arch = "wasm32"))]` to not include the code inside wasm builds:
+
+```rust,ignore
+#[cfg(not(target_arch = "wasm32"))]
+mod interface;
+```
+
+## Supported chains
+
+Cw-orchestrator supports the following chains natively:
+🟥 LocalNet, 🟦 Testnet, 🟩 Mainnet
+
+- Archway 🟦🟩
+- Injective 🟦🟩
+- Juno 🟥🟦🟩
+- Kujira 🟦
+- Migaloo 🟥🟦🟩
+- Neutron 🟦🟩
+- Nibiru 🟦
+- Osmosis 🟥🟦🟩
+- Sei 🟥🟦🟩
+- Terra 🟥🟦🟩
+- Rollkit 🟥🟦
+- Xion 🟦
+- Landslide 🟥
+
+Additional chains can easily be integrated by creating a new [`ChainInfo`](./packages/cw-orch-networks/src/chain_info.rs) structure. This can be done in your script directly. If you have additional time, don't hesitate to open a PR on this repository.
+
 ### Testing with OsmosisTestTube
 
-[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise. Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
+[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise.
+
+- Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
+- Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  
+
+## Installation
+
+Cw-orch relies on external tools to work properly. Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies and install commands that are needed for cw-orch to work properly on your machine.
 
 ## Contributing
 

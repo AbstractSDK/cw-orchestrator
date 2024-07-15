@@ -1,128 +1,174 @@
-# Quick-Start Guide
+# Quick-Start Guide <!-- omit in toc -->
 
-This guide will show you how to use the `cw-orchestrator` with your smart contract. Follow the steps below to add `cw-orch` to your contract's TOML file, enable the interface feature, add the interface macro to your contract's endpoints, and use interaction helpers to simplify contract calls and queries.
+Get ready to change the way you interact with contracts. The following steps will allow you to write clean code such as:
 
-## Adding `cw-orch` to Your `Cargo.toml` File
+```rust,ignore
+{{#include ../../contracts/counter/examples/deploy.rs:clean_example}}
+```
 
-To use the `cw-orchestrator`, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
+In this quick-start guide, we will review the necessary steps in order to integrate `cw-orch` into a simple contract crate. [We review integration of rust-workspaces (multiple contracts) at the end of this page](#integration-in-a-workspace).
+
+> **NOTE**: *Additional content*
+>
+>If you're moving quicker than everybody else, we suggest looking at <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..main" target="_blank">a before-after review of this example integration</a>. This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
+
+## Summary
+
+- [Summary](#summary)
+- [Single Contract Integration](#single-contract-integration)
+  - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
+  - [Creating an Interface](#creating-an-interface)
+  - [Interaction helpers](#interaction-helpers)
+  - [Using the integration](#using-the-integration)
+- [Integration in a workspace](#integration-in-a-workspace)
+  - [Handling dependencies](#handling-dependencies)
+  - [Creating an interface crate](#creating-an-interface-crate)
+  - [Integrating single contracts](#integrating-single-contracts)
+- [More examples and scripts](#more-examples-and-scripts)
+
+## Single Contract Integration
+
+### Adding `cw-orch` to your `Cargo.toml` file
+
+To use cw-orchestrator, you need to add `cw-orch` to your contract's TOML file. Run the command below in your contract's directory:
 
 ```shell
-$ cargo add --optional cw-orch
-> Adding cw-orch v0.15.0 to optional dependencies.
+cargo add cw-orch
 ```
 
 Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.15.0", optional = true } # Latest version at time of writing
+cw-orch = {version = "0.21.2" } # Latest version at time of writing
 ```
 
-Now that we have added `cw-orch` as an optional dependency we will want to enable it through a feature. This ensures that the code added by `cw-orch` is not included in the wasm artifact of the contract. To do this add an `interface` feature to the `Cargo.toml` and enable `cw-orch` when it is enabled.
+> **NOTE**: Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract. Learn more about this behavior in the section about [Wasm Compilation](contracts/wasm-compilation.md)
 
-To do this include the following in the `Cargo.toml`:
+### Creating an Interface
+
+When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. This file should not be included inside you final wasm. In order to do that, you need to add `#[cfg(not(target_arch = "wasm32"))]` when importing the file.
+
+```rust,ignore
+{{#include ../../contracts/counter/src/lib.rs:custom_interface}}
+```
+
+Then, inside that `interface.rs` file, you can define the interface for your contract:
+
+```rust,ignore
+{{#include ../../contracts/counter/src/interface.rs:custom_interface}}
+
+```
+
+Learn more about the content of the interface creation specifics on [the interface page](./contracts/interfaces.md#creating-an-interface)
+
+> **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
+>
+>    ```rust,ignore
+>    #[cfg(not(target_arch = "wasm32"))]
+>    pub use crate::interface::CounterContract;
+>    ```
+
+### Interaction helpers
+
+cw-orchestrator provides a additional macros that simplify contract calls and queries. The macro implements functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
+
+Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions (in `msg.rs` in our example) and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
+
+```rust,ignore
+{{#include ../../contracts/counter/src/msg.rs:exec_msg}}
+
+{{#include ../../contracts/counter/src/msg.rs:query_msg}}
+```
+
+Make sure to derive the `#[derive(cosmwasm_schema::QueryResponses)]` macro on your query messages !
+
+Find out more about the interaction helpers on [the interface page](./contracts/interfaces.md#entry-point-function-generation)
+
+> **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
+>
+>    ```rust,ignore
+>    pub use crate::msg::{ExecuteMsgFns as CounterExecuteMsgFns, QueryMsgFns as CounterQueryMsgFns};
+>    ```
+
+### Using the integration
+
+Now that all the setup is done, you can use your contract in tests, integration-tests or scripts.
+
+Start by importing your crate, in your `[dev-dependencies]` for instance:
 
 ```toml
-[features]
-interface = ["dep:cw-orch"] # Adds the dependency when the feature is enabled
+counter-contract = { path = "../counter-contract"}
 ```
 
-## Creating an Interface
-
-Now that we have the dependency set up you can add the `interface_entry_point` macro to your contract's entry points. This macro will generate an interface to your contract that you will be able to use to interact with your contract. Get started by adding the feature-flagged interface macro to the contract's entry points:
-
-```rust,no_run,noplayground
-# use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdResult};
-# pub struct InstantiateMsg;
-# pub struct ExecuteMsg;
-#
-// In `contract.rs`
-#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
-pub fn instantiate(
-   deps: DepsMut,
-   env: Env,
-   info: MessageInfo,
-   msg: InstantiateMsg,
-) -> StdResult<Response> {
-    // ...
-    Ok(Response::new())
-}
-
-#[cfg_attr(feature="interface", cw_orch::interface_entry_point)] // <--- Add this line
-pub fn execute(
-   deps: DepsMut,
-   env: Env,
-   info: MessageInfo,
-   msg: ExecuteMsg,
-) -> StdResult<Response> {
-    // ...
-    Ok(Response::new())
-}
-#
-# fn main() {}
-// ... Do the same for the other entry points (query, migrate, reply, sudo)
-```
-
-By adding these lines, we generate code whenever the `interface` feature is enabled. The code generates a contract interface, the name of which will be the PascalCase of the crate's name.
-
-When uploading to a blockchain the macro will search for an `artifacts` directory in the project's root. If this is not what you want you can specify the paths yourself using the `interface` macro covered in [interfaces](./tutorial/interfaces.md#defining-contract-interfaces).
-
-> The name of the crate is defined in the `Cargo.toml` file of your contract.
-
-It can be helpful to re-expose the interface in the crate's root so that it is easy to import:
+You can now use:
 
 ```rust,ignore
-// in lib.rs
-#[cfg(feature = "interface")]
-pub use crate::contract::MyContract
+{{#include ../../contracts/counter/examples/deploy.rs:full_counter_example}}
 ```
 
-You can now create a test in `contract/tests` or an executable in `contract/bin` and start interacting with the contract.
+## Integration in a workspace
 
-## Interaction helpers
+In this paragraph, we will use the `cw-plus` repository as an example. You can review:
 
-cw-orchestrator provides an additional macro to simplify contract calls and queries. The macro generates functions on the interface for each variant of the contract's `ExecuteMsg` and `QueryMsg`.
+- <a href="https://github.com/AbstractSDK/cw-plus" target="_blank">The full integration code</a> with `cw-orch` added
+- <a href="https://github.com/cosmwasm/cw-plus/compare/main...abstractsdk:main" target="_blank">The complete diff</a> that shows you all integration spots (if you want to go fast)
 
-Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
+### Handling dependencies
 
-```rust,no_run
-use cosmwasm_schema::{QueryResponses, cw_serde};
+When using workspaces, you need to add `cw-orch` as a dependency on all crates that include `ExecuteMsg` and `QueryMsg` used in your contracts.
+You then add the `#[derive(ExecuteFns)]` and `#[derive(QueryFns)]` macros to those messages. 
 
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
-#[cw_serde]
-pub enum ExecuteMsg {
-    Increment {},
-    // ...
-}
+Refer above to [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file) for more details on how to do that.
 
-#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
-#[derive(QueryResponses)]
-#[cw_serde]
-pub enum QueryMsg {
-    #[returns(String)]
-    Config {}
-    // ...
-}
+For instance, for the `cw20_base` contract, you need to execute those 2 steps on the `cw20-base` contract (where the `QueryMsg` are defined) as well as on the `cw20` package (where the `ExecuteMsg` are defined).
 
-# fn main() {}
+### Creating an interface crate
+
+When using workspace, we advise you to create a new crate inside your workspace for defining your contract's interfaces. In order to do that, use:
+
+```shell
+cargo new interface --lib
+cargo add cw-orch --package interface 
 ```
 
-Any variant of the `ExecuteMsg` and `QueryMsg` that has a `#[derive(ExecuteFns)]` or `#[derive(QueryFns)]` will have a function implemented on the interface through a trait. The function will have the snake_case name of the variant and will take the same arguments as the variant. The arguments are ordered in alphabetical order to prevent attribute ordering from changing the function signature. If coins need to be sent along with the message you can add `#[payable]` to the variant and the function will take a `Vec<Coin>` as the last argument.
+Add the interface package to your workspace `Cargo.toml` file
 
-You can access these functions by importing the generated traits from the message file. The generated traits are named `ExecuteMsgFns` and `QueryMsgFns`. Again it's helpful to re-export these traits in the crate's root so that they are easy to import:
-
-```rust,ignore
-// in lib.rs
-#[cfg(feature = "interface")]
-pub use crate::msg::{ExecuteMsgFns as MyContractExecuteFns, QueryMsgFns as MyContractQueryFns};
+```toml
+[workspace]
+members = ["packages/*", "contracts/*", "interface"]
 ```
 
-## Example Counter Contract
+Inside this `interface` crate, we advise to integrate all your contracts 1 by 1 in separate files. Here is the structure of the `cw-plus` integration for reference:
 
-To show all this functionality in action, we will use an example counter contract. The example counter contract is a simple contract that allows you to increment and decrement a counter. The contract also allows you to query the current value of the counter. The contract is available [here](https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter).
-
-We have already added the `interface_entry_point` macro to the contract's endpoints. We can now create a test in `contract/tests` to interact with the contract. The test will use the `Mock` struct from `cw-orchestrator` to mock the environment and the `CounterContract` struct generated by the `interface_entry_point` macro to interact with the contract.
-
-```rust,ignore
-{{#include ../../contracts/counter/tests/integration_tests.rs:integration_test}}
+```path
+interface (interface collection)
+├── Cargo.toml
+└── src
+    ├── cw1_subkeys.rs
+    ├── cw1_whitelist.rs
+    ├── cw20_base.rs
+    ├── cw20_ics20.rs
+    └── ..
 ```
+
+When importing your crates to get the messages types, you can use the following command in the interface folder.
+
+```shell
+cargo add cw20-base --path ../contracts/cw20-base/
+cargo add cw20 --path ../packages/cw20
+```
+
+### Integrating single contracts
+
+Now that you workspace is setup, you can [integrate with single contracts](#single-contract-integration) using the above section
+
+## More examples and scripts
+
+You can find more example interactions on the `counter-contract` example directly in the `cw-orchestrator` repo:  
+
+- Some examples <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/contracts/counter/examples/deploy.rs" target="_blank">showcase interacting with live chains</a>.
+- Some other examples show <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests" target="_blank">how to use the library for testing your contracts</a>.
+
+> **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`.
+> Why not go directly to [environment variables](./contracts/env-variable.md)?

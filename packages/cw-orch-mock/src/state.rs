@@ -1,8 +1,5 @@
 use cosmwasm_std::{testing::mock_env, Addr};
-use cw_orch_core::{
-    environment::{DeployDetails, StateInterface},
-    CwEnvError,
-};
+use cw_orch_core::{environment::StateInterface, CwEnvError};
 
 use std::collections::HashMap;
 
@@ -13,6 +10,8 @@ pub struct MockState {
     pub code_ids: HashMap<String, u64>,
     /// Deployed contract addresses
     pub addresses: HashMap<String, Addr>,
+    /// Chain id of the mocked chain
+    pub chain_id: String,
 }
 
 impl MockState {
@@ -21,7 +20,25 @@ impl MockState {
         Self {
             addresses: HashMap::new(),
             code_ids: HashMap::new(),
+            chain_id: mock_env().block.chain_id,
         }
+    }
+    /// Creates a new empty mock state
+    pub fn new_with_chain_id(chain_id: &str) -> Self {
+        Self {
+            addresses: HashMap::new(),
+            code_ids: HashMap::new(),
+            chain_id: chain_id.to_string(),
+        }
+    }
+
+    pub fn with_chain_id(mut self, chain_id: &str) -> Self {
+        self.chain_id = chain_id.to_string();
+        self
+    }
+
+    pub fn set_chain_id(&mut self, chain_id: &str) {
+        self.chain_id = chain_id.to_string();
     }
 }
 
@@ -44,6 +61,10 @@ impl StateInterface for MockState {
             .insert(contract_id.to_string(), address.to_owned());
     }
 
+    fn remove_address(&mut self, contract_id: &str) {
+        self.addresses.remove(contract_id);
+    }
+
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         self.code_ids
@@ -57,22 +78,16 @@ impl StateInterface for MockState {
         self.code_ids.insert(contract_id.to_string(), code_id);
     }
 
+    fn remove_code_id(&mut self, contract_id: &str) {
+        self.code_ids.remove(contract_id);
+    }
+
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {
         Ok(self.addresses.clone())
     }
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         Ok(self.code_ids.clone())
-    }
-
-    fn deploy_details(&self) -> DeployDetails {
-        let chain_id: String = mock_env().block.chain_id;
-        let chain_name: String = chain_id.rsplitn(2, '-').collect::<Vec<_>>()[1].to_string();
-        DeployDetails {
-            chain_id,
-            chain_name,
-            deployment_id: "default".to_string(),
-        }
     }
 }
 

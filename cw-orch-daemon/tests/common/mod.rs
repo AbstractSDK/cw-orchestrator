@@ -7,13 +7,17 @@ mod node {
 
     use ctor::{ctor, dtor};
 
+    use cw_orch_daemon::env::DaemonEnvVars;
     use duct::cmd;
 
     // Config
     const JUNO_IMAGE: &str = "ghcr.io/cosmoscontracts/juno:v12.0.0";
+    #[allow(unused)]
+    pub const STAKE_TOKEN: &str = "ujunox";
 
     // Defaults for env vars
     const CONTAINER_NAME: &str = "juno_node_1";
+    // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
     const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 
     use uid::Id as IdT;
@@ -46,6 +50,8 @@ mod node {
     }
 
     pub mod container {
+        use crate::common::STAKE_TOKEN;
+
         use super::cmd;
 
         pub fn find(name: &String) -> bool {
@@ -84,7 +90,7 @@ mod node {
                 "-p",
                 "9090:9090",
                 "-e",
-                "STAKE_TOKEN=ujunox",
+                format!("STAKE_TOKEN={}", STAKE_TOKEN),
                 "-e",
                 "UNSAFE_CORS=true",
                 image,
@@ -148,23 +154,19 @@ mod node {
         }
         let image = env::var("JUNO_IMAGE").unwrap();
 
-        let temp_dir = env::temp_dir();
-        let state_file = temp_dir.join("cw_orch_test.json");
-
-        if env::var("STATE_FILE").is_err() {
-            env::set_var("STATE_FILE", state_file);
-        }
-
-        if env::var("LOCAL_MNEMONIC").is_err() {
+        if DaemonEnvVars::local_mnemonic().is_none() {
             env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
         }
 
         log::info!("Using RUST_LOG: {}", env::var("RUST_LOG").unwrap());
         log::info!("Using CONTAINER_NAME: {}", container);
-        log::info!("Using STATE_FILE: {}", env::var("STATE_FILE").unwrap());
         log::info!(
-            "Using LOCAL_MNEMONIC: {}",
-            env::var("LOCAL_MNEMONIC").unwrap()
+            "Using STATE_FILE: {}",
+            DaemonEnvVars::state_file().display()
+        );
+        log::info!(
+            "Using LOCAL_MNEMONIC: {:?}",
+            DaemonEnvVars::local_mnemonic()
         );
 
         container::start(&container, &image);

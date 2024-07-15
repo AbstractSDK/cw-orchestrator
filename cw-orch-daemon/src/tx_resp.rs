@@ -1,11 +1,5 @@
-use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use cosmrs::rpc::endpoint;
-use cosmrs::tendermint::abci::Code;
-use cosmrs::tendermint::Hash;
-use cosmwasm_std::{to_binary, Binary, StdError, StdResult};
-use serde::{Deserialize, Serialize};
-
-use cw_orch_core::environment::IndexResponse;
+use prost::bytes::Bytes;
 
 use super::{
     cosmos_modules::{
@@ -14,14 +8,23 @@ use super::{
     },
     error::DaemonError,
 };
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+
+use cosmwasm_std::{to_json_binary, Binary, StdError, StdResult};
+use cw_orch_core::environment::IndexResponse;
+use serde::{Deserialize, Serialize};
 
 const FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f";
 const FORMAT_TZ_SUPPLIED: &str = "%Y-%m-%dT%H:%M:%S.%f%:z";
 const FORMAT_SHORT_Z: &str = "%Y-%m-%dT%H:%M:%SZ";
 const FORMAT_SHORT_Z2: &str = "%Y-%m-%dT%H:%M:%S.%fZ";
 
+fn parse_attribute_bytes(value: &Bytes) -> String {
+    String::from_utf8_lossy(value).to_string()
+}
+
 /// The response from a transaction performed on a blockchain.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CosmTxResponse {
     /// Height of the block in which the transaction was included.
     pub height: u64,
@@ -88,6 +91,33 @@ impl CosmTxResponse {
 
     /// get the list of event types from a TX record
     pub fn get_events(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
+        let log_events = self.get_events_from_logs(event_type);
+        // In case log events are empty, we fetch the events from the .events field
+        if log_events.is_empty() {
+            let events_filtered = self
+                .events
+                .iter()
+                .filter(|event| event.r#type == event_type)
+                .map(|event| TxResultBlockEvent {
+                    s_type: event.r#type.clone(),
+                    attributes: event
+                        .attributes
+                        .iter()
+                        .map(|attr| TxResultBlockAttribute {
+                            key: parse_attribute_bytes(&attr.key),
+                            value: parse_attribute_bytes(&attr.value),
+                        })
+                        .collect(),
+                })
+                .collect::<Vec<_>>();
+
+            events_filtered
+        } else {
+            log_events
+        }
+    }
+
+    fn get_events_from_logs(&self, event_type: &str) -> Vec<TxResultBlockEvent> {
         let mut response: Vec<TxResultBlockEvent> = Default::default();
 
         for log_part in &self.logs {
@@ -198,8 +228,8 @@ impl IndexResponse for CosmTxResponse {
 
             for attr in &event.attributes {
                 pattr.push(cosmwasm_std::Attribute {
-                    key: attr.key.clone(),
-                    value: attr.value.clone(),
+                    key: parse_attribute_bytes(&attr.key),
+                    value: parse_attribute_bytes(&attr.value.clone()),
                 })
             }
 
@@ -215,7 +245,7 @@ impl IndexResponse for CosmTxResponse {
         if self.data.is_empty() {
             None
         } else {
-            Some(to_binary(self.data.as_bytes()).unwrap())
+            Some(to_json_binary(self.data.as_bytes()).unwrap())
         }
     }
 
@@ -224,7 +254,7 @@ impl IndexResponse for CosmTxResponse {
             if event.r#type == event_type {
                 for attr in &event.attributes {
                     if attr.key == attr_key {
-                        return Ok(attr.value.clone());
+                        return Ok(parse_attribute_bytes(&attr.value));
                     }
                 }
             }
@@ -233,6 +263,21 @@ impl IndexResponse for CosmTxResponse {
         Err(StdError::generic_err(format!(
             "event of type {event_type} does not have a value at key {attr_key}"
         )))
+    }
+
+    fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+        let mut all_results = vec![];
+
+        for event in &self.events {
+            if event.r#type == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key {
+                        all_results.push(parse_attribute_bytes(&attr.value));
+                    }
+                }
+            }
+        }
+        all_results
     }
 }
 

@@ -1,18 +1,34 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cosmwasm_std::{Addr, Empty, Event, Uint128};
-use cw_multi_test::{custom_app, next_block, AppResponse, BasicApp, Contract, Executor};
-use cw_utils::NativeBalance;
-use serde::{de::DeserializeOwned, Serialize};
+use cosmwasm_std::{
+    testing::{MockApi, MockStorage},
+    to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
+};
+use cw_multi_test::{
+    ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
+};
+use serde::Serialize;
 
+use super::state::MockState;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::TxHandler,
-    environment::{ChainState, IndexResponse, StateInterface},
+    environment::{ChainState, IndexResponse, StateInterface, TxHandler},
     CwEnvError,
 };
 
-use super::state::MockState;
+pub type MockApp<A = MockApi> = App<
+    BankKeeper,
+    A,
+    MockStorage,
+    FailingModule<Empty, Empty, Empty>,
+    WasmKeeper<Empty, Empty>,
+    StakeKeeper,
+    DistributionKeeper,
+    IbcSimpleModule,
+    GovFailingModule,
+    StargateFailingModule,
+>;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
 ///
@@ -20,19 +36,24 @@ use super::state::MockState;
 ///
 /// The state is customizable by implementing the [`StateInterface`] trait on a custom struct and providing it on the custom constructor.
 ///
+/// The addresses used inside this environment are bech32 addresses. For instance, when creating a mock environment
+/// let chain = Mock::new("sender");
+/// the actual sender address can be generated using
+/// let sender_addr = chain.addr_make("sender")
+///
 /// ## Example
 /// ```
 /// # use cosmwasm_std::{Addr, coin, Uint128};
 /// use cw_orch_mock::Mock;
+/// use cw_orch_core::environment::TxHandler;
 ///
-/// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new(&sender);
+/// let mock: Mock = Mock::new("sender");
 ///
 /// // set a balance
-/// mock.set_balance(&sender, vec![coin(100u128, "token")]).unwrap();
+/// mock.set_balance("sender", vec![coin(100u128, "token")]).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = mock.query_balance(&sender, "token").unwrap();
+/// let balance: Uint128 = mock.query_balance("sender", "token").unwrap();
 /// assert_eq!(balance.u128(), 100u128);
 /// ```
 ///
@@ -44,108 +65,40 @@ use super::state::MockState;
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_mock::MockState as CustomState;
 ///
-/// let sender = Addr::unchecked("sender");
-/// let mock: Mock = Mock::new_custom(&sender, CustomState::new());
+/// let mock: Mock = Mock::new_custom("sender", CustomState::new());
 /// ```
-#[derive(Clone)]
-pub struct Mock<S: StateInterface = MockState> {
+pub struct MockBase<A: Api = MockApi, S: StateInterface = MockState> {
     /// Address used for the operations.
     pub sender: Addr,
     /// Inner mutable state storage for contract addresses and code-ids
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
-    pub app: Rc<RefCell<BasicApp<Empty, Empty>>>,
+    pub app: Rc<RefCell<MockApp<A>>>,
 }
 
-impl<S: StateInterface> Mock<S> {
-    /// Set the bank balance of an address.
-    pub fn set_balance(
-        &self,
-        address: &Addr,
-        amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwEnvError> {
-        self.app
-            .borrow_mut()
-            .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
-            .map_err(Into::into)
-    }
+pub type Mock<S = MockState> = MockBase<MockApi, S>;
+pub type MockBech32<S = MockState> = MockBase<MockApiBech32, S>;
 
-    /// Adds the bank balance of an address.
-    pub fn add_balance(
-        &self,
-        address: &Addr,
-        amount: Vec<cosmwasm_std::Coin>,
-    ) -> Result<(), CwEnvError> {
-        let b = self.query_all_balances(address)?;
-        let new_amount = NativeBalance(b) + NativeBalance(amount);
-        self.app
-            .borrow_mut()
-            .init_modules(|router, _, storage| {
-                router
-                    .bank
-                    .init_balance(storage, address, new_amount.into_vec())
-            })
-            .map_err(Into::into)
-    }
-
-    /// Set the balance for multiple coins at once.
-    pub fn set_balances(
-        &self,
-        balances: &[(&Addr, &[cosmwasm_std::Coin])],
-    ) -> Result<(), CwEnvError> {
-        self.app
-            .borrow_mut()
-            .init_modules(|router, _, storage| -> Result<(), CwEnvError> {
-                for (addr, coins) in balances {
-                    router.bank.init_balance(storage, addr, coins.to_vec())?;
-                }
-                Ok(())
-            })
-    }
-
-    /// Query the (bank) balance of a native token for and address.
-    /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
-        let amount = self
-            .app
-            .borrow()
-            .wrap()
-            .query_balance(address, denom)?
-            .amount;
-        Ok(amount)
-    }
-
-    /// Fetch all the balances of an address.
-    pub fn query_all_balances(
-        &self,
-        address: &Addr,
-    ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
-        let amount = self.app.borrow().wrap().query_all_balances(address)?;
-        Ok(amount)
-    }
-}
-
-impl Mock<MockState> {
-    /// Create a mock environment with the default mock state.
-    pub fn new(sender: &Addr) -> Self {
-        Mock::new_custom(sender, MockState::new())
-    }
-}
-
-impl<S: StateInterface> Mock<S> {
-    /// Create a mock environment with a custom mock state.
-    /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
-    pub fn new_custom(sender: &Addr, custom_state: S) -> Self {
-        let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(custom_app::<Empty, Empty, _>(|_, _, _| {})));
-
+impl<A: Api, S: StateInterface> Clone for MockBase<A, S> {
+    fn clone(&self) -> Self {
         Self {
-            sender: sender.clone(),
-            state,
-            app,
+            sender: self.sender.clone(),
+            state: self.state.clone(),
+            app: self.app.clone(),
         }
     }
+}
 
+impl<A: Api> MockBase<A, MockState> {
+    pub fn with_chain_id(&mut self, chain_id: &str) {
+        self.state.borrow_mut().set_chain_id(chain_id);
+        self.app
+            .borrow_mut()
+            .update_block(|b| b.chain_id = chain_id.to_string());
+    }
+}
+
+impl<A: Api, S: StateInterface> MockBase<A, S> {
     /// Upload a custom contract wrapper.
     /// Support for this is limited.
     pub fn upload_custom(
@@ -166,8 +119,7 @@ impl<S: StateInterface> Mock<S> {
         Ok(resp)
     }
 }
-
-impl<S: StateInterface> ChainState for Mock<S> {
+impl<A: Api, S: StateInterface> ChainState for MockBase<A, S> {
     type Out = Rc<RefCell<S>>;
 
     fn state(&self) -> Self::Out {
@@ -176,13 +128,17 @@ impl<S: StateInterface> ChainState for Mock<S> {
 }
 
 // Execute on the test chain, returns test response type
-impl<S: StateInterface> TxHandler for Mock<S> {
+impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     type Response = AppResponse;
     type Error = CwEnvError;
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
     fn sender(&self) -> Addr {
+        self.sender_addr()
+    }
+
+    fn sender_addr(&self) -> Addr {
         self.sender.clone()
     }
 
@@ -190,8 +146,8 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         self.sender = sender;
     }
 
-    fn upload(&self, contract: &impl Uploadable) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(contract.wrapper());
+    fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
+        let code_id = self.app.borrow_mut().store_code(T::wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -227,34 +183,53 @@ impl<S: StateInterface> TxHandler for Mock<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwEnvError> {
-        let addr = self.app.borrow_mut().instantiate_contract(
+        let msg = WasmMsg::Instantiate {
+            admin: admin.map(|a| a.to_string()),
             code_id,
-            self.sender.clone(),
-            init_msg,
-            coins,
-            label.unwrap_or("contract_init"),
-            admin.map(|a| a.to_string()),
-        )?;
-        // add contract address to events manually
-        let mut event = Event::new("instantiate");
-        event = event.add_attribute("_contract_address", addr);
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+        };
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
         let resp = AppResponse {
-            events: vec![event],
-            ..Default::default()
+            events: app.events,
+            data: app.data,
         };
         Ok(resp)
     }
 
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    fn instantiate2<I: Serialize + Debug>(
         &self,
-        query_msg: &Q,
-        contract_address: &Addr,
-    ) -> Result<T, CwEnvError> {
-        self.app
-            .borrow()
-            .wrap()
-            .query_wasm_smart(contract_address, query_msg)
-            .map_err(From::from)
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
+    ) -> Result<Self::Response, CwEnvError> {
+        let msg = WasmMsg::Instantiate2 {
+            admin: admin.map(|a| a.to_string()),
+            code_id,
+            label: label.unwrap_or("contract_init").to_string(),
+            msg: to_json_binary(init_msg)?,
+            funds: coins.to_vec(),
+            salt,
+        };
+
+        let app = self
+            .app
+            .borrow_mut()
+            .execute(self.sender.clone(), CosmosMsg::Wasm(msg))?;
+
+        let resp = AppResponse {
+            events: app.events,
+            data: app.data,
+        };
+        Ok(resp)
     }
 
     fn migrate<M: Serialize + Debug>(
@@ -273,50 +248,23 @@ impl<S: StateInterface> TxHandler for Mock<S> {
             )
             .map_err(From::from)
     }
-
-    fn wait_blocks(&self, amount: u64) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(|b| {
-            b.height += amount;
-            b.time = b.time.plus_seconds(5 * amount);
-        });
-        Ok(())
-    }
-
-    fn wait_seconds(&self, secs: u64) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(|b| {
-            b.time = b.time.plus_seconds(secs);
-            b.height += secs / 5;
-        });
-        Ok(())
-    }
-
-    fn next_block(&self) -> Result<(), CwEnvError> {
-        self.app.borrow_mut().update_block(next_block);
-        Ok(())
-    }
-
-    fn block_info(&self) -> Result<cosmwasm_std::BlockInfo, CwEnvError> {
-        Ok(self.app.borrow().block_info())
-    }
 }
 
 #[cfg(test)]
 mod test {
+
     use cosmwasm_std::{
-        to_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
-        Uint128,
+        coins, to_json_binary, Addr, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
+        StdResult, Uint128,
     };
     use cw_multi_test::ContractWrapper;
-    use serde::Serialize;
+    use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler};
     use speculoos::prelude::*;
 
     use crate::core::*;
 
     const SENDER: &str = "cosmos123";
     const BALANCE_ADDR: &str = "cosmos456";
-
-    #[derive(Debug, Serialize)]
-    struct MigrateMsg {}
 
     fn execute(
         _deps: DepsMut,
@@ -335,7 +283,7 @@ mod test {
 
     fn query(_deps: Deps, _env: Env, msg: cw20_base::msg::QueryMsg) -> StdResult<Binary> {
         match msg {
-            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_binary::<Response>(
+            cw20_base::msg::QueryMsg::Balance { address } => Ok(to_json_binary::<Response>(
                 &Response::default()
                     .add_attribute("address", address)
                     .add_attribute("balance", String::from("0")),
@@ -347,12 +295,11 @@ mod test {
 
     #[test]
     fn mock() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let recipient = BALANCE_ADDR;
+        let sender = SENDER;
+        let chain = Mock::new(sender);
         let amount = 1000000u128;
         let denom = "uosmo";
-
-        let chain = Mock::new(sender);
 
         chain
             .set_balance(recipient, vec![Coin::new(amount, denom)])
@@ -364,8 +311,8 @@ mod test {
             .is_equal_to(balance.u128());
 
         asserting("sender is correct")
-            .that(sender)
-            .is_equal_to(chain.sender());
+            .that(&sender.to_string())
+            .is_equal_to(chain.sender_addr().to_string());
 
         let contract_source = Box::new(
             ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
@@ -386,7 +333,7 @@ mod test {
             marketing: None,
         };
         let init_res = chain
-            .instantiate(1, &init_msg, None, Some(sender), &[])
+            .instantiate(1, &init_msg, None, Some(&Addr::unchecked(sender)), &[])
             .unwrap();
 
         let contract_address = Addr::unchecked(&init_res.events[0].attributes[0].value);
@@ -427,14 +374,12 @@ mod test {
 
     #[test]
     fn custom_mock_env() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let mock_state = MockState::new();
+        let chain = Mock::new_custom(SENDER, mock_state);
+
+        let recipient = BALANCE_ADDR;
         let amount = 1000000u128;
         let denom = "uosmo";
-
-        let mock_state = MockState::new();
-
-        let chain = Mock::<_>::new_custom(sender, mock_state);
 
         chain
             .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
@@ -474,13 +419,11 @@ mod test {
 
     #[test]
     fn add_balance() {
-        let sender = &Addr::unchecked(SENDER);
-        let recipient = &Addr::unchecked(BALANCE_ADDR);
+        let chain = Mock::new(SENDER);
+        let recipient = BALANCE_ADDR;
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
-
-        let chain = Mock::new(sender);
 
         chain
             .add_balance(recipient, vec![Coin::new(amount, denom_1)])
@@ -493,5 +436,26 @@ mod test {
         asserting("recipient balances added")
             .that(&balances)
             .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
+    }
+
+    #[test]
+    fn bank_querier_works() -> Result<(), CwEnvError> {
+        let denom = "urandom";
+        let init_coins = coins(45, denom);
+        let sender = "sender";
+        let app = Mock::new(sender);
+        app.set_balance(sender, init_coins.clone())?;
+        let sender = app.sender.clone();
+        assert_eq!(
+            app.bank_querier()
+                .balance(sender.clone(), Some(denom.to_string()))?,
+            init_coins
+        );
+        assert_eq!(
+            app.bank_querier().supply_of(denom.to_string())?,
+            init_coins[0]
+        );
+
+        Ok(())
     }
 }

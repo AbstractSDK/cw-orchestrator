@@ -6,25 +6,22 @@ Thank you for considering to contribute to the cw-orchestrator project! We appre
 Table of Contents
 -----------------
 
-* [Code of Conduct](#code-of-conduct)
-* [Getting Started](#getting-started)
-* [How to Contribute](#how-to-contribute)
-  * [Reporting Bugs](#reporting-bugs)
-  * [Suggesting Enhancements](#suggesting-enhancements)
-  * [Code Contributions](#code-contributions)
-    * [Pull Requests](#pull-requests)
-* [Style Guide](#style-guide)
-* [Community](#community)
+- [Contributing to cw-orchestrator](#contributing-to-cw-orchestrator)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+  - [How to Contribute](#how-to-contribute)
+  - [Reporting Bugs](#reporting-bugs)
+  - [Suggesting Enhancements](#suggesting-enhancements)
+  - [Code Contributions](#code-contributions)
+  - [Pull Requests](#pull-requests)
+  - [Style Guide](#style-guide)
+  - [Community](#community)
 
-Code of Conduct
----------------
-
-By participating in this project, you are expected to uphold our [Code of Conduct](CODE_OF_CONDUCT.md). Please read the Code of Conduct to ensure that you follow the community guidelines and contribute positively to the project.
 
 Getting Started
 ---------------
 
-To get started with contributing to the cw-orchestrator project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's [README](https://github.com/AbstractSDK/cw-orchestrator/) to understand the purpose, features, and usage of the cw-orchestrator library as well as its [documentation](https://orchestrator.abstract.money).
+To get started with contributing to the cw-orchestrator project, you should first familiarize yourself with the repository structure and the codebase. Please read the project's <a href="https://github.com/AbstractSDK/cw-orchestrator/" target="_blank">README</a> to understand the purpose, features, and usage of the cw-orchestrator library as well as its <a href="https://orchestrator.abstract.money" target="_blank">documentation</a>.
 
 How to Contribute
 -----------------
@@ -34,7 +31,7 @@ There are multiple ways to contribute to the cw-orchestrator project, including 
 Reporting Bugs
 ------------------
 
-If you encounter any bugs or issues while using the cw-orchestrator library, please report them by creating a new issue in the [issue tracker](https://github.com/AbstractSDK/cw-orchestrator/issues). When reporting a bug, please provide the following information:
+If you encounter any bugs or issues while using the cw-orchestrator library, please report them by creating a new issue in the <a href="https://github.com/AbstractSDK/cw-orchestrator/issues" target="_blank">issue tracker</a>. When reporting a bug, please provide the following information:
 
 * A clear and descriptive title
 * A detailed description of the issue, including steps to reproduce it
@@ -44,7 +41,7 @@ If you encounter any bugs or issues while using the cw-orchestrator library, ple
 Suggesting Enhancements
 ------------------
 
-We welcome suggestions for new features or improvements to the existing functionality of the cw-orchestrator library. To suggest an enhancement, create a new issue in the [issue tracker](https://github.com/AbstractSDK/cw-orchestrator/issues) with the following information:
+We welcome suggestions for new features or improvements to the existing functionality of the cw-orchestrator library. To suggest an enhancement, create a new issue in the <a href="https://github.com/AbstractSDK/cw-orchestrator/issues" target="_blank">issue tracker</a> with the following information:
 
 * A clear and descriptive title
 * A detailed explanation of the proposed enhancement, including its benefits and potential use cases
@@ -75,12 +72,12 @@ The cw-orchestrator project follows the Rust coding style and conventions. Pleas
 * Use proper indentation (4 spaces) and consistent formatting (`cargo fmt`).
 * Write descriptive variable and function names.
 * Use comments to explain complex or non-obvious code.
-* Follow the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) for API design.
+* Follow the <a href="https://rust-lang.github.io/api-guidelines/" target="_blank">Rust API Guidelines</a> for API design.
 * Add documentation for public functions, types, and modules.
-* Write [doc tests](https://doc.rust-lang.org/rustdoc/documentation-tests.html)
+* Write <a href="https://doc.rust-lang.org/rustdoc/documentation-tests.html" target="_blank">doc tests</a>
     for public functions and methods.
 
 Community
 ---------
 
-To join the cw-orchestrator community, please join the [Abstract Discord server](https://discord.gg/uch3Tq3aym) and the `#cw-orchestrator` channel. You can also follow the project on [Twitter](https://twitter.com/AbstractSDK) and [GitHub](https://github.com/AbstractSDK).
+To join the cw-orchestrator community, please join the <a href="https://discord.gg/uch3Tq3aym" target="_blank">Abstract Discord server</a> and the `#cw-orchestrator` channel. You can also follow the project on <a href="https://twitter.com/AbstractSDK" target="_blank">Twitter</a> and <a href="https://github.com/AbstractSDK" target="_blank">GitHub</a>.

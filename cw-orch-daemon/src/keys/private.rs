@@ -4,14 +4,16 @@ use crate::DaemonError;
 #[cfg(feature = "eth")]
 use ::ethers_core::k256::ecdsa::SigningKey;
 use base64::Engine;
+use bitcoin::secp256k1::{self, Secp256k1};
 use bitcoin::{
     bip32::{ExtendedPrivKey, IntoDerivationPath},
     Network,
 };
 use cosmrs::tx::SignerPublicKey;
+use cw_orch_core::log::local_target;
 use hkd32::mnemonic::{Phrase, Seed};
+use prost_types::Any;
 use rand_core::OsRng;
-use secp256k1::Secp256k1;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
@@ -86,6 +88,16 @@ impl PrivateKey {
         }
     }
 
+    pub fn from_raw_key<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
+        raw_key: &[u8],
+        account: u32,
+        index: u32,
+        coin_type: u32,
+    ) -> Result<PrivateKey, DaemonError> {
+        Self::gen_private_key_raw(secp, raw_key, account, index, coin_type)
+    }
+
     /// generate the public key for this private key
     pub fn public_key<C: secp256k1::Signing + secp256k1::Context>(
         &self,
@@ -121,11 +133,11 @@ impl PrivateKey {
 
         let vec_pk = public_key.serialize();
 
-        log::debug!("{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
+        log::debug!(target: &local_target(), "{:?}, public key", general_purpose::STANDARD.encode(vec_pk));
 
         let inj_key = InjectivePubKey { key: vec_pk.into() };
 
-        inj_key.to_any().unwrap().try_into().unwrap()
+        cosmrs::Any::from_msg(&inj_key).unwrap().try_into().unwrap()
     }
 
     pub fn get_signer_public_key<C: secp256k1::Signing + secp256k1::Context>(
@@ -149,10 +161,11 @@ impl PrivateKey {
         )
     }
 
-    pub fn raw_key(&self) -> Vec<u8> {
-        self.private_key.private_key.secret_bytes().to_vec()
+    pub fn raw_key(&self) -> [u8; secp256k1::constants::SECRET_KEY_SIZE] {
+        self.private_key.private_key.secret_bytes()
     }
 
+    // Generate private key from Phrase
     fn gen_private_key_phrase<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         phrase: Phrase,
@@ -162,8 +175,21 @@ impl PrivateKey {
         seed_phrase: &str,
     ) -> Result<PrivateKey, DaemonError> {
         let seed = phrase.to_seed(seed_phrase);
-        let root_private_key =
-            ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes()).unwrap();
+        let mut private_key =
+            Self::gen_private_key_raw(secp, seed.as_bytes(), account, index, coin_type)?;
+        private_key.mnemonic = Some(phrase);
+        Ok(private_key)
+    }
+
+    // Generate private key from private key bytes
+    fn gen_private_key_raw<C: secp256k1::Signing + secp256k1::Context>(
+        secp: &Secp256k1<C>,
+        raw_key: &[u8],
+        account: u32,
+        index: u32,
+        coin_type: u32,
+    ) -> Result<PrivateKey, DaemonError> {
+        let root_private_key = ExtendedPrivKey::new_master(Network::Bitcoin, raw_key).unwrap();
         // For injective: https://docs.injective.network/learn/basic-concepts/accounts#injective-accounts
         let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
@@ -173,7 +199,7 @@ impl PrivateKey {
             account,
             index,
             coin_type,
-            mnemonic: Some(phrase),
+            mnemonic: None,
             root_private_key,
             private_key,
         })

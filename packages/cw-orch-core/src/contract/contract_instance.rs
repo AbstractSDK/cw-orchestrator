@@ -1,18 +1,23 @@
 //! Main functional component for interacting with a contract. Used as the base for generating contract interfaces.
 use super::interface_traits::Uploadable;
 use crate::{
-    environment::{CwEnv, IndexResponse, StateInterface, TxResponse},
+    env::CoreEnvVars,
+    environment::{
+        AsyncWasmQuerier, ChainState, IndexResponse, StateInterface, TxHandler, TxResponse,
+    },
     error::CwEnvError,
+    log::{contract_target, transaction_target},
 };
 
-use cosmwasm_std::{Addr, Coin};
+use crate::environment::QueryHandler;
+use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 /// An instance of a contract. Contains references to the execution environment (chain) and a local state (state)
 /// The state is used to store contract addresses/code-ids
 #[derive(Clone)]
-pub struct Contract<Chain: CwEnv> {
+pub struct Contract<Chain> {
     /// ID of the contract, used to retrieve addr/code-id
     pub id: String,
     /// Chain object that handles tx execution and queries.
@@ -23,8 +28,8 @@ pub struct Contract<Chain: CwEnv> {
     pub default_address: Option<Addr>,
 }
 
-/// Expose chain and state function to call them on the contract
-impl<Chain: CwEnv + Clone> Contract<Chain> {
+/// Implements constructors and helpers
+impl<Chain> Contract<Chain> {
     /// Creates a new contract instance
     pub fn new(id: impl ToString, chain: Chain) -> Self {
         Contract {
@@ -35,103 +40,34 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         }
     }
 
+    #[deprecated(
+        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
+    )]
     /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
     pub fn get_chain(&self) -> &Chain {
+        self.environment()
+    }
+
+    // This should use the `Environment` trait, but it's not possible due to
+    // `downstream crates may implement trait `contract::interface_traits::ContractInstance<_>` for type `contract::contract_instance::Contract<_>`
+    /// Retrieves the underlying chain used for execution
+    pub fn environment(&self) -> &Chain {
         &self.chain
     }
 
-    /// Sets the address of the contract in the local state
-    pub fn with_address(self, address: Option<&Addr>) -> Self {
-        if let Some(address) = address {
-            self.set_address(address)
-        }
-        self
+    /// Sets default address for contract (used only if not present in state)
+    pub fn set_default_address(&mut self, address: &Addr) {
+        self.default_address = Some(address.clone());
     }
 
-    // Chain interfaces
-
-    /// Upload a contract given its source
-    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Uploading {}", self.id);
-        let resp = self.chain.upload(source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!("uploaded {} with code id {}", self.id, code_id);
-        log::debug!("Upload response: {:?}", resp);
-        Ok(resp)
+    /// Sets default code_id for contract (used only if not present in state)
+    pub fn set_default_code_id(&mut self, code_id: u64) {
+        self.default_code_id = Some(code_id);
     }
+}
 
-    /// Executes an operation on the contract
-    pub fn execute<E: Serialize + Debug>(
-        &self,
-        msg: &E,
-        coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Executing {:#?} on {}", msg, self.id);
-        let resp = self
-            .chain
-            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
-        log::debug!("execute response: {:?}", resp);
-        resp.map_err(Into::into)
-    }
-
-    /// Initializes the contract
-    pub fn instantiate<I: Serialize + Debug>(
-        &self,
-        msg: &I,
-        admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
-    ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Instantiating {} with msg {:#?}", self.id, msg);
-
-        let resp = self
-            .chain
-            .instantiate(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-            )
-            .map_err(Into::into)?;
-        let contract_address = resp.instantiated_contract_address()?;
-
-        self.set_address(&contract_address);
-
-        log::info!("Instantiated {} with address {}", self.id, contract_address);
-
-        log::debug!("Instantiate response: {:?}", resp);
-
-        Ok(resp)
-    }
-
-    /// Query the contract
-    pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
-        &self,
-        query_msg: &Q,
-    ) -> Result<T, CwEnvError> {
-        log::info!("Querying {:#?} on {}", query_msg, self.id);
-        let resp = self
-            .chain
-            .query(query_msg, &self.address()?)
-            .map_err(Into::into)?;
-        log::debug!("Query response: {:?}", resp);
-        Ok(resp)
-    }
-
-    /// Migrates the contract
-    pub fn migrate<M: Serialize + Debug>(
-        &self,
-        migrate_msg: &M,
-        new_code_id: u64,
-    ) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!("Migrating {:?} to code_id {}", self.id, new_code_id);
-        self.chain
-            .migrate(migrate_msg, new_code_id, &self.address()?)
-            .map_err(Into::into)
-    }
-
-    // State interfaces
+// State interfaces
+impl<Chain: ChainState> Contract<Chain> {
     /// Returns state address for contract
     pub fn address(&self) -> Result<Addr, CwEnvError> {
         let state_address = self.chain.state().get_address(&self.id);
@@ -147,9 +83,9 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
         self.chain.state().set_address(&self.id, address)
     }
 
-    /// Sets default address for contract (used only if not present in state)
-    pub fn set_default_address(&mut self, address: &Addr) {
-        self.default_address = Some(address.clone());
+    /// Remove state address for contract
+    pub fn remove_address(&self) {
+        self.chain.state().remove_address(&self.id)
     }
 
     /// Returns state code_id for contract
@@ -160,14 +96,317 @@ impl<Chain: CwEnv + Clone> Contract<Chain> {
             .default_code_id
             .ok_or(CwEnvError::CodeIdNotInStore(self.id.clone())))
     }
-
     /// Sets state code_id for contract
     pub fn set_code_id(&self, code_id: u64) {
         self.chain.state().set_code_id(&self.id, code_id)
     }
-
-    /// Sets default code_id for contract (used only if not present in state)
-    pub fn set_default_code_id(&mut self, code_id: u64) {
-        self.default_code_id = Some(code_id);
+    /// Remove state code_id for contract
+    pub fn remove_code_id(&self) {
+        self.chain.state().remove_code_id(&self.id)
     }
+}
+
+/// Expose chain and state function to call them on the contract
+impl<Chain: TxHandler> Contract<Chain> {
+    // Chain interfaces
+
+    /// Upload a contract given its source
+    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Upload]",
+            self.id,
+        );
+
+        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!(
+            target: &contract_target(),
+            "[{}][Uploaded] code_id {}",
+            self.id,
+            code_id
+        );
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Uploaded] response {:?}",
+            self.id,
+            resp
+        );
+        Ok(resp)
+    }
+
+    /// Executes an operation on the contract
+    pub fn execute<E: Serialize + Debug>(
+        &self,
+        msg: &E,
+        coins: Option<&[Coin]>,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Execute][{}] {}",
+            self.id,
+            self.address()?,
+            get_struct_name(msg)?
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Execute] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
+        let resp = self
+            .chain
+            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
+
+        log::info!(
+            target: &contract_target(),
+            "[{}][Executed][{}] {}",
+            self.id,
+            self.address()?,
+            get_struct_name(msg)?
+        );
+        log::debug!(
+            target: &transaction_target(),
+            "[{}][Executed] response: {:?}",
+            self.id,
+            resp
+        );
+
+        resp.map_err(Into::into)
+    }
+
+    /// Initializes the contract
+    pub fn instantiate<I: Serialize + Debug>(
+        &self,
+        msg: &I,
+        admin: Option<&Addr>,
+        coins: Option<&[Coin]>,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Instantiate]",
+            self.id,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Instantiate] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
+        let resp = self
+            .chain
+            .instantiate(
+                self.code_id()?,
+                msg,
+                Some(&self.id),
+                admin,
+                coins.unwrap_or(&[]),
+            )
+            .map_err(Into::into)?;
+        let contract_address = resp.instantiated_contract_address()?;
+
+        self.set_address(&contract_address);
+
+        log::info!(
+            target: &&contract_target(),
+            "[{}][Instantiated] {}",
+            self.id,
+            contract_address
+        );
+        log::debug!(
+            target: &&transaction_target(),
+            "[{}][Instantiated] response: {:?}",
+            self.id,
+            resp
+        );
+
+        Ok(resp)
+    }
+
+    /// Initializes the contract
+    pub fn instantiate2<I: Serialize + Debug>(
+        &self,
+        msg: &I,
+        admin: Option<&Addr>,
+        coins: Option<&[Coin]>,
+        salt: Binary,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Instantiate]",
+            self.id,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Instantiate] {}",
+            self.id,
+            log_serialize_message(msg)?
+        );
+
+        let resp = self
+            .chain
+            .instantiate2(
+                self.code_id()?,
+                msg,
+                Some(&self.id),
+                admin,
+                coins.unwrap_or(&[]),
+                salt,
+            )
+            .map_err(Into::into)?;
+        let contract_address = resp.instantiated_contract_address()?;
+
+        self.set_address(&contract_address);
+
+        log::info!(
+            target: &&contract_target(),
+            "[{}][Instantiated] {}",
+            self.id,
+            contract_address
+        );
+        log::debug!(
+            target: &&transaction_target(),
+            "[{}][Instantiated] response: {:?}",
+            self.id,
+            resp
+        );
+
+        Ok(resp)
+    }
+
+    /// Migrates the contract
+    pub fn migrate<M: Serialize + Debug>(
+        &self,
+        migrate_msg: &M,
+        new_code_id: u64,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Migrate][{}]",
+            self.id,
+            self.address()?,
+        );
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Migrate] code-id: {}, msg: {}",
+            self.id,
+            new_code_id,
+            log_serialize_message(migrate_msg)?
+        );
+
+        let resp = self
+            .chain
+            .migrate(migrate_msg, new_code_id, &self.address()?)
+            .map_err(Into::into)?;
+
+        log::info!(
+            target: &contract_target(),
+            "[{}][Migrated][{}] code-id {}",
+            self.id,
+            self.address()?,
+            new_code_id
+        );
+        log::debug!(
+            target: &transaction_target(),
+            "[{}][Migrated] response: {:?}",
+            self.id,
+            resp
+        );
+        Ok(resp)
+    }
+}
+
+impl<Chain: ChainState + QueryHandler> Contract<Chain> {
+    /// Query the contract
+    pub fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned + Debug>(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, CwEnvError> {
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Query][{}] {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(query_msg)?
+        );
+
+        let resp = self
+            .chain
+            .query(query_msg, &self.address()?)
+            .map_err(Into::into)?;
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Queried][{}] response {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(&resp)?
+        );
+        Ok(resp)
+    }
+}
+
+impl<Chain: AsyncWasmQuerier + ChainState> Contract<Chain> {
+    /// Query the contract
+    pub async fn async_query<
+        Q: Serialize + Debug + Sync,
+        T: Serialize + DeserializeOwned + Debug,
+    >(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, CwEnvError> {
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Query][{}] {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(query_msg)?
+        );
+
+        let resp = self
+            .chain
+            .smart_query(&self.address()?, query_msg)
+            .await
+            .map_err(Into::into)?;
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Queried][{}] response {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(&resp)?
+        );
+        Ok(resp)
+    }
+}
+
+/// Helper to serialize objects (JSON or Rust DEBUG)
+fn log_serialize_message<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
+    if CoreEnvVars::serialize_json() {
+        Ok(serde_json::to_string(msg)?)
+    } else {
+        Ok(format!("{:#?}", msg))
+    }
+}
+
+/// Helper to get the name of a struct
+fn get_struct_name<E: Serialize + Debug>(msg: &E) -> Result<String, CwEnvError> {
+    let serialized = serde_json::to_value(msg)?;
+    let value = serialized
+        .as_object()
+        .ok_or("Can't get struct name of non object")
+        .unwrap()
+        .into_iter()
+        .next()
+        .ok_or("Can't get struct name of non object")
+        .unwrap();
+
+    Ok(value.0.clone())
 }

@@ -2,7 +2,7 @@ use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: neutron
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {
-    id: "neutron",
+    chain_name: "neutron",
     pub_address_prefix: "neutron",
     coin_type: 118u32,
 };
@@ -12,7 +12,7 @@ pub const PION_1: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "pion-1",
     gas_denom: "untrn",
-    gas_price: 0.001,
+    gas_price: 0.075,
     grpc_urls: &["http://grpc-palvus.pion-1.ntrn.tech:80"],
     rpc_urls: &[],
     network_info: NEUTRON_NETWORK,
@@ -25,7 +25,7 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "neutron-1",
     gas_denom: "untrn",
-    gas_price: 0.01,
+    gas_price: 0.075,
     grpc_urls: &["http://grpc-kralum.neutron-1.neutron.org:80"],
     rpc_urls: &[],
     network_info: NEUTRON_NETWORK,
@@ -34,7 +34,7 @@ pub const NEUTRON_1: ChainInfo = ChainInfo {
 };
 
 pub const LOCAL_NEUTRON: ChainInfo = ChainInfo {
-    kind: ChainKind::Mainnet,
+    kind: ChainKind::Local,
     chain_id: "test-1",
     gas_denom: "untrn",
     gas_price: 0.0025,

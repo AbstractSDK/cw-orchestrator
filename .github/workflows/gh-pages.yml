@@ -24,53 +24,57 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # container: michaelfbryan/mdbook-docker-image:latest
 
     steps:
       - name: Checkout 🛎
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup | Rust
         id: rustup
-        uses: ATiltedTree/setup-rust@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          rust-version: stable
-        continue-on-error: true
-      - name: Delete rustup cache
-        run: rm -rf ~/.rustup
-        if: ${{ steps.rustup.outcome }} != "success"
-      - name: Setup Rust (again)
-        if: ${{ steps.rustup.outcome }} != "success"
-        uses: ATiltedTree/setup-rust@v1
-        with:
-          rust-version: stable
+          components: rustfmt
 
       - name: Setup | Just
         id: just
         uses: extractions/setup-just@v1
 
+      - name: Install static-sitemap-cli
+        run: npm install static-sitemap-cli
+
+      - name: Setup PATH # For using the pre-built mdbook
+        run: echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
+
       - name: Install dependencies 🔧
-        run: just install-docs
+        run: just install-docs-fast && just setup-docs
 
       - name: Build 🏗️
         run: just build-docs
 
+      - name: Generate sitemap
+        run: |
+          cd docs/book
+          npx sscli --no-clean --base https://orchestrator.abstract.money
+
+
       - name: Upload artifact
-        if: ${{ github.event_name != 'pull_request' && github.event_name == 'release' }}
-        uses: actions/upload-pages-artifact@v2
+        if: ${{ github.event_name != 'pull_request' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' ) }}
+        uses: actions/upload-pages-artifact@v3
         with:
           # Upload book repository
-          path: './docs/book'
+          path: "./docs/book"
 
   # Deploy job
   deploy:
-    if: ${{ github.event_name != 'pull_request' && github.event_name == 'release' }}
+    if: ${{ github.event_name != 'pull_request' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' ) }}
     # Add a dependency to the build job
     needs: build
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
 
     # Deploy to the github-pages environment
     environment:
@@ -82,4 +86,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4

@@ -1,24 +1,46 @@
-use crate::{cosmos_modules, error::DaemonError};
-use cosmrs::proto::cosmos::base::{query::v1beta1::PageRequest, v1beta1::Coin};
+use crate::{cosmos_modules, error::DaemonError, senders::query::QuerySender, DaemonBase};
+use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cosmwasm_std::{Coin, StdError};
+use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
+use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
-use crate::queriers::DaemonQuerier;
-
 /// Queries for Cosmos Bank Module
+/// All the async function are prefixed with `_`
 pub struct Bank {
-    channel: Channel,
+    pub channel: Channel,
+    pub rt_handle: Option<Handle>,
 }
 
-impl DaemonQuerier for Bank {
-    fn new(channel: Channel) -> Self {
-        Self { channel }
+impl Bank {
+    pub fn new<Sender: QuerySender>(daemon: &DaemonBase<Sender>) -> Self {
+        Self {
+            channel: daemon.channel(),
+            rt_handle: Some(daemon.rt_handle.clone()),
+        }
+    }
+    pub fn new_async(channel: Channel) -> Self {
+        Self {
+            channel,
+            rt_handle: None,
+        }
+    }
+}
+
+impl Querier for Bank {
+    type Error = DaemonError;
+}
+
+impl<Sender: QuerySender> QuerierGetter<Bank> for DaemonBase<Sender> {
+    fn querier(&self) -> Bank {
+        Bank::new(self)
     }
 }
 
 impl Bank {
     /// Query the bank balance of a given address
     /// If denom is None, returns all balances
-    pub async fn balance(
+    pub async fn _balance(
         &self,
         address: impl Into<String>,
         denom: Option<String>,
@@ -35,27 +57,22 @@ impl Bank {
                     }
                 );
                 let coin = resp.balance.unwrap();
-                Ok(vec![coin])
+                Ok(vec![cosmrs_to_cosmwasm_coin(coin)?])
             }
             None => {
-                let resp = cosmos_query!(
-                    self,
-                    bank,
-                    all_balances,
-                    QueryAllBalancesRequest {
-                        address: address.into(),
-                        pagination: None,
-                    }
-                );
-
-                let coins = resp.balances;
-                Ok(coins.into_iter().collect())
+                let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
+                let request = cosmos_modules::bank::QueryAllBalancesRequest {
+                    address: address.into(),
+                    ..Default::default()
+                };
+                let resp = client.all_balances(request).await?.into_inner();
+                Ok(cosmrs_to_cosmwasm_coins(resp.balances)?)
             }
         }
     }
 
     /// Query spendable balance for address
-    pub async fn spendable_balances(
+    pub async fn _spendable_balances(
         &self,
         address: impl Into<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
@@ -68,22 +85,22 @@ impl Bank {
                 pagination: None,
             }
         );
-        Ok(spendable_balances.balances)
+        Ok(cosmrs_to_cosmwasm_coins(spendable_balances.balances)?)
     }
 
     /// Query total supply in the bank
-    pub async fn total_supply(&self) -> Result<Vec<Coin>, DaemonError> {
+    pub async fn _total_supply(&self) -> Result<Vec<Coin>, DaemonError> {
         let total_supply: cosmos_modules::bank::QueryTotalSupplyResponse = cosmos_query!(
             self,
             bank,
             total_supply,
             QueryTotalSupplyRequest { pagination: None }
         );
-        Ok(total_supply.supply)
+        Ok(cosmrs_to_cosmwasm_coins(total_supply.supply)?)
     }
 
     /// Query total supply in the bank for a denom
-    pub async fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, DaemonError> {
+    pub async fn _supply_of(&self, denom: impl Into<String>) -> Result<Coin, DaemonError> {
         let supply_of: cosmos_modules::bank::QuerySupplyOfResponse = cosmos_query!(
             self,
             bank,
@@ -92,18 +109,18 @@ impl Bank {
                 denom: denom.into()
             }
         );
-        Ok(supply_of.amount.unwrap())
+        Ok(cosmrs_to_cosmwasm_coin(supply_of.amount.unwrap())?)
     }
 
     /// Query params
-    pub async fn params(&self) -> Result<cosmos_modules::bank::Params, DaemonError> {
+    pub async fn _params(&self) -> Result<cosmos_modules::bank::Params, DaemonError> {
         let params: cosmos_modules::bank::QueryParamsResponse =
             cosmos_query!(self, bank, params, QueryParamsRequest {});
         Ok(params.params.unwrap())
     }
 
     /// Query denom metadata
-    pub async fn denom_metadata(
+    pub async fn _denom_metadata(
         &self,
         denom: impl Into<String>,
     ) -> Result<cosmos_modules::bank::Metadata, DaemonError> {
@@ -121,7 +138,7 @@ impl Bank {
     /// Query denoms metadata with pagination
     ///
     /// see [PageRequest] for pagination
-    pub async fn denoms_metadata(
+    pub async fn _denoms_metadata(
         &self,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::bank::Metadata>, DaemonError> {
@@ -134,5 +151,46 @@ impl Bank {
             }
         );
         Ok(denoms_metadata.metadatas)
+    }
+}
+
+pub fn cosmrs_to_cosmwasm_coin(
+    c: cosmrs::proto::cosmos::base::v1beta1::Coin,
+) -> Result<Coin, StdError> {
+    Ok(Coin {
+        amount: c.amount.parse()?,
+        denom: c.denom,
+    })
+}
+
+pub fn cosmrs_to_cosmwasm_coins(
+    c: Vec<cosmrs::proto::cosmos::base::v1beta1::Coin>,
+) -> Result<Vec<Coin>, StdError> {
+    c.into_iter().map(cosmrs_to_cosmwasm_coin).collect()
+}
+impl BankQuerier for Bank {
+    fn balance(
+        &self,
+        address: impl Into<String>,
+        denom: Option<String>,
+    ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
+        self.rt_handle
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._balance(address, denom))
+    }
+
+    fn total_supply(&self) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
+        self.rt_handle
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._total_supply())
+    }
+
+    fn supply_of(&self, denom: impl Into<String>) -> Result<cosmwasm_std::Coin, Self::Error> {
+        self.rt_handle
+            .as_ref()
+            .ok_or(DaemonError::QuerierNeedRuntime)?
+            .block_on(self._supply_of(denom))
     }
 }

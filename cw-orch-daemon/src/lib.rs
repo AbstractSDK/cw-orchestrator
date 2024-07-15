@@ -1,28 +1,28 @@
+// TODO: Figure out better mutex locking for senders
+#![allow(clippy::await_holding_lock)]
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
-//!
-#[cfg(all(feature = "rpc", feature = "grpc"))]
-compile_error!("feature \"rpc\" and feature \"grpc\" cannot be enabled at the same time");
-
-#[cfg(not(any(feature = "rpc", feature = "grpc")))]
-compile_error!("At least one of feature \"rpc\" and feature \"grpc\" needs to be enabled");
-
-pub mod builder;
-pub mod core;
-pub mod error;
-pub(crate) mod json_file;
+pub mod json_lock;
 /// Proto types for different blockchains
 pub mod proto;
-pub mod sender;
-pub mod state;
-pub mod sync;
-pub mod tx_resp;
 // expose these as mods as they can grow
+pub mod env;
 pub mod keys;
 pub mod live_mock;
 
 pub mod queriers;
+pub mod senders;
+pub mod tx_broadcaster;
+pub mod tx_builder;
+
+mod builder;
+mod core;
+mod error;
+mod log;
+mod state;
+mod sync;
+mod tx_resp;
 
 #[cfg(feature = "rpc")]
 pub mod rpc_channel;
@@ -34,14 +34,12 @@ pub mod grpc_channel;
 #[cfg(feature = "grpc")]
 pub use self::grpc_channel::*;
 
-mod traits;
-pub mod tx_builder;
 
-pub use self::{builder::*, core::*, error::*, state::*, sync::*, traits::*, tx_resp::*};
-pub use cw_orch_networks::chain_info::*;
+pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
-pub use sender::Wallet;
+pub use senders::{query::QuerySender, tx::TxSender, CosmosOptions, Wallet};
 pub use tx_builder::TxBuilder;
+mod cosmos_proto_patches;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{
@@ -49,15 +47,9 @@ pub(crate) mod cosmos_modules {
             auth::v1beta1 as auth,
             authz::v1beta1 as authz,
             bank::v1beta1 as bank,
-            base::{abci::v1beta1 as abci, tendermint::v1beta1 as tendermint, v1beta1 as base},
-            crisis::v1beta1 as crisis,
-            distribution::v1beta1 as distribution,
-            evidence::v1beta1 as evidence,
+            base::{abci::v1beta1 as abci, tendermint::v1beta1 as tendermint},
             feegrant::v1beta1 as feegrant,
             gov::v1beta1 as gov,
-            mint::v1beta1 as mint,
-            params::v1beta1 as params,
-            slashing::v1beta1 as slashing,
             staking::v1beta1 as staking,
             tx::v1beta1 as tx,
             vesting::v1beta1 as vesting,
@@ -70,9 +62,10 @@ pub(crate) mod cosmos_modules {
                 connection::v1 as ibc_connection,
             },
         },
-        tendermint::abci as tendermint_abci,
+        tendermint::v0_34::abci as tendermint_abci,
     };
 }
 
-/// Re-export trait and data required to fetch daemon data from chain-registry
-pub use ibc_chain_registry::{chain::ChainData as ChainRegistryData, fetchable::Fetchable};
+lazy_static::lazy_static! {
+    pub static ref RUNTIME: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
+}

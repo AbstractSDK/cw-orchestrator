@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use crate::DaemonError;
+use cosmrs::tx::Raw;
 use cosmrs::tx::SignDoc;
 use cosmrs::{
     proto::traits::{Message, Name},
