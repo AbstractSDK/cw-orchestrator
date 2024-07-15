@@ -2,6 +2,8 @@
 
 ## Unpublished
 
+- `is_test` Added for DaemonBuilder, to use temporary file for state instead of default
+
 ### Breaking
 
 ## 0.24.1
