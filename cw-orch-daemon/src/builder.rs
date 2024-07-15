@@ -86,6 +86,7 @@ impl DaemonAsyncBuilder {
     }
 
     /// Set daemon as testing daemon
+    /// when set to `true` will use temporary file for state
     pub fn is_test(&mut self, is_test: bool) -> &mut Self {
         self.is_test = is_test;
         self
