@@ -21,6 +21,8 @@ pub struct ChainInfoBase<StringType: Into<String>, StringArrayType: AsRef<[Strin
     pub gas_price: f64,
     /// gRPC urls, used to attempt connection
     pub grpc_urls: StringArrayType,
+    /// RPC urls, used to attempt connection
+    pub rpc_urls: StringArrayType,
     /// Optional urls for custom functionality
     pub lcd_url: Option<StringType>,
     /// Optional urls for custom functionality
@@ -49,6 +51,7 @@ impl From<ChainInfo> for ChainInfoOwned {
             gas_denom: value.gas_denom.to_string(),
             gas_price: value.gas_price,
             grpc_urls: value.grpc_urls.iter().map(|url| url.to_string()).collect(),
+            rpc_urls: value.rpc_urls.iter().map(|url| url.to_string()).collect(),
             lcd_url: value.lcd_url.map(ToString::to_string),
             fcd_url: value.fcd_url.map(ToString::to_string),
             network_info: value.network_info.into(),
