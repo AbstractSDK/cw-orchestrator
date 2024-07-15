@@ -24,9 +24,11 @@ pub struct DaemonBuilder {
     pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
     pub(crate) state_path: Option<String>,
-    /// State from rebuild or existing daemon
+    // State from rebuild or existing daemon
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
+    // # Use tempfile as state
+    pub(crate) is_test: bool,
 
     pub(crate) mnemonic: Option<String>,
 }
@@ -41,6 +43,7 @@ impl DaemonBuilder {
             state: None,
             write_on_change: None,
             mnemonic: None,
+            is_test: false,
         }
     }
 
@@ -115,6 +118,12 @@ impl DaemonBuilder {
     /// Overwrite the chain info
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = chain.into();
+        self
+    }
+
+    /// Set daemon as testing daemon
+    pub fn is_test(&mut self, is_test: bool) -> &mut Self {
+        self.is_test = is_test;
         self
     }
 

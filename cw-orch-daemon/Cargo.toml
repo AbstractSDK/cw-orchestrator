@@ -71,6 +71,9 @@ lazy_static = "1.4.0"
 file-lock = { version = "2.1.10" }
 once_cell = { version = "1.19.0" }
 
+# Tempfile names
+fastrand = "2.1.0"
+
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
 cw-orch = { path = "../cw-orch", features = ["daemon"] }

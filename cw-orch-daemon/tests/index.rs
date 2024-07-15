@@ -10,7 +10,10 @@ mod tests {
     fn mnemonic_index() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
+            .build()
+            .unwrap();
 
         let daemon_sender = daemon.sender_addr().to_string();
         let indexed_daemon: Daemon = daemon

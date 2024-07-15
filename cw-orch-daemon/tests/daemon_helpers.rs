@@ -20,7 +20,10 @@ mod tests {
     fn helper_traits() {
         use cw_orch_networks::networks;
 
-        let mut daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
+        let mut daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
+            .build()
+            .unwrap();
 
         daemon.flush_state().unwrap();
 
@@ -91,7 +94,10 @@ mod tests {
     fn cw_orch_interface_traits() {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
+            .build()
+            .unwrap();
 
         let sender = daemon.sender_addr();
 

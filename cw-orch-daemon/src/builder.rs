@@ -32,6 +32,7 @@ pub struct DaemonAsyncBuilder {
     /// State from rebuild or existing daemon
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
+    pub(crate) is_test: bool,
 
     pub(crate) mnemonic: Option<String>,
 }
@@ -45,6 +46,7 @@ impl DaemonAsyncBuilder {
             state: None,
             write_on_change: None,
             mnemonic: None,
+            is_test: false,
         }
     }
 
@@ -80,6 +82,12 @@ impl DaemonAsyncBuilder {
     /// Overwrite the chain info
     pub fn chain(&mut self, chain: impl Into<ChainInfoOwned>) -> &mut Self {
         self.chain = chain.into();
+        self
+    }
+
+    /// Set daemon as testing daemon
+    pub fn is_test(&mut self, is_test: bool) -> &mut Self {
+        self.is_test = is_test;
         self
     }
 
@@ -165,10 +173,19 @@ impl DaemonAsyncBuilder {
                 state
             }
             None => {
-                let json_file_path = self
-                    .state_path
-                    .clone()
-                    .unwrap_or(DaemonState::state_file_path()?);
+                let json_file_path = match &self.state_path {
+                    Some(path) => path.clone(),
+                    None => {
+                        if self.is_test {
+                            crate::gen_temp_file_path()
+                                .into_os_string()
+                                .into_string()
+                                .unwrap()
+                        } else {
+                            DaemonState::state_file_path()?
+                        }
+                    }
+                };
 
                 DaemonState::new(
                     json_file_path,
@@ -192,6 +209,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             state_path: value.state_path,
             write_on_change: value.write_on_change,
             mnemonic: value.mnemonic,
+            is_test: value.is_test,
         }
     }
 }

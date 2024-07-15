@@ -180,7 +180,9 @@ mod node {
         container::ensure_removal(&env::var("CONTAINER_NAME").unwrap());
         let temp_dir = env::temp_dir();
         let expected_state_file = temp_dir.join("cw_orch_test_local.json");
-        state_file::remove(expected_state_file.to_str().unwrap());
+        if let Some(state_file) = expected_state_file.to_str() {
+            state_file::remove(state_file);
+        }
     }
 
     #[ctor]

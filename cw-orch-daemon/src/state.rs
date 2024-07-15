@@ -8,6 +8,7 @@ use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::ffi::OsString;
 use std::sync::Arc;
 use std::{
     collections::{HashMap, HashSet},
@@ -329,6 +330,19 @@ impl StateInterface for DaemonState {
         }
         Ok(store)
     }
+}
+
+// copied from `tempfile::util::tmpname` implementation
+pub(crate) fn gen_temp_file_path() -> std::path::PathBuf {
+    let mut env_dir = std::env::temp_dir();
+    let rand_len = 8;
+    let mut file_name = OsString::with_capacity(rand_len);
+    let mut char_buf = [0u8; 4];
+    for c in std::iter::repeat_with(fastrand::alphanumeric).take(rand_len) {
+        file_name.push(c.encode_utf8(&mut char_buf));
+    }
+    env_dir.push(file_name);
+    env_dir
 }
 
 #[cfg(test)]
