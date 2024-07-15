@@ -29,7 +29,7 @@ cw-multi-test = { package = "abstract-cw-multi-test", version = "1.0.0", feature
 cw20 = { package = "abstract-cw20", version = "1.2.2" }
 cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
 
-osmosis-test-tube = { version = "24.0.1" }
+osmosis-test-tube = { version = "25.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
@@ -47,7 +47,7 @@ cw-orch-contract-derive = { path = "packages/macros/cw-orch-contract-derive", ve
 cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0.22.0" }
 
 # Extensions
-cw-orch-osmosis-test-tube = { version = "0.2.1", path = "packages/cw-orch-osmosis-test-tube" }
+cw-orch-osmosis-test-tube = { version = "0.3.0", path = "packages/cw-orch-osmosis-test-tube" }
 
 # Interchain
 cw-orch-interchain = { path = "cw-orch-interchain", version = "0.3.1" }
