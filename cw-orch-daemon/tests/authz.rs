@@ -24,6 +24,7 @@ mod tests {
     pub const SECOND_MNEMONIC: &str ="salute trigger antenna west ignore own dance bounce battle soul girl scan test enroll luggage sorry distance traffic brand keen rich syrup wood repair";
 
     #[test]
+    #[serial_test::serial]
     fn authz() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
 
