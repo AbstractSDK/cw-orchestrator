@@ -112,6 +112,8 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
             write_on_change: None,
             handle: Some(self.rt_handle.clone()),
             mnemonic: None,
+            // If it was test it will just use same tempfile as state
+            is_test: false,
         }
     }
 }

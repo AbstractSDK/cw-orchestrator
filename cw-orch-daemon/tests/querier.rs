@@ -206,21 +206,20 @@ mod queriers {
     #[test]
     #[serial_test::serial]
     fn contract_info() {
-        use crate::common::Id;
         use cw_orch_daemon::TxSender;
         use cw_orch_networks::networks;
 
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
         let cosm_wasm = CosmWasm::new_async(channel);
-        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
+            .build()
+            .unwrap();
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         contract.upload().unwrap();
 
