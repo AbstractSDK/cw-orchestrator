@@ -13,8 +13,6 @@ mod tests {
 
     use speculoos::prelude::*;
 
-    use crate::common::Id;
-
     #[test]
     #[serial_test::serial]
     fn helper_traits() {
@@ -29,10 +27,7 @@ mod tests {
 
         let sender = daemon.sender_addr();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         asserting!("address is not present")
             .that(&contract.address())
@@ -101,10 +96,7 @@ mod tests {
 
         let sender = daemon.sender_addr();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         // upload contract
         let upload_res = contract.upload();
