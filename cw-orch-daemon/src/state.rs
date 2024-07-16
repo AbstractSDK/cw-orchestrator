@@ -1,11 +1,11 @@
 use super::error::DaemonError;
 use crate::networks::ChainKind;
 
+use crate::env::{default_state_folder, DaemonEnvVars};
 #[cfg(feature = "grpc")]
 use crate::grpc_channel::GrpcChannel;
 #[cfg(feature = "rpc")]
 use crate::rpc_channel::RpcChannel;
-use crate::env::{default_state_folder, DaemonEnvVars};
 use crate::{json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
@@ -14,8 +14,8 @@ use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs::File, path::Path};
 use std::sync::Arc;
+use std::{collections::HashMap, env, fs::File, path::Path};
 use std::{
     collections::{HashMap, HashSet},
     path::Path,

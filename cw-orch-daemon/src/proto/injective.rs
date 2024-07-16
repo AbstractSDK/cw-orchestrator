@@ -5,7 +5,6 @@ use cosmrs::tx::Raw;
 use cosmrs::tx::SignDoc;
 use cosmrs::{
     proto::traits::{Message, Name},
-    tx::Raw,
 };
 
 #[cfg(feature = "eth")]

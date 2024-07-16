@@ -13,7 +13,6 @@ use cosmwasm_std::Binary;
 use cosmwasm_std::Delegation;
 use cosmwasm_std::Empty;
 use cosmwasm_std::StakingQuery;
-use ibc_chain_registry::chain::ChainData;
 use tokio::runtime::Runtime;
 
 use cosmwasm_std::{
@@ -190,7 +189,7 @@ impl WasmMockQuerier {
     /// Creates a querier from chain information
     pub fn new(chain: ChainInfoOwned) -> Self {
         let channel = RUNTIME
-            .block_on(GrpcChannel::connect(
+            .block_on(CosmosClient::connect(
                 &chain.grpc_urls,
                 chain.chain_id.as_str(),
             ))

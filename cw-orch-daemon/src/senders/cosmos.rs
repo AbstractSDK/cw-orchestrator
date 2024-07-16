@@ -6,7 +6,7 @@ use crate::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    CosmosOptions, GrpcChannel,
+    CosmosOptions,
 };
 
 use crate::proto::injective::InjectiveEthAccount;
@@ -43,7 +43,9 @@ use std::{str::FromStr, sync::Arc};
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
+use super::{
+    client::CosmosClient, cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender,
+};
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -57,8 +59,7 @@ pub type Wallet = CosmosSender<All>;
 #[derive(Clone)]
 pub struct CosmosSender<C: Signing + Clone> {
     pub private_key: PrivateKey,
-    /// gRPC channel
-    pub grpc_channel: Channel,
+    pub client: CosmosClient,
     /// Information about the chain
     pub chain_info: Arc<ChainInfoOwned>,
     pub(crate) options: CosmosOptions,
@@ -105,7 +106,7 @@ impl Wallet {
 
         Ok(Self {
             chain_info: chain_info.clone(),
-            grpc_channel: GrpcChannel::from_chain_info(chain_info.as_ref()).await?,
+            client: CosmosClient::from_chain_info(chain_info.as_ref()).await?,
             private_key: pk,
             secp,
             options,

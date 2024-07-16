@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: injective
 pub const INJECTIVE_NETWORK: NetworkInfo = NetworkInfo {

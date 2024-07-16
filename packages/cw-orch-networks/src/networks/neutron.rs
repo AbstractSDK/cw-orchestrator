@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: neutron
 pub const NEUTRON_NETWORK: NetworkInfo = NetworkInfo {

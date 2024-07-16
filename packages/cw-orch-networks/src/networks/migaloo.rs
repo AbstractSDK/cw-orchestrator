@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: migaloo
 pub const MIGALOO_NETWORK: NetworkInfo = NetworkInfo {

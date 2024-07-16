@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: sei
 pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
@@ -48,6 +48,7 @@ pub const PACIFIC_1: ChainInfo = ChainInfo {
     chain_id: "pacific-1",
     gas_denom: "usei",
     gas_price: 0.1,
+    rpc_urls: &[],
     grpc_urls: &["http://sei-grpc.polkachu.com:11990"],
     network_info: SEI_NETWORK,
     lcd_url: None,

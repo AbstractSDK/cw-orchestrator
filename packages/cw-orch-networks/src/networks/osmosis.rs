@@ -13,7 +13,7 @@ pub const OSMOSIS_1: ChainInfo = ChainInfo {
     gas_denom: "uosmo",
     gas_price: 0.025,
     grpc_urls: &["https://grpc.osmosis.zone:443"],
-    
+    rpc_urls: &[],
     network_info: OSMO_NETWORK,
     lcd_url: None,
     fcd_url: None,

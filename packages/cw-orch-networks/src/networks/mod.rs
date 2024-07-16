@@ -19,7 +19,7 @@ pub mod wasm;
 pub mod xion;
 
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
-pub use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
+use cw_orch_core::environment::ChainInfo;
 pub use doravota::{VOTA_ASH, VOTA_TESTNET};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
 pub use juno::{JUNO_1, LOCAL_JUNO, UNI_6};
@@ -34,24 +34,6 @@ pub use sei::{ATLANTIC_2, LOCAL_SEI, PACIFIC_1, SEI_DEVNET_3};
 pub use terra::{LOCAL_TERRA, PHOENIX_1, PISCO_1};
 pub use wasm::LOCAL_WASMD;
 pub use xion::XION_TESTNET_1;
-
-/// A helper function to retrieve a [`ChainInfo`] struct for a given chain-id.
-///
-/// ## Example
-/// ```rust,no_run
-/// use cw_orch_networks::networks::{parse_network, ChainInfo};
-/// let juno_mainnet: ChainInfo = parse_network("juno-1").unwrap();
-/// ```
-/// ---
-/// supported chains are defined by the `SUPPORT_NETWORKS` variable
-
-pub fn parse_network(net_id: &str) -> Result<ChainInfo, String> {
-    SUPPORTED_NETWORKS
-        .iter()
-        .find(|net| net.chain_id == net_id)
-        .cloned()
-        .ok_or(format!("Network not found: {}", net_id))
-}
 
 pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     UNI_6,

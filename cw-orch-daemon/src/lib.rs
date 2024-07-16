@@ -24,18 +24,7 @@ mod state;
 mod sync;
 mod tx_resp;
 
-#[cfg(feature = "rpc")]
-pub mod rpc_channel;
-#[cfg(feature = "rpc")]
-pub use self::rpc_channel::*;
-
-#[cfg(feature = "grpc")]
-pub mod grpc_channel;
-#[cfg(feature = "grpc")]
-pub use self::grpc_channel::*;
-
-
-pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
+pub use self::{builder::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
 pub use senders::{query::QuerySender, tx::TxSender, CosmosOptions, Wallet};
 pub use tx_builder::TxBuilder;

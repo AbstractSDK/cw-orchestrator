@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: kujira
 pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {

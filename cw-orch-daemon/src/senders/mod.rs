@@ -4,6 +4,7 @@ pub mod query;
 pub mod tx;
 
 // Senders
+mod client;
 mod cosmos;
 mod cosmos_batch;
 mod cosmos_options;
@@ -14,4 +15,5 @@ pub use {
     cosmos_batch::{options::CosmosBatchOptions, BatchDaemon, CosmosBatchSender},
     cosmos_options::{CosmosOptions, CosmosWalletKey},
     query_only::{QueryOnlyDaemon, QueryOnlySender},
+    client::CosmosClient,
 };

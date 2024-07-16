@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: archway
 pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {

@@ -1,9 +1,9 @@
-use crate::chain_info::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: wasmd
 /// Wasmd local network
 pub const WASMD_NETWORK: NetworkInfo = NetworkInfo {
-    id: "wasm",
+    chain_name: "wasm",
     pub_address_prefix: "wasm",
     coin_type: 118u32,
 };

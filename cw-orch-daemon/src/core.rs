@@ -1,5 +1,5 @@
 use crate::{
-    queriers::CosmWasm,
+    queriers::{CosmWasm, CosmWasmBase},
     senders::{builder::SenderBuilder, query::QuerySender},
     DaemonAsyncBuilder, DaemonState,
 };
@@ -149,10 +149,10 @@ impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
         query_msg: &Q,
         contract_address: &Addr,
     ) -> Result<R, DaemonError> {
-        let querier = CosmWasm::new(self.channel());
+        let querier = CosmWasmBase::<Sender>::new_async(self.channel());
 
         let resp: Vec<u8> = querier
-            .contract_state(contract_address, serde_json::to_vec(&query_msg)?)
+            ._contract_state(contract_address, serde_json::to_vec(&query_msg)?)
             .await?;
 
         Ok(from_str(from_utf8(&resp).unwrap())?)
