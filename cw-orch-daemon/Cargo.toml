@@ -72,12 +72,11 @@ file-lock = { version = "2.1.10" }
 once_cell = { version = "1.19.0" }
 
 # Tempfile names
-fastrand = "2.1.0"
+uid = "0.1.7"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
 cw-orch = { path = "../cw-orch", features = ["daemon"] }
-uid = "0.1.7"
 env_logger = "0.11.2"
 cw20 = { version = "1" }
 cw20-base = { version = "1" }

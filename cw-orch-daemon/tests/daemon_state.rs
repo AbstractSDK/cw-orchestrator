@@ -3,6 +3,7 @@ use std::sync::Arc;
 use cw_orch_core::environment::ChainState;
 use cw_orch_daemon::{
     env::STATE_FILE_ENV_NAME,
+    json_lock::JsonLockedState,
     networks::{JUNO_1, NEUTRON_1},
     Daemon, DaemonBuilder, DaemonError, DaemonStateFile,
 };
@@ -216,22 +217,26 @@ fn reuse_same_state_multichain() {
     std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
-// #[test]
-// #[serial_test::serial]
-// #[should_panic]
-// #[ignore = "Serial don't track forks for some reason, run it manually"]
-// fn panic_when_someone_holds_json_file() {
-//     match unsafe { nix::unistd::fork() } {
-//         Ok(nix::unistd::ForkResult::Child) => {
-//             // Occur lock for file for 100 millis
-//             let _state = JsonLockedState::new(TEST_STATE_FILE);
-//             std::thread::sleep(std::time::Duration::from_millis(100));
-//         }
-//         Ok(nix::unistd::ForkResult::Parent { .. }) => {
-//             // Wait a bit for child to occur lock and try to lock already locked file by child
-//             std::thread::sleep(std::time::Duration::from_millis(50));
-//             let _state = JsonLockedState::new(TEST_STATE_FILE);
-//         }
-//         Err(_) => (),
-//     }
-// }
+#[test]
+#[serial_test::serial]
+#[should_panic]
+fn panic_when_someone_holds_json_file() {
+    let path = std::env::temp_dir()
+        .join("should_panic_state")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    match unsafe { nix::unistd::fork() } {
+        Ok(nix::unistd::ForkResult::Child) => {
+            // Occur lock for file for 100 millis
+            let _state = JsonLockedState::new(&path);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        Ok(nix::unistd::ForkResult::Parent { .. }) => {
+            // Wait a bit for child to occur lock and try to lock already locked file by child
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            let _state = JsonLockedState::new(&path);
+        }
+        Err(_) => (),
+    }
+}
