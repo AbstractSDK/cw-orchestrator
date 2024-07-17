@@ -338,6 +338,7 @@ pub mod test {
     use crate::{env::STATE_FILE_ENV_NAME, DaemonState};
 
     #[test]
+    #[serial_test::serial]
     fn test_env_variable_state_path() -> anyhow::Result<()> {
         let absolute_path = "/usr/var/file.json";
         let relative_path = "folder/file.json";
