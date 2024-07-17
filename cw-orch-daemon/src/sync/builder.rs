@@ -24,9 +24,11 @@ pub struct DaemonBuilder {
     pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
     pub(crate) state_path: Option<String>,
-    /// State from rebuild or existing daemon
+    // State from rebuild or existing daemon
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
+    // # Use tempfile as state
+    pub(crate) is_test: bool,
 
     pub(crate) mnemonic: Option<String>,
 }
@@ -41,6 +43,7 @@ impl DaemonBuilder {
             state: None,
             write_on_change: None,
             mnemonic: None,
+            is_test: false,
         }
     }
 
@@ -118,6 +121,13 @@ impl DaemonBuilder {
         self
     }
 
+    /// Set daemon as testing daemon
+    /// when set to `true` will use temporary file for state
+    pub fn is_test(&mut self, is_test: bool) -> &mut Self {
+        self.is_test = is_test;
+        self
+    }
+
     /// Build a Daemon with the default [`Wallet`] implementation.
     pub fn build(&self) -> Result<DaemonBase<Wallet>, DaemonError> {
         let rt_handle = self
@@ -166,7 +176,7 @@ impl DaemonBuilder {
 #[cfg(test)]
 mod test {
     use cw_orch_core::environment::TxHandler;
-    use cw_orch_networks::networks::OSMOSIS_1;
+    use cw_orch_networks::networks::JUNO_1;
 
     use crate::{DaemonBase, DaemonBuilder, Wallet};
     pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
@@ -174,18 +184,18 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn grpc_override() {
-        let mut chain = OSMOSIS_1;
+        let mut chain = JUNO_1;
         chain.grpc_urls = &[];
         let daemon = DaemonBuilder::new(chain)
             .mnemonic(DUMMY_MNEMONIC)
-            .grpc_url(OSMOSIS_1.grpc_urls[0])
+            .grpc_url(JUNO_1.grpc_urls[0])
             .build()
             .unwrap();
 
         assert_eq!(daemon.daemon.sender().chain_info.grpc_urls.len(), 1);
         assert_eq!(
             daemon.daemon.sender().chain_info.grpc_urls[0],
-            OSMOSIS_1.grpc_urls[0].to_string(),
+            JUNO_1.grpc_urls[0].to_string(),
         );
     }
 
@@ -193,7 +203,7 @@ mod test {
     #[serial_test::serial]
     fn fee_amount_override() {
         let fee_amount = 1.3238763;
-        let daemon = DaemonBuilder::new(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
             .gas(None, Some(fee_amount))
             .build()
@@ -207,7 +217,7 @@ mod test {
     #[serial_test::serial]
     fn fee_denom_override() {
         let token = "my_token";
-        let daemon = DaemonBuilder::new(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
             .gas(Some(token), None)
             .build()
@@ -224,7 +234,7 @@ mod test {
     fn fee_override() {
         let fee_amount = 1.3238763;
         let token = "my_token";
-        let daemon = DaemonBuilder::new(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
             .gas(Some(token), Some(fee_amount))
             .build()
@@ -241,7 +251,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn hd_index_re_generates_sender() -> anyhow::Result<()> {
-        let daemon = DaemonBuilder::new(OSMOSIS_1)
+        let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
             .build()
             .unwrap();

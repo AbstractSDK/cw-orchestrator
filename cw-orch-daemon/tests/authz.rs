@@ -28,7 +28,10 @@ mod tests {
     fn authz() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder(networks::LOCAL_JUNO).build().unwrap();
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
+            .build()
+            .unwrap();
 
         let sender = daemon.sender_addr().to_string();
 

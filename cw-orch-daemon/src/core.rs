@@ -133,6 +133,8 @@ impl<Sender> DaemonAsyncBase<Sender> {
             state_path: None,
             write_on_change: None,
             mnemonic: None,
+            // If it was test it will just use same tempfile as state
+            is_test: false,
         }
     }
 }
