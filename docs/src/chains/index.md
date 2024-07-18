@@ -6,11 +6,15 @@ cw-orchestrator currently explicitly supports the chains in this section:
 - [Injective](./injective.md)
 - [Juno](./juno.md)
 - [Kujira](./kujira.md)
+- [Landslide](./landslide.md)
+- [Migaloo](./migaloo.md)
 - [Neutron](./neutron.md)
+- [Nibiru](./nibiru.md)
 - [Osmosis](./osmosis.md)
+- [Rollkit](./rollkit.md)
 - [Sei](./sei.md)
 - [Terra](./terra.md)
-- [Rollkit](./rollkit.md)
+- [Union](./union.md)
 - [Xion](./xion.md)
 
 ## Support a new Cosmos Chain
