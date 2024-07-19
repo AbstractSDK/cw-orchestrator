@@ -13,11 +13,8 @@ pub const UNION_TESTNET_8: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "union-testnet-8",
     gas_denom: "muno",
-    gas_price: 0.0025,
-    grpc_urls: &[
-        "http://union-testnet-grpc.crouton.digital:24690",
-        "https://union-testnet.grpc.liveraven.net:443",
-    ],
+    gas_price: 0.000025,
+    grpc_urls: &["https://grpc.testnet.bonlulu.uno:443"],
     network_info: UNION_NETWORK,
     lcd_url: None,
     fcd_url: None,
