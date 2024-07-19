@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-clone-testing"
-version = "0.5.2"
+version = "0.6.2"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -31,3 +31,6 @@ cw20 = { workspace = true }
 cw20-base = { workspace = true }
 
 env_logger = "0.10.0"
+counter-contract = { path = "../../contracts/counter" }
+cw-orch = { path = "../../cw-orch", features = ["daemon"] }
+pretty_env_logger = "0.5.0"

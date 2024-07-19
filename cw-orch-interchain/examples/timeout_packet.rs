@@ -6,11 +6,7 @@ use cosmos_sdk_proto::{
     traits::{Message, Name},
     Any,
 };
-use cw_orch::{
-    environment::{QueryHandler, TxHandler},
-    prelude::Stargate,
-    tokio::runtime::Runtime,
-};
+use cw_orch::{environment::QueryHandler, prelude::*};
 use cw_orch_interchain_core::InterchainEnv;
 use cw_orch_interchain_daemon::ChannelCreator as _;
 use cw_orch_starship::Starship;
@@ -18,8 +14,7 @@ use ibc_relayer_types::core::ics24_host::identifier::PortId;
 fn main() -> cw_orch::anyhow::Result<()> {
     pretty_env_logger::init();
 
-    let runtime = Runtime::new()?;
-    let starship = Starship::new(runtime.handle(), None)?;
+    let starship = Starship::new(None)?;
     let interchain = starship.interchain_env();
 
     let channel = interchain.create_channel(
@@ -49,8 +44,8 @@ fn main() -> cw_orch::anyhow::Result<()> {
                     amount: "100_000".to_string(),
                     denom: "ujuno".to_string(),
                 }),
-                sender: juno.sender().to_string(),
-                receiver: stargaze.sender().to_string(),
+                sender: juno.sender_addr().to_string(),
+                receiver: stargaze.sender_addr().to_string(),
                 timeout_height: Some(Height {
                     revision_number: 1,
                     revision_height: stargaze_height.height,
@@ -63,7 +58,7 @@ fn main() -> cw_orch::anyhow::Result<()> {
         None,
     )?;
 
-    let result = interchain.wait_ibc("juno-1", tx_resp)?;
+    let result = interchain.await_packets("juno-1", tx_resp)?;
 
     match &result.packets[0].outcome {
         cw_orch_interchain_core::types::IbcPacketOutcome::Timeout { .. } => {}

@@ -37,6 +37,6 @@ impl BankModule for Daemon {
         funds: Vec<Coin>,
     ) -> Result<<Self as TxHandler>::Response, <Self as TxHandler>::Error> {
         self.rt_handle
-            .block_on(self.wallet().bank_send(recipient.as_ref(), funds))
+            .block_on(self.sender().bank_send(recipient.as_ref(), funds))
     }
 }

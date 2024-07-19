@@ -77,10 +77,6 @@ impl ChannelCreator for Starship {
     }
 
     fn interchain_env(&self) -> DaemonInterchainEnv<Self> {
-        DaemonInterchainEnv::from_daemons(
-            &self.rt_handle,
-            self.daemons.values().cloned().collect(),
-            self,
-        )
+        DaemonInterchainEnv::from_daemons(self.daemons.values().cloned().collect(), self)
     }
 }

@@ -2,9 +2,11 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract,
 };
-use cw_orch::prelude::{
-    networks, ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload,
-    Daemon, TxHandler,
+use cw_orch::{
+    environment::Environment,
+    prelude::{
+        networks, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler,
+    },
 };
 
 const TESTNET_MNEMONIC: &str = "across left ignore gold echo argue track joy hire release captain enforce hotel wide flash hotel brisk joke midnight duck spare drop chronic stool";
@@ -16,9 +18,7 @@ pub fn main() {
     env_logger::init();
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
-    let res = Daemon::builder()
-        // set the network to use
-        .chain(networks::INJECTIVE_888)
+    let res = Daemon::builder(networks::INJECTIVE_888) // set the network to use
         .mnemonic(TESTNET_MNEMONIC)
         .build();
 
@@ -33,7 +33,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());

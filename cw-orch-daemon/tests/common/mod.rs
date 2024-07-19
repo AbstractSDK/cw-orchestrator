@@ -20,14 +20,6 @@ mod node {
     // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
     const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 
-    use uid::Id as IdT;
-
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct DeployId(());
-
-    #[allow(unused)]
-    pub type Id = IdT<DeployId>;
-
     pub mod state_file {
         use super::{fs, Path};
 
@@ -180,7 +172,9 @@ mod node {
         container::ensure_removal(&env::var("CONTAINER_NAME").unwrap());
         let temp_dir = env::temp_dir();
         let expected_state_file = temp_dir.join("cw_orch_test_local.json");
-        state_file::remove(expected_state_file.to_str().unwrap());
+        if let Some(state_file) = expected_state_file.to_str() {
+            state_file::remove(state_file);
+        }
     }
 
     #[ctor]

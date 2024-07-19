@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-daemon"
-version = "0.23.5"
+version = "0.24.2"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -70,11 +70,13 @@ lazy_static = "1.4.0"
 # Lock daemon
 file-lock = { version = "2.1.10" }
 once_cell = { version = "1.19.0" }
-regex = "1.10.4"
+
+# Tempfile names
+uid = "0.1.7"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
-uid = "0.1.7"
+cw-orch = { path = "../cw-orch", features = ["daemon"] }
 env_logger = "0.11.2"
 cw20 = { version = "1" }
 cw20-base = { version = "1" }
@@ -83,7 +85,7 @@ speculoos = "0.11.0"
 ctor = "0.2.0"
 duct = "0.13"
 mock-contract = { path = "../contracts/mock_contract", features = [
-  "interface",
+    "interface",
 ] }
 serial_test = { version = "3.0.0" }
 
@@ -94,3 +96,6 @@ tokio-test = "0.4.3"
 
 # File lock test
 nix = { version = "0.28.0", features = ["process"] }
+counter-contract = { path = "../contracts/counter" }
+dotenv = "0.15.0"
+pretty_env_logger = "0.5.0"

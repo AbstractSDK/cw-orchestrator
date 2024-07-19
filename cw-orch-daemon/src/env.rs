@@ -9,16 +9,19 @@
 use std::{env, path::PathBuf, str::FromStr};
 
 use cosmwasm_std::StdError;
-use regex::Regex;
 use std::time::Duration;
 
 const DEFAULT_TX_QUERY_RETRIES: usize = 50;
 
+#[deprecated(since = "0.24.0", note = "Please use BLOCK_TIME_MIN_ENV_NAME instead")]
+pub const MIN_BLOCK_SPEED_ENV_NAME: &str = "CW_ORCH_MIN_BLOCK_SPEED";
+
+pub const BLOCK_TIME_MIN_ENV_NAME: &str = "CW_ORCH_MIN_BLOCK_TIME";
+pub const BLOCK_TIME_MAX_ENV_NAME: &str = "CW_ORCH_MAX_BLOCK_TIME";
 pub const STATE_FILE_ENV_NAME: &str = "STATE_FILE";
 pub const GAS_BUFFER_ENV_NAME: &str = "CW_ORCH_GAS_BUFFER";
 pub const MIN_GAS_ENV_NAME: &str = "CW_ORCH_MIN_GAS";
 pub const MAX_TX_QUERIES_RETRY_ENV_NAME: &str = "CW_ORCH_MAX_TX_QUERY_RETRIES";
-pub const MIN_BLOCK_SPEED_ENV_NAME: &str = "CW_ORCH_MIN_BLOCK_SPEED";
 pub const WALLET_BALANCE_ASSERTION_ENV_NAME: &str = "CW_ORCH_WALLET_BALANCE_ASSERTION";
 pub const LOGS_ACTIVATION_MESSAGE_ENV_NAME: &str = "CW_ORCH_LOGS_ACTIVATION_MESSAGE";
 
@@ -51,13 +54,13 @@ impl DaemonEnvVars {
     }
 
     /// Optional - Integer
-    /// Defaults to None
+    /// Defaults to 150_000
     /// Minimum gas amount. Useful when transaction still won't pass even when setting a high gas_buffer or for mixed transaction scripts
-    pub fn min_gas() -> Option<u64> {
+    pub fn min_gas() -> u64 {
         if let Ok(str_value) = env::var(MIN_GAS_ENV_NAME) {
-            Some(parse_with_log(str_value, MIN_GAS_ENV_NAME))
+            parse_with_log(str_value, MIN_GAS_ENV_NAME)
         } else {
-            None
+            150_000
         }
     }
 
@@ -72,37 +75,28 @@ impl DaemonEnvVars {
         }
     }
 
-    /// Optional - Integer
-    /// Defaults to 1
-    /// Minimum block speed in milliseconds. Useful when the block speeds are varying a lot
-    pub fn min_block_speed() -> Duration {
-        if let Ok(str_value) = env::var(MIN_BLOCK_SPEED_ENV_NAME) {
-            let ms_re = Regex::new(r"(\d+)ms").unwrap();
-            let s_re = Regex::new(r"(\d+)s").unwrap();
-
-            if let Some(caps) = ms_re.captures(&str_value) {
-                if let Some(ms) = caps.get(1) {
-                    let milliseconds: u64 =
-                        parse_with_log(ms.as_str().to_string(), MIN_BLOCK_SPEED_ENV_NAME);
-                    Duration::from_millis(milliseconds)
-                } else {
-                    panic!("Couldn't parse content of env var {MIN_BLOCK_SPEED_ENV_NAME}, error : Didn't find a match for format `{{int}}ms");
-                }
-            } else if let Some(caps) = s_re.captures(&str_value) {
-                if let Some(s) = caps.get(1) {
-                    let seconds: u64 =
-                        parse_with_log(s.as_str().to_string(), MIN_BLOCK_SPEED_ENV_NAME);
-                    Duration::from_secs(seconds)
-                } else {
-                    panic!("Couldn't parse content of env var {MIN_BLOCK_SPEED_ENV_NAME}, error : Didn't find a match for format `{{int}}s");
-                }
-            } else {
-                // Assuming the number is in seconds if no unit is specified
-                let seconds: u64 = parse_with_log(str_value, MIN_BLOCK_SPEED_ENV_NAME);
-                Duration::from_secs(seconds)
-            }
+    /// Optional - Block time
+    /// Defaults to 1s
+    /// Minimum block time in `Duration`. Useful when the block speeds are varying a lot
+    #[allow(deprecated)]
+    pub fn min_block_time() -> Duration {
+        if let Ok(str_value) =
+            env::var(BLOCK_TIME_MIN_ENV_NAME).or(env::var(MIN_BLOCK_SPEED_ENV_NAME))
+        {
+            parse_block_time_duration(&str_value)
         } else {
             Duration::from_secs(1)
+        }
+    }
+
+    /// Optional - Block time
+    /// Defaults to None
+    /// Maximum block time in `Duration`. Useful when the block speeds are varying a lot
+    pub fn max_block_time() -> Option<Duration> {
+        if let Ok(str_value) = env::var(BLOCK_TIME_MAX_ENV_NAME) {
+            Some(parse_block_time_duration(&str_value))
+        } else {
+            None
         }
     }
 
@@ -172,5 +166,83 @@ fn parse_with_log<F: FromStr<Err = E>, E: std::fmt::Display>(
     match value.parse() {
         Ok(parsed) => parsed,
         Err(e) => panic!("Couldn't parse content of env var {env_var_name}, error : {e}"),
+    }
+}
+
+/// Parse block time duration from duration string
+/// Takes duration in format `{integer}{duration_specifier}`
+///
+/// # Duration specifiers
+///
+/// * `s` - Block time in seconds
+/// * `ms` - Block time in milliseconds
+/// * `` - Defaults to `s`
+///
+/// # Examples
+///
+/// - "123s" == Duration::from_secs(123)
+/// - "321ms" == Duration::from_millis(321)
+/// - "42" == Duration::from_secs(42)
+fn parse_block_time_duration(raw_duration: &str) -> Duration {
+    let (digits, duration_specifier) = match raw_duration.find(|c: char| !c.is_ascii_digit()) {
+        // Found non-digit character, split string
+        Some(char_idx) => {
+            let (digits, not_digits) = raw_duration.split_at(char_idx);
+            (digits, not_digits.trim())
+        }
+        // Default to seconds
+        None => (raw_duration, "s"),
+    };
+
+    let duration: u64 = match digits.parse() {
+        Ok(duration) => duration,
+        Err(e) => panic!("Couldn't parse content of block time, error: {e}"),
+    };
+
+    match duration_specifier {
+        "s" => Duration::from_secs(duration),
+        "ms" => Duration::from_millis(duration),
+        _ => panic!("Couldn't parse content of block time, error: unexpected token after digits"),
+    }
+}
+
+#[cfg(test)]
+mod test_parse {
+    use super::*;
+
+    #[test]
+    fn test_parse_block_time_duration() {
+        assert_eq!(parse_block_time_duration("123s"), Duration::from_secs(123));
+        assert_eq!(
+            parse_block_time_duration("321ms"),
+            Duration::from_millis(321)
+        );
+        assert_eq!(parse_block_time_duration("42"), Duration::from_secs(42));
+        assert_eq!(
+            parse_block_time_duration("12345 s"),
+            Duration::from_secs(12345)
+        );
+        assert_eq!(
+            parse_block_time_duration("54321 ms "),
+            Duration::from_millis(54321)
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parse_empty_block_time_duration() {
+        parse_block_time_duration("");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parse_invalid_token_block_time_duration() {
+        parse_block_time_duration("45d");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parse_invalid_format_block_time_duration() {
+        parse_block_time_duration("s54");
     }
 }

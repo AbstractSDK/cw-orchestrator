@@ -6,7 +6,7 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract,
 };
-use cw_orch::prelude::{CallAs, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Mock};
+use cw_orch::prelude::*;
 
 /// This example shows how to create and use the cw-multi-test mock environment
 pub fn main() {

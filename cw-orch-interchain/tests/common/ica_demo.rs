@@ -58,8 +58,8 @@ pub fn full_ica_test<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Cha
     controller_chain_id: &str,
     host_funds_denom: &str,
 ) -> cw_orch::anyhow::Result<()> {
-    let host_chain = interchain.chain(host_chain_id)?;
-    let controller_chain = interchain.chain(controller_chain_id)?;
+    let host_chain = interchain.get_chain(host_chain_id)?;
+    let controller_chain = interchain.get_chain(controller_chain_id)?;
 
     let cw1 = Cw1::new("cw1", host_chain.clone());
     let host = Host::new("host", host_chain.clone());
@@ -146,14 +146,14 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
     )?;
 
     let chain_id = controller
-        .get_chain()
+        .environment()
         .block_info()
         .map_err(Into::into)?
         .chain_id
         .to_string();
 
     // Follow the transaction execution
-    interchain.check_ibc(&chain_id, burn_response)?;
+    interchain.await_and_check_packets(&chain_id, burn_response)?;
 
     // check that the balance became 0
     let balance = juno

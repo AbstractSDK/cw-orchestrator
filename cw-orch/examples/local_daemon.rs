@@ -1,11 +1,7 @@
 use counter_contract::{
-    msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
-    CounterContract,
+    msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
-};
+use cw_orch::{environment::Environment, prelude::*};
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
@@ -19,9 +15,7 @@ pub fn main() {
     // ANCHOR: daemon_creation
 
     // We start by creating a daemon. This daemon will be used to interact with the chain.
-    let daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
+    let daemon = Daemon::builder(cw_orch::daemon::networks::LOCAL_JUNO) // chain parameter
         .build()
         .unwrap();
 
@@ -35,15 +29,15 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());
     // ANCHOR_END: daemon_usage
 
-    let exec_res = counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = counter.increment();
     assert!(exec_res.is_ok());
 
-    let query_res = counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
+    let query_res = counter.get_count();
     assert!(query_res.is_ok());
 }

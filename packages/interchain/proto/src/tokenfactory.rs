@@ -29,7 +29,7 @@ pub fn create_denom<Chain: FullNode>(
     chain: &Chain,
     token_name: &str,
 ) -> Result<(), <Chain as TxHandler>::Error> {
-    let creator = chain.sender().to_string();
+    let creator = chain.sender_addr().to_string();
 
     let any = MsgCreateDenom {
         sender: creator,
@@ -54,7 +54,7 @@ pub fn create_denom<Chain: FullNode>(
 /// This actually creates the denom for a token created by an address (which is here taken to be the daemon sender address)
 /// This is mainly used for tests, but feel free to use that in production as well
 pub fn get_denom<Chain: CwEnv>(daemon: &Chain, token_name: &str) -> String {
-    let sender = daemon.sender().to_string();
+    let sender = daemon.sender_addr().to_string();
     format!("factory/{}/{}", sender, token_name)
 }
 
@@ -67,7 +67,7 @@ pub fn mint<Chain: FullNode>(
     token_name: &str,
     amount: u128,
 ) -> Result<(), <Chain as TxHandler>::Error> {
-    let sender = chain.sender().to_string();
+    let sender = chain.sender_addr().to_string();
     let denom = get_denom(chain, token_name);
 
     let any = MsgMint {
@@ -119,7 +119,7 @@ pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Cha
             amount: fund.amount.u128(),
             denom: Denom::from_str(fund.denom.as_str()).unwrap(),
         }),
-        sender: AccountId::from_str(origin.sender().to_string().as_str()).unwrap(),
+        sender: AccountId::from_str(origin.sender_addr().to_string().as_str()).unwrap(),
         receiver: AccountId::from_str(receiver).unwrap(),
         timeout_height: None,
         timeout_revision: None,
@@ -143,7 +143,7 @@ pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Cha
 
     // We wait for the IBC tx to stop successfully
     let tx_results = interchain_env
-        .wait_ibc(&source_port.chain_id, send_tx)
+        .await_packets(&source_port.chain_id, send_tx)
         .unwrap();
 
     Ok(tx_results)
@@ -163,7 +163,7 @@ pub fn create_transfer_channel<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>
             &PortId::transfer(),
             &PortId::transfer(),
             ICS20_CHANNEL_VERSION,
-            Some(cosmwasm_std::IbcOrder::Ordered),
+            Some(cosmwasm_std::IbcOrder::Unordered),
         )
         .unwrap();
 

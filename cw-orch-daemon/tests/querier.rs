@@ -4,7 +4,6 @@ mod common;
 mod queriers {
 
     use cw_orch_core::contract::interface_traits::*;
-    use cw_orch_core::environment::TxHandler;
     use cw_orch_daemon::{queriers::Bank, GrpcChannel};
     use cw_orch_networks::networks;
     use mock_contract::InstantiateMsg;
@@ -207,28 +206,25 @@ mod queriers {
     #[test]
     #[serial_test::serial]
     fn contract_info() {
-        use crate::common::Id;
+        use cw_orch_daemon::TxSender;
         use cw_orch_networks::networks;
 
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
         let cosm_wasm = CosmWasm::new_async(channel);
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         contract.upload().unwrap();
 
         contract
-            .instantiate(&InstantiateMsg {}, Some(&sender), None)
+            .instantiate(&InstantiateMsg {}, Some(&sender.address()), None)
             .unwrap();
 
         let contract_address = contract.address().unwrap();

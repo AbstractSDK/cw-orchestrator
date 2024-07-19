@@ -1,8 +1,38 @@
 # cw-orchestrator Changelog
 
+## Unpublished
+
+- `is_test` Added for Daemon Builders, when set to `true` will use temporary file for state
+
+### Breaking
+
+## 0.24.1
+
+- Added async query functions generations with cw_orch::QueryFns
+- Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
+- Deprecate cw-orch-core `TxHandler::sender` in favor of `TxHandler::sender_addr`
+- Implement `SenderBuilder`, `QuerySender` and `TxSender` which allow for customizing the transaction commitment logic.
+- Can now easily build `QueryOnlyDaemon` which will only expose query functions.
+- Changed cw-orch-interchain InterchainEnv API
+  - `chain` --> `get_chain`
+  - `follow_packet` --> `await_single_packet`
+  - `wait_ibc` --> `await_packets`
+  - `check_ibc` --> `await_and_check_packets`
+  - `follow_packets_from_tx_hash` --> `await_packets_for_txhash`
+- Better Docs for interchain, cw-orch and clone-testing
+- Added max block time environment variable `CW_ORCH_MAX_BLOCK_TIME`
+- `CW_ORCH_MIN_GAS` Now defaults to 150_000 instead of 0, making it more reliable for txs that cost little gas
+
+### Breaking
+
+- Refactor `Daemon` builder pattern to allow for custom senders.
+- Update `Daemon` / `DaemonAsync` implementations to reflect customizable sender.
+- Deprecated `CW_ORCH_MIN_BLOCK_SPEED` in favor of `CW_ORCH_MIN_BLOCK_TIME`
+
 ## cw-orch-daemon 0.23.5
 
 - Fixed Get Tx By Events compatibility with Cosmos SDK 0.50+ for Daemon
+- Fix Generics on QueryMsg and Return types
 
 ## 0.23.0
 

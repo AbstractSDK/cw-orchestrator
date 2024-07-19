@@ -212,6 +212,10 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Sender = Rc<SigningAccount>;
 
     fn sender(&self) -> Addr {
+        self.sender_addr()
+    }
+
+    fn sender_addr(&self) -> Addr {
         Addr::unchecked(self.sender.address())
     }
 

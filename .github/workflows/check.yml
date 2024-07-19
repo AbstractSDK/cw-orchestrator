@@ -79,7 +79,7 @@ jobs:
     # https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
     strategy:
       matrix:
-        msrv: [1.74.0] # clap-derive of cw-orch-cli requires 1.74 or newer
+        msrv: [1.75.0] # dep/feat syntax fixed with co-exist dep
     name: ubuntu / ${{ matrix.msrv }}
     steps:
       - uses: actions/checkout@v4

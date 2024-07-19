@@ -4,21 +4,18 @@ use cw_orch_core::environment::ChainState;
 use cw_orch_daemon::{
     env::STATE_FILE_ENV_NAME,
     json_lock::JsonLockedState,
-    networks::{JUNO_1, OSMOSIS_1},
-    DaemonBuilder, DaemonError, DaemonStateFile,
+    networks::{JUNO_1, NEUTRON_1},
+    Daemon, DaemonBuilder, DaemonError, DaemonStateFile,
 };
 
 pub const DUMMY_MNEMONIC:&str = "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch";
-const TEST_STATE_FILE: &str = "./tests/test.json";
-const TEST2_STATE_FILE: &str = "./tests/test2.json";
 
 #[test]
 #[serial_test::serial]
 fn simultaneous_read() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build()
         .unwrap();
 
@@ -59,10 +56,9 @@ fn simultaneous_read() {
 #[test]
 #[serial_test::serial]
 fn simultaneous_write() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build()
         .unwrap();
 
@@ -100,17 +96,18 @@ fn simultaneous_write() {
 #[test]
 #[serial_test::serial]
 fn simultaneous_write_rebuilt() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build()
         .unwrap();
+
+    let options = daemon.sender().options().clone();
 
     let mut handles = vec![];
     // Note this one has lower iterations since rebuild is pretty long process
     for i in 0..10 {
-        let daemon = daemon.rebuild().build().unwrap();
+        let daemon: Daemon = daemon.rebuild().build_sender(options.clone()).unwrap();
         let mut daemon_state = daemon.state();
         let handle = std::thread::spawn(move || {
             if let DaemonStateFile::FullAccess { json_file_state } = &daemon_state.json_state {
@@ -143,17 +140,17 @@ fn simultaneous_write_rebuilt() {
 #[test]
 #[serial_test::serial]
 fn error_when_another_daemon_holds_it() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let _daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let state_path = std::env::temp_dir()
+        .join("daemon_state_test_file")
+        .into_os_string();
+    std::env::set_var(STATE_FILE_ENV_NAME, state_path);
+
+    let _daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
         .build()
         .unwrap();
 
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
-        .mnemonic(DUMMY_MNEMONIC)
-        .build();
+    let daemon_res = DaemonBuilder::new(JUNO_1).mnemonic(DUMMY_MNEMONIC).build();
 
     assert!(matches!(
         daemon_res,
@@ -165,18 +162,17 @@ fn error_when_another_daemon_holds_it() {
 #[test]
 #[serial_test::serial]
 fn does_not_error_when_previous_daemon_dropped_state() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build()
         .unwrap();
 
     drop(daemon);
 
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon_res = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build();
 
     assert!(daemon_res.is_ok());
@@ -186,18 +182,17 @@ fn does_not_error_when_previous_daemon_dropped_state() {
 #[test]
 #[serial_test::serial]
 fn does_not_error_when_using_different_files() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let _daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let _daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build()
         .unwrap();
 
     // Different file
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST2_STATE_FILE);
-    let daemon_res = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon_res = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        // is test will produce new file every time
+        .is_test(true)
         .build();
 
     assert!(daemon_res.is_ok());
@@ -207,15 +202,13 @@ fn does_not_error_when_using_different_files() {
 #[test]
 #[serial_test::serial]
 fn reuse_same_state_multichain() {
-    std::env::set_var(STATE_FILE_ENV_NAME, TEST_STATE_FILE);
-    let daemon = DaemonBuilder::default()
-        .chain(OSMOSIS_1)
+    let daemon = DaemonBuilder::new(JUNO_1)
         .mnemonic(DUMMY_MNEMONIC)
+        .is_test(true)
         .build()
         .unwrap();
 
-    let daemon_res = DaemonBuilder::default()
-        .chain(JUNO_1)
+    let daemon_res = DaemonBuilder::new(NEUTRON_1)
         .state(daemon.state())
         .mnemonic(DUMMY_MNEMONIC)
         .build();
@@ -227,18 +220,22 @@ fn reuse_same_state_multichain() {
 #[test]
 #[serial_test::serial]
 #[should_panic]
-#[ignore = "Serial don't track forks for some reason, run it manually"]
 fn panic_when_someone_holds_json_file() {
+    let path = std::env::temp_dir()
+        .join("should_panic_state")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     match unsafe { nix::unistd::fork() } {
         Ok(nix::unistd::ForkResult::Child) => {
             // Occur lock for file for 100 millis
-            let _state = JsonLockedState::new(TEST_STATE_FILE);
+            let _state = JsonLockedState::new(&path);
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
         Ok(nix::unistd::ForkResult::Parent { .. }) => {
             // Wait a bit for child to occur lock and try to lock already locked file by child
             std::thread::sleep(std::time::Duration::from_millis(50));
-            let _state = JsonLockedState::new(TEST_STATE_FILE);
+            let _state = JsonLockedState::new(&path);
         }
         Err(_) => (),
     }
