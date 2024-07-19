@@ -1,6 +1,6 @@
 use cosmwasm_std::Uint128;
 use cw_orch::{
-    daemon::{CosmTxResponse, DaemonAsync},
+    daemon::{CosmTxResponse, DaemonAsync, TxSender},
     tokio::runtime::Runtime,
 };
 
@@ -57,20 +57,16 @@ impl SendCw20Output {
         let rt = Runtime::new()?;
 
         let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder()
-                .chain(chain)
-                .mnemonic(seed)
-                .build()
-                .await?;
+            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender.pub_addr()?,
+                sender: daemon.sender().account_id(),
                 contract: cw20_account_id,
                 msg,
                 funds: vec![],
             };
 
-            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
 

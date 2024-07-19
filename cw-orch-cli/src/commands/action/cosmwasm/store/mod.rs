@@ -1,6 +1,6 @@
 use color_eyre::eyre::Context;
 use cw_orch::{
-    daemon::CosmTxResponse,
+    daemon::{CosmTxResponse, TxSender},
     prelude::{DaemonAsync, IndexResponse},
     tokio::runtime::Runtime,
 };
@@ -40,19 +40,15 @@ impl StoreWasmOutput {
 
         let rt = Runtime::new()?;
         let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder()
-                .chain(chain)
-                .mnemonic(seed)
-                .build()
-                .await?;
+            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
 
             let exec_msg = cosmrs::cosmwasm::MsgStoreCode {
-                sender: daemon.sender.pub_addr()?,
+                sender: daemon.sender().account_id(),
                 wasm_byte_code,
                 instantiate_permission: None,
             };
 
-            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
         resp.log(chain.chain_info());

@@ -1,3 +1,4 @@
+use cw_orch::daemon::env::LOGS_ACTIVATION_MESSAGE_ENV_NAME;
 use cw_orch_cli::{common, TLCommand};
 
 use inquire::ui::{Attributes, RenderConfig, StyleSheet};
@@ -5,7 +6,7 @@ use interactive_clap::{ResultFromCli, ToCliArgs};
 
 fn main() -> color_eyre::Result<()> {
     // We don't want to see cw-orch logs during cli
-    std::env::set_var("CW_ORCH_DISABLE_LOGS_ACTIVATION_MESSAGE", "true");
+    std::env::set_var(LOGS_ACTIVATION_MESSAGE_ENV_NAME, "false");
     let render_config = RenderConfig {
         prompt: StyleSheet::new().with_attr(Attributes::BOLD),
         ..Default::default()

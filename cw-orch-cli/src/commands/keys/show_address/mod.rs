@@ -37,12 +37,11 @@ impl ShowAddressOutput {
 
         let rt = Runtime::new()?;
         rt.block_on(async {
-            let daemon = DaemonAsync::builder()
-                .chain(chain)
+            let daemon = DaemonAsync::builder(chain)
                 .mnemonic(mnemonic)
                 .build()
                 .await?;
-            let address = daemon.sender();
+            let address = daemon.sender_addr();
             println!("Your address: {address}");
             let _ = show_addr_explorer(chain.chain_info().clone(), address.as_str()).await;
             color_eyre::Result::<(), color_eyre::Report>::Ok(())

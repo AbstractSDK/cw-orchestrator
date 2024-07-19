@@ -1,5 +1,5 @@
 use cw_orch::{
-    daemon::{DaemonAsync, Wallet},
+    daemon::{DaemonAsync, TxSender},
     tokio::runtime::Runtime,
 };
 
@@ -72,40 +72,34 @@ impl TransferOwnershipOutput {
 
         let rt = Runtime::new()?;
         rt.block_on(async {
-            let mut daemon = DaemonAsync::builder()
-                .chain(chain)
+            let daemon = DaemonAsync::builder(chain)
                 .mnemonic(sender_seed)
                 .build()
                 .await?;
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender.pub_addr()?,
+                sender: daemon.sender().account_id(),
                 contract: contract.clone(),
                 msg,
                 funds: vec![],
             };
 
-            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
 
             resp.log(chain.chain_info());
             println!("Successfully transferred ownership, waiting for approval by {new_owner}",);
 
             if let Some(seed) = receiver_seed {
-                let receiver_sender = cw_orch::daemon::sender::Sender::from_mnemonic(
-                    chain.into(),
-                    daemon.channel(),
-                    &seed,
-                )?;
-                daemon.set_sender(&Wallet::new(receiver_sender));
+                let daemon = daemon.rebuild().mnemonic(seed).build().await?;
                 let action = cw_ownable::Action::AcceptOwnership {};
                 let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
                 let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                    sender: daemon.sender.pub_addr()?,
+                    sender: daemon.sender().account_id(),
                     contract,
                     msg,
                     funds: vec![],
                 };
-                let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+                let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
                 resp.log(chain.chain_info());
                 println!("{new_owner} successfully accepted ownership");
             }

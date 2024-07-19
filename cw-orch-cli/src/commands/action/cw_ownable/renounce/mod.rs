@@ -1,5 +1,5 @@
 use cw_orch::{
-    daemon::{CosmTxResponse, DaemonAsync},
+    daemon::{CosmTxResponse, DaemonAsync, TxSender},
     tokio::runtime::Runtime,
 };
 
@@ -46,20 +46,19 @@ impl RenounceOwnershipOutput {
 
         let rt = Runtime::new()?;
         let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder()
-                .chain(chain)
+            let daemon = DaemonAsync::builder(chain)
                 .mnemonic(sender_seed)
                 .build()
                 .await?;
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender.pub_addr()?,
+                sender: daemon.sender().account_id(),
                 contract,
                 msg,
                 funds: vec![],
             };
 
-            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
         resp.log(chain.chain_info());

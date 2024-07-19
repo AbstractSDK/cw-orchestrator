@@ -1,4 +1,5 @@
 use color_eyre::eyre::Context;
+use cw_orch::daemon::TxSender;
 use cw_orch::{daemon::CosmTxResponse, prelude::DaemonAsync, tokio::runtime::Runtime};
 
 use crate::log::LogOutput;
@@ -64,20 +65,16 @@ impl ExecuteWasmOutput {
 
         let rt = Runtime::new()?;
         let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder()
-                .chain(chain)
-                .mnemonic(seed)
-                .build()
-                .await?;
+            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
 
             let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender.pub_addr()?,
+                sender: daemon.sender().account_id(),
                 contract: contract_account_id,
                 msg,
                 funds: coins,
             };
 
-            let resp = daemon.sender.commit_tx(vec![exec_msg], None).await?;
+            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
             color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
         })?;
 

@@ -51,9 +51,9 @@ impl SendNativeOutput {
 
         let rt = Runtime::new()?;
 
-        let daemon = Daemon::builder().chain(chain).mnemonic(seed).build()?;
+        let daemon = Daemon::builder(chain).mnemonic(seed).build()?;
 
-        let resp = rt.block_on(daemon.wallet().bank_send(to_address.as_ref(), coins))?;
+        let resp = rt.block_on(daemon.sender().bank_send(to_address.as_ref(), coins))?;
         resp.log(chain.chain_info());
 
         Ok(SendNativeOutput)
