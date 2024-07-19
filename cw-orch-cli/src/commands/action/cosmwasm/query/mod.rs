@@ -2,6 +2,8 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 use crate::commands::action::CosmosContext;
 
+mod code;
+mod contract_info;
 mod raw;
 mod smart;
 
@@ -23,4 +25,10 @@ pub enum QueryAction {
     /// Query wasm raw state
     #[strum_discriminants(strum(message = "👉 Raw"))]
     Raw(raw::QueryRawCommands),
+    /// Query code
+    #[strum_discriminants(strum(message = "🔢 Code"))]
+    Code(code::QueryCodeCommands),
+    /// Query contract info
+    #[strum_discriminants(strum(message = "🔍 Contract Info"))]
+    ContractInfo(contract_info::QueryContractInfoCommands),
 }
