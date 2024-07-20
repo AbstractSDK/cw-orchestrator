@@ -548,7 +548,7 @@ fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
         .collect()
 }
 
-async fn find_ibc_packets_sent_in_tx(
+pub async fn find_ibc_packets_sent_in_tx(
     chain: NetworkId,
     grpc_channel: Channel,
     tx: CosmTxResponse,
