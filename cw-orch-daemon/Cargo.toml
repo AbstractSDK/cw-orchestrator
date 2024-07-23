@@ -20,7 +20,7 @@ all-features = true
 default = []
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
-# node-tests = []
+node-tests = []
 eth = ["dep:ethers-signers", "dep:ethers-core"]
 [dependencies]
 # Default deps
