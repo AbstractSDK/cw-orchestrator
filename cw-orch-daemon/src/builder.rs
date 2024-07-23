@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     log::print_if_log_disabled,
+    network_config,
     senders::{builder::SenderBuilder, CosmosOptions, CosmosWalletKey},
     DaemonAsyncBase, DaemonBuilder, DaemonStateFile, Wallet,
 };
@@ -104,9 +105,13 @@ impl DaemonAsyncBuilder {
 
     /// Build a daemon with provided mnemonic or env-var mnemonic
     pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
-        let chain_info = Arc::new(self.chain.clone());
+        let chain_info = if let Some(network_config) = network_config::NetworkConfig::load() {
+            Arc::new(network_config.update_chain_info(self.chain.clone()))
+        } else {
+            Arc::new(self.chain.clone())
+        };
 
-        let state = self.build_state()?;
+        let state = self.build_state(chain_info.clone())?;
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
 
         let options = CosmosOptions {
@@ -128,9 +133,13 @@ impl DaemonAsyncBuilder {
         &self,
         sender_options: T,
     ) -> Result<DaemonAsyncBase<T::Sender>, DaemonError> {
-        let chain_info = Arc::new(self.chain.clone());
+        let chain_info = if let Some(network_config) = network_config::NetworkConfig::load() {
+            Arc::new(network_config.update_chain_info(self.chain.clone()))
+        } else {
+            Arc::new(self.chain.clone())
+        };
 
-        let state = self.build_state()?;
+        let state = self.build_state(chain_info.clone())?;
 
         let sender = sender_options
             .build(&chain_info)
@@ -144,12 +153,11 @@ impl DaemonAsyncBuilder {
     }
 
     /// Returns a built state
-    fn build_state(&self) -> Result<DaemonState, DaemonError> {
+    fn build_state(&self, chain_info: Arc<ChainInfoOwned>) -> Result<DaemonState, DaemonError> {
         let deployment_id = self
             .deployment_id
             .clone()
             .unwrap_or(DEFAULT_DEPLOYMENT.to_string());
-        let chain_info = Arc::new(self.chain.clone());
 
         let state = match &self.state {
             Some(state) => {
