@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: sei
 pub const SEI_NETWORK: NetworkInfo = NetworkInfo {
@@ -13,6 +13,7 @@ pub const LOCAL_SEI: ChainInfo = ChainInfo {
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://localhost:9090"],
+    rpc_urls: &[],
     network_info: SEI_NETWORK,
     lcd_url: None,
     fcd_url: None,
@@ -24,6 +25,7 @@ pub const SEI_DEVNET_3: ChainInfo = ChainInfo {
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://sei_devnet-testnet-grpc.polkachu.com:11990"],
+    rpc_urls: &[],
     network_info: SEI_NETWORK,
     lcd_url: None,
     fcd_url: None,
@@ -35,6 +37,7 @@ pub const ATLANTIC_2: ChainInfo = ChainInfo {
     gas_denom: "usei",
     gas_price: 0.1,
     grpc_urls: &["http://sei-testnet-grpc.polkachu.com:11990"],
+    rpc_urls: &[],
     network_info: SEI_NETWORK,
     lcd_url: None,
     fcd_url: None,
@@ -45,6 +48,7 @@ pub const PACIFIC_1: ChainInfo = ChainInfo {
     chain_id: "pacific-1",
     gas_denom: "usei",
     gas_price: 0.1,
+    rpc_urls: &[],
     grpc_urls: &["http://sei-grpc.polkachu.com:11990"],
     network_info: SEI_NETWORK,
     lcd_url: None,

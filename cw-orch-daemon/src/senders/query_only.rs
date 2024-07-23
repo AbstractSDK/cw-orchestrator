@@ -6,7 +6,7 @@ use cw_orch_core::environment::ChainInfoOwned;
 
 use tonic::transport::Channel;
 
-use super::{builder::SenderBuilder, query::QuerySender};
+use super::{builder::SenderBuilder, client::CosmosClient, query::QuerySender};
 
 /// Daemon that does not support signing.
 /// Will err on any attempt to sign a transaction or retrieve a sender address.
@@ -15,8 +15,8 @@ pub type QueryOnlyDaemon = DaemonBase<QueryOnlySender>;
 /// Signer of the transactions and helper for address derivation
 #[derive(Clone)]
 pub struct QueryOnlySender {
-    /// gRPC channel
-    pub channel: Channel,
+    /// CosmosSDK Client
+    pub client: CosmosClient,
     /// Information about the chain
     pub chain_info: Arc<ChainInfoOwned>,
 }
@@ -26,10 +26,10 @@ impl SenderBuilder for () {
     type Sender = QueryOnlySender;
 
     async fn build(&self, chain_info: &Arc<ChainInfoOwned>) -> Result<Self::Sender, Self::Error> {
-        let channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await?;
+        let client = CosmosClient::from_chain_info(chain_info.as_ref()).await?;
 
         Ok(QueryOnlySender {
-            channel,
+            client,
             chain_info: chain_info.clone(),
         })
     }

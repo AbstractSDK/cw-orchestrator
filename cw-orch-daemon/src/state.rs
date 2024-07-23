@@ -1,5 +1,11 @@
 use super::error::DaemonError;
+use crate::networks::ChainKind;
+
 use crate::env::{default_state_folder, DaemonEnvVars};
+#[cfg(feature = "grpc")]
+use crate::grpc_channel::GrpcChannel;
+#[cfg(feature = "rpc")]
+use crate::rpc_channel::RpcChannel;
 use crate::{json_lock::JsonLockedState, networks::ChainKind};
 
 use cosmwasm_std::Addr;
@@ -9,6 +15,7 @@ use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::sync::Arc;
+use std::{collections::HashMap, env, fs::File, path::Path};
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
@@ -51,6 +58,20 @@ pub enum DaemonStateFile {
     FullAccess {
         json_file_state: Arc<Mutex<JsonLockedState>>,
     },
+}
+
+#[cfg(feature = "grpc")]
+pub async fn create_transport_channel(
+    chain_data: &ChainData,
+) -> Result<tonic::transport::Channel, DaemonError> {
+    GrpcChannel::connect(&chain_data.apis.grpc, &chain_data.chain_id).await
+}
+
+#[cfg(feature = "rpc")]
+pub async fn create_transport_channel(
+    chain_data: &ChainData,
+) -> Result<cosmrs::rpc::HttpClient, DaemonError> {
+    RpcChannel::connect(&chain_data.apis.rpc, &chain_data.chain_id).await
 }
 
 impl DaemonState {

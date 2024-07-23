@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: kujira
 pub const KUJIRA_NETWORK: NetworkInfo = NetworkInfo {
@@ -13,6 +13,7 @@ pub const HARPOON_4: ChainInfo = ChainInfo {
     gas_denom: "ukuji",
     gas_price: 0.025,
     grpc_urls: &["http://kujira-testnet-grpc.polkachu.com:11890"],
+    rpc_urls: &[],
     network_info: KUJIRA_NETWORK,
     lcd_url: None,
     fcd_url: None,

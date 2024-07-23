@@ -10,13 +10,13 @@ pub mod proto;
 pub mod env;
 pub mod keys;
 pub mod live_mock;
+
 pub mod queriers;
 pub mod senders;
 pub mod tx_broadcaster;
 pub mod tx_builder;
 
 mod builder;
-mod channel;
 mod core;
 mod error;
 mod log;
@@ -24,7 +24,7 @@ mod state;
 mod sync;
 mod tx_resp;
 
-pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
+pub use self::{builder::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
 pub use senders::{query::QuerySender, tx::TxSender, CosmosOptions, Wallet};
 pub use tx_builder::TxBuilder;

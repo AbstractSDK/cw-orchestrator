@@ -1,5 +1,5 @@
 use crate::{
-    queriers::CosmWasm,
+    queriers::{CosmWasm, CosmWasmBase},
     senders::{builder::SenderBuilder, query::QuerySender},
     DaemonAsyncBuilder, DaemonState,
 };
@@ -146,20 +146,18 @@ impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
     }
 
     /// Query a contract.
-    pub async fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    pub async fn query<Q: Serialize + Debug, R: Serialize + DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
-    ) -> Result<T, DaemonError> {
-        let mut client = cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
-        let resp = client
-            .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
-                address: contract_address.to_string(),
-                query_data: serde_json::to_vec(&query_msg)?,
-            })
+    ) -> Result<R, DaemonError> {
+        let querier = CosmWasmBase::<Sender>::new_async(self.channel());
+
+        let resp: Vec<u8> = querier
+            ._contract_state(contract_address, serde_json::to_vec(&query_msg)?)
             .await?;
 
-        Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
+        Ok(from_str(from_utf8(&resp).unwrap())?)
     }
 
     /// Wait for a given amount of blocks.

@@ -45,15 +45,17 @@ impl Bank {
         address: impl Into<String>,
         denom: Option<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
-        use cosmos_modules::bank::query_client::QueryClient;
         match denom {
             Some(denom) => {
-                let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
-                let request = cosmos_modules::bank::QueryBalanceRequest {
-                    address: address.into(),
-                    denom,
-                };
-                let resp = client.balance(request).await?.into_inner();
+                let resp = cosmos_query!(
+                    self,
+                    bank,
+                    balance,
+                    QueryBalanceRequest {
+                        address: address.into(),
+                        denom: denom,
+                    }
+                );
                 let coin = resp.balance.unwrap();
                 Ok(vec![cosmrs_to_cosmwasm_coin(coin)?])
             }

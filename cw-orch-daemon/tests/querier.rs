@@ -23,12 +23,39 @@ mod queriers {
         AccountId, Denom,
     };
 
+    #[cfg(feature = "grpc")]
     pub async fn build_channel() -> tonic::transport::Channel {
+        use ibc_chain_registry::chain::Grpc;
+
         let network = networks::LOCAL_JUNO;
 
         let grpcs = vec![network.grpc_urls[0].into()];
 
-        let channel = GrpcChannel::connect(&grpcs, network.chain_id).await;
+        let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
+
+        let channel = cw_orch_daemon::GrpcChannel::connect(&grpcs, &chain).await;
+
+        asserting!("channel connection is succesful")
+            .that(&channel)
+            .is_ok();
+
+        channel.unwrap()
+    }
+
+    #[cfg(feature = "rpc")]
+    pub async fn build_channel() -> cosmrs::rpc::HttpClient {
+        use ibc_chain_registry::chain::Rpc;
+
+        let network = networks::LOCAL_JUNO;
+
+        let rpcs: Vec<Rpc> = vec![Rpc {
+            address: network.rpc_urls[0].into(),
+            provider: None,
+        }];
+
+        let chain: ChainId = ChainId::new(network.chain_id.to_owned(), 1);
+
+        let channel = cw_orch_daemon::RpcChannel::connect(&rpcs, &chain).await;
 
         asserting!("channel connection is succesful")
             .that(&channel)

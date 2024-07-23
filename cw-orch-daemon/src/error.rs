@@ -24,12 +24,21 @@ pub enum DaemonError {
     VarError(#[from] ::std::env::VarError),
     #[error(transparent)]
     AnyError(#[from] ::anyhow::Error),
+
+    #[cfg(feature = "grpc")]
     #[error(transparent)]
     Status(#[from] ::tonic::Status),
+
+    #[cfg(feature = "grpc")]
     #[error(transparent)]
     TransportError(#[from] ::tonic::transport::Error),
+
     #[error(transparent)]
     TendermintError(#[from] ::cosmrs::tendermint::Error),
+    #[error(transparent)]
+    TendermintRPCError(#[from] cosmrs::rpc::Error),
+    #[error(transparent)]
+    ProseEncoreError(#[from] prost::EncodeError),
     #[error(transparent)]
     CwEnvError(#[from] ::cw_orch_core::CwEnvError),
     #[error(transparent)]
@@ -102,6 +111,8 @@ pub enum DaemonError {
     NewNetwork(String),
     #[error("Can not connect to any grpc endpoint that was provided.")]
     CannotConnectGRPC,
+    #[error("Can not connect to any rpc endpoint that was provided.")]
+    CannotConnectRPC,
     #[error("tx failed: {reason} with code {code}")]
     TxFailed { code: usize, reason: String },
     #[error("The list of grpc endpoints is empty")]

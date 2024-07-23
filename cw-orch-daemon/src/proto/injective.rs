@@ -3,7 +3,9 @@
 use crate::DaemonError;
 use cosmrs::tx::Raw;
 use cosmrs::tx::SignDoc;
-use prost::Name;
+use cosmrs::{
+    proto::traits::{Message, Name},
+};
 
 #[cfg(feature = "eth")]
 use crate::keys::private::PrivateKey;
@@ -30,11 +32,6 @@ pub struct InjectivePubKey {
 impl Name for InjectivePubKey {
     const NAME: &'static str = "PubKey";
     const PACKAGE: &'static str = "/injective.crypto.v1beta1.ethsecp256k1";
-
-    /// Workaround until tokio-rs/prost#923 is released
-    fn full_name() -> String {
-        format!("{}.{}", Self::PACKAGE, Self::NAME)
-    }
 }
 
 pub trait InjectiveSigner {

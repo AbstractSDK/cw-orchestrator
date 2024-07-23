@@ -1,4 +1,4 @@
-use crate::networks::{ChainInfo, ChainKind, NetworkInfo};
+use crate::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: archway
 pub const ARCHWAY_NETWORK: NetworkInfo = NetworkInfo {
@@ -15,6 +15,7 @@ pub const CONSTANTINE_3: ChainInfo = ChainInfo {
     gas_denom: "aconst",
     gas_price: 1000000000000.0,
     grpc_urls: &["https://grpc.constantine.archway.io:443"],
+    rpc_urls: &[],
     network_info: ARCHWAY_NETWORK,
     lcd_url: Some("https://api.constantine.archway.io"),
     fcd_url: None,
@@ -28,6 +29,7 @@ pub const ARCHWAY_1: ChainInfo = ChainInfo {
     gas_denom: "aarch",
     gas_price: 1000000000000.0,
     grpc_urls: &["https://grpc.mainnet.archway.io:443"],
+    rpc_urls: &["https://rpc.mainnet.archway.io"],
     network_info: ARCHWAY_NETWORK,
     lcd_url: Some("https://api.mainnet.archway.io"),
     fcd_url: None,

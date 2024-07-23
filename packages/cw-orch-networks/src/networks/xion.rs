@@ -12,6 +12,7 @@ pub const XION_TESTNET_1: ChainInfo = ChainInfo {
     chain_id: "xion-testnet-1",
     gas_denom: "uxion",
     gas_price: 0.0,
+    rpc_urls: &[],
     grpc_urls: &["http://xion-testnet-grpc.polkachu.com:22390"],
     network_info: XION_NETWORK,
     lcd_url: None,

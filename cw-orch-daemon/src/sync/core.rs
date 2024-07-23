@@ -14,7 +14,6 @@ use cw_orch_core::{
 use cw_orch_traits::stargate::Stargate;
 use serde::Serialize;
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
 
 use crate::senders::tx::TxSender;
 
