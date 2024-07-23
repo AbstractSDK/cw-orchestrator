@@ -143,3 +143,55 @@ impl<StringType: Into<String> + Default, StringArrayType: AsRef<[StringType]> + 
         }
     }
 }
+
+impl ChainInfoOwned {
+    pub fn overwrite_with(mut self, chain_info: ChainInfoOwned) -> ChainInfoOwned {
+        let ChainInfoOwned {
+            chain_id,
+            gas_denom,
+            gas_price,
+            grpc_urls,
+            lcd_url,
+            fcd_url,
+            network_info:
+                NetworkInfoOwned {
+                    chain_name,
+                    pub_address_prefix,
+                    coin_type,
+                },
+            kind,
+        } = chain_info;
+
+        if !chain_id.is_empty() {
+            self.chain_id = chain_id;
+        }
+        if !gas_denom.is_empty() {
+            self.gas_denom = gas_denom;
+        }
+        if !gas_price.is_nan() {
+            self.gas_price = gas_price;
+        }
+        if !grpc_urls.is_empty() {
+            self.grpc_urls = grpc_urls;
+        }
+        if let Some(lcd_url) = lcd_url {
+            self.lcd_url = Some(lcd_url);
+        }
+        if let Some(fcd_url) = fcd_url {
+            self.fcd_url = Some(fcd_url);
+        }
+        if !chain_name.is_empty() {
+            self.network_info.chain_name = chain_name;
+        }
+        if !pub_address_prefix.is_empty() {
+            self.network_info.pub_address_prefix = pub_address_prefix;
+        }
+        if coin_type != 118 {
+            self.network_info.coin_type = coin_type;
+        }
+        if kind != ChainKind::Unspecified {
+            self.kind = kind;
+        }
+        self
+    }
+}

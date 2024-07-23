@@ -105,8 +105,8 @@ impl DaemonAsyncBuilder {
 
     /// Build a daemon with provided mnemonic or env-var mnemonic
     pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
-        let chain_info = if let Some(network_config) = network_config::NetworkConfig::load() {
-            Arc::new(network_config.update_chain_info(self.chain.clone()))
+        let chain_info = if let Some(network_config) = network_config::load(&self.chain.chain_id) {
+            Arc::new(self.chain.clone().overwrite_with(network_config))
         } else {
             Arc::new(self.chain.clone())
         };
@@ -133,8 +133,8 @@ impl DaemonAsyncBuilder {
         &self,
         sender_options: T,
     ) -> Result<DaemonAsyncBase<T::Sender>, DaemonError> {
-        let chain_info = if let Some(network_config) = network_config::NetworkConfig::load() {
-            Arc::new(network_config.update_chain_info(self.chain.clone()))
+        let chain_info = if let Some(network_config) = network_config::load(&self.chain.chain_id) {
+            Arc::new(self.chain.clone().overwrite_with(network_config))
         } else {
             Arc::new(self.chain.clone())
         };
