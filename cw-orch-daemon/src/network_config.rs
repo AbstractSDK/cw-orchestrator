@@ -71,16 +71,16 @@ impl NetworkConfig {
         };
 
         if !chain_id.is_empty() {
-            chain_info.chain_id = chain_id.clone();
+            chain_info.chain_id.clone_from(chain_id);
         }
         if !gas_denom.is_empty() {
-            chain_info.gas_denom = gas_denom.clone();
+            chain_info.gas_denom.clone_from(gas_denom);
         }
         if !gas_price.is_nan() {
-            chain_info.gas_price = *gas_price;
+            chain_info.gas_price.clone_from(gas_price);
         }
         if !grpc_urls.is_empty() {
-            chain_info.grpc_urls = grpc_urls.clone();
+            chain_info.grpc_urls.clone_from(grpc_urls);
         }
         if let Some(lcd_url) = lcd_url {
             chain_info.lcd_url = Some(lcd_url.clone());
@@ -89,16 +89,19 @@ impl NetworkConfig {
             chain_info.fcd_url = Some(fcd_url.clone());
         }
         if !chain_name.is_empty() {
-            chain_info.network_info.chain_name = chain_name.clone()
+            chain_info.network_info.chain_name.clone_from(chain_name);
         }
         if !pub_address_prefix.is_empty() {
-            chain_info.network_info.pub_address_prefix = pub_address_prefix.clone()
+            chain_info
+                .network_info
+                .pub_address_prefix
+                .clone_from(pub_address_prefix);
         }
         if *coin_type != 118 {
-            chain_info.network_info.coin_type = *coin_type;
+            chain_info.network_info.coin_type.clone_from(coin_type);
         }
         if *kind != ChainKind::Unspecified {
-            chain_info.kind = kind.clone();
+            chain_info.kind.clone_from(kind);
         }
         chain_info
     }
@@ -111,7 +114,7 @@ impl NetworkConfig {
             .to_owned();
 
         if chain_info.chain_id.is_empty() {
-            chain_info.chain_id = chain_id.to_owned();
+            chain_id.clone_into(&mut chain_info.chain_id);
         }
         if chain_info.gas_denom.is_empty() {
             panic!("Missing gas_denom in custom config of {chain_id}");
