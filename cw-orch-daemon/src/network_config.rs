@@ -77,7 +77,7 @@ impl NetworkConfig {
             chain_info.gas_denom = gas_denom.clone();
         }
         if !gas_price.is_nan() {
-            chain_info.gas_price = gas_price.clone();
+            chain_info.gas_price = *gas_price;
         }
         if !grpc_urls.is_empty() {
             chain_info.grpc_urls = grpc_urls.clone();
@@ -107,7 +107,7 @@ impl NetworkConfig {
         let mut chain_info = self
             .0
             .get(chain_id)
-            .expect(&format!("Custom config for {chain_id} not found."))
+            .unwrap_or_else(|| panic!("Custom config for {chain_id} not found."))
             .to_owned();
 
         if chain_info.chain_id.is_empty() {
