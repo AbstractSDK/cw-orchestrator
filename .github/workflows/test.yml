@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         toolchain: [stable, beta]
+      fail-fast: false # beta may fail we shouldn't care
     steps:
       - uses: actions/checkout@v4
         with:
