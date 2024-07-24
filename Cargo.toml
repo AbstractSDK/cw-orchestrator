@@ -76,3 +76,6 @@ log = "0.4.14"
 # Interchain
 ibc-relayer-types = { version = "0.25.0" }
 ibc-chain-registry = { version = "0.25.0" }
+
+[patch.crates-io]
+cw-orch-core = { path = "packages/cw-orch-core" }
