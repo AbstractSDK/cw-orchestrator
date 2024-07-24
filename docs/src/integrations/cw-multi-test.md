@@ -15,7 +15,7 @@ Before starting, here are a few examples utilizing the mock structures:
 - <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/mockbech32.rs" target="_blank">Using actual cosmos addresses</a>
 - <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/mock.rs" target="_blank">Customizing the execution environment</a>
 
-The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages `cw-multi-test` goes along the lines of:
+The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environment in cw-orchestrator that leverages `cw-multi-test` goes along the lines of:
 
 ```rust,ignore
     use cw_orch::prelude::*;
