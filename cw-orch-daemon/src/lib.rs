@@ -20,6 +20,7 @@ mod channel;
 mod core;
 mod error;
 mod log;
+mod network_config;
 mod state;
 mod sync;
 mod tx_resp;
