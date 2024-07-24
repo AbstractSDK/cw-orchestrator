@@ -111,7 +111,7 @@ Supported actions:
 
 Optional, accepted values: `debug`, `error`, `info`, `warn`,  `trace`
 
- `RUST_LOG` defines the Log level for the application. This is actually a `Rust` flag that we use inside `cw-orch`. If working with this environment variable, don't forget to also initialize a logger at the beginning of you application to be able to see the output. You can work with <a href="https://crates.io/crates/pretty_env_logger/" target="_blank">pretty_env_logger</a> for instance.
+ `RUST_LOG` defines the Log level for the application. This is actually a `Rust` flag that we use inside `cw-orch`. If working with this environment variable, don't forget to also initialize a logger at the beginning of your application to be able to see the output. You can work with <a href="https://crates.io/crates/pretty_env_logger/" target="_blank">pretty_env_logger</a> for instance.
 
 ### CW_ORCH_SERIALIZE_JSON
 
