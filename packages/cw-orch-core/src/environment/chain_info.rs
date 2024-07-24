@@ -145,6 +145,7 @@ impl<StringType: Into<String> + Default, StringArrayType: AsRef<[StringType]> + 
 }
 
 impl ChainInfoOwned {
+    /// Overwrite the chain info with the provided chain info.
     pub fn overwrite_with(mut self, chain_info: ChainInfoOwned) -> ChainInfoOwned {
         let ChainInfoOwned {
             chain_id,
