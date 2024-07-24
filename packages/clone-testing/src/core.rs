@@ -218,13 +218,9 @@ impl<S: StateInterface> CloneTesting<S> {
         let chain: ChainInfoOwned = chain.into();
         let state = Rc::new(RefCell::new(custom_state));
 
-        let pub_address_prefix = &chain.network_info.pub_address_prefix;
-        let remote_channel = RemoteChannel::new(
-            rt,
-            get_channel(chain.clone(), rt)?,
-            pub_address_prefix.clone(),
-        )
-        .unwrap();
+        let pub_address_prefix = chain.network_info.pub_address_prefix.clone();
+        let remote_channel =
+            RemoteChannel::new(rt, chain.clone(), pub_address_prefix.clone()).unwrap();
 
         let wasm = WasmKeeper::<Empty, Empty>::new()
             .with_remote(remote_channel.clone())
@@ -242,7 +238,7 @@ impl<S: StateInterface> CloneTesting<S> {
         let app = AppBuilder::default()
             .with_wasm(wasm)
             .with_bank(bank)
-            .with_api(MockApiBech32::new(pub_address_prefix))
+            .with_api(MockApiBech32::new(&pub_address_prefix))
             .with_block(block_info)
             .with_remote(remote_channel.clone());
 
@@ -469,16 +465,6 @@ impl BankSetter for CloneTesting {
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(&Addr::unchecked(address), amount)
     }
-}
-
-/// Simple helper to get the GRPC transport channel
-fn get_channel(
-    chain: impl Into<ChainInfoOwned>,
-    rt: &Runtime,
-) -> anyhow::Result<tonic::transport::Channel> {
-    let chain = chain.into();
-    let channel = rt.block_on(GrpcChannel::connect(&chain.grpc_urls, &chain.chain_id))?;
-    Ok(channel)
 }
 
 #[cfg(test)]
