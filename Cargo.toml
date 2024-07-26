@@ -31,8 +31,7 @@ cw20 = { package = "abstract-cw20", version = "1.2.2" }
 cw20-base = { package = "abstract-cw20-base", version = "1.2.2" }
 
 osmosis-test-tube = { version = "25.0.0" }
-neutron-test-tube = { version = "4.0.0" }
-margined-neutron-std = { version = "4.0.0" }
+neutron-test-tube = { version = "=4.0.1-rc2" }
 
 anyhow = "1.0"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }

@@ -13,7 +13,6 @@ repository.workspace = true
 
 # Test Tube env deps
 neutron-test-tube = { workspace = true }
-margined-neutron-std = { workspace = true }
 
 prost-types = { workspace = true }
 prost = { workspace = true }

@@ -1,18 +1,21 @@
+use crate::{map_err, NeutronTestTube};
+
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::coin;
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter, StateInterface};
 use cw_orch_core::CwEnvError;
-use margined_neutron_std::try_proto_to_cosmwasm_coins;
-use margined_neutron_std::types::cosmos::bank::v1beta1::{
-    QuerySupplyOfRequest, QuerySupplyOfResponse,
+use neutron_test_tube::{
+    neutron_std::{
+        try_proto_to_cosmwasm_coins,
+        types::cosmos::bank::v1beta1::{
+            QueryAllBalancesRequest, QueryBalanceRequest, QuerySupplyOfRequest,
+            QuerySupplyOfResponse,
+        },
+    },
+    Bank, Module, NeutronTestApp, Runner,
 };
-use neutron_test_tube::{Bank, Module, NeutronTestApp, Runner};
 
-use crate::{map_err, NeutronTestTube};
-use margined_neutron_std::types::cosmos::bank::v1beta1::{
-    QueryAllBalancesRequest, QueryBalanceRequest,
-};
 pub struct NeutronTestTubeBankQuerier {
     app: Rc<RefCell<NeutronTestApp>>,
 }
@@ -61,7 +64,7 @@ impl BankQuerier for NeutronTestTubeBankQuerier {
                 .query_all_balances(&QueryAllBalancesRequest {
                     address: address.into(),
                     pagination: None,
-                    resolve_denom: true,
+                    resolve_denom: false,
                 })
                 .map_err(map_err)?
                 .balances;
