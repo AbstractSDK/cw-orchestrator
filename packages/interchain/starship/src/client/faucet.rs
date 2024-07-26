@@ -23,7 +23,7 @@ impl Faucet {
         // Assert that the faucet is reachable
         let client = reqwest::Client::new();
         client
-            .get(&format!("http://{}/status", path))
+            .get(format!("http://{path}/status"))
             .send()
             .await
             .map_err(|e| StarshipClientError::FaucetError(e.to_string()))

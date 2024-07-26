@@ -37,11 +37,11 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 tokio = { version = "1.4", features = ["full"] }
 
 cw-orch = { path = "./cw-orch", version = "0.24.1" }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.24.1" }
-cw-orch-core = { path = "packages/cw-orch-core", version = "1.2.0" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.23.1" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.24.3" }
+cw-orch-core = { path = "packages/cw-orch-core", version = "1.2.2" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.23.3" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.23.1" }
-cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.23.1" }
+cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.23.3" }
 
 # Macros
 cw-orch-contract-derive = { path = "packages/macros/cw-orch-contract-derive", version = "0.21.0" }
@@ -78,3 +78,6 @@ log = "0.4.14"
 # Interchain
 ibc-relayer-types = { version = "0.25.0" }
 ibc-chain-registry = { version = "0.25.0" }
+
+[patch.crates-io]
+cw-orch-core = { path = "packages/cw-orch-core" }

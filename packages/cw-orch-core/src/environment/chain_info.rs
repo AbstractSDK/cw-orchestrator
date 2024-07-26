@@ -10,12 +10,12 @@ pub type NetworkInfoOwned = NetworkInfoBase<String>;
 
 /// Information about a chain.
 /// This is used to connect to a chain and to generate transactions.
-#[derive(Clone, Debug)]
-pub struct ChainInfoBase<StringType: Into<String>, StringArrayType: AsRef<[StringType]>> {
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(default)]
+pub struct ChainInfoBase<StringType: Into<String> + Default, StringArrayType: AsRef<[StringType]>> {
     /// Identifier for the network ex. phoenix-2, pisco-1
     pub chain_id: StringType,
     /// Max gas and denom info
-    // #[serde(with = "cosm_denom_format")]
     pub gas_denom: StringType,
     /// gas price
     pub gas_price: f64,
@@ -32,14 +32,43 @@ pub struct ChainInfoBase<StringType: Into<String>, StringArrayType: AsRef<[Strin
 }
 
 /// Information about the underlying network, used for key derivation
-#[derive(Clone, Debug, Serialize, Default)]
-pub struct NetworkInfoBase<StringType> {
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(default)]
+pub struct NetworkInfoBase<StringType: Into<String>> {
     /// network identifier (ex. juno, terra2, osmosis, etc)
     pub chain_name: StringType,
     /// address prefix
     pub pub_address_prefix: StringType,
     /// coin type for key derivation
     pub coin_type: u32,
+}
+
+impl<StringType: Into<String> + Default> Default for NetworkInfoBase<StringType> {
+    fn default() -> Self {
+        Self {
+            chain_name: StringType::default(),
+            pub_address_prefix: StringType::default(),
+            // Default cosmos coin
+            coin_type: 118,
+        }
+    }
+}
+
+impl<StringType: Into<String> + Default, StringArrayType: AsRef<[StringType]> + Default> Default
+    for ChainInfoBase<StringType, StringArrayType>
+{
+    fn default() -> Self {
+        Self {
+            chain_id: Default::default(),
+            gas_denom: Default::default(),
+            gas_price: f64::NAN,
+            grpc_urls: Default::default(),
+            lcd_url: Default::default(),
+            fcd_url: Default::default(),
+            network_info: Default::default(),
+            kind: Default::default(),
+        }
+    }
 }
 
 impl From<ChainInfo> for ChainInfoOwned {
@@ -67,7 +96,8 @@ impl From<NetworkInfo> for NetworkInfoOwned {
 }
 
 /// Kind of chain (local, testnet, mainnet)
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
 pub enum ChainKind {
     /// A local chain, used for development
     Local,
@@ -75,6 +105,9 @@ pub enum ChainKind {
     Mainnet,
     /// A testnet chain
     Testnet,
+    #[default]
+    /// Unspecified chain kind
+    Unspecified,
 }
 
 impl Display for ChainKind {
@@ -83,6 +116,7 @@ impl Display for ChainKind {
             ChainKind::Local => "local",
             ChainKind::Testnet => "testnet",
             ChainKind::Mainnet => "mainnet",
+            ChainKind::Unspecified => "unspecified",
         };
         write!(f, "{}", str)
     }
@@ -94,7 +128,71 @@ impl From<String> for ChainKind {
             "local" => ChainKind::Local,
             "testnet" => ChainKind::Testnet,
             "mainnet" => ChainKind::Mainnet,
-            _ => ChainKind::Local,
+            _ => ChainKind::Unspecified,
         }
+    }
+}
+
+impl<StringType: Into<String> + Default, StringArrayType: AsRef<[StringType]> + Default>
+    ChainInfoBase<StringType, StringArrayType>
+{
+    pub fn config(chain_id: StringType) -> Self {
+        Self {
+            chain_id,
+            ..Default::default()
+        }
+    }
+}
+
+impl ChainInfoOwned {
+    /// Overwrite the chain info with the provided chain info.
+    pub fn overwrite_with(mut self, chain_info: ChainInfoOwned) -> ChainInfoOwned {
+        let ChainInfoOwned {
+            chain_id,
+            gas_denom,
+            gas_price,
+            grpc_urls,
+            lcd_url,
+            fcd_url,
+            network_info:
+                NetworkInfoOwned {
+                    chain_name,
+                    pub_address_prefix,
+                    coin_type,
+                },
+            kind,
+        } = chain_info;
+
+        if !chain_id.is_empty() {
+            self.chain_id = chain_id;
+        }
+        if !gas_denom.is_empty() {
+            self.gas_denom = gas_denom;
+        }
+        if !gas_price.is_nan() {
+            self.gas_price = gas_price;
+        }
+        if !grpc_urls.is_empty() {
+            self.grpc_urls = grpc_urls;
+        }
+        if let Some(lcd_url) = lcd_url {
+            self.lcd_url = Some(lcd_url);
+        }
+        if let Some(fcd_url) = fcd_url {
+            self.fcd_url = Some(fcd_url);
+        }
+        if !chain_name.is_empty() {
+            self.network_info.chain_name = chain_name;
+        }
+        if !pub_address_prefix.is_empty() {
+            self.network_info.pub_address_prefix = pub_address_prefix;
+        }
+        if coin_type != 118 {
+            self.network_info.coin_type = coin_type;
+        }
+        if kind != ChainKind::Unspecified {
+            self.kind = kind;
+        }
+        self
     }
 }
