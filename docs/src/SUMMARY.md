@@ -48,6 +48,9 @@
   - [XION](./chains/xion.md)
   - [Landslide](./chains/landslide.md)
 
+- [CLI](./cli/index.md)
+  - [Keys](./cli/keys.md)
+
 # Extras
 
 - [CI/CD](./ci-cd.md)
