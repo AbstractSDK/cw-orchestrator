@@ -322,7 +322,7 @@ mod test {
         let init_res = chain.upload_custom("cw20", contract_source).unwrap();
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
-            .is_equal_to(&String::from("1"));
+            .is_equal_to(String::from("1"));
 
         let init_msg = cw20_base::msg::InstantiateMsg {
             name: String::from("Token"),
@@ -351,7 +351,7 @@ mod test {
 
         asserting("that exect passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
-            .is_equal_to(&String::from("mint"));
+            .is_equal_to(String::from("mint"));
 
         let query_res = chain
             .query::<cw20_base::msg::QueryMsg, Response>(
@@ -364,7 +364,7 @@ mod test {
 
         asserting("that query passed on correctly")
             .that(&query_res.attributes[1].value)
-            .is_equal_to(&String::from("0"));
+            .is_equal_to(String::from("0"));
 
         let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg {}, 1, &contract_address);
         asserting("that migration passed on correctly")
