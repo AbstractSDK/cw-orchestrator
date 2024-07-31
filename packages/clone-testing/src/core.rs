@@ -573,7 +573,7 @@ mod test {
         let code_id = (1 + LOCAL_RUST_CODE_OFFSET) as u64;
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
-            .is_equal_to(&code_id.to_string());
+            .is_equal_to(code_id.to_string());
 
         let init_msg = cw20_base::msg::InstantiateMsg {
             name: String::from("Token"),
@@ -605,7 +605,7 @@ mod test {
 
         asserting("that exect passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
-            .is_equal_to(&String::from("mint"));
+            .is_equal_to(String::from("mint"));
 
         let query_res = chain
             .query::<cw20_base::msg::QueryMsg, BalanceResponse>(

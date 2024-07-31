@@ -152,7 +152,7 @@ mod index_response_test {
     fn test_instantiated_contract_address(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
         asserting!("instantiated contract_address is ")
             .that(&idxres.instantiated_contract_address()?)
-            .is_equal_to(&Addr::unchecked(CONTRACT_ADDRESS));
+            .is_equal_to(Addr::unchecked(CONTRACT_ADDRESS));
 
         Ok(())
     }

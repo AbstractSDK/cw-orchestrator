@@ -144,12 +144,12 @@ fn test_timestamp() {
     let ts_time = timestamp.time();
     asserting!("timestamp time is equal to dataset timestamp")
         .that(&ts_time.to_string())
-        .is_equal_to(&String::from("00:27:04"));
+        .is_equal_to(String::from("00:27:04"));
 
     let ts_date = timestamp.date_naive();
     asserting!("timestamp date is equal to dataset timestamp")
         .that(&ts_date.to_string())
-        .is_equal_to(&String::from("2023-04-07"));
+        .is_equal_to(String::from("2023-04-07"));
 }
 
 #[test]
