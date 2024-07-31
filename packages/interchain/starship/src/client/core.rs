@@ -11,10 +11,8 @@ use super::StarshipClientResult;
 
 // const CHAIN_REGISTRY: &str = "http://localhost:8081/chains";
 // const IBC_REGISTRY: &str = "http://localhost:8081/ibc";
-const LOCALHOST: &str = "http://localhost:8081";
-
-// TODO, this needs to come from the localhost as well
-const TEMP_HERMES_RELAYER_NAME: &str = "hermes-osmo-juno";
+const LOCALHOST: &str = "http://localhost";
+const DEFAULT_REST: &str = "8081";
 
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
 #[derive(Debug, Clone)]
@@ -24,29 +22,50 @@ pub struct StarshipClient {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
     // chain_config: HashMap<NetworkId, ChainData>,
     pub chains: Vec<ChainData>,
+    /// Starship config
+    pub starship_config: Option<yaml_rust2::Yaml>,
 }
 
 impl StarshipClient {
     /// Create a Starship object from the localhost chain registry.
-    pub fn new(rt: Handle, url: Option<&str>) -> StarshipClientResult<Self> {
-        let starship = rt.block_on(Self::new_async(url))?;
+    pub fn new(
+        rt: Handle,
+        url: Option<&str>,
+        starship_config: Option<yaml_rust2::Yaml>,
+    ) -> StarshipClientResult<Self> {
+        let starship = rt.block_on(Self::new_async(url, starship_config))?;
         Ok(starship)
     }
 
     /// Builds a new `Starship` instance from the hosted chain registry.
-    pub async fn new_async(url: Option<&str>) -> StarshipClientResult<Self> {
+    pub async fn new_async(
+        url: Option<&str>,
+        starship_config: Option<yaml_rust2::Yaml>,
+    ) -> StarshipClientResult<Self> {
+        let registry_rest = starship_config
+            .as_ref()
+            .map(|yaml| {
+                yaml["registry"]["ports"]["rest"]
+                    .as_i64()
+                    .expect("Starship registry port should be a number")
+                    .to_string()
+            })
+            .unwrap_or(DEFAULT_REST.to_string());
         let url: url::Url = url
             .map(|u| u.to_string())
-            .unwrap_or_else(|| LOCALHOST.to_string())
+            .unwrap_or_else(|| format!("{LOCALHOST}:{registry_rest}"))
             .parse()?;
-
         let registry = Registry::new(url.clone()).await;
 
         // Fetch all chain data from the chain registry
         let chains = registry.chain_data().await?;
 
         // get all the ibc data:
-        Ok(Self { url, chains })
+        Ok(Self {
+            url,
+            chains,
+            starship_config,
+        })
     }
 
     /// Get the `Registry` object for this `Starship` instance.
@@ -54,28 +73,30 @@ impl StarshipClient {
         Registry::new(self.url.clone()).await
     }
 
-    async fn find_hermes_pod(
-        &self,
-        _chain_id_a: &str,
-        _chain_id_b: &str,
-    ) -> StarshipClientResult<String> {
+    async fn find_hermes_pod(&self) -> StarshipClientResult<String> {
         // find an hermes pod with these ids
-        let relayer_name = TEMP_HERMES_RELAYER_NAME.to_string();
+        let pods: kube::Api<k8s_openapi::api::core::v1::Pod> =
+            kube::Api::default_namespaced(kube::Client::try_default().await?);
+        for p in pods.list(&kube::api::ListParams::default()).await? {
+            println!("found pod {}", kube::ResourceExt::name_any(&p));
+        }
+        todo!();
+        // let relayer_name = DEFAULT_RELAYER_NAME.to_string();
 
-        // execute on the pod
-        let pod_id_out = Command::new("kubectl")
-            .args(["get", "pods", "--no-headers"])
-            .arg(format!("-lapp.kubernetes.io/name={}", relayer_name))
-            .output()
-            .await
-            .unwrap();
+        // // execute on the pod
+        // let pod_id_out = Command::new("kubectl")
+        //     .args(["get", "pods", "--no-headers"])
+        //     .arg(format!("-lapp.kubernetes.io/name={}", relayer_name))
+        //     .output()
+        //     .await
+        //     .unwrap();
 
-        let pod_id_output = String::from_utf8(pod_id_out.stdout).unwrap();
+        // let pod_id_output = String::from_utf8(pod_id_out.stdout).unwrap();
 
-        let pod_id = pod_id_output.split_whitespace().next().unwrap();
-        println!("pod_out: {:?}", pod_id);
+        // let pod_id = pod_id_output.split_whitespace().next().unwrap();
+        // println!("pod_out: {:?}", pod_id);
 
-        Ok(pod_id.to_string())
+        // Ok(pod_id.to_string())
     }
 
     /// Triggers channel creation with the relayer registered between the 2 chains
@@ -88,7 +109,7 @@ impl StarshipClient {
         channel_version: &str,
         order: Option<IbcOrder>,
     ) -> StarshipClientResult<String> {
-        let pod_id = self.find_hermes_pod(chain_id_a, chain_id_b).await?;
+        let pod_id = self.find_hermes_pod().await?;
 
         // get the ibc channel between the two chains
         let path = self
@@ -145,5 +166,20 @@ impl StarshipClient {
         }
 
         Ok(src_connection_id.to_string())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::Starship;
+
+    #[test]
+    fn starship() {
+        let starship = Starship::new(None).unwrap();
+        let daemon = starship.daemon("juno-1").unwrap();
+        daemon
+            .rt_handle
+            .block_on(starship.client().find_hermes_pod())
+            .unwrap();
     }
 }

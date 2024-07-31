@@ -33,6 +33,9 @@ pub enum StarshipClientError {
 
     #[error("Missing test mnemonic for chain {0}")]
     MissingTestMnemonic(String),
+
+    #[error(transparent)]
+    Kube(#[from] kube::Error),
 }
 
 impl From<StarshipClientError> for CwEnvError {
