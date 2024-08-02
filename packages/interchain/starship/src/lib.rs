@@ -58,7 +58,6 @@ impl Starship {
                 daemon_builder = daemon_builder.state(existing_daemon.state())
             }
 
-            dbg!(chain.chain_id.to_string());
             daemons.insert(chain.chain_id.to_string(), daemon_builder.build()?);
         }
 

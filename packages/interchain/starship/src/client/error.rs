@@ -36,6 +36,12 @@ pub enum StarshipClientError {
 
     #[error(transparent)]
     Kube(#[from] kube::Error),
+
+    #[error(transparent)]
+    StdIo(#[from] std::io::Error),
+
+    #[error("Channel creation failed {0}-{1}")]
+    ChannelCreationFailure(String, String),
 }
 
 impl From<StarshipClientError> for CwEnvError {

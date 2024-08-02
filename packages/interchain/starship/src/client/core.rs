@@ -1,10 +1,15 @@
 //! Interactions with docker using bollard
+use std::fmt::Debug;
+
 use cosmwasm_std::IbcOrder;
 use ibc_chain_registry::chain::ChainData;
-
-use tokio::process::Command;
+use kube::runtime::reflector::Lookup;
+use serde_json::Value;
+use tokio::io::AsyncReadExt;
 use tokio::runtime::Handle;
 use url::Url;
+
+use crate::client::StarshipClientError;
 
 use super::registry::Registry;
 use super::StarshipClientResult;
@@ -14,8 +19,11 @@ use super::StarshipClientResult;
 const LOCALHOST: &str = "http://localhost";
 const DEFAULT_REST: &str = "8081";
 
+// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+const EXEC_SUCCESS_STATUS: &str = "Success";
+
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct StarshipClient {
     // Where starship is hosted, uses localhost:8081 by default.
     url: Url,
@@ -24,6 +32,19 @@ pub struct StarshipClient {
     pub chains: Vec<ChainData>,
     /// Starship config
     pub starship_config: Option<yaml_rust2::Yaml>,
+    kube_client: kube::Client,
+}
+
+// kube::Client doesn't implement debug unfortunately
+impl Debug for StarshipClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StarshipClient")
+            .field("url", &self.url)
+            .field("chains", &self.chains)
+            .field("starship_config", &self.starship_config)
+            // .field("kube_client", &self.kube_client)
+            .finish()
+    }
 }
 
 impl StarshipClient {
@@ -42,6 +63,7 @@ impl StarshipClient {
         url: Option<&str>,
         starship_config: Option<yaml_rust2::Yaml>,
     ) -> StarshipClientResult<Self> {
+        let kube_client = kube::Client::try_default().await?;
         let registry_rest = starship_config
             .as_ref()
             .map(|yaml| {
@@ -65,6 +87,7 @@ impl StarshipClient {
             url,
             chains,
             starship_config,
+            kube_client,
         })
     }
 
@@ -73,30 +96,78 @@ impl StarshipClient {
         Registry::new(self.url.clone()).await
     }
 
-    async fn find_hermes_pod(&self) -> StarshipClientResult<String> {
-        // find an hermes pod with these ids
-        let pods: kube::Api<k8s_openapi::api::core::v1::Pod> =
-            kube::Api::default_namespaced(kube::Client::try_default().await?);
-        for p in pods.list(&kube::api::ListParams::default()).await? {
-            println!("found pod {}", kube::ResourceExt::name_any(&p));
+    async fn find_hermes_pod(
+        &self,
+        chain_id_a: &str,
+        chain_id_b: &str,
+    ) -> StarshipClientResult<String> {
+        // Lucky if we can just parse starship config
+        if let Some(config) = &self.starship_config {
+            // Finding relayer with those 2 chains
+            for relayer in config["relayers"].clone() {
+                let chains = relayer["chains"]
+                    .as_vec()
+                    .expect("Missing chains in relayer config");
+                let chains = chains
+                    .iter()
+                    .map(|chain| chain.as_str().unwrap())
+                    .collect::<Vec<_>>();
+                if chains.contains(&chain_id_a) && chains.contains(&chain_id_b) {
+                    let relayer_name = relayer["name"].as_str().unwrap();
+                    // Most likely `hermes`
+                    let relayer_type = relayer["type"].as_str().unwrap();
+                    let relayer_name = format!("{relayer_type}-{relayer_name}");
+                    return Ok(relayer_name);
+                }
+            }
+        } else {
+            // find an hermes pod with these ids otherwise
+            let pods: kube::Api<k8s_openapi::api::core::v1::Pod> =
+                kube::Api::default_namespaced(self.kube_client.clone());
+            let hermes_pods = pods
+                .list(&kube::api::ListParams::default().labels("app.kubernetes.io/type=hermes"))
+                .await?;
+            for pod in hermes_pods {
+                let ap = kube::api::AttachParams::default().container("relayer");
+                let pod_name = pod.name().unwrap();
+                let mut process = pods
+                    .exec(
+                        &pod_name,
+                        // get chains
+                        ["curl", "-s", "-X", "GET", "http://127.0.0.1:3000/chains"],
+                        &ap,
+                    )
+                    .await?;
+                let status = process
+                    .take_status()
+                    .unwrap()
+                    .await
+                    .unwrap()
+                    .status
+                    .unwrap();
+                if status != EXEC_SUCCESS_STATUS {
+                    // Can't get status of kubernetes exec, meaning we can't get correct hermes
+                    return Err(StarshipClientError::HermesNotFound);
+                }
+                let mut async_stdout = process.stdout().unwrap();
+
+                let mut dst = vec![];
+                async_stdout.read_to_end(&mut dst).await?;
+                let val: Value =
+                    serde_json::from_slice(&dst).expect("curl output should be json formatted");
+                let chains = val["result"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|chain| chain.as_str().unwrap())
+                    .collect::<Vec<_>>();
+                if chains.contains(&chain_id_a) && chains.contains(&chain_id_b) {
+                    return Ok(pod_name.to_string());
+                }
+            }
         }
-        todo!();
-        // let relayer_name = DEFAULT_RELAYER_NAME.to_string();
-
-        // // execute on the pod
-        // let pod_id_out = Command::new("kubectl")
-        //     .args(["get", "pods", "--no-headers"])
-        //     .arg(format!("-lapp.kubernetes.io/name={}", relayer_name))
-        //     .output()
-        //     .await
-        //     .unwrap();
-
-        // let pod_id_output = String::from_utf8(pod_id_out.stdout).unwrap();
-
-        // let pod_id = pod_id_output.split_whitespace().next().unwrap();
-        // println!("pod_out: {:?}", pod_id);
-
-        // Ok(pod_id.to_string())
+        // Not found
+        Err(StarshipClientError::HermesNotFound)
     }
 
     /// Triggers channel creation with the relayer registered between the 2 chains
@@ -109,7 +180,7 @@ impl StarshipClient {
         channel_version: &str,
         order: Option<IbcOrder>,
     ) -> StarshipClientResult<String> {
-        let pod_id = self.find_hermes_pod().await?;
+        let pod_id = self.find_hermes_pod(chain_id_a, chain_id_b).await?;
 
         // get the ibc channel between the two chains
         let path = self
@@ -150,36 +221,53 @@ impl StarshipClient {
         }
 
         // now execute on the pod
-        let mut execute_channel_command = Command::new("kubectl");
-        let execute_channel_command = execute_channel_command
-            .arg("exec")
-            .arg(&pod_id)
-            .arg("--")
-            .args(command);
+        let pods: kube::Api<k8s_openapi::api::core::v1::Pod> =
+            kube::Api::default_namespaced(self.kube_client.clone());
+        let ap = kube::api::AttachParams::default().container("relayer");
+        let mut attached_process = pods.exec(&pod_id, command, &ap).await?;
 
+        // attached_process.stderr().unwrap().read()
         if log::log_enabled!(log::Level::Debug) {
-            // We don't catch the command output in case of a debug log
-            execute_channel_command.status().await.unwrap();
-        } else {
-            // Else, we catch the output
-            execute_channel_command.output().await.unwrap();
+            // Capture stdout and stderr in case of debug mode
+            let mut stdout = attached_process.stdout().unwrap();
+            let mut dst = String::new();
+            stdout.read_to_string(&mut dst).await?;
+            log::log!(log::Level::Debug, "{dst}");
         }
-
-        Ok(src_connection_id.to_string())
+        let status = attached_process
+            .take_status()
+            .unwrap()
+            .await
+            .unwrap()
+            .status
+            .unwrap();
+        if status == EXEC_SUCCESS_STATUS {
+            Ok(src_connection_id.to_string())
+        } else {
+            // Can't get status of kubernetes exec, meaning we can't get correct hermes
+            Err(StarshipClientError::ChannelCreationFailure(
+                chain_id_a.to_owned(),
+                chain_id_b.to_owned(),
+            ))
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::Starship;
+    use crate::{Starship, STARSHIP_CONFIG_ENV_NAME};
 
     #[test]
     fn starship() {
+        std::env::set_var("RUST_LOG", "debug");
+        std::env::set_var(STARSHIP_CONFIG_ENV_NAME, "./examples/starship.yaml");
+        env_logger::init();
         let starship = Starship::new(None).unwrap();
         let daemon = starship.daemon("juno-1").unwrap();
-        daemon
+        let a = daemon
             .rt_handle
-            .block_on(starship.client().find_hermes_pod())
+            .block_on(starship.client().find_hermes_pod("juno-1", "osmosis-1"))
             .unwrap();
+        dbg!(a);
     }
 }
