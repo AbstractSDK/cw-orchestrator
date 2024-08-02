@@ -227,18 +227,19 @@ impl StarshipClient {
         let mut attached_process = pods.exec(&pod_id, command, &ap).await?;
 
         log::log!(log::Level::Debug, "Executed create channel");
-        if log::log_enabled!(log::Level::Debug) {
-            // Capture stderr and stderr in case of debug mode
-            let mut stderr = attached_process.stderr().unwrap();
-            let mut dst = String::new();
-            stderr.read_to_string(&mut dst).await?;
-            log::log!(log::Level::Debug, "stderr: {dst}");
+        // TODO: Can't capture output for some reason
+        // if log::log_enabled!(log::Level::Debug) {
+        //     // Capture stderr and stderr in case of debug mode
+        //     let mut stderr = attached_process.stderr().unwrap();
+        //     let mut dst = String::new();
+        //     stderr.read_to_string(&mut dst).await?;
+        //     log::log!(log::Level::Debug, "stderr: {dst}");
 
-            let mut stdout = attached_process.stdout().unwrap();
-            let mut dst = String::new();
-            stdout.read_to_string(&mut dst).await?;
-            log::log!(log::Level::Debug, "stdout: {dst}");
-        }
+        //     let mut stdout = attached_process.stdout().unwrap();
+        //     let mut dst = String::new();
+        //     stdout.read_to_string(&mut dst).await?;
+        //     log::log!(log::Level::Debug, "stdout: {dst}");
+        // }
         let status = attached_process
             .take_status()
             .unwrap()
