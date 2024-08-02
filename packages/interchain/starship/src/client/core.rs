@@ -226,13 +226,18 @@ impl StarshipClient {
         let ap = kube::api::AttachParams::default().container("relayer");
         let mut attached_process = pods.exec(&pod_id, command, &ap).await?;
 
-        // attached_process.stderr().unwrap().read()
+        log::log!(log::Level::Debug, "Executed create channel");
         if log::log_enabled!(log::Level::Debug) {
-            // Capture stdout and stderr in case of debug mode
+            // Capture stderr and stderr in case of debug mode
+            let mut stderr = attached_process.stderr().unwrap();
+            let mut dst = String::new();
+            stderr.read_to_string(&mut dst).await?;
+            log::log!(log::Level::Debug, "stderr: {dst}");
+
             let mut stdout = attached_process.stdout().unwrap();
             let mut dst = String::new();
             stdout.read_to_string(&mut dst).await?;
-            log::log!(log::Level::Debug, "{dst}");
+            log::log!(log::Level::Debug, "stdout: {dst}");
         }
         let status = attached_process
             .take_status()
