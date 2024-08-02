@@ -240,22 +240,7 @@ impl StarshipClient {
         //     stdout.read_to_string(&mut dst).await?;
         //     log::log!(log::Level::Debug, "stdout: {dst}");
         // }
-        let status = attached_process
-            .take_status()
-            .unwrap()
-            .await
-            .unwrap()
-            .status
-            .unwrap();
-        if status == EXEC_SUCCESS_STATUS {
-            Ok(src_connection_id.to_string())
-        } else {
-            // Can't get status of kubernetes exec, meaning we can't get correct hermes
-            Err(StarshipClientError::ChannelCreationFailure(
-                chain_id_a.to_owned(),
-                chain_id_b.to_owned(),
-            ))
-        }
+        Ok(src_connection_id.to_string())
     }
 }
 
