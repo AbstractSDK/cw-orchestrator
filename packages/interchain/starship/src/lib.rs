@@ -51,7 +51,8 @@ impl Starship {
                     .unwrap()
             });
 
-            let mut daemon_builder = DaemonBuilder::new(chain_data_conversion(chain.clone()));
+            let mut daemon_builder =
+                DaemonBuilder::new(chain_data_conversion(chain.clone())).load_network(false);
             let mut daemon_builder = daemon_builder.mnemonic(mnemonic).handle(rt_handle);
 
             if let Some(existing_daemon) = daemons.values().next() {
