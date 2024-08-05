@@ -156,7 +156,7 @@ let tx_response = client.send_msgs(
 Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This is done through:
 
 ```rust,ignore
-let packet_lifetime = interchain.****wait_ibc("juno", tx_response).await?;
+let packet_lifetime = interchain.wait_ibc("juno", tx_response).await?;
 ```
 
 After that step, we make sure that the packets were relayed correctly
