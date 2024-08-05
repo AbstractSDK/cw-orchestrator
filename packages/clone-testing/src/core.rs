@@ -20,8 +20,8 @@ use cw_orch_core::{
     },
     CwEnvError,
 };
+use cw_orch_daemon::DEFAULT_DEPLOYMENT;
 use cw_orch_daemon::{queriers::Node, RUNTIME};
-use cw_orch_daemon::{GrpcChannel, DEFAULT_DEPLOYMENT};
 use cw_utils::NativeBalance;
 use serde::Serialize;
 use tokio::runtime::Runtime;
@@ -207,6 +207,20 @@ impl CloneTesting<MockState> {
     }
 }
 
+// TODO: Copied from cw-orch-daemon, would be nice to share this logic somehow
+pub(crate) fn load_network_config(chain_id: &str) -> Option<ChainInfoOwned> {
+    use cw_orch_daemon::env::default_state_folder;
+    use std::collections::HashMap;
+
+    let mut state_folder = default_state_folder().ok()?;
+    state_folder.push("networks.json");
+    let file = std::fs::File::open(state_folder).ok()?;
+
+    let mut network_config =
+        cw_orch_core::serde_json::from_reader::<_, HashMap<String, ChainInfoOwned>>(&file).ok()?;
+    network_config.remove(chain_id)
+}
+
 impl<S: StateInterface> CloneTesting<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
@@ -216,15 +230,16 @@ impl<S: StateInterface> CloneTesting<S> {
         custom_state: S,
     ) -> Result<Self, CwEnvError> {
         let chain: ChainInfoOwned = chain.into();
+        let chain = if let Some(chain_info) = load_network_config(&chain.chain_id) {
+            chain.overwrite_with(chain_info)
+        } else {
+            chain
+        };
         let state = Rc::new(RefCell::new(custom_state));
 
-        let pub_address_prefix = &chain.network_info.pub_address_prefix;
-        let remote_channel = RemoteChannel::new(
-            rt,
-            get_channel(chain.clone(), rt)?,
-            pub_address_prefix.clone(),
-        )
-        .unwrap();
+        let pub_address_prefix = chain.network_info.pub_address_prefix.clone();
+        let remote_channel =
+            RemoteChannel::new(rt, chain.clone(), pub_address_prefix.clone()).unwrap();
 
         let wasm = WasmKeeper::<Empty, Empty>::new()
             .with_remote(remote_channel.clone())
@@ -242,7 +257,7 @@ impl<S: StateInterface> CloneTesting<S> {
         let app = AppBuilder::default()
             .with_wasm(wasm)
             .with_bank(bank)
-            .with_api(MockApiBech32::new(pub_address_prefix))
+            .with_api(MockApiBech32::new(&pub_address_prefix))
             .with_block(block_info)
             .with_remote(remote_channel.clone());
 
@@ -471,16 +486,6 @@ impl BankSetter for CloneTesting {
     }
 }
 
-/// Simple helper to get the GRPC transport channel
-fn get_channel(
-    chain: impl Into<ChainInfoOwned>,
-    rt: &Runtime,
-) -> anyhow::Result<tonic::transport::Channel> {
-    let chain = chain.into();
-    let channel = rt.block_on(GrpcChannel::connect(&chain.grpc_urls, &chain.chain_id))?;
-    Ok(channel)
-}
-
 #[cfg(test)]
 mod test {
     use std::{path::PathBuf, str::FromStr};
@@ -568,7 +573,7 @@ mod test {
         let code_id = (1 + LOCAL_RUST_CODE_OFFSET) as u64;
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
-            .is_equal_to(&code_id.to_string());
+            .is_equal_to(code_id.to_string());
 
         let init_msg = cw20_base::msg::InstantiateMsg {
             name: String::from("Token"),
@@ -600,7 +605,7 @@ mod test {
 
         asserting("that exect passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
-            .is_equal_to(&String::from("mint"));
+            .is_equal_to(String::from("mint"));
 
         let query_res = chain
             .query::<cw20_base::msg::QueryMsg, BalanceResponse>(

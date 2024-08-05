@@ -49,7 +49,7 @@ Creating a test environment in cw-orchestrator that leverages `osmosis-test-tube
 ```
 
 This snippet will create a new address, provide it with initial balances and create the `osmosis-test-tube` environment.
-The addresses are not handled like in the `cw-multi-test` environment or in mock tests and can't be decided upon manually. You will learn more later about [handling addresses in the OsmosisTestTube environement](#additional-tools).
+The addresses are not handled like in the `cw-multi-test` environment or in mock tests and can't be decided upon manually. You will learn more later about [handling addresses in the OsmosisTestTube environment](#additional-tools).
 
 > **_NOTE:_** When using `osmosis-test-tube`, the addresses **are** validated like on a live chain.
 

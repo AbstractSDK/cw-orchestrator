@@ -1,6 +1,6 @@
 # Integration Tests
 
-Integration tests are very easy to write with cw-orch and are 100% compatible with actual on-chain deployment and scripting. We provide an overview of how they can be executed here. Find our more about how to setup your integration tests on the [Cw Multi Test page](../integrations/cw-multi-test.md)
+Integration tests are very easy to write with cw-orch and are 100% compatible with actual on-chain deployment and scripting. We provide an overview of how they can be executed here. Find out more about how to setup your integration tests on the [Cw Multi Test page](../integrations/cw-multi-test.md)
 
 Start by creating a `tests` folder in your contract's dir.
 
