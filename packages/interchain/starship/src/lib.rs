@@ -1,6 +1,7 @@
 //! This crate provides an integration with [starship](https://starship.cosmology.tech/) to be able to interact with it in rust directly.
 #![warn(missing_docs)]
 
+/// Path to the starship config that's currently deployed. Default values will be used otherwise(port 8081)
 pub const STARSHIP_CONFIG_ENV_NAME: &str = "CW_ORCH_STARSHIP_CONFIG_PATH";
 
 pub mod client;
