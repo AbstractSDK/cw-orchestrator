@@ -38,11 +38,11 @@ pub struct StarshipClient {
 // kube::Client doesn't implement debug unfortunately
 impl Debug for StarshipClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // No debug for kube::Client
         f.debug_struct("StarshipClient")
             .field("url", &self.url)
             .field("chains", &self.chains)
             .field("starship_config", &self.starship_config)
-            // .field("kube_client", &self.kube_client)
             .finish()
     }
 }
@@ -223,42 +223,28 @@ impl StarshipClient {
         // now execute on the pod
         let pods: kube::Api<k8s_openapi::api::core::v1::Pod> =
             kube::Api::default_namespaced(self.kube_client.clone());
-        let ap = kube::api::AttachParams::default().container("relayer");
+        let ap = kube::api::AttachParams::default()
+            .container("relayer")
+            // hermes channel create expect tty
+            .tty(true)
+            // Can't attach stderr to tty
+            .stderr(false);
         let mut attached_process = pods.exec(&pod_id, command, &ap).await?;
+        log::debug!("Waiting for {chain_id_a}-{chain_id_b} via {src_connection_id} open");
+        let status = attached_process.take_status().unwrap().await.unwrap();
 
-        log::log!(log::Level::Debug, "Executed create channel");
-        // TODO: Can't capture output for some reason
-        // if log::log_enabled!(log::Level::Debug) {
-        //     // Capture stderr and stderr in case of debug mode
-        //     let mut stderr = attached_process.stderr().unwrap();
-        //     let mut dst = String::new();
-        //     stderr.read_to_string(&mut dst).await?;
-        //     log::log!(log::Level::Debug, "stderr: {dst}");
+        // Make sure we succeeded
+        if status.status.clone().unwrap() != EXEC_SUCCESS_STATUS {
+            log::debug!("{status:?}");
+            return Err(StarshipClientError::ChannelCreationFailure(
+                chain_id_a.to_owned(),
+                chain_id_b.to_owned(),
+                status.reason.unwrap_or_default(),
+            ));
+        }
+        attached_process.join().await.unwrap();
 
-        //     let mut stdout = attached_process.stdout().unwrap();
-        //     let mut dst = String::new();
-        //     stdout.read_to_string(&mut dst).await?;
-        //     log::log!(log::Level::Debug, "stdout: {dst}");
-        // }
+        log::debug!("{chain_id_a}-{chain_id_b} via {src_connection_id} created");
         Ok(src_connection_id.to_string())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{Starship, STARSHIP_CONFIG_ENV_NAME};
-
-    #[test]
-    fn starship() {
-        std::env::set_var("RUST_LOG", "debug");
-        std::env::set_var(STARSHIP_CONFIG_ENV_NAME, "./examples/starship.yaml");
-        env_logger::init();
-        let starship = Starship::new(None).unwrap();
-        let daemon = starship.daemon("juno-1").unwrap();
-        let a = daemon
-            .rt_handle
-            .block_on(starship.client().find_hermes_pod("juno-1", "osmosis-1"))
-            .unwrap();
-        dbg!(a);
     }
 }

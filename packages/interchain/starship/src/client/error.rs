@@ -40,8 +40,8 @@ pub enum StarshipClientError {
     #[error(transparent)]
     StdIo(#[from] std::io::Error),
 
-    #[error("Channel creation failed {0}-{1}")]
-    ChannelCreationFailure(String, String),
+    #[error("Channel creation failed {0}-{1}, reason: {2}")]
+    ChannelCreationFailure(String, String, String),
 }
 
 impl From<StarshipClientError> for CwEnvError {
