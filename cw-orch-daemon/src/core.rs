@@ -135,7 +135,7 @@ impl<Sender> DaemonAsyncBase<Sender> {
             mnemonic: None,
             // If it was test it will just use same tempfile as state
             is_test: false,
-            // Uses same chain
+            // Uses same ChainInfo
             load_network: false,
         }
     }
