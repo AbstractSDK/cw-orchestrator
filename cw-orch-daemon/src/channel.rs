@@ -133,6 +133,7 @@ mod tests {
         chain.grpc_urls = grpcs;
 
         let build_res = DaemonAsync::builder(chain)
+            .is_test(true)
             .deployment_id("v0.1.0")
             .build_sender(())
             .await;

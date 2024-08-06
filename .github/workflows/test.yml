@@ -13,7 +13,9 @@ jobs:
     name: ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable, beta]
+        toolchain: [
+            stable, # beta failing to some crate using multiple `thread::set_current`
+          ]
       fail-fast: false # beta may fail we shouldn't care
     steps:
       - uses: actions/checkout@v4
