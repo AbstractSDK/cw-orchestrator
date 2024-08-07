@@ -95,7 +95,7 @@ impl DaemonAsyncBuilder {
         self
     }
 
-    /// Load network from `$HOME/.cw-orchestrator/networks.json`
+    /// Load network from `$HOME/.cw-orchestrator/networks.toml`
     /// Defaults to `true`
     pub fn load_network(&mut self, load_network: bool) -> &mut Self {
         self.load_network = load_network;
@@ -117,7 +117,7 @@ impl DaemonAsyncBuilder {
         let mut chain_info = self.chain.clone();
         if self.load_network {
             // try to load network
-            if let Some(network_config) = network_config::load(&chain_info.chain_id) {
+            if let Some(network_config) = network_config::read_network_config(&chain_info.chain_id) {
                 chain_info = chain_info.overwrite_with(network_config)
             }
         }
@@ -148,7 +148,7 @@ impl DaemonAsyncBuilder {
         let mut chain_info = self.chain.clone();
         if self.load_network {
             // try to load network
-            if let Some(network_config) = network_config::load(&chain_info.chain_id) {
+            if let Some(network_config) = network_config::read_network_config(&chain_info.chain_id) {
                 chain_info = chain_info.overwrite_with(network_config)
             }
         }

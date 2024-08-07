@@ -20,8 +20,8 @@ use cw_orch_core::{
     },
     CwEnvError,
 };
-use cw_orch_daemon::DEFAULT_DEPLOYMENT;
 use cw_orch_daemon::{queriers::Node, RUNTIME};
+use cw_orch_daemon::{read_network_config, DEFAULT_DEPLOYMENT};
 use cw_utils::NativeBalance;
 use serde::Serialize;
 use tokio::runtime::Runtime;
@@ -207,20 +207,6 @@ impl CloneTesting<MockState> {
     }
 }
 
-// TODO: Copied from cw-orch-daemon, would be nice to share this logic somehow
-pub(crate) fn load_network_config(chain_id: &str) -> Option<ChainInfoOwned> {
-    use cw_orch_daemon::env::default_state_folder;
-    use std::collections::HashMap;
-
-    let mut state_folder = default_state_folder().ok()?;
-    state_folder.push("networks.json");
-    let file = std::fs::File::open(state_folder).ok()?;
-
-    let mut network_config =
-        cw_orch_core::serde_json::from_reader::<_, HashMap<String, ChainInfoOwned>>(&file).ok()?;
-    network_config.remove(chain_id)
-}
-
 impl<S: StateInterface> CloneTesting<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
@@ -230,7 +216,7 @@ impl<S: StateInterface> CloneTesting<S> {
         custom_state: S,
     ) -> Result<Self, CwEnvError> {
         let chain: ChainInfoOwned = chain.into();
-        let chain = if let Some(chain_info) = load_network_config(&chain.chain_id) {
+        let chain = if let Some(chain_info) = read_network_config(&chain.chain_id) {
             chain.overwrite_with(chain_info)
         } else {
             chain

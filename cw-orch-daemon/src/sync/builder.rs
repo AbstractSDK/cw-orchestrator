@@ -130,7 +130,7 @@ impl DaemonBuilder {
         self
     }
 
-    /// Load network from `$HOME/.cw-orchestrator/networks.json`
+    /// Load network from `$HOME/.cw-orchestrator/networks.toml`
     /// Defaults to `true`
     pub fn load_network(&mut self, load_network: bool) -> &mut Self {
         self.load_network = load_network;
