@@ -22,11 +22,9 @@ schemars = "0.8.10"
 thiserror = { version = "1.0.21" }
 serde = { workspace = true }
 serde_json = "1.0.79"
-cw-orch = { path = "../../cw-orch", features = ["daemon"] }
+cw-orch = { workspace = true, features = ["daemon"] }
 # Unused, only there to check for wasm compatibility
-cw-orch-interchain = { path = "../../cw-orch-interchain", features = [
-  "daemon",
-] }
+cw-orch-interchain = { workspace = true, features = ["daemon"] }
 
 [[example]]
 name = "deploy"

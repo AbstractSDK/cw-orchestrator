@@ -33,6 +33,15 @@ pub enum StarshipClientError {
 
     #[error("Missing test mnemonic for chain {0}")]
     MissingTestMnemonic(String),
+
+    #[error(transparent)]
+    Kube(#[from] kube::Error),
+
+    #[error(transparent)]
+    StdIo(#[from] std::io::Error),
+
+    #[error("Channel creation failed {0}-{1}, reason: {2}")]
+    ChannelCreationFailure(String, String, String),
 }
 
 impl From<StarshipClientError> for CwEnvError {
