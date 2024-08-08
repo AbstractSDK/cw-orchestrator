@@ -74,6 +74,9 @@ once_cell = { version = "1.19.0" }
 # Tempfile names
 uid = "0.1.7"
 
+# Deserialize network config
+toml = "0.8"
+
 [dev-dependencies]
 cw-orch-daemon = { path = "." }
 cw-orch = { path = "../cw-orch", features = ["daemon"] }
