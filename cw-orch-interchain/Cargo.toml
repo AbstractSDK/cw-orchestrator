@@ -36,7 +36,7 @@ ibc-relayer-types.workspace = true
 #Used only for testing
 cosmwasm-std.workspace = true
 cw1 = "1.1.0"
-cw1-whitelist = "1.1.0"
+cw1-whitelist = "2.0.0"
 speculoos.workspace = true
 
 [dev-dependencies]
