@@ -15,7 +15,7 @@ export = []
 
 [dependencies]
 cosmwasm-std = { workspace = true }
-cw-storage-plus = "1.0"
+cw-storage-plus = "2.0"
 cw2 = "1.0"
 cosmwasm-schema = "1.2"
 schemars = "0.8.10"
