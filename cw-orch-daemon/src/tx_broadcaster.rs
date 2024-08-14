@@ -1,10 +1,7 @@
-use std::time::Duration;
-
-use bitcoin::secp256k1::All;
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
 
-use crate::{queriers::Node, sender::Sender, CosmTxResponse, DaemonError, TxBuilder};
+use crate::{queriers::Node, CosmTxResponse, DaemonError, TxBuilder, Wallet};
 
 pub type StrategyAction =
     fn(&mut TxBuilder, &Result<TxResponse, DaemonError>) -> Result<(), DaemonError>;
@@ -70,7 +67,7 @@ impl TxBroadcaster {
     pub async fn broadcast(
         mut self,
         mut tx_builder: TxBuilder,
-        wallet: &Sender<All>,
+        wallet: &Wallet,
     ) -> Result<TxResponse, DaemonError> {
         let mut tx_retry = true;
 
@@ -98,11 +95,11 @@ impl TxBroadcaster {
                         .await?;
                     log::warn!(
                         target: &transaction_target(),
-                        "Retrying broadcasting TX in {} seconds because of {}",
-                        block_speed,
+                        "Retrying broadcasting TX in {:?} milliseconds because of {}",
+                        block_speed.as_millis(),
                         s.reason
                     );
-                    tokio::time::sleep(Duration::from_secs(block_speed)).await;
+                    tokio::time::sleep(block_speed).await;
 
                     tx_response = broadcast_helper(&mut tx_builder, wallet).await;
                     continue;
@@ -125,7 +122,7 @@ fn strategy_condition_met(
 
 async fn broadcast_helper(
     tx_builder: &mut TxBuilder,
-    wallet: &Sender<All>,
+    wallet: &Wallet,
 ) -> Result<TxResponse, DaemonError> {
     let tx = tx_builder.build(wallet).await?;
     let tx_response = wallet.broadcast_tx(tx).await?;
@@ -151,7 +148,7 @@ pub(crate) fn assert_broadcast_code_response(
 }
 
 /// Tx Responses with a non 0 code, should also error with the raw loq
-pub(crate) fn assert_broadcast_code_cosm_response(
+pub fn assert_broadcast_code_cosm_response(
     tx_response: CosmTxResponse,
 ) -> Result<CosmTxResponse, DaemonError> {
     // if tx result != 0 then the tx failed, so we return an error

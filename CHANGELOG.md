@@ -1,6 +1,44 @@
 # cw-orchestrator Changelog
 
-## Unreleased
+## Unpublished
+
+- `is_test` Added for Daemon Builders, when set to `true` will use temporary file for state
+- Chain configs now can be edited from a networks config file. It will read `~/.cw-orchestrator/networks.toml`, see example `networks.toml.example`
+- Added `load_network` for `DaemonBuilder`, defaults to `true`. Set to `false` to avoid loading networks from `~/.cw-orchestrator/networks.toml`
+- New environment variable for `cw-orch-starship`: `CW_ORCH_STARSHIP_CONFIG_PATH` to specify path of starship config that's currently in use.
+- 3+ chain support for `cw-orch-starship`.
+
+### Breaking
+
+## 0.24.1
+
+- Added async query functions generations with cw_orch::QueryFns
+- Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
+- Deprecate cw-orch-core `TxHandler::sender` in favor of `TxHandler::sender_addr`
+- Implement `SenderBuilder`, `QuerySender` and `TxSender` which allow for customizing the transaction commitment logic.
+- Can now easily build `QueryOnlyDaemon` which will only expose query functions.
+- Changed cw-orch-interchain InterchainEnv API
+  - `chain` --> `get_chain`
+  - `follow_packet` --> `await_single_packet`
+  - `wait_ibc` --> `await_packets`
+  - `check_ibc` --> `await_and_check_packets`
+  - `follow_packets_from_tx_hash` --> `await_packets_for_txhash`
+- Better Docs for interchain, cw-orch and clone-testing
+- Added max block time environment variable `CW_ORCH_MAX_BLOCK_TIME`
+- `CW_ORCH_MIN_GAS` Now defaults to 150_000 instead of 0, making it more reliable for txs that cost little gas
+
+### Breaking
+
+- Refactor `Daemon` builder pattern to allow for custom senders.
+- Update `Daemon` / `DaemonAsync` implementations to reflect customizable sender.
+- Deprecated `CW_ORCH_MIN_BLOCK_SPEED` in favor of `CW_ORCH_MIN_BLOCK_TIME`
+
+## cw-orch-daemon 0.23.5
+
+- Fixed Get Tx By Events compatibility with Cosmos SDK 0.50+ for Daemon
+- Fix Generics on QueryMsg and Return types
+
+## 0.23.0
 
 - Added a test to make sure the derive macros stay compatible with new cw-orch versions
 - Changed the derive macros import from cw_orch to cw_orch_core. This allows changing the cw-orch API without breaking the derive macros.
@@ -18,12 +56,18 @@
 - Two non-related Daemon's can't use same file for writing simultaneously (cloned or rebuilt are related Daemon)
 - Writing to a file happens when all Daemon's that use same file dropped instead of hot writes
 - `force_write` added to the `DaemonState` to allow force write of the state
+- Added `event_attr_values` to get all the attribute values corresponding to a key
+- Added `remove_{address,code_id}` functions to be able to erase an entry in state. Involves core, mock, daemon, osmosis-test-tube, clone-testing
+- Added `state` to DaemonBuilder to be able to share state between daemons
+- Added `write_on_change` flag for writing to a `DaemonState` file on every change
 
 ### Breaking
 
-- Daemon : Changed return types on daemon queriers to match Cosmwasm std types
+- Daemon : Changed return types on daemon queriers to match CosmWasm std types
+- Daemon: Added below second block time.
 - Cw-orch : Separate osmosis test tube from cw-orch. Its not available in its own crate `cw-orch-osmosis-test-tube`
 - Simplify the generated macros to allow for `impl Into<Type>` on `Uint*` and `String` types.
+- Fns Derive Macros: Namespace the fns derive attributes with `cw-orch(<attribute>)`. For instance, `#[cw_orch(payable)]`.
 - Clone-testing : Remove rt in Mock State creation (daemon doesn't need it anymore)
 
 ## 0.22.0

@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-starship"
-version = "0.2.0"
+version = "0.4.1"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,6 +13,8 @@ description = "Adapter for interacting with cosmoslogy:starship via cw-orch"
 reqwest = { version = "0.11.18", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.102"
+# Serde yaml deprecated
+yaml-rust2 = "0.8"
 ibc-chain-registry = { workspace = true }
 ibc-relayer-types = { workspace = true }
 thiserror = "1.0.43"
@@ -23,3 +25,8 @@ cw-orch-core = { workspace = true }
 tokio = { workspace = true }
 
 url = "2.4.1"
+log.workspace = true
+env_logger = "0.11"
+
+kube = { version = "0.93.1", features = ["runtime", "derive", "ws"] }
+k8s-openapi = { version = "0.22.0", features = ["latest"] }

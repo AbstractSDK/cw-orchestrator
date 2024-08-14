@@ -15,8 +15,8 @@ pub mod test {
     #[test]
     #[serial_test::serial]
     fn instantiate2() -> anyhow::Result<()> {
-        let app = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let app = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 

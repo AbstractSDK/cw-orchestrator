@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.22.3"
+version = "0.24.1"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -15,9 +15,6 @@ exclude = [".env"]
 [package.metadata.docs.rs]
 # passes all-features to cargo when building the docs.
 all-features = true
-
-[[example]]
-name = "mock_test"
 
 [[example]]
 name = "local_daemon"
@@ -46,7 +43,6 @@ default = []
 # enable the optional dependencies
 daemon = [
   "dep:tokio",
-  # "dep:tonic",
   "dep:cosmrs",
   "dep:cw-orch-daemon",
   "dep:cw-orch-networks",
@@ -58,7 +54,6 @@ snapshot-testing = ["dep:insta", "dep:sanitize-filename"]
 # Derive
 cw-orch-contract-derive = { workspace = true }
 cw-orch-fns-derive = { workspace = true }
-
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 
@@ -105,6 +100,6 @@ mock-contract = { path = "../contracts/mock_contract" }
 mock-contract-u64 = { path = "../contracts/mock_contract_u64" }
 serde_json = { workspace = true }
 dotenv = "0.15.0"
-osmosis-std = "0.24.0"
+osmosis-std = "0.25.0"
 prost = { workspace = true }
 prost-types = { workspace = true }

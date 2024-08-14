@@ -1,6 +1,8 @@
 mod custom_resp;
 mod msg_tests;
 
+use std::fmt::Debug;
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
     to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
@@ -29,22 +31,25 @@ where
     T: Serialize,
 {
     FirstMessage {},
-    #[payable]
+    // ANCHOR: into_example
+    #[cw_orch(payable)]
     SecondMessage {
         /// test doc-comment
-        #[into]
+        #[cw_orch(into)]
         t: T,
     },
+    // ANCHOR_END: into_example
     /// test doc-comment
     ThirdMessage {
         /// test doc-comment
         t: T,
     },
+    #[cw_orch(fn_name("fourth"), payable)]
     FourthMessage,
-    #[payable]
+    #[cw_orch(payable, into)]
     FifthMessage,
     SixthMessage(u64, String),
-    #[payable]
+    #[cw_orch(payable)]
     SeventhMessage(Uint128, String),
 }
 
@@ -52,7 +57,7 @@ where
 #[derive(cw_orch::QueryFns, QueryResponses)]
 pub enum QueryMsg<T = String>
 where
-    T: Serialize,
+    T: Serialize + Debug,
 {
     #[returns(String)]
     /// test-doc-comment
@@ -62,13 +67,19 @@ where
         /// test doc-comment
         t: T,
     },
-    #[returns(String)]
+    #[returns(ThirdReturn<T>)]
     ThirdQuery {
         /// test doc-comment
         t: T,
     },
     #[returns(u64)]
     FourthQuery(u64, String),
+}
+
+#[cw_serde]
+pub struct ThirdReturn<T> {
+    /// test doc-comment
+    pub t: T,
 }
 
 #[cw_serde]
@@ -145,7 +156,9 @@ pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FirstQuery {} => to_json_binary("first query passed"),
         QueryMsg::SecondQuery { .. } => Err(StdError::generic_err("Query not available")),
-        QueryMsg::ThirdQuery { .. } => to_json_binary("third query passed"),
+        QueryMsg::ThirdQuery { .. } => to_json_binary(&ThirdReturn {
+            t: "third query passed",
+        }),
         QueryMsg::FourthQuery(_, _) => to_json_binary(&4u64),
     }
 }
@@ -201,7 +214,7 @@ mod test {
         // We need to check we can still call the execute msgs conveniently
         let sender = Addr::unchecked("sender");
         let mock = Mock::new(&sender);
-        mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
+        mock.set_balance(&sender, coins(156 * 3, "ujuno"))?;
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
@@ -211,7 +224,7 @@ mod test {
             .second_message("s", &coins(156, "ujuno"))
             .unwrap_err();
         contract.third_message("s".to_string()).unwrap();
-        contract.fourth_message().unwrap();
+        contract.fourth(&coins(156, "ujuno")).unwrap();
         contract.fifth_message(&coins(156, "ujuno")).unwrap();
         contract.sixth_message(45u64, "moneys").unwrap();
 

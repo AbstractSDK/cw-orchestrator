@@ -5,7 +5,7 @@ use cw_orch_core::{
 };
 use cw_orch_daemon::DaemonState;
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 #[derive(Clone, Debug)]
 /// Mock state for testing, stores addresses and code-ids.
@@ -26,9 +26,10 @@ impl MockState {
             code_ids: HashMap::new(),
             daemon_state: DaemonState::new(
                 DaemonState::state_file_path().unwrap(),
-                chain,
+                &Arc::new(chain),
                 deployment_id.to_string(),
                 true,
+                false,
             )
             .unwrap(),
         }
@@ -51,6 +52,10 @@ impl StateInterface for MockState {
             .insert(contract_id.to_string(), address.to_owned());
     }
 
+    fn remove_address(&mut self, contract_id: &str) {
+        self.addresses.remove(contract_id);
+    }
+
     /// Get the locally-saved version of the contract's version on this network
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError> {
         self.code_ids
@@ -64,6 +69,10 @@ impl StateInterface for MockState {
     /// Set the locally-saved version of the contract's latest version on this network
     fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
         self.code_ids.insert(contract_id.to_string(), code_id);
+    }
+
+    fn remove_code_id(&mut self, contract_id: &str) {
+        self.code_ids.remove(contract_id);
     }
 
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError> {

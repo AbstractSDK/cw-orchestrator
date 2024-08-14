@@ -1,8 +1,11 @@
-use crate::{queriers::CosmWasm, DaemonState};
+use crate::{
+    queriers::CosmWasm,
+    senders::{builder::SenderBuilder, query::QuerySender},
+    DaemonAsyncBuilder, DaemonState,
+};
 
 use super::{
-    builder::DaemonAsyncBuilder, cosmos_modules, error::DaemonError, queriers::Node,
-    sender::Wallet, tx_resp::CosmTxResponse,
+    cosmos_modules, error::DaemonError, queriers::Node, senders::Wallet, tx_resp::CosmTxResponse,
 };
 
 use cosmrs::{
@@ -14,7 +17,7 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{ChainState, IndexResponse},
+    environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -24,11 +27,16 @@ use serde_json::from_str;
 use std::{
     fmt::Debug,
     io::Write,
+    ops::Deref,
     str::{from_utf8, FromStr},
     time::Duration,
 };
 
 use tonic::transport::Channel;
+
+use crate::senders::tx::TxSender;
+
+pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
 
 #[derive(Clone)]
 /**
@@ -40,8 +48,7 @@ use tonic::transport::Channel;
     # tokio_test::block_on(async {
     use cw_orch_daemon::{DaemonAsync, networks};
 
-    let daemon: DaemonAsync = DaemonAsync::builder()
-        .chain(networks::JUNO_1)
+    let daemon: DaemonAsync = DaemonAsync::builder(networks::JUNO_1)
         .build()
         .await.unwrap();
     # })
@@ -59,25 +66,55 @@ use tonic::transport::Channel;
 
     This daemon is thread safe and can be used between threads.
     However, please make sure that you are not trying to broadcast multiple transactions at once when using this Daemon on different threads.
-    If you do so, you WILL get account sequence errors and your transactions won't get broadcasted.
-    Use a Mutex on top of this DaemonAsync to avoid such errors.
+    If you do so, you will get account sequence errors and your transactions won't get broadcasted.
 */
-pub struct DaemonAsync {
+pub struct DaemonAsyncBase<Sender = Wallet> {
     /// Sender to send transactions to the chain
-    pub sender: Wallet,
+    sender: Sender,
     /// State of the daemon
-    pub state: DaemonState,
+    pub(crate) state: DaemonState,
 }
 
-impl DaemonAsync {
-    /// Get the daemon builder
-    pub fn builder() -> DaemonAsyncBuilder {
-        DaemonAsyncBuilder::default()
+pub type DaemonAsync = DaemonAsyncBase<Wallet>;
+
+impl<Sender> DaemonAsyncBase<Sender> {
+    pub(crate) fn new(sender: Sender, state: DaemonState) -> Self {
+        Self { sender, state }
     }
 
-    /// Get the channel configured for this DaemonAsync.
-    pub fn channel(&self) -> Channel {
-        self.sender.grpc_channel.clone()
+    pub fn chain_info(&self) -> &ChainInfoOwned {
+        self.state.chain_data.as_ref()
+    }
+
+    /// Get the daemon builder
+    pub fn builder(chain: impl Into<ChainInfoOwned>) -> DaemonAsyncBuilder {
+        DaemonAsyncBuilder::new(chain)
+    }
+
+    /// Set the Sender for use with this Daemon
+    /// The sender will be configured with the chain's data.
+    pub async fn new_sender<T: SenderBuilder>(
+        self,
+        sender_options: T,
+    ) -> DaemonAsyncBase<T::Sender> {
+        let sender = sender_options
+            .build(&self.state.chain_data)
+            .await
+            .expect("Failed to build sender");
+        DaemonAsyncBase {
+            sender,
+            state: self.state,
+        }
+    }
+
+    /// Get a mutable Sender
+    pub fn sender_mut(&mut self) -> &mut Sender {
+        &mut self.sender
+    }
+
+    // Get a read-only Sender
+    pub fn sender(&self) -> &Sender {
+        &self.sender
     }
 
     /// Flushes all the state related to the current chain
@@ -85,118 +122,29 @@ impl DaemonAsync {
     pub fn flush_state(&mut self) -> Result<(), DaemonError> {
         self.state.flush()
     }
-}
-
-impl ChainState for DaemonAsync {
-    type Out = DaemonState;
-
-    fn state(&self) -> Self::Out {
-        self.state.clone()
-    }
-}
-
-// Execute on the real chain, returns tx response.
-impl DaemonAsync {
-    /// Get the sender address
-    pub fn sender(&self) -> Addr {
-        self.sender.address().unwrap()
-    }
 
     /// Returns a new [`DaemonAsyncBuilder`] with the current configuration.
     /// Does not consume the original [`DaemonAsync`].
     pub fn rebuild(&self) -> DaemonAsyncBuilder {
-        let mut builder = DaemonAsyncBuilder {
+        DaemonAsyncBuilder {
             state: Some(self.state()),
-            ..Default::default()
-        };
-        builder
-            .chain(self.sender.chain_info.clone())
-            .sender((*self.sender).clone());
-        builder
+            chain: self.state.chain_data.deref().clone(),
+            deployment_id: Some(self.state.deployment_id.clone()),
+            state_path: None,
+            write_on_change: None,
+            mnemonic: None,
+            // If it was test it will just use same tempfile as state
+            is_test: false,
+            // Uses same ChainInfo
+            load_network: false,
+        }
     }
+}
 
-    /// Execute a message on a contract.
-    pub async fn execute<E: Serialize>(
-        &self,
-        exec_msg: &E,
-        coins: &[cosmwasm_std::Coin],
-        contract_address: &Addr,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender.msg_sender()?,
-            contract: AccountId::from_str(contract_address.as_str())?,
-            msg: serde_json::to_vec(&exec_msg)?,
-            funds: parse_cw_coins(coins)?,
-        };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
-        log::info!(target: &transaction_target(), "Execution done: {:?}", result.txhash);
-
-        Ok(result)
-    }
-
-    /// Instantiate a contract.
-    pub async fn instantiate<I: Serialize + Debug>(
-        &self,
-        code_id: u64,
-        init_msg: &I,
-        label: Option<&str>,
-        admin: Option<&Addr>,
-        coins: &[Coin],
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let sender = &self.sender;
-
-        let init_msg = MsgInstantiateContract {
-            code_id,
-            label: Some(label.unwrap_or("instantiate_contract").to_string()),
-            admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: self.sender.msg_sender()?,
-            msg: serde_json::to_vec(&init_msg)?,
-            funds: parse_cw_coins(coins)?,
-        };
-
-        let result = sender.commit_tx(vec![init_msg], None).await?;
-
-        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
-
-        Ok(result)
-    }
-
-    /// Instantiate a contract.
-    pub async fn instantiate2<I: Serialize + Debug>(
-        &self,
-        code_id: u64,
-        init_msg: &I,
-        label: Option<&str>,
-        admin: Option<&Addr>,
-        coins: &[Coin],
-        salt: Binary,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let sender = &self.sender;
-
-        let init_msg = MsgInstantiateContract2 {
-            code_id,
-            label: label.unwrap_or("instantiate_contract").to_string(),
-            admin: admin.map(Into::into).unwrap_or_default(),
-            sender: sender.address()?.to_string(),
-            msg: serde_json::to_vec(&init_msg)?,
-            funds: proto_parse_cw_coins(coins)?,
-            salt: salt.to_vec(),
-            fix_msg: false,
-        };
-
-        let result = sender
-            .commit_tx_any(
-                vec![Any {
-                    type_url: "/cosmwasm.wasm.v1.MsgInstantiateContract2".to_string(),
-                    value: init_msg.encode_to_vec(),
-                }],
-                None,
-            )
-            .await?;
-
-        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
-
-        Ok(result)
+impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
+    /// Get the channel configured for this DaemonAsync.
+    pub fn channel(&self) -> Channel {
+        self.sender().channel()
     }
 
     /// Query a contract.
@@ -216,23 +164,6 @@ impl DaemonAsync {
         Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
     }
 
-    /// Migration a contract.
-    pub async fn migrate<M: Serialize + Debug>(
-        &self,
-        migrate_msg: &M,
-        new_code_id: u64,
-        contract_address: &Addr,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender.msg_sender()?,
-            contract: AccountId::from_str(contract_address.as_str())?,
-            msg: serde_json::to_vec(&migrate_msg)?,
-            code_id: new_code_id,
-        };
-        let result = self.sender.commit_tx(vec![exec_msg], None).await?;
-        Ok(result)
-    }
-
     /// Wait for a given amount of blocks.
     pub async fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
         let mut last_height = Node::new_async(self.channel())._block_height().await?;
@@ -242,15 +173,15 @@ impl DaemonAsync {
             ._average_block_speed(Some(0.9))
             .await?;
 
-        let wait_time = average_block_speed * amount;
+        let wait_time = average_block_speed.mul_f64(amount as f64);
 
         // now wait for that amount of time
-        tokio::time::sleep(Duration::from_secs(wait_time)).await;
+        tokio::time::sleep(wait_time).await;
         // now check every block until we hit the target
         while last_height < end_height {
             // wait
 
-            tokio::time::sleep(Duration::from_secs(average_block_speed)).await;
+            tokio::time::sleep(average_block_speed).await;
 
             // ping latest block
             last_height = Node::new_async(self.channel())._block_height().await?;
@@ -281,14 +212,140 @@ impl DaemonAsync {
             chain_id: block.header.chain_id.to_string(),
         })
     }
+}
+
+impl<Sender> ChainState for DaemonAsyncBase<Sender> {
+    type Out = DaemonState;
+
+    fn state(&self) -> Self::Out {
+        self.state.clone()
+    }
+}
+
+// Execute on the real chain, returns tx response.
+impl<Sender: TxSender> DaemonAsyncBase<Sender> {
+    /// Get the sender address
+    pub fn sender_addr(&self) -> Addr {
+        self.sender().address()
+    }
+
+    /// Execute a message on a contract.
+    pub async fn execute<E: Serialize>(
+        &self,
+        exec_msg: &E,
+        coins: &[cosmwasm_std::Coin],
+        contract_address: &Addr,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let exec_msg: MsgExecuteContract = MsgExecuteContract {
+            sender: self.sender().account_id(),
+            contract: AccountId::from_str(contract_address.as_str())?,
+            msg: serde_json::to_vec(&exec_msg)?,
+            funds: parse_cw_coins(coins)?,
+        };
+        let result = self
+            .sender()
+            .commit_tx(vec![exec_msg], None)
+            .await
+            .map_err(Into::into)?;
+        log::info!(target: &transaction_target(), "Execution done: {:?}", result.txhash);
+
+        Ok(result)
+    }
+
+    /// Instantiate a contract.
+    pub async fn instantiate<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[Coin],
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let init_msg = MsgInstantiateContract {
+            code_id,
+            label: Some(label.unwrap_or("instantiate_contract").to_string()),
+            admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
+            sender: self.sender().account_id(),
+            msg: serde_json::to_vec(&init_msg)?,
+            funds: parse_cw_coins(coins)?,
+        };
+
+        let result = self
+            .sender()
+            .commit_tx(vec![init_msg], None)
+            .await
+            .map_err(Into::into)?;
+
+        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
+
+        Ok(result)
+    }
+
+    /// Instantiate a contract.
+    pub async fn instantiate2<I: Serialize + Debug>(
+        &self,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[Coin],
+        salt: Binary,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let init_msg = MsgInstantiateContract2 {
+            code_id,
+            label: label.unwrap_or("instantiate_contract").to_string(),
+            admin: admin.map(Into::into).unwrap_or_default(),
+            sender: self.sender_addr().to_string(),
+            msg: serde_json::to_vec(&init_msg)?,
+            funds: proto_parse_cw_coins(coins)?,
+            salt: salt.to_vec(),
+            fix_msg: false,
+        };
+
+        let result = self
+            .sender()
+            .commit_tx_any(
+                vec![Any {
+                    type_url: INSTANTIATE_2_TYPE_URL.to_string(),
+                    value: init_msg.encode_to_vec(),
+                }],
+                None,
+            )
+            .await
+            .map_err(Into::into)?;
+
+        log::info!(target: &transaction_target(), "Instantiation done: {:?}", result.txhash);
+
+        Ok(result)
+    }
+
+    /// Migration a contract.
+    pub async fn migrate<M: Serialize + Debug>(
+        &self,
+        migrate_msg: &M,
+        new_code_id: u64,
+        contract_address: &Addr,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let exec_msg: MsgMigrateContract = MsgMigrateContract {
+            sender: self.sender().account_id(),
+            contract: AccountId::from_str(contract_address.as_str())?,
+            msg: serde_json::to_vec(&migrate_msg)?,
+            code_id: new_code_id,
+        };
+        let result = self
+            .sender()
+            .commit_tx(vec![exec_msg], None)
+            .await
+            .map_err(Into::into)?;
+        Ok(result)
+    }
 
     /// Upload a contract to the chain.
     pub async fn upload<T: Uploadable>(
         &self,
         _uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let sender = &self.sender;
-        let wasm_path = <T as Uploadable>::wasm(&self.sender.chain_info);
+        let wasm_path = <T as Uploadable>::wasm(self.chain_info());
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
@@ -297,12 +354,16 @@ impl DaemonAsync {
         e.write_all(&file_contents)?;
         let wasm_byte_code = e.finish()?;
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender.msg_sender()?,
+            sender: self.sender().account_id(),
             wasm_byte_code,
             instantiate_permission: None,
         };
 
-        let result = sender.commit_tx(vec![store_msg], None).await?;
+        let result = self
+            .sender()
+            .commit_tx(vec![store_msg], None)
+            .await
+            .map_err(Into::into)?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 
@@ -315,10 +376,31 @@ impl DaemonAsync {
         }
         Ok(result)
     }
+}
 
-    /// Set the sender to use with this DaemonAsync to be the given wallet
-    pub fn set_sender(&mut self, sender: &Wallet) {
-        self.sender = sender.clone();
+impl Querier for DaemonAsync {
+    type Error = DaemonError;
+}
+
+impl AsyncWasmQuerier for DaemonAsync {
+    /// Query a contract.
+    fn smart_query<Q: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        address: impl Into<String> + Send,
+        query_msg: &Q,
+    ) -> impl std::future::Future<Output = Result<T, DaemonError>> + Send {
+        let query_data = serde_json::to_vec(&query_msg).unwrap();
+        async {
+            let mut client =
+                cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());
+            let resp = client
+                .smart_contract_state(cosmos_modules::cosmwasm::QuerySmartContractStateRequest {
+                    address: address.into(),
+                    query_data,
+                })
+                .await?;
+            Ok(from_str(from_utf8(&resp.into_inner().data).unwrap())?)
+        }
     }
 }
 

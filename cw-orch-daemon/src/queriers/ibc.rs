@@ -1,5 +1,6 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmos_modules::ibc_channel;
+use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::proto::ibc::{
     applications::transfer::v1::{DenomTrace, QueryDenomHashResponse, QueryDenomTraceResponse},
     core::{
@@ -283,6 +284,25 @@ impl Ibc {
             "error fetching channel {} on port {}",
             channel_id, port_id
         )))
+    }
+
+    /// List all the channels
+    pub async fn _channels(
+        &self,
+        pagination: Option<PageRequest>,
+    ) -> Result<Vec<ibc_channel::IdentifiedChannel>, DaemonError> {
+        use cosmos_modules::ibc_channel::QueryChannelsResponse;
+
+        let ibc_channels: QueryChannelsResponse = cosmos_query!(
+            self,
+            ibc_channel,
+            channels,
+            QueryChannelsRequest {
+                pagination: pagination
+            }
+        );
+
+        Ok(ibc_channels.channels)
     }
 
     /// Get all the channels for a specific connection

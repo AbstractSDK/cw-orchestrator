@@ -2,9 +2,9 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
+use cw_orch::{
+    environment::Environment,
+    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler},
 };
 
 /// In order to use this script, you need to set the following env variables
@@ -22,9 +22,7 @@ pub fn main() {
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
-    let daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+    let daemon = Daemon::builder(cw_orch::daemon::networks::UNI_6) // set the network to use
         .build()
         .unwrap();
 
@@ -37,7 +35,7 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
+        Some(&counter.environment().sender_addr()),
         None,
     );
     assert!(init_res.is_ok());

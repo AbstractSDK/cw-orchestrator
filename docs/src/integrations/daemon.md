@@ -4,11 +4,17 @@
 
 ## Quick Start
 
+Before starting, here are a few examples utilizing the daemon structure:
+
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/testnet_daemon.rs" target="_blank">Interacting with a Testnet</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/complex_testnet_daemon.rs" target="_blank">Sending any message with a Daemon</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/async_daemon.rs" target="_blank">Using Daemon in an async context</a>
+
+
 Interacting with the `daemon` is really straightforward. Creating a daemon instance is shown below:
 
 ```rust,ignore
     use cw_orch::prelude::*;
-    use tokio::runtime::Runtime;
 {{#include ../../../cw-orch/examples/local_daemon.rs:daemon_creation}}
 ```
 
@@ -20,6 +26,24 @@ This simple script actually hides another parameter which is the `LOCAL_MNEMONIC
 > **_NOTE:_** When using `daemon`, you are interacting directly with a live chain. The program won't ask you for your permission at each step of the script. We advise you to test **ALL** your deployments on test chain before deploying to mainnet.
 >
 > Under the hood, the `DaemonBuilder` struct creates a `tokio::Runtime`. Be careful because this builder is not usable in an `async` function. In such function, you can use <a href="https://docs.rs/cw-orch/latest/cw_orch/daemon/struct.DaemonAsync.html" target="_blank">`DaemonAsync`</a>
+
+<div class="warning">
+
+When using multiple Daemons with the same state file, you should re-use a single Daemon State to avoid conflicts and panics: 
+
+```rust,ignore
+let daemon1 = Daemon::builder(OSMOSIS_1).build()?;
+// If you don't use the `state` method here, this will fail with:
+// State file <file-name> already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder
+let daemon2 = Daemon::builder(JUNO_1)
+  .state(daemon1.state())
+  .build()?;
+```
+
+
+</div>
+
+
 
 ## Interacting with contracts
 

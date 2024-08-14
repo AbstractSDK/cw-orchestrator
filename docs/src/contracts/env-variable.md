@@ -62,12 +62,27 @@ Defaults to `50`.
 
 Changes the number of tx queries (~1 query per block) before it fails if it doesn't find any result. Useful if the chain is slow or if the transaction has low gas price.
 
-### CW_ORCH_MIN_BLOCK_SPEED
+### CW_ORCH_MIN_BLOCK_TIME
 
-Optional, accepted value: integer in seconds
-Defaults to `1`.
+Optional, accepted values:
 
-Minimum block speed in seconds. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block speeds are varying a lot
+- `(integer)ms` (e.g. 57ms), to indicate the min block time in milliseconds
+- `(integer)s` (e.g. 57s), to indicate the min block time in seconds
+- `(integer)` (e.g. 57), to indicate the min block time in seconds
+
+Defaults to `1s`.
+
+Minimum block time. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block time are varying a lot.
+
+### CW_ORCH_MAX_BLOCK_TIME
+
+Optional, accepted values:
+
+- `(integer)ms` (e.g. 57ms), to indicate the max block time in milliseconds
+- `(integer)s` (e.g. 57s), to indicate the max block time in seconds
+- `(integer)` (e.g. 57), to indicate the max block time in seconds
+
+Maximum block time. This is used internally by `cw-orch` when broadcasting transactions. Useful when the block time are varying a lot.
 
 ### CW_ORCH_WALLET_BALANCE_ASSERTION
 
@@ -87,7 +102,7 @@ Some actions require user-intervention. If set to `false`, this disables those i
 
 Supported actions:
 
-- Balance checks. When set to `false`, if the gas token balance is too low to submit a transaction, it will error. See [Disable balance assertion](#cw_orch_disable_wallet_balance_assertion).
+- Balance checks. When set to `false`, if the gas token balance is too low to submit a transaction, it will error.
 - Deployment checks. When set to `false`, if no deployment file is detected when deploying a structure using the `Deploy::multi_deploy` function, it will deploy to all provided chains without asking for approval.
 
 ## Logging
@@ -96,7 +111,7 @@ Supported actions:
 
 Optional, accepted values: `debug`, `error`, `info`, `warn`,  `trace`
 
- `RUST_LOG` defines the Log level for the application. This is actually a `Rust` flag that we use inside `cw-orch`. If working with this environment variable, don't forget to also initialize a logger at the beginning of you application to be able to see the output. You can work with <a href="https://crates.io/crates/pretty_env_logger/" target="_blank">pretty_env_logger</a> for instance.
+ `RUST_LOG` defines the Log level for the application. This is actually a `Rust` flag that we use inside `cw-orch`. If working with this environment variable, don't forget to also initialize a logger at the beginning of your application to be able to see the output. You can work with <a href="https://crates.io/crates/pretty_env_logger/" target="_blank">pretty_env_logger</a> for instance.
 
 ### CW_ORCH_SERIALIZE_JSON
 

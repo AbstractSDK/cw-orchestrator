@@ -37,10 +37,20 @@ pub type MockBase<A> = cw_orch_mock::MockBase<A, MockState>;
 
 /// Interchain environment for cw_multi_test Mock environment
 /// This leverages Abstract's fork of cw_multi_test enabling IBC interactions
+
 pub struct MockInterchainEnvBase<A: Api> {
     /// Mock chains registered within the structure
     pub mocks: HashMap<String, MockBase<A>>,
 }
+
+impl<A: Api> Clone for MockInterchainEnvBase<A> {
+    fn clone(&self) -> Self {
+        Self {
+            mocks: self.mocks.clone(),
+        }
+    }
+}
+
 impl<A: Api> MockInterchainEnvBase<A> {
     /// Create an interchain structure from mocks
     pub fn from_mocks(chains: Vec<MockBase<A>>) -> Self {
@@ -113,7 +123,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
     type Error = InterchainMockError;
 
     /// Get the daemon for a network-id in the interchain.
-    fn chain(&self, chain_id: impl ToString) -> Result<MockBase<A>, InterchainMockError> {
+    fn get_chain(&self, chain_id: impl ToString) -> Result<MockBase<A>, InterchainMockError> {
         self.mocks
             .get(&chain_id.to_string())
             .ok_or(InterchainMockError::MockNotFound(chain_id.to_string()))
@@ -135,8 +145,8 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         }
 
         // We need to create a channel between the two chains. This is a job for the relayer
-        let src_mock = self.chain(src_chain)?;
-        let dst_mock = self.chain(dst_chain)?;
+        let src_mock = self.get_chain(src_chain)?;
+        let dst_mock = self.get_chain(dst_chain)?;
 
         // We verify that there is a connection between the 2 chains (this requires indexed-map or reverse mapping )
         // We need to specify the connection id no ?
@@ -214,14 +224,13 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         })
     }
 
-    // This function follows every IBC packet sent out in a tx result
-    fn wait_ibc(
+    fn await_packets(
         &self,
         chain_id: ChainId,
         tx_response: AppResponse,
     ) -> Result<IbcTxAnalysis<MockBase<A>>, Self::Error> {
         // We start by analyzing sent packets in the response
-        let packets = find_ibc_packets_sent_in_tx(&self.chain(chain_id)?, &tx_response)?;
+        let packets = find_ibc_packets_sent_in_tx(&self.get_chain(chain_id)?, &tx_response)?;
 
         let send_tx_id = TxId {
             chain_id: chain_id.to_string(),
@@ -231,7 +240,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         let packet_analysis = packets
             .iter()
             .map(|packet| {
-                let ibc_result = self.follow_packet(
+                let ibc_result = self.await_single_packet(
                     chain_id,
                     packet.src_port.clone(),
                     packet.src_channel.clone(),
@@ -251,7 +260,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                     .map(|tx| {
                         let chain_id = tx.chain_id.clone();
                         let response = tx.response.clone();
-                        self.wait_ibc(&chain_id, response)
+                        self.await_packets(&chain_id, response)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
 
@@ -287,7 +296,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
 
     // This function follow the execution of an IBC packet across the chain
     /// In mock, it also relays the packet
-    fn follow_packet(
+    fn await_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,
@@ -295,8 +304,8 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         dst_chain: ChainId,
         sequence: Sequence,
     ) -> Result<SimpleIbcPacketAnalysis<MockBase<A>>, Self::Error> {
-        let src_mock = self.chain(src_chain)?;
-        let dst_mock = self.chain(dst_chain)?;
+        let src_mock = self.get_chain(src_chain)?;
+        let dst_mock = self.get_chain(dst_chain)?;
 
         // We get the packet data from the chain directly
         let relay_result = relayer::relay_packet(

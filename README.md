@@ -108,19 +108,18 @@ fn example_test() {
 
 The `ExecuteFns` macro can be added to the `ExecuteMsg` definition of your contract. It will generate a trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
 
-The `ExecuteFns` macro would only run on the Msg when compiled for non-wasm target. Optionally you can ensure it by the `interface` feature, like in the following example:
+The `ExecuteFns` macro will only be applied on the Msg when compiled for non-wasm target. 
 
 ```rust,ignore
 use cw_orch::prelude::*;
 
 #[cosmwasm_schema::cw_serde]
-// ⬇️ This feature flag prevents cw-orchestrator from entering your contract.
-#[cfg_attr(feature = "interface", derive(cw_orch::ExecuteFns))]
+#[derive(cw_orch::ExecuteFns)]
 pub enum ExecuteMsg {
     Freeze {},
     UpdateAdmins { admins: Vec<String> },
     /// the `payable` attribute can be used to add a `coins` argument to the generated function.
-    #[payable]
+    #[cw_orch(payable)]
     Deposit {}
 }
 ```
@@ -188,12 +187,43 @@ impl<Chain: CwEnv> Example<Chain> {
 }
 ```
 
-### Testing with OsmosisTestTube
 
-[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise.
+## WASM flagging
 
-- Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
-- Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  
+Cw-orch cannot be used *inside* smart contracts. In order to prevent you from having to add feature flags inside your smart-contract, the library excludes itself when building for the WASM target architecture. If you see errors during the build process like shown below, you will want to `target-flag` the related code:
+
+```bash
+error[E0432]: unresolved import `cw_orch::prelude`
+ --> contracts/counter/src/interface.rs:4:26
+  |
+4 | use cw_orch::{interface, prelude::*};
+  |                          ^^^^^^^ could not find `prelude` in `cw_orch`
+
+error[E0432]: unresolved import `cw_orch::anyhow`
+  --> contracts/counter/src/interface.rs:38:14
+   |
+38 | use cw_orch::anyhow::Result;
+   |              ^^^^^^ could not find `anyhow` in `cw_orch`
+
+error: cannot find macro `artifacts_dir_from_workspace` in this scope
+  --> contracts/counter/src/interface.rs:19:9
+   |
+19 |         artifacts_dir_from_workspace!()
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0405]: cannot find trait `Uploadable` in this scope
+  --> contracts/counter/src/interface.rs:16:13
+   |
+16 | impl<Chain> Uploadable for CounterContract<Chain> {
+   |             ^^^^^^^^^^ not found in this scope
+```
+
+Just add the `#[cfg(not(target_arch = "wasm32"))]` to not include the code inside wasm builds:
+
+```rust,ignore
+#[cfg(not(target_arch = "wasm32"))]
+mod interface;
+```
 
 ## Supported chains
 
@@ -212,8 +242,16 @@ Cw-orchestrator supports the following chains natively:
 - Terra 🟥🟦🟩
 - Rollkit 🟥🟦
 - Xion 🟦
+- Landslide 🟥
 
 Additional chains can easily be integrated by creating a new [`ChainInfo`](./packages/cw-orch-networks/src/chain_info.rs) structure. This can be done in your script directly. If you have additional time, don't hesitate to open a PR on this repository.
+
+### Testing with OsmosisTestTube
+
+[OsmosisTestTube](https://github.com/osmosis-labs/test-tube) is available for testing in cw-orchestrator. In order to use it, you may need to install [clang](https://clang.llvm.org/) and [go](https://go.dev/) to compile the osmosis blockchain that serves as the backend for this env. This compilation is taken care of by cargo directly but if you don't have the right dependencies installed, weird errors may arise.
+
+- Visit <https://docs.osmosis.zone/osmosis-core/osmosisd> for a comprehensive list of dependencies.
+- Visit [the INSTALL.md file](./INSTALL.md) for a list of dependencies we have written specifically for use with cw-orch.  
 
 ## Installation
 

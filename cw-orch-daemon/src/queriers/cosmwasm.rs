@@ -1,12 +1,15 @@
-use std::str::FromStr;
+use std::{marker::PhantomData, str::FromStr};
 
-use crate::{cosmos_modules, error::DaemonError, Daemon};
+use crate::senders::query::QuerySender;
+use crate::senders::QueryOnlySender;
+use crate::{cosmos_modules, error::DaemonError, DaemonBase};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
     from_json, instantiate2_address, to_json_binary, Addr, Checksum, CodeInfoResponse,
     ContractInfoResponse,
 };
+use cw_orch_core::environment::Environment;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{Querier, QuerierGetter, WasmQuerier},
@@ -16,37 +19,49 @@ use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
-pub struct CosmWasm {
+pub struct CosmWasmBase<Sender = QueryOnlySender> {
     pub channel: Channel,
     pub rt_handle: Option<Handle>,
+    _sender: PhantomData<Sender>,
 }
 
-impl CosmWasm {
-    pub fn new(daemon: &Daemon) -> Self {
+pub type CosmWasm = CosmWasmBase<QueryOnlySender>;
+
+impl<Sender: QuerySender> CosmWasmBase<Sender> {
+    pub fn new(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
+            _sender: PhantomData,
         }
     }
     pub fn new_async(channel: Channel) -> Self {
         Self {
             channel,
             rt_handle: None,
+            _sender: PhantomData,
+        }
+    }
+    pub fn new_sync(channel: Channel, handle: &Handle) -> Self {
+        Self {
+            channel,
+            rt_handle: Some(handle.clone()),
+            _sender: PhantomData,
         }
     }
 }
 
-impl QuerierGetter<CosmWasm> for Daemon {
-    fn querier(&self) -> CosmWasm {
-        CosmWasm::new(self)
+impl<Sender: QuerySender> QuerierGetter<CosmWasmBase<Sender>> for DaemonBase<Sender> {
+    fn querier(&self) -> CosmWasmBase<Sender> {
+        CosmWasmBase::new(self)
     }
 }
 
-impl Querier for CosmWasm {
+impl<Sender> Querier for CosmWasmBase<Sender> {
     type Error = DaemonError;
 }
 
-impl CosmWasm {
+impl<Sender: QuerySender> CosmWasmBase<Sender> {
     /// Query code_id by hash
     pub async fn _code_id_hash(&self, code_id: u64) -> Result<Checksum, DaemonError> {
         use cosmos_modules::cosmwasm::{query_client::*, QueryCodeRequest};
@@ -220,9 +235,9 @@ impl CosmWasm {
     }
 }
 
-impl WasmQuerier for CosmWasm {
-    type Chain = Daemon;
-    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error> {
+impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
+    type Chain = DaemonBase<Sender>;
+    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
         self.rt_handle
             .as_ref()
             .ok_or(DaemonError::QuerierNeedRuntime)?
@@ -292,12 +307,12 @@ impl WasmQuerier for CosmWasm {
 
     fn local_hash<
         T: cw_orch_core::contract::interface_traits::Uploadable
-            + cw_orch_core::contract::interface_traits::ContractInstance<Daemon>,
+            + cw_orch_core::contract::interface_traits::ContractInstance<DaemonBase<Sender>>,
     >(
         &self,
         contract: &T,
-    ) -> Result<Checksum, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(&contract.get_chain().daemon.state.chain_data).checksum()
+    ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
+        <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum()
     }
 }
 

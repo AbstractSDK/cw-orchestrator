@@ -15,7 +15,7 @@ mod tests {
     use cosmwasm_std::coins;
     use cw_orch_core::environment::QuerierGetter;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler, TxHandler};
-    use cw_orch_daemon::{queriers::Authz, Daemon};
+    use cw_orch_daemon::{queriers::Authz, senders::CosmosOptions, Daemon};
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
     use prost::Message;
@@ -28,23 +28,25 @@ mod tests {
     fn authz() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 
-        let sender = daemon.sender().to_string();
+        let sender = daemon.sender_addr().to_string();
 
-        let second_daemon = daemon
+        let second_daemon: Daemon = daemon
             .rebuild()
-            .authz_granter(sender.clone())
-            .mnemonic(SECOND_MNEMONIC)
-            .build()
+            .build_sender(
+                CosmosOptions::default()
+                    .mnemonic(SECOND_MNEMONIC)
+                    .authz_granter(sender.clone()),
+            )
             .unwrap();
 
         let runtime = daemon.rt_handle.clone();
 
-        let grantee = second_daemon.sender().to_string();
+        let grantee = second_daemon.sender_addr().to_string();
 
         let current_timestamp = daemon.block_info()?.time;
 
@@ -63,6 +65,7 @@ mod tests {
             authorization: Some(authorization.clone()),
             expiration: Some(expiration.clone()),
         };
+
         // We start by granting authz to an account
         daemon.commit_any::<MsgGrantResponse>(
             vec![Any {
@@ -118,26 +121,25 @@ mod tests {
         // The we send some funds to the account
         runtime.block_on(
             daemon
-                .daemon
-                .sender
-                .bank_send(&grantee, coins(1_000_000, LOCAL_JUNO.gas_denom)),
+                .sender()
+                .bank_send(&grantee, coins(100_000, LOCAL_JUNO.gas_denom)),
         )?;
 
         // And send a large amount of tokens on their behalf
         runtime.block_on(
             second_daemon
-                .daemon
-                .sender
-                .bank_send(&grantee, coins(5_000_000, LOCAL_JUNO.gas_denom)),
+                .sender()
+                .bank_send(&grantee, coins(500_000, LOCAL_JUNO.gas_denom)),
         )?;
 
-        // the balance of the grantee whould be 6_000_000 or close
+        // the balance of the grantee whould be 600_000 or close
 
         let grantee_balance = daemon
             .bank_querier()
             .balance(grantee.clone(), Some(LOCAL_JUNO.gas_denom.to_string()))?;
 
-        assert_eq!(grantee_balance.first().unwrap().amount.u128(), 6_000_000);
+        // One coin eaten by gas
+        assert_eq!(grantee_balance.first().unwrap().amount.u128(), 600_000 - 1);
 
         Ok(())
     }

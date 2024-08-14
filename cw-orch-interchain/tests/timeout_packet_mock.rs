@@ -21,20 +21,20 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
         "ics20-1",
         None,
     )?;
-    let juno = interchain.chain("juno-1")?;
-    let stargaze = interchain.chain("stargaze-1")?;
+    let juno = interchain.get_chain("juno-1")?;
+    let stargaze = interchain.get_chain("stargaze-1")?;
 
     let stargaze_height = stargaze.block_info()?;
     let channel = channel
         .interchain_channel
         .get_ordered_ports_from("juno-1")?;
 
-    juno.add_balance(juno.sender().to_string(), vec![coin(100_000, "ujuno")])?;
+    juno.add_balance(juno.sender_addr().to_string(), vec![coin(100_000, "ujuno")])?;
     let tx_resp = juno.app.borrow_mut().execute(
-        juno.sender(),
+        juno.sender_addr(),
         CosmosMsg::Ibc(IbcMsg::Transfer {
             channel_id: channel.0.channel.unwrap().to_string(),
-            to_address: stargaze.sender().to_string(),
+            to_address: stargaze.sender_addr().to_string(),
             amount: coin(100_000, "ujuno"),
             timeout: IbcTimeout::with_block(IbcTimeoutBlock {
                 revision: 1,
@@ -43,7 +43,7 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
         }),
     )?;
 
-    let result = interchain.wait_ibc("juno-1", tx_resp)?;
+    let result = interchain.await_packets("juno-1", tx_resp)?;
 
     match &result.packets[0].outcome {
         cw_orch_interchain_core::types::IbcPacketOutcome::Timeout { .. } => {}

@@ -19,6 +19,7 @@ pub use crate::contract::interface_traits::{
 
 pub use cw_orch_core::contract::Deploy;
 
+pub use crate::environment::ChainState;
 pub use crate::environment::StateInterface;
 
 // Response trait
@@ -29,6 +30,8 @@ pub use crate::environment::{
     BankQuerier, BankSetter, CwEnv, DefaultQueriers, EnvironmentInfo, EnvironmentQuerier,
     NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
 };
+
+pub use cw_orch_core::environment::Environment;
 
 // Chains
 pub use crate::environment::{ChainInfo, ChainInfoOwned};
@@ -68,16 +71,3 @@ pub use cw_orch_traits::*;
 
 #[cfg(feature = "snapshot-testing")]
 pub use crate::take_storage_snapshot;
-
-#[cfg(feature = "interchain")]
-/// Everything that concerns interchain capabilities
-pub mod interchain {
-    pub use cw_orch_interchain_core::{IbcQueryHandler, InterchainEnv};
-    pub use cw_orch_interchain_daemon::{
-        ChannelCreationValidator, ChannelCreator, DaemonInterchainEnv,
-    };
-    pub use cw_orch_interchain_mock::{MockBech32InterchainEnv, MockInterchainEnv};
-    pub use cw_orch_starship::Starship;
-}
-#[cfg(feature = "interchain")]
-pub use interchain::*;

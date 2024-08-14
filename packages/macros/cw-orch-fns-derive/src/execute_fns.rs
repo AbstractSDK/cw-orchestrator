@@ -1,8 +1,5 @@
+use crate::helpers::has_cw_orch_attribute;
+
 pub fn payable(v: &syn::Variant) -> bool {
-    for attr in &v.attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "payable" {
-            return true;
-        }
-    }
-    false
+    has_cw_orch_attribute(&v.attrs, "payable")
 }

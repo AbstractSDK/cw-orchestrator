@@ -2,7 +2,7 @@
 
 `cw-orch` was designed to help you test, deploy, script and maintain your application. None of its features include in-contract operations. cw-orch interfaces, macros and helpers can't be used inside a wasm smart contract.
 
-In case you use one of the cw-orch features inside you smart-contract, the compilation will send an error anyway, so that we are **SURE** you are not using un-intended features inside your contract.
+In case you use one of the cw-orch features inside your smart-contract, the compilation will send an error anyway, so that we are **SURE** you are not using un-intended features inside your contract.
 
 ## Importing cw-orch
 

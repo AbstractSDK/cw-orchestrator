@@ -23,6 +23,12 @@ pub trait IndexResponse {
     /// Search for an event with given attribute key.
     fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String>;
 
+    /// Search for all events with a given attribute key.
+    fn event_attr_values(&self, _event_type: &str, _attr_key: &str) -> Vec<String> {
+        // This is provided to avoid breaking changes to cw-orch-core
+        unimplemented!("");
+    }
+
     /// Get the data field of the response.
     fn data(&self) -> Option<Binary>;
 
@@ -92,6 +98,21 @@ impl IndexResponse for AppResponse {
             event_type, attr_key
         )))
     }
+
+    fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+        let mut all_results = vec![];
+
+        for event in &self.events {
+            if event.ty == event_type {
+                for attr in &event.attributes {
+                    if attr.key == attr_key {
+                        all_results.push(attr.value.clone());
+                    }
+                }
+            }
+        }
+        all_results
+    }
 }
 
 #[cfg(test)]
@@ -131,7 +152,7 @@ mod index_response_test {
     fn test_instantiated_contract_address(idxres: &dyn IndexResponse) -> anyhow::Result<()> {
         asserting!("instantiated contract_address is ")
             .that(&idxres.instantiated_contract_address()?)
-            .is_equal_to(&Addr::unchecked(CONTRACT_ADDRESS));
+            .is_equal_to(Addr::unchecked(CONTRACT_ADDRESS));
 
         Ok(())
     }

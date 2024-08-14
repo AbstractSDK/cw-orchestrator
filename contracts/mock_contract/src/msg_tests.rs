@@ -7,7 +7,7 @@ use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, Std
 // ANCHOR: unordered_msg_def
 #[cw_serde]
 #[derive(cw_orch::ExecuteFns)]
-#[disable_fields_sorting]
+#[cw_orch(disable_fields_sorting)]
 pub enum ExecuteMsg {
     Test { b: u64, a: String },
 }

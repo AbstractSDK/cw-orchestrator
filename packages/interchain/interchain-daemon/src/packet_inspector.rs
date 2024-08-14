@@ -10,6 +10,7 @@ use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::ChainId;
 use futures_util::future::select_all;
 use futures_util::FutureExt;
+use ibc_relayer_types::core::ics04_channel::channel::State;
 
 use crate::{IcDaemonResult, InterchainDaemonError};
 use cw_orch_interchain_core::types::{
@@ -204,6 +205,12 @@ impl PacketInspector {
         let registered_channel = Ibc::new_async(src_grpc_channel.clone())
             ._channel(src_port.to_string(), src_channel.to_string())
             .await?;
+
+        // We log to warn when the channel state is not right
+        if registered_channel.state != State::Open as i32 {
+            log::warn!("Channel is not in an open state, the packet will most likely not be relayed. Channel information {:?}", registered_channel);
+        }
+
         let counterparty = registered_channel.counterparty.unwrap();
 
         // Here the connection id is not used, because a port_id and a channel_id are sufficient to track a channel
@@ -541,7 +548,7 @@ fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
         .collect()
 }
 
-async fn find_ibc_packets_sent_in_tx(
+pub async fn find_ibc_packets_sent_in_tx(
     chain: NetworkId,
     grpc_channel: Channel,
     tx: CosmTxResponse,

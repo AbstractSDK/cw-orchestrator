@@ -126,7 +126,7 @@ pub enum DaemonError {
     CheckSum(#[from] cosmwasm_std::ChecksumError),
     #[error("Error opening file {0},err: ({1})")]
     OpenFile(String, String),
-    #[error("State file {0} already locked, use another state file or clone daemon which holds the lock")]
+    #[error("State file {0} already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder")]
     StateAlreadyLocked(String),
 }
 

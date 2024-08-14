@@ -22,8 +22,8 @@ fn instantiate2() -> anyhow::Result<()> {
 
     let expected_address = app.wasm_querier().instantiate2_addr(
         mock_contract.code_id()?,
-        app.sender(),
-        salt.clone().into(),
+        app.sender_addr(),
+        salt.clone(),
     )?;
 
     mock_contract.instantiate2(&InstantiateMsg {}, None, None, Binary::new(salt.clone()))?;
@@ -37,7 +37,7 @@ fn instantiate2() -> anyhow::Result<()> {
         .app
         .borrow()
         .api()
-        .addr_canonicalize(app.sender().as_str())?;
+        .addr_canonicalize(app.sender_addr().as_str())?;
 
     // If there is a `Invalid input: canonical address length not correct` error, that means this env doesn't work with instantiate2 correctly
     assert_eq!(

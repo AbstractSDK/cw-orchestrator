@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use bitcoin::secp256k1::All;
 use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::AccountId;
 use cosmrs::{
@@ -11,9 +10,9 @@ use cosmrs::{
 };
 use cw_orch_core::log::transaction_target;
 
-use crate::sender::SenderOptions;
+use crate::Wallet;
 
-use super::{sender::Sender, DaemonError};
+use super::DaemonError;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]
@@ -62,23 +61,20 @@ impl TxBuilder {
         )
     }
 
-    pub(crate) fn build_fee(
+    pub fn build_fee(
         amount: impl Into<u128>,
         denom: &str,
         gas_limit: u64,
-        sender_options: SenderOptions,
+        fee_granter: Option<String>,
     ) -> Result<Fee, DaemonError> {
         let fee = Coin::new(amount.into(), denom).unwrap();
         let mut fee = Fee::from_amount_and_gas(fee, gas_limit);
-        fee.granter = sender_options
-            .fee_granter
-            .map(|g| AccountId::from_str(&g))
-            .transpose()?;
+        fee.granter = fee_granter.map(|g| AccountId::from_str(&g)).transpose()?;
         Ok(fee)
     }
 
     /// Simulates the transaction and returns the necessary gas fee returned by the simulation on a node
-    pub async fn simulate(&self, wallet: &Sender<All>) -> Result<u64, DaemonError> {
+    pub async fn simulate(&self, wallet: &Wallet) -> Result<u64, DaemonError> {
         // get the account number of the wallet
         let BaseAccount {
             account_number,
@@ -96,7 +92,7 @@ impl TxBuilder {
 
     /// Builds the raw tx with a given body and fee and signs it.
     /// Sets the TxBuilder's gas limit to its simulated amount for later use.
-    pub async fn build(&mut self, wallet: &Sender<All>) -> Result<Raw, DaemonError> {
+    pub async fn build(&mut self, wallet: &Wallet) -> Result<Raw, DaemonError> {
         // get the account number of the wallet
         let BaseAccount {
             account_number,
@@ -138,7 +134,7 @@ impl TxBuilder {
             tx_fee,
             &wallet.get_fee_token(),
             gas_limit,
-            wallet.options.clone(),
+            wallet.options.fee_granter.clone(),
         )?;
 
         log::debug!(
