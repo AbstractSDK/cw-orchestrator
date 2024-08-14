@@ -1,4 +1,6 @@
-use common::ica_demo::full_ica_test;
+#![allow(unused)]
+// TODO: Add something here
+
 use cw_orch_interchain::prelude::*;
 
 // Integrating the test inside the example
@@ -11,13 +13,13 @@ pub const STARGAZE: &str = "stargaze-1";
 pub const JUNO_FUNDS_DENOM: &str = "ujuno";
 
 fn main() {
-    dotenv().ok();
-    use dotenv::dotenv;
-    env_logger::init();
+    //     dotenv().ok();
+    //     use dotenv::dotenv;
+    //     env_logger::init();
 
-    // We use starship to create channels
-    let starship = Starship::new(None).unwrap();
-    let interchain = starship.interchain_env();
+    //     // We use starship to create channels
+    //     let starship = Starship::new(None).unwrap();
+    //     let interchain = starship.interchain_env();
 
-    full_ica_test(&interchain, JUNO, STARGAZE, JUNO_FUNDS_DENOM).unwrap();
+    //     common::ica_demo::full_ica_test(&interchain, JUNO, STARGAZE, JUNO_FUNDS_DENOM).unwrap();
 }

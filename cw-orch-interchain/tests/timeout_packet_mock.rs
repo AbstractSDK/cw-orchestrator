@@ -40,6 +40,7 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
                 revision: 1,
                 height: stargaze_height.height,
             }),
+            memo: None,
         }),
     )?;
 

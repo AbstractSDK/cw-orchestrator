@@ -295,16 +295,16 @@ mod test {
 
     #[test]
     fn mock() {
-        let recipient = BALANCE_ADDR;
-        let sender = SENDER;
-        let chain = Mock::new(sender);
+        let chain = MockBech32::new(SENDER);
+        let sender = chain.sender_addr();
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
 
         chain
-            .set_balance(recipient, vec![Coin::new(amount, denom)])
+            .set_balance(&recipient, vec![Coin::new(amount, denom)])
             .unwrap();
-        let balance = chain.query_balance(recipient, denom).unwrap();
+        let balance = chain.query_balance(&recipient, denom).unwrap();
 
         asserting("address balance amount is correct")
             .that(&amount)
@@ -366,7 +366,8 @@ mod test {
             .that(&query_res.attributes[1].value)
             .is_equal_to(String::from("0"));
 
-        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg {}, 1, &contract_address);
+        let migrate_msg = Empty {}; // cw20_base::msg::MigrateMsg{} Doesn't implement fmt::Debug
+        let migration_res = chain.migrate(&migrate_msg, 1, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
             .is_ok();

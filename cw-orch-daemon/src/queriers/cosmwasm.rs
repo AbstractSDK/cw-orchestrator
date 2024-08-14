@@ -237,7 +237,7 @@ impl<Sender: QuerySender> CosmWasmBase<Sender> {
 
 impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
     type Chain = DaemonBase<Sender>;
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error> {
         self.rt_handle
             .as_ref()
             .ok_or(DaemonError::QuerierNeedRuntime)?
@@ -311,7 +311,7 @@ impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
     >(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, cw_orch_core::CwEnvError> {
+    ) -> Result<Checksum, cw_orch_core::CwEnvError> {
         <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum()
     }
 }
