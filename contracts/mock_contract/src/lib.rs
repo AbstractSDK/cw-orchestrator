@@ -212,8 +212,8 @@ mod test {
     #[test]
     fn compiles() -> Result<(), CwOrchError> {
         // We need to check we can still call the execute msgs conveniently
-        let sender = Addr::unchecked("sender");
-        let mock = Mock::new(&sender);
+        let mock = Mock::new("sender");
+        let sender = mock.sender_addr();
         mock.set_balance(&sender, coins(156 * 3, "ujuno"))?;
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 

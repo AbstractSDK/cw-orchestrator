@@ -114,13 +114,12 @@ impl<S: StateInterface> Mock<S> {
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
     pub fn new_custom(sender: impl Into<String>, custom_state: S) -> Self {
         let state = Rc::new(RefCell::new(custom_state));
-        let app = Rc::new(RefCell::new(AppBuilder::new_custom().build(|_, _, _| {})));
+        let app = AppBuilder::new_custom().build(|_, _, _| {});
+        let sender: String = sender.into();
+        let sender = app.api().addr_make(&sender);
+        let app = Rc::new(RefCell::new(app));
 
-        Self {
-            sender: Addr::unchecked(sender),
-            state,
-            app,
-        }
+        Self { sender, state, app }
     }
 }
 

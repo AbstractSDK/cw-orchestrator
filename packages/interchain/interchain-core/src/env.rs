@@ -91,17 +91,18 @@ pub type ChainId<'a> = &'a str;
 ///     .interchain_channel
 ///     .get_ordered_ports_from("juno-1").unwrap();
 
-/// juno.add_balance(juno.sender().to_string(), vec![coin(100_000, "ujuno")]).unwrap();
+/// juno.add_balance(juno.sender_addr().to_string(), vec![coin(100_000, "ujuno")]).unwrap();
 /// let tx_resp = juno.app.borrow_mut().execute(
-///     juno.sender(),
+///     juno.sender_addr(),
 ///     CosmosMsg::Ibc(IbcMsg::Transfer {
 ///         channel_id: channel.0.channel.unwrap().to_string(),
-///         to_address: stargaze.sender().to_string(),
+///         to_address: stargaze.sender_addr().to_string(),
 ///         amount: coin(100_000, "ujuno"),
 ///         timeout: IbcTimeout::with_block(IbcTimeoutBlock {
 ///             revision: 1,
 ///             height: stargaze.block_info().unwrap().height + 1,
 ///         }),
+///         memo: None,
 ///     }),
 /// ).unwrap();
 
@@ -395,17 +396,18 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     ///     .interchain_channel
     ///     .get_ordered_ports_from("juno-1").unwrap();
 
-    /// juno.add_balance(juno.sender().to_string(), vec![coin(100_000, "ujuno")]).unwrap();
+    /// juno.add_balance(juno.sender_addr().to_string(), vec![coin(100_000, "ujuno")]).unwrap();
     /// let tx_resp = juno.app.borrow_mut().execute(
-    ///     juno.sender(),
+    ///     juno.sender_addr(),
     ///     CosmosMsg::Ibc(IbcMsg::Transfer {
     ///         channel_id: channel.0.channel.unwrap().to_string(),
-    ///         to_address: stargaze.sender().to_string(),
+    ///         to_address: stargaze.sender_addr().to_string(),
     ///         amount: coin(100_000, "ujuno"),
     ///         timeout: IbcTimeout::with_block(IbcTimeoutBlock {
     ///             revision: 1,
     ///             height: stargaze.block_info().unwrap().height + 1,
     ///         }),
+    ///         memo: None,
     ///     }),
     /// ).unwrap();
 

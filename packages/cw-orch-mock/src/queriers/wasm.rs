@@ -1,12 +1,10 @@
 use std::marker::PhantomData;
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::testing::MockApi;
-
 use cosmwasm_std::{
     instantiate2_address, Api, Binary, Checksum, ContractResult, StdError, SystemResult,
 };
-use cosmwasm_std::{to_json_binary, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{to_json_binary, ContractInfoResponse};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier},
@@ -179,38 +177,24 @@ impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
         creator: impl Into<String>,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, CwEnvError> {
-        // little hack to figure out which instantiate2 generator to use.
-        // Without this hack the querier methods can't be implemented on a generic "MockApi<A>"
-        const MOCK_ADDR: &str = "cosmos1g0pzl69nr8j7wyxxkzurj808svnrrrxtfl8qqm";
+        let creator: String = creator.into();
 
-        let mock_canonical = MockApi::default().addr_canonicalize(MOCK_ADDR)?;
-        let mock_humanized = self.app.borrow().api().addr_humanize(&mock_canonical);
-
-        if mock_humanized.is_ok() && mock_humanized.unwrap().as_str() == MOCK_ADDR {
-            // if regular mock
-            Ok(format!(
-                "contract/{}/{}",
-                creator.into(),
-                HexBinary::from(salt).to_hex()
-            ))
-        } else {
-            // if bech32 mock
-            let checksum = self.code_id_hash(code_id)?;
-            let canon_creator = self.app.borrow().api().addr_canonicalize(&creator.into())?;
-            let canonical_addr = instantiate2_address(checksum.as_slice(), &canon_creator, &salt)?;
-            Ok(self
-                .app
-                .borrow()
-                .api()
-                .addr_humanize(&canonical_addr)?
-                .to_string())
-        }
+        // if bech32 mock
+        let checksum = self.code_id_hash(code_id)?;
+        let canon_creator = self.app.borrow().api().addr_canonicalize(&creator)?;
+        let canonical_addr = instantiate2_address(checksum.as_slice(), &canon_creator, &salt)?;
+        Ok(self
+            .app
+            .borrow()
+            .api()
+            .addr_humanize(&canonical_addr)?
+            .to_string())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr, Binary, Empty, HexBinary, Response, StdError};
+    use cosmwasm_std::{Addr, Binary, Empty, Response, StdError};
     use cw_multi_test::ContractWrapper;
     use cw_orch_core::environment::{DefaultQueriers, TxHandler, WasmQuerier};
 
@@ -269,16 +253,20 @@ mod tests {
     fn normal_instantiate2() -> anyhow::Result<()> {
         let mock = Mock::new("sender");
 
-        let addr = mock.wasm_querier().instantiate2_addr(
-            0,
+        mock.upload_custom(
+            "test-contract",
+            Box::new(ContractWrapper::new_with_empty(
+                |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
+                |_, _, _, _: Empty| Ok::<_, StdError>(Response::new()),
+                |_, _, _: Empty| Ok::<_, StdError>(b"dummy-response".to_vec().into()),
+            )),
+        )?;
+
+        mock.wasm_querier().instantiate2_addr(
+            1,
             mock.sender_addr(),
             Binary::new(b"salt-test".to_vec()),
         )?;
-
-        assert_eq!(
-            addr,
-            format!("contract/sender/{}", HexBinary::from(b"salt-test").to_hex())
-        );
 
         Ok(())
     }

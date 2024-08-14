@@ -378,12 +378,12 @@ mod test {
         let mock_state = MockState::new();
         let chain = Mock::new_custom(SENDER, mock_state);
 
-        let recipient = BALANCE_ADDR;
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
 
         chain
-            .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
+            .set_balances(&[(recipient.clone(), &[Coin::new(amount, denom)])])
             .unwrap();
 
         let balances = chain.query_all_balances(recipient).unwrap();
@@ -421,16 +421,16 @@ mod test {
     #[test]
     fn add_balance() {
         let chain = Mock::new(SENDER);
-        let recipient = BALANCE_ADDR;
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
 
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_1)])
+            .add_balance(recipient.clone(), vec![Coin::new(amount, denom_1)])
             .unwrap();
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_2)])
+            .add_balance(recipient.clone(), vec![Coin::new(amount, denom_2)])
             .unwrap();
 
         let balances = chain.query_all_balances(recipient).unwrap();
@@ -443,9 +443,8 @@ mod test {
     fn bank_querier_works() -> Result<(), CwEnvError> {
         let denom = "urandom";
         let init_coins = coins(45, denom);
-        let sender = "sender";
-        let app = Mock::new(sender);
-        app.set_balance(sender, init_coins.clone())?;
+        let app = Mock::new(SENDER);
+        app.set_balance(app.sender.clone(), init_coins.clone())?;
         let sender = app.sender.clone();
         assert_eq!(
             app.bank_querier()

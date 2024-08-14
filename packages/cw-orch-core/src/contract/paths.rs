@@ -22,7 +22,7 @@ mod wasm_path {
     /// let wasm_path: WasmPath = WasmPath::new("path/to/contract.wasm").unwrap();
     ///
     /// // Calculate the checksum of the WASM file.
-    /// let checksum: cosmwasm_std::HexBinary = wasm_path.checksum().unwrap();
+    /// let checksum: cosmwasm_std::Checksum = wasm_path.checksum().unwrap();
     /// ```
     #[derive(Debug, Clone)]
     pub struct WasmPath(PathBuf);

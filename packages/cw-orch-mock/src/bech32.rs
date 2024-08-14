@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::{Addr, Coin, Uint128};
+use cosmwasm_std::{testing::MockApi, Addr, Coin, Uint128};
 use cw_multi_test::{AppBuilder, MockApiBech32};
 use cw_orch_core::{
     environment::{BankQuerier, BankSetter, DefaultQueriers, StateInterface, TxHandler},
@@ -31,6 +31,23 @@ impl<S: StateInterface> MockBase<MockApiBech32, S> {
     pub fn addr_make(&self, account_name: impl Into<String>) -> Addr {
         self.app.borrow().api().addr_make(&account_name.into())
     }
+    pub fn addr_make_with_balance(
+        &self,
+        account_name: impl Into<String>,
+        balance: Vec<Coin>,
+    ) -> Result<Addr, CwEnvError> {
+        let addr = self.app.borrow().api().addr_make(&account_name.into());
+        self.set_balance(&addr, balance)?;
+
+        Ok(addr)
+    }
+}
+
+impl<S: StateInterface> MockBase<MockApi, S> {
+    pub fn addr_make(&self, account_name: impl Into<String>) -> Addr {
+        self.app.borrow().api().addr_make(&account_name.into())
+    }
+
     pub fn addr_make_with_balance(
         &self,
         account_name: impl Into<String>,
