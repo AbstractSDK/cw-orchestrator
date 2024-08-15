@@ -50,10 +50,10 @@ pub type MockApp<A = MockApi> = App<
 /// let mock: Mock = Mock::new("sender");
 ///
 /// // set a balance
-/// mock.set_balance(mock.sender_addr(), vec![coin(100u128, "token")]).unwrap();
+/// mock.set_balance(&mock.sender_addr(), vec![coin(100u128, "token")]).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = mock.query_balance(mock.sender_addr(), "token").unwrap();
+/// let balance: Uint128 = mock.query_balance(&mock.sender_addr(), "token").unwrap();
 /// assert_eq!(balance.u128(), 100u128);
 /// ```
 ///
