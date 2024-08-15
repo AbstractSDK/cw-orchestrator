@@ -10,10 +10,11 @@ members = [
   # "packages/cw-orch-osmosis-test-tube",
   "packages/cw-orch-traits",
   "contracts/*",
+  "test_contracts/*",
   "packages/macros/*",
   "packages/interchain/*",
 ]
-exclude = ["contracts/compatibility-test"]
+exclude = ["test_contracts/compatibility-test"]
 resolver = "2"
 
 [workspace.package]
