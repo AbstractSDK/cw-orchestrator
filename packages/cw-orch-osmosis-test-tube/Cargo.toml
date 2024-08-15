@@ -22,7 +22,7 @@ cw-orch-mock = { workspace = true }
 cw-orch-traits = { workspace = true }
 
 [dev-dependencies]
-counter-contract = { path = "../../contracts/counter" }
+counter-contract = { path = "../../contracts-ws/contracts/counter" }
 env_logger = "0.11.3"
 
 cw-orch = { workspace = true }

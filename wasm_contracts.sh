@@ -8,6 +8,6 @@ fi
 
 # Optimized builds
 docker run --rm -v "$(pwd)":/code \
---mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
+--mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/contracts-ws/target \
 --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-${image}
+${image} ./contracts-ws

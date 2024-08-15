@@ -519,7 +519,7 @@ mod test {
     impl Uploadable for MockCw20 {
         fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
             let path = PathBuf::from_str(env!("CARGO_MANIFEST_DIR")).unwrap();
-            let path = path.join("../../artifacts/cw20_base.wasm");
+            let path = path.join("../../../artifacts/cw20_base.wasm");
             WasmPath::new(path).unwrap()
         }
 
