@@ -23,7 +23,7 @@ log = { workspace = true }
 prost = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
-osmosis-std = { version = "0.21.0" }
+osmosis-std = { version = "0.25.0" }
 
 [dev-dependencies]
 cw-orch-starship = { workspace = true }
