@@ -27,7 +27,9 @@ cw-utils = { version = "2.0.0" }
 cosmwasm-std = { version = "2.0" }
 cw-storage-plus = { version = "2.0.0" }
 
-cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.0" }
+cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.0", features = [
+  "cosmwasm_1_2",
+] }
 cw20 = { package = "abstract-cw20", version = "3.0.0" }
 cw20-base = { package = "abstract-cw20-base", version = "3.0.0" }
 
@@ -78,6 +80,3 @@ log = "0.4.14"
 # Interchain
 ibc-relayer-types = { version = "0.25.0" }
 ibc-chain-registry = { version = "0.25.0" }
-
-[patch.crates-io]
-cw-orch-core = { path = "packages/cw-orch-core" }
