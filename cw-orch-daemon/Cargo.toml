@@ -51,7 +51,7 @@ hkd32 = { version = "0.7.0", features = ["bip39", "mnemonic", "bech32"] }
 rand_core = { version = "0.6.4", default-features = false }
 ed25519-dalek = { version = "2", features = ["serde"] }
 eyre = { version = "0.6" }
-cosmrs = { version = "0.15.0", features = ["dev", "cosmwasm", "grpc"] }
+cosmrs = { version = "0.19.0", features = ["dev", "cosmwasm", "grpc"] }
 chrono = { version = "0.4" }
 base16 = { version = "0.2.1" }
 ring = { version = "0.17.3" }
