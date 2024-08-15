@@ -8,6 +8,7 @@ use cosmrs::{
     tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
     Any, Coin,
 };
+use cosmwasm_std::Addr;
 use cw_orch_core::log::transaction_target;
 
 use crate::Wallet;
@@ -65,11 +66,13 @@ impl TxBuilder {
         amount: impl Into<u128>,
         denom: &str,
         gas_limit: u64,
-        fee_granter: Option<String>,
+        fee_granter: Option<Addr>,
     ) -> Result<Fee, DaemonError> {
         let fee = Coin::new(amount.into(), denom).unwrap();
         let mut fee = Fee::from_amount_and_gas(fee, gas_limit);
-        fee.granter = fee_granter.map(|g| AccountId::from_str(&g)).transpose()?;
+        fee.granter = fee_granter
+            .map(|g| AccountId::from_str(g.as_str()))
+            .transpose()?;
         Ok(fee)
     }
 

@@ -18,34 +18,29 @@ impl<S: StateInterface> Mock<S> {
     /// Set the bank balance of an address.
     pub fn set_balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
     ) -> Result<(), CwEnvError> {
         self.app
             .borrow_mut()
-            .init_modules(|router, _, storage| {
-                router
-                    .bank
-                    .init_balance(storage, &Addr::unchecked(address.into()), amount)
-            })
+            .init_modules(|router, _, storage| router.bank.init_balance(storage, address, amount))
             .map_err(Into::into)
     }
 
     /// Adds the bank balance of an address.
     pub fn add_balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
     ) -> Result<(), CwEnvError> {
-        let addr = &Addr::unchecked(address.into());
-        let b = self.query_all_balances(addr.clone())?;
+        let b = self.query_all_balances(address)?;
         let new_amount = NativeBalance(b) + NativeBalance(amount);
         self.app
             .borrow_mut()
             .init_modules(|router, _, storage| {
                 router
                     .bank
-                    .init_balance(storage, addr, new_amount.into_vec())
+                    .init_balance(storage, address, new_amount.into_vec())
             })
             .map_err(Into::into)
     }
@@ -71,11 +66,7 @@ impl<S: StateInterface> Mock<S> {
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(
-        &self,
-        address: impl Into<String>,
-        denom: &str,
-    ) -> Result<Uint128, CwEnvError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
         Ok(self
             .bank_querier()
             .balance(address, Some(denom.to_string()))?
@@ -87,7 +78,7 @@ impl<S: StateInterface> Mock<S> {
     /// Fetch all the balances of an address.
     pub fn query_all_balances(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
     ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         self.bank_querier().balance(address, None)
     }
@@ -128,7 +119,7 @@ impl<S: StateInterface> BankSetter for Mock<S> {
 
     fn set_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(address, amount)

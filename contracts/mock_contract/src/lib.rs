@@ -253,7 +253,7 @@ mod test {
 
         let cw2_info: cw2::ContractVersion = from_json(
             mock.wasm_querier()
-                .raw_query(contract.address()?, b"contract_info".to_vec())?,
+                .raw_query(&contract.address()?, b"contract_info".to_vec())?,
         )?;
 
         assert_eq!(

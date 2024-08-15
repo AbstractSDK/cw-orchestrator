@@ -98,7 +98,7 @@ pub fn main() {
         )
         .unwrap();
     // We send some funds to the counter contract
-    let contract_addr = counter.addr_str().unwrap();
+    let contract_addr = counter.address().unwrap();
     daemon
         .rt_handle
         .block_on(
@@ -111,7 +111,7 @@ pub fn main() {
     assert_eq!(
         daemon
             .bank_querier()
-            .balance(contract_addr, Some(denom.clone()))
+            .balance(&contract_addr, Some(denom.clone()))
             .unwrap(),
         coins(50_000, denom.clone())
     );

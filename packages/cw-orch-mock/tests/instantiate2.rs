@@ -22,7 +22,7 @@ fn instantiate2() -> anyhow::Result<()> {
 
     let expected_address = app.wasm_querier().instantiate2_addr(
         mock_contract.code_id()?,
-        app.sender_addr(),
+        &app.sender_addr(),
         Binary::from(salt.clone()),
     )?;
 

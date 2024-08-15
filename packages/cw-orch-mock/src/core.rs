@@ -386,7 +386,7 @@ mod test {
             .set_balances(&[(recipient.clone(), &[Coin::new(amount, denom)])])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances length is 1")
             .that(&balances.len())
             .is_equal_to(1);
@@ -427,13 +427,13 @@ mod test {
         let denom_2 = "osmou";
 
         chain
-            .add_balance(recipient.clone(), vec![Coin::new(amount, denom_1)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_1)])
             .unwrap();
         chain
-            .add_balance(recipient.clone(), vec![Coin::new(amount, denom_2)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_2)])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances added")
             .that(&balances)
             .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
@@ -444,11 +444,11 @@ mod test {
         let denom = "urandom";
         let init_coins = coins(45, denom);
         let app = Mock::new(SENDER);
-        app.set_balance(app.sender.clone(), init_coins.clone())?;
-        let sender = app.sender.clone();
+        let sender = &app.sender;
+        app.set_balance(sender, init_coins.clone())?;
         assert_eq!(
             app.bank_querier()
-                .balance(sender.clone(), Some(denom.to_string()))?,
+                .balance(sender, Some(denom.to_string()))?,
             init_coins
         );
         assert_eq!(

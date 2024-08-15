@@ -29,7 +29,7 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
         .interchain_channel
         .get_ordered_ports_from("juno-1")?;
 
-    juno.add_balance(juno.sender_addr().to_string(), vec![coin(100_000, "ujuno")])?;
+    juno.add_balance(&juno.sender_addr(), vec![coin(100_000, "ujuno")])?;
     let tx_resp = juno.app.borrow_mut().execute(
         juno.sender_addr(),
         CosmosMsg::Ibc(IbcMsg::Transfer {

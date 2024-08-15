@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::{
-    instantiate2_address, Api, Binary, Checksum, ContractResult, StdError, SystemResult,
+    instantiate2_address, Addr, Api, Binary, Checksum, ContractResult, StdError, SystemResult,
 };
 use cosmwasm_std::{to_json_binary, ContractInfoResponse};
 use cw_orch_core::{
@@ -49,7 +49,7 @@ fn code_id_hash<A: Api, S: StateInterface>(
 
 fn contract_info<A: Api, S: StateInterface>(
     querier: &MockWasmQuerier<A, S>,
-    address: impl Into<String>,
+    address: &Addr,
 ) -> Result<ContractInfoResponse, CwEnvError> {
     let info = querier
         .app
@@ -71,7 +71,7 @@ fn local_hash<Chain: TxHandler + QueryHandler, T: Uploadable + ContractInstance<
 /// Copied implementation from [`cosmwasm_std::QuerierWrapper::query`] but without deserialization
 fn raw_query<A: Api, S: StateInterface>(
     querier: &MockWasmQuerier<A, S>,
-    address: impl Into<String>,
+    address: &Addr,
     query_data: Vec<u8>,
 ) -> Result<Vec<u8>, CwEnvError> {
     let raw = to_json_binary(&cosmwasm_std::QueryRequest::<cosmwasm_std::Empty>::Wasm(
@@ -97,7 +97,7 @@ fn raw_query<A: Api, S: StateInterface>(
 
 fn smart_query<A: Api, S: StateInterface, Q, T>(
     querier: &MockWasmQuerier<A, S>,
-    address: impl Into<String>,
+    address: &Addr,
     query_data: &Q,
 ) -> Result<T, CwEnvError>
 where
@@ -137,10 +137,7 @@ impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
     }
 
     /// Returns the code_info structure of the provided contract
-    fn contract_info(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
+    fn contract_info(&self, address: &Addr) -> Result<ContractInfoResponse, CwEnvError> {
         contract_info(self, address)
     }
 
@@ -151,15 +148,11 @@ impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
         local_hash(contract)
     }
 
-    fn raw_query(
-        &self,
-        address: impl Into<String>,
-        query_data: Vec<u8>,
-    ) -> Result<Vec<u8>, CwEnvError> {
+    fn raw_query(&self, address: &Addr, query_data: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
         raw_query(self, address, query_data)
     }
 
-    fn smart_query<Q, T>(&self, address: impl Into<String>, query_data: &Q) -> Result<T, CwEnvError>
+    fn smart_query<Q, T>(&self, address: &Addr, query_data: &Q) -> Result<T, CwEnvError>
     where
         T: DeserializeOwned,
         Q: Serialize,
@@ -174,7 +167,7 @@ impl<A: Api, S: StateInterface> WasmQuerier for MockWasmQuerier<A, S> {
     fn instantiate2_addr(
         &self,
         code_id: u64,
-        creator: impl Into<String>,
+        creator: &Addr,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, CwEnvError> {
         let creator: String = creator.into();
@@ -216,7 +209,7 @@ mod tests {
 
         mock.wasm_querier().instantiate2_addr(
             1,
-            mock.sender_addr(),
+            &mock.sender_addr(),
             Binary::new(b"salt-test".to_vec()),
         )?;
 
@@ -242,7 +235,7 @@ mod tests {
 
         mock.wasm_querier().instantiate2_addr(
             1,
-            mock.sender_addr(),
+            &mock.sender_addr(),
             Binary::new(b"salt-test".to_vec()),
         )?;
 
@@ -264,7 +257,7 @@ mod tests {
 
         mock.wasm_querier().instantiate2_addr(
             1,
-            mock.sender_addr(),
+            &mock.sender_addr(),
             Binary::new(b"salt-test".to_vec()),
         )?;
 
