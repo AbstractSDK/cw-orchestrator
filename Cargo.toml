@@ -8,7 +8,6 @@ members = [
   "packages/cw-orch-networks",
   "packages/cw-orch-osmosis-test-tube",
   "packages/cw-orch-traits",
-  # "contracts/*",
   "packages/macros/*",
   "packages/interchain/*",
 ]
