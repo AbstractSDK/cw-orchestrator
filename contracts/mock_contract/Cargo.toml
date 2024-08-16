@@ -17,11 +17,11 @@ interface = []
 
 [dependencies]
 cosmwasm-std = { workspace = true }
-cw2 = { version = "1.1.2" }
+cw2 = { version = "2.0.0" }
 serde = { workspace = true }
 schemars = "0.8.10"
 serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
 cosmwasm-schema = "1.2"
 cw-orch = { path = "../../cw-orch" }
-cw-storage-plus = { version = "1.2.0" }
+cw-storage-plus = { workspace = true }

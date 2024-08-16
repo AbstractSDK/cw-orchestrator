@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 use cw_multi_test::{
     ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
-    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailing, WasmKeeper,
 };
 use serde::Serialize;
 
@@ -27,7 +27,7 @@ pub type MockApp<A = MockApi> = App<
     DistributionKeeper,
     IbcSimpleModule,
     GovFailingModule,
-    StargateFailingModule,
+    StargateFailing,
 >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
@@ -50,10 +50,10 @@ pub type MockApp<A = MockApi> = App<
 /// let mock: Mock = Mock::new("sender");
 ///
 /// // set a balance
-/// mock.set_balance("sender", vec![coin(100u128, "token")]).unwrap();
+/// mock.set_balance(&mock.sender_addr(), vec![coin(100u128, "token")]).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = mock.query_balance("sender", "token").unwrap();
+/// let balance: Uint128 = mock.query_balance(&mock.sender_addr(), "token").unwrap();
 /// assert_eq!(balance.u128(), 100u128);
 /// ```
 ///
@@ -295,16 +295,16 @@ mod test {
 
     #[test]
     fn mock() {
-        let recipient = BALANCE_ADDR;
-        let sender = SENDER;
-        let chain = Mock::new(sender);
+        let chain = MockBech32::new(SENDER);
+        let sender = chain.sender_addr();
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
 
         chain
-            .set_balance(recipient, vec![Coin::new(amount, denom)])
+            .set_balance(&recipient, vec![Coin::new(amount, denom)])
             .unwrap();
-        let balance = chain.query_balance(recipient, denom).unwrap();
+        let balance = chain.query_balance(&recipient, denom).unwrap();
 
         asserting("address balance amount is correct")
             .that(&amount)
@@ -349,7 +349,7 @@ mod test {
             )
             .unwrap();
 
-        asserting("that exect passed on correctly")
+        asserting("that exec passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
             .is_equal_to(String::from("mint"));
 
@@ -366,7 +366,8 @@ mod test {
             .that(&query_res.attributes[1].value)
             .is_equal_to(String::from("0"));
 
-        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg {}, 1, &contract_address);
+        let migrate_msg = Empty {}; // cw20_base::msg::MigrateMsg{} Doesn't implement fmt::Debug
+        let migration_res = chain.migrate(&migrate_msg, 1, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
             .is_ok();
@@ -377,15 +378,15 @@ mod test {
         let mock_state = MockState::new();
         let chain = Mock::new_custom(SENDER, mock_state);
 
-        let recipient = BALANCE_ADDR;
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
 
         chain
-            .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
+            .set_balances(&[(recipient.clone(), &[Coin::new(amount, denom)])])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances length is 1")
             .that(&balances.len())
             .is_equal_to(1);
@@ -420,19 +421,19 @@ mod test {
     #[test]
     fn add_balance() {
         let chain = Mock::new(SENDER);
-        let recipient = BALANCE_ADDR;
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
 
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_1)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_1)])
             .unwrap();
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_2)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_2)])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances added")
             .that(&balances)
             .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
@@ -442,13 +443,12 @@ mod test {
     fn bank_querier_works() -> Result<(), CwEnvError> {
         let denom = "urandom";
         let init_coins = coins(45, denom);
-        let sender = "sender";
-        let app = Mock::new(sender);
+        let app = Mock::new(SENDER);
+        let sender = &app.sender;
         app.set_balance(sender, init_coins.clone())?;
-        let sender = app.sender.clone();
         assert_eq!(
             app.bank_querier()
-                .balance(sender.clone(), Some(denom.to_string()))?,
+                .balance(sender, Some(denom.to_string()))?,
             init_coins
         );
         assert_eq!(

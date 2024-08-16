@@ -4,7 +4,7 @@ use cw_orch::prelude::*;
 pub trait BankModule: TxHandler {
     fn send(
         &self,
-        receiver: &str,
+        receiver: &Addr,
         funds: Vec<Coin>,
     ) -> Result<<Self as TxHandler>::Response, <Self as TxHandler>::Error>;
 }
@@ -12,7 +12,7 @@ pub trait BankModule: TxHandler {
 impl BankModule for Mock {
     fn send(
         &self,
-        receiver: &str,
+        receiver: &Addr,
         funds: Vec<Coin>,
     ) -> Result<<Self as TxHandler>::Response, <Self as TxHandler>::Error> {
         let app_responses = self
@@ -33,10 +33,10 @@ impl BankModule for Mock {
 impl BankModule for Daemon {
     fn send(
         &self,
-        recipient: &str,
+        recipient: &Addr,
         funds: Vec<Coin>,
     ) -> Result<<Self as TxHandler>::Response, <Self as TxHandler>::Error> {
         self.rt_handle
-            .block_on(self.sender().bank_send(recipient.as_ref(), funds))
+            .block_on(self.sender().bank_send(recipient, funds))
     }
 }

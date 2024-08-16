@@ -5,7 +5,7 @@ use super::{
     queriers::{bank::BankQuerier, QuerierGetter},
     CwEnv, TxHandler,
 };
-use cosmwasm_std::Coin;
+use cosmwasm_std::{Addr, Coin};
 use cw_utils::NativeBalance;
 
 pub trait MutCwEnv: BankSetter + CwEnv {}
@@ -17,19 +17,17 @@ pub trait BankSetter: TxHandler + QuerierGetter<Self::T> {
 
     fn set_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error>;
 
     fn add_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        let address = address.into();
         // Query the current balance of the account
-        let current_balance =
-            QuerierGetter::<Self::T>::querier(self).balance(address.clone(), None)?;
+        let current_balance = QuerierGetter::<Self::T>::querier(self).balance(address, None)?;
         let future_balance = NativeBalance(current_balance) + NativeBalance(amount);
         // Set the balance with more funds
         self.set_balance(address, future_balance.into_vec())?;

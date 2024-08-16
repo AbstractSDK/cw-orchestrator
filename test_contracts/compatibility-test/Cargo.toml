@@ -24,6 +24,6 @@ thiserror = { version = "1.0.21" }
 cosmwasm-schema = "1.2"
 # This version should not be a path dependency and be kept to the last cw-orch version (beyond v0.23)
 # Keeping a different package until v0.23 to avoid package conflicts
-cw-orch = { package = "aaa-test-cw-orch", version = "0.22" }
+cw-orch = { package = "aaa-test-cw-orch", version = "0.25" }
 # Keep the old-cw-orch version to 0.22 for backwards compatibility
-old-cw-orch = { package = "cw-orch", version = "0.22" }
+old-cw-orch = { package = "cw-orch", version = "0.24" }

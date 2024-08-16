@@ -4,8 +4,7 @@ pub use wasm_path::WasmPath;
 
 mod wasm_path {
     use crate::error::CwEnvError;
-    use cosmwasm_std::{ensure_eq, HexBinary};
-    use sha2::{Digest, Sha256};
+    use cosmwasm_std::{ensure_eq, Checksum};
     use std::{
         io::Read,
         path::{Path, PathBuf},
@@ -23,7 +22,7 @@ mod wasm_path {
     /// let wasm_path: WasmPath = WasmPath::new("path/to/contract.wasm").unwrap();
     ///
     /// // Calculate the checksum of the WASM file.
-    /// let checksum: cosmwasm_std::HexBinary = wasm_path.checksum().unwrap();
+    /// let checksum: cosmwasm_std::Checksum = wasm_path.checksum().unwrap();
     /// ```
     #[derive(Debug, Clone)]
     pub struct WasmPath(PathBuf);
@@ -51,12 +50,11 @@ mod wasm_path {
         }
 
         /// Calculate the checksum of the WASM file.
-        pub fn checksum(&self) -> Result<HexBinary, CwEnvError> {
+        pub fn checksum(&self) -> Result<Checksum, CwEnvError> {
             let mut file = std::fs::File::open(self.path())?;
             let mut wasm = Vec::<u8>::new();
             file.read_to_end(&mut wasm)?;
-            let checksum: [u8; 32] = Sha256::digest(wasm).into();
-            Ok(checksum.into())
+            Ok(Checksum::generate(&wasm))
         }
     }
 }

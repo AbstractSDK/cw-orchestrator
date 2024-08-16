@@ -1,6 +1,7 @@
 use std::{str::FromStr, sync::Arc};
 
 use cosmrs::AccountId;
+use cosmwasm_std::Addr;
 use cw_orch_core::environment::ChainInfoOwned;
 
 use crate::{DaemonError, Wallet};
@@ -11,8 +12,8 @@ use super::{builder::SenderBuilder, CosmosSender};
 #[derive(Default, Clone)]
 #[non_exhaustive]
 pub struct CosmosOptions {
-    pub authz_granter: Option<String>,
-    pub fee_granter: Option<String>,
+    pub authz_granter: Option<Addr>,
+    pub fee_granter: Option<Addr>,
     pub hd_index: Option<u32>,
     /// Used to derive the private key
     pub(crate) key: CosmosWalletKey,
@@ -29,23 +30,23 @@ pub enum CosmosWalletKey {
 impl CosmosOptions {
     pub fn check(&self) -> Result<(), DaemonError> {
         if let Some(addr) = &self.authz_granter {
-            AccountId::from_str(addr)?;
+            AccountId::from_str(addr.as_str())?;
         }
 
         if let Some(addr) = &self.fee_granter {
-            AccountId::from_str(addr)?;
+            AccountId::from_str(addr.as_str())?;
         }
 
         Ok(())
     }
 
-    pub fn authz_granter(mut self, granter: impl ToString) -> Self {
-        self.authz_granter = Some(granter.to_string());
+    pub fn authz_granter(mut self, granter: &Addr) -> Self {
+        self.authz_granter = Some(granter.clone());
         self
     }
 
-    pub fn fee_granter(mut self, granter: impl ToString) -> Self {
-        self.fee_granter = Some(granter.to_string());
+    pub fn fee_granter(mut self, granter: &Addr) -> Self {
+        self.fee_granter = Some(granter.clone());
         self
     }
 
@@ -54,25 +55,25 @@ impl CosmosOptions {
         self
     }
 
-    pub fn mnemonic(mut self, mnemonic: impl ToString) -> Self {
-        self.key = CosmosWalletKey::Mnemonic(mnemonic.to_string());
+    pub fn mnemonic(mut self, mnemonic: impl Into<String>) -> Self {
+        self.key = CosmosWalletKey::Mnemonic(mnemonic.into());
         self
     }
 
-    pub fn set_authz_granter(&mut self, granter: impl ToString) {
-        self.authz_granter = Some(granter.to_string());
+    pub fn set_authz_granter(&mut self, granter: &Addr) {
+        self.authz_granter = Some(granter.clone());
     }
 
-    pub fn set_fee_granter(&mut self, granter: impl ToString) {
-        self.fee_granter = Some(granter.to_string());
+    pub fn set_fee_granter(&mut self, granter: &Addr) {
+        self.fee_granter = Some(granter.clone());
     }
 
     pub fn set_hd_index(&mut self, index: u32) {
         self.hd_index = Some(index);
     }
 
-    pub fn set_mnemonic(&mut self, mnemonic: impl ToString) {
-        self.key = CosmosWalletKey::Mnemonic(mnemonic.to_string());
+    pub fn set_mnemonic(&mut self, mnemonic: impl Into<String>) {
+        self.key = CosmosWalletKey::Mnemonic(mnemonic.into());
     }
 }
 

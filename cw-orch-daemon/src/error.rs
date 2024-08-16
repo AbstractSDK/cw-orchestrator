@@ -122,6 +122,8 @@ pub enum DaemonError {
     QuerierNeedRuntime,
     #[error(transparent)]
     Instantiate2Error(#[from] Instantiate2AddressError),
+    #[error(transparent)]
+    CheckSum(#[from] cosmwasm_std::ChecksumError),
     #[error("Error opening file {0},err: ({1})")]
     OpenFile(String, String),
     #[error("State file {0} already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder")]

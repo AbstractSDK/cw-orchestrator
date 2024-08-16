@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-interchain"
-version = "0.3.1"
+version = "0.4.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -35,15 +35,15 @@ ibc-relayer-types.workspace = true
 
 #Used only for testing
 cosmwasm-std.workspace = true
-cw1 = "1.1.0"
-cw1-whitelist = "1.1.0"
+cw1 = "2.0.0"
+cw1-whitelist = "2.0.0"
 speculoos.workspace = true
 
 [dev-dependencies]
 cw-orch = { workspace = true, features = ["daemon"] }
 cw-orch-interchain = { path = ".", features = ["daemon"] }
-simple-ica-controller = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
-simple-ica-host = { git = "https://github.com/confio/cw-ibc-demo.git", rev = "ce31127" }
+simple-ica-controller = { git = "https://github.com/Buckram123/cw-ibc-demo.git", rev = "2cc3c14" }
+simple-ica-host = { git = "https://github.com/Buckram123/cw-ibc-demo.git", rev = "2cc3c14" }
 clap = { version = "4.4.4", features = ["derive"] }
 dotenv = "0.15.0"
 env_logger = "0.10.0"
