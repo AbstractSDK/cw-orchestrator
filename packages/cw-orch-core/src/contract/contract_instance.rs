@@ -40,14 +40,6 @@ impl<Chain> Contract<Chain> {
         }
     }
 
-    #[deprecated(
-        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
-    )]
-    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
-    pub fn get_chain(&self) -> &Chain {
-        self.environment()
-    }
-
     // This should use the `Environment` trait, but it's not possible due to
     // `downstream crates may implement trait `contract::interface_traits::ContractInstance<_>` for type `contract::contract_instance::Contract<_>`
     /// Retrieves the underlying chain used for execution
