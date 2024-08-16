@@ -115,7 +115,7 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
 
     // get the account information
     let remote_account = remote_accounts.accounts[0].clone();
-    let remote_addr = remote_account.remote_addr.unwrap();
+    let remote_addr = Addr::unchecked(remote_account.remote_addr.unwrap());
     let channel = remote_account.channel_id;
 
     // send some funds to the remote account

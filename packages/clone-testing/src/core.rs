@@ -465,7 +465,7 @@ impl BankSetter for CloneTesting {
     type T = CloneBankQuerier;
     fn set_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(&Addr::unchecked(address), amount)

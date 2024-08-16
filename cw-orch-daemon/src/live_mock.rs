@@ -88,7 +88,8 @@ impl WasmMockQuerier {
 
                         let query_result: Result<Binary, _> = handle
                             .block_on(
-                                querier._contract_state(contract_addr.to_string(), msg.to_vec()),
+                                querier
+                                    ._contract_state(&Addr::unchecked(contract_addr), msg.to_vec()),
                             )
                             .map(|query_result| query_result.into());
                         SystemResult::Ok(ContractResult::from(query_result))
@@ -96,7 +97,7 @@ impl WasmMockQuerier {
                     WasmQuery::Raw { contract_addr, key } => {
                         // We forward the request to the cosmwasm querie
                         let query_result = querier
-                            .raw_query(contract_addr.to_string(), key.to_vec())
+                            .raw_query(&Addr::unchecked(contract_addr), key.to_vec())
                             .map(|query_result| query_result.into());
 
                         SystemResult::Ok(ContractResult::from(query_result))
@@ -114,15 +115,16 @@ impl WasmMockQuerier {
                 };
                 match x {
                     BankQuery::Balance { address, denom } => {
-                        let query_result =
-                            querier.balance(address, Some(denom.clone())).map(|result| {
+                        let query_result = querier
+                            .balance(&Addr::unchecked(address), Some(denom.clone()))
+                            .map(|result| {
                                 to_json_binary(&BalanceResponse::new(result[0].clone())).unwrap()
                             });
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     BankQuery::AllBalances { address } => {
                         let query_result = querier
-                            .balance(address, None)
+                            .balance(&Addr::unchecked(address), None)
                             .map(AllBalanceResponse::new)
                             .map(|query_result| to_json_binary(&query_result))
                             .unwrap();
@@ -151,7 +153,9 @@ impl WasmMockQuerier {
                     // TODO, do better here
                     StakingQuery::AllDelegations { delegator } => {
                         let query_result = handle
-                            .block_on(querier._delegator_delegations(delegator, None))
+                            .block_on(
+                                querier._delegator_delegations(&Addr::unchecked(delegator), None),
+                            )
                             .map(|result| {
                                 AllDelegationsResponse::new(
                                     result

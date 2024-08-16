@@ -386,10 +386,10 @@ impl AsyncWasmQuerier for DaemonAsync {
     /// Query a contract.
     fn smart_query<Q: Serialize + Sync, T: DeserializeOwned>(
         &self,
-        address: impl Into<String> + Send,
+        address: &Addr,
         query_msg: &Q,
     ) -> impl std::future::Future<Output = Result<T, DaemonError>> + Send {
-        let query_data = serde_json::to_vec(&query_msg).unwrap();
+        let query_data = serde_json::to_vec(query_msg).unwrap();
         async {
             let mut client =
                 cosmos_modules::cosmwasm::query_client::QueryClient::new(self.channel());

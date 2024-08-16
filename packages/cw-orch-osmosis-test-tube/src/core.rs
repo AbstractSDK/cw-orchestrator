@@ -307,7 +307,7 @@ impl BankSetter for OsmosisTestTube {
     /// It's impossible to set the balance of an address directly in OsmosisTestTube
     fn set_balance(
         &mut self,
-        _address: impl Into<String>,
+        _address: &Addr,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         unimplemented!();
@@ -315,7 +315,7 @@ impl BankSetter for OsmosisTestTube {
 
     fn add_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         let mut all_coins: Coins = amount.clone().try_into().unwrap();

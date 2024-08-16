@@ -156,7 +156,7 @@ impl<S: StateInterface> BankSetter for MockBech32<S> {
 
     fn set_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(&Addr::unchecked(address), amount)
@@ -175,7 +175,7 @@ mod test {
 
         let address = mock.addr_make_with_balance("sender", coins(42765, "ujuno"))?;
 
-        let balance = mock.bank_querier().balance(address, None)?;
+        let balance = mock.bank_querier().balance(&address, None)?;
 
         assert_eq!(balance, coins(42765, "ujuno"));
 

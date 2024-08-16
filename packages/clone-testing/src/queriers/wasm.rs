@@ -44,10 +44,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     }
 
     /// Returns the code_info structure of the provided contract
-    fn contract_info(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
+    fn contract_info(&self, address: &Addr) -> Result<ContractInfoResponse, CwEnvError> {
         let info = self.app.borrow().wrap().query_wasm_contract_info(address)?;
         Ok(info)
     }
@@ -62,11 +59,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
         Ok(hash.into())
     }
 
-    fn raw_query(
-        &self,
-        address: impl Into<String>,
-        query_data: Vec<u8>,
-    ) -> Result<Vec<u8>, Self::Error> {
+    fn raw_query(&self, address: &Addr, query_data: Vec<u8>) -> Result<Vec<u8>, Self::Error> {
         let block = self.app.borrow().block_info();
         Ok(self
             .app
@@ -86,11 +79,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
             .to_vec())
     }
 
-    fn smart_query<Q, T>(
-        &self,
-        address: impl Into<String>,
-        query_data: &Q,
-    ) -> Result<T, Self::Error>
+    fn smart_query<Q, T>(&self, address: &Addr, query_data: &Q) -> Result<T, Self::Error>
     where
         T: DeserializeOwned,
         Q: Serialize,
@@ -115,7 +104,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     fn instantiate2_addr(
         &self,
         code_id: u64,
-        creator: impl Into<String>,
+        creator: &Addr,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, Self::Error> {
         // Clone Testing needs mock

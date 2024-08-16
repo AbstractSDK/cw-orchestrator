@@ -262,6 +262,7 @@ mod test {
     fn hd_index_re_generates_sender() -> anyhow::Result<()> {
         let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
+            .is_test(true)
             .build()
             .unwrap();
 

@@ -31,7 +31,7 @@ fn mock_transfer() -> cw_orch::anyhow::Result<()> {
         .get_ordered_ports_from("juno-1")
         .unwrap();
 
-    juno.add_balance(juno.sender_addr().to_string(), vec![coin(100_000, "ujuno")])
+    juno.add_balance(&juno.sender_addr(), vec![coin(100_000, "ujuno")])
         .unwrap();
     let tx_resp = juno
         .app

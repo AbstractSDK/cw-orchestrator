@@ -21,7 +21,7 @@ fn mock_ica_demo() -> cw_orch::anyhow::Result<()> {
 
     let juno = interchain.get_chain(JUNO)?;
     // We need to add balance to the JUNO chain
-    juno.add_balance(juno.sender_addr(), coins(100_000, JUNO_FUNDS_DENOM))?;
+    juno.add_balance(&juno.sender_addr(), coins(100_000, JUNO_FUNDS_DENOM))?;
 
     common::ica_demo::full_ica_test(&interchain, JUNO, OSMOSIS, JUNO_FUNDS_DENOM)?;
 

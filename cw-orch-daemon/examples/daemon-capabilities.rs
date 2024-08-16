@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
-use cosmwasm_std::coins;
+use cosmwasm_std::{coins, Addr};
 // ANCHOR: full_counter_example
 use cw_orch_daemon::senders::tx::TxSender;
 use cw_orch_daemon::DaemonBuilder;
@@ -22,7 +22,10 @@ pub fn main() -> anyhow::Result<()> {
     let wallet = daemon.sender();
 
     let rt = daemon.rt_handle.clone();
-    rt.block_on(wallet.bank_send("<address-of-my-sister>", coins(345, "ujunox")))?;
+    rt.block_on(wallet.bank_send(
+        &Addr::unchecked("<address-of-my-sister>"),
+        coins(345, "ujunox"),
+    ))?;
     // ANCHOR_END: send_tx
 
     // ANCHOR: cosmrs_tx
