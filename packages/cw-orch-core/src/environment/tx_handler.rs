@@ -1,14 +1,10 @@
 //! Transactional traits for execution environments.
 
-use super::{queriers::QueryHandler, ChainState, IndexResponse};
+use super::{ChainState, IndexResponse};
 use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
 use cosmwasm_std::{Addr, Binary, Coin};
 use serde::Serialize;
 use std::fmt::Debug;
-
-/// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + QueryHandler + Clone {}
-impl<T: TxHandler + QueryHandler + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
