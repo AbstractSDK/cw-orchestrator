@@ -291,6 +291,14 @@ pub mod test {
         fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
             unimplemented!()
         }
+
+        fn remove_address(&mut self, _contract_id: &str) {
+            todo!()
+        }
+
+        fn remove_code_id(&mut self, _contract_id: &str) {
+            todo!()
+        }
     }
 
     fn associated_querier_error<T: QueryHandler>(t: T) -> anyhow::Result<()> {

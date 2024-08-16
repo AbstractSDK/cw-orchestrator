@@ -20,7 +20,7 @@ pub enum CwEnvError {
     AddrNotInStore(String),
     #[error(transparent)]
     IOErr(#[from] ::std::io::Error),
-    #[error("JSON Conversion Error")]
+    #[error(transparent)]
     SerdeJson(#[from] ::serde_json::Error),
     #[error(transparent)]
     EnvvarError(#[from] env::VarError),
