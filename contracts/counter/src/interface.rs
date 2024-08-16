@@ -60,7 +60,7 @@ impl CounterContract<Daemon> {
 
         // Instantiate the contract
         let msg = InstantiateMsg { count: 1i32 };
-        contract.instantiate(&msg, None, None).unwrap();
+        contract.instantiate(&msg, None, &[]).unwrap();
 
         Ok(())
     }

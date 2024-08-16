@@ -68,7 +68,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
 
         contract.increment()?;
@@ -114,7 +114,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
         contract.increment()?;
 
@@ -123,7 +123,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
         contract.increment()?;
         contract.increment()?;
@@ -135,7 +135,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
         contract.increment()?;
         contract.increment()?;

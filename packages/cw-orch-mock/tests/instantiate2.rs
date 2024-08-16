@@ -26,7 +26,7 @@ fn instantiate2() -> anyhow::Result<()> {
         Binary::from(salt.clone()),
     )?;
 
-    mock_contract.instantiate2(&InstantiateMsg {}, None, None, Binary::new(salt.clone()))?;
+    mock_contract.instantiate2(&InstantiateMsg {}, None, &[], Binary::new(salt.clone()))?;
 
     let addr = mock_contract.address()?;
 

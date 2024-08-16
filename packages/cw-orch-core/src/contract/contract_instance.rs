@@ -132,7 +132,7 @@ impl<Chain: TxHandler> Contract<Chain> {
     pub fn execute<E: Serialize + Debug>(
         &self,
         msg: &E,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -149,9 +149,7 @@ impl<Chain: TxHandler> Contract<Chain> {
             log_serialize_message(msg)?
         );
 
-        let resp = self
-            .chain
-            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
+        let resp = self.chain.execute(msg, coins, &self.address()?);
 
         log::info!(
             target: &contract_target(),
@@ -175,7 +173,7 @@ impl<Chain: TxHandler> Contract<Chain> {
         &self,
         msg: &I,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -192,13 +190,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-            )
+            .instantiate(self.code_id()?, msg, Some(&self.id), admin, coins)
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
 
@@ -225,7 +217,7 @@ impl<Chain: TxHandler> Contract<Chain> {
         &self,
         msg: &I,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
@@ -243,14 +235,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate2(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-                salt,
-            )
+            .instantiate2(self.code_id()?, msg, Some(&self.id), admin, coins, salt)
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
 

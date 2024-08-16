@@ -92,8 +92,8 @@ mod test {
 
         contract.upload()?;
         contract_ordered.upload()?;
-        contract.instantiate(&Empty {}, None, None)?;
-        contract_ordered.instantiate(&Empty {}, None, None)?;
+        contract.instantiate(&Empty {}, None, &[])?;
+        contract_ordered.instantiate(&Empty {}, None, &[])?;
 
         contract.test(5u64, "test")?;
         contract_ordered.test("test".to_string(), 5u64)?;

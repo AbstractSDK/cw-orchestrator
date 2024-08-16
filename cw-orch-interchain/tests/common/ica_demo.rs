@@ -94,9 +94,9 @@ fn deploy_contracts<Chain: CwEnv>(
             cw1_code_id: cw1.code_id()?,
         },
         None,
-        None,
+        &[],
     )?;
-    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
+    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, &[])?;
     Ok(())
 }
 
@@ -142,7 +142,7 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
             })],
             callback_id: None,
         },
-        None,
+        &[],
     )?;
 
     let chain_id = controller

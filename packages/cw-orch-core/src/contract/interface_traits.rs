@@ -107,7 +107,7 @@ pub trait CwOrchExecute<Chain: TxHandler>: ExecutableContract + ContractInstance
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().execute(&execute_msg, coins)
     }
@@ -124,7 +124,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
@@ -135,7 +135,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()

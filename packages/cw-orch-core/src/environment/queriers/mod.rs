@@ -38,7 +38,7 @@ pub trait QueryHandler: DefaultQueriers {
     }
 
     /// Send a QueryMsg to a contract.
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    fn query<Q: Serialize + Debug, T: DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
@@ -215,6 +215,10 @@ pub mod test {
         }
 
         fn data(&self) -> Option<Binary> {
+            unimplemented!()
+        }
+
+        fn event_attr_values(&self, _event_type: &str, _attr_key: &str) -> Vec<String> {
             unimplemented!()
         }
     }
