@@ -293,11 +293,11 @@ pub mod test {
         }
 
         fn remove_address(&mut self, _contract_id: &str) {
-            todo!()
+            unimplemented!()
         }
 
         fn remove_code_id(&mut self, _contract_id: &str) {
-            todo!()
+            unimplemented!()
         }
     }
 
