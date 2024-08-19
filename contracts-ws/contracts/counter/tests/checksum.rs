@@ -7,7 +7,7 @@ fn checksum() {
     use std::io::{self, BufRead};
     use std::path::Path;
 
-    let path = Path::new("../../artifacts/checksums.txt");
+    let path = Path::new("../../../artifacts/checksums.txt");
     let file = File::open(path).unwrap();
     let lines = io::BufReader::new(file).lines();
     let mut found = false;

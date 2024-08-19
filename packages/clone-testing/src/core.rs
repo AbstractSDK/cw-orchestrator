@@ -474,8 +474,6 @@ impl BankSetter for CloneTesting {
 
 #[cfg(test)]
 mod test {
-    use std::{path::PathBuf, str::FromStr};
-
     use crate::core::*;
     use clone_cw_multi_test::LOCAL_RUST_CODE_OFFSET;
     use cosmwasm_std::{
@@ -518,9 +516,7 @@ mod test {
     }
     impl Uploadable for MockCw20 {
         fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
-            let path = PathBuf::from_str(env!("CARGO_MANIFEST_DIR")).unwrap();
-            let path = path.join("../../artifacts/cw20_base.wasm");
-            WasmPath::new(path).unwrap()
+            unimplemented!()
         }
 
         fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {

@@ -95,9 +95,9 @@ cw-orch-mock = { workspace = true }
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
 env_logger = "0.11.5"
 cosmwasm-schema = "2.1"
-counter-contract = { path = "../contracts/counter" }
-mock-contract = { path = "../contracts/mock_contract" }
-mock-contract-u64 = { path = "../contracts/mock_contract_u64" }
+counter-contract = { path = "../contracts-ws/contracts/counter" }
+mock-contract = { path = "../contracts-ws/contracts/mock_contract" }
+mock-contract-u64 = { path = "../contracts-ws/contracts/mock_contract_u64" }
 serde_json = { workspace = true }
 dotenv = "0.15.0"
 osmosis-std = "0.25.0"
