@@ -1,4 +1,4 @@
-// Osmosis haven't bumped prost yet.
+// TODO: Osmosis haven't bumped prost yet.
 
 // use cosmwasm_std::coins;
 // use counter_contract::{

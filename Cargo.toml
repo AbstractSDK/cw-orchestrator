@@ -6,6 +6,7 @@ members = [
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
+  # TODO: release those 3 after osmosis-std reaches to prost 0.13
   # "packages/clone-testing",
   # "packages/cw-orch-osmosis-test-tube",
   # "packages/cw-orch-neutron-test-tube",
@@ -14,7 +15,10 @@ members = [
   "packages/macros/*",
   "packages/interchain/*",
 ]
-exclude = ["test_contracts/compatibility-test", "packages/interchain/proto"]
+exclude = [
+  "test_contracts/compatibility-test",
+  "packages/interchain/proto",         # TODO: Release cw-orch-proto after osmosis-std reaches prost 0.13
+]
 resolver = "2"
 
 [workspace.package]
@@ -62,7 +66,7 @@ cw-orch-interchain-core = { path = "packages/interchain/interchain-core", versio
 cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.5.0" }
 cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.5.0" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.5.0" }
-#cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" } # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory)
+# cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" } # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory)
 
 #Clone Testing
 # cw-orch-clone-testing = { version = "0.6.1", path = "packages/clone-testing" }
