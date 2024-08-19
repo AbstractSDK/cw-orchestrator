@@ -1,4 +1,4 @@
-//! Rust implementation for interacting with a faucet similar to https://github.com/cosmos/cosmjs/tree/main/packages/faucet
+//! Rust implementation for interacting with a faucet similar to <https://github.com/cosmos/cosmjs/tree/main/packages/faucet>
 use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
 

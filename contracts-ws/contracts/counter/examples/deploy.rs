@@ -17,7 +17,6 @@ pub fn main() -> anyhow::Result<()> {
     // ANCHOR_END: chain_construction
 
     // ANCHOR: contract_interaction
-
     let counter = CounterContract::new(chain);
 
     // ANCHOR: clean_example
