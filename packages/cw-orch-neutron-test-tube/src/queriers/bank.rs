@@ -2,7 +2,7 @@ use crate::{map_err, NeutronTestTube};
 
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::coin;
+use cosmwasm_std::{coin, Addr};
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter, StateInterface};
 use cw_orch_core::CwEnvError;
 use neutron_test_tube::{
@@ -41,7 +41,7 @@ impl<S: StateInterface> QuerierGetter<NeutronTestTubeBankQuerier> for NeutronTes
 impl BankQuerier for NeutronTestTubeBankQuerier {
     fn balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         if let Some(denom) = denom {

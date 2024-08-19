@@ -63,7 +63,7 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
 /// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = tube.query_balance(&account.address(), "uatom").unwrap();
+/// let balance: Uint128 = tube.query_balance(&Addr::unchecked(account.address()), "uatom").unwrap();
 /// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
@@ -115,14 +115,14 @@ impl<S: StateInterface> NeutronTestTube<S> {
     /// Sends coins a specific address
     pub fn bank_send(
         &self,
-        to: String,
+        to: &Addr,
         amount: Vec<cosmwasm_std::Coin>,
     ) -> Result<AppResponse, CwEnvError> {
         let send_response = Bank::new(&*self.app.borrow())
             .send(
                 MsgSend {
                     from_address: self.sender.address(),
-                    to_address: to,
+                    to_address: to.to_string(),
                     amount: cosmwasm_to_proto_coins(amount),
                 },
                 &self.sender,
@@ -130,14 +130,14 @@ impl<S: StateInterface> NeutronTestTube<S> {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(send_response.raw_data)),
+            data: Some(Binary::new(send_response.raw_data)),
             events: send_response.events,
         })
     }
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwEnvError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
         let amount = self
             .bank_querier()
             .balance(address, Some(denom.to_string()))?;
@@ -145,7 +145,10 @@ impl<S: StateInterface> NeutronTestTube<S> {
     }
 
     /// Fetch all the balances of an address.
-    pub fn query_all_balances(&self, address: &str) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
+    pub fn query_all_balances(
+        &self,
+        address: &Addr,
+    ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         let amount = self.bank_querier().balance(address, None)?;
         Ok(amount)
     }
@@ -193,8 +196,8 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
     type Response = AppResponse;
     type Sender = Rc<SigningAccount>;
 
-    fn sender(&self) -> Addr {
-        self.sender_addr()
+    fn sender(&self) -> &Self::Sender {
+        &self.sender
     }
 
     fn sender_addr(&self) -> Addr {
@@ -212,7 +215,7 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(upload_response.raw_data)),
+            data: Some(Binary::new(upload_response.raw_data)),
             events: upload_response.events,
         })
     }
@@ -223,12 +226,13 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, CwEnvError> {
+        let coins = cosmwasm_to_neutron_coins(coins);
         let execute_response = Wasm::new(&*self.app.borrow())
-            .execute(contract_address.as_ref(), exec_msg, coins, &self.sender)
+            .execute(contract_address.as_ref(), exec_msg, &coins, &self.sender)
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(execute_response.raw_data)),
+            data: Some(Binary::new(execute_response.raw_data)),
             events: execute_response.events,
         })
     }
@@ -241,19 +245,21 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwEnvError> {
+        let coins = cosmwasm_to_neutron_coins(coins);
+
         let instantiate_response = Wasm::new(&*self.app.borrow())
             .instantiate(
                 code_id,
                 init_msg,
                 admin.map(|a| a.to_string()).as_deref(),
                 label,
-                coins,
+                &coins,
                 &self.sender,
             )
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(instantiate_response.raw_data)),
+            data: Some(Binary::new(instantiate_response.raw_data)),
             events: instantiate_response.events,
         })
     }
@@ -280,6 +286,20 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
     }
 }
 
+fn cosmwasm_to_neutron_coins(
+    coins: &[cosmwasm_std::Coin],
+) -> Vec<neutron_test_tube::neutron_std::types::cosmos::base::v1beta1::Coin> {
+    coins
+        .iter()
+        .map(
+            |m| neutron_test_tube::neutron_std::types::cosmos::base::v1beta1::Coin {
+                denom: m.denom.to_string(),
+                amount: m.amount.to_string(),
+            },
+        )
+        .collect()
+}
+
 /// Gas Fee token for NeutronTestTube, used in BankSetter
 pub const GAS_TOKEN: &str = "untrn";
 
@@ -289,7 +309,7 @@ impl BankSetter for NeutronTestTube {
     /// It's impossible to set the balance of an address directly in NeutronTestTube
     fn set_balance(
         &mut self,
-        _address: impl Into<String>,
+        _address: &Addr,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         unimplemented!();
@@ -297,7 +317,7 @@ impl BankSetter for NeutronTestTube {
 
     fn add_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         let mut all_coins: Coins = amount.clone().try_into().unwrap();
@@ -306,8 +326,7 @@ impl BankSetter for NeutronTestTube {
 
         let new_account = self.init_account(all_coins.into())?;
 
-        self.call_as(&new_account)
-            .bank_send(address.into(), amount)?;
+        self.call_as(&new_account).bank_send(address, amount)?;
 
         Ok(())
 
@@ -328,7 +347,7 @@ impl Stargate for NeutronTestTube {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(tx_response.raw_data)),
+            data: Some(Binary::new(tx_response.raw_data)),
             events: tx_response.events,
         })
     }
@@ -355,7 +374,7 @@ pub mod tests {
         contract.instantiate(
             &InstantiateMsg { count: 7 },
             Some(&Addr::unchecked(app.sender.address())),
-            None,
+            &[],
         )?;
 
         assert_eq!(
@@ -363,12 +382,14 @@ pub mod tests {
             app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
-        let contract_info = app.wasm_querier().contract_info(contract.addr_str()?)?;
-        let mut target_contract_info = ContractInfoResponse::default();
-        target_contract_info.admin = Some(app.sender.address().to_string());
-        target_contract_info.code_id = contract.code_id()?;
-        target_contract_info.creator = app.sender.address().to_string();
-        target_contract_info.ibc_port = None;
+        let contract_info = app.wasm_querier().contract_info(&contract.address()?)?;
+        let target_contract_info = ContractInfoResponse::new(
+            contract.code_id()?,
+            app.sender_addr(),
+            Some(app.sender_addr()),
+            false,
+            None,
+        );
         assert_eq!(contract_info, target_contract_info);
 
         Ok(())
@@ -379,10 +400,10 @@ pub mod tests {
         let denom = "urandom";
         let init_coins = coins(45, denom);
         let app = NeutronTestTube::new(init_coins.clone());
-        let sender = app.sender.address();
+        let sender = Addr::unchecked(app.sender.address());
         assert_eq!(
             app.bank_querier()
-                .balance(sender.clone(), Some(denom.to_string()))?,
+                .balance(&sender, Some(denom.to_string()))?,
             init_coins
         );
         assert_eq!(
@@ -399,15 +420,16 @@ pub mod tests {
         let mut app = NeutronTestTube::new(init_coins.clone());
 
         let account = app.init_account(coins(78, "uweird"))?;
+        let address = Addr::unchecked(account.address());
 
         let amount1 = 139823876u128;
         let amount2 = 1398212713563876u128;
         app.add_balance(
-            account.address(),
+            &address,
             vec![coin(amount1, GAS_TOKEN), coin(amount2, "uother")],
         )?;
 
-        let balance = app.bank_querier().balance(account.address(), None)?;
+        let balance = app.bank_querier().balance(&address, None)?;
 
         assert_eq!(
             balance,
