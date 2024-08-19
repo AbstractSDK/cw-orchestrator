@@ -18,24 +18,24 @@ cw-orch-core = { workspace = true }
 
 tokio = { workspace = true }
 
-async-recursion = "1.0.4"
-base64 = "0.21.2"
-cosmwasm-schema = "2.0.0"
-futures = "0.3.28"
+async-recursion = "1.1.1"
+base64 = "0.22.1"
+cosmwasm-schema = "2.1.3"
+futures = "0.3.30"
 ibc-relayer-types = { workspace = true }
-log = "0.4.19"
-log4rs = "1.2.0"
-thiserror = "1.0.44"
+log = "0.4.22"
+log4rs = "1.3.0"
+thiserror = "1.0.63"
 tonic = { workspace = true }
 cosmrs = { workspace = true }
-futures-util = "0.3.28"
-derive_builder = "0.12.0"
+futures-util = "0.3.30"
+derive_builder = "0.20.0"
 diff-struct = "0.5.3"
 serde_json = { workspace = true }
 
 cw-orch-interchain-core = { workspace = true, features = ["daemon"] }
 cw-orch-starship = { workspace = true }
-dialoguer = "0.10.4"
+dialoguer = "0.11.0"
 cosmwasm-std = { workspace = true }
 
 [dev-dependencies]

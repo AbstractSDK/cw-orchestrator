@@ -45,8 +45,12 @@ pub enum InterchainDaemonError {
 
     #[error("Configuration already registered for chain {0}")]
     AlreadyRegistered(String),
+
+    #[error(transparent)]
+    Dialoguer(#[from] dialoguer::Error),
 }
 
+// impl From
 impl From<InterchainDaemonError> for InterchainError {
     fn from(value: InterchainDaemonError) -> Self {
         InterchainError::GenericError(value.to_string())

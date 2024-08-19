@@ -1,5 +1,5 @@
 use crate::DaemonError;
-use bitcoin::bech32::{decode, encode, u5, FromBase32, ToBase32, Variant};
+use bech32::{decode, encode};
 use cw_orch_core::log::local_target;
 pub use ed25519_dalek::VerifyingKey as Ed25519;
 use ring::digest::{Context, SHA256};
@@ -7,6 +7,8 @@ use ripemd::{Digest as _, Ripemd160};
 use serde::{Deserialize, Serialize};
 static BECH32_PUBKEY_DATA_PREFIX_SECP256K1: [u8; 5] = [0xeb, 0x5a, 0xe9, 0x87, 0x21]; // "eb5ae98721";
 static BECH32_PUBKEY_DATA_PREFIX_ED25519: [u8; 5] = [0x16, 0x24, 0xde, 0x64, 0x20]; // "eb5ae98721";
+
+const VALOPER: &str = "valoper";
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 /// The public key we used to generate the cosmos/tendermind/terrad addresses
@@ -45,16 +47,9 @@ impl PublicKey {
     }
     /// Generate a Cosmos/Tendermint/Terrad Account
     pub fn from_account(acc_address: &str, prefix: &str) -> Result<PublicKey, DaemonError> {
-        PublicKey::check_prefix_and_length(prefix, acc_address, 44).and_then(|vu5| {
-            let vu8 =
-                Vec::from_base32(vu5.as_slice()).map_err(|source| DaemonError::Conversion {
-                    key: acc_address.into(),
-                    source,
-                })?;
-            Ok(PublicKey {
-                raw_pub_key: None,
-                raw_address: Some(vu8),
-            })
+        PublicKey::check_prefix_and_length(prefix, acc_address, 44).map(|vu8| PublicKey {
+            raw_pub_key: None,
+            raw_address: Some(vu8),
         })
     }
     /// build a public key from a tendermint public key
@@ -65,13 +60,7 @@ impl PublicKey {
         let len = tendermint_public_key.len();
         if len == 83 {
             PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
-                .and_then(|vu5| {
-                    let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
-                        DaemonError::Conversion {
-                            key: tendermint_public_key.into(),
-                            source,
-                        }
-                    })?;
+                .and_then(|vu8| {
                     log::debug!(target: &local_target(), "{:#?}", hex::encode(&vu8));
                     if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_SECP256K1) {
                         let public_key = PublicKey::public_key_from_pubkey(&vu8)?;
@@ -90,14 +79,7 @@ impl PublicKey {
             // todo!()
 
             PublicKey::check_prefix_and_length("terravalconspub", tendermint_public_key, len)
-                .and_then(|vu5| {
-                    let vu8 = Vec::from_base32(vu5.as_slice()).map_err(|source| {
-                        DaemonError::Conversion {
-                            key: tendermint_public_key.into(),
-                            source,
-                        }
-                    })?;
-                    //   log::debug!("{:#?}", hex::encode(&vu8));
+                .and_then(|vu8| {
                     log::error!("ED25519 public keys are not fully supported");
                     if vu8.starts_with(&BECH32_PUBKEY_DATA_PREFIX_ED25519) {
                         //   let public_key = PublicKey::pubkey_from_ed25519_public_key(&vu8);
@@ -133,16 +115,11 @@ impl PublicKey {
     }
     /// Generate a Operator address for this public key (used by the validator)
     pub fn from_operator_address(valoper_address: &str) -> Result<PublicKey, DaemonError> {
-        PublicKey::check_prefix_and_length("terravaloper", valoper_address, 51).and_then(|vu5| {
-            let vu8 =
-                Vec::from_base32(vu5.as_slice()).map_err(|source| DaemonError::Conversion {
-                    key: valoper_address.into(),
-                    source,
-                })?;
-            Ok(PublicKey {
+        PublicKey::check_prefix_and_length("terravaloper", valoper_address, 51).map(|vu8| {
+            PublicKey {
                 raw_pub_key: None,
                 raw_address: Some(vu8),
-            })
+            }
         })
     }
 
@@ -173,16 +150,16 @@ impl PublicKey {
         prefix: &str,
         data: &str,
         length: usize,
-    ) -> Result<Vec<u5>, DaemonError> {
-        let (hrp, decoded_str, _) = decode(data).map_err(|source| DaemonError::Conversion {
+    ) -> Result<Vec<u8>, DaemonError> {
+        let (hrp, decoded_str) = decode(data).map_err(|source| DaemonError::Conversion {
             key: data.into(),
             source,
         })?;
-        if hrp == prefix && data.len() == length {
+        if hrp.as_str() == prefix && data.len() == length {
             Ok(decoded_str)
         } else {
             Err(DaemonError::Bech32DecodeExpanded(
-                hrp,
+                hrp.to_string(),
                 data.len(),
                 prefix.into(),
                 length,
@@ -294,100 +271,41 @@ impl PublicKey {
     pub fn account(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_address {
             Some(raw) => {
-                let data = encode(prefix, raw.to_base32(), Variant::Bech32);
-                match data {
-                    Ok(acc) => Ok(acc),
-                    Err(_) => Err(DaemonError::Bech32DecodeErr),
+                let hrp_result = bech32::Hrp::parse(prefix);
+                if let Ok(hrp) = hrp_result {
+                    if let Ok(acc) = encode::<bech32::Bech32>(hrp, raw) {
+                        return Ok(acc);
+                    }
                 }
+                Err(DaemonError::Bech32DecodeErr)
             }
             None => Err(DaemonError::Implementation),
         }
     }
     /// The operator address used for validators
     pub fn operator_address(&self, prefix: &str) -> Result<String, DaemonError> {
-        match &self.raw_address {
-            Some(raw) => {
-                let data = encode(
-                    &format!("{}{}", prefix, "valoper"),
-                    raw.to_base32(),
-                    Variant::Bech32,
-                );
-                match data {
-                    Ok(acc) => Ok(acc),
-                    Err(_) => Err(DaemonError::Bech32DecodeErr),
-                }
-            }
-            None => Err(DaemonError::Implementation),
-        }
+        let valoper_prefix = format!("{}{}", prefix, "valoper");
+        self.account(&valoper_prefix)
     }
     /// application public key - Application keys are associated with a public key terrapub- and an address terra-
     pub fn application_public_key(&self, prefix: &str) -> Result<String, DaemonError> {
-        match &self.raw_pub_key {
-            Some(raw) => {
-                let data = encode(
-                    &format!("{}{}", prefix, "pub"),
-                    raw.to_base32(),
-                    Variant::Bech32,
-                );
-                match data {
-                    Ok(acc) => Ok(acc),
-                    Err(_) => Err(DaemonError::Bech32DecodeErr),
-                }
-            }
-            None => {
-                log::warn!("Missing Public Key. Can't continue");
-                Err(DaemonError::Implementation)
-            }
-        }
+        let app_prefix = format!("{}{}", prefix, "pub");
+        self.account(&app_prefix)
     }
     /// The operator address used for validators public key.
     pub fn operator_address_public_key(&self, prefix: &str) -> Result<String, DaemonError> {
-        match &self.raw_pub_key {
-            Some(raw) => {
-                let data = encode(
-                    &format!("{}{}", prefix, "valoperpub"),
-                    raw.to_base32(),
-                    Variant::Bech32,
-                );
-                match data {
-                    Ok(acc) => Ok(acc),
-                    Err(_) => Err(DaemonError::Bech32DecodeErr),
-                }
-            }
-            None => Err(DaemonError::Implementation),
-        }
+        let valoper_pub_prefix = format!("{}{}", prefix, "valoperpub");
+        self.account(&valoper_pub_prefix)
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
     pub fn tendermint(&self, prefix: &str) -> Result<String, DaemonError> {
-        match &self.raw_address {
-            Some(raw) => {
-                let data = encode(
-                    &format!("{}{}", prefix, "valcons"),
-                    raw.to_base32(),
-                    Variant::Bech32,
-                );
-                match data {
-                    Ok(acc) => Ok(acc),
-                    Err(_) => Err(DaemonError::Bech32DecodeErr),
-                }
-            }
-            None => Err(DaemonError::Implementation),
-        }
+        let tendermint_prefix = format!("{}{}", prefix, "valcons");
+        self.account(&tendermint_prefix)
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
     pub fn tendermint_pubkey(&self, prefix: &str) -> Result<String, DaemonError> {
-        match &self.raw_pub_key {
-            Some(raw) => {
-                // eprintln!("{} - tendermint_pubkey", hex::encode(raw));
-                let b32 = raw.to_base32();
-                let data = encode(&format!("{}{}", prefix, "valconspub"), b32, Variant::Bech32);
-                match data {
-                    Ok(acc) => Ok(acc),
-                    Err(_) => Err(DaemonError::Bech32DecodeErr),
-                }
-            }
-            None => Err(DaemonError::Implementation),
-        }
+        let tendermint_pub_prefix = format!("{}{}", prefix, "valconspub");
+        self.account(&tendermint_pub_prefix)
     }
 }
 #[cfg(test)]
@@ -519,7 +437,7 @@ mod tst {
         //  let ed2: tendermint::PublicKey =
         //      tendermint::PublicKey::from_raw_ed25519(&hex::decode(public_key)?).unwrap();
 
-        match encode("cosmosvalconspub", foo_v8.to_base32(),Variant::Bech32) {
+        match encode::<bech32::Bech32>(bech32::Hrp::parse_unchecked("cosmosvalconspub"), &foo_v8) {
             Ok(cosmospub) => assert_eq!("cosmosvalconspub1zcjduepqfgjuveq2raetnjt4xwpffm63kmguxv2chdhvhf5lhslmtgeunh8qmf7exk", cosmospub),
             Err(_) => panic!("bad encoding"),
         };
@@ -528,7 +446,7 @@ mod tst {
         //       ed2.to_bech32("cosmosvalconspub")
         //   );
 
-        match encode("terravalconspub", foo_v8.to_base32(), Variant::Bech32) {
+        match encode::<bech32::Bech32>(bech32::Hrp::parse_unchecked("terravalconspub"), &foo_v8) {
             Ok(tendermint) => {
                 let ed_key = PublicKey::from_tendermint_key(&tendermint)?;
                 //let ed_key_pubkey = ed_key.tendermint_pubkey()?;
