@@ -9,7 +9,6 @@ members = [
   # "packages/clone-testing",
   # "packages/cw-orch-osmosis-test-tube",
   "packages/cw-orch-traits",
-  "contracts/*",
   "test_contracts/*",
   "packages/macros/*",
   "packages/interchain/*",

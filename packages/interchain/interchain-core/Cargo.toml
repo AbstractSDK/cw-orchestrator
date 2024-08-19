@@ -31,7 +31,7 @@ tokio = "1.32.0"
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
 
 [dev-dependencies]
-counter-contract = { path = "../../../contracts/counter" }
+counter-contract = { path = "../../../contracts-ws/contracts/counter" }
 cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
   "daemon",
 ] }
