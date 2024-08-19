@@ -3,6 +3,8 @@
 ## Unpublished
 
 - `is_test` Added for Daemon Builders, when set to `true` will use temporary file for state
+- Chain configs now can be edited from a networks config file. It will read `~/.cw-orchestrator/networks.json`, see example `networks.json.example`
+- New package `cw-orch-neutron-test-tube`
 - Chain configs now can be edited from a networks config file. It will read `~/.cw-orchestrator/networks.toml`, see example `networks.toml.example`
 - Added `load_network` for `DaemonBuilder`, defaults to `true`. Set to `false` to avoid loading networks from `~/.cw-orchestrator/networks.toml`
 - New environment variable for `cw-orch-starship`: `CW_ORCH_STARSHIP_CONFIG_PATH` to specify path of starship config that's currently in use.
