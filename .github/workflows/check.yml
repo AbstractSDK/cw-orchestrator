@@ -100,7 +100,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Generate Cargo.lock
         run: |
-          cargo fetch --verbose
+          (cd contracts-ws && cargo fetch --verbose)
       - name: Build Artifacts
         run: |
           docker run --rm -v "$(pwd)":/code \
