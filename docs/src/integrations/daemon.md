@@ -158,5 +158,5 @@ For more information and queries, <a href="https://docs.rs/crate/cw-orch/latest/
 Here is an example of a script that deploys the counter contract only after a specific block_height.
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/interface.rs:daemon}}
+{{#include ../../../contracts-ws/contracts/counter/src/interface.rs:daemon}}
 ```

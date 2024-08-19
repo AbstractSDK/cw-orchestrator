@@ -29,13 +29,13 @@ With the setup done, we can start writing our script. Our initial plan is to dep
 We start by creating the chain object for specifying we want to interact with a local juno instance:
 
 ```rust,ignore
-{{#include ../../../contracts/counter/examples/deploy.rs:chain_construction}}
+{{#include ../../../contracts-ws/contracts/counter/examples/deploy.rs:chain_construction}}
 ```
 
 Then we can interact with our contract using that chain
 
 ```rust,ignore
-{{#include ../../../contracts/counter/examples/deploy.rs:contract_interaction}}
+{{#include ../../../contracts-ws/contracts/counter/examples/deploy.rs:contract_interaction}}
 ```
 
 ## Asynchronous Daemon

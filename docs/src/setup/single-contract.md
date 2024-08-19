@@ -27,7 +27,7 @@ Even if you include `cw-orch` in your dependencies here, it won't be included in
 Now that we have our dependency set up, we can create the files that will contain our interface. We will create that interface in an `interface.rs` file inside the crate (`counter/src/interface.rs`). Then, we need to include that file inside our project. However, that file will contain multiple `cw-orch` elements that are not exposed when compiling your WASM. In order to prevent errors when compiling for Wasm, we will import our `interface.rs` file and target-flag it like so, in `counter/src/lib.rs`:
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/lib.rs:custom_interface}}
+{{#include ../../../contracts-ws/contracts/counter/src/lib.rs:custom_interface}}
 ```
 
 In the next section, we will learn how to define the interface to be able to interact with an actual contract inside this `interface.rs` file.
