@@ -34,11 +34,11 @@ pub fn main() {
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
         Some(&counter.environment().sender_addr()),
-        None,
+        &[],
     );
     assert!(init_res.is_ok());
 
-    let exec_res = counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = counter.execute(&ExecuteMsg::Increment {}, &[]);
     assert!(exec_res.is_ok());
 
     let query_res = counter.query::<GetCountResponse>(&QueryMsg::GetCount {});

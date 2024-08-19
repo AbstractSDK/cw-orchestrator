@@ -1,18 +1,23 @@
 use super::error::DaemonError;
-use crate::env::{default_state_folder, DaemonEnvVars};
-use crate::{json_lock::JsonLockedState, networks::ChainKind};
+use crate::{
+    env::{default_state_folder, DaemonEnvVars},
+    json_lock::JsonLockedState,
+    networks::ChainKind,
+};
 
 use cosmwasm_std::Addr;
-use cw_orch_core::environment::ChainInfoOwned;
-use cw_orch_core::{environment::StateInterface, log::local_target, CwEnvError};
+use cw_orch_core::{
+    environment::{ChainInfoOwned, Environment, EnvironmentQuerier, StateInterface},
+    log::local_target,
+    CwEnvError,
+};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::sync::Arc;
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
-    sync::Mutex,
+    sync::{Arc, Mutex},
 };
 
 /// Global state to track which files are already open by other daemons from other threads
@@ -329,6 +334,111 @@ impl StateInterface for DaemonState {
         }
         Ok(store)
     }
+}
+
+pub trait DeployedChains: cw_orch_core::contract::Deploy<crate::Daemon> {
+    /// Gets all the chain ids on which the library is deployed on
+    /// This loads all chains that are registered in the crate-local daemon_state file
+    /// The state file should have the following format :
+    /// {
+    ///     "juno":{
+    ///         "juno-1":{
+    ///             ...
+    ///         },
+    ///         "uni-6": {
+
+    ///         }
+    ///     }
+    ///     ...
+    /// }
+    /// So this function actually looks for the second level of indices in the deployed_state_file
+    fn get_all_deployed_chains() -> Vec<String> {
+        let deployed_state_file = Self::deployed_state_file_path();
+        if let Some(state_file) = deployed_state_file {
+            if let Ok(module_state_json) = crate::json_lock::read(&state_file) {
+                let all_chain_ids: Vec<String> = module_state_json
+                    .as_object()
+                    .unwrap()
+                    .into_iter()
+                    .flat_map(|(_, v)| {
+                        v.as_object()
+                            .unwrap()
+                            .into_iter()
+                            .map(|(chain_id, _)| chain_id.clone())
+                            .collect::<Vec<_>>()
+                    })
+                    .collect();
+
+                return all_chain_ids;
+            }
+        }
+        vec![]
+    }
+    /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
+    /// If a state is provided, it is used for all contracts, otherwise, the state is loaded from the crate's state file.
+    fn set_contracts_state(&mut self, custom_state: Option<Value>) {
+        let state;
+
+        let state_file = Self::deployed_state_file_path();
+        if let Some(custom_state) = custom_state {
+            state = custom_state;
+        } else if let Some(state_file) = state_file {
+            if let Ok(module_state_json) = crate::json_lock::read(&state_file) {
+                state = module_state_json;
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+
+        let all_contracts = self.get_contracts_mut();
+
+        for contract in all_contracts {
+            // We set the code_id and/or address of the contract in question if they are not present already
+            let env_info = contract.environment().env_info();
+            // We load the file
+            // We try to get the code_id for the contract
+            if contract.code_id().is_err() {
+                let code_id = state
+                    .get(env_info.chain_name.clone())
+                    .unwrap_or(&Value::Null)
+                    .get(env_info.chain_id.to_string())
+                    .unwrap_or(&Value::Null)
+                    .get("code_ids")
+                    .unwrap_or(&Value::Null)
+                    .get(contract.id());
+
+                if let Some(code_id) = code_id {
+                    if code_id.is_u64() {
+                        contract.set_default_code_id(code_id.as_u64().unwrap())
+                    }
+                }
+            }
+            // We try to get the address for the contract
+            if contract.address().is_err() {
+                // Try and get the code id from file
+                let address = state
+                    .get(env_info.chain_name.clone())
+                    .unwrap_or(&Value::Null)
+                    .get(env_info.chain_id.to_string())
+                    .unwrap_or(&Value::Null)
+                    .get(env_info.deployment_id)
+                    .unwrap_or(&Value::Null)
+                    .get(contract.id());
+
+                if let Some(address) = address {
+                    if address.is_string() {
+                        contract.set_default_address(&Addr::unchecked(address.as_str().unwrap()))
+                    }
+                }
+            }
+        }
+    }
+
+    /// Sets the custom state file path for exporting the state with the package.
+    /// This function needs to be defined by projects. If the project doesn't want to give deployment state with their crate, they can return None here.
+    fn deployed_state_file_path() -> Option<String>;
 }
 
 pub(crate) use tempstate::gen_temp_file_path;

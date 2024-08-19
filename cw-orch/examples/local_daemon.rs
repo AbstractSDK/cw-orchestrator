@@ -30,7 +30,7 @@ pub fn main() {
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
         Some(&counter.environment().sender_addr()),
-        None,
+        &[],
     );
     assert!(init_res.is_ok());
     // ANCHOR_END: daemon_usage

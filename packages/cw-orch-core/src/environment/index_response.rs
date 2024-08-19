@@ -24,10 +24,7 @@ pub trait IndexResponse {
     fn event_attr_value(&self, event_type: &str, attr_key: &str) -> StdResult<String>;
 
     /// Search for all events with a given attribute key.
-    fn event_attr_values(&self, _event_type: &str, _attr_key: &str) -> Vec<String> {
-        // This is provided to avoid breaking changes to cw-orch-core
-        unimplemented!("");
-    }
+    fn event_attr_values(&self, _event_type: &str, _attr_key: &str) -> Vec<String>;
 
     /// Get the data field of the response.
     fn data(&self) -> Option<Binary>;

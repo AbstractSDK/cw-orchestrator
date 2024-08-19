@@ -12,9 +12,7 @@ fn test_instantiate() {
     let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 }
 
 #[test]
@@ -22,13 +20,9 @@ fn test_execute() {
     let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
-    let response = contract
-        .execute(&ExecuteMsg::FirstMessage {}, None)
-        .unwrap();
+    let response = contract.execute(&ExecuteMsg::FirstMessage {}, &[]).unwrap();
     response.has_event(
         &Event::new("wasm")
             .add_attribute("_contract_addr", "contract0")
@@ -36,7 +30,7 @@ fn test_execute() {
     );
 
     contract
-        .execute(&ExecuteMsg::SecondMessage { t: "".to_string() }, None)
+        .execute(&ExecuteMsg::SecondMessage { t: "".to_string() }, &[])
         .unwrap_err();
 }
 
@@ -45,9 +39,7 @@ fn test_query() {
     let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
     let response: String = contract.query(&QueryMsg::FirstQuery {}).unwrap();
     assert_eq!(response, "first query passed");
@@ -65,7 +57,7 @@ fn test_migrate() {
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&chain.sender_addr()), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender_addr()), &[])
         .unwrap();
 
     contract

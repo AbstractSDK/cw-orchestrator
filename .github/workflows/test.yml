@@ -33,7 +33,7 @@ jobs:
         run: cargo test --locked --all-features --all-targets
       - name: cargo test network config
         run: |
-          cp cw-orch-daemon/tests/mock_networks.json ~/.cw-orchestrator/networks.json
+          cp cw-orch-daemon/tests/mock_networks.toml ~/.cw-orchestrator/networks.toml
           cargo test --package cw-orch-daemon --lib -- network_config::test --ignored
 
   docs:

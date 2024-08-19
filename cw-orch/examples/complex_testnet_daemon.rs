@@ -45,12 +45,12 @@ pub fn main() {
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
         Some(&counter.environment().sender_addr()),
-        None,
+        &[],
     );
     assert!(init_res.is_ok());
 
     // You can execute a message using actual message types
-    let exec_res = counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = counter.execute(&ExecuteMsg::Increment {}, &[]);
     assert!(exec_res.is_ok());
 
     let query_res = counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
@@ -98,7 +98,7 @@ pub fn main() {
         )
         .unwrap();
     // We send some funds to the counter contract
-    let contract_addr = counter.addr_str().unwrap();
+    let contract_addr = counter.address().unwrap();
     daemon
         .rt_handle
         .block_on(
@@ -111,7 +111,7 @@ pub fn main() {
     assert_eq!(
         daemon
             .bank_querier()
-            .balance(contract_addr, Some(denom.clone()))
+            .balance(&contract_addr, Some(denom.clone()))
             .unwrap(),
         coins(50_000, denom.clone())
     );

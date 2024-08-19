@@ -79,7 +79,7 @@ jobs:
     # https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
     strategy:
       matrix:
-        msrv: [1.75.0] # dep/feat syntax fixed with co-exist dep
+        msrv: [1.76.0] # dep/feat syntax fixed with co-exist dep
     name: ubuntu / ${{ matrix.msrv }}
     steps:
       - uses: actions/checkout@v4
@@ -100,11 +100,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Generate Cargo.lock
         run: |
-          cargo fetch --verbose
+          (cd contracts-ws && cargo fetch --verbose)
       - name: Build Artifacts
         run: |
           docker run --rm -v "$(pwd)":/code \
-          --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
+          --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/contracts-ws/target \
           --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-          cosmwasm/optimizer:0.16.0
+          cosmwasm/optimizer:0.16.0 ./contracts-ws
           tar -zcvf cosmwasm-artifacts.tar.gz artifacts

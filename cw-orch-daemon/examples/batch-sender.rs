@@ -19,7 +19,7 @@ pub fn main() -> anyhow::Result<()> {
     let counter = CounterContract::new(chain.clone());
 
     counter.upload()?;
-    counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
+    counter.instantiate(&InstantiateMsg { count: 0 }, None, &[])?;
 
     counter.increment()?;
 

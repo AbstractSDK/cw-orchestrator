@@ -94,9 +94,9 @@ fn deploy_contracts<Chain: CwEnv>(
             cw1_code_id: cw1.code_id()?,
         },
         None,
-        None,
+        &[],
     )?;
-    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
+    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, &[])?;
     Ok(())
 }
 
@@ -115,7 +115,7 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
 
     // get the account information
     let remote_account = remote_accounts.accounts[0].clone();
-    let remote_addr = remote_account.remote_addr.unwrap();
+    let remote_addr = Addr::unchecked(remote_account.remote_addr.unwrap());
     let channel = remote_account.channel_id;
 
     // send some funds to the remote account
@@ -142,7 +142,7 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
             })],
             callback_id: None,
         },
-        None,
+        &[],
     )?;
 
     let chain_id = controller

@@ -24,10 +24,10 @@ pub fn main() {
     upload_res.unwrap();
     // ANCHOR_END: mock_usage
 
-    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, Some(&sender), None);
+    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, Some(&sender), &[]);
     init_res.unwrap();
 
-    let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, &[]);
     exec_res.unwrap();
 
     let query_res = contract_counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
@@ -69,12 +69,12 @@ pub fn customize() {
                     time: Timestamp::from_seconds(13345762376),
                     chain_id: "juno-1".to_string(),
                 },
-                cosmwasm_std::Validator {
-                    address: "new-validator-address".to_string(),
-                    commission: Decimal::from_str("0.5").unwrap(), // Greedy validator
-                    max_commission: Decimal::from_str("1").unwrap(), // Dangerous validator
-                    max_change_rate: Decimal::from_str("1").unwrap(), // Very dangerous validator
-                },
+                cosmwasm_std::Validator::create(
+                    "new-validator-address".to_string(),
+                    Decimal::from_str("0.5").unwrap(), // Greedy validator
+                    Decimal::from_str("1").unwrap(),   // Dangerous validator
+                    Decimal::from_str("1").unwrap(),   // Very dangerous validator
+                ),
             )
         })
         .unwrap();

@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::{Addr, Coin, Uint128};
-use cw_multi_test::{AppBuilder, MockAddressGenerator, MockApiBech32, WasmKeeper};
+use cosmwasm_std::{testing::MockApi, Addr, Coin, Uint128};
+use cw_multi_test::{AppBuilder, MockApiBech32};
 use cw_orch_core::{
     environment::{BankQuerier, BankSetter, DefaultQueriers, StateInterface, TxHandler},
     CwEnvError,
@@ -43,6 +43,23 @@ impl<S: StateInterface> MockBase<MockApiBech32, S> {
     }
 }
 
+impl<S: StateInterface> MockBase<MockApi, S> {
+    pub fn addr_make(&self, account_name: impl Into<String>) -> Addr {
+        self.app.borrow().api().addr_make(&account_name.into())
+    }
+
+    pub fn addr_make_with_balance(
+        &self,
+        account_name: impl Into<String>,
+        balance: Vec<Coin>,
+    ) -> Result<Addr, CwEnvError> {
+        let addr = self.app.borrow().api().addr_make(&account_name.into());
+        self.set_balance(&addr, balance)?;
+
+        Ok(addr)
+    }
+}
+
 impl Default for MockBase<MockApiBech32, MockState> {
     fn default() -> Self {
         MockBase::<MockApiBech32, MockState>::new_custom("mock", MockState::new())
@@ -57,7 +74,6 @@ impl<S: StateInterface> MockBase<MockApiBech32, S> {
         let app = Rc::new(RefCell::new(
             AppBuilder::new_custom()
                 .with_api(MockApiBech32::new(prefix))
-                .with_wasm(WasmKeeper::default().with_address_generator(MockAddressGenerator))
                 .build(|_, _, _| {}),
         ));
 
@@ -140,7 +156,7 @@ impl<S: StateInterface> BankSetter for MockBech32<S> {
 
     fn set_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(&Addr::unchecked(address), amount)
@@ -159,7 +175,7 @@ mod test {
 
         let address = mock.addr_make_with_balance("sender", coins(42765, "ujuno"))?;
 
-        let balance = mock.bank_querier().balance(address, None)?;
+        let balance = mock.bank_querier().balance(&address, None)?;
 
         assert_eq!(balance, coins(42765, "ujuno"));
 

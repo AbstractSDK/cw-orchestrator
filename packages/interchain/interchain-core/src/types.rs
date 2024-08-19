@@ -68,6 +68,7 @@ pub enum IbcPacketOutcome<T> {
 }
 
 /// Structure to hold simple information about a sent packet
+#[derive(Debug, Clone)]
 pub struct IbcPacketInfo {
     /// Port on which is packet was sent
     pub src_port: PortId,

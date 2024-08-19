@@ -14,7 +14,7 @@ impl Signature {
         let sig = STANDARD.decode(signature)?;
         let pk = bitcoin::secp256k1::PublicKey::from_slice(public.as_slice())?;
         let sha_result = ring::digest::digest(&SHA256, blob.as_bytes());
-        let message: Message = Message::from_slice(&sha_result.as_ref()[0..32])?;
+        let message: Message = Message::from_digest_slice(&sha_result.as_ref()[0..32])?;
         let secp_sig = bitcoin::secp256k1::ecdsa::Signature::from_compact(sig.as_slice())?;
         secp.verify_ecdsa(&message, &secp_sig, &pk)?;
         Ok(())
