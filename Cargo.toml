@@ -16,7 +16,7 @@ members = [
   "packages/interchain/*",
 ]
 exclude = [
-  "test_contracts/compatibility-test",
+  "test_contracts/compatibility-test", # TODO: add new after cw-orch-core 2.0.0 as it's breaking, it shouldn't be compatible
   "packages/interchain/proto",         # TODO: Release cw-orch-proto after osmosis-std reaches prost 0.13
 ]
 resolver = "2"
