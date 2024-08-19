@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::{Api, Coin};
+use cosmwasm_std::{Addr, Api, Coin};
 use cw_orch_core::{
     environment::{
         QuerierGetter, StateInterface, {BankQuerier, Querier},
@@ -35,7 +35,7 @@ impl<A: Api> Querier for MockBankQuerier<A> {
 impl<A: Api> BankQuerier for MockBankQuerier<A> {
     fn balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         if let Some(denom) = denom {

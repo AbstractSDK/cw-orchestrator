@@ -1,4 +1,3 @@
-use common::ica_demo::full_ica_test;
 use cw_orch_interchain::prelude::*;
 
 // Integrating the test inside the example
@@ -23,5 +22,5 @@ fn main() {
         starship.daemons.values().cloned().collect(),
         &ChannelCreationValidator,
     );
-    full_ica_test(&interchain, JUNO, STARGAZE, JUNO_FUNDS_DENOM).unwrap();
+    common::ica_demo::full_ica_test(&interchain, JUNO, STARGAZE, JUNO_FUNDS_DENOM).unwrap();
 }

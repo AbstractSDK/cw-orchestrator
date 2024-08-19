@@ -1,4 +1,5 @@
 use anyhow::Result as AnyResult;
+use cosmwasm_std::Addr;
 use cw_orch::daemon::Daemon;
 use cw_orch::prelude::BankQuerier;
 use cw_orch::prelude::QuerierGetter;
@@ -14,16 +15,17 @@ pub fn main() -> AnyResult<()> {
 
     // We do an actual bank query on MAINNET
     let bank_query_client: Bank = daemon.querier();
-    let sender = "juno185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqc5vwdr";
-    let balance_result = bank_query_client.balance(sender, None)?;
+    let sender = Addr::unchecked("juno185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqc5vwdr");
+    let balance_result = bank_query_client.balance(&sender, None)?;
     println!("Balance of {} : {:?}", sender, balance_result);
 
     // We do an actual Staking query on MAINNET
     let staking_query_client: Staking = daemon.querier();
-    let validator = "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn";
+    let validator =
+        Addr::unchecked("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn");
     let validator_result = daemon
         .rt_handle
-        .block_on(staking_query_client._validator(validator))?;
+        .block_on(staking_query_client._validator(&validator))?;
     println!("Validator info of {} : {:?}", sender, validator_result);
 
     // We do an actual IBC query on MAINNET

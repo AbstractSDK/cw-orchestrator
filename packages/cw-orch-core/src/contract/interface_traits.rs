@@ -172,7 +172,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
     fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
         self.environment()
             .wasm_querier()
-            .raw_query(self.address()?, query_keys)
+            .raw_query(&self.address()?, query_keys)
             .map_err(Into::into)
     }
 
@@ -183,18 +183,18 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
     ) -> Result<T, CwEnvError> {
         self.environment()
             .wasm_querier()
-            .item_query(self.address()?, query_item)
+            .item_query(&self.address()?, query_item)
     }
 
     /// Query the contract raw state from a cw-storage-plus::Map
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
-        query_map: Map<'a, K, T>,
+        query_map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
         self.environment()
             .wasm_querier()
-            .map_query(self.address()?, query_map, key)
+            .map_query(&self.address()?, query_map, key)
     }
 }
 /// Smart contract query entry point.
@@ -330,7 +330,7 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
         let chain = self.environment();
         let info = chain
             .wasm_querier()
-            .contract_info(self.address()?)
+            .contract_info(&self.address()?)
             .map_err(Into::into)?;
         Ok(latest_uploaded_code_id == info.code_id)
     }

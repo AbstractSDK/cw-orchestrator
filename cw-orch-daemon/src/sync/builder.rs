@@ -262,6 +262,7 @@ mod test {
     fn hd_index_re_generates_sender() -> anyhow::Result<()> {
         let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
+            .is_test(true)
             .build()
             .unwrap();
 
@@ -269,10 +270,7 @@ mod test {
             .rebuild()
             .build_sender(daemon.sender().options().hd_index(56))?;
 
-        assert_ne!(
-            daemon.sender_addr(),
-            indexed_daemon.sender_addr().to_string()
-        );
+        assert_ne!(daemon.sender_addr(), indexed_daemon.sender_addr());
 
         Ok(())
     }

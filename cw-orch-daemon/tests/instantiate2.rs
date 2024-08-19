@@ -20,7 +20,7 @@ pub mod test {
             .build()
             .unwrap();
 
-        let salt = Binary(vec![12, 89, 156, 63]);
+        let salt = Binary::new(vec![12, 89, 156, 63]);
         let mock_contract = MockContract::new("mock-contract", app.clone());
 
         mock_contract.upload()?;

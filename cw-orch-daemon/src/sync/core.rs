@@ -123,14 +123,14 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
 // Helpers for Daemon with [`Wallet`] sender.
 impl Daemon {
     /// Specifies wether authz should be used with this daemon
-    pub fn authz_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_mut().set_authz_granter(granter.to_string());
+    pub fn authz_granter(&mut self, granter: &Addr) -> &mut Self {
+        self.sender_mut().set_authz_granter(granter);
         self
     }
 
     /// Specifies wether feegrant should be used with this daemon
-    pub fn fee_granter(&mut self, granter: impl ToString) -> &mut Self {
-        self.sender_mut().set_fee_granter(granter.to_string());
+    pub fn fee_granter(&mut self, granter: &Addr) -> &mut Self {
+        self.sender_mut().set_fee_granter(granter);
         self
     }
 }

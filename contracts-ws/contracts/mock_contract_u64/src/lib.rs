@@ -105,15 +105,15 @@ pub mod interface {
 mod test {
     use super::interface::MockContract as LocalMockContract;
     use super::*;
-    use cosmwasm_std::{coins, Addr};
+    use cosmwasm_std::coins;
     use cw_orch::prelude::*;
     use mock_contract::{ExecuteMsgFns, QueryMsgFns};
 
     #[test]
     fn compiles() -> Result<(), CwOrchError> {
         // We need to check we can still call the execute msgs conveniently
-        let sender = Addr::unchecked("sender");
-        let mock = Mock::new(&sender);
+        let mock = Mock::new("sender");
+        let sender = mock.sender_addr();
         mock.set_balance(&sender, coins(156 * 2, "ujuno"))?;
         let contract = LocalMockContract::new(mock.clone());
 
