@@ -11,7 +11,7 @@ Interfaces are virtual wrappers around CosmWasm contracts. They allow you to int
 Now that we have our filesystem and crate setup, we are able to create our contract interface using the `cw-orch::interface` macro. It allows you to create an interface for your contract without having to call it at the entry points, as well as the ability to specify the contract's source more easily.
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/interface.rs:custom_interface}}
+{{#include ../../../contracts-ws/contracts/counter/src/interface.rs:custom_interface}}
 ```
 
 The use of the `interface` macro even allows you to have generic arguments in the message types. Any generics will be added to the interface under a `PhantomData` attribute.
@@ -21,7 +21,7 @@ It can be beneficial to re-export the structure in our `lib.rs` file.
 In the counter contract we re-export in `lib.rs`;
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/lib.rs:interface_reexport}}
+{{#include ../../../contracts-ws/contracts/counter/src/lib.rs:interface_reexport}}
 ```
 
 > **NOTE**: You can see that we have used the `artifacts_dir_from_workspace` macro inside the `wasm` trait function. This macro helps you locate the workspace `artifacts` folder. It actually looks for any directory named `artifacts` from the root of the current crate going up. For instance if the project is located in `/path1/path2/counter`, it will look for the artifacts folder inside the following directories in order and return as soon as it finds such a folder:
@@ -45,7 +45,7 @@ In the counter contract we re-export in `lib.rs`;
 The `interface` macro implements a `new` function on the interface:
 
 ```rust,ignore
-{{#include ../../../contracts/counter/tests/integration_tests.rs:constructor}}
+{{#include ../../../contracts-ws/contracts/counter/tests/integration_tests.rs:constructor}}
 ```
 
 The constructor takes one argument:
@@ -80,7 +80,7 @@ The environments that are currently supported are:
 Generic functions can be executed over any environment. Setup functions are a good example of this.
 
 ```rust,ignore
-{{#include ../../../contracts/counter/tests/integration_tests.rs:setup}}
+{{#include ../../../contracts-ws/contracts/counter/tests/integration_tests.rs:setup}}
 ```
 
 ### Entry point function generation
