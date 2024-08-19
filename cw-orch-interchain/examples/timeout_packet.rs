@@ -1,16 +1,14 @@
-use cosmos_sdk_proto::{
-    ibc::{
-        applications::transfer::v1::{MsgTransfer, MsgTransferResponse},
-        core::client::v1::Height,
-    },
-    traits::{Message, Name},
-    Any,
-};
+use cosmos_sdk_proto::traits::{Message, Name};
 use cw_orch::{environment::QueryHandler, prelude::*};
 use cw_orch_interchain_core::InterchainEnv;
 use cw_orch_interchain_daemon::ChannelCreator as _;
 use cw_orch_starship::Starship;
+use ibc_proto::ibc::{
+    applications::transfer::v1::{MsgTransfer, MsgTransferResponse},
+    core::client::v1::Height,
+};
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
+use prost_types::Any;
 fn main() -> cw_orch::anyhow::Result<()> {
     pretty_env_logger::init();
 
@@ -40,7 +38,7 @@ fn main() -> cw_orch::anyhow::Result<()> {
             value: MsgTransfer {
                 source_port: channel.0.port.to_string(),
                 source_channel: channel.0.channel.unwrap().to_string(),
-                token: Some(cosmos_sdk_proto::cosmos::base::v1beta1::Coin {
+                token: Some(ibc_proto::cosmos::base::v1beta1::Coin {
                     amount: "100_000".to_string(),
                     denom: "ujuno".to_string(),
                 }),
@@ -51,6 +49,7 @@ fn main() -> cw_orch::anyhow::Result<()> {
                     revision_height: stargaze_height.height,
                 }),
                 timeout_timestamp: 0,
+                memo: String::new(),
             }
             .encode_to_vec(),
             type_url: MsgTransfer::type_url(),
