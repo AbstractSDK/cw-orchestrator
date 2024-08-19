@@ -24,10 +24,11 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 
 [workspace.dependencies]
 cw-utils = { version = "2.0.0" }
-cosmwasm-std = { version = "2.0" }
+cosmwasm-std = { version = "2.1" }
 cw-storage-plus = { version = "2.0.0" }
+cosmos-sdk-proto = { version = "0.22.0", default-features = false } # https://github.com/cosmos/cosmos-rust/issues/497
 
-cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.0", features = [
+cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", features = [
   "cosmwasm_1_2",
 ] }
 cw20 = { package = "abstract-cw20", version = "3.0.0" }
@@ -36,8 +37,8 @@ cw20-base = { package = "abstract-cw20-base", version = "3.0.0" }
 osmosis-test-tube = { version = "25.0.0" }
 
 anyhow = "1.0"
-serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-tokio = { version = "1.4", features = ["full"] }
+serde = { version = "1.0.208", default-features = false, features = ["derive"] }
+tokio = { version = "1.39", features = ["full"] }
 
 cw-orch = { path = "./cw-orch", version = "0.25.0" }
 cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.25.0" }
@@ -64,19 +65,19 @@ cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" }
 #Clone Testing
 # cw-orch-clone-testing = { version = "0.6.1", path = "packages/clone-testing" }
 
-thiserror = { version = "1.0.21" }
+thiserror = { version = "1.0.63" }
 sha2 = { version = "0.10.8" }
-serde_json = "1.0.79"
-tonic = { version = "0.10.2" }
+serde_json = "1.0.125"
+tonic = { version = "0.11.0" }
 prost-types = "0.12.3"
-prost = "0.12.3"
-cosmrs = { version = "0.15.0" }
+prost = "0.12.3"                   # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory
+cosmrs = { version = "0.17.0" }
 # Test deps
 speculoos = "0.11.0"
 
 # Logging
-log = "0.4.14"
+log = "0.4.22"
 
 # Interchain
-ibc-relayer-types = { version = "0.25.0" }
-ibc-chain-registry = { version = "0.25.0" }
+ibc-relayer-types = { version = "0.29.2" }
+ibc-chain-registry = { version = "0.29.2" }

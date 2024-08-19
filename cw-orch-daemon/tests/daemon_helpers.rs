@@ -43,7 +43,7 @@ mod tests {
 
         let init_msg = &InstantiateMsg {};
 
-        let _ = contract.instantiate(init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
+        let _ = contract.instantiate(init_msg, Some(&Addr::unchecked(sender)), &[]);
 
         asserting!("address is present")
             .that(&contract.address())
@@ -109,7 +109,7 @@ mod tests {
         log::info!("Using code_id {}", code_id);
 
         // instantiate contract on chain
-        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), None);
+        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), &[]);
         asserting!("instantiate is successful")
             .that(&init_res)
             .is_ok();

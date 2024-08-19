@@ -75,14 +75,6 @@ pub trait ContractInstance<Chain: ChainState> {
     fn set_default_code_id(&mut self, code_id: u64) {
         Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
-
-    #[deprecated(
-        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
-    )]
-    /// Returns the chain that this contract is deployed on.
-    fn get_chain(&self) -> &Chain {
-        self.as_instance().environment()
-    }
 }
 
 /// Trait that indicates that the contract can be instantiated with the associated message.
@@ -115,7 +107,7 @@ pub trait CwOrchExecute<Chain: TxHandler>: ExecutableContract + ContractInstance
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().execute(&execute_msg, coins)
     }
@@ -132,7 +124,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
@@ -143,7 +135,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()

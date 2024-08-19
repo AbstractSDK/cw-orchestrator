@@ -218,7 +218,7 @@ mod test {
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
-        contract.instantiate(&InstantiateMsg {}, None, None)?;
+        contract.instantiate(&InstantiateMsg {}, None, &[])?;
         contract.first_message()?;
         contract
             .second_message("s", &coins(156, "ujuno"))
@@ -249,7 +249,7 @@ mod test {
         let contract = LocalMockContract::new("mock-contract", mock.clone());
 
         contract.upload()?;
-        contract.instantiate(&InstantiateMsg {}, None, None)?;
+        contract.instantiate(&InstantiateMsg {}, None, &[])?;
 
         let cw2_info: cw2::ContractVersion = from_json(
             mock.wasm_querier()

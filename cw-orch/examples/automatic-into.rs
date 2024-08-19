@@ -104,7 +104,7 @@ pub fn main() -> anyhow::Result<()> {
 
     let contract = Cw20::new("cw20", mock.clone());
     contract.upload()?;
-    contract.instantiate(&Empty {}, None, None)?;
+    contract.instantiate(&Empty {}, None, &[])?;
 
     contract.mint(150_100u128, "nicoco")?;
     contract.send(150_100u128, "nicoco", Binary::from_base64("cXNk")?)?;
@@ -115,12 +115,12 @@ pub fn main() -> anyhow::Result<()> {
 
     let contract = Cw20Minter::new("cw20_minter", mock.clone());
     contract.upload()?;
-    contract.instantiate(&Empty {}, None, None)?;
+    contract.instantiate(&Empty {}, None, &[])?;
     contract.mint(150_100u128, "nicoco")?;
 
     let contract = Cw20Base::new("cw20_base", mock.clone());
     contract.upload()?;
-    contract.instantiate(&Empty {}, None, None)?;
+    contract.instantiate(&Empty {}, None, &[])?;
     contract.send(150_100u128, "nicoco", Binary::from_base64("cXNk")?)?;
 
     Ok(())

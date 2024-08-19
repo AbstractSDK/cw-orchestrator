@@ -6,7 +6,7 @@ use ::ethers_core::k256::ecdsa::SigningKey;
 use base64::Engine;
 use bitcoin::secp256k1::{self, Secp256k1};
 use bitcoin::{
-    bip32::{ExtendedPrivKey, IntoDerivationPath},
+    bip32::{IntoDerivationPath, Xpriv},
     Network,
 };
 use cosmrs::tx::SignerPublicKey;
@@ -29,9 +29,9 @@ pub struct PrivateKey {
     mnemonic: Option<Phrase>,
     #[allow(dead_code)]
     /// This is used for testing
-    root_private_key: ExtendedPrivKey,
+    root_private_key: Xpriv,
     /// The private key
-    private_key: ExtendedPrivKey,
+    private_key: Xpriv,
 }
 impl PrivateKey {
     /// Generate a new private key
@@ -189,7 +189,7 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
-        let root_private_key = ExtendedPrivKey::new_master(Network::Bitcoin, raw_key).unwrap();
+        let root_private_key = Xpriv::new_master(Network::Bitcoin, raw_key).unwrap();
         // For injective: https://docs.injective.network/learn/basic-concepts/accounts#injective-accounts
         let path = format!("m/44'/{coin_type}'/{account}'/0/{index}");
         let derivation_path = path.into_derivation_path()?;
@@ -221,8 +221,6 @@ impl PrivateKey {
 #[cfg(test)]
 mod tst {
     use base64::{engine::general_purpose, Engine};
-    use bitcoin::bech32::ToBase32;
-    use bitcoin::bech32::{Bech32Writer, Variant};
     use ethers_core::k256::ecdsa::SigningKey;
     use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer};
 

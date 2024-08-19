@@ -12,7 +12,7 @@ pub fn main() -> anyhow::Result<()> {
     let contract_counter = CounterContract::new(mock.clone());
 
     contract_counter.upload()?;
-    contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
+    contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, &[])?;
     contract_counter.increment()?;
 
     let query_res = contract_counter.get_count()?;

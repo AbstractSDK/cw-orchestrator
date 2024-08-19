@@ -228,7 +228,7 @@ mod queriers {
         contract.upload().unwrap();
 
         contract
-            .instantiate(&InstantiateMsg {}, Some(&sender.address()), None)
+            .instantiate(&InstantiateMsg {}, Some(&sender.address()), &[])
             .unwrap();
 
         let contract_address = contract.address().unwrap();

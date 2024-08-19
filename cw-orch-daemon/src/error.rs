@@ -46,10 +46,10 @@ pub enum DaemonError {
     MissingPhrase,
     #[error("Bad Implementation. Missing Component")]
     Implementation,
-    #[error("Unable to convert into public key `{key}`")]
+    #[error("Unable to convert into public key `{key}`: {source}")]
     Conversion {
         key: String,
-        source: bitcoin::bech32::Error,
+        source: bech32::DecodeError,
     },
     #[error("Can not augment daemon deployment after usage in more than one contract.")]
     SharedDaemonState,
@@ -57,7 +57,6 @@ pub enum DaemonError {
     ErrReport(#[from] ::eyre::ErrReport),
     #[error(transparent)]
     GRpcDecodeError(#[from] ::prost::DecodeError),
-
     #[error(transparent)]
     ED25519(#[from] ::ed25519_dalek::ed25519::Error),
     #[error(transparent)]

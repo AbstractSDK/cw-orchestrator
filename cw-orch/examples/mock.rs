@@ -24,10 +24,10 @@ pub fn main() {
     upload_res.unwrap();
     // ANCHOR_END: mock_usage
 
-    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, Some(&sender), None);
+    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, Some(&sender), &[]);
     init_res.unwrap();
 
-    let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, &[]);
     exec_res.unwrap();
 
     let query_res = contract_counter.query::<GetCountResponse>(&QueryMsg::GetCount {});

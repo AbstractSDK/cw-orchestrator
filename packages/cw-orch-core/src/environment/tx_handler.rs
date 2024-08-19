@@ -1,14 +1,10 @@
 //! Transactional traits for execution environments.
 
-use super::{queriers::QueryHandler, ChainState, IndexResponse};
+use super::{ChainState, IndexResponse};
 use crate::{contract::interface_traits::Uploadable, error::CwEnvError};
 use cosmwasm_std::{Addr, Binary, Coin};
 use serde::Serialize;
 use std::fmt::Debug;
-
-/// Signals a supported execution environment for CosmWasm contracts
-pub trait CwEnv: TxHandler + QueryHandler + Clone {}
-impl<T: TxHandler + QueryHandler + Clone> CwEnv for T {}
 
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
@@ -25,20 +21,11 @@ pub trait TxHandler: ChainState + Clone {
 
     type Sender: Clone;
 
-    /// Gets the address of the current wallet used to sign transactions.
-    #[deprecated(
-        since = "1.1.2",
-        note = "Please use `sender_addr` instead. This method will be changed in the next release."
-    )]
-    // TODO: return &Self::Sender here in the next breaking release
-    fn sender(&self) -> Addr;
+    /// Get a read-only Sender
+    fn sender(&self) -> &Self::Sender;
 
     /// Gets the address of the current wallet used to sign transactions.
-    // TODO: remove this default implementation in the next breaking release
-    fn sender_addr(&self) -> Addr {
-        #[allow(deprecated)]
-        self.sender()
-    }
+    fn sender_addr(&self) -> Addr;
 
     /// Sets wallet to sign transactions.
     fn set_sender(&mut self, sender: Self::Sender);
@@ -131,6 +118,14 @@ mod tests {
         fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
             unimplemented!()
         }
+
+        fn remove_address(&mut self, _contract_id: &str) {
+            unimplemented!()
+        }
+
+        fn remove_code_id(&mut self, _contract_id: &str) {
+            unimplemented!()
+        }
     }
 
     impl ChainState for MockHandler {
@@ -148,7 +143,7 @@ mod tests {
 
         type Sender = ();
 
-        fn sender(&self) -> Addr {
+        fn sender(&self) -> &Self::Sender {
             unimplemented!()
         }
 

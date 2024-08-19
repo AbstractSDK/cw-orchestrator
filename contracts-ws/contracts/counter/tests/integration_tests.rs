@@ -89,7 +89,7 @@ fn setup<Chain: CwEnv>(chain: Chain) -> anyhow::Result<CounterContract<Chain>> {
 
     // Instantiate the contract
     let msg = InstantiateMsg { count: 1i32 };
-    let init_resp = contract.instantiate(&msg, Some(&admin), None)?;
+    let init_resp = contract.instantiate(&msg, Some(&admin), &[])?;
 
     // Get the address from the response
     let contract_addr = init_resp.instantiated_contract_address()?;

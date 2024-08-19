@@ -1,14 +1,13 @@
 mod chain_info;
-mod cosmwasm_environment;
+mod envs;
 mod index_response;
-mod mut_env;
 mod queriers;
 mod state;
+mod tx_handler;
 
 pub use chain_info::{ChainInfo, ChainInfoOwned, ChainKind, NetworkInfo, NetworkInfoOwned};
-pub use cosmwasm_environment::{CwEnv, TxHandler, TxResponse};
+pub use envs::{BankSetter, CwEnv, Environment, MutCwEnv};
 pub use index_response::IndexResponse;
-pub use mut_env::{BankSetter, MutCwEnv};
 pub use queriers::{
     bank::BankQuerier,
     env::{EnvironmentInfo, EnvironmentQuerier},
@@ -17,9 +16,4 @@ pub use queriers::{
     DefaultQueriers, Querier, QuerierGetter, QueryHandler,
 };
 pub use state::{ChainState, StateInterface};
-
-/// Describes a structure that contains an underlying execution environment
-pub trait Environment<Chain> {
-    /// Returns the chain that this structure executes on
-    fn environment(&self) -> &Chain;
-}
+pub use tx_handler::{TxHandler, TxResponse};

@@ -38,7 +38,7 @@ pub trait QueryHandler: DefaultQueriers {
     }
 
     /// Send a QueryMsg to a contract.
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    fn query<Q: Serialize + Debug, T: DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
@@ -217,6 +217,10 @@ pub mod test {
         fn data(&self) -> Option<Binary> {
             unimplemented!()
         }
+
+        fn event_attr_values(&self, _event_type: &str, _attr_key: &str) -> Vec<String> {
+            unimplemented!()
+        }
     }
 
     impl QuerierGetter<MockQuerier> for MockHandler {
@@ -285,6 +289,14 @@ pub mod test {
         }
 
         fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
+            unimplemented!()
+        }
+
+        fn remove_address(&mut self, _contract_id: &str) {
+            unimplemented!()
+        }
+
+        fn remove_code_id(&mut self, _contract_id: &str) {
             unimplemented!()
         }
     }

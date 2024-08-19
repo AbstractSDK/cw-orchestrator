@@ -30,7 +30,7 @@ mod tests {
 
         let init_msg = &InstantiateMsg {};
 
-        let _ = contract.instantiate(init_msg, Some(&sender), Some(&[]));
+        let _ = contract.instantiate(init_msg, Some(&sender), &[]);
 
         asserting!("address is present")
             .that(&contract.address())
@@ -85,7 +85,7 @@ mod tests {
         let code_id = contract.code_id().unwrap();
 
         // instantiate contract on chain
-        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), None);
+        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), &[]);
         asserting!("instantiate is successful")
             .that(&init_res)
             .is_ok();

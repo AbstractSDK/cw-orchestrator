@@ -25,7 +25,7 @@ pub mod test {
 
         mock_contract.upload()?;
 
-        mock_contract.instantiate2(&InstantiateMsg {}, None, None, salt.clone())?;
+        mock_contract.instantiate2(&InstantiateMsg {}, None, &[], salt.clone())?;
 
         mock_contract.address()?;
 

@@ -62,7 +62,7 @@ impl<Sender> DaemonBase<Sender> {
         self.daemon.sender_mut()
     }
 
-    /// Get the channel configured for this Daemon
+    /// Get a read-only Sender
     pub fn sender(&self) -> &Sender {
         self.daemon.sender()
     }
@@ -150,8 +150,8 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
     type ContractSource = WasmPath;
     type Sender = Sender;
 
-    fn sender(&self) -> Addr {
-        self.sender_addr()
+    fn sender(&self) -> &Self::Sender {
+        self.daemon.sender()
     }
 
     fn sender_addr(&self) -> Addr {

@@ -118,7 +118,7 @@ mod test {
         let contract = LocalMockContract::new(mock.clone());
 
         contract.upload()?;
-        contract.instantiate(&InstantiateMsg {}, None, None)?;
+        contract.instantiate(&InstantiateMsg {}, None, &[])?;
         contract.first_message()?;
         contract.second_message(54u64, &[]).unwrap_err();
         contract.third_message(54u64).unwrap();

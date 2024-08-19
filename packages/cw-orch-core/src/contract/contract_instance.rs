@@ -40,14 +40,6 @@ impl<Chain> Contract<Chain> {
         }
     }
 
-    #[deprecated(
-        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
-    )]
-    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
-    pub fn get_chain(&self) -> &Chain {
-        self.environment()
-    }
-
     // This should use the `Environment` trait, but it's not possible due to
     // `downstream crates may implement trait `contract::interface_traits::ContractInstance<_>` for type `contract::contract_instance::Contract<_>`
     /// Retrieves the underlying chain used for execution
@@ -140,7 +132,7 @@ impl<Chain: TxHandler> Contract<Chain> {
     pub fn execute<E: Serialize + Debug>(
         &self,
         msg: &E,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -157,9 +149,7 @@ impl<Chain: TxHandler> Contract<Chain> {
             log_serialize_message(msg)?
         );
 
-        let resp = self
-            .chain
-            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
+        let resp = self.chain.execute(msg, coins, &self.address()?);
 
         log::info!(
             target: &contract_target(),
@@ -183,7 +173,7 @@ impl<Chain: TxHandler> Contract<Chain> {
         &self,
         msg: &I,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -200,13 +190,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-            )
+            .instantiate(self.code_id()?, msg, Some(&self.id), admin, coins)
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
 
@@ -233,7 +217,7 @@ impl<Chain: TxHandler> Contract<Chain> {
         &self,
         msg: &I,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
@@ -251,14 +235,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate2(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-                salt,
-            )
+            .instantiate2(self.code_id()?, msg, Some(&self.id), admin, coins, salt)
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
 
