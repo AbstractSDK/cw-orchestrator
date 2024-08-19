@@ -36,4 +36,4 @@ cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
   "daemon",
 ] }
 cw-orch = { workspace = true }
-cosmos-sdk-proto = "0.24.0"
+cosmos-sdk-proto = { workspace = true }

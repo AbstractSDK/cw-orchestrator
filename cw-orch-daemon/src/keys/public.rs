@@ -226,8 +226,6 @@ impl PublicKey {
     @param publicKey raw public key
     */
     pub fn address_from_public_ed25519_key(public_key: &[u8]) -> Result<Vec<u8>, DaemonError> {
-        // Vec<bech32::u5> {
-
         if public_key.len() != (32 + 5/* the 5 is the BECH32 ED25519 prefix */) {
             Err(DaemonError::ConversionPrefixED25519(
                 public_key.len(),
@@ -268,32 +266,34 @@ impl PublicKey {
     /// The main account used in most things
     pub fn account(&self, prefix: &str) -> Result<String, DaemonError> {
         match &self.raw_address {
-            Some(raw) => {
-                let hrp_result = bech32::Hrp::parse(prefix);
-                if let Ok(hrp) = hrp_result {
-                    if let Ok(acc) = encode::<bech32::Bech32>(hrp, raw) {
-                        return Ok(acc);
-                    }
-                }
-                Err(DaemonError::Bech32DecodeErr)
-            }
+            Some(raw) => key_to_addr(raw, prefix),
             None => Err(DaemonError::Implementation),
         }
     }
+
     /// The operator address used for validators
     pub fn operator_address(&self, prefix: &str) -> Result<String, DaemonError> {
         let valoper_prefix = format!("{}{}", prefix, "valoper");
-        self.account(&valoper_prefix)
+        match &self.raw_address {
+            Some(raw) => key_to_addr(raw, &valoper_prefix),
+            None => Err(DaemonError::Implementation),
+        }
     }
     /// application public key - Application keys are associated with a public key terrapub- and an address terra-
     pub fn application_public_key(&self, prefix: &str) -> Result<String, DaemonError> {
         let app_prefix = format!("{}{}", prefix, "pub");
-        self.account(&app_prefix)
+        match &self.raw_pub_key {
+            Some(raw) => key_to_addr(raw, &app_prefix),
+            None => Err(DaemonError::Implementation),
+        }
     }
     /// The operator address used for validators public key.
     pub fn operator_address_public_key(&self, prefix: &str) -> Result<String, DaemonError> {
         let valoper_pub_prefix = format!("{}{}", prefix, "valoperpub");
-        self.account(&valoper_pub_prefix)
+        match &self.raw_pub_key {
+            Some(raw) => key_to_addr(raw, &valoper_pub_prefix),
+            None => Err(DaemonError::Implementation),
+        }
     }
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
     pub fn tendermint(&self, prefix: &str) -> Result<String, DaemonError> {
@@ -303,8 +303,21 @@ impl PublicKey {
     /// This is a unique key used to sign block hashes. It is associated with a public key terravalconspub.
     pub fn tendermint_pubkey(&self, prefix: &str) -> Result<String, DaemonError> {
         let tendermint_pub_prefix = format!("{}{}", prefix, "valconspub");
-        self.account(&tendermint_pub_prefix)
+        match &self.raw_pub_key {
+            Some(raw) => key_to_addr(raw, &tendermint_pub_prefix),
+            None => Err(DaemonError::Implementation),
+        }
     }
+}
+
+fn key_to_addr(data: &[u8], prefix: &str) -> Result<String, DaemonError> {
+    let hrp_result = bech32::Hrp::parse(prefix);
+    if let Ok(hrp) = hrp_result {
+        if let Ok(acc) = encode::<bech32::Bech32>(hrp, data) {
+            return Ok(acc);
+        }
+    }
+    Err(DaemonError::Bech32DecodeErr)
 }
 #[cfg(test)]
 mod tst {

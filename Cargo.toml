@@ -27,6 +27,7 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 cw-utils = { version = "2.0.0" }
 cosmwasm-std = { version = "2.1" }
 cw-storage-plus = { version = "2.0.0" }
+cosmos-sdk-proto = { version = "0.22.0", default-features = false } # https://github.com/cosmos/cosmos-rust/issues/497
 
 cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", features = [
   "cosmwasm_1_2",
@@ -70,7 +71,7 @@ sha2 = { version = "0.10.8" }
 serde_json = "1.0.125"
 tonic = { version = "0.11.0" }
 prost-types = "0.12.3"
-prost = "0.12.3"
+prost = "0.12.3"                   # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory
 cosmrs = { version = "0.17.0" }
 # Test deps
 speculoos = "0.11.0"
