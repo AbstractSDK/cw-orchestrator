@@ -89,7 +89,7 @@ Maximum block time. This is used internally by `cw-orch` when broadcasting trans
 Optional, accepted values: `true`, `false`
 Defaults to `true`
 
-By default, `cw-orch` verifies that the account has sufficient balance to pay for gas fees. If it detects that the balance is too low, it propmts the user to fill up their wallet with gas tokens and allows for retrying at the press of a button.
+By default, `cw-orch` verifies that the account has sufficient balance to pay for gas fees. If it detects that the balance is too low, it prompts the user to fill up their wallet with gas tokens and allows for retrying at the press of a button.
 
 If set to `false`, it won't check the user has enough balance before broadcasting transactions.
 
@@ -126,4 +126,4 @@ Optional, accepted values: `false`, `true`
 
 Defaults to `true`
 
-By default if the logs are not enabled, `cw-orch` wil print a warning message to invite users to activate the logging capabilities of cw-orch. if equals to `false`, the warning message is disabled.
+By default if the logs are not enabled, `cw-orch` will print a warning message to invite users to activate the logging capabilities of cw-orch. if equals to `false`, the warning message is disabled.
