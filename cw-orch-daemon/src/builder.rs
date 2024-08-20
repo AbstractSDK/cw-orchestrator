@@ -187,11 +187,7 @@ impl DaemonAsyncBuilder {
                 // It's most likely a new chain, need to "prepare" json state for writes
                 if let DaemonStateFile::FullAccess { json_file_state } = &state.json_state {
                     let mut json_file_lock = json_file_state.lock().unwrap();
-                    json_file_lock.prepare(
-                        &state.chain_data.chain_id,
-                        &state.chain_data.network_info.chain_name,
-                        &state.deployment_id,
-                    );
+                    json_file_lock.prepare(&state.chain_data.chain_id, &state.deployment_id);
                     if state.write_on_change {
                         json_file_lock.force_write();
                     }
