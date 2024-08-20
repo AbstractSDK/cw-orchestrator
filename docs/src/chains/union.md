@@ -1,7 +1,6 @@
 # Union
 
-Union is the first infrastructure layer that unifies thousands of networks, unlocking horizontal scalability for any protocol. 
-
+Union is the first infrastructure layer that unifies thousands of networks, unlocking horizontal scalability for any protocol.
 
 [Visit Union's Website](https://union.build)
 

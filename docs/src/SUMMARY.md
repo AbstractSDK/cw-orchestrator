@@ -39,14 +39,15 @@
   - [Injective](./chains/injective.md)
   - [Juno](./chains/juno.md)
   - [Kujira](./chains/kujira.md)
+  - [Landslide](./chains/landslide.md)
   - [Neutron](./chains/neutron.md)
   - [Nibiru](./chains/nibiru.md)
   - [Osmosis](./chains/osmosis.md)
   - [Sei](./chains/sei.md)
   - [Terra](./chains/terra.md)
   - [Rollkit](./chains/rollkit.md)
+  - [Union](./chains/union.md)
   - [XION](./chains/xion.md)
-  - [Landslide](./chains/landslide.md)
 
 # Extras
 
