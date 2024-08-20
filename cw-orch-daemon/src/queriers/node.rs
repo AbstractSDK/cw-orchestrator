@@ -319,12 +319,12 @@ impl Node {
         retry_on_empty: bool,
         retries: usize,
     ) -> Result<Vec<CosmTxResponse>, DaemonError> {
-        let mut client = crate::cosmos_proto_patches::v0_50::tx::service_client::ServiceClient::new(
+        let mut client = cosmrs::proto::cosmos::tx::v1beta1::service_client::ServiceClient::new(
             self.channel.clone(),
         );
 
         #[allow(deprecated)]
-        let request = crate::cosmos_proto_patches::v0_50::tx::GetTxsEventRequest {
+        let request = cosmrs::proto::cosmos::tx::v1beta1::GetTxsEventRequest {
             events: events.clone(),
             pagination: None,
             order_by: order_by.unwrap_or(OrderBy::Desc).into(),
