@@ -72,6 +72,6 @@ Visit the dedicated [Starship](./integrations/daemon.md#for-testing) page for mo
 
 ### [Cosmos SDK Node Scripting](./integrations/daemon.md#for-scripting)
 
-The `DaemonInterchainEnvironment` object allows developers to script, deploy and manage their application on running chains with attention to IBC functionalities. This enhances the developer experience with more tooling, more useful logging. This is the all-in-one toolbox cor the cosmwasm IBC developer.
+The `DaemonInterchain` object allows developers to script, deploy and manage their application on running chains with attention to IBC functionalities. This enhances the developer experience with more tooling, more useful logging. This is the all-in-one toolbox cor the cosmwasm IBC developer.
 
 Visit the dedicated [Daemon Interchain](./integrations/daemon.md#for-scripting) page for more details and code snippets.

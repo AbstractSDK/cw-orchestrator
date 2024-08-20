@@ -18,4 +18,4 @@ pub type IcDaemonResult<R> = Result<R, InterchainDaemonError>;
 /// We want to export some major elements
 pub use channel_creator::{ChannelCreationValidator, ChannelCreator};
 
-pub use interchain_env::DaemonInterchainEnv;
+pub use interchain_env::DaemonInterchain;

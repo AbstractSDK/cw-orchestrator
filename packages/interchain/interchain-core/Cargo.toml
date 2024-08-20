@@ -37,3 +37,5 @@ cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
 ] }
 cw-orch = { workspace = true }
 cosmos-sdk-proto = { workspace = true }
+ibc-proto = { workspace = true }
+prost-types = { workspace = true }

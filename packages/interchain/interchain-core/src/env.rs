@@ -311,13 +311,13 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// ``` rust,no_run
     /// use cw_orch::prelude::*;
     /// use cw_orch_interchain::prelude::*;
-    /// use cosmos_sdk_proto::{
-    ///     ibc::{
+    /// use ibc_proto::ibc::{
     ///         applications::transfer::v1::{MsgTransfer, MsgTransferResponse},
     ///         core::client::v1::Height,
-    ///     },
+    /// };
+    /// use prost_types::Any;
+    /// use cosmos_sdk_proto::{
     ///     traits::{Message, Name},
-    ///     Any,
     /// };
     /// let starship = Starship::new(None).unwrap();
     /// let interchain = starship.interchain_env();
@@ -343,7 +343,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     ///             value: MsgTransfer {
     ///                 source_port: src_channel.0.port.to_string(),
     ///                 source_channel: src_channel.0.channel.unwrap().to_string(),
-    ///                 token: Some(cosmos_sdk_proto::cosmos::base::v1beta1::Coin {
+    ///                 token: Some(ibc_proto::cosmos::base::v1beta1::Coin {
     ///                     amount: "100_000".to_string(),
     ///                     denom: "osmo".to_string(),
     ///                 }),
@@ -351,6 +351,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     ///                 receiver: archway.sender_addr().to_string(),
     ///                 timeout_height: None,
     ///                 timeout_timestamp: osmosis.block_info().unwrap().time.plus_seconds(600).nanos(),
+    ///                 memo: String::new(),
     ///             }.encode_to_vec(),
     ///             type_url: MsgTransfer::type_url(),
     ///         }

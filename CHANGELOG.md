@@ -13,6 +13,7 @@
 ### Breaking
 
 - Daemon state got flattened from `.chain_name.chain_id` to `.chain_id` to simplify state parsing.
+- Rename `DaemonInterchainEnv` to `DaemonInterchain` for consistency.
 
 ## 0.24.1
 

@@ -1,12 +1,12 @@
 use cw_orch::prelude::networks::{LOCAL_JUNO, LOCAL_MIGALOO, LOCAL_OSMO};
 use cw_orch::prelude::*;
 use cw_orch_interchain::{
-    ChannelCreationValidator, ChannelCreator, DaemonInterchainEnv, InterchainEnv, Starship,
+    ChannelCreationValidator, ChannelCreator, DaemonInterchain, InterchainEnv, Starship,
 };
 /// Others
 
-fn create_daemon_env() -> cw_orch::anyhow::Result<DaemonInterchainEnv> {
-    let mut interchain = DaemonInterchainEnv::new(
+fn create_daemon_env() -> cw_orch::anyhow::Result<DaemonInterchain> {
+    let mut interchain = DaemonInterchain::new(
         vec![(LOCAL_JUNO, None), (LOCAL_OSMO, None)],
         &ChannelCreationValidator,
     )?;
@@ -22,7 +22,7 @@ fn create_daemon_env() -> cw_orch::anyhow::Result<DaemonInterchainEnv> {
     Ok(interchain)
 }
 
-fn create_starship_env() -> cw_orch::anyhow::Result<DaemonInterchainEnv<Starship>> {
+fn create_starship_env() -> cw_orch::anyhow::Result<DaemonInterchain<Starship>> {
     let starship = Starship::new(None)?;
     let interchain = starship.interchain_env();
 

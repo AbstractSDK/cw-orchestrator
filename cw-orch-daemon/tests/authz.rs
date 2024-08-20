@@ -20,7 +20,7 @@ mod tests {
     use cw_orch_traits::Stargate;
     use prost::Message;
     use prost::Name;
-    use prost_types::{Any, Timestamp};
+    use prost_types::Any;
     pub const SECOND_MNEMONIC: &str ="salute trigger antenna west ignore own dance bounce battle soul girl scan test enroll luggage sorry distance traffic brand keen rich syrup wood repair";
 
     #[test]
@@ -57,13 +57,13 @@ mod tests {
             }
             .encode_to_vec(),
         };
-        let expiration = Timestamp {
+        let expiration = cosmrs::proto::Timestamp {
             seconds: (current_timestamp.seconds() + 3600) as i64,
             nanos: 0,
         };
         let grant = cosmrs::proto::cosmos::authz::v1beta1::Grant {
             authorization: Some(authorization.clone()),
-            expiration: Some(expiration.clone()),
+            expiration: Some(expiration),
         };
 
         // We start by granting authz to an account
@@ -85,7 +85,7 @@ mod tests {
             granter: sender.to_string(),
             grantee: grantee.to_string(),
             authorization: Some(authorization.clone()),
-            expiration: Some(expiration.clone()),
+            expiration: Some(expiration),
         };
 
         // Grants

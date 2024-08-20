@@ -6,15 +6,20 @@ members = [
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
+  # TODO: clone-cw-multi-test depends on cw-orch, so needs to be bumped first
   # "packages/clone-testing",
+  # TODO: release those after *-std reaches to prost 0.13
   # "packages/cw-orch-osmosis-test-tube",
-  "packages/cw-orch-neutron-test-tube",
+  # "packages/cw-orch-neutron-test-tube",
   "packages/cw-orch-traits",
   "test_contracts/*",
   "packages/macros/*",
   "packages/interchain/*",
 ]
-exclude = ["test_contracts/compatibility-test"]
+exclude = [
+  "test_contracts/compatibility-test", # TODO: add new after cw-orch-core 2.0.0 as it's breaking, it shouldn't be compatible
+  "packages/interchain/proto",         # TODO: Release cw-orch-proto after osmosis-std reaches prost 0.13
+]
 resolver = "2"
 
 [workspace.package]
@@ -27,7 +32,7 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 cw-utils = { version = "2.0.0" }
 cosmwasm-std = { version = "2.1" }
 cw-storage-plus = { version = "2.0.0" }
-cosmos-sdk-proto = { version = "0.22.0", default-features = false } # https://github.com/cosmos/cosmos-rust/issues/497
+cosmos-sdk-proto = { version = "0.24.0", default-features = false }
 
 cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", features = [
   "cosmwasm_1_2",
@@ -62,7 +67,7 @@ cw-orch-interchain-core = { path = "packages/interchain/interchain-core", versio
 cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.5.0" }
 cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.5.0" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.5.0" }
-cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" }
+# cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" } # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory)
 
 #Clone Testing
 # cw-orch-clone-testing = { version = "0.6.1", path = "packages/clone-testing" }
@@ -70,10 +75,11 @@ cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" }
 thiserror = { version = "1.0.63" }
 sha2 = { version = "0.10.8" }
 serde_json = "1.0.125"
-tonic = { version = "0.11.0" }
-prost-types = "0.12.3"
-prost = "0.12.3"                   # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory
-cosmrs = { version = "0.17.0" }
+tonic = { version = "0.12.1" }
+prost-types = "0.13.1"
+prost = "0.13.1"
+cosmrs = { version = "0.19.0" }
+ibc-proto = { version = "0.47.0" }
 # Test deps
 speculoos = "0.11.0"
 
