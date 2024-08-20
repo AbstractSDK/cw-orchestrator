@@ -3,7 +3,7 @@ use cw_orch::{
     environment::{ChainInfo, NetworkInfo},
     prelude::networks::osmosis::OSMOSIS_1,
 };
-use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchainEnv};
+use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchain};
 
 pub const NOBLE: NetworkInfo = NetworkInfo {
     chain_name: "noble",
@@ -27,7 +27,7 @@ fn follow_by_tx_hash() -> cw_orch::anyhow::Result<()> {
     let dst_chain = ARCHWAY_1;
     let src_chain = OSMOSIS_1;
 
-    let interchain = DaemonInterchainEnv::new(
+    let interchain = DaemonInterchain::new(
         vec![(src_chain.clone(), None), (dst_chain, None)],
         &ChannelCreationValidator,
     )?;

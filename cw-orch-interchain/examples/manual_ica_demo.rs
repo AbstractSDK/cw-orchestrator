@@ -18,7 +18,7 @@ fn main() {
 
     let starship = Starship::new(None).unwrap();
 
-    let interchain = DaemonInterchainEnv::from_daemons(
+    let interchain = DaemonInterchain::from_daemons(
         starship.daemons.values().cloned().collect(),
         &ChannelCreationValidator,
     );
