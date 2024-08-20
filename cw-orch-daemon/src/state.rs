@@ -7,7 +7,7 @@ use crate::{
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
-    environment::{ChainInfoOwned, Environment, EnvironmentQuerier, StateInterface},
+    environment::{ChainInfoOwned, CwEnv, Environment, StateInterface},
     log::local_target,
     CwEnvError,
 };
@@ -324,7 +324,7 @@ impl StateInterface for DaemonState {
     }
 }
 
-pub trait DeployedChains: cw_orch_core::contract::Deploy<crate::Daemon> {
+pub trait DeployedChains<Chain: CwEnv>: cw_orch_core::contract::Deploy<Chain> {
     /// Gets all the chain ids on which the library is deployed on
     /// This loads all chains that are registered in the crate-local daemon_state file
     /// The state file should have the following format :

@@ -60,6 +60,7 @@ pub use crate::daemon::{
     DaemonAsyncBuilder,
     // expose the sync variants
     DaemonBuilder,
+    DeployedChains,
 };
 
 #[cfg(feature = "daemon")]
