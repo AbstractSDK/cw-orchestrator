@@ -12,6 +12,8 @@
 
 ### Breaking
 
+- Daemon state got flattened from `.chain_name.chain_id` to `.chain_id` to simplify state parsing.
+
 ## 0.24.1
 
 - Added async query functions generations with cw_orch::QueryFns
