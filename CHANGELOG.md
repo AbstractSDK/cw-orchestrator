@@ -12,6 +12,8 @@
 
 ### Breaking
 
+- Rename `DaemonInterchainEnv` to `DaemonInterchain` for consistency.
+
 ## 0.24.1
 
 - Added async query functions generations with cw_orch::QueryFns
