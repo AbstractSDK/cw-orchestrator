@@ -4,7 +4,7 @@ This guide explains how to upgrade cw-orch in your contracts
 
 ## cw-orch-core 1.x.x -> 2.x.x (Cosmwasm 2.0)
 
-- bump cw-orch packages
+- Update cw-orch dependencies
 
     ```diff
     -cw-orch = { version = "0.24.0" }
@@ -13,7 +13,7 @@ This guide explains how to upgrade cw-orch in your contracts
     +cw-orch-interchain = { version = "0.4.0" }
     ```
 
-- bump cosmwasm packages
+- Update cosmwasm dependencies
 
     ```diff
     -cosmwasm-std = { version = "1.5.0", features = ["cosmwasm_1_2"] }
@@ -28,7 +28,7 @@ This guide explains how to upgrade cw-orch in your contracts
 
     For more detailed cosmwasm migration see: <https://github.com/CosmWasm/cosmwasm/blob/main/MIGRATING.md#15x---20x>
 
-- bump cosmwasm specifications
+- Update cosmwasm specifications dependencies
 
     ```diff
     -cw2 = { version = "1.0" }
@@ -37,19 +37,19 @@ This guide explains how to upgrade cw-orch in your contracts
     +cw20 = { version = "2.0" }
     ```
 
-- bump prost crates to 0.13 versions
+- Update prost dependencies to 0.13.x
 
     ```diff
     -prost = { version = "0.12.3", default-features = false }
     +prost = { version = "0.13.1", default-features = false }
     ```
 
-- bump cosmos-sdk-proto to 0.24+
+- Update cosmos-sdk-proto dependency to 0.24+
 
     ```diff
     -cosmos-sdk-proto = { version = "0.20.0", default-features = false }
     +cosmos-sdk-proto = { version = "0.24.0", default-features = false }
-    +ibc-proto = { version = "0.47.0" } # ibc types from cosmos-sdk-proto replaced by `ibc-proto` package 0.47+
+    +ibc-proto = { version = "0.47.0" } # ibc types from cosmos-sdk-proto replaced by `ibc-proto` package
     ```
 
 - `TxHandler::sender()` was deprecated in 1.1.2 and in 2.x.x versions returned value is `&TxHandler::Sender`, instead of `Addr`, for address please use `TxHandler::sender_addr()`
