@@ -99,7 +99,7 @@ Starship will most likely crash after at most 1 day of usage. Don't forget to `m
 
 All interchain environments are centered around the `await_single_packet` function. In the Daemon case (be it for testing or for scripting), this function is responsible for tracking the relayer interactions associated with the packet lifetime. The lifetime steps of this function are:
 
-1. <span style="color:purple">⬤</span> On the `source chain`, identify the packet and the destination chain. If the destination chain id is not registered in the `interchain` environment, it will error. Please make sure all the chains your are trying to inspect are included in the environment.
+1. <span style="color:purple">⬤</span> On the `source chain`, identify the packet and the destination chain. If the destination chain id is not registered in the `interchain` environment, it will error. Please make sure all the chains you are trying to inspect are included in the environment.
 2. Then, it follows the timeline of a packet. A packet can either timeout or be transmitted successfully. The function concurrently does the following steps. If one step returns successfully, the other step will be aborted (as a packet can only have one outcome).
     a. Successful cycle:
       1. <span style="color:red">⬤</span> On the `destination chain`, it looks for the receive transaction of that packet. The function logs the transaction hash as well as the acknowledgement when the receive transaction is found.
