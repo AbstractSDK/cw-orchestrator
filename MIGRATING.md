@@ -1,6 +1,6 @@
 # Migrating cw-orch
 
-This guide explains how to upgrade cw-orch in your contracts
+This guide explains how to upgrade cw-orch in your contracts.
 
 ## cw-orch-core 1.x.x -> 2.x.x (Cosmwasm 2.0)
 
