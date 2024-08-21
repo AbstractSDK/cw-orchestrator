@@ -460,7 +460,6 @@ fn get_mnemonic_env(chain_kind: &ChainKind) -> Result<String, CwEnvError> {
         ChainKind::Local => DaemonEnvVars::local_mnemonic(),
         ChainKind::Testnet => DaemonEnvVars::test_mnemonic(),
         ChainKind::Mainnet => DaemonEnvVars::main_mnemonic(),
-        _ => None,
     }
     .ok_or(CwEnvError::EnvVarNotPresentNamed(
         get_mnemonic_env_name(chain_kind).to_string(),
@@ -472,6 +471,5 @@ fn get_mnemonic_env_name(chain_kind: &ChainKind) -> &str {
         ChainKind::Local => LOCAL_MNEMONIC_ENV_NAME,
         ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
         ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
-        _ => panic!("Can't set mnemonic for unspecified chainkind"),
     }
 }
