@@ -12,6 +12,8 @@ A Rust tool for interacting with [CosmWasm](https://cosmwasm.com/) smart contrac
 
 The documentation here gives you a brief overview of the functionality that cw-orchestrator provides. We provide more documentation at [orchestrator.abstract.money](https://orchestrator.abstract.money).
 
+> Versions >= 0.25.0 are compatible with CosmWasm 2.x. For more information on migrating from CosmWasm 1.x to 2.x, see the [MIGRATING.md](./MIGRATING.md) file.
+
 ## How it works
 
 Interacting with a [CosmWasm](https://cosmwasm.com/) contract involves calling the contract's endpoints using the appropriate message for that endpoint (`ExecuteMsg`,`InstantiateMsg`, `QueryMsg`, `MigrateMsg`, etc.). cw-orchestrator generates typed interfaces for your contracts, allowing them to be type-checked at compile time. This generic interface then allows you to write environment-generic code, meaning that you can re-use the code that you write to deploy your application to `cw-multi-test` when deploying to test/mainnet.
