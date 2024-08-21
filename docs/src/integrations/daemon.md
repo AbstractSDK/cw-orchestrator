@@ -66,12 +66,10 @@ When calling the `upload` function on a contract, if the tx is successful, the d
 
 ```json
 {
-  "juno": {
-    "juno-1": {
-      "code_ids": {
-        "counter_contract": 1356,
-      },     
-    }
+  "juno-1": {
+    "code_ids": {
+      "counter_contract": 1356,
+    },     
   }
 }
 
@@ -83,14 +81,12 @@ When calling the `instantiate` function, if the tx is successful, the daemon wil
 
 ```json
 {
-  "juno": {
-    "juno-1": {
-      "code_ids": {
-        "counter_contract": 1356,
-      },
-      "default": {
-        "counter_contract": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
-      }
+  "juno-1": {
+    "code_ids": {
+      "counter_contract": 1356,
+    },
+    "default": {
+      "counter_contract": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
     }
   }
 }

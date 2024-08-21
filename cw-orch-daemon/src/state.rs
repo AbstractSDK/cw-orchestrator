@@ -1,13 +1,13 @@
 use super::error::DaemonError;
 use crate::{
     env::{default_state_folder, DaemonEnvVars},
-    json_lock::JsonLockedState,
+    json_lock::{patch_state_if_old, JsonLockedState},
     networks::ChainKind,
 };
 
 use cosmwasm_std::Addr;
 use cw_orch_core::{
-    environment::{ChainInfoOwned, Environment, EnvironmentQuerier, StateInterface},
+    environment::{ChainInfoOwned, CwEnv, Environment, StateInterface},
     log::local_target,
     CwEnvError,
 };
@@ -69,7 +69,6 @@ impl DaemonState {
         write_on_change: bool,
     ) -> Result<DaemonState, DaemonError> {
         let chain_id = &chain_data.chain_id;
-        let chain_name = &chain_data.network_info.chain_name;
 
         log::debug!(target: &local_target(), "Using state file : {}", json_file_path);
 
@@ -108,7 +107,7 @@ impl DaemonState {
             lock.insert(json_file_path);
             drop(lock);
 
-            json_file_state.prepare(chain_id, chain_name, &deployment_id);
+            json_file_state.prepare(chain_id, &deployment_id);
             if write_on_change {
                 json_file_state.force_write();
             }
@@ -165,16 +164,14 @@ impl DaemonState {
         let json = match &self.json_state {
             DaemonStateFile::ReadOnly { path } => {
                 let j = crate::json_lock::read(path)?;
+                let j = patch_state_if_old(j);
 
-                j[&self.chain_data.network_info.chain_name][&self.chain_data.chain_id].clone()
+                j[&self.chain_data.chain_id].clone()
             }
             DaemonStateFile::FullAccess { json_file_state } => json_file_state
                 .lock()
                 .unwrap()
-                .get(
-                    &self.chain_data.network_info.chain_name,
-                    &self.chain_data.chain_id,
-                )
+                .get(&self.chain_data.chain_id)
                 .clone(),
         };
         Ok(json[key].clone())
@@ -195,10 +192,7 @@ impl DaemonState {
         };
 
         let mut json_file_lock = json_file_state.lock().unwrap();
-        let val = json_file_lock.get_mut(
-            &self.chain_data.network_info.chain_name,
-            &self.chain_data.chain_id,
-        );
+        let val = json_file_lock.get_mut(&self.chain_data.chain_id);
         val[key][contract_id] = json!(value);
 
         if self.write_on_change {
@@ -218,10 +212,7 @@ impl DaemonState {
         };
 
         let mut json_file_lock = json_file_state.lock().unwrap();
-        let val = json_file_lock.get_mut(
-            &self.chain_data.network_info.chain_name,
-            &self.chain_data.chain_id,
-        );
+        let val = json_file_lock.get_mut(&self.chain_data.chain_id);
         val[key][contract_id] = Value::Null;
 
         if self.write_on_change {
@@ -257,10 +248,7 @@ impl DaemonState {
         };
 
         let mut json_file_lock = json_file_state.lock().unwrap();
-        let json = json_file_lock.get_mut(
-            &self.chain_data.network_info.chain_name,
-            &self.chain_data.chain_id,
-        );
+        let json = json_file_lock.get_mut(&self.chain_data.chain_id);
 
         *json = json!({});
 
@@ -336,7 +324,7 @@ impl StateInterface for DaemonState {
     }
 }
 
-pub trait DeployedChains: cw_orch_core::contract::Deploy<crate::Daemon> {
+pub trait DeployedChains<Chain: CwEnv>: cw_orch_core::contract::Deploy<Chain> {
     /// Gets all the chain ids on which the library is deployed on
     /// This loads all chains that are registered in the crate-local daemon_state file
     /// The state file should have the following format :
@@ -356,20 +344,13 @@ pub trait DeployedChains: cw_orch_core::contract::Deploy<crate::Daemon> {
         let deployed_state_file = Self::deployed_state_file_path();
         if let Some(state_file) = deployed_state_file {
             if let Ok(module_state_json) = crate::json_lock::read(&state_file) {
-                let all_chain_ids: Vec<String> = module_state_json
+                let module_state_json = patch_state_if_old(module_state_json);
+                return module_state_json
                     .as_object()
                     .unwrap()
-                    .into_iter()
-                    .flat_map(|(_, v)| {
-                        v.as_object()
-                            .unwrap()
-                            .into_iter()
-                            .map(|(chain_id, _)| chain_id.clone())
-                            .collect::<Vec<_>>()
-                    })
+                    .keys()
+                    .cloned()
                     .collect();
-
-                return all_chain_ids;
             }
         }
         vec![]
@@ -384,7 +365,7 @@ pub trait DeployedChains: cw_orch_core::contract::Deploy<crate::Daemon> {
             state = custom_state;
         } else if let Some(state_file) = state_file {
             if let Ok(module_state_json) = crate::json_lock::read(&state_file) {
-                state = module_state_json;
+                state = patch_state_if_old(module_state_json);
             } else {
                 return;
             }
