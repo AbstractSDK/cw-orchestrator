@@ -26,7 +26,7 @@ This guide explains how to upgrade cw-orch in your contracts
     +cw-storage-plus = "2.0.0"
     ```
 
-    For more detailed cosmwasm migration see: <https://github.com/CosmWasm/cosmwasm/blob/main/MIGRATING.md>
+    For more detailed cosmwasm migration see: <https://github.com/CosmWasm/cosmwasm/blob/main/MIGRATING.md#15x---20x>
 
 - bump cosmwasm specifications
 
