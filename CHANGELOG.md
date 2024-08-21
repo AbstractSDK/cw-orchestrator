@@ -2,6 +2,10 @@
 
 ## Unpublished
 
+### Breaking
+
+## 0.25.0
+
 - `is_test` Added for Daemon Builders, when set to `true` will use temporary file for state
 - Chain configs now can be edited from a networks config file. It will read `~/.cw-orchestrator/networks.json`, see example `networks.json.example`
 - New package `cw-orch-neutron-test-tube`
