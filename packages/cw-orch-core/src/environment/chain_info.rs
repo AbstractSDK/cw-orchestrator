@@ -100,14 +100,12 @@ impl From<NetworkInfo> for NetworkInfoOwned {
 #[serde(rename_all = "snake_case")]
 pub enum ChainKind {
     /// A local chain, used for development
+    #[default]
     Local,
     /// A mainnet chain
     Mainnet,
     /// A testnet chain
     Testnet,
-    #[default]
-    /// Unspecified chain kind
-    Unspecified,
 }
 
 impl Display for ChainKind {
@@ -116,7 +114,6 @@ impl Display for ChainKind {
             ChainKind::Local => "local",
             ChainKind::Testnet => "testnet",
             ChainKind::Mainnet => "mainnet",
-            ChainKind::Unspecified => "unspecified",
         };
         write!(f, "{}", str)
     }
@@ -128,7 +125,7 @@ impl From<String> for ChainKind {
             "local" => ChainKind::Local,
             "testnet" => ChainKind::Testnet,
             "mainnet" => ChainKind::Mainnet,
-            _ => ChainKind::Unspecified,
+            _ => ChainKind::Local,
         }
     }
 }
@@ -160,7 +157,7 @@ impl ChainInfoOwned {
                     pub_address_prefix,
                     coin_type,
                 },
-            kind,
+            ..
         } = chain_info;
 
         if !chain_id.is_empty() {
@@ -189,9 +186,6 @@ impl ChainInfoOwned {
         }
         if coin_type != 118 {
             self.network_info.coin_type = coin_type;
-        }
-        if kind != ChainKind::Unspecified {
-            self.kind = kind;
         }
         self
     }
