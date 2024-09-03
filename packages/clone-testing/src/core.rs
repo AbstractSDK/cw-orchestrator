@@ -224,8 +224,7 @@ impl<S: StateInterface> CloneTesting<S> {
         let state = Rc::new(RefCell::new(custom_state));
 
         let pub_address_prefix = chain.network_info.pub_address_prefix.clone();
-        let remote_channel =
-            RemoteChannel::new(rt, chain.clone(), pub_address_prefix.clone()).unwrap();
+        let remote_channel = RemoteChannel::new(rt, chain.clone()).unwrap();
 
         let wasm = WasmKeeper::<Empty, Empty>::new()
             .with_remote(remote_channel.clone())
