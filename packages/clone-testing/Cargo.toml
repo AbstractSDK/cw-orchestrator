@@ -21,7 +21,7 @@ cw-orch-mock = { version = "0.24.0" }
 cw-orch-daemon = { version = "0.25.0" }
 
 # clone-cw-multi-test = { version = "0.5", features = ["cosmwasm_1_2"] }
-clone-cw-multi-test = { path = "../../../cw-multi-test" }
+clone-cw-multi-test = { git = "https://github.com/AbstractSDK/cw-multi-test-fork/", branch = "clone-test/cosmwasm-2" }
 
 
 cw-utils = { workspace = true }
