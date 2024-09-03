@@ -278,8 +278,8 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
-    fn sender(&self) -> Addr {
-        self.sender_addr()
+    fn sender(&self) -> &cosmwasm_std::Addr {
+        &self.sender
     }
 
     fn sender_addr(&self) -> Addr {
@@ -602,8 +602,7 @@ mod test {
             .that(&query_res.balance)
             .is_equal_to(Uint128::from(100u128));
 
-        let migration_res =
-            chain.migrate(&cw20_base::msg::MigrateMsg {}, code_id, &contract_address);
+        let migration_res = chain.migrate(&Empty {}, code_id, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
             .is_ok();

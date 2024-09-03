@@ -1,7 +1,9 @@
-use counter_contract::CounterContract;
 use cw_orch::prelude::*;
 use cw_orch_clone_testing::CloneTesting;
 use cw_orch_daemon::networks::ARCHWAY_1;
+
+mod common;
+use common::counter_contract::CounterContract;
 
 #[test]
 fn multiple_upload() -> anyhow::Result<()> {

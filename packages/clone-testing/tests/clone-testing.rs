@@ -3,8 +3,6 @@ use cosmwasm_schema::QueryResponses;
 use cosmwasm_std::coins;
 use cosmwasm_std::Addr;
 use counter_contract::msg::MigrateMsg;
-use counter_contract::CounterContract;
-use counter_contract::CounterQueryMsgFns;
 use cw20::BalanceResponse;
 use cw20::Cw20QueryMsg;
 use cw_orch::daemon::networks::PHOENIX_1;
@@ -17,6 +15,9 @@ use cw_orch::prelude::*;
 use cw_orch_clone_testing::CloneTesting;
 
 use cosmwasm_std::Empty;
+
+mod common;
+use common::counter_contract::CounterContract;
 
 /// For those Who don't know, CAVERN PROTOCOL was a money market
 #[test]
@@ -57,7 +58,7 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
 
     // 0. We start by saving some useful information for later (admin for migration (1.) + code id for remigration (3.))
 
-    let contract_info = app.wasm_querier().contract_info(market_addr.to_string())?;
+    let contract_info = app.wasm_querier().contract_info(&market_addr)?;
 
     let money_market_admin = Addr::unchecked(contract_info.admin.unwrap());
     let money_market_code_id = contract_info.code_id;
@@ -76,7 +77,9 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
         .unwrap();
 
     // 2. We see that the state is not correctly initialized on this contract (because it's the wrong code id)
-    let err = counter_contract.get_count().unwrap_err();
+    let err = counter_contract
+        .query::<GetCountResponse>(&counter_contract::msg::QueryMsg::GetCount {})
+        .unwrap_err();
 
     if !err
         .to_string()
@@ -183,6 +186,6 @@ fn query_contract_info() -> cw_orch::anyhow::Result<()> {
     let market_addr = Addr::unchecked(MARKET_ADDR);
     market.set_address(&market_addr);
 
-    app.wasm_querier().contract_info(market.address()?)?;
+    app.wasm_querier().contract_info(&market.address()?)?;
     Ok(())
 }

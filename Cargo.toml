@@ -6,8 +6,7 @@ members = [
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
-  # TODO: clone-cw-multi-test depends on cw-orch, so needs to be bumped first
-  # "packages/clone-testing",
+  "packages/clone-testing",
   # TODO: release those after *-std reaches to prost 0.13
   # "packages/cw-orch-osmosis-test-tube",
   # "packages/cw-orch-neutron-test-tube",

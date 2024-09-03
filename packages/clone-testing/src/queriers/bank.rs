@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::Coin;
+use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     environment::{BankQuerier, Querier, QuerierGetter, StateInterface},
     CwEnvError,
