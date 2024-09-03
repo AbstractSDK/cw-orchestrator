@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-clone-testing"
-version = "0.6.4"
+version = "0.7.0-alpha.1"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,17 +11,13 @@ description = "Adapter for interacting with cw-multi-test via the cw-orchestrato
 
 [dependencies]
 cosmwasm-std = { workspace = true }
-# cw-orch-daemon = { workspace = true }
-# cw-orch-core = { workspace = true }
-# cw-orch-mock = { workspace = true }
 
 # This package depends on published cw-orch version due to the clone-testing-cw-multi-test dependency
 cw-orch-core = { version = "2.0.0" }
 cw-orch-mock = { version = "0.24.0" }
 cw-orch-daemon = { version = "0.25.0" }
 
-# clone-cw-multi-test = { version = "0.5", features = ["cosmwasm_1_2"] }
-clone-cw-multi-test = { git = "https://github.com/AbstractSDK/cw-multi-test-fork/", branch = "clone-test/cosmwasm-2" }
+clone-cw-multi-test = { version = "0.6.0-alpha.1" }
 
 
 cw-utils = { workspace = true }
