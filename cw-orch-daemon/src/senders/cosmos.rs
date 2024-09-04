@@ -132,6 +132,8 @@ impl Wallet {
         self.options.clone()
     }
 
+    /// Replaces the private key that the [CosmosSender] is using with the provided mnemonic string.
+    /// If you want more control over the derived private key, use [Self::set_private_key]
     pub fn set_mnemonic(&mut self, mnemonic: impl Into<String>) -> Result<(), DaemonError> {
         let secp = Secp256k1::new();
 
@@ -146,6 +148,8 @@ impl Wallet {
         Ok(())
     }
 
+    /// Replaces the private key the sender is using
+    /// If you only need to change the mnemonic, use [Self::set_mnemonic]
     pub fn set_private_key(&mut self, private_key: PrivateKey) {
         self.private_key = private_key
     }
