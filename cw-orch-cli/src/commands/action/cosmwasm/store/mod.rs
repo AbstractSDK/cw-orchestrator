@@ -1,11 +1,7 @@
-use color_eyre::eyre::Context;
-use cw_orch::{
-    daemon::{CosmTxResponse, TxSender},
-    prelude::{DaemonAsync, IndexResponse},
-    tokio::runtime::Runtime,
-};
+use crate::{commands::action::CosmosContext, types::keys::seed_phrase_for_id};
 
-use crate::{commands::action::CosmosContext, log::LogOutput, types::keys::seed_phrase_for_id};
+use color_eyre::eyre::Context;
+use cw_orch::{daemon::TxSender, prelude::*};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -38,24 +34,33 @@ impl StoreWasmOutput {
             scope.wasm_path.0.display()
         ))?;
 
-        let rt = Runtime::new()?;
-        let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
+        let daemon = chain.daemon(seed)?;
 
-            let exec_msg = cosmrs::cosmwasm::MsgStoreCode {
-                sender: daemon.sender().account_id(),
-                wasm_byte_code,
-                instantiate_permission: None,
-            };
-
-            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
-        })?;
-        resp.log(chain.chain_info());
-
+        let upload_msg = cosmrs::cosmwasm::MsgStoreCode {
+            sender: daemon.sender().account_id(),
+            wasm_byte_code,
+            instantiate_permission: None,
+        };
+        let resp = daemon
+            .rt_handle
+            .block_on(daemon.sender().commit_tx(vec![upload_msg], None))?;
         let code_id = resp.uploaded_code_id().unwrap();
         println!("code_id: {code_id}");
 
         Ok(StoreWasmOutput)
     }
 }
+
+// TODO: the dream here to use Uploadable instead
+// fn uploadable_from_path(wasm_path: WasmPath) -> impl Uploadable {
+//     struct Placeholder {
+//         wasm_path: WasmPath,
+//     }
+//     impl Uploadable for Placeholder {
+//         fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
+//             // having &self.wasm_path instead would solve the issue
+//             wasm_path
+//         }
+//     }
+//     Placeholder { wasm_path }
+// }

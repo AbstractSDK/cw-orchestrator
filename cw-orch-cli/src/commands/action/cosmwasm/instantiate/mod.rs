@@ -1,10 +1,3 @@
-use color_eyre::eyre::Context;
-use cw_orch::{
-    daemon::{CosmTxResponse, TxSender},
-    prelude::{DaemonAsync, IndexResponse},
-    tokio::runtime::Runtime,
-};
-
 use crate::{
     commands::action::CosmosContext,
     log::LogOutput,
@@ -12,6 +5,9 @@ use crate::{
 };
 
 use super::msg_type;
+
+use color_eyre::eyre::Context;
+use cw_orch::{daemon::TxSender, prelude::*};
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -66,22 +62,20 @@ impl InstantiateWasmOutput {
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
-        let rt = Runtime::new()?;
-        let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
+        let daemon = chain.daemon(seed)?;
 
-            let exec_msg = cosmrs::cosmwasm::MsgInstantiateContract {
-                sender: daemon.sender().account_id(),
-                admin: scope.admin.clone().0.map(|a| a.parse()).transpose()?,
-                code_id: scope.code_id,
-                label: Some(scope.label.clone()),
-                msg,
-                funds: coins,
-            };
+        let init_msg = cosmrs::cosmwasm::MsgInstantiateContract {
+            sender: daemon.sender().account_id(),
+            admin: scope.admin.clone().0.map(|a| a.parse()).transpose()?,
+            code_id: scope.code_id,
+            label: Some(scope.label.clone()),
+            msg,
+            funds: coins,
+        };
 
-            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
-        })?;
+        let resp = daemon
+            .rt_handle
+            .block_on(daemon.sender().commit_tx(vec![init_msg], None))?;
         resp.log(chain.chain_info());
 
         let address = resp.instantiated_contract_address()?;

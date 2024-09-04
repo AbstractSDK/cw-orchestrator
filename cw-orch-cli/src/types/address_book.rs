@@ -296,19 +296,21 @@ pub fn cw_orch_state_contracts(
 
     let json = read_cw_orch_state()?;
 
-    let Some(chain_state) = json.get(chain_name) else {
-        return Err(color_eyre::eyre::eyre!("State is empty for {chain_name}"));
+    let chain_state = if let Some(chain_state) = json.get(chain_name) {
+        // In case old state
+        // TODO: should be able to remove in the future
+        chain_state
+    } else {
+        &json
     };
 
     let Some(chain_id_state) = chain_state.get(chain_id) else {
-        return Err(color_eyre::eyre::eyre!(
-            "State is empty for {chain_name}.{chain_id}"
-        ));
+        return Err(color_eyre::eyre::eyre!("State is empty for {chain_id}"));
     };
 
     let Some(deployment) = chain_id_state.get(deployment_id) else {
         return Err(color_eyre::eyre::eyre!(
-            "State is empty for {chain_name}.{chain_id}.{deployment_id}"
+            "State is empty for {chain_id}.{deployment_id}"
         ));
     };
 

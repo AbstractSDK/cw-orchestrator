@@ -1,12 +1,12 @@
-use color_eyre::eyre::Context;
-use cw_orch::{daemon::Daemon, tokio::runtime::Runtime};
-
 use crate::{
     log::LogOutput,
     types::{keys::seed_phrase_for_id, CliAddress, CliCoins},
 };
 
 use super::CosmosContext;
+
+use color_eyre::eyre::Context;
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -45,15 +45,16 @@ impl SendNativeOutput {
             .to_address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let to_address = Addr::unchecked(to_address);
 
         let seed = seed_phrase_for_id(&scope.signer)?;
         let coins = scope.coins.clone().into();
 
-        let rt = Runtime::new()?;
+        let daemon = chain.daemon(seed)?;
 
-        let daemon = Daemon::builder(chain).mnemonic(seed).build()?;
-
-        let resp = rt.block_on(daemon.sender().bank_send(to_address.as_ref(), coins))?;
+        let resp = daemon
+            .rt_handle
+            .block_on(daemon.sender().bank_send(&to_address, coins))?;
         resp.log(chain.chain_info());
 
         Ok(SendNativeOutput)

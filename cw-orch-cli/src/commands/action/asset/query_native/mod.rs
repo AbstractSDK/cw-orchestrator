@@ -1,8 +1,8 @@
-use cw_orch::{daemon::GrpcChannel, environment::ChainInfoOwned, tokio::runtime::Runtime};
-
 use crate::types::{CliAddress, CliSkippable};
 
 use super::CosmosContext;
+
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -28,28 +28,19 @@ impl QueryNativeOutput {
             .address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let addr = Addr::unchecked(account_id);
 
-        let chain_data: ChainInfoOwned = chain.into();
-        let rt = Runtime::new()?;
+        let daemon = chain.daemon_querier()?;
 
-        rt.block_on(async {
-            let grpc_channel =
-                GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
-            let bank = cw_orch::daemon::queriers::Bank::new_async(grpc_channel);
-            if let Some(denom) = denom {
-                let balance = bank
-                    ._balance(account_id.to_string(), Some(denom))
-                    .await?
-                    .swap_remove(0);
-                println!("balance: {balance}")
-            } else {
-                let balances = bank._balance(account_id.to_string(), None).await?;
-                // `cosmwasm_std::Coins` have nice display
-                let coins = cosmwasm_std::Coins::try_from(balances).unwrap();
-                println!("balances: {coins}")
-            }
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
-        })?;
+        if let Some(denom) = denom {
+            let balance = daemon.balance(&addr, Some(denom))?.swap_remove(0);
+            println!("balance: {balance}")
+        } else {
+            let balances = daemon.balance(&addr, None)?;
+            // `cosmwasm_std::Coins` have nice display
+            let coins = cosmwasm_std::Coins::try_from(balances).unwrap();
+            println!("balances: {coins}")
+        }
 
         Ok(QueryNativeOutput)
     }

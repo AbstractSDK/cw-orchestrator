@@ -1,12 +1,12 @@
+use super::CosmosContext;
+
+use strum::{EnumDiscriminants, EnumIter, EnumMessage};
+
 mod execute;
 mod instantiate;
 pub mod msg_type;
 mod query;
 mod store;
-
-use strum::{EnumDiscriminants, EnumIter, EnumMessage};
-
-use super::CosmosContext;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(context = CosmosContext)]

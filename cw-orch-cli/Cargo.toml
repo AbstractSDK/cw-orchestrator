@@ -18,10 +18,10 @@ async-trait = { version = "0.1" }
 
 # Cosmos
 cosmwasm-std = { workspace = true }
-cw-utils = "1.0.3"
-cw20 = { version = "1" }
-cw-ownable = { version = "0.5.1" }
-cosmrs = { version = "0.15.0", features = ["cosmwasm", "grpc"] }
+cw-utils = "2.0.0"
+cw20 = { version = "2.0" }
+cw-ownable = { version = "2.0.0" }
+cosmrs = { workspace = true, features = ["cosmwasm", "grpc"] }
 ibc-chain-registry = { workspace = true }
 
 # Serde

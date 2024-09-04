@@ -1,11 +1,8 @@
-use cosmrs::proto::cosmwasm::wasm::v1::{
-    query_client::QueryClient, QuerySmartContractStateRequest, QuerySmartContractStateResponse,
-};
-use cw_orch::{daemon::GrpcChannel, environment::ChainInfoOwned, tokio::runtime::Runtime};
-
 use crate::{commands::action::CosmosContext, types::CliAddress};
 
 use super::super::msg_type;
+
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -40,29 +37,15 @@ impl QueryWasmOutput {
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
-
+        let contract_addr = Addr::unchecked(contract_account_id);
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
-        let chain_data: ChainInfoOwned = chain.into();
+        let daemon = chain.daemon_querier()?;
 
-        let rt = Runtime::new()?;
-        // TODO: replace by no-signer daemon
-        let resp = rt.block_on(async {
-            let grpc_channel =
-                GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
-            let mut client = QueryClient::new(grpc_channel);
-
-            let resp = client
-                .smart_contract_state(QuerySmartContractStateRequest {
-                    address: contract_account_id.to_string(),
-                    query_data: msg,
-                })
-                .await?;
-            color_eyre::Result::<QuerySmartContractStateResponse, color_eyre::Report>::Ok(
-                resp.into_inner(),
-            )
-        })?;
-        let parsed_output: Option<serde_json::Value> = serde_json::from_slice(&resp.data)?;
+        let resp_data = daemon
+            .rt_handle
+            .block_on(daemon.wasm_querier()._contract_state(&contract_addr, msg))?;
+        let parsed_output: Option<serde_json::Value> = serde_json::from_slice(&resp_data)?;
         let output = parsed_output.unwrap_or_default();
         println!("{}", serde_json::to_string_pretty(&output)?);
 

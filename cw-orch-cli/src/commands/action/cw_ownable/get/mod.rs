@@ -1,12 +1,8 @@
-use cw_orch::{daemon::GrpcChannel, environment::ChainInfoOwned, tokio::runtime::Runtime};
-
-use cosmrs::proto::cosmwasm::wasm::v1::{
-    query_client::QueryClient, QuerySmartContractStateRequest,
-};
-
 use crate::{commands::action::CosmosContext, types::CliAddress};
 
 use super::ContractQueryMsg;
+
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -28,27 +24,14 @@ impl GetOwnershipOutput {
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let contract_addr = Addr::unchecked(contract_account_id);
 
-        let msg = serde_json::to_vec(&ContractQueryMsg::Ownership {})?;
-        let chain_data: ChainInfoOwned = chain.into();
+        let daemon = chain.daemon_querier()?;
 
-        // TODO: replace by no-signer daemon
-        let rt = Runtime::new()?;
-        rt.block_on(async {
-            let grpc_channel =
-                GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
-            let mut client = QueryClient::new(grpc_channel);
-
-            let resp = client
-                .smart_contract_state(QuerySmartContractStateRequest {
-                    address: contract_account_id.to_string(),
-                    query_data: msg,
-                })
-                .await?;
-            let parsed_output: serde_json::Value = serde_json::from_slice(&resp.into_inner().data)?;
-            println!("{}", serde_json::to_string_pretty(&parsed_output)?);
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
-        })?;
+        let output: serde_json::Value = daemon
+            .wasm_querier()
+            .smart_query(&contract_addr, &ContractQueryMsg::Ownership {})?;
+        println!("{}", serde_json::to_string_pretty(&output)?);
 
         Ok(GetOwnershipOutput)
     }

@@ -1,7 +1,7 @@
+use crate::commands::action::CosmosContext;
+
 use serde::Serialize;
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
-
-use crate::commands::action::CosmosContext;
 
 mod accept;
 mod get;
@@ -9,7 +9,7 @@ mod renounce;
 mod transfer;
 
 // Helper enum to serialize execute
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
 enum ContractExecuteMsg {
     UpdateOwnership(cw_ownable::Action),

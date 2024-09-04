@@ -18,6 +18,8 @@ pub struct Explorer {
 }
 
 impl Fetchable for Explorers {
+    const DESC: &'static str = "Getting explorers list";
+
     fn path(resource: &str) -> PathBuf {
         [resource, "chain.json"].iter().collect()
     }

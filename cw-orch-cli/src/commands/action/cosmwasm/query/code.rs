@@ -1,6 +1,6 @@
 use crate::commands::action::CosmosContext;
 
-use cw_orch::{daemon::DaemonBuilder, environment::ChainInfoOwned, prelude::*};
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -19,8 +19,8 @@ impl QueryCodeOutput {
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
 
-        let chain_data: ChainInfoOwned = chain.into();
-        let daemon = DaemonBuilder::new(chain_data.clone()).build_sender(())?;
+        let daemon = chain.daemon_querier()?;
+
         let code_info = daemon.wasm_querier().code(scope.code_id)?;
         println!("{}", serde_json::to_string_pretty(&code_info)?);
 

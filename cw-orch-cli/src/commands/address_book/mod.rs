@@ -1,11 +1,11 @@
+use crate::{types::CliLockedChain, GlobalConfig};
+
+use strum::{EnumDiscriminants, EnumIter, EnumMessage};
+
 mod add_address;
 mod fetch_cw_orch;
 mod remove_address;
 mod show_address;
-
-use strum::{EnumDiscriminants, EnumIter, EnumMessage};
-
-use crate::{types::CliLockedChain, GlobalConfig};
 
 #[derive(Clone, Debug)]
 pub struct AddresBookContext {

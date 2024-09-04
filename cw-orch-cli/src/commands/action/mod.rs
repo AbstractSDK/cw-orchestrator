@@ -1,10 +1,10 @@
-mod asset;
-mod cosmwasm;
-mod cw_ownable;
+use crate::{types::CliLockedChain, GlobalConfig};
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
-use crate::{types::CliLockedChain, GlobalConfig};
+mod asset;
+mod cosmwasm;
+mod cw_ownable;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = GlobalConfig)]

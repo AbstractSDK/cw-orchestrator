@@ -1,13 +1,9 @@
-use cw20::BalanceResponse;
-use cw_orch::{daemon::GrpcChannel, environment::ChainInfoOwned, tokio::runtime::Runtime};
-
-use cosmrs::proto::cosmwasm::wasm::v1::{
-    query_client::QueryClient, QuerySmartContractStateRequest,
-};
-
 use crate::types::CliAddress;
 
 use super::CosmosContext;
+
+use cw20::BalanceResponse;
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -35,29 +31,15 @@ impl QueryCw20Output {
             .address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
-        let chain_data: ChainInfoOwned = chain.into();
-        let msg = serde_json::to_vec(&cw20::Cw20QueryMsg::Balance {
-            address: account_id.to_string(),
-        })?;
+        let daemon = chain.daemon_querier()?;
 
-        let rt = Runtime::new()?;
-
-        rt.block_on(async {
-            let grpc_channel =
-                GrpcChannel::connect(&chain_data.grpc_urls, chain_data.chain_id.as_str()).await?;
-            let mut client = QueryClient::new(grpc_channel);
-
-            let resp = client
-                .smart_contract_state(QuerySmartContractStateRequest {
-                    address: cw20_account_id.to_string(),
-                    query_data: msg,
-                })
-                .await?;
-            let parsed_output: BalanceResponse = serde_json::from_slice(&resp.into_inner().data)?;
-            println!("{}", serde_json::to_string_pretty(&parsed_output)?);
-
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
-        })?;
+        let balance: BalanceResponse = daemon.query(
+            &(cw20::Cw20QueryMsg::Balance {
+                address: account_id.to_string(),
+            }),
+            &Addr::unchecked(cw20_account_id),
+        )?;
+        println!("{}", serde_json::to_string_pretty(&balance)?);
 
         Ok(QueryCw20Output)
     }

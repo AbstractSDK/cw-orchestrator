@@ -1,13 +1,13 @@
-use color_eyre::eyre::Context;
-use cw_orch::daemon::TxSender;
-use cw_orch::{daemon::CosmTxResponse, prelude::DaemonAsync, tokio::runtime::Runtime};
-
-use crate::log::LogOutput;
-use crate::types::keys::seed_phrase_for_id;
-use crate::types::CliAddress;
-use crate::{commands::action::CosmosContext, types::CliCoins};
+use crate::{
+    commands::action::CosmosContext,
+    log::LogOutput,
+    types::{keys::seed_phrase_for_id, CliAddress, CliCoins},
+};
 
 use super::msg_type;
+
+use color_eyre::eyre::Context;
+use cw_orch::daemon::TxSender;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -63,20 +63,16 @@ impl ExecuteWasmOutput {
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
-        let rt = Runtime::new()?;
-        let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
-
-            let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender().account_id(),
-                contract: contract_account_id,
-                msg,
-                funds: coins,
-            };
-
-            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
-        })?;
+        let daemon = chain.daemon(seed)?;
+        let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
+            sender: daemon.sender().account_id(),
+            contract: contract_account_id,
+            msg,
+            funds: coins,
+        };
+        let resp = daemon
+            .rt_handle
+            .block_on(daemon.sender().commit_tx(vec![exec_msg], None))?;
 
         resp.log(chain.chain_info());
 

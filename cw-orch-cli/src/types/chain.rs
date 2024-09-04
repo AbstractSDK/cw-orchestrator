@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
 use cw_orch::{
-    daemon::networks::SUPPORTED_NETWORKS,
+    daemon::{
+        networks::SUPPORTED_NETWORKS, senders::QueryOnlyDaemon, Daemon, DaemonBuilder, DaemonError,
+    },
     environment::{ChainInfo, ChainInfoOwned},
 };
 
@@ -15,6 +17,16 @@ impl CliLockedChain {
 
     pub fn chain_info(&self) -> &ChainInfo {
         &SUPPORTED_NETWORKS[self.0]
+    }
+
+    pub fn daemon(&self, seed: String) -> Result<Daemon, DaemonError> {
+        DaemonBuilder::new(SUPPORTED_NETWORKS[self.0].clone())
+            .mnemonic(seed)
+            .build()
+    }
+
+    pub fn daemon_querier(&self) -> Result<QueryOnlyDaemon, DaemonError> {
+        DaemonBuilder::new(SUPPORTED_NETWORKS[self.0].clone()).build_sender(())
     }
 }
 

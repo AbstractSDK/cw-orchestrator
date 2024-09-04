@@ -1,8 +1,3 @@
-use cw_orch::{
-    daemon::{CosmTxResponse, DaemonAsync, TxSender},
-    tokio::runtime::Runtime,
-};
-
 use crate::{
     commands::action::CosmosContext,
     log::LogOutput,
@@ -10,6 +5,8 @@ use crate::{
 };
 
 use super::ContractExecuteMsg;
+
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -35,32 +32,21 @@ impl RenounceOwnershipOutput {
         scope:&<RenounceOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let contract = scope
+        let contract_account_id = scope
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
-
-        let sender_seed = seed_phrase_for_id(&scope.signer)?;
+        let contract_addr = Addr::unchecked(contract_account_id);
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let action = cw_ownable::Action::RenounceOwnership {};
-        let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
 
-        let rt = Runtime::new()?;
-        let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder(chain)
-                .mnemonic(sender_seed)
-                .build()
-                .await?;
+        let daemon = chain.daemon(seed)?;
 
-            let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender().account_id(),
-                contract,
-                msg,
-                funds: vec![],
-            };
-
-            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
-        })?;
+        let resp = daemon.execute(
+            &ContractExecuteMsg::UpdateOwnership(action),
+            &[],
+            &contract_addr,
+        )?;
         resp.log(chain.chain_info());
 
         Ok(RenounceOwnershipOutput)

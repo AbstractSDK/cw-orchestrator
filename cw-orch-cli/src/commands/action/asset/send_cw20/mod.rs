@@ -1,15 +1,12 @@
-use cosmwasm_std::Uint128;
-use cw_orch::{
-    daemon::{CosmTxResponse, DaemonAsync, TxSender},
-    tokio::runtime::Runtime,
-};
-
 use crate::{
     log::LogOutput,
     types::{keys::seed_phrase_for_id, CliAddress},
 };
 
 use super::CosmosContext;
+
+use cosmwasm_std::Uint128;
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -47,28 +44,18 @@ impl SendCw20Output {
             .cw20_address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let cw20_addr = Addr::unchecked(cw20_account_id);
 
         let seed = seed_phrase_for_id(&scope.signer)?;
-        let cw20_msg = cw20::Cw20ExecuteMsg::Transfer {
-            recipient: to_address_account_id.to_string(),
-            amount: Uint128::new(scope.amount),
-        };
-        let msg = serde_json::to_vec(&cw20_msg)?;
-        let rt = Runtime::new()?;
-
-        let resp = rt.block_on(async {
-            let daemon = DaemonAsync::builder(chain).mnemonic(seed).build().await?;
-
-            let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender().account_id(),
-                contract: cw20_account_id,
-                msg,
-                funds: vec![],
-            };
-
-            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-            color_eyre::Result::<CosmTxResponse, color_eyre::Report>::Ok(resp)
-        })?;
+        let daemon = chain.daemon(seed)?;
+        let resp = daemon.execute(
+            &cw20::Cw20ExecuteMsg::Transfer {
+                recipient: to_address_account_id.to_string(),
+                amount: Uint128::new(scope.amount),
+            },
+            &[],
+            &cw20_addr,
+        )?;
 
         resp.log(chain.chain_info());
 

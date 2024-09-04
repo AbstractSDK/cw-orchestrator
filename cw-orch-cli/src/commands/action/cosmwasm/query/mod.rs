@@ -1,6 +1,6 @@
-use strum::{EnumDiscriminants, EnumIter, EnumMessage};
-
 use crate::commands::action::CosmosContext;
+
+use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 mod code;
 mod contract_info;

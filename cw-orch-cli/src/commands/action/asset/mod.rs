@@ -1,11 +1,11 @@
+use super::CosmosContext;
+
+use strum::{EnumDiscriminants, EnumIter, EnumMessage};
+
 mod query_cw20;
 mod query_native;
 mod send_cw20;
 mod send_native;
-
-use strum::{EnumDiscriminants, EnumIter, EnumMessage};
-
-use super::CosmosContext;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(context = CosmosContext)]

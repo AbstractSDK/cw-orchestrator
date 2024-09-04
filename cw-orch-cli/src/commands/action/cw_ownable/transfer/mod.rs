@@ -1,8 +1,3 @@
-use cw_orch::{
-    daemon::{DaemonAsync, TxSender},
-    tokio::runtime::Runtime,
-};
-
 use crate::{
     commands::action::CosmosContext,
     common::parse_expiration,
@@ -11,6 +6,8 @@ use crate::{
 };
 
 use super::ContractExecuteMsg;
+
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -48,16 +45,17 @@ impl TransferOwnershipOutput {
         scope:&<TransferOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let contract = scope
+        let contract_account_id = scope
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let contract_addr = Addr::unchecked(contract_account_id);
         let new_owner = scope
             .new_owner
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
 
-        let sender_seed = seed_phrase_for_id(&scope.signer)?;
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let receiver_seed = scope
             .new_signer
             .0
@@ -68,43 +66,27 @@ impl TransferOwnershipOutput {
             new_owner: new_owner.to_string(),
             expiry: Some(scope.expiration.0),
         };
-        let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
 
-        let rt = Runtime::new()?;
-        rt.block_on(async {
-            let daemon = DaemonAsync::builder(chain)
-                .mnemonic(sender_seed)
-                .build()
-                .await?;
+        let daemon = chain.daemon(seed)?;
+        let resp = daemon.execute(
+            &ContractExecuteMsg::UpdateOwnership(action),
+            &[],
+            &contract_addr,
+        )?;
+        resp.log(chain.chain_info());
+        println!("Successfully transferred ownership, waiting for approval by {new_owner}",);
 
-            let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                sender: daemon.sender().account_id(),
-                contract: contract.clone(),
-                msg,
-                funds: vec![],
-            };
-
-            let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-
+        if let Some(seed) = receiver_seed {
+            let daemon = daemon.rebuild().mnemonic(seed).build()?;
+            let action = cw_ownable::Action::AcceptOwnership {};
+            let resp = daemon.execute(
+                &ContractExecuteMsg::UpdateOwnership(action),
+                &[],
+                &contract_addr,
+            )?;
             resp.log(chain.chain_info());
-            println!("Successfully transferred ownership, waiting for approval by {new_owner}",);
-
-            if let Some(seed) = receiver_seed {
-                let daemon = daemon.rebuild().mnemonic(seed).build().await?;
-                let action = cw_ownable::Action::AcceptOwnership {};
-                let msg = serde_json::to_vec(&ContractExecuteMsg::UpdateOwnership(action))?;
-                let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
-                    sender: daemon.sender().account_id(),
-                    contract,
-                    msg,
-                    funds: vec![],
-                };
-                let resp = daemon.sender().commit_tx(vec![exec_msg], None).await?;
-                resp.log(chain.chain_info());
-                println!("{new_owner} successfully accepted ownership");
-            }
-            color_eyre::Result::<(), color_eyre::Report>::Ok(())
-        })?;
+            println!("{new_owner} successfully accepted ownership");
+        }
 
         Ok(TransferOwnershipOutput)
     }

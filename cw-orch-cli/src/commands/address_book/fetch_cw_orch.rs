@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
-use strum::IntoEnumIterator;
-
 use crate::types::address_book::{self, cw_orch_state_contracts, CW_ORCH_STATE_FILE_DAMAGED_ERROR};
 
 use super::AddresBookContext;
+
+use strum::IntoEnumIterator;
 
 #[derive(Debug, strum::EnumDiscriminants, strum::Display, Clone, clap::ValueEnum)]
 #[strum_discriminants(derive(strum::EnumMessage, strum::EnumIter))]

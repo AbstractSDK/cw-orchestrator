@@ -1,6 +1,6 @@
 use crate::{commands::action::CosmosContext, types::CliAddress};
 
-use cw_orch::{daemon::DaemonBuilder, environment::ChainInfoOwned, prelude::*};
+use cw_orch::prelude::*;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
 #[interactive_clap(input_context = CosmosContext)]
@@ -22,12 +22,11 @@ impl QueryContractInfoOutput {
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let addr = Addr::unchecked(account_id);
 
-        let chain_data: ChainInfoOwned = chain.into();
-        let daemon = DaemonBuilder::new(chain_data.clone()).build_sender(())?;
-        let contract_info = daemon
-            .wasm_querier()
-            .contract_info(account_id.to_string())?;
+        let daemon = chain.daemon_querier()?;
+
+        let contract_info = daemon.wasm_querier().contract_info(&addr)?;
         println!("{}", serde_json::to_string_pretty(&contract_info)?);
 
         Ok(QueryContractInfoOutput)
