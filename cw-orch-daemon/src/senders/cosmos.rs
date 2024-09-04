@@ -132,6 +132,24 @@ impl Wallet {
         self.options.clone()
     }
 
+    pub fn set_mnemonic(&mut self, mnemonic: impl Into<String>) -> Result<(), DaemonError> {
+        let secp = Secp256k1::new();
+
+        let pk = PrivateKey::from_words(
+            &secp,
+            &mnemonic.into(),
+            0,
+            self.options.hd_index.unwrap_or(0),
+            self.chain_info.network_info.coin_type,
+        )?;
+        self.set_private_key(pk);
+        Ok(())
+    }
+
+    pub fn set_private_key(&mut self, private_key: PrivateKey) {
+        self.private_key = private_key
+    }
+
     pub fn set_authz_granter(&mut self, granter: &Addr) {
         self.options.authz_granter = Some(granter.to_owned());
     }
