@@ -155,10 +155,7 @@ impl CloneTesting {
         let mut file = std::fs::File::open(T::wasm(&self.chain).path())?;
         let mut wasm = Vec::<u8>::new();
         file.read_to_end(&mut wasm)?;
-        let code_id = self
-            .app
-            .borrow_mut()
-            .store_wasm_code(WasmContract::Local(LocalWasmContract { code: wasm }));
+        let code_id = self.app.borrow_mut().store_wasm_code(wasm);
 
         contract.set_code_id(code_id);
 
