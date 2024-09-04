@@ -54,16 +54,18 @@ impl ExecuteWasmOutput {
         scope:&<ExecuteContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
+        let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
+        let coins = (&scope.coins).try_into()?;
+
         let contract_account_id = scope
             .contract_addr
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let seed = seed_phrase_for_id(&scope.signer)?;
-        let coins = (&scope.coins).try_into()?;
-        let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
-
         let daemon = chain.daemon(seed)?;
+
         let exec_msg = cosmrs::cosmwasm::MsgExecuteContract {
             sender: daemon.sender().account_id(),
             contract: contract_account_id,
@@ -73,7 +75,6 @@ impl ExecuteWasmOutput {
         let resp = daemon
             .rt_handle
             .block_on(daemon.sender().commit_tx(vec![exec_msg], None))?;
-
         resp.log(chain.chain_info());
 
         Ok(ExecuteWasmOutput)

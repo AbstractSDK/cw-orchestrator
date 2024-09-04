@@ -18,6 +18,7 @@ impl QueryContractInfoOutput {
         scope:&<QueryContractInfoCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
         let account_id = scope
             .contract
             .clone()

@@ -28,12 +28,12 @@ impl StoreWasmOutput {
         scope:&<StoreContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let seed = seed_phrase_for_id(&scope.signer)?;
         let wasm_byte_code = std::fs::read(&scope.wasm_path).wrap_err(format!(
             "Failed to open or read the file: {}",
             scope.wasm_path.0.display()
         ))?;
 
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let daemon = chain.daemon(seed)?;
 
         let upload_msg = cosmrs::cosmwasm::MsgStoreCode {

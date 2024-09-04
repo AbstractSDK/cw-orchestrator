@@ -58,10 +58,11 @@ impl InstantiateWasmOutput {
         scope:&<InstantiateContractCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
-        let seed = seed_phrase_for_id(&scope.signer)?;
+
         let coins = (&scope.coins).try_into()?;
         let msg = msg_type::msg_bytes(scope.msg.clone(), scope.msg_type.clone())?;
 
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let daemon = chain.daemon(seed)?;
 
         let init_msg = cosmrs::cosmwasm::MsgInstantiateContract {

@@ -32,16 +32,17 @@ impl AcceptOwnershipOutput {
         scope:&<AcceptOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
         let contract_account_id = scope
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
         let contract_addr = Addr::unchecked(contract_account_id);
-        let seed = seed_phrase_for_id(&scope.signer)?;
-        let action = cw_ownable::Action::AcceptOwnership {};
 
+        let seed = seed_phrase_for_id(&scope.signer)?;
         let daemon = chain.daemon(seed)?;
 
+        let action = cw_ownable::Action::AcceptOwnership {};
         let resp = daemon.execute(
             &ContractExecuteMsg::UpdateOwnership(action),
             &[],

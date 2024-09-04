@@ -36,10 +36,12 @@ impl SendCw20Output {
         scope: &<Cw20TransferCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
         let to_address_account_id = scope
             .to_address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+
         let cw20_account_id = scope
             .cw20_address
             .clone()
@@ -48,6 +50,7 @@ impl SendCw20Output {
 
         let seed = seed_phrase_for_id(&scope.signer)?;
         let daemon = chain.daemon(seed)?;
+
         let resp = daemon.execute(
             &cw20::Cw20ExecuteMsg::Transfer {
                 recipient: to_address_account_id.to_string(),
@@ -56,7 +59,6 @@ impl SendCw20Output {
             &[],
             &cw20_addr,
         )?;
-
         resp.log(chain.chain_info());
 
         Ok(SendCw20Output)

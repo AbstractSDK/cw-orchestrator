@@ -23,21 +23,25 @@ impl QueryCw20Output {
         scope: &<QueryCw20Commands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
         let cw20_account_id = scope
             .cw20_address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+        let cw20_addr = Addr::unchecked(cw20_account_id);
+
         let account_id = scope
             .address
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
+
         let daemon = chain.daemon_querier()?;
 
         let balance: BalanceResponse = daemon.query(
             &(cw20::Cw20QueryMsg::Balance {
                 address: account_id.to_string(),
             }),
-            &Addr::unchecked(cw20_account_id),
+            &cw20_addr,
         )?;
         println!("{}", serde_json::to_string_pretty(&balance)?);
 

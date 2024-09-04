@@ -20,6 +20,7 @@ impl GetOwnershipOutput {
         scope:&<GetOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
         let contract_account_id = scope
             .contract
             .clone()

@@ -41,6 +41,8 @@ impl SendNativeOutput {
         scope: &<SendNativeCommands as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+        let coins = scope.coins.clone().into();
+
         let to_address = scope
             .to_address
             .clone()
@@ -48,8 +50,6 @@ impl SendNativeOutput {
         let to_address = Addr::unchecked(to_address);
 
         let seed = seed_phrase_for_id(&scope.signer)?;
-        let coins = scope.coins.clone().into();
-
         let daemon = chain.daemon(seed)?;
 
         let resp = daemon

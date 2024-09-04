@@ -45,29 +45,25 @@ impl TransferOwnershipOutput {
         scope:&<TransferOwnership as interactive_clap::ToInteractiveClapContextScope>::InteractiveClapContextScope,
     ) -> color_eyre::eyre::Result<Self> {
         let chain = previous_context.chain;
+
         let contract_account_id = scope
             .contract
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
         let contract_addr = Addr::unchecked(contract_account_id);
+
         let new_owner = scope
             .new_owner
             .clone()
             .account_id(chain.chain_info(), &previous_context.global_config)?;
 
         let seed = seed_phrase_for_id(&scope.signer)?;
-        let receiver_seed = scope
-            .new_signer
-            .0
-            .as_deref()
-            .map(seed_phrase_for_id)
-            .transpose()?;
+        let daemon = chain.daemon(seed)?;
+
         let action = cw_ownable::Action::TransferOwnership {
             new_owner: new_owner.to_string(),
             expiry: Some(scope.expiration.0),
         };
-
-        let daemon = chain.daemon(seed)?;
         let resp = daemon.execute(
             &ContractExecuteMsg::UpdateOwnership(action),
             &[],
@@ -76,8 +72,15 @@ impl TransferOwnershipOutput {
         resp.log(chain.chain_info());
         println!("Successfully transferred ownership, waiting for approval by {new_owner}",);
 
-        if let Some(seed) = receiver_seed {
-            let daemon = daemon.rebuild().mnemonic(seed).build()?;
+        let maybe_receiver_seed = scope
+            .new_signer
+            .0
+            .as_deref()
+            .map(seed_phrase_for_id)
+            .transpose()?;
+        if let Some(receiver_seed) = maybe_receiver_seed {
+            let daemon = daemon.rebuild().mnemonic(receiver_seed).build()?;
+
             let action = cw_ownable::Action::AcceptOwnership {};
             let resp = daemon.execute(
                 &ContractExecuteMsg::UpdateOwnership(action),
