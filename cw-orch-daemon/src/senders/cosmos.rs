@@ -149,7 +149,7 @@ impl Wallet {
     }
 
     /// Replaces the private key the sender is using
-    /// If you only need to change the mnemonic, use [Self::set_mnemonic]
+    /// You can use a mnemonic to overwrite the key using [Self::set_mnemonic]
     pub fn set_private_key(&mut self, private_key: PrivateKey) {
         self.private_key = private_key
     }
