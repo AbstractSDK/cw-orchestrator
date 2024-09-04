@@ -2,11 +2,7 @@ use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
 
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
-    wasm_emulation::{
-        channel::RemoteChannel,
-        contract::{LocalWasmContract, WasmContract},
-        storage::analyzer::StorageAnalyzer,
-    },
+    wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
 use cosmwasm_std::{to_json_binary, WasmMsg};
