@@ -2,11 +2,7 @@ use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
 
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
-    wasm_emulation::{
-        channel::RemoteChannel,
-        contract::{LocalWasmContract, WasmContract},
-        storage::analyzer::StorageAnalyzer,
-    },
+    wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
 use cosmwasm_std::{to_json_binary, WasmMsg};
@@ -155,10 +151,7 @@ impl CloneTesting {
         let mut file = std::fs::File::open(T::wasm(&self.chain).path())?;
         let mut wasm = Vec::<u8>::new();
         file.read_to_end(&mut wasm)?;
-        let code_id = self
-            .app
-            .borrow_mut()
-            .store_wasm_code(WasmContract::Local(LocalWasmContract { code: wasm }));
+        let code_id = self.app.borrow_mut().store_wasm_code(wasm);
 
         contract.set_code_id(code_id);
 
