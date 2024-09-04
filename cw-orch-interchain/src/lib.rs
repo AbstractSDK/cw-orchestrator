@@ -13,7 +13,7 @@ pub mod prelude {
 
     #[cfg(feature = "daemon")]
     pub use cw_orch_interchain_daemon::{
-        ChannelCreationValidator, ChannelCreator, DaemonInterchainEnv,
+        ChannelCreationValidator, ChannelCreator, DaemonInterchain,
     };
     #[cfg(feature = "daemon")]
     pub use cw_orch_starship::Starship;

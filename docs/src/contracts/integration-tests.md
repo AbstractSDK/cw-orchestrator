@@ -17,5 +17,5 @@ touch counter/tests/integration_tests.rs
 Now we can write our tests. Here's an example of a test that deploys the contract, increments the counter and then resets it.
 
 ```rust,ignore
-{{#include ../../../contracts/counter/tests/integration_tests.rs:all}}
+{{#include ../../../contracts-ws/contracts/counter/tests/integration_tests.rs:all}}
 ```

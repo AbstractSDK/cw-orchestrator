@@ -30,7 +30,7 @@ use cosmrs::{
     tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
     AccountId, Any,
 };
-use cosmwasm_std::{coin, Coin};
+use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{
     environment::{ChainInfoOwned, ChainKind},
     CoreEnvVars, CwEnvError,
@@ -132,12 +132,12 @@ impl Wallet {
         self.options.clone()
     }
 
-    pub fn set_authz_granter(&mut self, granter: impl Into<String>) {
-        self.options.authz_granter = Some(granter.into());
+    pub fn set_authz_granter(&mut self, granter: &Addr) {
+        self.options.authz_granter = Some(granter.to_owned());
     }
 
-    pub fn set_fee_granter(&mut self, granter: impl Into<String>) {
-        self.options.fee_granter = Some(granter.into());
+    pub fn set_fee_granter(&mut self, granter: &Addr) {
+        self.options.fee_granter = Some(granter.to_owned());
     }
 
     pub fn pub_addr_str(&self) -> String {
@@ -162,18 +162,18 @@ impl Wallet {
 
     pub async fn bank_send(
         &self,
-        recipient: &str,
+        recipient: &Addr,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let acc_id = if let Some(granter) = self.options.authz_granter.as_ref() {
-            AccountId::from_str(granter).unwrap()
+            AccountId::from_str(granter.as_str()).unwrap()
         } else {
             self.account_id()
         };
 
         let msg_send = MsgSend {
             from_address: acc_id,
-            to_address: AccountId::from_str(recipient)?,
+            to_address: AccountId::from_str(recipient.as_str())?,
             amount: parse_cw_coins(&coins)?,
         };
 
@@ -314,7 +314,7 @@ impl Wallet {
 
         let bank = Bank::new_async(self.channel());
         let balance = bank
-            ._balance(self.address(), Some(fee.denom.clone()))
+            ._balance(&self.address(), Some(fee.denom.clone()))
             .await?[0]
             .clone();
 

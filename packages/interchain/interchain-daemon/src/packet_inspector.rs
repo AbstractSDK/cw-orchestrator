@@ -1,5 +1,6 @@
 //! Module for tracking a specific packet inside the interchain
 
+use cosmrs::proto::ibc::core::channel::v1::State;
 use cw_orch_core::environment::{ChainInfoOwned, ChainState};
 use cw_orch_daemon::networks::parse_network;
 use cw_orch_daemon::queriers::{Ibc, Node};
@@ -10,7 +11,6 @@ use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::ChainId;
 use futures_util::future::select_all;
 use futures_util::FutureExt;
-use ibc_relayer_types::core::ics04_channel::channel::State;
 
 use crate::{IcDaemonResult, InterchainDaemonError};
 use cw_orch_interchain_core::types::{
@@ -207,7 +207,7 @@ impl PacketInspector {
             .await?;
 
         // We log to warn when the channel state is not right
-        if registered_channel.state != State::Open as i32 {
+        if registered_channel.state() != State::Open {
             log::warn!("Channel is not in an open state, the packet will most likely not be relayed. Channel information {:?}", registered_channel);
         }
 
@@ -548,7 +548,8 @@ fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
         .collect()
 }
 
-async fn find_ibc_packets_sent_in_tx(
+#[allow(missing_docs)]
+pub async fn find_ibc_packets_sent_in_tx(
     chain: NetworkId,
     grpc_channel: Channel,
     tx: CosmTxResponse,

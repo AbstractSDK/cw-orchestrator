@@ -27,7 +27,7 @@ ibc-chain-registry = { workspace = true }
 # Serde
 serde_json = { workspace = true }
 serde = { workspace = true }
-base64 = { workspace = true }
+base64 = { version = "0.22.1" }
 
 # Interactive clap
 interactive-clap = "0.2.8"

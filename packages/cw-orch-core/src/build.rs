@@ -1,7 +1,7 @@
 //! # Build Postfix Format
 //! Used to specify the build-postfix for contracts in the `Uploadable` trait.
 
-use crate::environment::{ChainInfoOwned, EnvironmentInfo, EnvironmentQuerier};
+use crate::environment::ChainInfoOwned;
 
 /// Build name used for building the contract.
 /// See the [Abstract Optimizer](https://github.com/AbstractSDK/rust-optimizer).
@@ -24,11 +24,5 @@ impl From<BuildPostfix<'_>> for String {
             BuildPostfix::ChainID(chain) => chain.chain_id.clone(),
             BuildPostfix::Custom(postfix) => postfix,
         }
-    }
-}
-
-impl EnvironmentQuerier for () {
-    fn env_info(&self) -> EnvironmentInfo {
-        panic!()
     }
 }

@@ -66,12 +66,10 @@ When calling the `upload` function on a contract, if the tx is successful, the d
 
 ```json
 {
-  "juno": {
-    "juno-1": {
-      "code_ids": {
-        "counter_contract": 1356,
-      },     
-    }
+  "juno-1": {
+    "code_ids": {
+      "counter_contract": 1356,
+    },     
   }
 }
 
@@ -83,14 +81,12 @@ When calling the `instantiate` function, if the tx is successful, the daemon wil
 
 ```json
 {
-  "juno": {
-    "juno-1": {
-      "code_ids": {
-        "counter_contract": 1356,
-      },
-      "default": {
-        "counter_contract": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
-      }
+  "juno-1": {
+    "code_ids": {
+      "counter_contract": 1356,
+    },
+    "default": {
+      "counter_contract": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
     }
   }
 }
@@ -158,5 +154,5 @@ For more information and queries, <a href="https://docs.rs/crate/cw-orch/latest/
 Here is an example of a script that deploys the counter contract only after a specific block_height.
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/interface.rs:daemon}}
+{{#include ../../../contracts-ws/contracts/counter/src/interface.rs:daemon}}
 ```

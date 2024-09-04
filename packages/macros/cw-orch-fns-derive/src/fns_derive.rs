@@ -86,9 +86,9 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
             MsgType::Execute => {
                 let is_payable = payable(&variant);
                 if is_payable {
-                    (quote!(coins: &[::cosmwasm_std::Coin]),quote!(Some(coins)))
+                    (quote!(coins: &[::cosmwasm_std::Coin]),quote!(coins))
                 } else {
-                    (quote!(),quote!(None))
+                    (quote!(),quote!(&[]))
                 }
             }
             MsgType::Query => {

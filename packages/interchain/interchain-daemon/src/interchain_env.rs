@@ -29,7 +29,7 @@ use tokio::runtime::Handle;
 
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
 #[derive(Clone)]
-pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
+pub struct DaemonInterchain<C: ChannelCreator = ChannelCreationValidator> {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
     daemons: HashMap<NetworkId, Daemon>,
 
@@ -43,8 +43,8 @@ pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
 
 type Mnemonic = String;
 
-impl<C: ChannelCreator> DaemonInterchainEnv<C> {
-    /// Builds a new [`DaemonInterchainEnv`] instance.
+impl<C: ChannelCreator> DaemonInterchain<C> {
+    /// Builds a new [`DaemonInterchain`] instance.
     /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
     /// channel_creator allows you to specify an object that is able to create channels
     /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
@@ -55,7 +55,7 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         Self::new_with_runtime(chains, channel_creator, RUNTIME.handle())
     }
 
-    /// Builds a new [`DaemonInterchainEnv`] instance.
+    /// Builds a new [`DaemonInterchain`] instance.
     /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
     /// channel_creator allows you to specify an object that is able to create channels
     /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
@@ -157,7 +157,7 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     }
 }
 
-impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
     type ChannelCreationResult = ();
 
     type Error = InterchainDaemonError;
@@ -291,7 +291,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 }
 
-impl<C: ChannelCreator> DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> DaemonInterchain<C> {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
     ///
@@ -303,7 +303,7 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     /// let dst_chain = ARCHWAY_1;
     /// let src_chain = OSMOSIS_1;
     ///
-    /// let interchain = DaemonInterchainEnv::new(
+    /// let interchain = DaemonInterchain::new(
     ///     vec![(src_chain.clone(), None), (dst_chain, None)],
     ///     &ChannelCreationValidator,
     /// ).unwrap();

@@ -22,10 +22,7 @@ pub trait StateInterface: Clone {
     fn set_address(&mut self, contract_id: &str, address: &Addr);
 
     /// Removes the address of a contract using the specified contract id.
-    fn remove_address(&mut self, _contract_id: &str) {
-        // Using default impl to avoid breaking changes
-        unimplemented!()
-    }
+    fn remove_address(&mut self, _contract_id: &str);
 
     /// Get the code id for a contract with the specified contract id.
     fn get_code_id(&self, contract_id: &str) -> Result<u64, CwEnvError>;
@@ -34,10 +31,7 @@ pub trait StateInterface: Clone {
     fn set_code_id(&mut self, contract_id: &str, code_id: u64);
 
     /// Removes the code id for a contract with the specified contract id.
-    fn remove_code_id(&mut self, _contract_id: &str) {
-        // Using default impl to avoid breaking changes
-        unimplemented!()
-    }
+    fn remove_code_id(&mut self, _contract_id: &str);
 
     /// Get all addresses related to this deployment.
     fn get_all_addresses(&self) -> Result<HashMap<String, Addr>, CwEnvError>;
@@ -104,6 +98,14 @@ impl<S: StateInterface> StateInterface for Rc<S> {
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).get_all_code_ids()
     }
+
+    fn remove_address(&mut self, contract_id: &str) {
+        (*Rc::make_mut(self)).remove_address(contract_id)
+    }
+
+    fn remove_code_id(&mut self, contract_id: &str) {
+        (*Rc::make_mut(self)).remove_code_id(contract_id)
+    }
 }
 
 impl<S: StateInterface> StateInterface for Arc<S> {
@@ -129,5 +131,13 @@ impl<S: StateInterface> StateInterface for Arc<S> {
 
     fn get_all_code_ids(&self) -> Result<HashMap<String, u64>, CwEnvError> {
         (**self).get_all_code_ids()
+    }
+
+    fn remove_address(&mut self, contract_id: &str) {
+        (*Arc::make_mut(self)).remove_address(contract_id)
+    }
+
+    fn remove_code_id(&mut self, contract_id: &str) {
+        (*Arc::make_mut(self)).remove_code_id(contract_id)
     }
 }

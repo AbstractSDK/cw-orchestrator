@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{core::CloneTestingApp, CloneTesting};
 use clone_cw_multi_test::AddressGenerator;
 use clone_cw_multi_test::CosmosRouter;
-use cosmwasm_std::{instantiate2_address, Api, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{instantiate2_address, Api, Checksum, ContractInfoResponse};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
@@ -38,16 +38,13 @@ impl<S: StateInterface> QuerierGetter<CloneWasmQuerier<S>> for CloneTesting<S> {
 
 impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     type Chain = CloneTesting<S>;
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, CwEnvError> {
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, CwEnvError> {
         let code_info = self.app.borrow().wrap().query_wasm_code_info(code_id)?;
         Ok(code_info.checksum)
     }
 
     /// Returns the code_info structure of the provided contract
-    fn contract_info(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
+    fn contract_info(&self, address: &Addr) -> Result<ContractInfoResponse, CwEnvError> {
         let info = self.app.borrow().wrap().query_wasm_contract_info(address)?;
         Ok(info)
     }
@@ -55,18 +52,14 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError> {
+    ) -> Result<Checksum, CwEnvError> {
         // We return the hashed contract-id.
         // This will cause the logic to never re-upload a contract if it has the same contract-id.
         let hash: [u8; 32] = Sha256::digest(contract.id()).into();
         Ok(hash.into())
     }
 
-    fn raw_query(
-        &self,
-        address: impl Into<String>,
-        query_data: Vec<u8>,
-    ) -> Result<Vec<u8>, Self::Error> {
+    fn raw_query(&self, address: &Addr, query_data: Vec<u8>) -> Result<Vec<u8>, Self::Error> {
         let block = self.app.borrow().block_info();
         Ok(self
             .app
@@ -86,11 +79,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
             .to_vec())
     }
 
-    fn smart_query<Q, T>(
-        &self,
-        address: impl Into<String>,
-        query_data: &Q,
-    ) -> Result<T, Self::Error>
+    fn smart_query<Q, T>(&self, address: &Addr, query_data: &Q) -> Result<T, Self::Error>
     where
         T: DeserializeOwned,
         Q: Serialize,
@@ -115,7 +104,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     fn instantiate2_addr(
         &self,
         code_id: u64,
-        creator: impl Into<String>,
+        creator: &Addr,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, Self::Error> {
         // Clone Testing needs mock

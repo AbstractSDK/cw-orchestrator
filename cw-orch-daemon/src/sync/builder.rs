@@ -29,6 +29,7 @@ pub struct DaemonBuilder {
     pub(crate) write_on_change: Option<bool>,
     // # Use tempfile as state
     pub(crate) is_test: bool,
+    pub(crate) load_network: bool,
 
     pub(crate) mnemonic: Option<String>,
 }
@@ -44,6 +45,7 @@ impl DaemonBuilder {
             write_on_change: None,
             mnemonic: None,
             is_test: false,
+            load_network: true,
         }
     }
 
@@ -125,6 +127,13 @@ impl DaemonBuilder {
     /// when set to `true` will use temporary file for state
     pub fn is_test(&mut self, is_test: bool) -> &mut Self {
         self.is_test = is_test;
+        self
+    }
+
+    /// Load network from `$HOME/.cw-orchestrator/networks.toml`
+    /// Defaults to `true`
+    pub fn load_network(&mut self, load_network: bool) -> &mut Self {
+        self.load_network = load_network;
         self
     }
 
@@ -253,6 +262,7 @@ mod test {
     fn hd_index_re_generates_sender() -> anyhow::Result<()> {
         let daemon = DaemonBuilder::new(JUNO_1)
             .mnemonic(DUMMY_MNEMONIC)
+            .is_test(true)
             .build()
             .unwrap();
 
@@ -260,10 +270,7 @@ mod test {
             .rebuild()
             .build_sender(daemon.sender().options().hd_index(56))?;
 
-        assert_ne!(
-            daemon.sender_addr(),
-            indexed_daemon.sender_addr().to_string()
-        );
+        assert_ne!(daemon.sender_addr(), indexed_daemon.sender_addr());
 
         Ok(())
     }

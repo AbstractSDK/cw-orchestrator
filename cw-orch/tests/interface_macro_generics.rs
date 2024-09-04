@@ -26,9 +26,7 @@ fn test_instantiate() {
 
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 }
 
 #[test]
@@ -37,13 +35,9 @@ fn test_execute() {
 
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
-    let response = contract
-        .execute(&ExecuteMsg::FirstMessage {}, None)
-        .unwrap();
+    let response = contract.execute(&ExecuteMsg::FirstMessage {}, &[]).unwrap();
 
     response.has_event(
         &Event::new("wasm")
@@ -52,12 +46,12 @@ fn test_execute() {
     );
 
     contract
-        .execute(&ExecuteMsg::SecondMessage { t: 46u64 }, None)
+        .execute(&ExecuteMsg::SecondMessage { t: 46u64 }, &[])
         .unwrap_err();
 
     // This call should not error, the types are good now
     contract
-        .execute(&ExecuteMsg::ThirdMessage { t: 67u64 }, None)
+        .execute(&ExecuteMsg::ThirdMessage { t: 67u64 }, &[])
         .unwrap();
 }
 
@@ -67,9 +61,7 @@ fn test_query() {
 
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
     let response: String = contract.query(&QueryMsg::FirstQuery {}).unwrap();
     assert_eq!(response, "first query passed");
@@ -86,7 +78,7 @@ fn test_migrate() {
     contract.upload().unwrap();
 
     contract
-        .instantiate(&InstantiateMsg {}, Some(&chain.sender_addr()), None)
+        .instantiate(&InstantiateMsg {}, Some(&chain.sender_addr()), &[])
         .unwrap();
 
     contract

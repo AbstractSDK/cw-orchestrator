@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-interchain-core"
-version = "0.4.2"
+version = "0.5.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -14,26 +14,28 @@ daemon = ["dep:cw-orch-daemon"]
 
 
 [dependencies]
-base64 = "0.21.3"
-cosmwasm-schema = "1.4.0"
+base64 = "0.22.1"
+cosmwasm-schema = "2.1.3"
 cosmwasm-std = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
 cw-orch-daemon = { workspace = true, optional = true }
-futures = "0.3.28"
+futures = "0.3.30"
 ibc-relayer-types = { workspace = true }
 log = { workspace = true }
 polytone = "1.0.0"
-prost = "0.12.6"
+prost = "0.13.1"
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tokio = "1.32.0"
+tokio = "1.39.2"
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
 
 [dev-dependencies]
-counter-contract = { path = "../../../contracts/counter" }
+counter-contract = { path = "../../../contracts-ws/contracts/counter" }
 cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
   "daemon",
 ] }
 cw-orch = { workspace = true }
-cosmos-sdk-proto = "0.20.0"
+cosmos-sdk-proto = { workspace = true }
+ibc-proto = { workspace = true }
+prost-types = { workspace = true }

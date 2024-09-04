@@ -33,7 +33,7 @@ impl Querier for CloneBankQuerier {
 impl BankQuerier for CloneBankQuerier {
     fn balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         if let Some(denom) = denom {

@@ -34,6 +34,7 @@ pub struct DaemonAsyncBuilder {
     pub(crate) state: Option<DaemonState>,
     pub(crate) write_on_change: Option<bool>,
     pub(crate) is_test: bool,
+    pub(crate) load_network: bool,
 
     pub(crate) mnemonic: Option<String>,
 }
@@ -48,6 +49,7 @@ impl DaemonAsyncBuilder {
             write_on_change: None,
             mnemonic: None,
             is_test: false,
+            load_network: true,
         }
     }
 
@@ -93,6 +95,13 @@ impl DaemonAsyncBuilder {
         self
     }
 
+    /// Load network from `$HOME/.cw-orchestrator/networks.toml`
+    /// Defaults to `true`
+    pub fn load_network(&mut self, load_network: bool) -> &mut Self {
+        self.load_network = load_network;
+        self
+    }
+
     /// Specifies path to the daemon state file
     /// Defaults to env variable.
     ///
@@ -105,11 +114,15 @@ impl DaemonAsyncBuilder {
 
     /// Build a daemon with provided mnemonic or env-var mnemonic
     pub async fn build(&self) -> Result<DaemonAsyncBase<Wallet>, DaemonError> {
-        let chain_info = if let Some(network_config) = network_config::load(&self.chain.chain_id) {
-            Arc::new(self.chain.clone().overwrite_with(network_config))
-        } else {
-            Arc::new(self.chain.clone())
-        };
+        let mut chain_info = self.chain.clone();
+        if self.load_network {
+            // try to load network
+            if let Some(network_config) = network_config::read_network_config(&chain_info.chain_id)
+            {
+                chain_info = chain_info.overwrite_with(network_config)
+            }
+        }
+        let chain_info = Arc::new(chain_info);
 
         let state = self.build_state(chain_info.clone())?;
         // if mnemonic provided, use it. Else use env variables to retrieve mnemonic
@@ -133,11 +146,15 @@ impl DaemonAsyncBuilder {
         &self,
         sender_options: T,
     ) -> Result<DaemonAsyncBase<T::Sender>, DaemonError> {
-        let chain_info = if let Some(network_config) = network_config::load(&self.chain.chain_id) {
-            Arc::new(self.chain.clone().overwrite_with(network_config))
-        } else {
-            Arc::new(self.chain.clone())
-        };
+        let mut chain_info = self.chain.clone();
+        if self.load_network {
+            // try to load network
+            if let Some(network_config) = network_config::read_network_config(&chain_info.chain_id)
+            {
+                chain_info = chain_info.overwrite_with(network_config)
+            }
+        }
+        let chain_info = Arc::new(chain_info);
 
         let state = self.build_state(chain_info.clone())?;
 
@@ -170,11 +187,7 @@ impl DaemonAsyncBuilder {
                 // It's most likely a new chain, need to "prepare" json state for writes
                 if let DaemonStateFile::FullAccess { json_file_state } = &state.json_state {
                     let mut json_file_lock = json_file_state.lock().unwrap();
-                    json_file_lock.prepare(
-                        &state.chain_data.chain_id,
-                        &state.chain_data.network_info.chain_name,
-                        &state.deployment_id,
-                    );
+                    json_file_lock.prepare(&state.chain_data.chain_id, &state.deployment_id);
                     if state.write_on_change {
                         json_file_lock.force_write();
                     }
@@ -219,6 +232,7 @@ impl From<DaemonBuilder> for DaemonAsyncBuilder {
             write_on_change: value.write_on_change,
             mnemonic: value.mnemonic,
             is_test: value.is_test,
+            load_network: value.load_network,
         }
     }
 }

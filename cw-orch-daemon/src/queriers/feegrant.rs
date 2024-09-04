@@ -1,5 +1,6 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cosmwasm_std::Addr;
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -41,16 +42,16 @@ impl FeeGrant {
     /// Query all allowances granted to the grantee address by a granter address
     pub async fn _allowance(
         &self,
-        granter: impl Into<String>,
-        grantee: impl Into<String>,
+        granter: &Addr,
+        grantee: &Addr,
     ) -> Result<cosmos_modules::feegrant::Grant, DaemonError> {
         let allowance: cosmos_modules::feegrant::QueryAllowanceResponse = cosmos_query!(
             self,
             feegrant,
             allowance,
             QueryAllowanceRequest {
-                granter: granter.into(),
-                grantee: grantee.into(),
+                granter: granter.to_string(),
+                grantee: grantee.to_string(),
             }
         );
         Ok(allowance.allowance.unwrap())
@@ -61,7 +62,7 @@ impl FeeGrant {
     /// see [PageRequest] for pagination
     pub async fn _allowances(
         &self,
-        grantee: impl Into<String>,
+        grantee: &Addr,
         pagination: Option<PageRequest>,
     ) -> Result<Vec<cosmos_modules::feegrant::Grant>, DaemonError> {
         let allowances: cosmos_modules::feegrant::QueryAllowancesResponse = cosmos_query!(
@@ -69,7 +70,7 @@ impl FeeGrant {
             feegrant,
             allowances,
             QueryAllowancesRequest {
-                grantee: grantee.into(),
+                grantee: grantee.to_string(),
                 pagination: pagination
             }
         );

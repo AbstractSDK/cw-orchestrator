@@ -136,7 +136,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(send_response.raw_data)),
+            data: Some(Binary::new(send_response.raw_data)),
             events: send_response.events,
         })
     }
@@ -230,7 +230,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(upload_response.raw_data)),
+            data: Some(Binary::new(upload_response.raw_data)),
             events: upload_response.events,
         })
     }
@@ -246,7 +246,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(execute_response.raw_data)),
+            data: Some(Binary::new(execute_response.raw_data)),
             events: execute_response.events,
         })
     }
@@ -271,7 +271,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(instantiate_response.raw_data)),
+            data: Some(Binary::new(instantiate_response.raw_data)),
             events: instantiate_response.events,
         })
     }
@@ -307,7 +307,7 @@ impl BankSetter for OsmosisTestTube {
     /// It's impossible to set the balance of an address directly in OsmosisTestTube
     fn set_balance(
         &mut self,
-        _address: impl Into<String>,
+        _address: &Addr,
         _amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         unimplemented!();
@@ -315,7 +315,7 @@ impl BankSetter for OsmosisTestTube {
 
     fn add_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         let mut all_coins: Coins = amount.clone().try_into().unwrap();
@@ -346,7 +346,7 @@ impl Stargate for OsmosisTestTube {
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary(tx_response.raw_data)),
+            data: Some(Binary::new(tx_response.raw_data)),
             events: tx_response.events,
         })
     }

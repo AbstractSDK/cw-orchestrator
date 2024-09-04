@@ -75,14 +75,6 @@ pub trait ContractInstance<Chain: ChainState> {
     fn set_default_code_id(&mut self, code_id: u64) {
         Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
-
-    #[deprecated(
-        note = "Please use `environment` from the cw_orch::prelude::Environment trait instead"
-    )]
-    /// Returns the chain that this contract is deployed on.
-    fn get_chain(&self) -> &Chain {
-        self.as_instance().environment()
-    }
 }
 
 /// Trait that indicates that the contract can be instantiated with the associated message.
@@ -115,7 +107,7 @@ pub trait CwOrchExecute<Chain: TxHandler>: ExecutableContract + ContractInstance
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().execute(&execute_msg, coins)
     }
@@ -132,7 +124,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
@@ -143,7 +135,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
@@ -172,7 +164,7 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
     fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
         self.environment()
             .wasm_querier()
-            .raw_query(self.address()?, query_keys)
+            .raw_query(&self.address()?, query_keys)
             .map_err(Into::into)
     }
 
@@ -183,18 +175,18 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
     ) -> Result<T, CwEnvError> {
         self.environment()
             .wasm_querier()
-            .item_query(self.address()?, query_item)
+            .item_query(&self.address()?, query_item)
     }
 
     /// Query the contract raw state from a cw-storage-plus::Map
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
-        query_map: Map<'a, K, T>,
+        query_map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
         self.environment()
             .wasm_querier()
-            .map_query(self.address()?, query_map, key)
+            .map_query(&self.address()?, query_map, key)
     }
 }
 /// Smart contract query entry point.
@@ -330,7 +322,7 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
         let chain = self.environment();
         let info = chain
             .wasm_querier()
-            .contract_info(self.address()?)
+            .contract_info(&self.address()?)
             .map_err(Into::into)?;
         Ok(latest_uploaded_code_id == info.code_id)
     }

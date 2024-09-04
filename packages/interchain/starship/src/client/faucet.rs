@@ -1,4 +1,5 @@
-//! Rust implementation for interacting with a faucet similar to https://github.com/cosmos/cosmjs/tree/main/packages/faucet
+//! Rust implementation for interacting with a faucet similar to <https://github.com/cosmos/cosmjs/tree/main/packages/faucet>
+use cosmwasm_std::Addr;
 use serde::{Deserialize, Serialize};
 
 use super::{error::StarshipClientError, registry::URL, StarshipClientResult};
@@ -35,17 +36,17 @@ impl Faucet {
     /// Returns as soon as the funds are distributed to the address
     pub async fn request_funds(
         &self,
-        address: impl ToString,
-        denom: impl ToString,
+        address: &Addr,
+        denom: impl Into<String>,
     ) -> StarshipClientResult<()> {
         let faucet = &self.0;
-        let url = format!("http://{}/{}", faucet, address.to_string());
+        let url = format!("http://{}/{}", faucet, address);
         let client = reqwest::Client::new();
         let response = client
             .post(&url)
             .json(&Request {
                 address: address.to_string(),
-                denom: denom.to_string(),
+                denom: denom.into(),
             })
             .send()
             .await

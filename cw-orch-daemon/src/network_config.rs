@@ -4,19 +4,19 @@ use cw_orch_core::environment::ChainInfoOwned;
 
 use crate::env::default_state_folder;
 
-pub(crate) fn load(chain_id: &str) -> Option<ChainInfoOwned> {
+/// Reads network config from `~/.cw-orchestrator/networks.toml` and returns the config for the chain id
+pub fn read_network_config(chain_id: &str) -> Option<ChainInfoOwned> {
     let mut state_folder = default_state_folder().ok()?;
-    state_folder.push("networks.json");
-    let file = std::fs::File::open(state_folder).ok()?;
+    state_folder.push("networks.toml");
+    let file_content = std::fs::read_to_string(state_folder).ok()?;
 
-    let mut network_config =
-        serde_json::from_reader::<_, HashMap<String, ChainInfoOwned>>(&file).ok()?;
+    let mut network_config: HashMap<String, ChainInfoOwned> = toml::from_str(&file_content).ok()?;
     network_config.remove(chain_id)
 }
 
 #[cfg(test)]
 mod test {
-    use super::load;
+    use super::read_network_config;
 
     use crate::{
         networks::{JUNO_1, NEUTRON_1},
@@ -30,8 +30,8 @@ mod test {
     #[test]
     #[ignore = "This test is for testing config in CI"]
     fn existing_network_config() {
-        let chain_info =
-            ChainInfoOwned::from(NEUTRON_1).overwrite_with(load(JUNO_1.chain_id).unwrap());
+        let chain_info = ChainInfoOwned::from(NEUTRON_1)
+            .overwrite_with(read_network_config(JUNO_1.chain_id).unwrap());
         let expected_chain_info = ChainInfoOwned {
             chain_id: "joono-1".to_owned(),
             gas_denom: "gas_denom".to_owned(),
@@ -54,8 +54,8 @@ mod test {
     #[serial_test::serial]
     #[ignore = "This test is for testing config in CI"]
     fn existing_network_partial_config() {
-        let chain_info =
-            ChainInfoOwned::from(NEUTRON_1).overwrite_with(load(NEUTRON_1.chain_id).unwrap());
+        let chain_info = ChainInfoOwned::from(NEUTRON_1)
+            .overwrite_with(read_network_config(NEUTRON_1.chain_id).unwrap());
         let expected_chain_info = ChainInfoOwned {
             gas_price: 1.23f64,
             ..NEUTRON_1.into()
@@ -70,7 +70,7 @@ mod test {
     #[serial_test::serial]
     #[ignore = "This test is for testing config in CI"]
     fn missing_network_full_config() {
-        let chain_info = load("abstr-1").unwrap();
+        let chain_info = read_network_config("abstr-1").unwrap();
         let expected_chain_info = ChainInfoOwned {
             kind: ChainKind::Mainnet,
             chain_id: "juno-1".to_owned(),
