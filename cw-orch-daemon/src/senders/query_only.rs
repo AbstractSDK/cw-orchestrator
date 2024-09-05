@@ -61,7 +61,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn tls_grpc() {
-        let chain = VOTA_ASH;
+        let chain = ARCHWAY_1;
         // Make sure this test is up to date
         assert!(chain.grpc_urls[0].starts_with("https"));
         let _query_only_daemon: QueryOnlyDaemon =
