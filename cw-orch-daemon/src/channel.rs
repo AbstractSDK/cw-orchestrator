@@ -46,7 +46,7 @@ impl GrpcChannel {
                 log::debug!(target: &connectivity_target(), "Attempting to connect with TLS");
 
                 // re attempt to connect
-                let maybe_channel = endpoint.clone().tls_config(ClientTlsConfig::new())?.connect().await;
+                let maybe_channel = endpoint.clone().tls_config(ClientTlsConfig::new().with_enabled_roots())?.connect().await;
 
                 // connection still fails
                 if maybe_channel.is_err() {
