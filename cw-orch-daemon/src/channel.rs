@@ -22,7 +22,7 @@ impl GrpcChannel {
             log::debug!(target: &connectivity_target(), "Trying to connect to endpoint: {}", address);
 
             // get grpc endpoint
-            let endpoint = Channel::builder(address.clone().try_into().unwrap());
+            let endpoint = Channel::builder(address.clone().try_into().unwrap()).tls_config(ClientTlsConfig::new().with_enabled_roots()).unwrap();
 
             // try to connect to grpc endpoint
             let maybe_client = ServiceClient::connect(endpoint.clone()).await;
