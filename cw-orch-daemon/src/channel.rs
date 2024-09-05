@@ -46,20 +46,19 @@ impl GrpcChannel {
                 log::debug!(target: &connectivity_target(), "Attempting to connect with TLS");
 
                 // re attempt to connect
-                let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
-                let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+                let maybe_channel = endpoint.clone().tls_config(ClientTlsConfig::new())?.connect().await;
 
                 // connection still fails
-                if maybe_client.is_err() {
+                if maybe_channel.is_err() {
                     log::warn!(
                         "Cannot connect to gRPC endpoint: {}, {:?}",
                         address,
-                        maybe_client.unwrap_err()
+                        maybe_channel.unwrap_err()
                     );
                     continue;
                 };
 
-                maybe_client?
+                ServiceClient::new(maybe_channel?)
             };
 
             // get client information for verification down below
