@@ -12,7 +12,6 @@ description = "Adapter for interacting with cw-multi-test via the cw-orchestrato
 [dependencies]
 cosmwasm-std = { workspace = true }
 
-# This package depends on published cw-orch version due to the clone-testing-cw-multi-test dependency
 cw-orch-core = { path = "../cw-orch-core" }
 cw-orch-mock = { path = "../cw-orch-mock" }
 cw-orch-daemon = { path = "../../cw-orch-daemon" }
@@ -39,6 +38,5 @@ cw20-base = { version = "2.0.0" }
 
 env_logger = "0.10.0"
 counter-contract = { path = "../../contracts-ws/contracts/counter" }
-# This package depends on published cw-orch version due to the clone-testing-cw-multi-test dependency
 cw-orch = { path = "../../cw-orch", features = ["daemon"] }
 pretty_env_logger = "0.5.0"
