@@ -385,6 +385,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
                                 .map(|a| a.parse())
                                 .collect::<Result<_, _>>()?,
                         },
+                        _ => unimplemented!(),
                     };
                     Ok::<_, DaemonError>(response)
                 })

@@ -88,6 +88,7 @@ pub trait TxHandler: ChainState + Clone {
     }
 }
 
+#[non_exhaustive]
 pub enum AccessConfig {
     Nobody,
     Everybody,
