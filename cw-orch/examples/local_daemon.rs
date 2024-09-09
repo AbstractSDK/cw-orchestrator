@@ -2,7 +2,6 @@ use counter_contract::{
     msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
 use cw_orch::{environment::Environment, prelude::*};
-use dotenv::dotenv;
 
 // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
 const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
@@ -11,7 +10,6 @@ pub fn main() {
     // There are two types of daemon, sync and async. Sync daemons can be used is generic code. Async daemons can be used
     // in async code (e.g. tokio), which enables multi-threaded and non-blocking code.
     std::env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
-    dotenv().unwrap();
     env_logger::init();
 
     // ANCHOR: daemon_creation
