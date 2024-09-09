@@ -10,7 +10,7 @@ pub fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::LOCAL_JUNO;
-    // There is no need to register a mnemonic to use this daemon querier
+    // The mnemonic is read from environment variables automatically, no need to specify in this builders
     let sender = CosmosOptions::default()
         .hd_index(5)
         .authz_granter(&Addr::unchecked(LOCAL_JUNO_GRANTER));
