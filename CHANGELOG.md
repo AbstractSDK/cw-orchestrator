@@ -2,7 +2,7 @@
 
 ## Unpublished
 
-- Add a method on TxHandler to select instantiation permissions on Wasm upload
+- Add a method on `TxHandler` to select instantiation permissions on Wasm upload
 
 ### Breaking
 
