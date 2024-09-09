@@ -3,7 +3,8 @@
 ## Unpublished
 
 - Add a method on `TxHandler` to select instantiation permissions on Wasm upload
-
+- Add methods to set the private key and mnemonic of an existing sender
+  
 ### Breaking
 
 ## 0.25.0

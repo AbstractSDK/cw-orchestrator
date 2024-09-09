@@ -1,4 +1,6 @@
-//! This regroups all env variables used by cw-orch-daemon. It allows for easier documentation and env variable management
+//! This regroups all env variables used by cw-orch-daemon.
+//!
+//! It allows for easier documentation and env variable management
 //! This is used to import environment variables with safe names (and at a centralized location)
 //! To get the env variable parsed value, you can use
 //! ```rust,no_run
