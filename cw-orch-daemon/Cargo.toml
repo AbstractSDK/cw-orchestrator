@@ -48,7 +48,6 @@ tokio = { workspace = true, features = ["full"] }
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
 reqwest = { version = "0.12.5" }
 base64 = { version = "0.22.1" }
-hkd32 = { version = "0.7.0", features = ["bip39", "mnemonic", "bech32"] }
 rand_core = { version = "0.6.4", default-features = false }
 ed25519-dalek = { version = "2", features = ["serde"] }
 eyre = { version = "0.6" }
@@ -77,6 +76,8 @@ uid = "0.1.7"
 
 # Deserialize network config
 toml = "0.8"
+bip39 = "2.0.0"
+itertools = "0.13.0"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

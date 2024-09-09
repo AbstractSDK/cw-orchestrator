@@ -11,9 +11,9 @@ use bitcoin::{
 };
 use cosmrs::tx::SignerPublicKey;
 use cw_orch_core::log::local_target;
-use hkd32::mnemonic::{Phrase, Seed};
+use itertools::Itertools;
 use prost_types::Any;
-use rand_core::OsRng;
+use rand_core::{OsRng, RngCore};
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
@@ -25,8 +25,8 @@ pub struct PrivateKey {
     pub index: u32,
     #[allow(missing_docs)]
     pub coin_type: u32,
-    /// The 24 words used to generate this private key
-    mnemonic: Option<Phrase>,
+    /// The mnemonic (12, 15, 18, 21 or 24 words) used to generate this private key
+    mnemonic: Option<bip39::Mnemonic>,
     #[allow(dead_code)]
     /// This is used for testing
     root_private_key: Xpriv,
@@ -39,9 +39,7 @@ impl PrivateKey {
         secp: &Secp256k1<C>,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
-        let phrase = hkd32::mnemonic::Phrase::random(OsRng, hkd32::mnemonic::Language::English);
-
-        PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, "")
+        Self::new_seed(secp, "", coin_type)
     }
     /// generate a new private key with a seed phrase
     pub fn new_seed<C: secp256k1::Signing + secp256k1::Context>(
@@ -49,9 +47,14 @@ impl PrivateKey {
         seed_phrase: &str,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
-        let phrase = hkd32::mnemonic::Phrase::random(OsRng, hkd32::mnemonic::Language::English);
-
-        PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_phrase)
+        let mut key = [0u8; 16];
+        OsRng.fill_bytes(&mut key);
+        match bip39::Mnemonic::from_entropy(&key) {
+            Ok(mnemonic) => {
+                PrivateKey::gen_private_key_phrase(secp, mnemonic, 0, 0, coin_type, seed_phrase)
+            }
+            Err(_) => Err(DaemonError::Phrasing),
+        }
     }
     /// for private key recovery. This is also used by wallet routines to re-hydrate the structure
     pub fn from_words<C: secp256k1::Signing + secp256k1::Context>(
@@ -61,13 +64,9 @@ impl PrivateKey {
         index: u32,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
-        if words.split(' ').count() != 24 {
-            return Err(DaemonError::WrongLength);
-        }
-
-        match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
-            Ok(phrase) => {
-                PrivateKey::gen_private_key_phrase(secp, phrase, account, index, coin_type, "")
+        match bip39::Mnemonic::parse_in_normalized(bip39::Language::English, words) {
+            Ok(mnemonic) => {
+                PrivateKey::gen_private_key_phrase(secp, mnemonic, account, index, coin_type, "")
             }
             Err(_) => Err(DaemonError::Phrasing),
         }
@@ -80,7 +79,7 @@ impl PrivateKey {
         seed_pass: &str,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
-        match hkd32::mnemonic::Phrase::new(words, hkd32::mnemonic::Language::English) {
+        match bip39::Mnemonic::parse_in_normalized(bip39::Language::English, words) {
             Ok(phrase) => {
                 PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_pass)
             }
@@ -168,15 +167,14 @@ impl PrivateKey {
     // Generate private key from Phrase
     fn gen_private_key_phrase<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
-        phrase: Phrase,
+        phrase: bip39::Mnemonic,
         account: u32,
         index: u32,
         coin_type: u32,
         seed_phrase: &str,
     ) -> Result<PrivateKey, DaemonError> {
         let seed = phrase.to_seed(seed_phrase);
-        let mut private_key =
-            Self::gen_private_key_raw(secp, seed.as_bytes(), account, index, coin_type)?;
+        let mut private_key = Self::gen_private_key_raw(secp, &seed, account, index, coin_type)?;
         private_key.mnemonic = Some(phrase);
         Ok(private_key)
     }
@@ -206,14 +204,16 @@ impl PrivateKey {
     }
 
     /// the words used to generate this private key
-    pub fn words(&self) -> Option<&str> {
-        self.mnemonic.as_ref().map(|phrase| phrase.phrase())
+    pub fn words(&self) -> Option<String> {
+        self.mnemonic
+            .as_ref()
+            .map(|phrase| phrase.word_iter().join(" "))
     }
 
     /// used for testing
     /// could potentially be used to recreate the private key instead of words
     #[allow(dead_code)]
-    pub(crate) fn seed(&self, passwd: &str) -> Option<Seed> {
+    pub(crate) fn seed(&self, passwd: &str) -> Option<[u8; 64]> {
         self.mnemonic.as_ref().map(|phrase| phrase.to_seed(passwd))
     }
 }
@@ -251,7 +251,7 @@ mod tst {
         let seed_1 = "a2ae8846397b55d266af35acdbb18ba1d005f7ddbdd4ca7a804df83352eaf373f274ba0dc8ac1b2b25f19dfcb7fa8b30a240d2c6039d88963defc2f626003b2f";
         let s = Secp256k1::new();
         let pk = PrivateKey::from_words(&s, str_1, 0, 0, coin_type)?;
-        assert_eq!(hex::encode(pk.seed("").unwrap().as_bytes()), seed_1);
+        assert_eq!(hex::encode(pk.seed("").unwrap()), seed_1);
         match pk.words() {
             Some(words) => {
                 assert_eq!(words, str_1);
