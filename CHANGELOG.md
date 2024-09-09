@@ -2,6 +2,8 @@
 
 ## Unpublished
 
+- Add a method on TxHandler to select instantiation permissions on Wasm upload
+
 ### Breaking
 
 ## 0.25.0
