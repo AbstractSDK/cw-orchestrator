@@ -94,6 +94,7 @@ mod artifacts_dir {
 
     #[macro_export]
     /// Creates an [`ArtifactsDir`] from the current workspace by searching the file tree for a directory named `artifacts`.
+    ///
     /// It does this by reading the CARGO_MANIFEST_DIR environment variable and going up the file tree until it finds the `artifacts` directory.
     macro_rules! from_workspace {
         () => {
