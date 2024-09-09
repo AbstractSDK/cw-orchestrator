@@ -207,7 +207,7 @@ impl PrivateKey {
     pub fn words(&self) -> Option<String> {
         self.mnemonic
             .as_ref()
-            .map(|phrase| phrase.word_iter().join(" "))
+            .map(|phrase| phrase.to_string())
     }
 
     /// used for testing
