@@ -6,8 +6,6 @@ use cosmwasm_std::{Addr, Binary, Coin};
 use serde::Serialize;
 use std::fmt::Debug;
 
-pub use cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig;
-
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 
@@ -87,6 +85,34 @@ pub trait TxHandler: ChainState + Clone {
         let mut chain = self.clone();
         chain.set_sender(sender.clone());
         chain
+    }
+}
+
+pub enum AccessConfig {
+    Nobody,
+    Everybody,
+    AnyOfAddresses(Vec<String>),
+}
+
+impl From<AccessConfig> for cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+    fn from(val: AccessConfig) -> Self {
+        match val {
+            AccessConfig::Nobody => cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::Nobody.into(),
+                addresses: vec![],
+            },
+            AccessConfig::Everybody => cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::Everybody.into(),
+                addresses: vec![],
+            },
+            AccessConfig::AnyOfAddresses(addresses) => {
+                cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                    permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::AnyOfAddresses
+                        .into(),
+                    addresses,
+                }
+            }
+        }
     }
 }
 

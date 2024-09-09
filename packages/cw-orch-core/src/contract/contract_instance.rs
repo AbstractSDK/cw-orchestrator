@@ -9,8 +9,8 @@ use crate::{
     log::{contract_target, transaction_target},
 };
 
+use crate::environment::AccessConfig;
 use crate::environment::QueryHandler;
-use cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig;
 use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;

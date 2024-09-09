@@ -369,14 +369,24 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             wasm_byte_code,
             instantiate_permission: access
                 .map(|a| {
-                    Ok::<_, DaemonError>(cosmrs::cosmwasm::AccessConfig {
-                        permission: a.permission.try_into().unwrap(),
-                        addresses: a
-                            .addresses
-                            .into_iter()
-                            .map(|a| a.parse())
-                            .collect::<Result<_, _>>()?,
-                    })
+                    let response = match a {
+                        AccessConfig::Nobody => cosmrs::cosmwasm::AccessConfig {
+                            permission: cosmrs::cosmwasm::AccessType::Nobody,
+                            addresses: vec![],
+                        },
+                        AccessConfig::Everybody => cosmrs::cosmwasm::AccessConfig {
+                            permission: cosmrs::cosmwasm::AccessType::Everybody,
+                            addresses: vec![],
+                        },
+                        AccessConfig::AnyOfAddresses(addresses) => cosmrs::cosmwasm::AccessConfig {
+                            permission: cosmrs::cosmwasm::AccessType::AnyOfAddresses,
+                            addresses: addresses
+                                .into_iter()
+                                .map(|a| a.parse())
+                                .collect::<Result<_, _>>()?,
+                        },
+                    };
+                    Ok::<_, DaemonError>(response)
                 })
                 .transpose()?,
         };

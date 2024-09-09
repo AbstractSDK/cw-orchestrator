@@ -1,4 +1,5 @@
 use super::{Contract, WasmPath};
+use crate::environment::AccessConfig;
 use crate::{
     environment::{
         AsyncWasmQuerier, ChainInfoOwned, ChainState, CwEnv, Environment, QueryHandler, TxHandler,
@@ -7,7 +8,6 @@ use crate::{
     error::CwEnvError,
     log::contract_target,
 };
-use cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig;
 use cosmwasm_std::{Addr, Binary, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
 use cw_storage_plus::{Item, Map, PrimaryKey};
