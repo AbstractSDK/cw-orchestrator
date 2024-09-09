@@ -249,10 +249,10 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
             .map_err(From::from)
     }
 
-    fn upload_with_access<T: Uploadable>(
+    fn upload_with_access_config<T: Uploadable>(
         &self,
         contract_source: &T,
-        _access_config: AccessConfig,
+        _access_config: Option<AccessConfig>,
     ) -> Result<Self::Response, Self::Error> {
         log::debug!("Uploading with access is not enforced when using Mock testing");
         self.upload(contract_source)

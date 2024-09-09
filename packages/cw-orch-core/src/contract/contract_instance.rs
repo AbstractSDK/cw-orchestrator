@@ -104,10 +104,10 @@ impl<Chain: TxHandler> Contract<Chain> {
     // Chain interfaces
 
     /// Upload a contract given its source and access control option
-    pub fn upload_with_access(
+    pub fn upload_with_access_config(
         &self,
         source: &impl Uploadable,
-        access_config: AccessConfig,
+        access_config: Option<AccessConfig>,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -117,7 +117,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .upload_with_access(source, access_config)
+            .upload_with_access_config(source, access_config)
             .map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
@@ -138,28 +138,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
     /// Upload a contract given its source
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
-        log::info!(
-            target: &contract_target(),
-            "[{}][Upload]",
-            self.id,
-        );
-
-        let resp = self.chain.upload(source).map_err(Into::into)?;
-        let code_id = resp.uploaded_code_id()?;
-        self.set_code_id(code_id);
-        log::info!(
-            target: &contract_target(),
-            "[{}][Uploaded] code_id {}",
-            self.id,
-            code_id
-        );
-        log::debug!(
-            target: &contract_target(),
-            "[{}][Uploaded] response {:?}",
-            self.id,
-            resp
-        );
-        Ok(resp)
+        self.upload_with_access_config(source, None)
     }
 
     /// Executes an operation on the contract

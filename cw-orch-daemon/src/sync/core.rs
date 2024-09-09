@@ -220,14 +220,14 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         )
     }
 
-    fn upload_with_access<T: Uploadable>(
+    fn upload_with_access_config<T: Uploadable>(
         &self,
         contract_source: &T,
-        access_config: cw_orch_core::environment::AccessConfig,
+        access_config: Option<cw_orch_core::environment::AccessConfig>,
     ) -> Result<Self::Response, Self::Error> {
         self.rt_handle.block_on(
             self.daemon
-                .upload_with_access(contract_source, Some(access_config)),
+                .upload_with_access_config(contract_source, access_config),
         )
     }
 }

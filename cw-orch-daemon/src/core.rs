@@ -347,11 +347,11 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         &self,
         uploadable: &T,
     ) -> Result<CosmTxResponse, DaemonError> {
-        self.upload_with_access(uploadable, None).await
+        self.upload_with_access_config(uploadable, None).await
     }
 
     /// Upload a contract to the chain.
-    pub async fn upload_with_access<T: Uploadable>(
+    pub async fn upload_with_access_config<T: Uploadable>(
         &self,
         _uploadable: &T,
         access: Option<AccessConfig>,

@@ -264,11 +264,12 @@ pub trait CwOrchUpload<Chain: TxHandler>: ContractInstance<Chain> + Uploadable +
     }
 
     /// upload the contract to the configured environment with access configuration.
-    fn upload_with_access(
+    fn upload_with_access_config(
         &self,
-        access_config: AccessConfig,
+        access_config: Option<AccessConfig>,
     ) -> Result<Chain::Response, CwEnvError> {
-        self.as_instance().upload_with_access(self, access_config)
+        self.as_instance()
+            .upload_with_access_config(self, access_config)
     }
 }
 
