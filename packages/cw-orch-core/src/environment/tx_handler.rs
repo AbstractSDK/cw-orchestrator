@@ -6,6 +6,8 @@ use cosmwasm_std::{Addr, Binary, Coin};
 use serde::Serialize;
 use std::fmt::Debug;
 
+pub use cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig;
+
 /// Response type for actions on an environment
 pub type TxResponse<Chain> = <Chain as TxHandler>::Response;
 
@@ -34,6 +36,13 @@ pub trait TxHandler: ChainState + Clone {
 
     /// Uploads a contract to the chain.
     fn upload<T: Uploadable>(&self, contract_source: &T) -> Result<Self::Response, Self::Error>;
+
+    /// Uploads a contract to the chain, and configure the access control to that code instantiation.
+    fn upload_with_access<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        access_config: AccessConfig,
+    ) -> Result<Self::Response, Self::Error>;
 
     /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(
@@ -200,6 +209,14 @@ mod tests {
             _admin: Option<&Addr>,
             _coins: &[cosmwasm_std::Coin],
             _salt: Binary,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn upload_with_access<T: Uploadable>(
+            &self,
+            _contract_source: &T,
+            _access_config: AccessConfig,
         ) -> Result<Self::Response, Self::Error> {
             unimplemented!()
         }

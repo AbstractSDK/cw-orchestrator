@@ -17,7 +17,9 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
+    environment::{
+        AccessConfig, AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier,
+    },
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -343,7 +345,16 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     /// Upload a contract to the chain.
     pub async fn upload<T: Uploadable>(
         &self,
+        uploadable: &T,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        self.upload_with_access(uploadable, None).await
+    }
+
+    /// Upload a contract to the chain.
+    pub async fn upload_with_access<T: Uploadable>(
+        &self,
         _uploadable: &T,
+        access: Option<AccessConfig>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let wasm_path = <T as Uploadable>::wasm(self.chain_info());
 
@@ -356,7 +367,18 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
             sender: self.sender().account_id(),
             wasm_byte_code,
-            instantiate_permission: None,
+            instantiate_permission: access
+                .map(|a| {
+                    Ok::<_, DaemonError>(cosmrs::cosmwasm::AccessConfig {
+                        permission: a.permission.try_into().unwrap(),
+                        addresses: a
+                            .addresses
+                            .into_iter()
+                            .map(|a| a.parse())
+                            .collect::<Result<_, _>>()?,
+                    })
+                })
+                .transpose()?,
         };
 
         let result = self

@@ -10,6 +10,7 @@ use crate::{
 };
 
 use crate::environment::QueryHandler;
+use cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig;
 use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
@@ -101,6 +102,39 @@ impl<Chain: ChainState> Contract<Chain> {
 /// Expose chain and state function to call them on the contract
 impl<Chain: TxHandler> Contract<Chain> {
     // Chain interfaces
+
+    /// Upload a contract given its source and access control option
+    pub fn upload_with_access(
+        &self,
+        source: &impl Uploadable,
+        access_config: AccessConfig,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
+        log::info!(
+            target: &contract_target(),
+            "[{}][Upload]",
+            self.id,
+        );
+
+        let resp = self
+            .chain
+            .upload_with_access(source, access_config)
+            .map_err(Into::into)?;
+        let code_id = resp.uploaded_code_id()?;
+        self.set_code_id(code_id);
+        log::info!(
+            target: &contract_target(),
+            "[{}][Uploaded] code_id {}",
+            self.id,
+            code_id
+        );
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Uploaded] response {:?}",
+            self.id,
+            resp
+        );
+        Ok(resp)
+    }
 
     /// Upload a contract given its source
     pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {

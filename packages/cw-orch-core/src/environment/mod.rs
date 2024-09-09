@@ -16,4 +16,4 @@ pub use queriers::{
     DefaultQueriers, Querier, QuerierGetter, QueryHandler,
 };
 pub use state::{ChainState, StateInterface};
-pub use tx_handler::{TxHandler, TxResponse};
+pub use tx_handler::{TxHandler, TxResponse, AccessConfig};

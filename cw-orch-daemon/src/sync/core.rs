@@ -219,6 +219,17 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
                 .instantiate2(code_id, init_msg, label, admin, coins, salt),
         )
     }
+
+    fn upload_with_access<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        access_config: cw_orch_core::environment::AccessConfig,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle.block_on(
+            self.daemon
+                .upload_with_access(contract_source, Some(access_config)),
+        )
+    }
 }
 
 impl<Sender: TxSender> Stargate for DaemonBase<Sender> {

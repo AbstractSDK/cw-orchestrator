@@ -7,6 +7,7 @@ use crate::{
     error::CwEnvError,
     log::contract_target,
 };
+use cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig;
 use cosmwasm_std::{Addr, Binary, Coin, Empty};
 use cw_multi_test::Contract as MockContract;
 use cw_storage_plus::{Item, Map, PrimaryKey};
@@ -260,6 +261,14 @@ pub trait CwOrchUpload<Chain: TxHandler>: ContractInstance<Chain> + Uploadable +
     /// upload the contract to the configured environment.
     fn upload(&self) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().upload(self)
+    }
+
+    /// upload the contract to the configured environment with access configuration.
+    fn upload_with_access(
+        &self,
+        access_config: AccessConfig,
+    ) -> Result<Chain::Response, CwEnvError> {
+        self.as_instance().upload_with_access(self, access_config)
     }
 }
 
