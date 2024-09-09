@@ -350,7 +350,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         self.upload_with_access_config(uploadable, None).await
     }
 
-    /// Upload a contract to the chain.
+    /// Upload a contract to the chain and specify the permissions for instantiating
     pub async fn upload_with_access_config<T: Uploadable>(
         &self,
         _uploadable: &T,

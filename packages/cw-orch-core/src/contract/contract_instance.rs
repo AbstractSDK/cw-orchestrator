@@ -103,7 +103,7 @@ impl<Chain: ChainState> Contract<Chain> {
 impl<Chain: TxHandler> Contract<Chain> {
     // Chain interfaces
 
-    /// Upload a contract given its source and access control option
+    /// Upload a contract given its source and specify the permissions for instantiating
     pub fn upload_with_access_config(
         &self,
         source: &impl Uploadable,

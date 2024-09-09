@@ -263,7 +263,7 @@ pub trait CwOrchUpload<Chain: TxHandler>: ContractInstance<Chain> + Uploadable +
         self.as_instance().upload(self)
     }
 
-    /// upload the contract to the configured environment with access configuration.
+    /// upload the contract to the configured environment and specify the permissions for instantiating
     fn upload_with_access_config(
         &self,
         access_config: Option<AccessConfig>,
