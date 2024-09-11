@@ -4,7 +4,7 @@
 
 ### Breaking
 
-- Added Support for for types of mnemonic (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
+- Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
 
 ## 0.25.0
 

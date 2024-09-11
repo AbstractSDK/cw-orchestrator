@@ -71,8 +71,8 @@ impl PrivateKey {
         }
     }
 
-    /// for private key recovery with seed phrase
-    pub fn from_words_seed<C: secp256k1::Signing + secp256k1::Context>(
+    /// for private key recovery with passphrase
+    pub fn from_words_with_passphrase<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         words: &str,
         passphrase: &str,
