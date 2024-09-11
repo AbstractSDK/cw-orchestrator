@@ -122,12 +122,14 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
 
 // Helpers for Daemon with [`Wallet`] sender.
 impl Daemon {
+    #[deprecated = "Use `self.sender_mut().set_authz_granter(granter)` or change the sender builder options instead"]
     /// Specifies wether authz should be used with this daemon
     pub fn authz_granter(&mut self, granter: &Addr) -> &mut Self {
         self.sender_mut().set_authz_granter(granter);
         self
     }
 
+    #[deprecated = "Use `self.sender_mut().set_fee_granter(granter)` or change the sender builder options instead"]
     /// Specifies wether feegrant should be used with this daemon
     pub fn fee_granter(&mut self, granter: &Addr) -> &mut Self {
         self.sender_mut().set_fee_granter(granter);
