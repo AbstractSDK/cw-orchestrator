@@ -8,6 +8,8 @@
   
 ### Breaking
 
+- Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
+
 ## 0.25.0
 
 - `is_test` Added for Daemon Builders, when set to `true` will use temporary file for state
