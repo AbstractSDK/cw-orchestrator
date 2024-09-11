@@ -88,8 +88,8 @@ pub trait TxHandler: ChainState + Clone {
     }
 }
 
-#[non_exhaustive]
 pub enum AccessConfig {
+    Unspecified,
     Nobody,
     Everybody,
     AnyOfAddresses(Vec<String>),
@@ -113,6 +113,10 @@ impl From<AccessConfig> for cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
                     addresses,
                 }
             }
+            AccessConfig::Unspecified => cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::Unspecified.into(),
+                addresses: vec![],
+            },
         }
     }
 }

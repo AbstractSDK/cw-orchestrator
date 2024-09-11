@@ -367,29 +367,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         let store_msg = cosmrs::cosmwasm::MsgStoreCode {
             sender: self.sender().account_id(),
             wasm_byte_code,
-            instantiate_permission: access
-                .map(|a| {
-                    let response = match a {
-                        AccessConfig::Nobody => cosmrs::cosmwasm::AccessConfig {
-                            permission: cosmrs::cosmwasm::AccessType::Nobody,
-                            addresses: vec![],
-                        },
-                        AccessConfig::Everybody => cosmrs::cosmwasm::AccessConfig {
-                            permission: cosmrs::cosmwasm::AccessType::Everybody,
-                            addresses: vec![],
-                        },
-                        AccessConfig::AnyOfAddresses(addresses) => cosmrs::cosmwasm::AccessConfig {
-                            permission: cosmrs::cosmwasm::AccessType::AnyOfAddresses,
-                            addresses: addresses
-                                .into_iter()
-                                .map(|a| a.parse())
-                                .collect::<Result<_, _>>()?,
-                        },
-                        _ => unimplemented!(),
-                    };
-                    Ok::<_, DaemonError>(response)
-                })
-                .transpose()?,
+            instantiate_permission: access.map(access_config_to_cosmrs).transpose()?,
         };
 
         let result = self
@@ -409,6 +387,33 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         }
         Ok(result)
     }
+}
+
+fn access_config_to_cosmrs(
+    access_config: AccessConfig,
+) -> Result<cosmrs::cosmwasm::AccessConfig, DaemonError> {
+    let response = match access_config {
+        AccessConfig::Nobody => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Nobody,
+            addresses: vec![],
+        },
+        AccessConfig::Everybody => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Everybody,
+            addresses: vec![],
+        },
+        AccessConfig::AnyOfAddresses(addresses) => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::AnyOfAddresses,
+            addresses: addresses
+                .into_iter()
+                .map(|a| a.parse())
+                .collect::<Result<_, _>>()?,
+        },
+        AccessConfig::Unspecified => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Unspecified,
+            addresses: vec![],
+        },
+    };
+    Ok(response)
 }
 
 impl Querier for DaemonAsync {

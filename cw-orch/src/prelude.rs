@@ -27,9 +27,8 @@ pub use crate::environment::IndexResponse;
 
 // Environment
 pub use crate::environment::{
-    AccessConfig, BankQuerier, BankSetter, CwEnv, DefaultQueriers, EnvironmentInfo,
-    EnvironmentQuerier, NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse,
-    WasmQuerier,
+    BankQuerier, BankSetter, CwEnv, DefaultQueriers, EnvironmentInfo, EnvironmentQuerier,
+    NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
 };
 
 pub use cw_orch_core::environment::Environment;
