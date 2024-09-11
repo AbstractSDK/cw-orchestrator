@@ -57,7 +57,7 @@ pub fn cavern_integration_test() -> cw_orch::anyhow::Result<()> {
 
     // 0. We start by saving some useful information for later (admin for migration (1.) + code id for remigration (3.))
 
-    let contract_info = app.wasm_querier().contract_info(market_addr.to_string())?;
+    let contract_info = app.wasm_querier().contract_info(&market_addr)?;
 
     let money_market_admin = Addr::unchecked(contract_info.admin.unwrap());
     let money_market_code_id = contract_info.code_id;
@@ -183,6 +183,6 @@ fn query_contract_info() -> cw_orch::anyhow::Result<()> {
     let market_addr = Addr::unchecked(MARKET_ADDR);
     market.set_address(&market_addr);
 
-    app.wasm_querier().contract_info(market.address()?)?;
+    app.wasm_querier().contract_info(&market.address()?)?;
     Ok(())
 }

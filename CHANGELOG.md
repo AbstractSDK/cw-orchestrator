@@ -2,6 +2,9 @@
 
 ## Unpublished
 
+ - Add methods to set the private key and mnemonic of an existing sender
+ - Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
+  
 ### Breaking
 
 - Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)

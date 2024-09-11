@@ -46,7 +46,7 @@ impl QuerySender for QueryOnlySender {
 
 #[cfg(test)]
 mod tests {
-    use cw_orch_networks::networks::JUNO_1;
+    use cw_orch_networks::networks::{ARCHWAY_1, JUNO_1, VOTA_ASH};
 
     use super::QueryOnlyDaemon;
     use crate::DaemonBuilder;
@@ -56,5 +56,15 @@ mod tests {
     fn build() {
         let _query_only_daemon: QueryOnlyDaemon =
             DaemonBuilder::new(JUNO_1).build_sender(()).unwrap();
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn tls_grpc() {
+        let chain = ARCHWAY_1;
+        // Make sure this test is up to date
+        assert!(chain.grpc_urls[0].starts_with("https"));
+        let _query_only_daemon: QueryOnlyDaemon =
+            DaemonBuilder::new(chain).build_sender(()).unwrap();
     }
 }

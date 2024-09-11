@@ -241,6 +241,7 @@ pub trait CwOrchMigrate<Chain: TxHandler>: MigratableContract + ContractInstance
 impl<T: MigratableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchMigrate<Chain> for T {}
 
 /// Trait to implement on the contract to enable it to be uploaded
+///
 /// Should return [`WasmPath`](crate::contract::interface_traits::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
