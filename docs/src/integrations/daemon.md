@@ -117,10 +117,10 @@ If you wish to use the default `CosmosSender` provided by default, you can use t
   let daemon = Daemon::builder(JUNO_1).build()?;
 ```
 
-You can use the following functions on the `Daemon` object to customize some of its properties : 
+You can use the following functions on the `CosmosSender` (obtained via `Daemon::sender_mut()`) object to customize some of its properties:
 
-- `Daemon::authz_granter` allows you to use the authz module. If this method is used, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/type.Daemon.html#method.authz_granter" target="_blank">Documentation Link</a>
-- `Daemon::fee_granter` allows you to use the fee-grant module. If this method is used, the sender will try to pay for transactions using the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/feegrant/" target="_blank">More info on the fee grant module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/type.Daemon.html#method.fee_granter" target="_blank">Documentation Link</a>
+- `CosmosSender::set_authz_granter` allows you to use the authz module. If this method is used, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/type.Daemon.html#method.authz_granter" target="_blank">Documentation Link</a>
+- `CosmosSender::set_fee_granter` allows you to use the fee-grant module. If this method is used, the sender will try to pay for transactions using the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/feegrant/" target="_blank">More info on the fee grant module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/type.Daemon.html#method.fee_granter" target="_blank">Documentation Link</a>
 
 ### Customizing the Sender
 
