@@ -46,7 +46,7 @@ impl QuerySender for QueryOnlySender {
 
 #[cfg(test)]
 mod tests {
-    use cw_orch_networks::networks::{ARCHWAY_1, JUNO_1, VOTA_ASH};
+    use cw_orch_networks::networks::{ARCHWAY_1, JUNO_1};
 
     use super::QueryOnlyDaemon;
     use crate::DaemonBuilder;

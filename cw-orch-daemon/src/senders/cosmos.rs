@@ -33,7 +33,7 @@ use cosmrs::{
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{
     contract::WasmPath,
-    environment::{ChainInfoOwned, ChainKind, IndexResponse},
+    environment::{ChainInfoOwned, ChainKind},
     CoreEnvVars, CwEnvError,
 };
 use flate2::{write, Compression};
@@ -419,11 +419,9 @@ impl Wallet {
 
 // Helpers to facilitate some rare operations
 impl Wallet {
-    /// Uploads the `WasmPath` path specifier on chain and returns the resulting code_id
-    pub async fn upload_wasm(
-        &self,
-        wasm_path: WasmPath,
-    ) -> Result<(u64, CosmTxResponse), DaemonError> {
+    /// Uploads the `WasmPath` path specifier on chain.
+    /// The resulting code_id can be extracted from the Transaction result using [cw_orch_core::environment::IndexResponse::uploaded_code_id] and returns the resulting code_id
+    pub async fn upload_wasm(&self, wasm_path: WasmPath) -> Result<CosmTxResponse, DaemonError> {
         let file_contents = std::fs::read(wasm_path.path())?;
         let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
         e.write_all(&file_contents)?;
@@ -434,10 +432,7 @@ impl Wallet {
             instantiate_permission: None,
         };
 
-        let result = self.commit_tx(vec![store_msg], None).await?;
-        let code_id = result.uploaded_code_id().unwrap();
-
-        Ok((code_id, result))
+        self.commit_tx(vec![store_msg], None).await
     }
 }
 
