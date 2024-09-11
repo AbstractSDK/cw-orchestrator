@@ -2,8 +2,9 @@
 
 ## Unpublished
 
-- Add a method on `TxHandler` to select instantiation permissions on Wasm upload
 - Add methods to set the private key and mnemonic of an existing sender
+- Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
+- Add a method on `TxHandler` to select instantiation permissions on Wasm upload
   
 ### Breaking
 

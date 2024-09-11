@@ -10,7 +10,7 @@ pub fn main() -> anyhow::Result<()> {
     pretty_env_logger::init(); // Used to log contract and chain interactions
 
     let network = networks::LOCAL_JUNO;
-    // There is no need to register a mnemonic to use this daemon querier
+    // QueryOnlyDaemon doesn't need a mnemonic to function
     let chain: QueryOnlyDaemon = QueryOnlyDaemon::builder(network).build_sender(())?;
 
     let balances = chain
