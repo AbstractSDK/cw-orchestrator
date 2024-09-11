@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{core::CloneTestingApp, CloneTesting};
 use clone_cw_multi_test::AddressGenerator;
 use clone_cw_multi_test::CosmosRouter;
-use cosmwasm_std::{instantiate2_address, Api, Checksum, ContractInfoResponse};
+use cosmwasm_std::{instantiate2_address, Addr, Api, Checksum, ContractInfoResponse};
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
     environment::{Querier, QuerierGetter, StateInterface, WasmQuerier},
@@ -88,7 +88,7 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
             .app
             .borrow()
             .wrap()
-            .query_wasm_smart(address.into(), query_data)?)
+            .query_wasm_smart(address, query_data)?)
     }
 
     fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
@@ -109,7 +109,11 @@ impl<S: StateInterface> WasmQuerier for CloneWasmQuerier<S> {
     ) -> Result<String, Self::Error> {
         // Clone Testing needs mock
         let checksum = self.code_id_hash(code_id)?;
-        let canon_creator = self.app.borrow().api().addr_canonicalize(&creator.into())?;
+        let canon_creator = self
+            .app
+            .borrow()
+            .api()
+            .addr_canonicalize(creator.as_str())?;
         let canonical_addr = instantiate2_address(checksum.as_slice(), &canon_creator, &salt)?;
         Ok(self
             .app
