@@ -11,9 +11,10 @@ use bitcoin::{
 };
 use cosmrs::tx::SignerPublicKey;
 use cw_orch_core::log::local_target;
-use itertools::Itertools;
 use prost_types::Any;
 use rand_core::{OsRng, RngCore};
+
+pub const DEFAULT_MNEMONIC_WORD_COUNT: usize = 24;
 
 /// The Private key structure that is used to generate signatures and public keys
 /// WARNING: No Security Audit has been performed
@@ -44,14 +45,12 @@ impl PrivateKey {
     /// generate a new private key with a seed phrase
     pub fn new_seed<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
-        seed_phrase: &str,
+        passphrase: &str,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
-        let mut key = [0u8; 16];
-        OsRng.fill_bytes(&mut key);
-        match bip39::Mnemonic::from_entropy(&key) {
+        match bip39::Mnemonic::generate(DEFAULT_MNEMONIC_WORD_COUNT) {
             Ok(mnemonic) => {
-                PrivateKey::gen_private_key_phrase(secp, mnemonic, 0, 0, coin_type, seed_phrase)
+                PrivateKey::gen_private_key_phrase(secp, mnemonic, 0, 0, coin_type, passphrase)
             }
             Err(_) => Err(DaemonError::Phrasing),
         }
@@ -76,12 +75,12 @@ impl PrivateKey {
     pub fn from_words_seed<C: secp256k1::Signing + secp256k1::Context>(
         secp: &Secp256k1<C>,
         words: &str,
-        seed_pass: &str,
+        passphrase: &str,
         coin_type: u32,
     ) -> Result<PrivateKey, DaemonError> {
         match bip39::Mnemonic::parse_in_normalized(bip39::Language::English, words) {
             Ok(phrase) => {
-                PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, seed_pass)
+                PrivateKey::gen_private_key_phrase(secp, phrase, 0, 0, coin_type, passphrase)
             }
             Err(_) => Err(DaemonError::Phrasing),
         }
@@ -171,9 +170,9 @@ impl PrivateKey {
         account: u32,
         index: u32,
         coin_type: u32,
-        seed_phrase: &str,
+        passphrase: &str,
     ) -> Result<PrivateKey, DaemonError> {
-        let seed = phrase.to_seed(seed_phrase);
+        let seed = phrase.to_seed(passphrase);
         let mut private_key = Self::gen_private_key_raw(secp, &seed, account, index, coin_type)?;
         private_key.mnemonic = Some(phrase);
         Ok(private_key)
@@ -205,9 +204,7 @@ impl PrivateKey {
 
     /// the words used to generate this private key
     pub fn words(&self) -> Option<String> {
-        self.mnemonic
-            .as_ref()
-            .map(|phrase| phrase.to_string())
+        self.mnemonic.as_ref().map(|phrase| phrase.to_string())
     }
 
     /// used for testing
