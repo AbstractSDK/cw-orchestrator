@@ -32,13 +32,15 @@ use cosmrs::{
 };
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{
-    environment::{ChainInfoOwned, ChainKind},
+    contract::WasmPath,
+    environment::{ChainInfoOwned, ChainKind, IndexResponse},
     CoreEnvVars, CwEnvError,
 };
+use flate2::{write, Compression};
 
 use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
 use bitcoin::secp256k1::{All, Secp256k1, Signing};
-use std::{str::FromStr, sync::Arc};
+use std::{io::Write, str::FromStr, sync::Arc};
 
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
@@ -412,6 +414,30 @@ impl Wallet {
         let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
 
         Ok((gas_expected as u64, fee_amount as u128))
+    }
+}
+
+// Helpers to facilitate some rare operations
+impl Wallet {
+    /// Uploads the `WasmPath` path specifier on chain and returns the resulting code_id
+    pub async fn upload_wasm(
+        &self,
+        wasm_path: WasmPath,
+    ) -> Result<(u64, CosmTxResponse), DaemonError> {
+        let file_contents = std::fs::read(wasm_path.path())?;
+        let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
+        e.write_all(&file_contents)?;
+        let wasm_byte_code = e.finish()?;
+        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+            sender: self.account_id(),
+            wasm_byte_code,
+            instantiate_permission: None,
+        };
+
+        let result = self.commit_tx(vec![store_msg], None).await?;
+        let code_id = result.uploaded_code_id().unwrap();
+
+        Ok((code_id, result))
     }
 }
 
