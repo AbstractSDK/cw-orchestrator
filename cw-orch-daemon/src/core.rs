@@ -20,13 +20,11 @@ use cw_orch_core::{
     environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
     log::transaction_target,
 };
-use flate2::{write, Compression};
 use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
-    io::Write,
     ops::Deref,
     str::{from_utf8, FromStr},
     time::Duration,
@@ -349,32 +347,18 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
-        let file_contents = std::fs::read(wasm_path.path())?;
-        let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
-        e.write_all(&file_contents)?;
-        let wasm_byte_code = e.finish()?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender().account_id(),
-            wasm_byte_code,
-            instantiate_permission: None,
-        };
+        let upload_result = self.sender.upload_wasm(wasm_path).await?;
 
-        let result = self
-            .sender()
-            .commit_tx(vec![store_msg], None)
-            .await
-            .map_err(Into::into)?;
+        log::info!(target: &transaction_target(), "Uploading done: {:?}", upload_result.txhash);
 
-        log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
-
-        let code_id = result.uploaded_code_id().unwrap();
+        let code_id = upload_result.uploaded_code_id().unwrap();
 
         // wait for the node to return the contract information for this upload
         let wasm = CosmWasm::new_async(self.channel());
         while wasm._code(code_id).await.is_err() {
             self.next_block().await?;
         }
-        Ok(result)
+        Ok(upload_result)
     }
 }
 
