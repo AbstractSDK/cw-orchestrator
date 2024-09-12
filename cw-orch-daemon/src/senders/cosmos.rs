@@ -1,8 +1,13 @@
 use crate::{
-    access_config_to_cosmrs, env::DaemonEnvVars, proto::injective::ETHEREUM_COIN_TYPE, queriers::Bank, tx_broadcaster::{
+    access_config_to_cosmrs,
+    env::DaemonEnvVars,
+    proto::injective::ETHEREUM_COIN_TYPE,
+    queriers::Bank,
+    tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
-    }, CosmosOptions, GrpcChannel
+    },
+    CosmosOptions, GrpcChannel,
 };
 
 use crate::proto::injective::InjectiveEthAccount;
