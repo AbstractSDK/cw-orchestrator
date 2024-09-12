@@ -5,19 +5,19 @@ use clone_cw_multi_test::{
     wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
-use cosmwasm_std::{to_json_binary, WasmMsg};
-use cosmwasm_std::{Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128};
-use cw_orch_core::contract::interface_traits::ContractInstance;
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128,
+    WasmMsg,
+};
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::interface_traits::{ContractInstance, Uploadable},
     environment::{
-        BankQuerier, BankSetter, ChainInfoOwned, ChainState, DefaultQueriers, IndexResponse,
-        StateInterface, TxHandler,
+        AccessConfig, BankQuerier, BankSetter, ChainInfoOwned, ChainState, DefaultQueriers,
+        IndexResponse, StateInterface, TxHandler,
     },
     CwEnvError,
 };
-use cw_orch_daemon::{queriers::Node, RUNTIME};
-use cw_orch_daemon::{read_network_config, DEFAULT_DEPLOYMENT};
+use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT, RUNTIME};
 use cw_utils::NativeBalance;
 use serde::Serialize;
 use tokio::runtime::Runtime;
@@ -303,6 +303,15 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
             ..Default::default()
         };
         Ok(resp)
+    }
+
+    fn upload_with_access_config<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        _access_config: Option<AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        log::debug!("Uploading with access is not enforced when using Clone Testing");
+        self.upload(contract_source)
     }
 
     fn execute<E: Serialize + Debug>(

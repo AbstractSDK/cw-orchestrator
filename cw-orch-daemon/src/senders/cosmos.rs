@@ -1,12 +1,8 @@
 use crate::{
-    env::DaemonEnvVars,
-    proto::injective::ETHEREUM_COIN_TYPE,
-    queriers::Bank,
-    tx_broadcaster::{
+    access_config_to_cosmrs, env::DaemonEnvVars, proto::injective::ETHEREUM_COIN_TYPE, queriers::Bank, tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
-    },
-    CosmosOptions, GrpcChannel,
+    }, CosmosOptions, GrpcChannel
 };
 
 use crate::proto::injective::InjectiveEthAccount;
@@ -33,7 +29,7 @@ use cosmrs::{
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{
     contract::WasmPath,
-    environment::{ChainInfoOwned, ChainKind},
+    environment::{AccessConfig, ChainInfoOwned, ChainKind},
     CoreEnvVars, CwEnvError,
 };
 use flate2::{write, Compression};
@@ -422,13 +418,22 @@ impl Wallet {
     /// Uploads the `WasmPath` path specifier on chain.
     /// The resulting code_id can be extracted from the Transaction result using [cw_orch_core::environment::IndexResponse::uploaded_code_id] and returns the resulting code_id
     pub async fn upload_wasm(&self, wasm_path: WasmPath) -> Result<CosmTxResponse, DaemonError> {
-        upload_wasm(self, wasm_path).await
+        self.upload_with_access_config(wasm_path, None).await
+    }
+
+    pub async fn upload_with_access_config(
+        &self,
+        wasm_path: WasmPath,
+        access: Option<AccessConfig>,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        upload_wasm(self, wasm_path, access).await
     }
 }
 
 pub async fn upload_wasm<T: TxSender>(
     sender: &T,
     wasm_path: WasmPath,
+    access: Option<AccessConfig>,
 ) -> Result<CosmTxResponse, DaemonError> {
     let file_contents = std::fs::read(wasm_path.path())?;
     let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
@@ -437,7 +442,7 @@ pub async fn upload_wasm<T: TxSender>(
     let store_msg = cosmrs::cosmwasm::MsgStoreCode {
         sender: sender.account_id(),
         wasm_byte_code,
-        instantiate_permission: None,
+        instantiate_permission: access.map(access_config_to_cosmrs).transpose()?,
     };
 
     sender

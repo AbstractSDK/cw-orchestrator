@@ -17,7 +17,9 @@ use cosmrs::{
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
+    environment::{
+        AccessConfig, AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier,
+    },
     log::transaction_target,
 };
 use prost::Message;
@@ -341,13 +343,22 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     /// Upload a contract to the chain.
     pub async fn upload<T: Uploadable>(
         &self,
+        uploadable: &T,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        self.upload_with_access_config(uploadable, None).await
+    }
+
+    /// Upload a contract to the chain and specify the permissions for instantiating
+    pub async fn upload_with_access_config<T: Uploadable>(
+        &self,
         _uploadable: &T,
+        access: Option<AccessConfig>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let wasm_path = <T as Uploadable>::wasm(self.chain_info());
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
-        let result = upload_wasm(self.sender(), wasm_path).await?;
+        let result = upload_wasm(self.sender(), wasm_path, access).await?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 
@@ -360,6 +371,33 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         }
         Ok(result)
     }
+}
+
+pub(crate) fn access_config_to_cosmrs(
+    access_config: AccessConfig,
+) -> Result<cosmrs::cosmwasm::AccessConfig, DaemonError> {
+    let response = match access_config {
+        AccessConfig::Nobody => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Nobody,
+            addresses: vec![],
+        },
+        AccessConfig::Everybody => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Everybody,
+            addresses: vec![],
+        },
+        AccessConfig::AnyOfAddresses(addresses) => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::AnyOfAddresses,
+            addresses: addresses
+                .into_iter()
+                .map(|a| a.parse())
+                .collect::<Result<_, _>>()?,
+        },
+        AccessConfig::Unspecified => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Unspecified,
+            addresses: vec![],
+        },
+    };
+    Ok(response)
 }
 
 impl Querier for DaemonAsync {
