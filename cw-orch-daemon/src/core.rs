@@ -1,6 +1,6 @@
 use crate::{
     queriers::CosmWasm,
-    senders::{builder::SenderBuilder, query::QuerySender},
+    senders::{builder::SenderBuilder, query::QuerySender, upload_wasm},
     DaemonAsyncBuilder, DaemonState,
 };
 
@@ -20,13 +20,11 @@ use cw_orch_core::{
     environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
     log::transaction_target,
 };
-use flate2::{write, Compression};
 use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
     fmt::Debug,
-    io::Write,
     ops::Deref,
     str::{from_utf8, FromStr},
     time::Duration,
@@ -349,21 +347,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
-        let file_contents = std::fs::read(wasm_path.path())?;
-        let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
-        e.write_all(&file_contents)?;
-        let wasm_byte_code = e.finish()?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender().account_id(),
-            wasm_byte_code,
-            instantiate_permission: None,
-        };
-
-        let result = self
-            .sender()
-            .commit_tx(vec![store_msg], None)
-            .await
-            .map_err(Into::into)?;
+        let result = upload_wasm(self.sender(), wasm_path).await?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 

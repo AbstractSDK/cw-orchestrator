@@ -9,6 +9,7 @@ mod cosmos_batch;
 mod cosmos_options;
 mod query_only;
 
+pub(crate) use cosmos::upload_wasm;
 pub use {
     cosmos::{CosmosSender, Wallet},
     cosmos_batch::{options::CosmosBatchOptions, BatchDaemon, CosmosBatchSender},
