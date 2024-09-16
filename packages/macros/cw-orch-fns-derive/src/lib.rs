@@ -1,6 +1,5 @@
 #![recursion_limit = "128"]
 
-mod execute_fns;
 mod fns_derive;
 mod helpers;
 mod query_fns;

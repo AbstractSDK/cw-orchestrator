@@ -1,8 +1,8 @@
 extern crate proc_macro;
 use crate::{
-    execute_fns::payable,
     helpers::{
-        has_into, process_fn_name, process_sorting, LexiographicMatching, MsgType, SyncType,
+        parse_enum_attributes, parse_field_attributes, parse_variant_attributes,
+        LexiographicMatching, MsgType, SyncType,
     },
     query_fns::parse_query_type,
 };
@@ -64,12 +64,16 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
         SyncType::Async => ("Async", Some(quote!(async)), Some(quote!(.await)), "_async"),
     };
 
+    let enum_attributes = parse_enum_attributes(&input);
+
     let variant_fns = input.variants.into_iter().map( |mut variant|{
         let variant_name = variant.ident.clone();
 
+        let variant_attributes = parse_variant_attributes(&variant);
+
         // We rename the variant if it has a fn_name attribute associated with it
         let mut variant_func_name =
-                format_ident!("{}{async_fn_name_suffix}", process_fn_name(&variant).to_case(Case::Snake));
+                format_ident!("{}{async_fn_name_suffix}", variant_attributes.fn_name.to_case(Case::Snake));
         variant_func_name.set_span(variant_name.span());
 
 
@@ -80,11 +84,10 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
             )
         };
 
-        // TODO
-        // Execute Specific
+
         let (maybe_coins_attr,passed_coins) = match msg_type{
             MsgType::Execute => {
-                let is_payable = payable(&variant);
+                let is_payable = variant_attributes.payable;
                 if is_payable {
                     (quote!(coins: &[::cosmwasm_std::Coin]),quote!(coins))
                 } else {
@@ -103,6 +106,7 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
         };
 
         match &mut variant.fields {
+
             Fields::Unnamed(variant_fields) => {
                 let mut variant_idents = variant_fields.unnamed.clone();
 
@@ -123,8 +127,9 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
                     .iter()
                     .map(|field| {
                         let ident = &field.ident;
+                        let field_attributes = parse_field_attributes(field);
 
-                        if has_into(field){
+                        if field_attributes.into{
                             quote!(#ident.into())
                         }else{
                             quote!(#ident)
@@ -136,7 +141,8 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
                 let variant_params = variant_fields.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
-                    if has_into(field){
+                    let field_attributes = parse_field_attributes(field);
+                    if field_attributes.into{
                         quote! (#field_name: impl Into<#field_type> )
                     }else{
                         quote! (#field_name: #field_type )
@@ -166,9 +172,8 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
                 )
             }
             Fields::Named(variant_fields) => {
-                let is_attributes_sorted = process_sorting(&input.attrs);
 
-                if is_attributes_sorted{
+                if !enum_attributes.disable_fields_sorting{
                     // sort fields on field name
                     LexiographicMatching::default().visit_fields_named_mut(variant_fields);
                 }
@@ -179,7 +184,8 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
                 // Generate the struct members (This can be kept, it doesn't disturb)
                 let variant_idents = variant_fields.iter().map(|field|{
                     let ident = field.ident.clone().unwrap();
-                    if has_into(field){
+                    let field_attributes = parse_field_attributes(field);
+                    if field_attributes.into{
                         quote!(#ident: #ident.into())
                     }else{
                         quote!(#ident)
@@ -190,7 +196,8 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
                 let variant_attr = variant_fields.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
-                    if has_into(field){
+                    let field_attributes = parse_field_attributes(field);
+                    if field_attributes.into{
                         quote! (#field_name: impl Into<#field_type> )
                     }else{
                         quote! (#field_name: #field_type )

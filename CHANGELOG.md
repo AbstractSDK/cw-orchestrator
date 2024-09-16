@@ -2,10 +2,11 @@
 
 ## Unpublished
 
- - Add methods to set the private key and mnemonic of an existing sender
- - Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
- - Add a method on `TxHandler` to select instantiation permissions on Wasm upload
- - Adds an `upload_wasm` function to CosmosSender to upload wasm code associated to no Contract structure
+- Add methods to set the private key and mnemonic of an existing sender
+- Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
+- Add a method on `TxHandler` to select instantiation permissions on Wasm upload
+- Adds an `upload_wasm` function to CosmosSender to upload wasm code associated to no Contract structure
+- Update syn to 2.0
   
 ### Breaking
 

@@ -13,5 +13,5 @@ proc-macro = true
 [dependencies]
 quote = "1"
 proc-macro2 = "1"
-syn = { version = "1", features = ["full", "extra-traits", "visit-mut"] }
+syn = { version = "2", features = ["full", "extra-traits", "visit-mut"] }
 convert_case = "0.6.0"
