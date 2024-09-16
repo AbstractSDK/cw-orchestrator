@@ -1,27 +1,22 @@
+use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
 use crate::{
-    env::DaemonEnvVars,
-    proto::injective::ETHEREUM_COIN_TYPE,
-    queriers::Bank,
+    core::parse_cw_coins,
+    cosmos_modules::{self, auth::BaseAccount},
+    env::{DaemonEnvVars, LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
+    error::DaemonError,
+    keys::private::PrivateKey,
+    proto::injective::{InjectiveEthAccount, ETHEREUM_COIN_TYPE},
+    queriers::{Bank, Node},
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    CosmosOptions, GrpcChannel,
-};
-
-use crate::proto::injective::InjectiveEthAccount;
-use crate::{
-    cosmos_modules::{self, auth::BaseAccount},
-    error::DaemonError,
-    queriers::Node,
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
+    upload_wasm, CosmosOptions, GrpcChannel,
 };
-
-#[cfg(feature = "eth")]
-use crate::proto::injective::InjectiveSigner;
-
-use crate::{core::parse_cw_coins, keys::private::PrivateKey};
+use bitcoin::secp256k1::{All, Secp256k1, Signing};
+use cosmos_modules::vesting::PeriodicVestingAccount;
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
@@ -32,18 +27,15 @@ use cosmrs::{
 };
 use cosmwasm_std::{coin, Addr, Coin};
 use cw_orch_core::{
-    environment::{ChainInfoOwned, ChainKind},
+    contract::WasmPath,
+    environment::{AccessConfig, ChainInfoOwned, ChainKind},
     CoreEnvVars, CwEnvError,
 };
-
-use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
-use bitcoin::secp256k1::{All, Secp256k1, Signing};
 use std::{str::FromStr, sync::Arc};
-
-use cosmos_modules::vesting::PeriodicVestingAccount;
 use tonic::transport::Channel;
 
-use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
+#[cfg(feature = "eth")]
+use crate::proto::injective::InjectiveSigner;
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -412,6 +404,23 @@ impl Wallet {
         let fee_amount = gas_expected * (self.chain_info.gas_price + 0.00001);
 
         Ok((gas_expected as u64, fee_amount as u128))
+    }
+}
+
+// Helpers to facilitate some rare operations
+impl Wallet {
+    /// Uploads the `WasmPath` path specifier on chain.
+    /// The resulting code_id can be extracted from the Transaction result using [cw_orch_core::environment::IndexResponse::uploaded_code_id] and returns the resulting code_id
+    pub async fn upload_wasm(&self, wasm_path: WasmPath) -> Result<CosmTxResponse, DaemonError> {
+        self.upload_with_access_config(wasm_path, None).await
+    }
+
+    pub async fn upload_with_access_config(
+        &self,
+        wasm_path: WasmPath,
+        access: Option<AccessConfig>,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        upload_wasm(self, wasm_path, access).await
     }
 }
 
