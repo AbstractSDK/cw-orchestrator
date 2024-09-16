@@ -1,28 +1,22 @@
+use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
 use crate::{
-    access_config_to_cosmrs,
-    env::DaemonEnvVars,
-    proto::injective::ETHEREUM_COIN_TYPE,
-    queriers::Bank,
+    core::parse_cw_coins,
+    cosmos_modules::{self, auth::BaseAccount},
+    env::{DaemonEnvVars, LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
+    error::DaemonError,
+    keys::private::PrivateKey,
+    proto::injective::{InjectiveEthAccount, ETHEREUM_COIN_TYPE},
+    queriers::{Bank, Node},
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
         TxBroadcaster,
     },
-    CosmosOptions, GrpcChannel,
-};
-
-use crate::proto::injective::InjectiveEthAccount;
-use crate::{
-    cosmos_modules::{self, auth::BaseAccount},
-    error::DaemonError,
-    queriers::Node,
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
+    upload_wasm, CosmosOptions, GrpcChannel,
 };
-
-#[cfg(feature = "eth")]
-use crate::proto::injective::InjectiveSigner;
-
-use crate::{core::parse_cw_coins, keys::private::PrivateKey};
+use bitcoin::secp256k1::{All, Secp256k1, Signing};
+use cosmos_modules::vesting::PeriodicVestingAccount;
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
@@ -37,16 +31,11 @@ use cw_orch_core::{
     environment::{AccessConfig, ChainInfoOwned, ChainKind},
     CoreEnvVars, CwEnvError,
 };
-use flate2::{write, Compression};
-
-use crate::env::{LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME};
-use bitcoin::secp256k1::{All, Secp256k1, Signing};
-use std::{io::Write, str::FromStr, sync::Arc};
-
-use cosmos_modules::vesting::PeriodicVestingAccount;
+use std::{str::FromStr, sync::Arc};
 use tonic::transport::Channel;
 
-use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
+#[cfg(feature = "eth")]
+use crate::proto::injective::InjectiveSigner;
 
 const GAS_BUFFER: f64 = 1.3;
 const BUFFER_THRESHOLD: u64 = 200_000;
@@ -433,27 +422,6 @@ impl Wallet {
     ) -> Result<CosmTxResponse, DaemonError> {
         upload_wasm(self, wasm_path, access).await
     }
-}
-
-pub async fn upload_wasm<T: TxSender>(
-    sender: &T,
-    wasm_path: WasmPath,
-    access: Option<AccessConfig>,
-) -> Result<CosmTxResponse, DaemonError> {
-    let file_contents = std::fs::read(wasm_path.path())?;
-    let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
-    e.write_all(&file_contents)?;
-    let wasm_byte_code = e.finish()?;
-    let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-        sender: sender.account_id(),
-        wasm_byte_code,
-        instantiate_permission: access.map(access_config_to_cosmrs).transpose()?,
-    };
-
-    sender
-        .commit_tx(vec![store_msg], None)
-        .await
-        .map_err(Into::into)
 }
 
 impl QuerySender for Wallet {

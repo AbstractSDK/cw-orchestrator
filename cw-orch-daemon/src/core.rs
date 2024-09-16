@@ -1,13 +1,11 @@
-use crate::{
-    queriers::CosmWasm,
-    senders::{builder::SenderBuilder, query::QuerySender, upload_wasm},
-    DaemonAsyncBuilder, DaemonState,
-};
-
 use super::{
     cosmos_modules, error::DaemonError, queriers::Node, senders::Wallet, tx_resp::CosmTxResponse,
 };
-
+use crate::{
+    queriers::CosmWasm,
+    senders::{builder::SenderBuilder, query::QuerySender, tx::TxSender},
+    DaemonAsyncBuilder, DaemonState,
+};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     proto::cosmwasm::wasm::v1::MsgInstantiateContract2,
@@ -16,25 +14,20 @@ use cosmrs::{
 };
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::{interface_traits::Uploadable, WasmPath},
     environment::{
         AccessConfig, AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier,
     },
     log::transaction_target,
 };
+use flate2::{write, Compression};
 use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
-    fmt::Debug,
-    ops::Deref,
-    str::{from_utf8, FromStr},
-    time::Duration,
+    fmt::Debug, io::Write, ops::Deref, str::{from_utf8, FromStr}, time::Duration
 };
-
 use tonic::transport::Channel;
-
-use crate::senders::tx::TxSender;
 
 pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
 
@@ -371,6 +364,27 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         }
         Ok(result)
     }
+}
+
+pub async fn upload_wasm<T: TxSender>(
+    sender: &T,
+    wasm_path: WasmPath,
+    access: Option<AccessConfig>,
+) -> Result<CosmTxResponse, DaemonError> {
+    let file_contents = std::fs::read(wasm_path.path())?;
+    let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
+    e.write_all(&file_contents)?;
+    let wasm_byte_code = e.finish()?;
+    let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+        sender: sender.account_id(),
+        wasm_byte_code,
+        instantiate_permission: access.map(access_config_to_cosmrs).transpose()?,
+    };
+
+    sender
+        .commit_tx(vec![store_msg], None)
+        .await
+        .map_err(Into::into)
 }
 
 pub(crate) fn access_config_to_cosmrs(
