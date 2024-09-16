@@ -25,7 +25,11 @@ use prost::Message;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::from_str;
 use std::{
-    fmt::Debug, io::Write, ops::Deref, str::{from_utf8, FromStr}, time::Duration
+    fmt::Debug,
+    io::Write,
+    ops::Deref,
+    str::{from_utf8, FromStr},
+    time::Duration,
 };
 use tonic::transport::Channel;
 
