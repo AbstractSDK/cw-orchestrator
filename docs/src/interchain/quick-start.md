@@ -8,11 +8,10 @@ In order to interact with your environment using IBC capabilities, you first nee
 In this guide, we will create a mock environment for local testing. [↓Click here, if you want to interact with actual nodes](#with-actual-cosmos-sdk-nodes).
 
 With mock chains, you can create a mock environment simply by specifying chains ids and sender addresses.
-For this guide, we will create 2 chains, `juno` and `osmosis`, with the same address as sender:  
+For this guide, we will create 2 chains, `juno-1` and `osmosis-1`, with respective address prefixes:
 
 ```rust,ignore
- let sender = Addr::unchecked("sender_for_all_chains");
- let interchain = MockInterchainEnv::new(vec![("juno", &sender), ("osmosis", &sender)]);
+ let interchain = MockBech32InterchainEnv::new(vec![("juno-1", "juno"), ("osmosis-1", "osmosis")]);
 ```
 
 ### Interacting with the environment
@@ -24,8 +23,8 @@ The `client` will send IBC messages to the `host` that in turn will execute the 
 Let's first create the contracts:
 
 ```rust,ignore
-let juno = interchain.chain("juno")?;
-let osmosis = interchain.chain("osmosis")?;
+let juno = interchain.chain("juno-1")?;
+let osmosis = interchain.chain("osmosis-1")?;
 
 let client = Client::new("test:client", juno.clone());
 let host = Host::new("test:host", osmosis.clone());
@@ -131,10 +130,10 @@ impl<Chain> Uploadable for Host<Chain> {
 Then, we can create an IBC channel between the two contracts:
 
 ```rust,ignore
-let channel_receipt = interchain.create_contract_channel(&client, &host, None, "simple-ica-v2").await?;
+let channel_receipt: ChannelCreationResult<_> = interchain.create_contract_channel(&client, &host, None, "simple-ica-v2").await?;
 
 // After channel creation is complete, we get the channel id, which is necessary for ICA remote execution
-let juno_channel = channel.0.get_chain("juno")?.channel.unwrap();
+let juno_channel = channel_receipt.interchain_channel.get_chain("juno-1")?.channel.unwrap();
 ```
 
 This step will also await until all the packets sent during channel creation are relayed. In the case of the ICA contracts, a <a href="https://github.com/confio/cw-ibc-demo/blob/main/contracts/simple-ica-controller/src/ibc.rs#L54" target="_blank">`{"who_am_i":{}}`</a> packet is sent out right after channel creation and allows to identify the calling chain.
@@ -153,30 +152,10 @@ let tx_response = client.send_msgs(
 )?;
 ```
 
-Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This is done through:
+Now, we need to wait for the IBC execution to take place and the relayers to relay the packets. This will also verify that the IBC execution is successful. This is done through:
 
 ```rust,ignore
-let packet_lifetime = interchain.wait_ibc("juno", tx_response).await?;
-```
-
-After that step, we make sure that the packets were relayed correctly
-
-```rust,ignore
-// For testing a successful outcome of the first packet sent out in the tx, you can use: 
-if let IbcPacketOutcome::Success{
-    ack,
-    ..
-} = packet_lifetime.packets[0].outcome{
-    if let IbcPacketAckDecode::Success(_) = ack{
-        /// Packet has been successfully acknowledged and decoded, the transaction has gone through correctly
-    }
-    /// Else, there was a decode error (maybe you are using the wrong acknowledgement format)
-}else{
-    /// Else the packet timed-out, you may have a relayer error or something is wrong in your application
-};
-
-// OR you can use a helper, that will only error if one of the packets being relayed failed
-assert_packets_success_decode(packet_lifetime)?;
+let packet_lifetime = interchain.await_and_check_packets("juno-1", tx_response).await?;
 ```
 
 If it was relayed correctly, we can proceed with our application.
@@ -189,29 +168,10 @@ With this simple guide, you should be able to test and debug your IBC applicatio
 You can also create an interchain environment that interacts with actual running chains. Keep in mind in that case that this type of environment doesn't allow channel creation. This step will have to be done manually with external tooling. If you're looking to test your application in a full local test setup, please turn to [↓Starship](#with-starship)
 
 ```rust,ignore
-use cw_orch::prelude::*;
-use cw_orch::tokio;
+    use cw_orch::prelude::*;
 
-// This is used to deal with async functions
-let rt = tokio::runtime::Runtime::new().unwrap();
+{{#include ../../../cw-orch-interchain/examples/doc_daemon.rs:DAEMON_INTERCHAIN_CREATION}}
 
-// We create the daemons ourselves to interact with actual running chains (testnet here)
-let juno = Daemon::builder(cw_orch::daemon::networks::UNI_6)
-        .build()
-        .unwrap(); 
-
-// We create the daemons ourselves to interact with actual running chains (testnet here)
-let osmosis = Daemon::builder(cw_orch::daemon::networks::OSMO_5)
-        .build()
-        .unwrap();
-
-// This will allow us to follow packets execution between juno and osmosis
-let interchain = DaemonInterchain::from_daemons(
-    vec![juno, osmosis],
-    &ChannelCreationValidator,
-);
-
-// In case one wants to analyze packets between more chains, you just need to add them to the interchain object
 ```
 
 With this setup, you can now resume this quick-start guide from [↑Interacting with the environment](#interacting-with-the-environment).
@@ -226,17 +186,9 @@ Check out <a href="https://docs.cosmology.zone/starship" target="_blank">the off
 Once starship is setup and all the ports forwarded, assuming that starship was run locally, you can execute the following:
 
 ```rust,ignore
-use cw_orch::prelude::*;
-use cw_orch::tokio;
-
-// This is used to deal with async functions
-let rt = tokio::runtime::Runtime::new().unwrap();
-
-// This is the starship adapter
-let starship = Starship::new(None).unwrap();
-
-// You have now an interchain environment that you can use in your application
-let interchain = starship.interchain_env();
+    use cw_orch::prelude::*;
+    
+{{#include ../../../cw-orch-interchain/examples/doc_daemon.rs:STARSHIP_INTERCHAIN_CREATION}}
 ```
 
 This snippet will identify the local Starship setup and initialize all helpers and information needed for interaction using cw-orchestrator.

@@ -61,7 +61,39 @@ This function will relay a packets successfully from the receiving chain back th
 2. <span style="color:red">⬤</span> On the `destination chain`, it triggers a receive transaction for that packet.
 3. <span style="color:purple">⬤</span> On the `source chain`, it finally triggers an acknowledgement transaction with the data the `destination_chain` returned.
 
-The `await_packets` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will never return a timeout transaction. This function is recursive as it will also look for packets inside the receive/ack transactions and also follow their IBC cycle. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete.
+The `await_packets` function is very similar except that instead of following a single packet, it follows all packets that are being sent within a transaction. This works in a very similar manner and will allows for testing timeouts on IBC packets. This function is recursive as it will also look for packets inside the receive/ack transactions and also follow their IBC cycles. You can think of this function as going down the rabbit-hole of IBC execution and only returning when all IBC interactions are complete.
+
+Finally, the recommended function is `await_and_check_packets`. This will run `await_packets` and then make sure that the resulting IBC acknowledgments and executions are successful. You can find more live examples <a target="_blank" href="https://github.com/AbstractSDK/cw-orchestrator/blob/dd7238f3108ad38b416171c3b1b2f8a0ce368539/cw-orch-interchain/tests/common/ica_demo.rs">here</a>. Here is an example usage:
+
+```rust,ignore
+# use cw_orch_interchain::prelude::*;
+# fn main() -> anyhow::Result<()>{
+    # let mut interchain = MockBech32InterchainEnv::new(
+    #    vec![("juno-1", "juno"), ("osmosis-1", "osmosis")],
+    # );
+    # let chain = interchain.get_chain("juno-1")?;
+    # let contract = Contract::new(chain);
+    let response = contract.execution_with_ibc_consequences()?;
+
+    interchain.await_and_check_packets("juno-1", response)?;
+
+    let port_id = PortId::transfer();
+    
+    let ChannelCreationResult {
+        interchain_channel,
+        channel_creation_txs,
+    } = interchain
+        .create_channel(
+            "juno-1", 
+            "osmosis-1", 
+            &port_id, 
+            &port_id, 
+            "ics20-1",
+            Some(cosmwasm_std::IbcOrder::Unordered)
+        )?;
+    # Ok(())
+# }
+```
 
 ## IBC Channel creation
 
@@ -90,5 +122,5 @@ cw-orchestrator also provides tooling for creating channels between mock environ
 # }
 ```
 
-- The resulting `interchain_channel` object allows you to identify the channel that was just created. It can be useful to retrieve the channel identifiers for instance
+- The resulting `interchain_channel` object allows you to identify the channel that was just created. It can be useful to retrieve the channel identifiers for instance (e.g. `channel-567`)
 - The resulting `channel_creation_txs` object allows you to identify the different steps of channel creation as well as the IBC packets sent during this creation. This is very useful to analyze the effects of the channel creation on external contracts and structures.
