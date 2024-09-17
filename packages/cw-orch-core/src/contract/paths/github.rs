@@ -31,7 +31,8 @@ impl GithubWasmPath {
                     .repos(&self.owner, &self.repo_name)
                     .releases()
                     .get_by_tag(tag)
-                    .await?;
+                    .await
+                    .map_err(|e| CwEnvError::Octocrab(e.to_string()))?;
                 let wasm_asset = release
                     .assets
                     .iter()
@@ -48,13 +49,14 @@ impl GithubWasmPath {
                 let mut response = octocrab::instance()
                     .repos(&self.owner, &self.repo_name)
                     .raw_file(reference.clone(), file_path)
-                    .await?;
+                    .await
+                    .map_err(|e| CwEnvError::Octocrab(e.to_string()))?;
 
                 let body = response.body_mut();
                 let mut bytes = Vec::new();
 
                 while let Some(chunk) = body.frame().await {
-                    let chunk = chunk?;
+                    let chunk = chunk.map_err(|e| CwEnvError::Octocrab(e.to_string()))?;
                     bytes.extend_from_slice(&chunk.into_data().unwrap());
                 }
                 Ok(bytes.to_vec())

@@ -34,8 +34,8 @@ pub enum CwEnvError {
     Instantiate2AddressError(#[from] Instantiate2AddressError),
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
-    #[error(transparent)]
-    Octocrab(#[from] octocrab::Error),
+    #[error("Github query error {0}")]
+    Octocrab(String),
     #[error("File must be a wasm file")]
     NotWasm,
     #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]
