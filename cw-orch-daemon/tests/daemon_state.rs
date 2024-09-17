@@ -214,7 +214,6 @@ fn reuse_same_state_multichain() {
         .build();
 
     assert!(daemon_res.is_ok());
-
     std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 
