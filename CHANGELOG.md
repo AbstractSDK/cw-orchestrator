@@ -10,6 +10,7 @@
 ### Breaking
 
 - Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
+- Breaking on cw-orch-core. Update WasmPath to be able to accept distant wasm artifacts (Github added)
 
 ## 0.25.0
 
