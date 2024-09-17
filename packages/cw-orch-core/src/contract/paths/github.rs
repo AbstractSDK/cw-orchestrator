@@ -1,5 +1,4 @@
 use http_body_util::BodyExt;
-use octocrab::params::repos::Reference;
 
 use crate::CwEnvError;
 
