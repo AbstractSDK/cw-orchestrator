@@ -31,7 +31,6 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 [workspace.dependencies]
 cw-utils = { version = "2.0.0" }
 cosmwasm-std = { version = "2.1" }
-cosmwasm-schema = { version = "2.1" }
 
 cw-storage-plus = { version = "2.0.0" }
 cosmos-sdk-proto = { version = "0.24.0", default-features = false }
@@ -73,9 +72,6 @@ cw-orch-starship = { path = "packages/interchain/starship", version = "0.5.0" }
 
 # Clone Testing
 cw-orch-clone-testing = { version = "0.6.1", path = "packages/clone-testing" }
-
-# Integrations
-cw-plus-orch = { path = "packages/integrations/cw-plus" }
 
 thiserror = { version = "1.0.63" }
 sha2 = { version = "0.10.8" }

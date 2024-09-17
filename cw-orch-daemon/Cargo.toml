@@ -84,7 +84,7 @@ cw-orch = { path = "../cw-orch", features = ["daemon"] }
 env_logger = "0.11.5"
 cw20 = { version = "2" }
 cw20-base = { version = "2" }
-cosmwasm-schema = { workspace = true }
+cosmwasm-schema = "2.1"
 speculoos = "0.11.0"
 ctor = "0.2.8"
 duct = "0.13"

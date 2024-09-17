@@ -9,7 +9,6 @@ edition = "2021"
 
 [workspace.dependencies]
 cosmwasm-std = "2.0.0"
-cosmwasm-schema = "2.0.0"
 cw20 = { package = "abstract-cw20", version = "2.0.0" }
 cw20-base = { package = "abstract-cw20-base", version = "2.0.0" }
 cw-storage-plus = { version = "2.0.0" }
