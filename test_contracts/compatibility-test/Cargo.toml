@@ -21,7 +21,7 @@ serde = { workspace = true }
 schemars = "0.8.10"
 serde_json = "1.0.79"
 thiserror = { version = "1.0.21" }
-cosmwasm-schema = { workspace = true }
+cosmwasm-schema = "2.0"
 # This version should not be a path dependency and be kept to the last cw-orch version (beyond v0.23)
 # Keeping a different package until v0.23 to avoid package conflicts
 cw-orch = { package = "aaa-test-cw-orch", version = "0.25" }
