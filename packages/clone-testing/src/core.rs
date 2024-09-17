@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
@@ -20,7 +20,7 @@ use cw_orch_core::{
 use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT, RUNTIME};
 use cw_utils::NativeBalance;
 use serde::Serialize;
-use tokio::runtime::Runtime;
+use tokio::runtime::{Handle, Runtime};
 
 use crate::{contract::CloneTestingContract, queriers::bank::CloneBankQuerier};
 
@@ -74,6 +74,8 @@ pub struct CloneTesting<S: StateInterface = MockState> {
     pub state: Rc<RefCell<S>>,
     /// Inner mutable cw-multi-test app backend
     pub app: Rc<RefCell<CloneTestingApp>>,
+
+    pub rt_handle: Handle,
 }
 
 impl CloneTesting {
@@ -148,9 +150,7 @@ impl CloneTesting {
         &self,
         contract: &T,
     ) -> Result<<Self as TxHandler>::Response, CwEnvError> {
-        let mut file = std::fs::File::open(T::wasm(&self.chain).path())?;
-        let mut wasm = Vec::<u8>::new();
-        file.read_to_end(&mut wasm)?;
+        let wasm = self.rt_handle.block_on(T::wasm(&self.chain).wasm())?;
         let code_id = self.app.borrow_mut().store_wasm_code(wasm);
 
         contract.set_code_id(code_id);
@@ -257,6 +257,7 @@ impl<S: StateInterface> CloneTesting<S> {
             sender: sender.clone(),
             state,
             app,
+            rt_handle: rt.handle().clone(),
         })
     }
 

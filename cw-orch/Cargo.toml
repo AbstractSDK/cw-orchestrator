@@ -94,7 +94,7 @@ cw-orch-mock = { workspace = true }
 [dev-dependencies]
 cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
 env_logger = "0.11.5"
-cosmwasm-schema = "2.1"
+cosmwasm-schema = { workspace = true }
 counter-contract = { path = "../contracts-ws/contracts/counter" }
 mock-contract = { path = "../contracts-ws/contracts/mock_contract" }
 mock-contract-u64 = { path = "../contracts-ws/contracts/mock_contract_u64" }
@@ -103,3 +103,6 @@ dotenv = "0.15.0"
 osmosis-std = "0.25.0"
 prost = { workspace = true }
 prost-types = { workspace = true }
+cw-plus-orch = { workspace = true }
+cw20 = { version = "2.0.0" }
+cw20-base = { version = "2.0.0" }

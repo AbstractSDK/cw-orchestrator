@@ -375,7 +375,7 @@ pub async fn upload_wasm<T: TxSender>(
     wasm_path: WasmPath,
     access: Option<AccessConfig>,
 ) -> Result<CosmTxResponse, DaemonError> {
-    let file_contents = std::fs::read(wasm_path.path())?;
+    let file_contents = wasm_path.wasm().await?;
     let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
     e.write_all(&file_contents)?;
     let wasm_byte_code = e.finish()?;

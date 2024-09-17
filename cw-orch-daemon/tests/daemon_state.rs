@@ -211,9 +211,9 @@ fn reuse_same_state_multichain() {
     let daemon_res = DaemonBuilder::new(NEUTRON_1)
         .state(daemon.state())
         .mnemonic(DUMMY_MNEMONIC)
-        .build();
+        .build()
+        .unwrap();
 
-    assert!(daemon_res.is_ok());
     std::env::remove_var(STATE_FILE_ENV_NAME);
 }
 

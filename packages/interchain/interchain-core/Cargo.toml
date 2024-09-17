@@ -15,7 +15,7 @@ daemon = ["dep:cw-orch-daemon"]
 
 [dependencies]
 base64 = "0.22.1"
-cosmwasm-schema = "2.1.3"
+cosmwasm-schema = { workspace = true }
 cosmwasm-std = { workspace = true }
 cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }

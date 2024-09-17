@@ -38,6 +38,10 @@ dirs = "5.0.1"
 cw-utils = { workspace = true }
 cosmos-sdk-proto = { workspace = true, features = ["cosmwasm"] }
 cw-storage-plus = { workspace = true }
+octocrab = "0.39.0"
+reqwest = "0.12.7"
+http = "1.1.0"
+http-body-util = "0.1.2"
 
 [dev-dependencies]
 speculoos = { workspace = true }

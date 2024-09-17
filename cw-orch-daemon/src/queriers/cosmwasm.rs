@@ -307,7 +307,9 @@ impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
         &self,
         contract: &T,
     ) -> Result<Checksum, cw_orch_core::CwEnvError> {
-        <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum()
+        self.rt_handle.as_ref().unwrap().block_on(
+            <T as Uploadable>::wasm(contract.environment().daemon.chain_info()).checksum(),
+        )
     }
 }
 

@@ -32,6 +32,10 @@ pub enum CwEnvError {
     ParseBoolError(#[from] ParseBoolError),
     #[error(transparent)]
     Instantiate2AddressError(#[from] Instantiate2AddressError),
+    #[error(transparent)]
+    Reqwest(#[from] reqwest::Error),
+    #[error(transparent)]
+    Octocrab(#[from] octocrab::Error),
     #[error("File must be a wasm file")]
     NotWasm,
     #[error("Could not find wasm file with name {0} in artifacts:{1} dir")]
@@ -44,6 +48,8 @@ pub enum CwEnvError {
     StdErr(String),
     #[error("Environment variable not defined {0}")]
     EnvVarNotPresentNamed(String),
+    #[error("Couldn't find file {0} in remote location")]
+    ReleaseArtifactNotFound(String),
 }
 
 impl CwEnvError {

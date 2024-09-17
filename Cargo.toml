@@ -14,6 +14,7 @@ members = [
   "test_contracts/*",
   "packages/macros/*",
   "packages/interchain/*",
+  "packages/integrations/*",
 ]
 exclude = [
   "test_contracts/compatibility-test", # TODO: add new after cw-orch-core 2.0.0 as it's breaking, it shouldn't be compatible
@@ -30,6 +31,8 @@ repository = "https://github.com/AbstractSDK/cw-orchestrator"
 [workspace.dependencies]
 cw-utils = { version = "2.0.0" }
 cosmwasm-std = { version = "2.1" }
+cosmwasm-schema = { version = "2.1" }
+
 cw-storage-plus = { version = "2.0.0" }
 cosmos-sdk-proto = { version = "0.24.0", default-features = false }
 
@@ -68,8 +71,11 @@ cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", versio
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.5.0" }
 # cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" } # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory)
 
-#Clone Testing
-# cw-orch-clone-testing = { version = "0.6.1", path = "packages/clone-testing" }
+# Clone Testing
+cw-orch-clone-testing = { version = "0.6.1", path = "packages/clone-testing" }
+
+# Integrations
+cw-plus-orch = { path = "packages/integrations/cw-plus" }
 
 thiserror = { version = "1.0.63" }
 sha2 = { version = "0.10.8" }
