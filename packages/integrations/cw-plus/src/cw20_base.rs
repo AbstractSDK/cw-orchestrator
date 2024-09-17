@@ -1,7 +1,4 @@
-use cw_orch::{
-    contract::{GithubWasmPath, GithubWasmPathLocation},
-    interface,
-};
+use cw_orch::interface;
 
 use cw20_base::contract;
 pub use cw20_base::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
@@ -21,14 +18,12 @@ use crate::{WASM_RELEASE_TAG, WASM_REPO_NAME, WASM_REPO_OWNER};
 impl<Chain: CwEnv> Uploadable for Cw20Base<Chain> {
     // Return the path to the wasm file
     fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
-        WasmPath::Github(GithubWasmPath {
-            owner: WASM_REPO_OWNER.to_string(),
-            repo_name: WASM_REPO_NAME.to_string(),
-            location: GithubWasmPathLocation::Release {
-                tag: WASM_RELEASE_TAG.to_string(),
-                file_name: "cw20_base.wasm".to_string(),
-            },
-        })
+        WasmPath::github_release(
+            WASM_REPO_OWNER,
+            WASM_REPO_NAME,
+            WASM_RELEASE_TAG,
+            "cw20_base.wasm",
+        )
     }
     // Return a CosmWasm contract wrapper
     fn wrapper() -> Box<dyn MockContract<Empty>> {

@@ -1,6 +1,5 @@
 use cosmwasm_std::Uint128;
 use cw20::{Cw20Coin, Cw20ExecuteMsg};
-use cw_orch::contract::{GithubWasmPath, GithubWasmPathLocation};
 use cw_orch::prelude::*;
 use cw_plus_orch::cw20_base::{Cw20Base, InstantiateMsg};
 use cw_plus_orch::cw20_base::{QueryMsg, QueryMsgInterfaceFns};
@@ -63,14 +62,12 @@ pub struct FileCw20Base;
 impl<Chain: CwEnv> Uploadable for FileCw20Base<Chain> {
     // Return the path to the wasm file
     fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
-        WasmPath::Github(GithubWasmPath {
-            owner: "Abstractsdk".to_string(),
-            repo_name: "cw-plus".to_string(),
-            location: GithubWasmPathLocation::File {
-                reference: "abstract_versions".to_string(),
-                file_path: "artifacts/abstract_cw20_base.wasm".to_string(),
-            },
-        })
+        WasmPath::github_file(
+            "AbstractSDK",
+            "cw-plus",
+            "abstract_versions",
+            "artifacts/abstract_cw20_base.wasm",
+        )
     }
     // Return a CosmWasm contract wrapper
     fn wrapper() -> Box<dyn MockContract<Empty>> {

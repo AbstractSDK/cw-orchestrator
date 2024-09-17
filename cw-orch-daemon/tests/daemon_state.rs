@@ -208,7 +208,7 @@ fn reuse_same_state_multichain() {
         .build()
         .unwrap();
 
-    let daemon_res = DaemonBuilder::new(NEUTRON_1)
+    DaemonBuilder::new(NEUTRON_1)
         .state(daemon.state())
         .mnemonic(DUMMY_MNEMONIC)
         .build()

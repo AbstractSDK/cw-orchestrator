@@ -176,7 +176,7 @@ struct Controller;
 
 impl<Chain: CwEnv> Uploadable for Controller<Chain> {
     fn wasm(_chain: &ChainInfoOwned) -> <Daemon as TxHandler>::ContractSource {
-        WasmPath::new(format!("{CRATE_PATH}/wasms/simple_ica_controller.wasm")).unwrap()
+        WasmPath::path(format!("{CRATE_PATH}/wasms/simple_ica_controller.wasm")).unwrap()
     }
 
     fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
@@ -206,7 +206,7 @@ pub fn host_execute(_: DepsMut, _: Env, _: MessageInfo, _: Empty) -> StdResult<R
 struct Host;
 impl<Chain: CwEnv> Uploadable for Host<Chain> {
     fn wasm(_chain: &ChainInfoOwned) -> <Daemon as TxHandler>::ContractSource {
-        WasmPath::new(format!("{CRATE_PATH}/wasms/simple_ica_host.wasm")).unwrap()
+        WasmPath::path(format!("{CRATE_PATH}/wasms/simple_ica_host.wasm")).unwrap()
     }
 
     fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
@@ -235,7 +235,7 @@ struct Cw1;
 
 impl<Chain: CwEnv> Uploadable for Cw1<Chain> {
     fn wasm(_chain: &ChainInfoOwned) -> <Daemon as TxHandler>::ContractSource {
-        WasmPath::new(format!("{CRATE_PATH}/wasms/cw1_whitelist.wasm")).unwrap()
+        WasmPath::path(format!("{CRATE_PATH}/wasms/cw1_whitelist.wasm")).unwrap()
     }
     fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
         Box::new(ContractWrapper::new_with_empty(

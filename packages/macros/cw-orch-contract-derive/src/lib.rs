@@ -136,7 +136,7 @@ impl <Chain> Uploadable for Cw20<Chain> {
     }
 
     fn wasm(_chain: &ChainInfoOwned) -> <Daemon as cw_orch::TxHandler>::ContractSource {
-        WasmPath::new("path/to/cw20.wasm").unwrap()
+        WasmPath::path("path/to/cw20.wasm").unwrap()
     }
 }
 */

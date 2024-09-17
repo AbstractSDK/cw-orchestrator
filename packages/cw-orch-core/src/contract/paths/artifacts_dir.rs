@@ -148,7 +148,7 @@ impl ArtifactsDir {
                     self.path().to_str().unwrap_or_default().to_owned(),
                 )
             })?;
-        WasmPath::new(self.path().join(path_str))
+        WasmPath::path(self.path().join(path_str))
     }
 }
 

@@ -11,13 +11,14 @@ fn checksum() {
     let file = File::open(path).unwrap();
     let lines = io::BufReader::new(file).lines();
     let mut found = false;
+    let rt = cw_orch::tokio::runtime::Runtime::new().unwrap();
 
     for line in lines.map_while(Result::ok) {
         if line.contains("counter_contract.wasm") {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() > 1 {
-                let calculated_hash = CounterContract::<Mock>::wasm(&OSMOSIS_1.into())
-                    .checksum()
+                let calculated_hash = rt
+                    .block_on(CounterContract::<Mock>::wasm(&OSMOSIS_1.into()).checksum())
                     .unwrap();
                 assert_eq!(parts[0], calculated_hash.to_string());
                 found = true;

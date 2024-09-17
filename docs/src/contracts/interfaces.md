@@ -37,7 +37,7 @@ In the counter contract we re-export in `lib.rs`;
 >    ```rust,ignore
 >     let crate_path = env!("CARGO_MANIFEST_DIR");
 >     let wasm_path = format!("{}/../../artifacts/counter_contract.wasm", crate_path);
->     WasmPath::new(wasm_path).unwrap()
+>     WasmPath::path(wasm_path).unwrap()
 >     ```
 
 ## Constructor
