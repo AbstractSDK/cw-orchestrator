@@ -27,9 +27,7 @@ pub fn main() -> anyhow::Result<()> {
 
 fn execution<T>(cw20: T, sender: &Addr) -> anyhow::Result<()>
 where
-    T: Uploadable
-        + CwOrchUpload<Daemon>
-        + ContractInstance<Daemon>
+    T: CwOrchUpload<Daemon>
         + CwOrchInstantiate<Daemon>
         + CwOrchExecute<Daemon>
         + InstantiableContract<InstantiateMsg = InstantiateMsg>
