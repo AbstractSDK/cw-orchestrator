@@ -12,18 +12,13 @@ pub struct Cw20Base;
 #[cfg(not(target_arch = "wasm32"))]
 use cw_orch::prelude::*;
 
-use crate::{WASM_RELEASE_TAG, WASM_REPO_NAME, WASM_REPO_OWNER};
-
 #[cfg(not(target_arch = "wasm32"))]
 impl<Chain: CwEnv> Uploadable for Cw20Base<Chain> {
     // Return the path to the wasm file
     fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
-        WasmPath::github_release(
-            WASM_REPO_OWNER,
-            WASM_REPO_NAME,
-            WASM_RELEASE_TAG,
-            "cw20_base.wasm",
-        )
+        artifacts_dir_from_workspace!()
+            .find_wasm_path("cw20_base")
+            .unwrap()
     }
     // Return a CosmWasm contract wrapper
     fn wrapper() -> Box<dyn MockContract<Empty>> {

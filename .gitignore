@@ -22,3 +22,5 @@ gen_cov_test
 **/logs/
 
 docs/book
+
+packages/integrations/**/artifacts
