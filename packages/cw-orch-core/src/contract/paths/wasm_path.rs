@@ -19,6 +19,7 @@ use super::github::GithubWasmPath;
 /// let checksum: cosmwasm_std::Checksum = wasm_path.checksum().unwrap();
 /// ```
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum WasmPath {
     Path(PathBuf),
     Github(GithubWasmPath),
