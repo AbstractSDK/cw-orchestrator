@@ -109,7 +109,7 @@ pub type ChainId<'a> = &'a str;
 /// // This makes sure that the packets arrive successfully and present a success ack
 /// let result = interchain.await_and_check_packets("juno-1", tx_resp).unwrap();
 /// ```    
-pub trait InterchainEnv<Chain: IbcQueryHandler> {
+pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     /// Type returned by the internal channel creation function
     /// Examples
     /// Daemon : This is empty, because hermes doesn't return anything after channel creation
