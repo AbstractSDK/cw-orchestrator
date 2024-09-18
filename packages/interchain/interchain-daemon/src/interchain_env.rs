@@ -289,6 +289,10 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
 
         Ok(ibc_trail)
     }
+
+    fn chains(&self) -> Result<Vec<Daemon>, Self::Error> {
+        Ok(self.daemons.values().cloned().collect())
+    }
 }
 
 impl<C: ChannelCreator> DaemonInterchainEnv<C> {
