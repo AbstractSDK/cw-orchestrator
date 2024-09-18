@@ -7,6 +7,7 @@
 - Add a method on `TxHandler` to select instantiation permissions on Wasm upload
 - Adds an `upload_wasm` function to CosmosSender to upload wasm code associated to no Contract structure
 - Update syn to 2.0
+- Added cw-plus orchestrator interface to the repo. Pacing the way for more integrations inside this repository in the future
   
 ### Breaking
 
