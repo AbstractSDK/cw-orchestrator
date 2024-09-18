@@ -2,11 +2,11 @@
 name = "cw-plus-orch"
 version = "0.25.0"                                                 # Version of cw-orch that's used
 edition = "2021"
-description = "CW4 implementation of group based on staked tokens"
+description = "cw-orch interfaces for cw-plus base contracts"
 license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-plus"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+repository = "https://github.com/AbstractSDK/cw-orchestrator"
+homepage = "https://abstract.money"
+documentation = "https://orchestrator.abstract.money"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
