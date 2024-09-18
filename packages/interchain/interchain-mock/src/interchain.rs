@@ -358,6 +358,10 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
 
         Ok(analysis_result)
     }
+
+    fn chains(&self) -> Result<Vec<MockBase<A>>, Self::Error> {
+        Ok(self.mocks.values().cloned().collect())
+    }
 }
 
 fn get_events(tx: &AppResponse, event: &str) -> Vec<Event> {

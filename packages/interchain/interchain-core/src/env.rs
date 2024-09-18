@@ -138,6 +138,19 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// ```
     fn get_chain(&self, chain_id: impl ToString) -> Result<Chain, Self::Error>;
 
+    /// Returns every chain registered within the environment.
+    /// To get a single chain, use [`InterchainEnv::get_chain`]
+    /// ``` rust
+    /// use cw_orch::prelude::*;
+    /// use cw_orch_interchain::prelude::*;
+    /// use counter_contract::CounterContract;
+    /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
+    ///
+    /// let all_chains = interchain.chains().unwrap();
+    ///
+    /// ```
+    fn chains(&self) -> Result<Vec<Chain>, Self::Error>;
+
     /// This triggers channel creation between 2 chains
     /// Returns a channel creation receipt as well as as the connection_id on the src_chain side
     /// This code is only for internal use and for most cases shouldn't be used outside of the [InterchainEnv<Chain>::create_channel] function
