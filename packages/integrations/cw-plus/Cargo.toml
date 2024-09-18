@@ -1,6 +1,6 @@
 [package]
 name = "cw-plus-orch"
-version = "0.25.0"                                                 # Version of cw-orch that's used
+version = "0.25.0"                                            # Version of cw-orch that's used
 edition = "2021"
 description = "cw-orch interfaces for cw-plus base contracts"
 license = "Apache-2.0"
