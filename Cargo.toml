@@ -61,10 +61,10 @@ cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0
 # cw-orch-osmosis-test-tube = { version = "0.3.0", path = "packages/cw-orch-osmosis-test-tube" }
 
 # Interchain
-cw-orch-interchain = { path = "cw-orch-interchain", version = "0.4.0" }
-cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.5.0" }
-cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.5.0" }
-cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.5.0" }
+cw-orch-interchain = { path = "cw-orch-interchain", version = "0.5.0" }
+cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.6.0" }
+cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.6.0" }
+cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.6.0" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.5.0" }
 # cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" } # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory)
 

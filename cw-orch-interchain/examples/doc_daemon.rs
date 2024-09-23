@@ -8,10 +8,8 @@ use cw_orch_interchain::{
 fn create_daemon_env() -> cw_orch::anyhow::Result<DaemonInterchain> {
     // ANCHOR: DAEMON_INTERCHAIN_CREATION
     // This will create `Daemon` structures associated with chains `LOCAL_JUNO` and `LOCAL_OSMO`
-    let mut interchain = DaemonInterchain::new(
-        vec![(LOCAL_JUNO, None), (LOCAL_OSMO, None)],
-        &ChannelCreationValidator,
-    )?;
+    let mut interchain =
+        DaemonInterchain::new(vec![LOCAL_JUNO, LOCAL_OSMO], &ChannelCreationValidator)?;
 
     let local_juno: Daemon = interchain.get_chain("testing")?;
     let _local_osmo: Daemon = interchain.get_chain("localosmosis")?;

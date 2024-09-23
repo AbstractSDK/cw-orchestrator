@@ -41,8 +41,6 @@ pub struct DaemonInterchain<C: ChannelCreator = ChannelCreationValidator> {
     rt_handle: Handle,
 }
 
-type Mnemonic = String;
-
 impl<C: ChannelCreator> DaemonInterchain<C> {
     /// Builds a new [`DaemonInterchain`] instance.
     /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
