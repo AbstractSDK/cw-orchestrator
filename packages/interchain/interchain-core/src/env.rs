@@ -146,10 +146,12 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     /// use counter_contract::CounterContract;
     /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
     ///
-    /// let all_chains = interchain.chains().unwrap();
+    /// let all_chains: Vec<&MockBeck32> = interchain.chains().collect();
     ///
     /// ```
-    fn chains(&self) -> Result<Vec<Chain>, Self::Error>;
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Chain>
+    where
+        Chain: 'a;
 
     /// This triggers channel creation between 2 chains
     /// Returns a channel creation receipt as well as as the connection_id on the src_chain side

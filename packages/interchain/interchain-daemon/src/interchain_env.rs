@@ -287,9 +287,11 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
 
         Ok(ibc_trail)
     }
-
-    fn chains(&self) -> Result<Vec<Daemon>, Self::Error> {
-        Ok(self.daemons.values().cloned().collect())
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Daemon>
+    where
+        Daemon: 'a,
+    {
+        self.daemons.values()
     }
 }
 
