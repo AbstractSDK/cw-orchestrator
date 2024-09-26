@@ -63,17 +63,16 @@ impl TxBroadcaster {
         self
     }
 
-    // We can't make async recursions easily because wallet is not `Sync`
-    // Thus we use a `while` loop structure here
+    /// Broadcasts a transaction with the given signer
     pub async fn broadcast(
         mut self,
         mut tx_builder: TxBuilder,
-        wallet: &impl Signer,
+        signer: &impl Signer,
     ) -> Result<TxResponse, DaemonError> {
         let mut tx_retry = true;
 
         // We try and broadcast once
-        let mut tx_response = broadcast_helper(&mut tx_builder, wallet).await;
+        let mut tx_response = broadcast_helper(&mut tx_builder, signer).await;
         log::info!(
             target: &transaction_target(),
             "Awaiting TX inclusion in block..."
@@ -91,7 +90,7 @@ impl TxBroadcaster {
                     tx_retry = true;
 
                     // We still await for the next block, to avoid spamming retry when an error occurs
-                    let block_speed = Node::new_async(wallet.channel())
+                    let block_speed = Node::new_async(signer.channel())
                         ._average_block_speed(None)
                         .await?;
                     log::warn!(
@@ -102,7 +101,7 @@ impl TxBroadcaster {
                     );
                     tokio::time::sleep(block_speed).await;
 
-                    tx_response = broadcast_helper(&mut tx_builder, wallet).await;
+                    tx_response = broadcast_helper(&mut tx_builder, signer).await;
                     continue;
                 }
             }
@@ -123,10 +122,10 @@ fn strategy_condition_met(
 
 async fn broadcast_helper(
     tx_builder: &mut TxBuilder,
-    wallet: &impl Signer,
+    signer: &impl Signer,
 ) -> Result<TxResponse, DaemonError> {
-    let tx = tx_builder.build(wallet).await?;
-    let tx_response = wallet.broadcast_tx(tx).await?;
+    let tx = tx_builder.build(signer).await?;
+    let tx_response = signer.broadcast_tx(tx).await?;
     log::debug!(target: &transaction_target(), "TX broadcast response: {:?}", tx_response);
 
     assert_broadcast_code_response(tx_response)
