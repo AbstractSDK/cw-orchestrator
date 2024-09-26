@@ -41,14 +41,12 @@ pub struct DaemonInterchain<C: ChannelCreator = ChannelCreationValidator> {
     rt_handle: Handle,
 }
 
-type Mnemonic = String;
-
 impl<C: ChannelCreator> DaemonInterchain<C> {
     /// Builds a new [`DaemonInterchain`] instance.
     /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
     /// channel_creator allows you to specify an object that is able to create channels
     /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
-    pub fn new<T>(chains: Vec<(T, Option<Mnemonic>)>, channel_creator: &C) -> IcDaemonResult<Self>
+    pub fn new<T>(chains: Vec<T>, channel_creator: &C) -> IcDaemonResult<Self>
     where
         T: Into<ChainInfoOwned>,
     {
@@ -61,7 +59,7 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
     /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
     /// runtime allows you to control the async runtime (for advanced devs)
     pub fn new_with_runtime<T>(
-        chains: Vec<(T, Option<Mnemonic>)>,
+        chains: Vec<T>,
         channel_creator: &C,
         runtime: &Handle,
     ) -> IcDaemonResult<Self>
@@ -71,8 +69,8 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         let mut env = Self::raw(runtime, channel_creator);
 
         // We create daemons for each chains
-        for (chain_data, mnemonic) in chains {
-            env.build_daemon(runtime, chain_data.into(), mnemonic)?;
+        for chain_data in chains {
+            env.build_daemon(runtime, chain_data.into(), None::<String>)?;
         }
 
         Ok(env)
@@ -288,6 +286,12 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         ))?;
 
         Ok(ibc_trail)
+    }
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Daemon>
+    where
+        Daemon: 'a,
+    {
+        self.daemons.values()
     }
 }
 
