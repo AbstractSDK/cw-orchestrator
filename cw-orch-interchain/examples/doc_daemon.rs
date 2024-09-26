@@ -3,7 +3,6 @@ use cw_orch::prelude::*;
 use cw_orch_interchain::{
     ChannelCreationValidator, ChannelCreator, DaemonInterchain, InterchainEnv, Starship,
 };
-/// Others
 
 fn create_daemon_env() -> cw_orch::anyhow::Result<DaemonInterchain> {
     // ANCHOR: DAEMON_INTERCHAIN_CREATION

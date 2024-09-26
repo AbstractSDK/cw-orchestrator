@@ -48,7 +48,7 @@ macro_rules! take_storage_snapshot {
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use crate::mock::cw_multi_test::ContractWrapper;
     use cosmwasm_std::Empty;
     use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};

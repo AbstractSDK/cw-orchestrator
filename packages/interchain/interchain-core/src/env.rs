@@ -56,6 +56,7 @@ impl<R> ChannelCreation<R> {
 pub type ChainId<'a> = &'a str;
 
 /// This trait allows to extend `cw_orch::prelude::CwEnv` with interchain capabilities
+///
 /// The center of those capabilities is the ability to follow the execution of outgoing IBC packets
 /// This enables users to script chain execution even throughout IBC executions which are more asynchronous than usual transactions.
 /// With the following simple syntax, users are even able to await and analyze the execution of all packets submitted in a single transactions
@@ -104,7 +105,7 @@ pub type ChainId<'a> = &'a str;
 ///         memo: None,
 ///     }),
 /// ).unwrap();
-
+///
 /// // This makes sure that the packets arrive successfully and present a success ack
 /// let result = interchain.await_and_check_packets("juno-1", tx_resp).unwrap();
 /// ```    
@@ -410,7 +411,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     ///         memo: None,
     ///     }),
     /// ).unwrap();
-
+    ///
     /// // This makes sure that the packets arrive successfully and present a success ack
     /// let result = interchain.await_and_check_packets("juno-1", tx_resp).unwrap();
     /// ```    
