@@ -188,9 +188,10 @@ mod node {
         docker_container_stop()
     }
 
+    #[cfg(test)]
     pub fn enable_logger() {
-        env_logger::Builder::new()
+        let _ = env_logger::Builder::new()
             .filter_level(log::LevelFilter::Debug)
-            .init();
+            .try_init();
     }
 }
