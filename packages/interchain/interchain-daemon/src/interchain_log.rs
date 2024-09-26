@@ -62,7 +62,6 @@ impl InterchainLog {
     /// Initiates an interchain log setup
     /// This will log the different chain interactions and updates on separate files for each chain.
     /// This is useful for tracking operations happenning on IBC chains
-
     pub fn new() -> Self {
         Self::default()
     }

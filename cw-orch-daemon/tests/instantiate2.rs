@@ -15,6 +15,7 @@ pub mod test {
     #[test]
     #[serial_test::serial]
     fn instantiate2() -> anyhow::Result<()> {
+        super::common::enable_logger();
         let app = Daemon::builder(networks::LOCAL_JUNO)
             .is_test(true)
             .build()

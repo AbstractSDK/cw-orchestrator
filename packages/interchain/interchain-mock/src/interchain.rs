@@ -37,7 +37,6 @@ pub type MockBase<A> = cw_orch_mock::MockBase<A, MockState>;
 
 /// Interchain environment for cw_multi_test Mock environment
 /// This leverages Abstract's fork of cw_multi_test enabling IBC interactions
-
 pub struct MockInterchainEnvBase<A: Api> {
     /// Mock chains registered within the structure
     pub mocks: HashMap<String, MockBase<A>>,

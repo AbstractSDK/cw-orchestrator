@@ -19,6 +19,7 @@
 // pub const SUBDENOM: &str = "complex-test";
 
 /// In order to use this script, you need to set the following env variables
+///
 /// RUST_LOG (recommended value `info`) to see the app logs
 /// TEST_MNEMONIC to be able to sign and broadcast a transaction on UNI testnet
 pub fn main() {

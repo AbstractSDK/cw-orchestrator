@@ -44,7 +44,6 @@ pub use xion::XION_TESTNET_1;
 /// ```
 /// ---
 /// supported chains are defined by the `SUPPORT_NETWORKS` variable
-
 pub fn parse_network(net_id: &str) -> Result<ChainInfo, String> {
     SUPPORTED_NETWORKS
         .iter()

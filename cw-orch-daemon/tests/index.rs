@@ -9,6 +9,7 @@ mod tests {
     #[serial_test::serial]
     fn mnemonic_index() -> anyhow::Result<()> {
         use cw_orch_networks::networks;
+        super::common::enable_logger();
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO)
             .is_test(true)

@@ -347,7 +347,7 @@ impl Wallet {
         }
 
         // If there is not enough asset balance, we need to warn the user
-        println!(
+        log::info!(
             "Not enough funds on chain {} at address {} to deploy the contract. 
                 Needed: {}{} but only have: {}.
                 Press 'y' when the wallet balance has been increased to resume deployment",
@@ -371,7 +371,7 @@ impl Wallet {
                 })
             }
         } else {
-            println!("No Manual Interactions, defaulting to 'no'");
+            log::info!("No Manual Interactions, defaulting to 'no'");
             return Err(DaemonError::NotEnoughBalance {
                 expected: fee.clone(),
                 current: balance,
