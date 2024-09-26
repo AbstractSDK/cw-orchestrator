@@ -26,6 +26,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn authz() -> anyhow::Result<()> {
+        super::common::enable_logger();
         use cw_orch_networks::networks;
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO)
