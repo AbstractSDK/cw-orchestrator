@@ -25,7 +25,7 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
     fn chain_id(&self) -> String;
 
     /// The account id of the signer.
-    /// This is `_` prefixed because this conflict wih the TxSender trat
+    /// This is `_` prefixed because this conflict wih the TxSender trait
     fn _account_id(&self) -> AccountId;
 
     fn signing_account(
@@ -34,7 +34,9 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
 
     /// Signals wether this signer is using authz
     /// If set to true, the signed messages will be wrapped inside authz messages
-    fn has_authz(&self) -> bool;
+    fn has_authz(&self) -> bool {
+        false
+    }
 
     // --- Related to transaction signing --- //
     /// Transaction signing
