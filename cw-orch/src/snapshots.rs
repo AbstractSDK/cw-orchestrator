@@ -22,7 +22,6 @@ pub fn parse_storage(storage: &[(Vec<u8>, Vec<u8>)]) -> Vec<(String, String)> {
 /// The name you input to the function should be different from all other snapshots in your repository
 /// Find more details on how snapshot testing works on the official quick-start guide: https://insta.rs/docs/quickstart/
 /// This function will panic if the snapshot is different from the reference snapshot
-
 #[macro_export]
 macro_rules! take_storage_snapshot {
     ($chain: ident, $name: literal) => {

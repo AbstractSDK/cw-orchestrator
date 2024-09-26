@@ -29,7 +29,6 @@ use crate::{
 /// In this example the struct contains all transaction results for channel creation
 /// Those transactions are usually sent by a validator
 /// [More info about channel creation here](https://github.com/cosmos/ibc/blob/main/spec/core/ics-004-channel-and-packet-semantics/README.md)
-
 pub struct ChannelCreation<R> {
     /// First step, channel creation open-initialization (src_chain)
     pub init: R,
@@ -73,9 +72,9 @@ pub type ChainId<'a> = &'a str;
 /// use cw_orch::mock::cw_multi_test::Executor;
 /// use cw_orch_interchain::prelude::*;
 /// use ibc_relayer_types::core::ics24_host::identifier::PortId;
-
+///
 /// let interchain = MockInterchainEnv::new(vec![("juno-1", "sender"), ("stargaze-1", "sender")]);
-
+///
 /// let channel = interchain.create_channel(
 ///     "juno-1",
 ///     "stargaze-1",
@@ -86,11 +85,11 @@ pub type ChainId<'a> = &'a str;
 /// ).unwrap();
 /// let juno = interchain.get_chain("juno-1").unwrap();
 /// let stargaze = interchain.get_chain("stargaze-1").unwrap();
-
+///
 /// let channel = channel
 ///     .interchain_channel
 ///     .get_ordered_ports_from("juno-1").unwrap();
-
+///
 /// juno.add_balance(&juno.sender_addr(), vec![coin(100_000, "ujuno")]).unwrap();
 /// let tx_resp = juno.app.borrow_mut().execute(
 ///     juno.sender_addr(),
@@ -379,9 +378,9 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// use cw_orch::mock::cw_multi_test::Executor;
     /// use cw_orch_interchain::prelude::*;
     /// use ibc_relayer_types::core::ics24_host::identifier::PortId;
-
+    ///
     /// let interchain = MockInterchainEnv::new(vec![("juno-1", "sender"), ("stargaze-1", "sender")]);
-
+    ///
     /// let channel = interchain.create_channel(
     ///     "juno-1",
     ///     "stargaze-1",
@@ -392,11 +391,11 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     /// ).unwrap();
     /// let juno = interchain.get_chain("juno-1").unwrap();
     /// let stargaze = interchain.get_chain("stargaze-1").unwrap();
-
+    ///
     /// let channel = channel
     ///     .interchain_channel
     ///     .get_ordered_ports_from("juno-1").unwrap();
-
+    ///
     /// juno.add_balance(&juno.sender_addr(), vec![coin(100_000, "ujuno")]).unwrap();
     /// let tx_resp = juno.app.borrow_mut().execute(
     ///     juno.sender_addr(),

@@ -179,17 +179,13 @@ mod node {
 
     #[ctor]
     fn common_start() {
-        // env_logger::Builder::new()
-        //     .filter_level(log::LevelFilter::Debug)
-        //     .init();
         docker_container_start();
         libc_println!("Finish start");
     }
 
     #[dtor]
     fn common_stop() {
-        // libc_println!("Stopping");
-        // docker_container_stop()
+        docker_container_stop()
     }
 
     pub fn enable_logger() {
