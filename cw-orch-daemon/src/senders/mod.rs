@@ -1,6 +1,7 @@
 // Core Sender traits
 pub mod builder;
 pub mod query;
+pub mod sign;
 pub mod tx;
 
 // Senders
