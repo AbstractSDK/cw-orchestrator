@@ -17,7 +17,7 @@ cargo install cw-orch-cli
 
 Supported features of cw-orch-cli:
 
-- **[Keys management](./keys.md)**
-  - Add, show or remove key for the CLI
+- **[Keys management](./keys.md)**: Add, show or remove key for the CLI
+- **[Action](./cosmos_action.md)**: Perform cosmos action
 
 Feel free to request new features by [opening an issue](https://github.com/AbstractSDK/cw-orchestrator/issues/new)!

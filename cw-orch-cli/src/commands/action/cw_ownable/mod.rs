@@ -40,7 +40,7 @@ pub enum CwOwnableAction {
     /// Accept pending ownership
     #[strum_discriminants(strum(message = "✅ Accept pending ownership."))]
     Accept(accept::AcceptOwnership),
-    // /// Renounce pending ownership
+    /// Renounce pending ownership
     #[strum_discriminants(strum(message = "🚫 Renounce pending ownership"))]
     Renounce(renounce::RenounceOwnership),
     /// Get current ownership

@@ -22,13 +22,13 @@ Show seed command loads saved seed phrase from the keyring and outputs it:
 
 - Shows seed phrase of the key: `cw-orch-cli key show [NAME]`
 
-#### Show address
+### Show address
 
 Show address command generates public address for this key on chosen network:
 
 - Show address: `cw-orch-cli key show-address [NAME] [CHAIN_ID]`
 
-#### Remove key
+### Remove key
 
 Remove key command deletes entry of provided key-id from the keyring:
 

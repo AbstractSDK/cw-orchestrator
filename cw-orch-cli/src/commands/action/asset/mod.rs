@@ -22,7 +22,7 @@ pub enum AssetAction {
     /// Native or factory coin send
     #[strum_discriminants(strum(message = "Send native coins"))]
     SendNative(send_native::SendNativeCommands),
-    /// Native or factory coin transfer
+    /// Cw20 coin transfer
     #[strum_discriminants(strum(message = "Send cw20 coin"))]
     SendCw20(send_cw20::Cw20TransferCommands),
     /// Native or factory coins query
