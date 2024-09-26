@@ -334,7 +334,6 @@ pub trait DeployedChains<Chain: CwEnv>: cw_orch_core::contract::Deploy<Chain> {
     ///             ...
     ///         },
     ///         "uni-6": {
-
     ///         }
     ///     }
     ///     ...
