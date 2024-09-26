@@ -234,7 +234,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender().account_id(),
+            sender: self.sender().msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
@@ -262,7 +262,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             code_id,
             label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: self.sender().account_id(),
+            sender: self.sender().msg_sender().map_err(Into::into)?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
@@ -324,7 +324,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender().account_id(),
+            sender: self.sender().msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
@@ -380,7 +380,7 @@ pub async fn upload_wasm<T: TxSender>(
     e.write_all(&file_contents)?;
     let wasm_byte_code = e.finish()?;
     let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-        sender: sender.account_id(),
+        sender: sender.msg_sender().map_err(Into::into)?,
         wasm_byte_code,
         instantiate_permission: access.map(access_config_to_cosmrs).transpose()?,
     };

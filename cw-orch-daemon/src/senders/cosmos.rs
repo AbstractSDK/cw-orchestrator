@@ -179,11 +179,7 @@ impl Wallet {
         recipient: &Addr,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let acc_id = if let Some(granter) = self.options.authz_granter.as_ref() {
-            AccountId::from_str(granter.as_str()).unwrap()
-        } else {
-            self.account_id()
-        };
+        let acc_id = self.msg_sender()?;
 
         let msg_send = MsgSend {
             from_address: acc_id,
@@ -483,6 +479,16 @@ impl TxSender for Wallet {
         )
         // unwrap as address is validated on construction
         .unwrap()
+    }
+
+    /// Actual sender of the messages.
+    /// This is different when using authz capabilites
+    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
+        if let Some(sender) = &self.options.authz_granter {
+            Ok(sender.as_str().parse()?)
+        } else {
+            Ok(self.account_id())
+        }
     }
 }
 
