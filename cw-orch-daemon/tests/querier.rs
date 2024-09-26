@@ -43,6 +43,7 @@ mod queriers {
     */
     #[test]
     fn ibc() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
@@ -57,6 +58,7 @@ mod queriers {
     */
     #[test]
     fn staking() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
@@ -77,6 +79,7 @@ mod queriers {
     */
     #[test]
     fn gov() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
@@ -91,6 +94,7 @@ mod queriers {
     */
     #[test]
     fn bank() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
@@ -134,6 +138,7 @@ mod queriers {
     */
     #[test]
     fn cosmwasm() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
@@ -148,6 +153,7 @@ mod queriers {
     */
     #[test]
     fn node() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
 
@@ -166,6 +172,7 @@ mod queriers {
     #[test]
     #[serial_test::serial]
     fn simulate_tx() {
+        super::common::enable_logger();
         let rt = Runtime::new().unwrap();
 
         let channel = rt.block_on(build_channel());
@@ -210,6 +217,7 @@ mod queriers {
     #[test]
     #[serial_test::serial]
     fn contract_info() {
+        super::common::enable_logger();
         use cw_orch_daemon::TxSender;
         use cw_orch_networks::networks;
 
