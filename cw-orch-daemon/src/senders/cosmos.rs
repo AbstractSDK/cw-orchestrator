@@ -1,7 +1,7 @@
 use super::{
     cosmos_options::CosmosWalletKey,
     query::QuerySender,
-    sign::{CosmosSigner, SigningAccount},
+    sign::{Signer, SigningAccount},
     tx::TxSender,
 };
 use crate::{
@@ -424,7 +424,7 @@ fn get_mnemonic_env_name(chain_kind: &ChainKind) -> &str {
     }
 }
 
-impl CosmosSigner for Wallet {
+impl Signer for Wallet {
     fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
         let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
             #[cfg(not(feature = "eth"))]

@@ -10,7 +10,7 @@ use cosmwasm_std::Addr;
 use cw_orch_core::log::transaction_target;
 
 use crate::env::DaemonEnvVars;
-use crate::senders::sign::{CosmosSigner, SigningAccount};
+use crate::senders::sign::{Signer, SigningAccount};
 
 use super::DaemonError;
 
@@ -80,7 +80,7 @@ impl TxBuilder {
     }
 
     /// Simulates the transaction and returns the necessary gas fee returned by the simulation on a node
-    pub async fn simulate(&self, wallet: &impl CosmosSigner) -> Result<u64, DaemonError> {
+    pub async fn simulate(&self, wallet: &impl Signer) -> Result<u64, DaemonError> {
         // get the account number of the wallet
         let SigningAccount {
             account_number,
@@ -97,7 +97,7 @@ impl TxBuilder {
 
     /// Builds the raw tx with a given body and fee and signs it.
     /// Sets the TxBuilder's gas limit to its simulated amount for later use.
-    pub async fn build(&mut self, wallet: &impl CosmosSigner) -> Result<Raw, DaemonError> {
+    pub async fn build(&mut self, wallet: &impl Signer) -> Result<Raw, DaemonError> {
         // get the account number of the wallet
         let SigningAccount {
             account_number,

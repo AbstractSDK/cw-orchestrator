@@ -1,5 +1,4 @@
 use crate::{
-    cosmos_modules,
     queriers::Node,
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
@@ -20,7 +19,7 @@ pub struct SigningAccount {
     pub sequence: u64,
 }
 
-pub trait CosmosSigner: QuerySender<Error = DaemonError> + Sync {
+pub trait Signer: QuerySender<Error = DaemonError> + Sync {
     // --- General information about the signer --- //
     /// The chain id of the connected chain
     fn chain_id(&self) -> String;
@@ -75,7 +74,7 @@ pub trait CosmosSigner: QuerySender<Error = DaemonError> + Sync {
     }
 }
 
-impl<T: CosmosSigner + Sync> TxSender for T {
+impl<T: Signer + Sync> TxSender for T {
     fn account_id(&self) -> cosmrs::AccountId {
         self._account_id()
     }
