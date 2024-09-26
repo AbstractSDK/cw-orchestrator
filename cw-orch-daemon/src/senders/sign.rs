@@ -73,26 +73,6 @@ pub trait CosmosSigner: QuerySender<Error = DaemonError> + Sync {
                 .await
         }
     }
-    /// Transaction broadcasting for Tendermint Transactions
-    fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> impl std::future::Future<
-        Output = Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError>,
-    > + Send {
-        async move {
-            let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-            let commit = client
-                .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
-                    tx_bytes: tx.to_bytes()?,
-                    mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
-                })
-                .await?;
-
-            let commit = commit.into_inner().tx_response.unwrap();
-            Ok(commit)
-        }
-    }
 }
 
 impl<T: CosmosSigner + Sync> TxSender for T {

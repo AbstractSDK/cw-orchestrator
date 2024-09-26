@@ -1,6 +1,7 @@
 use cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse;
 use cw_orch_core::log::transaction_target;
 
+use crate::senders::tx::TxSender;
 use crate::{queriers::Node, senders::sign::CosmosSigner, CosmTxResponse, DaemonError, TxBuilder};
 
 pub type StrategyAction =
