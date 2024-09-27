@@ -295,3 +295,9 @@ This software is provided as-is without any guarantees.
 ## Credits
 
 cw-orchestrator is inspired by [terra-rust-api](https://github.com/PFC-Validator/terra-rust) and uses [cosmos-rust](https://github.com/cosmos/cosmos-rust) for [protocol buffer](https://developers.google.com/protocol-buffers/docs/overview) gRPC communication.
+
+## License
+
+This software is licensed under LGPL-3.0. For more information, see the [LICENSE](LICENSE.LESSER) file.
+
+Versions of this software on and before commit `cbab5f51b9e0b4ddec88906e263e4290e5b2dedf`, corresponding to version `v0.25.0`, are licensed under GPL-3.0. For more information, see the [LICENSE](LICENSE) file.
