@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-clone-testing"
-version = "0.7.0"
+version = "0.7.1"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -16,7 +16,7 @@ cw-orch-core = { workspace = true }
 cw-orch-mock = { workspace = true }
 cw-orch-daemon = { workspace = true }
 
-clone-cw-multi-test = { version = "0.6.0" }
+clone-cw-multi-test = { version = "0.6.1" }
 
 cw-utils = { workspace = true }
 serde = { workspace = true }
