@@ -38,9 +38,11 @@ pub trait TxHandler: ChainState + Clone {
     /// Uploads a contract to the chain and specify the permissions for instantiating
     fn upload_with_access_config<T: Uploadable>(
         &self,
-        contract_source: &T,
-        access_config: Option<AccessConfig>,
-    ) -> Result<Self::Response, Self::Error>;
+        _contract_source: &T,
+        _access_config: Option<AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        unimplemented!();
+    }
 
     /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(
