@@ -30,8 +30,8 @@ serde = { workspace = true }
 base64 = { version = "0.22.1" }
 
 # Interactive clap
-interactive-clap = "0.2.8"
-interactive-clap-derive = "0.2.8"
+interactive-clap = "0.3.0"
+interactive-clap-derive = "0.3.0"
 clap = { version = "4.0.18", features = ["derive"] }
 color-eyre = { version = "0.6" }
 strum = { version = "0.24", features = ["derive"] }
