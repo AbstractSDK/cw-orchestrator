@@ -150,6 +150,8 @@ pub mod acknowledgement {
 }
 
 mod polytone_callback {
+    use super::*;
+
     use cosmwasm_std::{SubMsgResponse, Uint64};
 
     #[cw_serde]
@@ -160,8 +162,6 @@ mod polytone_callback {
         /// message.
         pub result: Vec<SubMsgResponse>,
     }
-
-    use super::*;
 
     #[cw_serde]
     pub struct ErrorResponse {
