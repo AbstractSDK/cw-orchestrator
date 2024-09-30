@@ -11,14 +11,10 @@ use ibc_relayer_types::core::{
 };
 
 use crate::{
-    ack_parser::IbcAckParser,
-    channel::{IbcPort, InterchainChannel},
-    types::{
-        parse::SuccessIbcPacket, ChannelCreationResult, ChannelCreationTransactionsResult,
-        FullIbcPacketAnalysis, IbcPacketOutcome, IbcTxAnalysis, InternalChannelCreationResult,
-        SimpleIbcPacketAnalysis,
-    },
-    IbcQueryHandler, InterchainError,
+    analysis::{IbcTxAnalysis, SimpleIbcPacketAnalysis}, channel::{IbcPort, InterchainChannel}, results::{
+        ChannelCreationResult, ChannelCreationTransactionsResult,
+        InternalChannelCreationResult,
+    }, IbcQueryHandler, InterchainError
 };
 
 /// This struct contains information about an IBC channel creation process. It contains the same struct type for each step of the channel creation
@@ -462,96 +458,4 @@ pub fn contract_port<Chain: CwEnv>(contract: &dyn ContractInstance<Chain>) -> Po
     format!("wasm.{}", contract.addr_str().unwrap())
         .parse()
         .unwrap()
-}
-
-impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
-    /// Tries to parses all acknowledgements into polytone, ics20 and ics004 acks.
-    /// Errors if some packet doesn't conform to those results.
-    pub fn into_result(&self) -> Result<(), InterchainError> {
-        self.packets.iter().try_for_each(|p| p.into_result())?;
-        Ok(())
-    }
-}
-
-impl<Chain: CwEnv> FullIbcPacketAnalysis<Chain> {
-    /// Tries to parses all acknowledgements into polytone, ics20 and ics004 acks.
-    /// Errors if some packet doesn't conform to those results.
-    /// Use [`InterchainEnv::parse_ibc`] if you want to handle your own acks
-    pub fn into_result(&self) -> Result<(), InterchainError> {
-        match &self.outcome {
-            IbcPacketOutcome::Success {
-                ack,
-                receive_tx,
-                ack_tx,
-            } => {
-                receive_tx.into_result()?;
-                ack_tx.into_result()?;
-
-                if IbcAckParser::polytone_ack(ack).is_ok() {
-                    return Ok(());
-                }
-                if IbcAckParser::ics20_ack(ack).is_ok() {
-                    return Ok(());
-                }
-                if IbcAckParser::ics004_ack(ack).is_ok() {
-                    return Ok(());
-                }
-
-                Err(InterchainError::AckDecodingFailed(
-                    ack.clone(),
-                    String::from_utf8_lossy(ack.as_slice()).to_string(),
-                ))
-            }
-            IbcPacketOutcome::Timeout { .. } => Err(InterchainError::PacketTimeout {}),
-        }
-    }
-
-    /// Returns all successful packets gathered during the packet following procedure
-    /// Doesn't error if a packet has timed-out
-    pub fn get_success_packets(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        match &self.outcome {
-            IbcPacketOutcome::Success {
-                ack,
-                receive_tx,
-                ack_tx,
-            } => Ok([
-                vec![SuccessIbcPacket {
-                    send_tx: self.send_tx.clone().unwrap(),
-                    packet_ack: ack.clone(),
-                }],
-                receive_tx.get_success_packets()?,
-                ack_tx.get_success_packets()?,
-            ]
-            .concat()),
-            IbcPacketOutcome::Timeout { .. } => Ok(vec![]),
-        }
-    }
-
-    /// Returns all successful packets gathered during the packet following procedure
-    /// Errors if a packet has timed-out
-    pub fn assert_no_timeout(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        match &self.outcome {
-            IbcPacketOutcome::Success {
-                ack,
-                receive_tx,
-                ack_tx,
-            } => Ok([
-                vec![SuccessIbcPacket {
-                    send_tx: self.send_tx.clone().unwrap(),
-                    packet_ack: ack.clone(),
-                }],
-                receive_tx.assert_no_timeout()?,
-                ack_tx.assert_no_timeout()?,
-            ]
-            .concat()),
-            IbcPacketOutcome::Timeout { .. } => Err(InterchainError::PacketTimeout {}),
-        }
-    }
-}
-
-pub(crate) fn decode_ack_error(ack: &Binary) -> InterchainError {
-    InterchainError::AckDecodingFailed(
-        ack.clone(),
-        String::from_utf8_lossy(ack.as_slice()).to_string(),
-    )
 }

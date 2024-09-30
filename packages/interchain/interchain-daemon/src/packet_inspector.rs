@@ -13,7 +13,7 @@ use futures_util::future::select_all;
 use futures_util::FutureExt;
 
 use crate::{IcDaemonResult, InterchainDaemonError};
-use cw_orch_interchain_core::types::{
+use cw_orch_interchain_core::results::{
     FullIbcPacketAnalysis, IbcPacketAnalysis, IbcPacketInfo, IbcPacketOutcome, IbcTxAnalysis,
     NetworkId, SimpleIbcPacketAnalysis, TxId,
 };

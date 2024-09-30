@@ -5,10 +5,10 @@ use cw_orch_core::environment::QueryHandler;
 use cw_orch_interchain_core::{
     channel::InterchainChannel,
     env::{ChainId, ChannelCreation},
-    types::{
-        ChannelCreationTransactionsResult, FullIbcPacketAnalysis, IbcPacketAnalysis, IbcPacketInfo,
-        IbcPacketOutcome, IbcTxAnalysis, InternalChannelCreationResult, SimpleIbcPacketAnalysis,
-        TxId,
+    results::{
+        ChannelCreationTransactionsResult,
+        InternalChannelCreationResult,
+    
     },
     InterchainEnv,
 };

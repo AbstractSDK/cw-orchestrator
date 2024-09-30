@@ -7,7 +7,7 @@ use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
 use crate::env::ChainId;
-use crate::types::NetworkId;
+use crate::results::NetworkId;
 use crate::InterchainError;
 
 /// Identifies a channel between two IBC connected chains.

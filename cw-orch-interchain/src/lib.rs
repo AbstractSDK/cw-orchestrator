@@ -2,7 +2,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 pub mod prelude {
     pub use cw_orch_interchain_core::{
-        types::ChannelCreationResult, IbcQueryHandler, InterchainEnv,
+        results::ChannelCreationResult, IbcQueryHandler, InterchainEnv,
     };
     pub use cw_orch_interchain_mock::{MockBech32InterchainEnv, MockInterchainEnv};
 

@@ -13,9 +13,13 @@ mod ack_parser;
 mod error;
 
 /// Type definition for interchain structure and return types
-pub mod types;
+pub mod results;
+pub(crate) mod analysis;
+pub(crate) mod packet;
+pub(crate) mod tx;
+pub(crate) mod ibc_query;
 
 pub use ack_parser::IbcAckParser;
 pub use env::InterchainEnv;
 pub use error::InterchainError;
-pub use types::IbcQueryHandler;
+pub use ibc_query::IbcQueryHandler;

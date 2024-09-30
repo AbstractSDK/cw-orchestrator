@@ -17,7 +17,7 @@ use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
 
 use crate::{IcDaemonResult, InterchainDaemonError};
 
-use cw_orch_interchain_core::types::{
+use cw_orch_interchain_core::results::{
     ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult, NetworkId,
     SimpleIbcPacketAnalysis,
 };

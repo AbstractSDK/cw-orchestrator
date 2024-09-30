@@ -5,9 +5,7 @@ use polytone::ack::Callback;
 use prost::Message;
 
 use crate::{
-    env::decode_ack_error,
-    types::{parse::SuccessIbcPacket, IbcTxAnalysis},
-    InterchainError,
+    InterchainError
 };
 
 use self::acknowledgement::{Acknowledgement, Response};
@@ -84,6 +82,14 @@ impl IbcAckParser {
     }
 }
 
+
+pub(crate) fn decode_ack_error(ack: &Binary) -> InterchainError {
+    InterchainError::AckDecodingFailed(
+        ack.clone(),
+        String::from_utf8_lossy(ack.as_slice()).to_string(),
+    )
+}
+
 #[cw_serde]
 /// Taken from https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md#data-structures
 pub enum FungibleTokenPacketAcknowledgement {
@@ -91,32 +97,6 @@ pub enum FungibleTokenPacketAcknowledgement {
     Result(String),
     /// Error packet
     Error(String),
-}
-
-impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
-    /// Assert that all packets were not timeout
-    pub fn assert_no_timeout(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        Ok(self
-            .packets
-            .iter()
-            .map(|p| p.assert_no_timeout())
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
-    }
-
-    /// Returns all packets that were successful without asserting there was no timeout
-    pub fn get_success_packets(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        Ok(self
-            .packets
-            .iter()
-            .map(|p| p.get_success_packets())
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
-    }
 }
 
 /// This is copied from https://github.com/cosmos/cosmos-rust/blob/4f2e3bbf9c67c8ffef44ef1e485a327fd66f060a/cosmos-sdk-proto/src/prost/ibc-go/ibc.core.channel.v1.rs#L164
