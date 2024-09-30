@@ -26,7 +26,7 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
 
     /// The account id of the signer.
     /// This is `_` prefixed because this conflict wih the TxSender trait
-    fn _account_id(&self) -> AccountId;
+    fn account_id(&self) -> AccountId;
 
     fn signing_account(
         &self,
@@ -78,7 +78,7 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
 
 impl<T: Signer + Sync> TxSender for T {
     fn account_id(&self) -> cosmrs::AccountId {
-        self._account_id()
+        self.account_id()
     }
 
     async fn commit_tx_any(

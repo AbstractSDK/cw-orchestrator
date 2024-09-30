@@ -156,7 +156,7 @@ impl Wallet {
     }
 
     pub fn pub_addr_str(&self) -> String {
-        self.account_id().to_string()
+        Signer::account_id(self).to_string()
     }
 
     pub async fn bank_send(
@@ -167,7 +167,7 @@ impl Wallet {
         let acc_id = if let Some(granter) = self.options.authz_granter.as_ref() {
             AccountId::from_str(granter.as_str()).unwrap()
         } else {
-            self.account_id()
+            Signer::account_id(self)
         };
 
         let msg_send = MsgSend {
@@ -478,7 +478,7 @@ impl Signer for Wallet {
         Ok(self.chain_info.gas_price)
     }
 
-    fn _account_id(&self) -> AccountId {
+    fn account_id(&self) -> AccountId {
         AccountId::new(
             &self.chain_info.network_info.pub_address_prefix,
             &self.private_key.public_key(&self.secp).raw_address.unwrap(),
