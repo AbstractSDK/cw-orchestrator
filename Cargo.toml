@@ -37,8 +37,8 @@ cosmos-sdk-proto = { version = "0.24.0", default-features = false }
 cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", features = [
   "cosmwasm_1_2",
 ] }
-cw20 = { package = "abstract-cw20", version = "3.0.0" }
-cw20-base = { package = "abstract-cw20-base", version = "3.0.0" }
+cw20 = { version = "2.0.0" }
+cw20-base = { version = "2.0.0" }
 
 osmosis-test-tube = { version = "25.0.0" }
 neutron-test-tube = { version = "4.2.0" }
