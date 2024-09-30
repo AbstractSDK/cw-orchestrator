@@ -8,8 +8,12 @@ use crate::tx::TxId;
 use crate::{IbcAckParser, InterchainError};
 use cw_orch_core::environment::CwEnv;
 
+/// Trait used for analysis of IBC packet flows
 pub trait PacketAnalysis {
+    /// Result of the Analysis of the packet flows
     type AnalysisResult;
+
+    /// Asserts that there is no timeout packet inside the result structure.
     fn assert_no_timeout(&self) -> Result<(), InterchainError>;
 
     /// Tries to parses all acknowledgements into polytone, ics20 and ics004 acks.
