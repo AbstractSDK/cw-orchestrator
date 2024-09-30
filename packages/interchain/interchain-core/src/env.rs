@@ -109,7 +109,7 @@ pub type ChainId<'a> = &'a str;
 /// // This makes sure that the packets arrive successfully and present a success ack
 /// let result = interchain.await_and_check_packets("juno-1", tx_resp).unwrap();
 /// ```    
-pub trait InterchainEnv<Chain: IbcQueryHandler> {
+pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     /// Type returned by the internal channel creation function
     /// Examples
     /// Daemon : This is empty, because hermes doesn't return anything after channel creation
@@ -137,6 +137,21 @@ pub trait InterchainEnv<Chain: IbcQueryHandler> {
     ///
     /// ```
     fn get_chain(&self, chain_id: impl ToString) -> Result<Chain, Self::Error>;
+
+    /// Returns every chain registered within the environment.
+    /// To get a single chain, use [`InterchainEnv::get_chain`]
+    /// ``` rust
+    /// use cw_orch::prelude::*;
+    /// use cw_orch_interchain::prelude::*;
+    /// use counter_contract::CounterContract;
+    /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
+    ///
+    /// let all_chains: Vec<&MockBech32> = interchain.chains().collect();
+    ///
+    /// ```
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Chain>
+    where
+        Chain: 'a;
 
     /// This triggers channel creation between 2 chains
     /// Returns a channel creation receipt as well as as the connection_id on the src_chain side

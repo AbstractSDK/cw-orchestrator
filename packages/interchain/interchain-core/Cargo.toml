@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-interchain-core"
-version = "0.5.0"
+version = "0.6.1"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -23,7 +23,7 @@ cw-orch-daemon = { workspace = true, optional = true }
 futures = "0.3.30"
 ibc-relayer-types = { workspace = true }
 log = { workspace = true }
-polytone = "1.0.0"
+# TODO: polytone = "2.0.0"
 prost = "0.13.1"
 serde_json = { workspace = true }
 thiserror = { workspace = true }

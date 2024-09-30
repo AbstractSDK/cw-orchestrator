@@ -357,6 +357,13 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
 
         Ok(analysis_result)
     }
+
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a MockBase<A>>
+    where
+        MockBase<A>: 'a,
+    {
+        self.mocks.values()
+    }
 }
 
 fn get_events(tx: &AppResponse, event: &str) -> Vec<Event> {

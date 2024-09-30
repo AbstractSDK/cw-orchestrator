@@ -23,7 +23,7 @@ mod contract {
         },
         Contract,
     };
-    use cosmwasm_std::{Deps, DepsMut, Empty, QuerierWrapper};
+    use cosmwasm_std::{Checksum, Deps, DepsMut, Empty, QuerierWrapper};
 
     pub struct CloneTestingContract(Box<dyn cw_orch_mock::cw_multi_test::Contract<Empty, Empty>>);
 
@@ -160,6 +160,11 @@ mod contract {
                 querier: QuerierWrapper::new(&querier),
             };
             self.0.migrate(deps, env, msg)
+        }
+
+        /// Returns the provided checksum of the contract's Wasm blob.
+        fn checksum(&self) -> Option<Checksum> {
+            self.0.checksum()
         }
     }
 }

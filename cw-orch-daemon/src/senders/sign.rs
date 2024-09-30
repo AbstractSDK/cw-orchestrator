@@ -12,6 +12,7 @@ use cosmrs::{
     tx::{Body, Fee, Raw, SignDoc, SignerInfo},
     AccountId, Any,
 };
+use cosmwasm_std::Addr;
 use prost::Message;
 
 pub struct SigningAccount {
@@ -34,8 +35,8 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
 
     /// Signals wether this signer is using authz
     /// If set to true, the signed messages will be wrapped inside authz messages
-    fn has_authz(&self) -> bool {
-        false
+    fn authz_granter(&self) -> Option<&Addr> {
+        None
     }
 
     // --- Related to transaction signing --- //
@@ -88,7 +89,7 @@ impl<T: Signer + Sync> TxSender for T {
     ) -> Result<CosmTxResponse, DaemonError> {
         let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
 
-        let msgs = if self.has_authz() {
+        let msgs = if self.authz_granter().is_some() {
             // We wrap authz messages
             vec![Any {
                 type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
@@ -122,5 +123,14 @@ impl<T: Signer + Sync> TxSender for T {
             .await?;
 
         assert_broadcast_code_cosm_response(resp)
+    }
+    /// Actual sender of the messages.
+    /// This is different when using authz capabilites
+    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
+        if let Some(sender) = self.authz_granter() {
+            Ok(sender.as_str().parse()?)
+        } else {
+            Ok(self.account_id())
+        }
     }
 }

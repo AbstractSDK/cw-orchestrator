@@ -23,7 +23,7 @@ use cosmrs::{
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, Fee, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
+    tx::{self, Fee, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo, SignerPublicKey},
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
@@ -125,6 +125,10 @@ impl Wallet {
         self.options.clone()
     }
 
+    pub fn public_key(&self) -> Option<SignerPublicKey> {
+        self.private_key.get_signer_public_key(&self.secp)
+    }
+
     /// Replaces the private key that the [CosmosSender] is using with key derived from the provided 24-word mnemonic.
     /// If you want more control over the derived private key, use [Self::set_private_key]
     pub fn set_mnemonic(&mut self, mnemonic: impl Into<String>) -> Result<(), DaemonError> {
@@ -164,11 +168,7 @@ impl Wallet {
         recipient: &Addr,
         coins: Vec<cosmwasm_std::Coin>,
     ) -> Result<CosmTxResponse, DaemonError> {
-        let acc_id = if let Some(granter) = self.options.authz_granter.as_ref() {
-            AccountId::from_str(granter.as_str()).unwrap()
-        } else {
-            Signer::account_id(self)
-        };
+        let acc_id = self.msg_sender()?;
 
         let msg_send = MsgSend {
             from_address: acc_id,
@@ -487,7 +487,7 @@ impl Signer for Wallet {
         .unwrap()
     }
 
-    fn has_authz(&self) -> bool {
-        self.options.authz_granter.is_some()
+    fn authz_granter(&self) -> Option<&Addr> {
+        self.options.authz_granter.as_ref()
     }
 }
