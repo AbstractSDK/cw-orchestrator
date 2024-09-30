@@ -22,7 +22,7 @@ use cosmrs::{
     crypto::secp256k1::SigningKey,
     proto::{cosmos::authz::v1beta1::MsgExec, traits::Message},
     tendermint::chain::Id,
-    tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo},
+    tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo, SignerPublicKey},
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
@@ -122,6 +122,10 @@ impl Wallet {
 
     pub fn options(&self) -> CosmosOptions {
         self.options.clone()
+    }
+
+    pub fn public_key(&self) -> Option<SignerPublicKey> {
+        self.private_key.get_signer_public_key(&self.secp)
     }
 
     /// Replaces the private key that the [CosmosSender] is using with key derived from the provided 24-word mnemonic.
