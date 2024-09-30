@@ -12,14 +12,20 @@ pub mod env;
 mod ack_parser;
 mod error;
 
+pub(crate) mod analysis;
+pub(crate) mod ibc_query;
+pub(crate) mod packet;
 /// Type definition for interchain structure and return types
 pub mod results;
-pub(crate) mod analysis;
-pub(crate) mod packet;
 pub(crate) mod tx;
-pub(crate) mod ibc_query;
 
 pub use ack_parser::IbcAckParser;
-pub use env::InterchainEnv;
+pub use analysis::PacketAnalysis;
+pub use env::{contract_port, InterchainEnv};
 pub use error::InterchainError;
 pub use ibc_query::IbcQueryHandler;
+pub use packet::{
+    success::{SuccessIbcPacketOutcome, SuccessNestedPacketsFlow, SuccessSinglePacketFlow},
+    IbcPacketInfo, IbcPacketOutcome, NestedPacketsFlow, SinglePacketFlow,
+};
+pub use tx::TxId;

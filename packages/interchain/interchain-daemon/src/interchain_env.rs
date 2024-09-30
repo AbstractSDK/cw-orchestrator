@@ -4,7 +4,7 @@ use cw_orch_daemon::queriers::{Ibc, Node};
 use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError, RUNTIME};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
-use cw_orch_interchain_core::InterchainEnv;
+use cw_orch_interchain_core::{InterchainEnv, NestedPacketsFlow, SinglePacketFlow};
 
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use tokio::time::sleep;
@@ -18,8 +18,7 @@ use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
 use crate::{IcDaemonResult, InterchainDaemonError};
 
 use cw_orch_interchain_core::results::{
-    ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult, NetworkId,
-    SimpleIbcPacketAnalysis,
+    ChannelCreationTransactionsResult, InternalChannelCreationResult, NetworkId,
 };
 use futures::future::try_join4;
 use std::collections::HashMap;
@@ -242,7 +241,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         &self,
         chain_id: ChainId,
         tx_response: CosmTxResponse,
-    ) -> Result<IbcTxAnalysis<Daemon>, Self::Error> {
+    ) -> Result<NestedPacketsFlow<Daemon>, Self::Error> {
         log::info!(
             target: chain_id,
             "Investigating sent packet events on tx {}",
@@ -270,7 +269,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         src_channel: ChannelId,
         dst_chain: ChainId,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Daemon>, Self::Error> {
+    ) -> Result<SinglePacketFlow<Daemon>, Self::Error> {
         // We crate an interchain env object that is safe to send between threads
         let interchain_env = self
             .rt_handle
@@ -322,7 +321,7 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,
-    ) -> Result<IbcTxAnalysis<Daemon>, InterchainDaemonError> {
+    ) -> Result<NestedPacketsFlow<Daemon>, InterchainDaemonError> {
         let grpc_channel1 = self.get_chain(chain_id)?.channel();
 
         let tx = self.rt_handle.block_on(

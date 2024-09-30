@@ -1,5 +1,5 @@
 use cw_orch::prelude::*;
-use cw_orch_interchain::{InterchainEnv, MockInterchainEnv};
+use cw_orch_interchain::prelude::*;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
 fn crate_mock_env() -> cw_orch::anyhow::Result<MockInterchainEnv> {

@@ -2,7 +2,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 pub mod prelude {
     pub use cw_orch_interchain_core::{
-        results::ChannelCreationResult, IbcQueryHandler, InterchainEnv,
+        results::ChannelCreationResult, IbcQueryHandler, InterchainEnv, PacketAnalysis,
     };
     pub use cw_orch_interchain_mock::{MockBech32InterchainEnv, MockInterchainEnv};
 
@@ -20,15 +20,23 @@ pub mod prelude {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use cw_orch_interchain_core::*;
+pub mod core {
+    pub use cw_orch_interchain_core::*;
+}
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use cw_orch_interchain_mock::*;
+pub mod mock {
+    pub use cw_orch_interchain_mock::*;
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "daemon")]
-pub use cw_orch_interchain_daemon::*;
+pub mod daemon {
+    pub use cw_orch_interchain_daemon::*;
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "daemon")]
-pub use cw_orch_starship::*;
+pub mod starship {
+    pub use cw_orch_starship::*;
+}

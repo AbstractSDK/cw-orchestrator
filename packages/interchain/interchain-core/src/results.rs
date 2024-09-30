@@ -1,19 +1,11 @@
-use crate::analysis::IbcTxAnalysis;
 use crate::ibc_query::IbcQueryHandler;
+use crate::packet::NestedPacketsFlow;
 use crate::{channel::InterchainChannel, env::ChannelCreation};
-use cosmwasm_std::{Api, Binary, StdError};
-use cw_orch_core::environment::IndexResponse;
-use cw_orch_core::environment::QueryHandler;
-use cw_orch_core::environment::{CwEnv, TxHandler};
-use cw_orch_mock::{MockBase, MockState};
-use ibc_relayer_types::core::{
-    ics04_channel::packet::Sequence,
-    ics24_host::identifier::{ChannelId, PortId},
-};
+use cw_orch_core::environment::TxHandler;
+use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 
 /// Chain identification for cw-orch Ibc purposes
 pub type NetworkId = String;
-
 
 // Return types for the env trait
 /// Result returned by  InterchainEnv::_internal_create_channel
@@ -40,5 +32,5 @@ pub struct ChannelCreationResult<Chain: IbcQueryHandler> {
     /// Channel object containing every variable needed for identifying the channel that was just created
     pub interchain_channel: InterchainChannel<<Chain as IbcQueryHandler>::Handler>,
     /// Transactions involved in the channel creation + Their packet following analysis
-    pub channel_creation_txs: ChannelCreation<IbcTxAnalysis<Chain>>,
+    pub channel_creation_txs: ChannelCreation<NestedPacketsFlow<Chain>>,
 }

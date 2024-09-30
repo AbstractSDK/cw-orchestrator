@@ -1,6 +1,6 @@
 //! This module contains the trait definition for an interchain analysis environment
 
-use cosmwasm_std::{Binary, IbcOrder};
+use cosmwasm_std::IbcOrder;
 use cw_orch_core::{
     contract::interface_traits::ContractInstance,
     environment::{CwEnv, Environment, IndexResponse, TxHandler},
@@ -11,10 +11,13 @@ use ibc_relayer_types::core::{
 };
 
 use crate::{
-    analysis::{IbcTxAnalysis, SimpleIbcPacketAnalysis}, channel::{IbcPort, InterchainChannel}, results::{
-        ChannelCreationResult, ChannelCreationTransactionsResult,
-        InternalChannelCreationResult,
-    }, IbcQueryHandler, InterchainError
+    analysis::PacketAnalysis,
+    channel::{IbcPort, InterchainChannel},
+    packet::{success::SuccessNestedPacketsFlow, NestedPacketsFlow, SinglePacketFlow},
+    results::{
+        ChannelCreationResult, ChannelCreationTransactionsResult, InternalChannelCreationResult,
+    },
+    IbcQueryHandler, InterchainError,
 };
 
 /// This struct contains information about an IBC channel creation process. It contains the same struct type for each step of the channel creation
@@ -377,7 +380,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
-    ) -> Result<IbcTxAnalysis<Chain>, Self::Error>;
+    ) -> Result<NestedPacketsFlow<Chain>, Self::Error>;
 
     /// Follow every IBC packets sent out during the transaction
     /// Parses the acks according to usual ack formats (ICS20, Polytone, ICS-004)
@@ -430,14 +433,12 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
         &self,
         chain_id: ChainId,
         tx_response: <Chain as TxHandler>::Response,
-    ) -> Result<(), InterchainError> {
+    ) -> Result<SuccessNestedPacketsFlow<Chain>, InterchainError> {
         let tx_result = self
             .await_packets(chain_id, tx_response)
             .map_err(Into::into)?;
 
-        tx_result.into_result()?;
-
-        Ok(())
+        tx_result.into_result()
     }
 
     /// Follow the execution of a single IBC packet across the chain.
@@ -450,7 +451,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
         src_channel: ChannelId,
         dst_chain: ChainId,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Chain>, Self::Error>;
+    ) -> Result<SinglePacketFlow<Chain>, Self::Error>;
 }
 
 /// format the port for a contract

@@ -1,15 +1,8 @@
 use crate::results::NetworkId;
-use crate::analysis::IbcTxAnalysis;
-use crate::{channel::InterchainChannel, env::ChannelCreation};
-use cosmwasm_std::{Api, Binary, StdError};
-use cw_orch_core::environment::IndexResponse;
+use cosmwasm_std::Api;
+use cw_orch_core::environment::CwEnv;
 use cw_orch_core::environment::QueryHandler;
-use cw_orch_core::environment::{CwEnv, TxHandler};
 use cw_orch_mock::{MockBase, MockState};
-use ibc_relayer_types::core::{
-    ics04_channel::packet::Sequence,
-    ics24_host::identifier::{ChannelId, PortId},
-};
 
 /// Adds additional capabilities to CwEnv for use with ibc environments
 pub trait IbcQueryHandler: CwEnv {

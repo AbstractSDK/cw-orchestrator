@@ -3,7 +3,7 @@ use cw_orch::{
     environment::{ChainInfo, NetworkInfo},
     prelude::networks::osmosis::OSMOSIS_1,
 };
-use cw_orch_interchain_daemon::{ChannelCreationValidator, DaemonInterchain};
+use cw_orch_interchain::prelude::*;
 
 pub const NOBLE: NetworkInfo = NetworkInfo {
     chain_name: "noble",
