@@ -308,7 +308,7 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
     /// let src_chain = OSMOSIS_1;
     ///
     /// let interchain = DaemonInterchain::new(
-    ///     vec![(src_chain.clone(), None), (dst_chain, None)],
+    ///     vec![src_chain.clone(), dst_chain],
     ///     &ChannelCreationValidator,
     /// ).unwrap();
     ///
