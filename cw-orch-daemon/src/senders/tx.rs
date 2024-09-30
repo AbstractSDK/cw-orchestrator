@@ -21,6 +21,13 @@ pub trait TxSender: QuerySender {
         Addr::unchecked(self.account_id().to_string())
     }
 
+    /// Actual sender of the messages.
+    ///
+    /// For example, this can be different when using authz capabilites
+    fn msg_sender(&self) -> Result<AccountId, Self::Error> {
+        Ok(self.account_id())
+    }
+
     /// Commit a transaction to the chain using this sender.
     fn commit_tx<T: Msg>(
         &self,
