@@ -3,7 +3,10 @@
 use cosmwasm_std::{from_json, testing::MockApi, Api, Event, IbcOrder};
 use cw_orch_core::environment::QueryHandler;
 use cw_orch_interchain_core::{
-    channel::InterchainChannel, env::{ChainId, ChannelCreation}, results::{ChannelCreationTransactionsResult, InternalChannelCreationResult}, IbcPacketInfo, IbcPacketOutcome, InterchainEnv, NestedPacketsFlow, SinglePacketFlow, TxId
+    channel::InterchainChannel,
+    env::{ChainId, ChannelCreation},
+    results::{ChannelCreationTransactionsResult, InternalChannelCreationResult},
+    IbcPacketInfo, IbcPacketOutcome, InterchainEnv, NestedPacketsFlow, SinglePacketFlow, TxId,
 };
 use cw_orch_mock::{
     cw_multi_test::{
