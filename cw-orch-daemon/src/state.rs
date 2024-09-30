@@ -426,16 +426,8 @@ pub(crate) use tempstate::gen_temp_file_path;
 
 mod tempstate {
 
-    use uid::IdU16 as IdT;
-
-    #[derive(Copy, Clone)]
-    struct T(());
-
-    type Id = IdT<T>;
-
     pub fn gen_temp_file_path() -> std::path::PathBuf {
-        let id = Id::new();
-        let id = id.get();
+        let id = uuid::Uuid::new_v4();
         let env_dir = std::env::temp_dir();
         env_dir.join(format!("tempstate_{id}"))
     }
