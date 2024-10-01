@@ -120,10 +120,7 @@ impl PacketInspector {
         .into_iter()
         .collect::<Vec<_>>();
 
-        let send_tx_id = TxId {
-            chain_id: src_chain.clone(),
-            response: tx,
-        };
+        let send_tx_id = TxId::new(src_chain.clone(), tx);
 
         // We follow all results from outgoing packets in the resulting transactions
         let full_results = try_join_all(ibc_packet_results.into_iter().map(|ibc_result| async {
@@ -341,19 +338,10 @@ impl PacketInspector {
         );
 
         Ok(SinglePacketFlow {
-            send_tx: Some(TxId {
-                response: send_tx,
-                chain_id: src_port.chain_id.clone(),
-            }),
+            send_tx: Some(TxId::new(src_port.chain_id.clone(), send_tx)),
             outcome: IbcPacketOutcome::Success {
-                receive_tx: TxId {
-                    chain_id: dst_port.chain_id.clone(),
-                    response: received_tx,
-                },
-                ack_tx: TxId {
-                    chain_id: src_port.chain_id.clone(),
-                    response: ack_tx,
-                },
+                receive_tx: TxId::new(dst_port.chain_id.clone(), received_tx),
+                ack_tx: TxId::new(src_port.chain_id.clone(), ack_tx),
                 ack: acknowledgment.as_bytes().into(),
             },
         })
@@ -401,15 +389,9 @@ impl PacketInspector {
 
         // We return the tx hash of this transaction for future analysis
         Ok(SinglePacketFlow {
-            send_tx: Some(TxId {
-                chain_id: src_port.chain_id.clone(),
-                response: send_tx,
-            }),
+            send_tx: Some(TxId::new(src_port.chain_id.clone(), send_tx)),
             outcome: IbcPacketOutcome::Timeout {
-                timeout_tx: TxId {
-                    chain_id: src_port.chain_id.clone(),
-                    response: timeout_tx,
-                },
+                timeout_tx: TxId::new(src_port.chain_id.clone(), timeout_tx),
             },
         })
     }

@@ -227,10 +227,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         // We start by analyzing sent packets in the response
         let packets = find_ibc_packets_sent_in_tx(&self.get_chain(chain_id)?, &tx_response)?;
 
-        let send_tx_id = TxId {
-            chain_id: chain_id.to_string(),
-            response: tx_response,
-        };
+        let send_tx_id = TxId::new(chain_id.to_string(), tx_response);
 
         let packet_analysis = packets
             .iter()
@@ -310,10 +307,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                 timeout_tx,
                 close_channel_confirm: _,
             } => IbcPacketOutcome::Timeout {
-                timeout_tx: TxId {
-                    response: timeout_tx,
-                    chain_id: src_chain.to_string(),
-                },
+                timeout_tx: TxId::new(src_chain.to_string(), timeout_tx),
             },
             relayer::RelayingResult::Acknowledgement { tx, ack } => {
                 let ack_string =
@@ -327,14 +321,8 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                     ack_string,
                 );
                 IbcPacketOutcome::Success {
-                    receive_tx: TxId {
-                        response: relay_result.receive_tx,
-                        chain_id: dst_chain.to_string(),
-                    },
-                    ack_tx: TxId {
-                        response: tx,
-                        chain_id: src_chain.to_string(),
-                    },
+                    receive_tx: TxId::new(dst_chain.to_string(), relay_result.receive_tx),
+                    ack_tx: TxId::new(src_chain.to_string(), tx),
                     ack,
                 }
             }
