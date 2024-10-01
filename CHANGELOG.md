@@ -12,7 +12,8 @@
   
 ### Breaking
 
-- Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
+- Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`) (published in cw-orch-daemon 0.26.0)
+- Added `Signer` trait for being able to re-use the signing/broadcast flow (Unpublished)
 
 ## 0.25.0
 
