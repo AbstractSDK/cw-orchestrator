@@ -26,7 +26,6 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
     fn chain_id(&self) -> String;
 
     /// The account id of the signer.
-    /// This is `_` prefixed because this conflict wih the TxSender trait
     fn account_id(&self) -> AccountId;
 
     fn signing_account(
