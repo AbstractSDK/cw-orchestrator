@@ -1,4 +1,9 @@
-use super::{cosmos_options::CosmosWalletKey, query::QuerySender, tx::TxSender};
+use super::{
+    cosmos_options::CosmosWalletKey,
+    query::QuerySender,
+    sign::{Signer, SigningAccount},
+    tx::TxSender,
+};
 use crate::{
     core::parse_cw_coins,
     cosmos_modules::{self, auth::BaseAccount},
@@ -7,10 +12,6 @@ use crate::{
     keys::private::PrivateKey,
     proto::injective::{InjectiveEthAccount, ETHEREUM_COIN_TYPE},
     queriers::{Bank, Node},
-    tx_broadcaster::{
-        account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
-        TxBroadcaster,
-    },
     tx_builder::TxBuilder,
     tx_resp::CosmTxResponse,
     upload_wasm, CosmosOptions, GrpcChannel,
@@ -20,9 +21,9 @@ use cosmos_modules::vesting::PeriodicVestingAccount;
 use cosmrs::{
     bank::MsgSend,
     crypto::secp256k1::SigningKey,
-    proto::{cosmos::authz::v1beta1::MsgExec, traits::Message},
+    proto::traits::Message,
     tendermint::chain::Id,
-    tx::{self, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo, SignerPublicKey},
+    tx::{self, Fee, ModeInfo, Msg, Raw, SignDoc, SignMode, SignerInfo, SignerPublicKey},
     AccountId, Any,
 };
 use cosmwasm_std::{coin, Addr, Coin};
@@ -159,23 +160,7 @@ impl Wallet {
     }
 
     pub fn pub_addr_str(&self) -> String {
-        self.account_id().to_string()
-    }
-
-    pub async fn broadcast_tx(
-        &self,
-        tx: Raw,
-    ) -> Result<cosmrs::proto::cosmos::base::abci::v1beta1::TxResponse, DaemonError> {
-        let mut client = cosmos_modules::tx::service_client::ServiceClient::new(self.channel());
-        let commit = client
-            .broadcast_tx(cosmos_modules::tx::BroadcastTxRequest {
-                tx_bytes: tx.to_bytes()?,
-                mode: cosmos_modules::tx::BroadcastMode::Sync.into(),
-            })
-            .await?;
-
-        let commit = commit.into_inner().tx_response.unwrap();
-        Ok(commit)
+        Signer::account_id(self).to_string()
     }
 
     pub async fn bank_send(
@@ -267,21 +252,6 @@ impl Wallet {
             .unwrap();
 
         self.commit_tx_any(msgs, memo).await
-    }
-
-    pub fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
-        let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
-            #[cfg(not(feature = "eth"))]
-            panic!(
-                "Coin Type {} not supported without eth feature",
-                ETHEREUM_COIN_TYPE
-            );
-            #[cfg(feature = "eth")]
-            self.private_key.sign_injective(sign_doc)?
-        } else {
-            sign_doc.sign(&self.cosmos_private_key())?
-        };
-        Ok(tx_raw)
     }
 
     pub async fn base_account(&self) -> Result<BaseAccount, DaemonError> {
@@ -433,69 +403,6 @@ impl QuerySender for Wallet {
     }
 }
 
-impl TxSender for Wallet {
-    async fn commit_tx_any(
-        &self,
-        msgs: Vec<Any>,
-        memo: Option<&str>,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let timeout_height = Node::new_async(self.channel())._block_height().await? + 10u64;
-
-        let msgs = if self.options.authz_granter.is_some() {
-            // We wrap authz messages
-            vec![Any {
-                type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
-                value: MsgExec {
-                    grantee: self.pub_addr_str(),
-                    msgs,
-                }
-                .encode_to_vec(),
-            }]
-        } else {
-            msgs
-        };
-
-        let tx_body = TxBuilder::build_body(msgs, memo, timeout_height);
-
-        let tx_builder = TxBuilder::new(tx_body);
-
-        // We retry broadcasting the tx, with the following strategies
-        // 1. In case there is an `incorrect account sequence` error, we can retry as much as possible (doesn't cost anything to the user)
-        // 2. In case there is an insufficient_fee error, we retry once (costs fee to the user everytime we submit this kind of tx)
-        // 3. In case there is an other error, we fail
-        let tx_response = TxBroadcaster::default()
-            .add_strategy(insufficient_fee_strategy())
-            .add_strategy(account_sequence_strategy())
-            .broadcast(tx_builder, self)
-            .await?;
-
-        let resp = Node::new_async(self.channel())
-            ._find_tx(tx_response.txhash)
-            .await?;
-
-        assert_broadcast_code_cosm_response(resp)
-    }
-
-    fn account_id(&self) -> AccountId {
-        AccountId::new(
-            &self.chain_info.network_info.pub_address_prefix,
-            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
-        )
-        // unwrap as address is validated on construction
-        .unwrap()
-    }
-
-    /// Actual sender of the messages.
-    /// This is different when using authz capabilites
-    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
-        if let Some(sender) = &self.options.authz_granter {
-            Ok(sender.as_str().parse()?)
-        } else {
-            Ok(self.account_id())
-        }
-    }
-}
-
 fn get_mnemonic_env(chain_kind: &ChainKind) -> Result<String, CwEnvError> {
     match chain_kind {
         ChainKind::Local => DaemonEnvVars::local_mnemonic(),
@@ -514,5 +421,73 @@ fn get_mnemonic_env_name(chain_kind: &ChainKind) -> &str {
         ChainKind::Testnet => TEST_MNEMONIC_ENV_NAME,
         ChainKind::Mainnet => MAIN_MNEMONIC_ENV_NAME,
         _ => panic!("Can't set mnemonic for unspecified chainkind"),
+    }
+}
+
+impl Signer for Wallet {
+    fn sign(&self, sign_doc: SignDoc) -> Result<Raw, DaemonError> {
+        let tx_raw = if self.private_key.coin_type == ETHEREUM_COIN_TYPE {
+            #[cfg(not(feature = "eth"))]
+            panic!(
+                "Coin Type {} not supported without eth feature",
+                ETHEREUM_COIN_TYPE
+            );
+            #[cfg(feature = "eth")]
+            self.private_key.sign_injective(sign_doc)?
+        } else {
+            sign_doc.sign(&self.cosmos_private_key())?
+        };
+        Ok(tx_raw)
+    }
+
+    fn chain_id(&self) -> String {
+        self.chain_info.chain_id.clone()
+    }
+
+    fn signer_info(&self, sequence: u64) -> SignerInfo {
+        SignerInfo {
+            public_key: self.private_key.get_signer_public_key(&self.secp),
+            mode_info: ModeInfo::single(SignMode::Direct),
+            sequence,
+        }
+    }
+
+    fn build_fee(&self, amount: impl Into<u128>, gas_limit: u64) -> Result<Fee, DaemonError> {
+        TxBuilder::build_fee(
+            amount,
+            &self.get_fee_token(),
+            gas_limit,
+            self.options.fee_granter.clone(),
+        )
+    }
+
+    async fn signing_account(&self) -> Result<super::sign::SigningAccount, DaemonError> {
+        let BaseAccount {
+            account_number,
+            sequence,
+            ..
+        } = self.base_account().await?;
+
+        Ok(SigningAccount {
+            account_number,
+            sequence,
+        })
+    }
+
+    fn gas_price(&self) -> Result<f64, DaemonError> {
+        Ok(self.chain_info.gas_price)
+    }
+
+    fn account_id(&self) -> AccountId {
+        AccountId::new(
+            &self.chain_info.network_info.pub_address_prefix,
+            &self.private_key.public_key(&self.secp).raw_address.unwrap(),
+        )
+        // unwrap as address is validated on construction
+        .unwrap()
+    }
+
+    fn authz_granter(&self) -> Option<&Addr> {
+        self.options.authz_granter.as_ref()
     }
 }
