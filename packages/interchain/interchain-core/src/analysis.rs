@@ -17,11 +17,13 @@ pub trait PacketAnalysis {
     /// Asserts that there is no timeout packet inside the result structure.
     fn assert_no_timeout(&self) -> Result<(), InterchainError>;
 
-    /// Tries to parses all acknowledgements into polytone, ics20 and ics004 acks.
+    /// Tries to parses all acknowledgements into standard acknowledgments (polytone, ics20 or ics004).
     /// Errors if some packet doesn't conform to those results.
     fn into_result(self) -> Result<Self::AnalysisResult<Empty>, InterchainError>;
 
-    /// Tries to parses all acknowledgements into polytone, ics20 and ics004 acks and additional provided parsing functions.
+    /// Tries to parses all acknowledgements into `CustomOutcome` using a custom parsing function.
+    ///
+    /// If it fails, also tries with standard acknowledgements (polytone, ics20 or ics004).
     /// Errors if some packet doesn't conform to those results.
     fn into_result_custom<CustomOutcome>(
         self,
