@@ -1,7 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{from_json, Binary};
-use polytone::ack::Callback;
 use prost::Message;
+// TODO: when polytone updates to cosmwasm v2 use polytone::ack::Callback;
+use polytone_callback::Callback;
 
 use crate::InterchainError;
 
@@ -121,5 +122,60 @@ pub mod acknowledgement {
         fn full_name() -> ::prost::alloc::string::String {
             ::prost::alloc::format!("ibc.core.channel.v1.{}", Self::NAME)
         }
+    }
+}
+
+mod polytone_callback {
+    use super::*;
+
+    use cosmwasm_std::{SubMsgResponse, Uint64};
+
+    #[cw_serde]
+    pub struct ExecutionResponse {
+        /// The address on the remote chain that executed the messages.
+        pub executed_by: String,
+        /// Index `i` corresponds to the result of executing the `i`th
+        /// message.
+        pub result: Vec<SubMsgResponse>,
+    }
+
+    #[cw_serde]
+    pub struct ErrorResponse {
+        /// The index of the first message who's execution failed.
+        pub message_index: Uint64,
+        /// The error that occured executing the message.
+        pub error: String,
+    }
+
+    /// Copy of the [polytone::ack::Callback](https://docs.rs/polytone/1.0.0/polytone/ack/index.html#reexport.Callback)
+    /// But without cosmwasm v1 dependencies
+    #[cw_serde]
+    pub enum Callback {
+        /// Result of executing the requested query, or an error.
+        ///
+        /// result[i] corresponds to the i'th query and contains the
+        /// base64 encoded query response.
+        Query(Result<Vec<Binary>, ErrorResponse>),
+
+        /// Result of executing the requested messages, or an error.
+        ///
+        /// 14/04/23: if a submessage errors the reply handler can see
+        /// `codespace: wasm, code: 5`, but not the actual error. as a
+        /// result, we can't return good errors for Execution and this
+        /// error string will only tell you the error's codespace. for
+        /// example, an out-of-gas error is code 11 and looks like
+        /// `codespace: sdk, code: 11`.
+        Execute(Result<ExecutionResponse, String>),
+
+        /// An error occured that could not be recovered from. The only
+        /// known way that this can occur is message handling running out
+        /// of gas, in which case the error will be `codespace: sdk, code:
+        /// 11`.
+        ///
+        /// This error is not named becuase it could also occur due to a
+        /// panic or unhandled error during message processing. We don't
+        /// expect this to happen and have carefully written the code to
+        /// avoid it.
+        FatalError(String),
     }
 }

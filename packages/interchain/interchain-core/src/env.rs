@@ -145,7 +145,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     /// use counter_contract::CounterContract;
     /// let interchain = MockBech32InterchainEnv::new(vec![("osmosis-1","osmo"),("archway-1","arch")]);
     ///
-    /// let all_chains: Vec<&MockBeck32> = interchain.chains().collect();
+    /// let all_chains: Vec<&MockBech32> = interchain.chains().collect();
     ///
     /// ```
     fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Chain>
