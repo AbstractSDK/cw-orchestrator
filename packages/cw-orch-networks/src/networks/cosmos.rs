@@ -9,6 +9,8 @@ pub const COSMOS_HUB_NETWORK: NetworkInfo = NetworkInfo {
 
 pub const COSMOS_HUB_TESTNET: ChainInfo = THETA_TESTNET_001;
 
+/// Cosmos Hub Testnet
+/// @see https://github.com/cosmos/testnets/tree/master/release
 pub const THETA_TESTNET_001: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "theta-testnet-001",
