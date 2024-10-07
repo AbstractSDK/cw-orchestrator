@@ -2,19 +2,15 @@ use std::{
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
     rc::Rc,
-    sync::Arc,
 };
 
 use cosmwasm_std::{
     instantiate2_address, to_json_binary, Addr, Api, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
     QuerierWrapper, StdError, Storage,
 };
-use cw_orch_core::{
-    environment::{
-        BankQuerier, ChainState, DefaultQueriers, EnvironmentQuerier, IndexResponse, NodeQuerier,
-        Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier,
-    },
-    CwEnvError,
+use cw_orch_core::environment::{
+    BankQuerier, ChainState, DefaultQueriers, EnvironmentQuerier, IndexResponse, NodeQuerier,
+    Querier, QuerierGetter, QueryHandler, StateInterface, TxHandler, WasmQuerier,
 };
 use cw_storage_plus::Item;
 use serde::Serialize;
@@ -158,11 +154,11 @@ impl<'a> StateInterface for OnChainState<'a> {
         todo!()
     }
 
-    fn get_code_id(&self, contract_id: &str) -> Result<u64, cw_orch_core::CwEnvError> {
+    fn get_code_id(&self, _contract_id: &str) -> Result<u64, cw_orch_core::CwEnvError> {
         todo!()
     }
 
-    fn set_code_id(&mut self, contract_id: &str, code_id: u64) {
+    fn set_code_id(&mut self, _contract_id: &str, _code_id: u64) {
         todo!()
     }
 
@@ -324,7 +320,7 @@ impl<'a> DefaultQueriers for OnChain<'a> {
 }
 
 impl<'a> BankQuerier for OnChain<'a> {
-    fn balance(&self, address: &Addr, denom: Option<String>) -> Result<Vec<Coin>, Self::Error> {
+    fn balance(&self, _address: &Addr, _denom: Option<String>) -> Result<Vec<Coin>, Self::Error> {
         todo!()
     }
 
@@ -332,7 +328,7 @@ impl<'a> BankQuerier for OnChain<'a> {
         todo!()
     }
 
-    fn supply_of(&self, denom: impl Into<String>) -> Result<Coin, Self::Error> {
+    fn supply_of(&self, _denom: impl Into<String>) -> Result<Coin, Self::Error> {
         todo!()
     }
 }
@@ -385,7 +381,7 @@ impl<'a> WasmQuerier for OnChain<'a> {
             + cw_orch_core::contract::interface_traits::ContractInstance<Self::Chain>,
     >(
         &self,
-        contract: &T,
+        _contract: &T,
     ) -> Result<cosmwasm_std::Checksum, cw_orch_core::CwEnvError> {
         unimplemented!()
     }
@@ -420,7 +416,7 @@ impl<'a> NodeQuerier for OnChain<'a> {
         todo!()
     }
 
-    fn block_by_height(&self, height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
+    fn block_by_height(&self, _height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
         todo!()
     }
 
@@ -432,11 +428,11 @@ impl<'a> NodeQuerier for OnChain<'a> {
         todo!()
     }
 
-    fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
+    fn simulate_tx(&self, _tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
         todo!()
     }
 
-    fn find_tx(&self, hash: String) -> Result<Self::Response, Self::Error> {
+    fn find_tx(&self, _hash: String) -> Result<Self::Response, Self::Error> {
         todo!()
     }
 }

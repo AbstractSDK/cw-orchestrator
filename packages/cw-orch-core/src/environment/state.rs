@@ -16,7 +16,7 @@ pub trait ChainState {
 /// This Interface allows for managing the local state of a deployment on any CosmWasm-supported environment.
 pub trait StateInterface: Clone {
     /// Get the address of a contract using the specified contract id.
-    fn get_address<'b>(&'b self, contract_id: &str) -> Result<Addr, CwEnvError>;
+    fn get_address(&self, contract_id: &str) -> Result<Addr, CwEnvError>;
 
     /// Set the address of a contract using the specified contract id.
     fn set_address(&mut self, contract_id: &str, address: &Addr);
