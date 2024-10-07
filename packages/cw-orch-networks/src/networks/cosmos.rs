@@ -18,7 +18,7 @@ pub const THETA_TESTNET_001: ChainInfo = ChainInfo {
     gas_price: 0.0025,
     grpc_urls: &["https://grpc-t.cosmos.nodestake.top:443"],
     network_info: COSMOS_HUB_NETWORK,
-    lcd_url: None,
+    lcd_url: Some("https://api-t.cosmos.nodestake.top:443"),
     fcd_url: None,
 };
 
