@@ -6,7 +6,7 @@ use std::{
     str::ParseBoolError,
 };
 
-use cosmwasm_std::Instantiate2AddressError;
+use cosmwasm_std::{Instantiate2AddressError, StdError};
 use thiserror::Error;
 
 /// cw-orchestrator error wrapper using thiserror.
@@ -62,5 +62,11 @@ impl CwEnvError {
             CwEnvError::AnyError(e) => e.downcast(),
             _ => panic!("Unexpected error type"),
         }
+    }
+}
+
+impl From<CwEnvError> for StdError {
+    fn from(val: CwEnvError) -> Self {
+        StdError::generic_err(val.to_string())
     }
 }
