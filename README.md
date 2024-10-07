@@ -233,6 +233,7 @@ Cw-orchestrator supports the following chains natively:
 🟥 LocalNet, 🟦 Testnet, 🟩 Mainnet
 
 - Archway 🟦🟩
+- Cosmos 🟩
 - Injective 🟦🟩
 - Juno 🟥🟦🟩
 - Kujira 🟦
