@@ -3,7 +3,7 @@
 cw-orchestrator currently explicitly supports the chains in this section:
 
 - [Archway](./archway.md)
-- [Cosmos](./cosmos.md)
+- [Cosmos Hub](./cosmos.md)
 - [Injective](./injective.md)
 - [Juno](./juno.md)
 - [Kujira](./kujira.md)

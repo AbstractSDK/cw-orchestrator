@@ -10,7 +10,7 @@ The Cosmos Hub is the first of thousands of interconnected blockchains that will
 
 ## Usage
 
-See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::COSMOS_TESTNET`.
+See how to setup your main function in the [main function](../contracts/scripting.md#main-function) section. Update the network passed into the `Daemon` builder to be `networks::COSMOS_HUB_TESTNET`.
 ## References
 
 - [Cosmos Hub Documentation](https://hub.cosmos.network/main)

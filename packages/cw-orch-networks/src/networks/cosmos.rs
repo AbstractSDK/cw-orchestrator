@@ -1,13 +1,13 @@
 use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 
 // ANCHOR: cosmos
-pub const COSMOS_NETWORK: NetworkInfo = NetworkInfo {
+pub const COSMOS_HUB_NETWORK: NetworkInfo = NetworkInfo {
     chain_name: "cosmoshub",
     pub_address_prefix: "cosmos",
     coin_type: 118,
 };
 
-pub const COSMOS_TESTNET: ChainInfo = THETA_TESTNET_001;
+pub const COSMOS_HUB_TESTNET: ChainInfo = THETA_TESTNET_001;
 
 pub const THETA_TESTNET_001: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
@@ -15,7 +15,7 @@ pub const THETA_TESTNET_001: ChainInfo = ChainInfo {
     gas_denom: "uatom",
     gas_price: 0.0025,
     grpc_urls: &["https://grpc-t.cosmos.nodestake.top:443"],
-    network_info: COSMOS_NETWORK,
+    network_info: COSMOS_HUB_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
