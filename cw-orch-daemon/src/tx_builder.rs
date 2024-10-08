@@ -1,19 +1,22 @@
 use std::str::FromStr;
 
-use cosmrs::tx::{ModeInfo, SignMode};
 use cosmrs::AccountId;
 use cosmrs::{
-    proto::cosmos::auth::v1beta1::BaseAccount,
     tendermint::chain::Id,
-    tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc, SignerInfo},
+    tx::{self, Body, Fee, Raw, SequenceNumber, SignDoc},
     Any, Coin,
 };
 use cosmwasm_std::Addr;
 use cw_orch_core::log::transaction_target;
 
-use crate::Wallet;
+use crate::env::DaemonEnvVars;
+use crate::senders::sign::{Signer, SigningAccount};
 
 use super::DaemonError;
+
+const GAS_BUFFER: f64 = 1.3;
+const BUFFER_THRESHOLD: u64 = 200_000;
+const SMALL_GAS_BUFFER: f64 = 1.4;
 
 /// Struct used to build a raw transaction and broadcast it with a sender.
 #[derive(Clone, Debug)]
@@ -77,13 +80,12 @@ impl TxBuilder {
     }
 
     /// Simulates the transaction and returns the necessary gas fee returned by the simulation on a node
-    pub async fn simulate(&self, wallet: &Wallet) -> Result<u64, DaemonError> {
+    pub async fn simulate(&self, wallet: &impl Signer) -> Result<u64, DaemonError> {
         // get the account number of the wallet
-        let BaseAccount {
+        let SigningAccount {
             account_number,
             sequence,
-            ..
-        } = wallet.base_account().await?;
+        } = wallet.signing_account().await?;
 
         // overwrite sequence if set (can be used for concurrent txs)
         let sequence = self.sequence.unwrap_or(sequence);
@@ -95,13 +97,12 @@ impl TxBuilder {
 
     /// Builds the raw tx with a given body and fee and signs it.
     /// Sets the TxBuilder's gas limit to its simulated amount for later use.
-    pub async fn build(&mut self, wallet: &Wallet) -> Result<Raw, DaemonError> {
+    pub async fn build(&mut self, wallet: &impl Signer) -> Result<Raw, DaemonError> {
         // get the account number of the wallet
-        let BaseAccount {
+        let SigningAccount {
             account_number,
             sequence,
-            ..
-        } = wallet.base_account().await?;
+        } = wallet.signing_account().await?;
 
         // overwrite sequence if set (can be used for concurrent txs)
         let sequence = self.sequence.unwrap_or(sequence);
@@ -123,7 +124,8 @@ impl TxBuilder {
                 .await?;
             log::debug!(target: &transaction_target(), "Simulated gas needed {:?}", sim_gas_used);
 
-            let (gas_expected, fee_amount) = wallet.get_fee_from_gas(sim_gas_used)?;
+            let (gas_expected, fee_amount) =
+                TxBuilder::get_fee_from_gas(sim_gas_used, wallet.gas_price()?)?;
 
             log::debug!(target: &transaction_target(), "Calculated fee needed: {:?}", fee_amount);
             // set the gas limit of self for future txs
@@ -133,12 +135,7 @@ impl TxBuilder {
             (fee_amount, gas_expected)
         };
 
-        let fee = Self::build_fee(
-            tx_fee,
-            &wallet.get_fee_token(),
-            gas_limit,
-            wallet.options.fee_granter.clone(),
-        )?;
+        let fee = wallet.build_fee(tx_fee, gas_limit)?;
 
         log::debug!(
             target: &transaction_target(),
@@ -148,19 +145,33 @@ impl TxBuilder {
             sequence
         );
 
-        let auth_info = SignerInfo {
-            public_key: wallet.private_key.get_signer_public_key(&wallet.secp),
-            mode_info: ModeInfo::single(SignMode::Direct),
-            sequence,
-        }
-        .auth_info(fee);
+        let auth_info = wallet.signer_info(sequence).auth_info(fee);
 
         let sign_doc = SignDoc::new(
             &self.body,
             &auth_info,
-            &Id::try_from(wallet.chain_info.chain_id.to_string())?,
+            &Id::try_from(wallet.chain_id())?,
             account_number,
         )?;
         wallet.sign(sign_doc).map_err(Into::into)
+    }
+
+    /// Compute the gas fee from the expected gas in the transaction
+    /// Applies a Gas Buffer for including signature verification
+    pub(crate) fn get_fee_from_gas(gas: u64, gas_price: f64) -> Result<(u64, u128), DaemonError> {
+        let mut gas_expected = if let Some(gas_buffer) = DaemonEnvVars::gas_buffer() {
+            gas as f64 * gas_buffer
+        } else if gas < BUFFER_THRESHOLD {
+            gas as f64 * SMALL_GAS_BUFFER
+        } else {
+            gas as f64 * GAS_BUFFER
+        };
+
+        let min_gas = DaemonEnvVars::min_gas();
+        gas_expected = (min_gas as f64).max(gas_expected);
+
+        let fee_amount = gas_expected * (gas_price + 0.00001);
+
+        Ok((gas_expected as u64, fee_amount as u128))
     }
 }

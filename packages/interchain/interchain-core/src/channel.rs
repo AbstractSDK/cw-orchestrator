@@ -1,4 +1,5 @@
 //! This defines types and traits associated with IBC channels.
+//!
 //! Those structures are mostly used internally for dealing with channel creation and analysis
 //! But they can also be used in a user application if they need specific channel description
 

@@ -122,12 +122,14 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
 
 // Helpers for Daemon with [`Wallet`] sender.
 impl Daemon {
+    #[deprecated = "Use `self.sender_mut().set_authz_granter(granter)` or change the sender builder options instead"]
     /// Specifies wether authz should be used with this daemon
     pub fn authz_granter(&mut self, granter: &Addr) -> &mut Self {
         self.sender_mut().set_authz_granter(granter);
         self
     }
 
+    #[deprecated = "Use `self.sender_mut().set_fee_granter(granter)` or change the sender builder options instead"]
     /// Specifies wether feegrant should be used with this daemon
     pub fn fee_granter(&mut self, granter: &Addr) -> &mut Self {
         self.sender_mut().set_fee_granter(granter);
@@ -217,6 +219,17 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         self.rt_handle.block_on(
             self.daemon
                 .instantiate2(code_id, init_msg, label, admin, coins, salt),
+        )
+    }
+
+    fn upload_with_access_config<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        access_config: Option<cw_orch_core::environment::AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle.block_on(
+            self.daemon
+                .upload_with_access_config(contract_source, access_config),
         )
     }
 }

@@ -1,6 +1,5 @@
 #![recursion_limit = "128"]
 
-mod execute_fns;
 mod fns_derive;
 mod helpers;
 mod query_fns;
@@ -12,6 +11,7 @@ use proc_macro::TokenStream;
 use syn::{parse_macro_input, ItemEnum};
 
 /// Available attributes are :
+///
 /// payable - The Execute function can accept funds
 /// fn_name - Modify the generated function name (useful for query or execute variants for instance)
 /// disable_fields_sorting - By default the fields are sorted on named variants. Disabled this behavior
@@ -24,6 +24,7 @@ pub fn cw_orch_execute(input: TokenStream) -> TokenStream {
 }
 
 /// Available attributes are :
+///
 /// returns - The return type of the query
 /// fn_name - Modify the generated function name (useful for query or execute variants for instance)
 /// disable_fields_sorting - By default the fields are sorted on named variants. Disabled this behavior

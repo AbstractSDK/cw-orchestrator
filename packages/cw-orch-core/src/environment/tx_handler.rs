@@ -35,6 +35,21 @@ pub trait TxHandler: ChainState + Clone {
     /// Uploads a contract to the chain.
     fn upload<T: Uploadable>(&self, contract_source: &T) -> Result<Self::Response, Self::Error>;
 
+    /// Uploads a contract to the chain and specify the permissions for instantiating
+    fn upload_with_access_config<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        access_config: Option<AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        // If access config provided make sure it's handled
+        // or we can just use default upload otherwise
+        if access_config.is_some() {
+            unimplemented!();
+        } else {
+            self.upload(contract_source)
+        }
+    }
+
     /// Send a InstantiateMsg to a contract.
     fn instantiate<I: Serialize + Debug>(
         &self,
@@ -78,6 +93,39 @@ pub trait TxHandler: ChainState + Clone {
         let mut chain = self.clone();
         chain.set_sender(sender.clone());
         chain
+    }
+}
+
+pub enum AccessConfig {
+    Unspecified,
+    Nobody,
+    Everybody,
+    AnyOfAddresses(Vec<String>),
+}
+
+impl From<AccessConfig> for cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+    fn from(val: AccessConfig) -> Self {
+        match val {
+            AccessConfig::Nobody => cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::Nobody.into(),
+                addresses: vec![],
+            },
+            AccessConfig::Everybody => cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::Everybody.into(),
+                addresses: vec![],
+            },
+            AccessConfig::AnyOfAddresses(addresses) => {
+                cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                    permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::AnyOfAddresses
+                        .into(),
+                    addresses,
+                }
+            }
+            AccessConfig::Unspecified => cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
+                permission: cosmos_sdk_proto::cosmwasm::wasm::v1::AccessType::Unspecified.into(),
+                addresses: vec![],
+            },
+        }
     }
 }
 
@@ -200,6 +248,14 @@ mod tests {
             _admin: Option<&Addr>,
             _coins: &[cosmwasm_std::Coin],
             _salt: Binary,
+        ) -> Result<Self::Response, Self::Error> {
+            unimplemented!()
+        }
+
+        fn upload_with_access_config<T: Uploadable>(
+            &self,
+            _contract_source: &T,
+            _access_config: Option<AccessConfig>,
         ) -> Result<Self::Response, Self::Error> {
             unimplemented!()
         }

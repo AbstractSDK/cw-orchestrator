@@ -1,4 +1,3 @@
-// ANCHOR: full_counter_example
 use counter_contract::{
     msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };

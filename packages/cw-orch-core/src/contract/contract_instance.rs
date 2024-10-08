@@ -9,6 +9,7 @@ use crate::{
     log::{contract_target, transaction_target},
 };
 
+use crate::environment::AccessConfig;
 use crate::environment::QueryHandler;
 use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
@@ -102,15 +103,22 @@ impl<Chain: ChainState> Contract<Chain> {
 impl<Chain: TxHandler> Contract<Chain> {
     // Chain interfaces
 
-    /// Upload a contract given its source
-    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
+    /// Upload a contract given its source and specify the permissions for instantiating
+    pub fn upload_with_access_config(
+        &self,
+        source: &impl Uploadable,
+        access_config: Option<AccessConfig>,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
             "[{}][Upload]",
             self.id,
         );
 
-        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let resp = self
+            .chain
+            .upload_with_access_config(source, access_config)
+            .map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
         log::info!(
@@ -126,6 +134,11 @@ impl<Chain: TxHandler> Contract<Chain> {
             resp
         );
         Ok(resp)
+    }
+
+    /// Upload a contract given its source
+    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
+        self.upload_with_access_config(source, None)
     }
 
     /// Executes an operation on the contract

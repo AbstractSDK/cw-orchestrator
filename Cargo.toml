@@ -7,8 +7,7 @@ members = [
   "packages/cw-orch-core",
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
-  # TODO: clone-cw-multi-test depends on cw-orch, so needs to be bumped first
-  # "packages/clone-testing",
+  "packages/clone-testing",
   # TODO: release those after *-std reaches to prost 0.13
   # "packages/cw-orch-osmosis-test-tube",
   # "packages/cw-orch-neutron-test-tube",
@@ -16,6 +15,7 @@ members = [
   "test_contracts/*",
   "packages/macros/*",
   "packages/interchain/*",
+  "packages/integrations/*",
 ]
 exclude = [
   "test_contracts/compatibility-test", # TODO: add new after cw-orch-core 2.0.0 as it's breaking, it shouldn't be compatible
@@ -26,7 +26,7 @@ resolver = "2"
 [workspace.package]
 authors = ["CyberHoward <cyberhoward@protonmail.com>"]
 edition = "2021"
-license = "GPL-3.0-only"
+license = "LGPL-3.0"
 repository = "https://github.com/AbstractSDK/cw-orchestrator"
 
 [workspace.dependencies]
@@ -38,8 +38,8 @@ cosmos-sdk-proto = { version = "0.24.0", default-features = false }
 cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", features = [
   "cosmwasm_1_2",
 ] }
-cw20 = { package = "abstract-cw20", version = "3.0.0" }
-cw20-base = { package = "abstract-cw20-base", version = "3.0.0" }
+cw20 = { version = "2.0.0" }
+cw20-base = { version = "2.0.0" }
 
 osmosis-test-tube = { version = "25.0.0" }
 neutron-test-tube = { version = "4.2.0" }
@@ -49,8 +49,8 @@ serde = { version = "1.0.208", default-features = false, features = ["derive"] }
 tokio = { version = "1.39", features = ["full"] }
 
 cw-orch = { path = "./cw-orch", version = "0.25.0" }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.25.0" }
-cw-orch-core = { path = "packages/cw-orch-core", version = "2.0.0" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.26.0" }
+cw-orch-core = { path = "packages/cw-orch-core", version = "2.1.0" }
 cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.24.0" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.24.0" }
 cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.24.0" }
@@ -63,10 +63,10 @@ cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0
 # cw-orch-osmosis-test-tube = { version = "0.3.0", path = "packages/cw-orch-osmosis-test-tube" }
 
 # Interchain
-cw-orch-interchain = { path = "cw-orch-interchain", version = "0.4.0" }
-cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.5.0" }
-cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.5.0" }
-cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.5.0" }
+cw-orch-interchain = { path = "cw-orch-interchain", version = "0.5.0" }
+cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.6.0" }
+cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.6.0" }
+cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.6.0" }
 cw-orch-starship = { path = "packages/interchain/starship", version = "0.5.0" }
 # cw-orch-proto = { path = "packages/interchain/proto", version = "0.5.0" } # prost, tonic, cosmrs bump locked by osmosis (we use it for tokenfactory)
 

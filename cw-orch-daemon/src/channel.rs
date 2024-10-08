@@ -2,7 +2,8 @@ use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
     service_client::ServiceClient, GetNodeInfoRequest,
 };
 use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
-use tonic::transport::{Channel, ClientTlsConfig};
+use http::Uri;
+use tonic::transport::{Channel, ClientTlsConfig, Endpoint};
 
 use super::error::DaemonError;
 
@@ -21,55 +22,32 @@ impl GrpcChannel {
         for address in grpc.iter() {
             log::debug!(target: &connectivity_target(), "Trying to connect to endpoint: {}", address);
 
-            // get grpc endpoint
-            let endpoint = Channel::builder(address.clone().try_into().unwrap());
+            let uri = Uri::from_maybe_shared(address.clone()).expect("Invalid URI");
 
-            // try to connect to grpc endpoint
-            let maybe_client = ServiceClient::connect(endpoint.clone()).await;
+            let maybe_channel = Endpoint::from(uri)
+                .tls_config(ClientTlsConfig::new().with_enabled_roots())
+                .unwrap()
+                .connect()
+                .await;
 
-            // connection succeeded
-            let mut client = if maybe_client.is_ok() {
-                maybe_client?
-            } else {
+            if maybe_channel.is_err() {
                 log::warn!(
                     "Cannot connect to gRPC endpoint: {}, {:?}",
                     address,
-                    maybe_client.unwrap_err()
+                    maybe_channel.unwrap_err()
                 );
-
-                // try HTTPS approach
-                // https://github.com/hyperium/tonic/issues/363#issuecomment-638545965
-                if !(address.contains("https") || address.contains("443")) {
-                    continue;
-                };
-
-                log::debug!(target: &connectivity_target(), "Attempting to connect with TLS");
-
-                // re attempt to connect
-                let endpoint = endpoint.clone().tls_config(ClientTlsConfig::new())?;
-                let maybe_client = ServiceClient::connect(endpoint.clone()).await;
-
-                // connection still fails
-                if maybe_client.is_err() {
-                    log::warn!(
-                        "Cannot connect to gRPC endpoint: {}, {:?}",
-                        address,
-                        maybe_client.unwrap_err()
-                    );
-                    continue;
-                };
-
-                maybe_client?
+                continue;
             };
+            let channel = maybe_channel.unwrap();
 
-            // get client information for verification down below
+            let mut client = ServiceClient::new(channel.clone());
+
+            // Verify that node is the expected network
             let node_info = client
                 .get_node_info(GetNodeInfoRequest {})
                 .await?
                 .into_inner();
 
-            // local juno does not return a proper ChainId with epoch format
-            // verify we are connected to the expected network
             if node_info.default_node_info.as_ref().unwrap().network != chain_id {
                 log::error!(
                     "Network mismatch: connection:{} != config:{}",
@@ -80,7 +58,7 @@ impl GrpcChannel {
             }
 
             // add endpoint to succesful connections
-            successful_connections.push(endpoint.connect().await?)
+            successful_connections.push(channel);
         }
 
         // we could not get any succesful connections

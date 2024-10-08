@@ -16,6 +16,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn helper_traits() {
+        super::common::enable_logger();
         use cw_orch_networks::networks;
 
         let mut daemon = Daemon::builder(networks::LOCAL_JUNO)
@@ -87,6 +88,7 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn cw_orch_interface_traits() {
+        super::common::enable_logger();
         use cw_orch_networks::networks;
 
         let daemon = Daemon::builder(networks::LOCAL_JUNO)

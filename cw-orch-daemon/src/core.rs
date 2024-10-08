@@ -1,13 +1,11 @@
-use crate::{
-    queriers::CosmWasm,
-    senders::{builder::SenderBuilder, query::QuerySender},
-    DaemonAsyncBuilder, DaemonState,
-};
-
 use super::{
     cosmos_modules, error::DaemonError, queriers::Node, senders::Wallet, tx_resp::CosmTxResponse,
 };
-
+use crate::{
+    queriers::CosmWasm,
+    senders::{builder::SenderBuilder, query::QuerySender, tx::TxSender},
+    DaemonAsyncBuilder, DaemonState,
+};
 use cosmrs::{
     cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgMigrateContract},
     proto::cosmwasm::wasm::v1::MsgInstantiateContract2,
@@ -16,8 +14,10 @@ use cosmrs::{
 };
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
-    environment::{AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier},
+    contract::{interface_traits::Uploadable, WasmPath},
+    environment::{
+        AccessConfig, AsyncWasmQuerier, ChainInfoOwned, ChainState, IndexResponse, Querier,
+    },
     log::transaction_target,
 };
 use flate2::{write, Compression};
@@ -31,10 +31,7 @@ use std::{
     str::{from_utf8, FromStr},
     time::Duration,
 };
-
 use tonic::transport::Channel;
-
-use crate::senders::tx::TxSender;
 
 pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
 
@@ -237,7 +234,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgExecuteContract = MsgExecuteContract {
-            sender: self.sender().account_id(),
+            sender: self.sender().msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&exec_msg)?,
             funds: parse_cw_coins(coins)?,
@@ -265,7 +262,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
             code_id,
             label: Some(label.unwrap_or("instantiate_contract").to_string()),
             admin: admin.map(|a| FromStr::from_str(a.as_str()).unwrap()),
-            sender: self.sender().account_id(),
+            sender: self.sender().msg_sender().map_err(Into::into)?,
             msg: serde_json::to_vec(&init_msg)?,
             funds: parse_cw_coins(coins)?,
         };
@@ -327,7 +324,7 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         contract_address: &Addr,
     ) -> Result<CosmTxResponse, DaemonError> {
         let exec_msg: MsgMigrateContract = MsgMigrateContract {
-            sender: self.sender().account_id(),
+            sender: self.sender().msg_sender().map_err(Into::into)?,
             contract: AccountId::from_str(contract_address.as_str())?,
             msg: serde_json::to_vec(&migrate_msg)?,
             code_id: new_code_id,
@@ -343,27 +340,22 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
     /// Upload a contract to the chain.
     pub async fn upload<T: Uploadable>(
         &self,
+        uploadable: &T,
+    ) -> Result<CosmTxResponse, DaemonError> {
+        self.upload_with_access_config(uploadable, None).await
+    }
+
+    /// Upload a contract to the chain and specify the permissions for instantiating
+    pub async fn upload_with_access_config<T: Uploadable>(
+        &self,
         _uploadable: &T,
+        access: Option<AccessConfig>,
     ) -> Result<CosmTxResponse, DaemonError> {
         let wasm_path = <T as Uploadable>::wasm(self.chain_info());
 
         log::debug!(target: &transaction_target(), "Uploading file at {:?}", wasm_path);
 
-        let file_contents = std::fs::read(wasm_path.path())?;
-        let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
-        e.write_all(&file_contents)?;
-        let wasm_byte_code = e.finish()?;
-        let store_msg = cosmrs::cosmwasm::MsgStoreCode {
-            sender: self.sender().account_id(),
-            wasm_byte_code,
-            instantiate_permission: None,
-        };
-
-        let result = self
-            .sender()
-            .commit_tx(vec![store_msg], None)
-            .await
-            .map_err(Into::into)?;
+        let result = upload_wasm(self.sender(), wasm_path, access).await?;
 
         log::info!(target: &transaction_target(), "Uploading done: {:?}", result.txhash);
 
@@ -376,6 +368,54 @@ impl<Sender: TxSender> DaemonAsyncBase<Sender> {
         }
         Ok(result)
     }
+}
+
+pub async fn upload_wasm<T: TxSender>(
+    sender: &T,
+    wasm_path: WasmPath,
+    access: Option<AccessConfig>,
+) -> Result<CosmTxResponse, DaemonError> {
+    let file_contents = std::fs::read(wasm_path.path())?;
+    let mut e = write::GzEncoder::new(Vec::new(), Compression::default());
+    e.write_all(&file_contents)?;
+    let wasm_byte_code = e.finish()?;
+    let store_msg = cosmrs::cosmwasm::MsgStoreCode {
+        sender: sender.msg_sender().map_err(Into::into)?,
+        wasm_byte_code,
+        instantiate_permission: access.map(access_config_to_cosmrs).transpose()?,
+    };
+
+    sender
+        .commit_tx(vec![store_msg], None)
+        .await
+        .map_err(Into::into)
+}
+
+pub(crate) fn access_config_to_cosmrs(
+    access_config: AccessConfig,
+) -> Result<cosmrs::cosmwasm::AccessConfig, DaemonError> {
+    let response = match access_config {
+        AccessConfig::Nobody => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Nobody,
+            addresses: vec![],
+        },
+        AccessConfig::Everybody => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Everybody,
+            addresses: vec![],
+        },
+        AccessConfig::AnyOfAddresses(addresses) => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::AnyOfAddresses,
+            addresses: addresses
+                .into_iter()
+                .map(|a| a.parse())
+                .collect::<Result<_, _>>()?,
+        },
+        AccessConfig::Unspecified => cosmrs::cosmwasm::AccessConfig {
+            permission: cosmrs::cosmwasm::AccessType::Unspecified,
+            addresses: vec![],
+        },
+    };
+    Ok(response)
 }
 
 impl Querier for DaemonAsync {

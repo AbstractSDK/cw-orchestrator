@@ -2,26 +2,22 @@ use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
 
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
-    wasm_emulation::{
-        channel::RemoteChannel,
-        contract::{LocalWasmContract, WasmContract},
-        storage::analyzer::StorageAnalyzer,
-    },
+    wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
-use cosmwasm_std::{to_json_binary, WasmMsg};
-use cosmwasm_std::{Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128};
-use cw_orch_core::contract::interface_traits::ContractInstance;
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128,
+    WasmMsg,
+};
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::interface_traits::{ContractInstance, Uploadable},
     environment::{
-        BankQuerier, BankSetter, ChainInfoOwned, ChainState, DefaultQueriers, IndexResponse,
-        StateInterface, TxHandler,
+        AccessConfig, BankQuerier, BankSetter, ChainInfoOwned, ChainState, DefaultQueriers,
+        IndexResponse, StateInterface, TxHandler,
     },
     CwEnvError,
 };
-use cw_orch_daemon::{queriers::Node, RUNTIME};
-use cw_orch_daemon::{read_network_config, DEFAULT_DEPLOYMENT};
+use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT, RUNTIME};
 use cw_utils::NativeBalance;
 use serde::Serialize;
 use tokio::runtime::Runtime;
@@ -155,10 +151,7 @@ impl CloneTesting {
         let mut file = std::fs::File::open(T::wasm(&self.chain).path())?;
         let mut wasm = Vec::<u8>::new();
         file.read_to_end(&mut wasm)?;
-        let code_id = self
-            .app
-            .borrow_mut()
-            .store_wasm_code(WasmContract::Local(LocalWasmContract { code: wasm }));
+        let code_id = self.app.borrow_mut().store_wasm_code(wasm);
 
         contract.set_code_id(code_id);
 
@@ -224,8 +217,17 @@ impl<S: StateInterface> CloneTesting<S> {
         let state = Rc::new(RefCell::new(custom_state));
 
         let pub_address_prefix = chain.network_info.pub_address_prefix.clone();
-        let remote_channel =
-            RemoteChannel::new(rt, chain.clone(), pub_address_prefix.clone()).unwrap();
+        let remote_channel = RemoteChannel::new(
+            rt,
+            &chain
+                .grpc_urls
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<_>>(),
+            &chain.chain_id,
+            &chain.network_info.pub_address_prefix,
+        )
+        .unwrap();
 
         let wasm = WasmKeeper::<Empty, Empty>::new()
             .with_remote(remote_channel.clone())
@@ -278,8 +280,8 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
-    fn sender(&self) -> Addr {
-        self.sender_addr()
+    fn sender(&self) -> &cosmwasm_std::Addr {
+        &self.sender
     }
 
     fn sender_addr(&self) -> Addr {
@@ -301,6 +303,15 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
             ..Default::default()
         };
         Ok(resp)
+    }
+
+    fn upload_with_access_config<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        _access_config: Option<AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        log::debug!("Uploading with access is not enforced when using Clone Testing");
+        self.upload(contract_source)
     }
 
     fn execute<E: Serialize + Debug>(
@@ -602,8 +613,7 @@ mod test {
             .that(&query_res.balance)
             .is_equal_to(Uint128::from(100u128));
 
-        let migration_res =
-            chain.migrate(&cw20_base::msg::MigrateMsg {}, code_id, &contract_address);
+        let migration_res = chain.migrate(&Empty {}, code_id, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
             .is_ok();
