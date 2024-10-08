@@ -42,10 +42,13 @@ pub enum IbcPacketOutcome<T> {
     },
 }
 
-/// The result of following a single packet across IBC
-/// This allows indentifying the different transactions involved as well as the result of the packet transmission
+/// The result of awaiting the Lifecycle of Single packet across IBC
+///
+/// This identifies:
+/// - `send_tx`: The transaction in which the packet was sent (if available)
+/// - `outcome`: The outcome of the Lifecycle and the corresponding transactions (Receive/Acknowledgement or Timeout)
 #[derive(Clone)]
-#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert ibc success"]
+#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert IBC success"]
 pub struct SinglePacketFlow<Chain: CwEnv> {
     /// The transaction during which the packet was sent
     ///
@@ -56,11 +59,16 @@ pub struct SinglePacketFlow<Chain: CwEnv> {
     pub outcome: IbcPacketOutcome<TxId<Chain>>,
 }
 
-/// The result of following all packets sent across IBC during a single transaction.
+/// The result of awaiting all packets sent across IBC during a single transaction.
 ///
-/// This structure is nested and will also await all packets emitted during the subsequent (receive/acknowledgement/timeout) transactions
+/// This structure is nested and allows identifying all packets emitted during the subsequent (receive/acknowledgement/timeout) transactions
+///
+/// This identifies:
+/// - `tx_id`: The original transaction that was used as a starting point of the awaiting procedure
+/// - `packets`: For each packet sent inside this transaction, this contains the outcome of the lifecycle of the packet.
+///     This also contains the result of awaiting all packets sent across IBC during each outcome transactions (receive/acknowledgement/timeout)
 #[derive(Clone)]
-#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert ibc success"]
+#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert IBC success"]
 pub struct NestedPacketsFlow<Chain: CwEnv> {
     /// Identification of the transaction
     pub tx_id: TxId<Chain>,
