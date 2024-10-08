@@ -9,6 +9,7 @@
 - Update syn to 2.0
 - Added cw-plus orchestrator interface to the repo. Pacing the way for more integrations inside this repository in the future
 - Add easier way to get PublicKey for `cw_orch_daemon::Wallet`
+- Added Cosmos hub Testnet
   
 ### Breaking
 
