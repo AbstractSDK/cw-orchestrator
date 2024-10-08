@@ -112,6 +112,7 @@
 ## 0.21.2
 
 - Allow cw-orch wasm compilation without features
+- Bumped MSRV to 1.74 because of dependency `clap_derive@4.5.3`
 - Transaction Response now inspects logs and events to find matching events.
 
 ## 0.21.1
