@@ -2,18 +2,25 @@
 
 ## Unpublished
 
-- Add methods to set the private key and mnemonic of an existing sender
-- Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
-- Add a method on `TxHandler` to select instantiation permissions on Wasm upload
-- Adds an `upload_wasm` function to CosmosSender to upload wasm code associated to no Contract structure
-- Update syn to 2.0
-- Added cw-plus orchestrator interface to the repo. Pacing the way for more integrations inside this repository in the future
-- Add easier way to get PublicKey for `cw_orch_daemon::Wallet`
+
+### Breaking
+
+
+## 0.26.0 [8. October 2024]
+
+- [daemon] Add methods to set the private key and mnemonic of an existing sender
+- [daemon] Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
+- [core] Add a method on `TxHandler` to select instantiation permissions on Wasm upload
+- [daemon] Adds an `upload_wasm` function to CosmosSender to upload wasm code associated to no Contract structure
+- [Macros] Update syn to 2.0
+- [Integrations] Added cw-plus orchestrator interface to the repo. Pacing the way for more integrations inside this repository in the future
+- [daemon] Add easier way to get PublicKey for `cw_orch_daemon::Wallet`
+- [networks] Added Cosmos hub Testnet
   
 ### Breaking
 
-- Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`) (published in cw-orch-daemon 0.26.0)
-- Added `Signer` trait for being able to re-use the signing/broadcast flow (Unpublished)
+- [Daemon] Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
+- [Daemon] Added `Signer` trait for being able to re-use the signing/broadcast flow 
 
 ## 0.25.0
 
