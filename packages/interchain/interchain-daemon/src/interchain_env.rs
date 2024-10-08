@@ -315,7 +315,7 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
     ///     .await_packets_for_txhash(
     ///         src_chain.chain_id,
     ///         "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
-    ///     ).unwrap().into_result().unwrap();
+    ///     ).unwrap().assert().unwrap();
     /// ```
     pub fn await_packets_for_txhash(
         &self,

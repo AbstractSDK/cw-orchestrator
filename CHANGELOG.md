@@ -5,6 +5,7 @@
 
 ### Breaking
 
+- [cw-orch-interchain-core] Modify the structure and the names of the IBC analysis and following structure. 
 
 ## 0.26.0 [8. October 2024]
 
