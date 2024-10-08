@@ -2,7 +2,7 @@
 
 use crate::packet::success::{SuccessNestedPacketsFlow, SuccessSinglePacketFlow};
 use crate::packet::{
-    success::SuccessIbcPacketOutcome, IbcPacketOutcome, NestedPacketsFlow, SinglePacketFlow,
+    success::IbcPacketResult, IbcPacketOutcome, NestedPacketsFlow, SinglePacketFlow,
 };
 use crate::tx::TxId;
 use crate::{IbcAckParser, InterchainError};
@@ -12,47 +12,47 @@ use cw_orch_core::environment::CwEnv;
 /// Trait used for analysis of IBC packet flows
 pub trait PacketAnalysis {
     /// Result of the Analysis of the packet flows
-    type AnalysisResult<CustomOutcome>;
+    type AnalysisResult<CustomResult>;
 
     /// Asserts that there is no timeout packet inside the result structure.
     fn assert_no_timeout(&self) -> Result<(), InterchainError>;
 
     /// Tries to parses all acknowledgements into standard acknowledgments (polytone, ics20 or ics004).
     /// Errors if some packet doesn't conform to those results.
-    fn into_result(self) -> Result<Self::AnalysisResult<Empty>, InterchainError>;
+    fn assert(self) -> Result<Self::AnalysisResult<Empty>, InterchainError>;
 
-    /// Tries to parses all acknowledgements into `CustomOutcome` using a custom parsing function.
+    /// Tries to parses all acknowledgements into `CustomResult` using a custom parsing function.
     ///
     /// If it fails, also tries with standard acknowledgements (polytone, ics20 or ics004).
     /// Errors if some packet doesn't conform to those results.
-    fn into_result_custom<CustomOutcome>(
+    fn assert_custom<CustomResult>(
         self,
-        parse_func: fn(&Binary) -> Result<CustomOutcome, InterchainError>,
-    ) -> Result<Self::AnalysisResult<CustomOutcome>, InterchainError>;
+        parse_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<Self::AnalysisResult<CustomResult>, InterchainError>;
 }
 
 impl<Chain: CwEnv> PacketAnalysis for TxId<Chain, Empty> {
-    type AnalysisResult<CustomOutcome> = TxId<Chain, CustomOutcome>;
+    type AnalysisResult<CustomResult> = TxId<Chain, CustomResult>;
 
     fn assert_no_timeout(&self) -> Result<(), InterchainError> {
         Ok(())
     }
 
-    fn into_result(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
+    fn assert(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
         Ok(self)
     }
 
-    fn into_result_custom<CustomOutcome>(
+    fn assert_custom<CustomResult>(
         self,
-        _funcs: fn(&Binary) -> Result<CustomOutcome, InterchainError>,
-    ) -> Result<Self::AnalysisResult<CustomOutcome>, InterchainError> {
+        _funcs: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<Self::AnalysisResult<CustomResult>, InterchainError> {
         Ok(TxId::new(self.chain_id, self.response))
     }
 }
 
 impl<T: PacketAnalysis> PacketAnalysis for IbcPacketOutcome<T> {
-    type AnalysisResult<CustomOutcome> =
-        SuccessIbcPacketOutcome<T::AnalysisResult<CustomOutcome>, CustomOutcome>;
+    type AnalysisResult<CustomResult> =
+        IbcPacketResult<T::AnalysisResult<CustomResult>, CustomResult>;
 
     fn assert_no_timeout(&self) -> Result<(), InterchainError> {
         match &self {
@@ -61,40 +61,40 @@ impl<T: PacketAnalysis> PacketAnalysis for IbcPacketOutcome<T> {
         }
     }
 
-    fn into_result(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
+    fn assert(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
         match self {
             IbcPacketOutcome::Success {
                 receive_tx,
                 ack_tx,
                 ack,
             } => {
-                let successful_ack = IbcAckParser::any_standard_ack(&ack)?;
-                Ok(SuccessIbcPacketOutcome {
-                    receive_tx: receive_tx.into_result()?,
-                    ack_tx: ack_tx.into_result()?,
-                    ack: successful_ack,
+                let ibc_app_result = IbcAckParser::any_standard_app_result(&ack)?;
+                Ok(IbcPacketResult {
+                    receive_tx: receive_tx.assert()?,
+                    ack_tx: ack_tx.assert()?,
+                    ibc_app_result,
                 })
             }
             IbcPacketOutcome::Timeout { .. } => Err(InterchainError::PacketTimeout {}),
         }
     }
 
-    fn into_result_custom<CustomOutcome>(
+    fn assert_custom<CustomResult>(
         self,
-        parsing_func: fn(&Binary) -> Result<CustomOutcome, InterchainError>,
-    ) -> Result<Self::AnalysisResult<CustomOutcome>, InterchainError> {
+        parsing_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<Self::AnalysisResult<CustomResult>, InterchainError> {
         match self {
             IbcPacketOutcome::Success {
                 receive_tx,
                 ack_tx,
                 ack,
             } => {
-                let successful_ack =
-                    IbcAckParser::any_standard_ack_with_custom(&ack, parsing_func)?;
-                Ok(SuccessIbcPacketOutcome {
-                    receive_tx: receive_tx.into_result_custom(parsing_func)?,
-                    ack_tx: ack_tx.into_result_custom(parsing_func)?,
-                    ack: successful_ack,
+                let ibc_app_result =
+                    IbcAckParser::any_standard_app_result_with_custom(&ack, parsing_func)?;
+                Ok(IbcPacketResult {
+                    receive_tx: receive_tx.assert_custom(parsing_func)?,
+                    ack_tx: ack_tx.assert_custom(parsing_func)?,
+                    ibc_app_result,
                 })
             }
             IbcPacketOutcome::Timeout { .. } => Err(InterchainError::PacketTimeout {}),
@@ -102,36 +102,36 @@ impl<T: PacketAnalysis> PacketAnalysis for IbcPacketOutcome<T> {
     }
 }
 impl<Chain: CwEnv> PacketAnalysis for SinglePacketFlow<Chain> {
-    type AnalysisResult<CustomOutcome> = SuccessSinglePacketFlow<Chain, CustomOutcome>;
+    type AnalysisResult<CustomResult> = SuccessSinglePacketFlow<Chain, CustomResult>;
 
     fn assert_no_timeout(&self) -> Result<(), InterchainError> {
         self.outcome.assert_no_timeout()
     }
 
-    fn into_result(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
-        let success = self.outcome.into_result()?;
+    fn assert(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
+        let success = self.outcome.assert()?;
 
         Ok(SuccessSinglePacketFlow {
             send_tx: self.send_tx,
-            outcome: success,
+            result: success,
         })
     }
 
-    fn into_result_custom<CustomOutcome>(
+    fn assert_custom<CustomResult>(
         self,
-        parse_func: fn(&Binary) -> Result<CustomOutcome, InterchainError>,
-    ) -> Result<Self::AnalysisResult<CustomOutcome>, InterchainError> {
-        let success = self.outcome.into_result_custom(parse_func)?;
+        parse_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<Self::AnalysisResult<CustomResult>, InterchainError> {
+        let success = self.outcome.assert_custom(parse_func)?;
 
-        Ok(SuccessSinglePacketFlow::<Chain, CustomOutcome> {
+        Ok(SuccessSinglePacketFlow::<Chain, CustomResult> {
             send_tx: self.send_tx,
-            outcome: success,
+            result: success,
         })
     }
 }
 
 impl<Chain: CwEnv> PacketAnalysis for NestedPacketsFlow<Chain> {
-    type AnalysisResult<CustomOutcome> = SuccessNestedPacketsFlow<Chain, CustomOutcome>;
+    type AnalysisResult<CustomResult> = SuccessNestedPacketsFlow<Chain, CustomResult>;
 
     fn assert_no_timeout(&self) -> Result<(), InterchainError> {
         self.packets
@@ -141,11 +141,11 @@ impl<Chain: CwEnv> PacketAnalysis for NestedPacketsFlow<Chain> {
         Ok(())
     }
 
-    fn into_result(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
+    fn assert(self) -> Result<Self::AnalysisResult<Empty>, InterchainError> {
         let packets = self
             .packets
             .into_iter()
-            .map(|p| p.into_result())
+            .map(|p| p.assert())
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(SuccessNestedPacketsFlow {
@@ -154,14 +154,14 @@ impl<Chain: CwEnv> PacketAnalysis for NestedPacketsFlow<Chain> {
         })
     }
 
-    fn into_result_custom<CustomOutcome>(
+    fn assert_custom<CustomResult>(
         self,
-        parse_func: fn(&Binary) -> Result<CustomOutcome, InterchainError>,
-    ) -> Result<Self::AnalysisResult<CustomOutcome>, InterchainError> {
+        parse_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<Self::AnalysisResult<CustomResult>, InterchainError> {
         let packets = self
             .packets
             .into_iter()
-            .map(|p| p.into_result_custom(parse_func))
+            .map(|p| p.assert_custom(parse_func))
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(SuccessNestedPacketsFlow {

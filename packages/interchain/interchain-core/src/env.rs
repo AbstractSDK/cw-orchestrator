@@ -438,7 +438,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
             .await_packets(chain_id, tx_response)
             .map_err(Into::into)?;
 
-        tx_result.into_result()
+        tx_result.assert()
     }
 
     /// Follow the execution of a single IBC packet across the chain.

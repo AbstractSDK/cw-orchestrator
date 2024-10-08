@@ -25,7 +25,7 @@ pub use env::{contract_port, InterchainEnv};
 pub use error::InterchainError;
 pub use ibc_query::IbcQueryHandler;
 pub use packet::{
-    success::{SuccessIbcPacketOutcome, SuccessNestedPacketsFlow, SuccessSinglePacketFlow},
+    success::{IbcPacketResult, SuccessNestedPacketsFlow, SuccessSinglePacketFlow},
     IbcPacketInfo, IbcPacketOutcome, NestedPacketsFlow, SinglePacketFlow,
 };
 pub use tx::TxId;

@@ -4,7 +4,7 @@ use prost::Message;
 // TODO: when polytone updates to cosmwasm v2 use polytone::ack::Callback;
 use polytone_callback::Callback;
 
-use crate::{packet::success::SuccessfullAck, InterchainError};
+use crate::{packet::success::IbcAppResult, InterchainError};
 
 use self::acknowledgement::{Acknowledgement, Response};
 
@@ -82,13 +82,13 @@ impl IbcAckParser {
     /// Verifies if the given ack is a standard acknowledgement type
     ///
     /// Returns an error if there was an error in the parsing process
-    pub fn any_standard_ack(ack: &Binary) -> Result<SuccessfullAck, InterchainError> {
+    pub fn any_standard_app_result(ack: &Binary) -> Result<IbcAppResult, InterchainError> {
         if let Ok(ack) = IbcAckParser::polytone_ack(ack) {
-            Ok(SuccessfullAck::Polytone(ack))
+            Ok(IbcAppResult::Polytone(ack))
         } else if IbcAckParser::ics20_ack(ack).is_ok() {
-            Ok(SuccessfullAck::Ics20)
+            Ok(IbcAppResult::Ics20)
         } else if let Ok(ack) = IbcAckParser::ics004_ack(ack) {
-            Ok(SuccessfullAck::Ics004(ack))
+            Ok(IbcAppResult::Ics004(ack))
         } else {
             Err(InterchainError::AckDecodingFailed(
                 ack.clone(),
@@ -101,13 +101,13 @@ impl IbcAckParser {
     /// If it fails, tries to parse into standard ack types
     ///
     /// Returns an error if there was an error in the parsing process
-    pub fn any_standard_ack_with_custom<CustomOutcome>(
+    pub fn any_standard_app_result_with_custom<CustomResult>(
         ack: &Binary,
-        parsing_func: fn(&Binary) -> Result<CustomOutcome, InterchainError>,
-    ) -> Result<SuccessfullAck<CustomOutcome>, InterchainError> {
+        parsing_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<IbcAppResult<CustomResult>, InterchainError> {
         parsing_func(ack)
-            .map(SuccessfullAck::Custom)
-            .or_else(|_| Self::any_standard_ack(ack).map(|ack| ack.into_custom()))
+            .map(IbcAppResult::Custom)
+            .or_else(|_| Self::any_standard_app_result(ack).map(|ack| ack.into_custom()))
     }
 }
 

@@ -235,20 +235,20 @@ pub mod success {
     use cw_orch_core::environment::CwEnv;
 
     #[derive(Debug, PartialEq, Clone)]
-    pub enum SuccessfullAck<CustomOutcome = Empty> {
+    pub enum IbcAppResult<CustomResult = Empty> {
         Polytone(Callback),
         Ics20,
         Ics004(Vec<u8>),
-        Custom(CustomOutcome),
+        Custom(CustomResult),
     }
 
-    impl SuccessfullAck<Empty> {
-        pub fn into_custom<CustomOutcome>(self) -> SuccessfullAck<CustomOutcome> {
+    impl IbcAppResult<Empty> {
+        pub fn into_custom<CustomResult>(self) -> IbcAppResult<CustomResult> {
             match self {
-                SuccessfullAck::Polytone(callback) => SuccessfullAck::Polytone(callback),
-                SuccessfullAck::Ics20 => SuccessfullAck::Ics20,
-                SuccessfullAck::Ics004(vec) => SuccessfullAck::Ics004(vec),
-                SuccessfullAck::Custom(_) => unreachable!(),
+                IbcAppResult::Polytone(callback) => IbcAppResult::Polytone(callback),
+                IbcAppResult::Ics20 => IbcAppResult::Ics20,
+                IbcAppResult::Ics004(vec) => IbcAppResult::Ics004(vec),
+                IbcAppResult::Custom(_) => unreachable!(),
             }
         }
     }
@@ -256,40 +256,39 @@ pub mod success {
     /// Success packet outcome. This is the result of a packet analysis.
     /// The T generic is used to allow for raw transactions or analyzed transactions to be used
     #[derive(Debug, PartialEq, Clone)]
-    pub struct SuccessIbcPacketOutcome<T, CustomOutcome = Empty> {
+    pub struct IbcPacketResult<T, CustomResult = Empty> {
         /// The packets gets transmitted to the dst chain
         pub receive_tx: T,
         /// The ack is broadcasted back on the src chain
         pub ack_tx: T,
-        /// The raw binary acknowledgement retrieved from `ack_tx`
-        pub ack: SuccessfullAck<CustomOutcome>,
+        /// The parsed and raw binary acknowledgement retrieved from `ack_tx`
+        pub ibc_app_result: IbcAppResult<CustomResult>,
     }
 
     /// Success Packet Flow. This is the result of a packet analysis.
     ///
     /// This allows identifying the different transactions involved.
     #[derive(Clone)]
-    pub struct SuccessSinglePacketFlow<Chain: CwEnv, CustomOutcome = Empty> {
+    pub struct SuccessSinglePacketFlow<Chain: CwEnv, CustomResult = Empty> {
         /// The transaction during which the packet was sent
         ///
         /// Can optionally be specified, depending on the environment on which the implementation is done
         /// This is not available for the [`Mock`] implementation for instance
         pub send_tx: Option<TxId<Chain>>,
-        /// Outcome transactions of the packet (+ eventual acknowledgment)
-        pub outcome: SuccessIbcPacketOutcome<TxId<Chain, CustomOutcome>, CustomOutcome>,
+        /// Result of the successful packet flow
+        pub result: IbcPacketResult<TxId<Chain, CustomResult>, CustomResult>,
     }
 
     /// The result of following all packets sent across IBC during a single transaction.
     ///
     /// This structure is nested and will also await all packets emitted during the subsequent (receive/acknowledgement) transactions
     #[derive(Clone)]
-    pub struct SuccessNestedPacketsFlow<Chain: CwEnv, CustomOutcome = Empty> {
+    pub struct SuccessNestedPacketsFlow<Chain: CwEnv, CustomResult = Empty> {
         /// Identification of the transaction
         pub tx_id: TxId<Chain>,
         /// Result of following a packet + Recursive Analysis of the resulting transactions for additional IBC packets
-        pub packets: Vec<
-            SuccessIbcPacketOutcome<SuccessNestedPacketsFlow<Chain, CustomOutcome>, CustomOutcome>,
-        >,
+        pub packets:
+            Vec<IbcPacketResult<SuccessNestedPacketsFlow<Chain, CustomResult>, CustomResult>>,
     }
 }
 
@@ -319,19 +318,19 @@ mod debug {
         }
     }
 
-    impl<C: CwEnv, CustomOutcome: std::fmt::Debug> std::fmt::Debug
-        for SuccessSinglePacketFlow<C, CustomOutcome>
+    impl<C: CwEnv, CustomResult: std::fmt::Debug> std::fmt::Debug
+        for SuccessSinglePacketFlow<C, CustomResult>
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("SuccessSinglePacketFlow")
                 .field("sent_tx", &self.send_tx)
-                .field("outcome", &self.outcome)
+                .field("result", &self.result)
                 .finish()
         }
     }
 
-    impl<C: CwEnv, CustomOutcome: std::fmt::Debug> std::fmt::Debug
-        for SuccessNestedPacketsFlow<C, CustomOutcome>
+    impl<C: CwEnv, CustomResult: std::fmt::Debug> std::fmt::Debug
+        for SuccessNestedPacketsFlow<C, CustomResult>
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("SuccessNestedPacketsFlow")
