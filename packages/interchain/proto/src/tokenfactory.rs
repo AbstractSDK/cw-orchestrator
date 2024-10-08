@@ -19,6 +19,7 @@ use cw_orch_traits::FullNode;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
 /// Creates a new denom using the token factory module.
+///
 /// This is used mainly for tests, but feel free to use that in production as well
 pub fn create_denom<Chain: FullNode>(
     chain: &Chain,
@@ -40,6 +41,7 @@ pub fn create_denom<Chain: FullNode>(
 }
 
 /// Gets the denom of a token created by a daemon object
+///
 /// This actually creates the denom for a token created by an address (which is here taken to be the daemon sender address)
 /// This is mainly used for tests, but feel free to use that in production as well
 pub fn get_denom<Chain: CwEnv>(daemon: &Chain, token_name: &str) -> String {
@@ -48,6 +50,7 @@ pub fn get_denom<Chain: CwEnv>(daemon: &Chain, token_name: &str) -> String {
 }
 
 /// Mints new subdenom token for which the minter is the sender of chain object
+///
 /// This mints new tokens to the receiver address
 /// This is mainly used for tests, but feel free to use that in production as well
 pub fn mint<Chain: FullNode>(
@@ -80,6 +83,7 @@ pub fn mint<Chain: FullNode>(
 const TIMEOUT_IN_NANO_SECONDS: u64 = 3_600_000_000_000;
 
 /// Ibc token transfer
+///
 /// This allows transfering token over a channel using an interchain_channel object
 #[allow(clippy::too_many_arguments)]
 pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Chain>>(
