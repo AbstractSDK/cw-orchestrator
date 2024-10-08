@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
 
 use cw_orch_interchain_core::{
-    channel::InterchainChannel, types::IbcTxAnalysis, IbcQueryHandler, InterchainEnv,
-    InterchainError,
+    channel::InterchainChannel, IbcQueryHandler, InterchainEnv, InterchainError, NestedPacketsFlow,
 };
 use ibc_proto::ibc::{
     applications::transfer::v1::MsgTransferResponse, apps::transfer::v1::MsgTransfer,
@@ -94,7 +93,7 @@ pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Cha
     ibc_channel: &InterchainChannel<Channel>,
     timeout: Option<u64>,
     memo: Option<String>,
-) -> Result<IbcTxAnalysis<Chain>, InterchainError> {
+) -> Result<NestedPacketsFlow<Chain>, InterchainError> {
     let chain_id = origin.block_info().unwrap().chain_id;
 
     let (source_port, _) = ibc_channel.get_ordered_ports_from(&chain_id)?;

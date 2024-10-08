@@ -1,7 +1,7 @@
 use cosmos_sdk_proto::traits::{Message, Name};
 use cw_orch::{environment::QueryHandler, prelude::*};
-use cw_orch_interchain_core::InterchainEnv;
-use cw_orch_interchain_daemon::ChannelCreator as _;
+use cw_orch_interchain::prelude::*;
+use cw_orch_interchain_core::IbcPacketOutcome;
 use cw_orch_starship::Starship;
 use ibc_proto::ibc::{
     applications::transfer::v1::{MsgTransfer, MsgTransferResponse},
@@ -59,9 +59,9 @@ fn main() -> cw_orch::anyhow::Result<()> {
 
     let result = interchain.await_packets("juno-1", tx_resp)?;
 
-    match &result.packets[0].outcome {
-        cw_orch_interchain_core::types::IbcPacketOutcome::Timeout { .. } => {}
-        cw_orch_interchain_core::types::IbcPacketOutcome::Success { .. } => {
+    match &result.packets[0] {
+        IbcPacketOutcome::Timeout { .. } => {}
+        IbcPacketOutcome::Success { .. } => {
             panic!("Expected timeout")
         }
     }

@@ -9,14 +9,14 @@ use cw_orch_daemon::TxResultBlockEvent;
 use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::ChainId;
+use cw_orch_interchain_core::{
+    IbcPacketInfo, IbcPacketOutcome, NestedPacketsFlow, SinglePacketFlow, TxId,
+};
 use futures_util::future::select_all;
 use futures_util::FutureExt;
 
 use crate::{IcDaemonResult, InterchainDaemonError};
-use cw_orch_interchain_core::types::{
-    FullIbcPacketAnalysis, IbcPacketAnalysis, IbcPacketInfo, IbcPacketOutcome, IbcTxAnalysis,
-    NetworkId, SimpleIbcPacketAnalysis, TxId,
-};
+use cw_orch_interchain_core::results::NetworkId;
 
 use futures::future::try_join_all;
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
@@ -93,7 +93,7 @@ impl PacketInspector {
         &self,
         src_chain: NetworkId,
         tx: CosmTxResponse,
-    ) -> IcDaemonResult<IbcTxAnalysis<Daemon>> {
+    ) -> IcDaemonResult<NestedPacketsFlow<Daemon>> {
         // 1. Getting IBC related events for the current tx + finding all IBC packets sent out in the transaction
         let grpc_channel1 = self.get_grpc_channel(&src_chain).await?;
 
@@ -120,10 +120,7 @@ impl PacketInspector {
         .into_iter()
         .collect::<Vec<_>>();
 
-        let send_tx_id = TxId {
-            chain_id: src_chain.clone(),
-            response: tx,
-        };
+        let send_tx_id = TxId::new(src_chain.clone(), tx);
 
         // We follow all results from outgoing packets in the resulting transactions
         let full_results = try_join_all(ibc_packet_results.into_iter().map(|ibc_result| async {
@@ -157,16 +154,11 @@ impl PacketInspector {
                 },
             };
 
-            let analyzed_result = FullIbcPacketAnalysis {
-                send_tx: Some(send_tx_id.clone()),
-                outcome: analyzed_outcome,
-            };
-
-            Ok::<_, InterchainDaemonError>(analyzed_result.clone())
+            Ok::<_, InterchainDaemonError>(analyzed_outcome.clone())
         }))
         .await?;
 
-        let tx_identification = IbcTxAnalysis {
+        let tx_identification = NestedPacketsFlow {
             tx_id: send_tx_id.clone(),
             packets: full_results,
         };
@@ -197,7 +189,7 @@ impl PacketInspector {
         src_channel: ChannelId,
         dst_chain: ChainId<'a>,
         sequence: Sequence,
-    ) -> IcDaemonResult<SimpleIbcPacketAnalysis<Daemon>> {
+    ) -> IcDaemonResult<SinglePacketFlow<Daemon>> {
         let src_grpc_channel = self.get_grpc_channel(src_chain).await?;
         let dst_grpc_channel = self.get_grpc_channel(dst_chain).await?;
 
@@ -268,7 +260,7 @@ impl PacketInspector {
         from: ChainId<'a>,
         ibc_channel: &'a InterchainChannel<Channel>,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Daemon>, InterchainDaemonError> {
+    ) -> Result<SinglePacketFlow<Daemon>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
         // 0. Query the send tx hash for analysis
@@ -345,20 +337,11 @@ impl PacketInspector {
             ack_tx.txhash
         );
 
-        Ok(IbcPacketAnalysis {
-            send_tx: Some(TxId {
-                response: send_tx,
-                chain_id: src_port.chain_id.clone(),
-            }),
+        Ok(SinglePacketFlow {
+            send_tx: Some(TxId::new(src_port.chain_id.clone(), send_tx)),
             outcome: IbcPacketOutcome::Success {
-                receive_tx: TxId {
-                    chain_id: dst_port.chain_id.clone(),
-                    response: received_tx,
-                },
-                ack_tx: TxId {
-                    chain_id: src_port.chain_id.clone(),
-                    response: ack_tx,
-                },
+                receive_tx: TxId::new(dst_port.chain_id.clone(), received_tx),
+                ack_tx: TxId::new(src_port.chain_id.clone(), ack_tx),
                 ack: acknowledgment.as_bytes().into(),
             },
         })
@@ -370,7 +353,7 @@ impl PacketInspector {
         from: ChainId<'a>,
         ibc_channel: &'a InterchainChannel<Channel>,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Daemon>, InterchainDaemonError> {
+    ) -> Result<SinglePacketFlow<Daemon>, InterchainDaemonError> {
         // 0. Query the send tx hash for analysis
         let send_tx = self.get_packet_send_tx(from, ibc_channel, sequence).await?;
 
@@ -405,16 +388,10 @@ impl PacketInspector {
         );
 
         // We return the tx hash of this transaction for future analysis
-        Ok(IbcPacketAnalysis {
-            send_tx: Some(TxId {
-                chain_id: src_port.chain_id.clone(),
-                response: send_tx,
-            }),
+        Ok(SinglePacketFlow {
+            send_tx: Some(TxId::new(src_port.chain_id.clone(), send_tx)),
             outcome: IbcPacketOutcome::Timeout {
-                timeout_tx: TxId {
-                    chain_id: src_port.chain_id.clone(),
-                    response: timeout_tx,
-                },
+                timeout_tx: TxId::new(src_port.chain_id.clone(), timeout_tx),
             },
         })
     }

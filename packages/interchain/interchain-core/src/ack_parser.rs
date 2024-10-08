@@ -1,15 +1,10 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{from_json, Binary};
-use cw_orch_core::environment::CwEnv;
 use prost::Message;
 // TODO: when polytone updates to cosmwasm v2 use polytone::ack::Callback;
 use polytone_callback::Callback;
 
-use crate::{
-    env::decode_ack_error,
-    types::{parse::SuccessIbcPacket, IbcTxAnalysis},
-    InterchainError,
-};
+use crate::{packet::success::IbcAppResult, InterchainError};
 
 use self::acknowledgement::{Acknowledgement, Response};
 
@@ -17,7 +12,7 @@ use self::acknowledgement::{Acknowledgement, Response};
 pub enum IbcAckParser {}
 
 impl IbcAckParser {
-    /// Verifies if the given ack is an Polytone type and returns the acknowledgement if it is
+    /// Verifies if the given ack is an Polytone type and returns the parsed acknowledgement if it is
     ///
     /// Returns an error if there was an error in the process
     pub fn polytone_ack(ack: &Binary) -> Result<Callback, InterchainError> {
@@ -83,6 +78,44 @@ impl IbcAckParser {
         }
         Err(decode_ack_error(ack))
     }
+
+    /// Verifies if the given ack is a standard acknowledgement type
+    ///
+    /// Returns an error if there was an error in the parsing process
+    pub fn any_standard_app_result(ack: &Binary) -> Result<IbcAppResult, InterchainError> {
+        if let Ok(ack) = IbcAckParser::polytone_ack(ack) {
+            Ok(IbcAppResult::Polytone(ack))
+        } else if IbcAckParser::ics20_ack(ack).is_ok() {
+            Ok(IbcAppResult::Ics20)
+        } else if let Ok(ack) = IbcAckParser::ics004_ack(ack) {
+            Ok(IbcAppResult::Ics004(ack))
+        } else {
+            Err(InterchainError::AckDecodingFailed(
+                ack.clone(),
+                String::from_utf8_lossy(ack.as_slice()).to_string(),
+            ))
+        }
+    }
+
+    /// Verifies if the given ack custom acknowledgement type.
+    /// If it fails, tries to parse into standard ack types
+    ///
+    /// Returns an error if there was an error in the parsing process
+    pub fn any_standard_app_result_with_custom<CustomResult>(
+        ack: &Binary,
+        parsing_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<IbcAppResult<CustomResult>, InterchainError> {
+        parsing_func(ack)
+            .map(IbcAppResult::Custom)
+            .or_else(|_| Self::any_standard_app_result(ack).map(|ack| ack.into_custom()))
+    }
+}
+
+pub(crate) fn decode_ack_error(ack: &Binary) -> InterchainError {
+    InterchainError::AckDecodingFailed(
+        ack.clone(),
+        String::from_utf8_lossy(ack.as_slice()).to_string(),
+    )
 }
 
 #[cw_serde]
@@ -92,32 +125,6 @@ pub enum FungibleTokenPacketAcknowledgement {
     Result(String),
     /// Error packet
     Error(String),
-}
-
-impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
-    /// Assert that all packets were not timeout
-    pub fn assert_no_timeout(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        Ok(self
-            .packets
-            .iter()
-            .map(|p| p.assert_no_timeout())
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
-    }
-
-    /// Returns all packets that were successful without asserting there was no timeout
-    pub fn get_success_packets(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        Ok(self
-            .packets
-            .iter()
-            .map(|p| p.get_success_packets())
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
-    }
 }
 
 /// This is copied from https://github.com/cosmos/cosmos-rust/blob/4f2e3bbf9c67c8ffef44ef1e485a327fd66f060a/cosmos-sdk-proto/src/prost/ibc-go/ibc.core.channel.v1.rs#L164
@@ -149,7 +156,7 @@ pub mod acknowledgement {
     }
 }
 
-mod polytone_callback {
+pub mod polytone_callback {
     use super::*;
 
     use cosmwasm_std::{SubMsgResponse, Uint64};
