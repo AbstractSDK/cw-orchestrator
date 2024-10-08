@@ -83,14 +83,7 @@ impl<Chain: CwEnv> IndexResponse for SinglePacketFlow<Chain> {
             .as_ref()
             .map(|tx| tx.response.events())
             .unwrap_or_default();
-        let other_events = match &self.outcome {
-            IbcPacketOutcome::Timeout { timeout_tx } => timeout_tx.events(),
-            IbcPacketOutcome::Success {
-                receive_tx,
-                ack_tx,
-                ack: _,
-            } => [receive_tx.events(), ack_tx.events()].concat(),
-        };
+        let other_events = self.outcome.events();
         events.extend(other_events);
 
         events
@@ -105,19 +98,7 @@ impl<Chain: CwEnv> IndexResponse for SinglePacketFlow<Chain> {
             .as_ref()
             .map(|r| r.event_attr_value(event_type, attr_key))
             .and_then(|res| res.ok())
-            .or_else(|| match &self.outcome {
-                IbcPacketOutcome::Timeout { timeout_tx } => {
-                    timeout_tx.event_attr_value(event_type, attr_key).ok()
-                }
-                IbcPacketOutcome::Success {
-                    receive_tx,
-                    ack_tx,
-                    ack: _,
-                } => receive_tx
-                    .event_attr_value(event_type, attr_key)
-                    .or_else(|_| ack_tx.event_attr_value(event_type, attr_key))
-                    .ok(),
-            })
+            .or_else(|| self.outcome.event_attr_value(event_type, attr_key).ok())
             .ok_or(StdError::generic_err(format!(
                 "event of type {event_type} does not have a value at key {attr_key}"
             )))
@@ -129,20 +110,7 @@ impl<Chain: CwEnv> IndexResponse for SinglePacketFlow<Chain> {
             .as_ref()
             .map(|tx| tx.response.event_attr_values(event_type, attr_key))
             .unwrap_or_default();
-        let other_results = match &self.outcome {
-            IbcPacketOutcome::Timeout { timeout_tx } => {
-                timeout_tx.event_attr_values(event_type, attr_key)
-            }
-            IbcPacketOutcome::Success {
-                receive_tx,
-                ack_tx,
-                ack: _,
-            } => [
-                receive_tx.event_attr_values(event_type, attr_key),
-                ack_tx.event_attr_values(event_type, attr_key),
-            ]
-            .concat(),
-        };
+        let other_results = self.outcome.event_attr_values(event_type, attr_key);
         all_results.extend(other_results);
 
         all_results
@@ -159,14 +127,7 @@ impl<Chain: CwEnv> IndexResponse for NestedPacketsFlow<Chain> {
         let other_events = self
             .packets
             .iter()
-            .flat_map(|packet_result| match &packet_result {
-                IbcPacketOutcome::Timeout { timeout_tx } => timeout_tx.events(),
-                IbcPacketOutcome::Success {
-                    receive_tx,
-                    ack_tx,
-                    ack: _,
-                } => [receive_tx.events(), ack_tx.events()].concat(),
-            });
+            .flat_map(|packet_result| packet_result.events());
         self_events.extend(other_events);
         self_events
     }
@@ -182,18 +143,8 @@ impl<Chain: CwEnv> IndexResponse for NestedPacketsFlow<Chain> {
             .or_else(|_| {
                 self.packets
                     .iter()
-                    .find_map(|packet_result| match &packet_result {
-                        IbcPacketOutcome::Timeout { timeout_tx } => {
-                            timeout_tx.event_attr_value(event_type, attr_key).ok()
-                        }
-                        IbcPacketOutcome::Success {
-                            receive_tx,
-                            ack_tx,
-                            ack: _,
-                        } => receive_tx
-                            .event_attr_value(event_type, attr_key)
-                            .or_else(|_| ack_tx.event_attr_value(event_type, attr_key))
-                            .ok(),
+                    .find_map(|packet_result| {
+                        packet_result.event_attr_value(event_type, attr_key).ok()
                     })
                     .ok_or(StdError::generic_err(format!(
                         "event of type {event_type} does not have a value at key {attr_key}"
@@ -204,22 +155,11 @@ impl<Chain: CwEnv> IndexResponse for NestedPacketsFlow<Chain> {
     fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
         let mut all_results = self.tx_id.response.event_attr_values(event_type, attr_key);
 
-        all_results.extend(self.packets.iter().flat_map(|packet_result| {
-            match &packet_result {
-                IbcPacketOutcome::Timeout { timeout_tx } => {
-                    timeout_tx.event_attr_values(event_type, attr_key)
-                }
-                IbcPacketOutcome::Success {
-                    receive_tx,
-                    ack_tx,
-                    ack: _,
-                } => [
-                    receive_tx.event_attr_values(event_type, attr_key),
-                    ack_tx.event_attr_values(event_type, attr_key),
-                ]
-                .concat(),
-            }
-        }));
+        all_results.extend(
+            self.packets
+                .iter()
+                .flat_map(|packet_result| packet_result.event_attr_values(event_type, attr_key)),
+        );
 
         all_results
     }
@@ -231,18 +171,25 @@ impl<Chain: CwEnv> IndexResponse for NestedPacketsFlow<Chain> {
 
 pub mod success {
     use crate::{ack_parser::polytone_callback::Callback, tx::TxId};
-    use cosmwasm_std::Empty;
+    use cosmwasm_std::{Binary, Empty, StdError};
     use cw_orch_core::environment::CwEnv;
+    use cw_orch_core::environment::IndexResponse;
 
+    /// Contains the result (ack success) associated with various Ibc applications
     #[derive(Debug, PartialEq, Clone)]
     pub enum IbcAppResult<CustomResult = Empty> {
+        /// Contains a successful result for Polytone
         Polytone(Callback),
+        /// Signals a successful result for ICS20 (token transfer)
         Ics20,
+        /// Contains a successful result according to the ICS004 standard
         Ics004(Vec<u8>),
+        /// Contains a custom result. This is only used if a custom parsing function is specified
         Custom(CustomResult),
     }
 
     impl IbcAppResult<Empty> {
+        /// Casts the Result into a Result with a specified CustomResult type
         pub fn into_custom<CustomResult>(self) -> IbcAppResult<CustomResult> {
             match self {
                 IbcAppResult::Polytone(callback) => IbcAppResult::Polytone(callback),
@@ -289,6 +236,127 @@ pub mod success {
         /// Result of following a packet + Recursive Analysis of the resulting transactions for additional IBC packets
         pub packets:
             Vec<IbcPacketResult<SuccessNestedPacketsFlow<Chain, CustomResult>, CustomResult>>,
+    }
+
+    impl<T: IndexResponse> IndexResponse for IbcPacketResult<T> {
+        fn events(&self) -> Vec<cosmwasm_std::Event> {
+            [self.receive_tx.events(), self.ack_tx.events()].concat()
+        }
+
+        fn event_attr_value(
+            &self,
+            event_type: &str,
+            attr_key: &str,
+        ) -> cosmwasm_std::StdResult<String> {
+            self.receive_tx
+                .event_attr_value(event_type, attr_key)
+                .or_else(|_| self.ack_tx.event_attr_value(event_type, attr_key))
+        }
+
+        fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+            [
+                self.receive_tx.event_attr_values(event_type, attr_key),
+                self.ack_tx.event_attr_values(event_type, attr_key),
+            ]
+            .concat()
+        }
+
+        fn data(&self) -> Option<Binary> {
+            unimplemented!("No data fields on Ibc Packet Flow, this is not well defined")
+        }
+    }
+
+    impl<Chain: CwEnv> IndexResponse for SuccessSinglePacketFlow<Chain> {
+        fn events(&self) -> Vec<cosmwasm_std::Event> {
+            let mut events: Vec<_> = self
+                .send_tx
+                .as_ref()
+                .map(|tx| tx.response.events())
+                .unwrap_or_default();
+            let other_events = self.result.events();
+            events.extend(other_events);
+
+            events
+        }
+
+        fn event_attr_value(
+            &self,
+            event_type: &str,
+            attr_key: &str,
+        ) -> cosmwasm_std::StdResult<String> {
+            self.send_tx
+                .as_ref()
+                .map(|r| r.event_attr_value(event_type, attr_key))
+                .and_then(|res| res.ok())
+                .or_else(|| self.result.event_attr_value(event_type, attr_key).ok())
+                .ok_or(StdError::generic_err(format!(
+                    "event of type {event_type} does not have a value at key {attr_key}"
+                )))
+        }
+
+        fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+            let mut all_results: Vec<_> = self
+                .send_tx
+                .as_ref()
+                .map(|tx| tx.response.event_attr_values(event_type, attr_key))
+                .unwrap_or_default();
+            let other_results = self.result.event_attr_values(event_type, attr_key);
+            all_results.extend(other_results);
+
+            all_results
+        }
+
+        fn data(&self) -> Option<Binary> {
+            unimplemented!("No data fields on SuccessSinglePacketFlow, this is not well defined")
+        }
+    }
+
+    impl<Chain: CwEnv> IndexResponse for SuccessNestedPacketsFlow<Chain> {
+        fn events(&self) -> Vec<cosmwasm_std::Event> {
+            let mut self_events = self.tx_id.response.events();
+            let other_events = self
+                .packets
+                .iter()
+                .flat_map(|packet_result| packet_result.events());
+            self_events.extend(other_events);
+            self_events
+        }
+
+        fn event_attr_value(
+            &self,
+            event_type: &str,
+            attr_key: &str,
+        ) -> cosmwasm_std::StdResult<String> {
+            self.tx_id
+                .response
+                .event_attr_value(event_type, attr_key)
+                .or_else(|_| {
+                    self.packets
+                        .iter()
+                        .find_map(|packet_result| {
+                            packet_result.event_attr_value(event_type, attr_key).ok()
+                        })
+                        .ok_or(StdError::generic_err(format!(
+                            "event of type {event_type} does not have a value at key {attr_key}"
+                        )))
+                })
+        }
+
+        fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+            let mut all_results = self.tx_id.response.event_attr_values(event_type, attr_key);
+
+            all_results.extend(
+                self.packets.iter().flat_map(|packet_result| {
+                    packet_result.event_attr_values(event_type, attr_key)
+                }),
+            );
+
+            all_results
+        }
+
+        fn data(&self) -> Option<Binary> {
+            unimplemented!("No data fields on SuccessNestedPacketsFlow")
+        }
     }
 }
 
@@ -337,6 +405,66 @@ mod debug {
                 .field("tx_id", &self.tx_id)
                 .field("packets", &self.packets)
                 .finish()
+        }
+    }
+}
+
+mod index_response {
+    use cosmwasm_std::Binary;
+    use cw_orch_core::environment::IndexResponse;
+
+    use super::IbcPacketOutcome;
+
+    impl<T: IndexResponse> IndexResponse for IbcPacketOutcome<T> {
+        fn events(&self) -> Vec<cosmwasm_std::Event> {
+            match &self {
+                IbcPacketOutcome::Timeout { timeout_tx } => timeout_tx.events(),
+                IbcPacketOutcome::Success {
+                    receive_tx,
+                    ack_tx,
+                    ack: _,
+                } => [receive_tx.events(), ack_tx.events()].concat(),
+            }
+        }
+
+        fn event_attr_value(
+            &self,
+            event_type: &str,
+            attr_key: &str,
+        ) -> cosmwasm_std::StdResult<String> {
+            match &self {
+                IbcPacketOutcome::Timeout { timeout_tx } => {
+                    timeout_tx.event_attr_value(event_type, attr_key)
+                }
+                IbcPacketOutcome::Success {
+                    receive_tx,
+                    ack_tx,
+                    ack: _,
+                } => receive_tx
+                    .event_attr_value(event_type, attr_key)
+                    .or_else(|_| ack_tx.event_attr_value(event_type, attr_key)),
+            }
+        }
+
+        fn event_attr_values(&self, event_type: &str, attr_key: &str) -> Vec<String> {
+            match &self {
+                IbcPacketOutcome::Timeout { timeout_tx } => {
+                    timeout_tx.event_attr_values(event_type, attr_key)
+                }
+                IbcPacketOutcome::Success {
+                    receive_tx,
+                    ack_tx,
+                    ack: _,
+                } => [
+                    receive_tx.event_attr_values(event_type, attr_key),
+                    ack_tx.event_attr_values(event_type, attr_key),
+                ]
+                .concat(),
+            }
+        }
+
+        fn data(&self) -> Option<Binary> {
+            unimplemented!("No data fields on Ibc Packet Flow, this is not well defined")
         }
     }
 }
