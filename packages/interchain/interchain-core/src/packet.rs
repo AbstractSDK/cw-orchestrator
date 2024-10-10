@@ -24,7 +24,7 @@ pub struct IbcPacketInfo {
 /// Raw packet outcome
 /// The T generic is used to allow for raw transactions or analyzed transactions to be used
 #[derive(Debug, PartialEq, Clone)]
-#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert ibc success"]
+#[must_use = "We recommend using `PacketAnalysis::assert()` to assert ibc success"]
 pub enum IbcPacketOutcome<T> {
     /// Packet timeout
     Timeout {
@@ -48,7 +48,7 @@ pub enum IbcPacketOutcome<T> {
 /// - `send_tx`: The transaction in which the packet was sent (if available)
 /// - `outcome`: The outcome of the Lifecycle and the corresponding transactions (Receive/Acknowledgement or Timeout)
 #[derive(Clone)]
-#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert IBC success"]
+#[must_use = "We recommend using `PacketAnalysis::assert()` to assert IBC success"]
 pub struct SinglePacketFlow<Chain: CwEnv> {
     /// The transaction during which the packet was sent
     ///
@@ -68,7 +68,7 @@ pub struct SinglePacketFlow<Chain: CwEnv> {
 /// - `packets`: For each packet sent inside this transaction, this contains the outcome of the lifecycle of the packet.
 ///     This also contains the result of awaiting all packets sent across IBC during each outcome transactions (receive/acknowledgement/timeout)
 #[derive(Clone)]
-#[must_use = "We recommend using `PacketAnalysis::into_result()` to assert IBC success"]
+#[must_use = "We recommend using `PacketAnalysis::assert()` to assert IBC success"]
 pub struct NestedPacketsFlow<Chain: CwEnv> {
     /// Identification of the transaction
     pub tx_id: TxId<Chain>,

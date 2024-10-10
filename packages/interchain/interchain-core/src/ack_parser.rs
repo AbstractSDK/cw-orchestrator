@@ -122,7 +122,7 @@ pub(crate) fn decode_ack_error(ack: &Binary) -> InterchainError {
 /// Taken from https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md#data-structures
 pub enum FungibleTokenPacketAcknowledgement {
     /// Successful packet
-    Result(String),
+    Result(Binary),
     /// Error packet
     Error(String),
 }
