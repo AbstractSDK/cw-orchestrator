@@ -51,15 +51,12 @@ impl IbcAckParser {
     ///
     /// Returns an error if there was an error in the parsing process
     pub fn ics20_ack(ack: &Binary) -> Result<(), InterchainError> {
-        let decoded_fungible_packet: Result<FungibleTokenPacketAcknowledgement, _> = from_json(ack);
-        if let Ok(decoded_fungible_packet) = decoded_fungible_packet {
-            match decoded_fungible_packet {
-                FungibleTokenPacketAcknowledgement::Result(_) => return Ok(()),
-                FungibleTokenPacketAcknowledgement::Error(e) => {
-                    return Err(InterchainError::FailedAckReceived(e))
-                }
-            }
+        let successful_ics20_packet = Binary::new(vec![0x01]);
+
+        if ack == &successful_ics20_packet {
+            return Ok(());
         }
+
         Err(decode_ack_error(ack))
     }
 
@@ -116,15 +113,6 @@ pub(crate) fn decode_ack_error(ack: &Binary) -> InterchainError {
         ack.clone(),
         String::from_utf8_lossy(ack.as_slice()).to_string(),
     )
-}
-
-#[cw_serde]
-/// Taken from https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md#data-structures
-pub enum FungibleTokenPacketAcknowledgement {
-    /// Successful packet
-    Result(Binary),
-    /// Error packet
-    Error(String),
 }
 
 /// This is copied from https://github.com/cosmos/cosmos-rust/blob/4f2e3bbf9c67c8ffef44ef1e485a327fd66f060a/cosmos-sdk-proto/src/prost/ibc-go/ibc.core.channel.v1.rs#L164
@@ -208,5 +196,20 @@ pub mod polytone_callback {
         /// expect this to happen and have carefully written the code to
         /// avoid it.
         FatalError(String),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use cosmwasm_std::Binary;
+
+    use super::IbcAckParser;
+
+    #[test]
+    fn ics20_ack_test() -> cw_orch::anyhow::Result<()> {
+        let success_ack = Binary::from_base64("AQ==")?;
+
+        IbcAckParser::ics20_ack(&success_ack)?;
+        Ok(())
     }
 }
