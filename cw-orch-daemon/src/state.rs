@@ -60,7 +60,6 @@ pub enum DaemonStateFile {
 
 impl DaemonState {
     /// Creates a new state from the given chain data and deployment id.
-    /// Attempts to connect to any of the provided gRPC endpoints.
     pub fn new(
         mut json_file_path: String,
         chain_data: &Arc<ChainInfoOwned>,
