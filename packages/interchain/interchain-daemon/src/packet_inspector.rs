@@ -30,7 +30,7 @@ use std::collections::HashMap;
 /// This struct is safe to be sent between threads
 /// In contrary to InterchainStructure that holds Daemon in its definition which is not sendable
 #[derive(Default, Clone)]
-pub(crate) struct PacketInspector {
+pub struct PacketInspector {
     registered_chains: HashMap<NetworkId, Channel>,
 }
 
@@ -410,7 +410,7 @@ impl PacketInspector {
     }
 
     // From is the channel from which the send packet has been sent
-    pub async fn get_packet_send_tx<'a>(
+    async fn get_packet_send_tx<'a>(
         &self,
         from: ChainId<'a>,
         ibc_channel: &'a InterchainChannel<Channel>,
@@ -437,7 +437,7 @@ impl PacketInspector {
     }
 
     // on is the chain on which the packet will be received
-    pub async fn get_packet_receive_tx<'a>(
+    async fn get_packet_receive_tx<'a>(
         &self,
         from: ChainId<'a>,
         ibc_channel: &'a InterchainChannel<Channel>,
@@ -464,7 +464,7 @@ impl PacketInspector {
     }
 
     // on is the chain on which the packet will be received
-    pub async fn get_packet_timeout_tx<'a>(
+    async fn get_packet_timeout_tx<'a>(
         &self,
         from: ChainId<'a>,
         ibc_channel: &'a InterchainChannel<Channel>,
@@ -491,7 +491,7 @@ impl PacketInspector {
     }
 
     // From is the channel from which the original send packet has been sent
-    pub async fn get_packet_ack_receive_tx<'a>(
+    async fn get_packet_ack_receive_tx<'a>(
         &self,
         from: ChainId<'a>,
         ibc_channel: &'a InterchainChannel<Channel>,
@@ -525,7 +525,7 @@ fn get_events(events: &[TxResultBlockEvent], attr_name: &str) -> Vec<String> {
         .collect()
 }
 
-#[allow(missing_docs)]
+/// Find all the ibc packets that were sent during a transaction from the transaction events
 pub async fn find_ibc_packets_sent_in_tx(
     chain: NetworkId,
     grpc_channel: Channel,
