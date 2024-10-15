@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-interchain-core"
-version = "0.8.5"
+version = "0.8.6"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -26,6 +26,7 @@ log = { workspace = true }
 # TODO: polytone = "2.0.0"
 prost = "0.13.1"
 serde_json = { workspace = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = "1.39.2"
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
