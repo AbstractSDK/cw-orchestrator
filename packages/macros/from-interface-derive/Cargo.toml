@@ -1,0 +1,16 @@
+[package]
+name = "cw-orch-from-interface-derive"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Macro for generating From implementation for cw-orch interfaces of copied types"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1"
+syn = { version = "2", features = ["full", "extra-traits", "visit-mut"] }

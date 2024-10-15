@@ -1,22 +1,23 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
 
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
     wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
-use cosmwasm_std::{to_json_binary, WasmMsg};
-use cosmwasm_std::{Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128};
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128,
+    WasmMsg,
+};
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::interface_traits::{ContractInstance, Uploadable},
     environment::{
-        BankQuerier, BankSetter, ChainInfoOwned, ChainState, DefaultQueriers, IndexResponse,
-        StateInterface, TxHandler,
+        AccessConfig, BankQuerier, BankSetter, ChainInfoOwned, ChainState, DefaultQueriers,
+        IndexResponse, StateInterface, TxHandler,
     },
     CwEnvError,
 };
-use cw_orch_daemon::queriers::Node;
-use cw_orch_daemon::{GrpcChannel, DEFAULT_DEPLOYMENT};
+use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT, RUNTIME};
 use cw_utils::NativeBalance;
 use serde::Serialize;
 use tokio::runtime::Runtime;
@@ -40,8 +41,7 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 /// use cw_orch_core::environment::TxHandler;
 ///
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let runtime = tokio::runtime::Runtime::new().unwrap();
-/// let mock: CloneTesting = CloneTesting::new(&runtime, chain.clone()).unwrap();
+/// let mock: CloneTesting = CloneTesting::new(chain.clone()).unwrap();
 /// let sender = mock.sender();
 ///
 /// // set a balance
@@ -143,11 +143,41 @@ impl CloneTesting {
     ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         self.bank_querier().balance(address, None)
     }
+
+    pub fn upload_wasm<T: Uploadable + ContractInstance<CloneTesting>>(
+        &self,
+        contract: &T,
+    ) -> Result<<Self as TxHandler>::Response, CwEnvError> {
+        let mut file = std::fs::File::open(T::wasm(&self.chain).path())?;
+        let mut wasm = Vec::<u8>::new();
+        file.read_to_end(&mut wasm)?;
+        let code_id = self.app.borrow_mut().store_wasm_code(wasm);
+
+        contract.set_code_id(code_id);
+
+        // add contract code_id to events manually
+        let mut event = Event::new("store_code");
+        event = event.add_attribute("code_id", code_id.to_string());
+        let resp = AppResponse {
+            events: vec![event],
+            ..Default::default()
+        };
+        Ok(resp)
+    }
 }
 
 impl CloneTesting<MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new(rt: &Runtime, chain: impl Into<ChainInfoOwned>) -> Result<Self, CwEnvError> {
+    pub fn new(chain: impl Into<ChainInfoOwned>) -> Result<Self, CwEnvError> {
+        Self::new_with_runtime(&RUNTIME, chain)
+    }
+
+    /// Create a mock environment with the default mock state.
+    /// It uses a custom runtime object to control async requests
+    pub fn new_with_runtime(
+        rt: &Runtime,
+        chain: impl Into<ChainInfoOwned>,
+    ) -> Result<Self, CwEnvError> {
         let chain_data = chain.into();
         CloneTesting::new_custom(
             rt,
@@ -179,13 +209,23 @@ impl<S: StateInterface> CloneTesting<S> {
         custom_state: S,
     ) -> Result<Self, CwEnvError> {
         let chain: ChainInfoOwned = chain.into();
+        let chain = if let Some(chain_info) = read_network_config(&chain.chain_id) {
+            chain.overwrite_with(chain_info)
+        } else {
+            chain
+        };
         let state = Rc::new(RefCell::new(custom_state));
 
-        let pub_address_prefix = &chain.network_info.pub_address_prefix;
+        let pub_address_prefix = chain.network_info.pub_address_prefix.clone();
         let remote_channel = RemoteChannel::new(
             rt,
-            get_channel(chain.clone(), rt)?,
-            pub_address_prefix.clone(),
+            &chain
+                .grpc_urls
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<_>>(),
+            &chain.chain_id,
+            &chain.network_info.pub_address_prefix,
         )
         .unwrap();
 
@@ -205,7 +245,7 @@ impl<S: StateInterface> CloneTesting<S> {
         let app = AppBuilder::default()
             .with_wasm(wasm)
             .with_bank(bank)
-            .with_api(MockApiBech32::new(pub_address_prefix))
+            .with_api(MockApiBech32::new(&pub_address_prefix))
             .with_block(block_info)
             .with_remote(remote_channel.clone());
 
@@ -240,7 +280,11 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
-    fn sender(&self) -> Addr {
+    fn sender(&self) -> &cosmwasm_std::Addr {
+        &self.sender
+    }
+
+    fn sender_addr(&self) -> Addr {
         self.sender.clone()
     }
 
@@ -259,6 +303,15 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
             ..Default::default()
         };
         Ok(resp)
+    }
+
+    fn upload_with_access_config<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        _access_config: Option<AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        log::debug!("Uploading with access is not enforced when using Clone Testing");
+        self.upload(contract_source)
     }
 
     fn execute<E: Serialize + Debug>(
@@ -423,27 +476,15 @@ impl BankSetter for CloneTesting {
     type T = CloneBankQuerier;
     fn set_balance(
         &mut self,
-        address: impl Into<String>,
+        address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
         (*self).set_balance(&Addr::unchecked(address), amount)
     }
 }
 
-/// Simple helper to get the GRPC transport channel
-fn get_channel(
-    chain: impl Into<ChainInfoOwned>,
-    rt: &Runtime,
-) -> anyhow::Result<tonic::transport::Channel> {
-    let chain = chain.into();
-    let channel = rt.block_on(GrpcChannel::connect(&chain.grpc_urls, &chain.chain_id))?;
-    Ok(channel)
-}
-
 #[cfg(test)]
 mod test {
-    use std::{path::PathBuf, str::FromStr};
-
     use crate::core::*;
     use clone_cw_multi_test::LOCAL_RUST_CODE_OFFSET;
     use cosmwasm_std::{
@@ -486,9 +527,7 @@ mod test {
     }
     impl Uploadable for MockCw20 {
         fn wasm(_chain: &ChainInfoOwned) -> WasmPath {
-            let path = PathBuf::from_str(env!("CARGO_MANIFEST_DIR")).unwrap();
-            let path = path.join("../../artifacts/cw20_base.wasm");
-            WasmPath::new(path).unwrap()
+            unimplemented!()
         }
 
         fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
@@ -503,12 +542,11 @@ mod test {
     fn mock() -> anyhow::Result<()> {
         let amount = 1000000u128;
         let denom = "uosmo";
-        let chain = JUNO_1;
+        let chain_info = JUNO_1;
 
-        let rt = Runtime::new().unwrap();
-        let chain = CloneTesting::new(&rt, chain)?;
+        let chain = CloneTesting::new(chain_info)?;
 
-        let sender = chain.sender();
+        let sender = chain.sender_addr();
         let recipient = &chain.init_account();
 
         chain
@@ -522,13 +560,13 @@ mod test {
 
         asserting("sender is correct")
             .that(&sender)
-            .is_equal_to(chain.sender());
+            .is_equal_to(chain.sender_addr());
 
         let init_res = chain.upload(&MockCw20).unwrap();
         let code_id = (1 + LOCAL_RUST_CODE_OFFSET) as u64;
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
-            .is_equal_to(&code_id.to_string());
+            .is_equal_to(code_id.to_string());
 
         let init_msg = cw20_base::msg::InstantiateMsg {
             name: String::from("Token"),
@@ -560,7 +598,7 @@ mod test {
 
         asserting("that exect passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
-            .is_equal_to(&String::from("mint"));
+            .is_equal_to(String::from("mint"));
 
         let query_res = chain
             .query::<cw20_base::msg::QueryMsg, BalanceResponse>(
@@ -575,8 +613,7 @@ mod test {
             .that(&query_res.balance)
             .is_equal_to(Uint128::from(100u128));
 
-        let migration_res =
-            chain.migrate(&cw20_base::msg::MigrateMsg {}, code_id, &contract_address);
+        let migration_res = chain.migrate(&Empty {}, code_id, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
             .is_ok();
@@ -639,10 +676,9 @@ mod test {
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
-        let chain = JUNO_1;
+        let chain_info = JUNO_1;
 
-        let rt = Runtime::new().unwrap();
-        let chain = CloneTesting::new(&rt, chain)?;
+        let chain = CloneTesting::new(chain_info)?;
         let recipient = &chain.init_account();
 
         chain

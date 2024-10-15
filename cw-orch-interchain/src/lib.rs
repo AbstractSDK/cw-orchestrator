@@ -1,27 +1,44 @@
 // prelude
 #[cfg(not(target_arch = "wasm32"))]
 pub mod prelude {
-    pub use cw_orch_interchain_core::{IbcQueryHandler, InterchainEnv};
+    pub use cw_orch_interchain_core::{
+        results::ChannelCreationResult, IbcPacketOutcome, IbcPacketResult, IbcQueryHandler,
+        InterchainEnv, InterchainError, NestedPacketsFlow, PacketAnalysis, SinglePacketFlow,
+        SuccessNestedPacketsFlow, SuccessSinglePacketFlow, TxId,
+    };
     pub use cw_orch_interchain_mock::{MockBech32InterchainEnv, MockInterchainEnv};
+
+    pub use ibc_relayer_types::core::{
+        ics04_channel::packet::Sequence,
+        ics24_host::identifier::{ChannelId, PortId},
+    };
 
     #[cfg(feature = "daemon")]
     pub use cw_orch_interchain_daemon::{
-        ChannelCreationValidator, ChannelCreator, DaemonInterchainEnv,
+        ChannelCreationValidator, ChannelCreator, DaemonInterchain,
     };
     #[cfg(feature = "daemon")]
     pub use cw_orch_starship::Starship;
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use cw_orch_interchain_core::*;
+pub mod core {
+    pub use cw_orch_interchain_core::*;
+}
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use cw_orch_interchain_mock::*;
+pub mod mock {
+    pub use cw_orch_interchain_mock::*;
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "daemon")]
-pub use cw_orch_interchain_daemon::*;
+pub mod daemon {
+    pub use cw_orch_interchain_daemon::*;
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "daemon")]
-pub use cw_orch_starship::*;
+pub mod starship {
+    pub use cw_orch_starship::*;
+}

@@ -79,11 +79,11 @@ impl HermesRelayer {
         chain_data: ChainInfoOwned,
         mnemonic: Option<impl ToString>,
     ) -> IcDaemonResult<Daemon> {
-        let mut daemon_builder = Daemon::builder();
-        let mut daemon_builder = daemon_builder.chain(chain_data.clone()).handle(runtime);
+        let mut daemon_builder = Daemon::builder(chain_data.clone());
+        let mut daemon_builder = daemon_builder.handle(runtime);
 
         daemon_builder = if let Some(mn) = mnemonic {
-            daemon_builder.mnemonic(mn)
+            daemon_builder.mnemonic(mn.to_string())
         } else {
             daemon_builder
         };
@@ -138,7 +138,7 @@ impl HermesRelayer {
         let (daemon, _, _) = self.daemons.get(&chain_id).unwrap();
 
         let chain_data = &daemon.state().chain_data;
-        let hd_path = daemon.wallet().options().hd_index;
+        let hd_path = daemon.sender().options().hd_index;
         let key = restore_key(self.mnemonic().clone(), hd_path.unwrap_or(0), chain_data).unwrap();
         chain.add_key(KEY_NAME.to_string(), key).unwrap();
     }

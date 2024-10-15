@@ -3,8 +3,8 @@ mod common;
 #[cfg(feature = "node-tests")]
 mod queriers {
 
+    use cosmwasm_std::Addr;
     use cw_orch_core::contract::interface_traits::*;
-    use cw_orch_core::environment::TxHandler;
     use cw_orch_daemon::{queriers::Bank, GrpcChannel};
     use cw_orch_networks::networks;
     use mock_contract::InstantiateMsg;
@@ -99,12 +99,15 @@ mod queriers {
         let params = rt.block_on(bank._params());
         asserting!("params is ok").that(&params).is_ok();
 
-        let balances =
-            rt.block_on(bank._balance("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y", None));
+        let balances = rt.block_on(bank._balance(
+            &Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"),
+            None,
+        ));
         asserting!("balances is ok").that(&balances).is_ok();
 
-        let spendable_balances =
-            rt.block_on(bank._spendable_balances("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"));
+        let spendable_balances = rt.block_on(bank._spendable_balances(&Addr::unchecked(
+            "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y",
+        )));
         asserting!("spendable_balances is ok")
             .that(&spendable_balances)
             .is_ok();
@@ -207,33 +210,30 @@ mod queriers {
     #[test]
     #[serial_test::serial]
     fn contract_info() {
-        use crate::common::Id;
+        use cw_orch_daemon::TxSender;
         use cw_orch_networks::networks;
 
         let rt = Runtime::new().unwrap();
         let channel = rt.block_on(build_channel());
         let cosm_wasm = CosmWasm::new_async(channel);
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 
         let sender = daemon.sender();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         contract.upload().unwrap();
 
         contract
-            .instantiate(&InstantiateMsg {}, Some(&sender), None)
+            .instantiate(&InstantiateMsg {}, Some(&sender.address()), &[])
             .unwrap();
 
         let contract_address = contract.address().unwrap();
 
-        let contract_info = rt.block_on(cosm_wasm._contract_info(contract_address));
+        let contract_info = rt.block_on(cosm_wasm._contract_info(&contract_address));
 
         asserting!("contract info is ok")
             .that(&contract_info)

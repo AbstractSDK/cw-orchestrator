@@ -1,3 +1,0 @@
-7f0cded8903f583ef14be13e9dee28b31f393d4bc5bcde37ec6e46ca1785c48a  target/wasm32-unknown-unknown/release/counter_contract.wasm
-0f488b4e1544c85281d91107a115ce2d9c9d076f27a41ee7c171c7dc70ac64ea  target/wasm32-unknown-unknown/release/mock_contract.wasm
-9aa171f7eefb000f7d20189dd1096e72b8a1f3d051a2c038547f1cff63112ca4  target/wasm32-unknown-unknown/release/mock_contract_u64.wasm

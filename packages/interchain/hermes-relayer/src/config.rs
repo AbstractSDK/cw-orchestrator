@@ -61,5 +61,6 @@ pub fn chain_config(
         compat_mode: Default::default(),
         clear_interval: Default::default(),
         excluded_sequences: Default::default(),
+        allow_ccq: true,
     })
 }

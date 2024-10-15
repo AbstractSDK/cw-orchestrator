@@ -4,7 +4,7 @@ use cw_orch_starship::Starship;
 use dialoguer::Input;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
-use crate::{interchain_env::DaemonInterchainEnv, InterchainDaemonError};
+use crate::{interchain_env::DaemonInterchain, InterchainDaemonError};
 
 /// Used for allowing multiple interaction types with the Daemon interchain environment
 pub trait ChannelCreator: Clone {
@@ -21,7 +21,7 @@ pub trait ChannelCreator: Clone {
     ) -> Result<String, InterchainDaemonError>;
 
     /// Returns an interchain environment from the channel creator object
-    fn interchain_env(&self) -> DaemonInterchainEnv<Self>;
+    fn interchain_env(&self) -> DaemonInterchain<Self>;
 }
 
 /// This is a struct for use with actual RPCs where you want to create you channel manually
@@ -47,8 +47,8 @@ impl ChannelCreator for ChannelCreationValidator {
         Ok(connection_id)
     }
 
-    fn interchain_env(&self) -> DaemonInterchainEnv<Self> {
-        panic!("To create an RPC based interchain environement, use DaemonInterchainEnv::new(). Use the Starship::interchain_env() method for interacting with Starship")
+    fn interchain_env(&self) -> DaemonInterchain<Self> {
+        panic!("To create an RPC based interchain environement, use DaemonInterchain::new(). Use the Starship::interchain_env() method for interacting with Starship")
     }
 }
 
@@ -76,11 +76,7 @@ impl ChannelCreator for Starship {
         Ok(connection_id)
     }
 
-    fn interchain_env(&self) -> DaemonInterchainEnv<Self> {
-        DaemonInterchainEnv::from_daemons(
-            &self.rt_handle,
-            self.daemons.values().cloned().collect(),
-            self,
-        )
+    fn interchain_env(&self) -> DaemonInterchain<Self> {
+        DaemonInterchain::from_daemons(self.daemons.values().cloned().collect(), self)
     }
 }

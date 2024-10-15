@@ -1,9 +1,7 @@
-use proc_macro2::TokenTree;
 use quote::ToTokens;
 use std::cmp::Ordering;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Field, FieldsNamed, Lit, Meta, MetaList,
-    NestedMeta, Type,
+    parenthesized, punctuated::Punctuated, token::Comma, Field, FieldsNamed, ItemEnum, LitStr, Type,
 };
 
 pub enum MsgType {
@@ -11,27 +9,9 @@ pub enum MsgType {
     Query,
 }
 
-pub(crate) fn process_fn_name(v: &syn::Variant) -> String {
-    for attr in &v.attrs {
-        if let Ok(Meta::List(list)) = attr.parse_meta() {
-            if let Some(ident) = list.path.get_ident() {
-                if ident == "cw_orch" {
-                    for meta in list.nested {
-                        if let NestedMeta::Meta(Meta::List(MetaList { nested, .. })) = &meta {
-                            if let Some(NestedMeta::Lit(Lit::Str(lit_str))) = nested.last() {
-                                return lit_str.value();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    v.ident.to_string()
-}
-
-pub(crate) fn process_sorting(attrs: &[Attribute]) -> bool {
-    !has_cw_orch_attribute(attrs, "disable_fields_sorting")
+pub enum SyncType {
+    Sync,
+    Async,
 }
 
 #[derive(Default)]
@@ -111,26 +91,79 @@ pub(crate) fn is_type_using_into(field_type: &Type) -> bool {
         _ => false,
     }
 }
+#[derive(Default)]
+pub struct EnumAttributes {
+    pub disable_fields_sorting: bool,
+}
 
-pub(crate) fn has_cw_orch_attribute(attrs: &[Attribute], attribute_name: &str) -> bool {
-    for attr in attrs {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "cw_orch" {
-            // We check the payable attribute is in there
-            for token_tree in attr.tokens.clone() {
-                if let TokenTree::Group(e) = token_tree {
-                    for ident in e.stream() {
-                        if ident.to_string() == attribute_name {
-                            return true;
-                        }
-                    }
+pub(crate) fn parse_enum_attributes(item_enum: &ItemEnum) -> EnumAttributes {
+    let mut enum_attributes = EnumAttributes::default();
+    for attr in &item_enum.attrs {
+        if attr.path().is_ident("cw_orch") {
+            attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("disable_fields_sorting") {
+                    enum_attributes.disable_fields_sorting = true;
                 }
-            }
+                Ok(())
+            })
+            .unwrap();
+        }
+    }
+    enum_attributes
+}
+
+#[derive(Default)]
+pub struct VariantAttributes {
+    pub fn_name: String,
+    pub payable: bool,
+}
+
+pub(crate) fn parse_variant_attributes(variant: &syn::Variant) -> VariantAttributes {
+    let mut cw_orch_attributes = VariantAttributes {
+        fn_name: variant.ident.to_string(),
+        ..Default::default()
+    };
+    for attr in &variant.attrs {
+        if attr.path().is_ident("cw_orch") {
+            attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("payable") {
+                    cw_orch_attributes.payable = true;
+                }
+                if meta.path.is_ident("fn_name") {
+                    let content;
+                    parenthesized!(content in meta.input);
+                    let lit: LitStr = content.parse()?;
+                    cw_orch_attributes.fn_name = lit.value();
+                }
+                Ok(())
+            })
+            .unwrap();
         }
     }
 
-    false
+    cw_orch_attributes
 }
 
-pub(crate) fn has_into(field: &syn::Field) -> bool {
-    is_type_using_into(&field.ty) || has_cw_orch_attribute(&field.attrs, "into")
+#[derive(Default)]
+pub struct FieldAttributes {
+    pub into: bool,
+}
+
+pub(crate) fn parse_field_attributes(field: &syn::Field) -> FieldAttributes {
+    let mut cw_orch_attributes = FieldAttributes::default();
+    for attr in &field.attrs {
+        if attr.path().is_ident("cw_orch") {
+            attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("into") {
+                    cw_orch_attributes.into = true;
+                }
+                Ok(())
+            })
+            .unwrap();
+        }
+    }
+
+    cw_orch_attributes.into = cw_orch_attributes.into || is_type_using_into(&field.ty);
+
+    cw_orch_attributes
 }

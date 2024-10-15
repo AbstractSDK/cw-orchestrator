@@ -1,7 +1,7 @@
 [package]
 name = "cw-orch-proto"
 description = "A helper crate for interaction with protos from different chains. Mostly used for handling cw20 coins and ibc transfers"
-version = "0.3.0"
+version = "0.8.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -16,17 +16,18 @@ cw-orch-core = { workspace = true }
 
 anyhow = { workspace = true }
 
-cosmrs = { workspace = true }
+ibc-proto = { workspace = true }
+prost-types = { workspace = true }
+prost = { workspace = true }
 cosmwasm-std = { workspace = true }
 ibc-relayer-types = { workspace = true }
 log = { workspace = true }
-prost = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
-osmosis-std = { version = "0.21.0" }
+osmosis-std = { version = "0.26.0" }
 
 [dev-dependencies]
 cw-orch-starship = { workspace = true }
 cw-orch-interchain-daemon = { workspace = true }
-env_logger = "0.10.0"
+env_logger = "0.11.5"
 speculoos = { workspace = true }

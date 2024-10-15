@@ -9,31 +9,32 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 cosmwasm-std.workspace = true
-cw-orch-interchain-core = { version = "0.3.3", path = "../interchain-core" }
-cw-orch-interchain-daemon = { version = "0.3.2", path = "../interchain-daemon" }
-cw-orch-networks = { version = "0.22.2", path = "../../cw-orch-networks" }
-cw-orch-core = { version = "1.1.1", path = "../../cw-orch-core" }
+
+cw-orch-interchain-core = { workspace = true }
+cw-orch-interchain-daemon = { workspace = true }
+cw-orch-networks = { workspace = true }
+cw-orch-core = { workspace = true }
+cw-orch-traits = { workspace = true }
+cw-orch-daemon = { workspace = true }
+
+
 hdpath = "0.6.3"
-ibc-relayer = "0.28.0"
+ibc-relayer = { workspace = true }
 ibc-relayer-cli = "1.9.0"
-ibc-relayer-types = { version = "0.28.0" }
-old-ibc-relayer-types = { package = "ibc-relayer-types", version = "0.25.0" }
+ibc-relayer-types = { workspace = true }
 tokio.workspace = true
-cw-orch-daemon = { version = "0.23.5", path = "../../../cw-orch-daemon" }
 log.workspace = true
 cosmrs.workspace = true
 futures = "0.3.30"
 tonic.workspace = true
-cw-orch-traits = { version = "0.22.0", path = "../../cw-orch-traits" }
 futures-util = "0.3.30"
 async-recursion = "1.1.1"
 serde_json.workspace = true
+prost-types = { workspace = true }
 
 [dev-dependencies]
-cw-orch = { path = "../../../cw-orch", features = ["daemon"] }
-cw-orch-interchain = { path = "../../../cw-orch-interchain", features = [
-  "daemon",
-] }
+cw-orch = { workspace = true, features = ["daemon"] }
+cw-orch-interchain = { workspace = true, features = ["daemon"] }
 dotenv = "0.15.0"
-ibc-proto = "0.32.0"
+ibc-proto = "0.47.0"
 pretty_env_logger = "0.5.0"

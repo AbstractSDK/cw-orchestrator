@@ -18,8 +18,8 @@ impl ChannelCreator for HermesRelayer {
         &self,
         src_chain: ChainId,
         dst_chain: ChainId,
-        src_port: &old_ibc_relayer_types::core::ics24_host::identifier::PortId,
-        dst_port: &old_ibc_relayer_types::core::ics24_host::identifier::PortId,
+        src_port: &ibc_relayer_types::core::ics24_host::identifier::PortId,
+        dst_port: &ibc_relayer_types::core::ics24_host::identifier::PortId,
         version: &str,
         order: Option<IbcOrder>,
     ) -> Result<String, InterchainDaemonError> {
@@ -86,7 +86,7 @@ impl ChannelCreator for HermesRelayer {
         Ok(src_connection.to_string())
     }
 
-    fn interchain_env(&self) -> cw_orch_interchain_daemon::DaemonInterchainEnv<Self> {
+    fn interchain_env(&self) -> cw_orch_interchain_daemon::DaemonInterchain<Self> {
         unimplemented!("
             The Hermes Relayer is a channel creator as well as an Interchain env. 
             You don't need to use this function, you can simply await packets directly on this structure"

@@ -1,12 +1,14 @@
 //! Integration testing execution environment backed by a [cw-multi-test](cw_multi_test) App.
 //! It has an associated state that stores deployment information for easy retrieval and contract interactions.
 
+mod contract_instance;
 mod core;
 pub mod queriers;
 mod state;
 
 pub use self::core::CloneTesting;
 pub use clone_cw_multi_test as cw_multi_test;
+pub use contract_instance::WasmUpload;
 pub use state::MockState;
 
 // We define a new structure to reunite the ContractWrapper objects
@@ -21,7 +23,7 @@ mod contract {
         },
         Contract,
     };
-    use cosmwasm_std::{Deps, DepsMut, Empty, QuerierWrapper};
+    use cosmwasm_std::{Checksum, Deps, DepsMut, Empty, QuerierWrapper};
 
     pub struct CloneTestingContract(Box<dyn cw_orch_mock::cw_multi_test::Contract<Empty, Empty>>);
 
@@ -158,6 +160,11 @@ mod contract {
                 querier: QuerierWrapper::new(&querier),
             };
             self.0.migrate(deps, env, msg)
+        }
+
+        /// Returns the provided checksum of the contract's Wasm blob.
+        fn checksum(&self) -> Option<Checksum> {
+            self.0.checksum()
         }
     }
 }

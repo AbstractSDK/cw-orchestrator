@@ -27,7 +27,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
     contract_counter.execute(&ExecuteMsg::Increment {}, None)?;
 
-    let sender = contract_counter.as_instance().get_chain().sender.clone();
+    let sender = contract_counter.environment().sender.clone();
     let sender_addr = sender.address().to_string();
 
     contract_counter.call_as(&sender).increment()?;

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Before publishing, we need to download the cw-plus artifacts
+./before_publish.sh
 
 # Before publishing, test the version with the Abstract implementation to make sure you're not breaking important API
 set -o errexit -o nounset -o pipefail
@@ -25,7 +27,20 @@ BASE_PACKAGES="
   cw-orch-mock 
   cw-orch-networks  
 "
-CORE="cw-orch-daemon cw-orch"
+
+INTERCHAIN_PACKAGES="
+  interchain-core
+  starship
+  interchain-daemon
+  interchain-mock
+  proto
+"
+
+CORE="cw-orch-daemon cw-orch cw-orch-interchain"
+
+INTEGRATIONS="
+  cw-plus
+"
 
 for pack in $BASE_PACKAGES; do
   (
@@ -35,10 +50,26 @@ for pack in $BASE_PACKAGES; do
   )
 done
 
+for lib in $INTERCHAIN; do
+  (
+    cd "packages/interchain/$lib"
+    echo "Publishing $lib"
+    cargo publish
+  )
+done
+
 for lib in $CORE; do
   (
     cd "$lib"
     echo "Publishing $lib"
+    cargo publish
+  )
+done
+
+for integration in $INTEGRATIONS; do
+  (
+    cd "packages/integrations/$integration"
+    echo "Publishing $integration"
     cargo publish
   )
 done

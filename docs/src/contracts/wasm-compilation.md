@@ -2,7 +2,7 @@
 
 `cw-orch` was designed to help you test, deploy, script and maintain your application. None of its features include in-contract operations. cw-orch interfaces, macros and helpers can't be used inside a wasm smart contract.
 
-In case you use one of the cw-orch features inside you smart-contract, the compilation will send an error anyway, so that we are **SURE** you are not using un-intended features inside your contract.
+In case you use one of the cw-orch features inside your smart-contract, the compilation will send an error anyway, so that we are **SURE** you are not using un-intended features inside your contract.
 
 ## Importing cw-orch
 
@@ -21,14 +21,14 @@ Import cw-orch without a worry, this won't include unnecessary dependencies and 
 The interface macro itself compiles to Wasm to empty traits. So this macro can be used anywhere in your contract. This **IS** smart-contract safe:
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/interface.rs:interface_macro}}
+{{#include ../../../contracts-ws/contracts/counter/src/interface.rs:interface_macro}}
 ```
 
 However, the `Uploadable` traits implementation **IS NOT** safe for smart contracts and needs to import namely `cw-multi-test` elements that we don't remove from WASM compilation. The following code needs to be flagged to not be compiled inside Wasm contracts:
 
 ```rust,ignore
 #[cfg(not(target_arch = "wasm32"))]
-{{#include ../../../contracts/counter/src/interface.rs:uploadable_impl}}
+{{#include ../../../contracts-ws/contracts/counter/src/interface.rs:uploadable_impl}}
 ```
 
 ### Entry Points
@@ -36,9 +36,9 @@ However, the `Uploadable` traits implementation **IS NOT** safe for smart contra
 The entry points are easy to work with as they compile to empty traits inside Wasm. So you can define them, import and export them in your contract without having to care about compilation targets. Furthermore, those traits are optimized out when getting your contract ready to upload on a chain. The syntax use in the 2 following examples is WASM safe:
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/msg.rs:exec_msg}}
+{{#include ../../../contracts-ws/contracts/counter/src/msg.rs:exec_msg}}
 ```
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/lib.rs:fn_re_export}}
+{{#include ../../../contracts-ws/contracts/counter/src/lib.rs:fn_re_export}}
 ```

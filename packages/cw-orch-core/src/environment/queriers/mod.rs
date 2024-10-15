@@ -31,14 +31,14 @@ pub trait QueryHandler: DefaultQueriers {
 
     fn balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<Coin>, <Self::Bank as Querier>::Error> {
         self.bank_querier().balance(address, denom)
     }
 
     /// Send a QueryMsg to a contract.
-    fn query<Q: Serialize + Debug, T: Serialize + DeserializeOwned>(
+    fn query<Q: Serialize + Debug, T: DeserializeOwned>(
         &self,
         query_msg: &Q,
         contract_address: &Addr,
@@ -80,7 +80,7 @@ pub trait DefaultQueriers:
 
 #[cfg(test)]
 pub mod test {
-    use cosmwasm_std::{Binary, Coin};
+    use cosmwasm_std::{Addr, Binary, Coin};
     use serde::Serialize;
 
     use crate::{
@@ -106,7 +106,7 @@ pub mod test {
     impl BankQuerier for MockQuerier {
         fn balance(
             &self,
-            _address: impl Into<String>,
+            _address: &Addr,
             _denom: Option<String>,
         ) -> Result<Vec<Coin>, Self::Error> {
             // Returns an empty balance
@@ -123,28 +123,24 @@ pub mod test {
     }
     impl WasmQuerier for MockQuerier {
         type Chain = MockHandler;
-        fn code_id_hash(&self, _code_id: u64) -> Result<cosmwasm_std::HexBinary, Self::Error> {
+        fn code_id_hash(&self, _code_id: u64) -> Result<cosmwasm_std::Checksum, Self::Error> {
             unimplemented!()
         }
 
         fn contract_info(
             &self,
-            _address: impl Into<String>,
+            _address: &Addr,
         ) -> Result<cosmwasm_std::ContractInfoResponse, Self::Error> {
             unimplemented!()
         }
 
-        fn raw_query(
-            &self,
-            _address: impl Into<String>,
-            _query_keys: Vec<u8>,
-        ) -> Result<Vec<u8>, Self::Error> {
+        fn raw_query(&self, _address: &Addr, _query_keys: Vec<u8>) -> Result<Vec<u8>, Self::Error> {
             unimplemented!()
         }
 
         fn smart_query<Q: Serialize, T: serde::de::DeserializeOwned>(
             &self,
-            _address: impl Into<String>,
+            _address: &Addr,
             _query_msg: &Q,
         ) -> Result<T, Self::Error> {
             unimplemented!()
@@ -157,7 +153,7 @@ pub mod test {
         fn instantiate2_addr(
             &self,
             _code_id: u64,
-            _creator: impl Into<String>,
+            _creator: &Addr,
             _salt: cosmwasm_std::Binary,
         ) -> Result<String, Self::Error> {
             unimplemented!()
@@ -169,7 +165,7 @@ pub mod test {
         >(
             &self,
             _contract: &T,
-        ) -> Result<cosmwasm_std::HexBinary, CwEnvError> {
+        ) -> Result<cosmwasm_std::Checksum, CwEnvError> {
             unimplemented!()
         }
     }
@@ -219,6 +215,10 @@ pub mod test {
         }
 
         fn data(&self) -> Option<Binary> {
+            unimplemented!()
+        }
+
+        fn event_attr_values(&self, _event_type: &str, _attr_key: &str) -> Vec<String> {
             unimplemented!()
         }
     }
@@ -291,10 +291,18 @@ pub mod test {
         fn get_all_code_ids(&self) -> Result<std::collections::HashMap<String, u64>, CwEnvError> {
             unimplemented!()
         }
+
+        fn remove_address(&mut self, _contract_id: &str) {
+            unimplemented!()
+        }
+
+        fn remove_code_id(&mut self, _contract_id: &str) {
+            unimplemented!()
+        }
     }
 
     fn associated_querier_error<T: QueryHandler>(t: T) -> anyhow::Result<()> {
-        t.bank_querier().balance("anyone".to_string(), None)?;
+        t.bank_querier().balance(&Addr::unchecked("anyone"), None)?;
         t.wait_blocks(7)?;
         Ok(())
     }

@@ -4,22 +4,21 @@ use cw_orch_daemon::queriers::{Ibc, Node};
 use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
-use cw_orch_interchain_core::types::{FullIbcPacketAnalysis, IbcPacketOutcome, TxId};
-use cw_orch_interchain_core::InterchainEnv;
+use cw_orch_interchain_core::results::{
+    ChannelCreationTransactionsResult, InternalChannelCreationResult,
+};
+use cw_orch_interchain_core::{IbcPacketOutcome, InterchainEnv, SinglePacketFlow, TxId};
 use cw_orch_interchain_daemon::packet_inspector::find_ibc_packets_sent_in_tx;
 use cw_orch_interchain_daemon::packet_inspector::PacketInspector;
 
 use crate::core::HermesRelayer;
 use cw_orch_interchain_daemon::InterchainDaemonError;
-use old_ibc_relayer_types::core::ics04_channel::packet::Sequence;
-use old_ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
+use ibc_relayer_types::core::ics04_channel::packet::Sequence;
+use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
 use tokio::time::sleep;
 use tonic::transport::Channel;
 
-use cw_orch_interchain_core::types::{
-    ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult,
-    SimpleIbcPacketAnalysis,
-};
+use cw_orch_interchain_core::NestedPacketsFlow;
 use cw_orch_interchain_daemon::ChannelCreator;
 use futures::future::try_join4;
 use std::str::FromStr;
@@ -31,7 +30,7 @@ impl InterchainEnv<Daemon> for HermesRelayer {
     type Error = InterchainDaemonError;
 
     /// Get the daemon for a network-id in the interchain.
-    fn chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
+    fn get_chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
         self.daemons
             .get(&chain_id.to_string())
             .map(|(d, _, _)| d)
@@ -108,11 +107,11 @@ impl InterchainEnv<Daemon> for HermesRelayer {
     }
 
     // This function follows every IBC packet sent out in a tx result
-    fn wait_ibc(
+    fn await_packets(
         &self,
         chain_id: ChainId,
         tx_response: CosmTxResponse,
-    ) -> Result<IbcTxAnalysis<Daemon>, Self::Error> {
+    ) -> Result<NestedPacketsFlow<Daemon>, Self::Error> {
         log::info!(
             target: chain_id,
             "Investigating sent packet events on tx {}",
@@ -120,7 +119,7 @@ impl InterchainEnv<Daemon> for HermesRelayer {
         );
 
         // 1. Getting IBC related events for the current tx + finding all IBC packets sent out in the transaction
-        let daemon_1 = self.chain(chain_id)?;
+        let daemon_1 = self.get_chain(chain_id)?;
         let grpc_channel1 = daemon_1.channel();
 
         let sent_packets = daemon_1.rt_handle.block_on(find_ibc_packets_sent_in_tx(
@@ -133,7 +132,7 @@ impl InterchainEnv<Daemon> for HermesRelayer {
         let ibc_packet_results = sent_packets
             .iter()
             .map(|packet| {
-                self.follow_packet(
+                self.await_single_packet(
                     chain_id,
                     packet.src_port.clone(),
                     packet.src_channel.clone(),
@@ -143,10 +142,7 @@ impl InterchainEnv<Daemon> for HermesRelayer {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        let send_tx_id = TxId {
-            chain_id: chain_id.to_string(),
-            response: tx_response,
-        };
+        let send_tx_id = TxId::new(chain_id.to_string(), tx_response);
 
         // We follow all results from outgoing packets in the resulting transactions
         let full_results = ibc_packet_results
@@ -164,7 +160,7 @@ impl InterchainEnv<Daemon> for HermesRelayer {
                     .map(|tx| {
                         let chain_id = tx.chain_id.clone();
                         let response = tx.response.clone();
-                        self.wait_ibc(&chain_id, response)
+                        self.await_packets(&chain_id, response)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
 
@@ -179,16 +175,11 @@ impl InterchainEnv<Daemon> for HermesRelayer {
                     },
                 };
 
-                let analyzed_result = FullIbcPacketAnalysis {
-                    send_tx: Some(send_tx_id.clone()),
-                    outcome: analyzed_outcome,
-                };
-
-                Ok::<_, InterchainDaemonError>(analyzed_result.clone())
+                Ok::<_, InterchainDaemonError>(analyzed_outcome.clone())
             })
             .collect::<Result<_, _>>()?;
 
-        let tx_identification = IbcTxAnalysis {
+        let tx_identification = NestedPacketsFlow {
             tx_id: send_tx_id.clone(),
             packets: full_results,
         };
@@ -197,14 +188,14 @@ impl InterchainEnv<Daemon> for HermesRelayer {
     }
 
     // This function follow the execution of an IBC packet across the chain
-    fn follow_packet(
+    fn await_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,
         src_channel: ChannelId,
         dst_chain: ChainId,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Daemon>, Self::Error> {
+    ) -> Result<SinglePacketFlow<Daemon>, Self::Error> {
         // We crate an interchain env object that is safe to send between threads
         let interchain_env = self.rt_handle.block_on(PacketInspector::new(
             self.daemons.values().map(|(d, _, _)| d).collect(),
@@ -230,6 +221,13 @@ impl InterchainEnv<Daemon> for HermesRelayer {
 
         Ok(ibc_trail)
     }
+
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Daemon>
+    where
+        Daemon: 'a,
+    {
+        self.daemons.values().map(|(daemon, _, _)| daemon)
+    }
 }
 
 impl HermesRelayer {
@@ -239,14 +237,14 @@ impl HermesRelayer {
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,
-    ) -> Result<IbcTxAnalysis<Daemon>, InterchainDaemonError> {
-        let grpc_channel1 = self.chain(chain_id)?.channel();
+    ) -> Result<NestedPacketsFlow<Daemon>, InterchainDaemonError> {
+        let grpc_channel1 = self.get_chain(chain_id)?.channel();
 
         let tx = self.rt_handle.block_on(
             Node::new_async(grpc_channel1.clone())._find_tx(packet_send_tx_hash.clone()),
         )?;
 
-        let ibc_trail = self.wait_ibc(chain_id, tx)?;
+        let ibc_trail = self.await_packets(chain_id, tx)?;
 
         Ok(ibc_trail)
     }

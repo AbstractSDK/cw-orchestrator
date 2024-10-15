@@ -1,0 +1,44 @@
+[package]
+name = "cw-plus-orch"
+version = "0.25.0"                                            # Version of cw-orch that's used
+edition = "2021"
+description = "cw-orch interfaces for cw-plus base contracts"
+license = "Apache-2.0"
+repository = "https://github.com/AbstractSDK/cw-orchestrator"
+homepage = "https://abstract.money"
+documentation = "https://orchestrator.abstract.money"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cw-utils = { workspace = true }
+cosmwasm-schema = { version = "2.0.0" }
+
+
+cw-controllers = { version = "2.0.0" }
+cw1 = { version = "2.0.0" }
+cw1-subkeys = { version = "2.0.0", features = ["library"] }
+cw1-whitelist = { version = "2.0.0", features = ["library"] }
+cw3 = { version = "2.0.0" }
+cw3-fixed-multisig = { version = "2.0.0", features = ["library"] }
+cw3-flex-multisig = { version = "2.0.0", features = ["library"] }
+cw4 = { version = "2.0.0" }
+cw4-group = { version = "2.0.0", features = ["library"] }
+cw4-stake = { version = "2.0.0", features = ["library"] }
+cw20 = { version = "2.0.0" }
+cw20-base = { version = "2.0.0", features = ["library"] }
+cw20-ics20 = { version = "2.0.0", features = ["library"] }
+
+cw-orch-from-interface-derive = { version = "0.1.0", path = "../../macros/from-interface-derive" }
+
+cw-orch = { workspace = true }
+
+[dev-dependencies]
+cw-orch-interchain = { workspace = true }
+cw-orch = { workspace = true, features = ["daemon"] }
+dotenv = "0.15.0"
+octocrab = "0.39.0"
+pretty_env_logger = "0.5.0"
+reqwest = "0.12.7"
+tokio.workspace = true

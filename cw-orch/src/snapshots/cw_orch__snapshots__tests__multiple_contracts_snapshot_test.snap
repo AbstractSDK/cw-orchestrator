@@ -6,15 +6,14 @@ counter_contract:
   - - contract_info
     - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
   - - state
-    - "{\"count\":1,\"owner\":\"sender\"}"
+    - "{\"count\":1,\"owner\":\"cosmwasm1pgm8hyk0pvphmlvfjc8wsvk4daluz5tgrw6pu5mfpemk74uxnx9qlm3aqg\"}"
 second-counter-contract:
   - - contract_info
     - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
   - - state
-    - "{\"count\":4,\"owner\":\"sender\"}"
+    - "{\"count\":4,\"owner\":\"cosmwasm1pgm8hyk0pvphmlvfjc8wsvk4daluz5tgrw6pu5mfpemk74uxnx9qlm3aqg\"}"
 third-counter-contract:
   - - contract_info
     - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
   - - state
-    - "{\"count\":3,\"owner\":\"sender\"}"
-
+    - "{\"count\":3,\"owner\":\"cosmwasm1pgm8hyk0pvphmlvfjc8wsvk4daluz5tgrw6pu5mfpemk74uxnx9qlm3aqg\"}"

@@ -5,7 +5,7 @@ use cw_orch_interchain_core::env::ChainId;
 use ibc_relayer::link::{Link, LinkParameters};
 use ibc_relayer_cli::cli_utils::ChainHandlePair;
 use ibc_relayer_types::core::{ics04_channel, ics24_host::identifier};
-use old_ibc_relayer_types::core::{
+use ibc_relayer_types::core::{
     ics04_channel::packet::Sequence,
     ics24_host::identifier::{ChannelId, PortId},
 };

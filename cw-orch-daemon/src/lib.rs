@@ -1,31 +1,35 @@
+// TODO: Figure out better mutex locking for senders
+#![allow(clippy::await_holding_lock)]
 //! `Daemon` and `DaemonAsync` execution environments.
 //!
 //! The `Daemon` type is a synchronous wrapper around the `DaemonAsync` type and can be used as a contract execution environment.
-
-pub mod builder;
-pub mod channel;
-pub mod core;
-pub mod error;
 pub mod json_lock;
 /// Proto types for different blockchains
 pub mod proto;
-pub mod sender;
-pub mod state;
-pub mod sync;
-pub mod tx_resp;
 // expose these as mods as they can grow
 pub mod env;
 pub mod keys;
 pub mod live_mock;
-mod log;
 pub mod queriers;
+pub mod senders;
 pub mod tx_broadcaster;
 pub mod tx_builder;
+
+mod builder;
+mod channel;
+mod core;
+mod error;
+mod log;
+mod network_config;
+mod state;
+mod sync;
+mod tx_resp;
+
 pub use self::{builder::*, channel::*, core::*, error::*, state::*, sync::*, tx_resp::*};
 pub use cw_orch_networks::networks;
-pub use sender::Wallet;
+pub use network_config::read_network_config;
+pub use senders::{query::QuerySender, tx::TxSender, CosmosOptions, Wallet};
 pub use tx_builder::TxBuilder;
-mod cosmos_proto_patches;
 
 pub(crate) mod cosmos_modules {
     pub use cosmrs::proto::{

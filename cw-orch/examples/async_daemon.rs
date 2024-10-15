@@ -3,7 +3,9 @@ use cw_orch_daemon::DaemonAsync;
 use cw_orch_mock::Mock;
 
 /// In order to use this script, you need to set the following env variables
+///
 /// RUST_LOG (recommended value `info`) to see the app logs
+///
 /// TEST_MNEMONIC to be able to sign and broadcast a transaction on UNI testnet
 #[tokio::main]
 pub async fn main() -> anyhow::Result<()> {
@@ -18,9 +20,7 @@ pub async fn main() -> anyhow::Result<()> {
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
-    let daemon = DaemonAsync::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+    let daemon = DaemonAsync::builder(cw_orch::daemon::networks::UNI_6) // set the network to use
         .build()
         .await?;
 

@@ -13,26 +13,22 @@ mod tests {
 
     use speculoos::prelude::*;
 
-    use crate::common::Id;
-
     #[test]
     #[serial_test::serial]
     fn helper_traits() {
+        super::common::enable_logger();
         use cw_orch_networks::networks;
 
-        let mut daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let mut daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 
         daemon.flush_state().unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         asserting!("address is not present")
             .that(&contract.address())
@@ -48,7 +44,7 @@ mod tests {
 
         let init_msg = &InstantiateMsg {};
 
-        let _ = contract.instantiate(init_msg, Some(&Addr::unchecked(sender)), Some(&[]));
+        let _ = contract.instantiate(init_msg, Some(&Addr::unchecked(sender)), &[]);
 
         asserting!("address is present")
             .that(&contract.address())
@@ -89,46 +85,20 @@ mod tests {
             .is_ok();
     }
 
-    // #[test]
-    // #[serial_test::serial]
-    // fn wrong_min_fee() {
-    //     use cw_orch::prelude::networks;
-
-    //     let runtime = tokio::runtime::Runtime::new().unwrap();
-
-    //     let mut chain = networks::UNI_6;
-    //     chain.gas_price = 0.00001;
-
-    //     let daemon = Daemon::builder()
-    //         .chain(chain)
-    //         .mnemonic("tide genuine angle mass fall promote blind skull swim army maximum add peasant fringe uncle october female crisp voyage blind extend jeans give wrap")
-    //         .build()
-    //         .unwrap();
-
-    //     let contract = mock_contract::MockContract::new(
-    //         format!("test:mock_contract:{}", Id::new()),
-    //         daemon.clone(),
-    //     );
-
-    //     contract.upload().unwrap();
-    // }
-
     #[test]
     #[serial_test::serial]
     fn cw_orch_interface_traits() {
+        super::common::enable_logger();
         use cw_orch_networks::networks;
 
-        let daemon = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        let daemon = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 
-        let sender = daemon.sender();
+        let sender = daemon.sender_addr();
 
-        let contract = mock_contract::MockContract::new(
-            format!("test:mock_contract:{}", Id::new()),
-            daemon.clone(),
-        );
+        let contract = mock_contract::MockContract::new("test:mock_contract", daemon.clone());
 
         // upload contract
         let upload_res = contract.upload();
@@ -141,7 +111,7 @@ mod tests {
         log::info!("Using code_id {}", code_id);
 
         // instantiate contract on chain
-        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), None);
+        let init_res = contract.instantiate(&InstantiateMsg {}, Some(&sender), &[]);
         asserting!("instantiate is successful")
             .that(&init_res)
             .is_ok();

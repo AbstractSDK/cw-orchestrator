@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-mock"
-version = "0.22.4"
+version = "0.24.2"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,7 +11,7 @@ description = "Adapter for interacting with cw-multi-test via the cw-orchestrato
 
 [dependencies]
 cw-orch-core = { workspace = true }
-cosmwasm-std = { workspace = true }
+cosmwasm-std = { workspace = true, features = ["cosmwasm_1_2"] }
 cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }
@@ -20,8 +20,8 @@ log = { workspace = true }
 
 [dev-dependencies]
 speculoos = { workspace = true }
-cw20 = { workspace = true }
-cw20-base = { workspace = true }
+cw20 = { version = "2.0.0" }
+cw20-base = { version = "2.0.0" }
 
-mock-contract = { path = "../../contracts/mock_contract" }
+mock-contract = { path = "../../contracts-ws/contracts/mock_contract" }
 anyhow = { workspace = true }

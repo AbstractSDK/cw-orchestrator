@@ -1,4 +1,3 @@
-use cosmrs::Any;
 use cw_orch::prelude::*;
 use cw_orch::{
     daemon::networks::{PION_1, XION_TESTNET_1},
@@ -7,9 +6,9 @@ use cw_orch::{
 use cw_orch_interchain::prelude::*;
 use cw_orch_traits::Stargate;
 use hermes_relayer::core::HermesRelayer;
-use old_ibc_relayer_types::core::ics24_host::identifier::PortId;
-use old_ibc_relayer_types::tx_msg::Msg;
-use old_ibc_relayer_types::{
+use ibc_relayer_types::core::ics24_host::identifier::PortId;
+use ibc_relayer_types::tx_msg::Msg;
+use ibc_relayer_types::{
     applications::transfer::msgs::transfer::MsgTransfer,
     core::ics04_channel::timeout::TimeoutHeight, timestamp::Timestamp,
 };
@@ -55,8 +54,8 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
         None,
     )?;
 
-    let xion = relayer.chain("xion-testnet-1")?;
-    let pion = relayer.chain("pion-1")?;
+    let xion = relayer.get_chain("xion-testnet-1")?;
+    let pion = relayer.get_chain("pion-1")?;
 
     let msg = MsgTransfer {
         source_port: PortId::transfer(),
@@ -70,21 +69,21 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
             amount: "1987".to_string(),
         },
 
-        sender: xion.sender().to_string().parse().unwrap(),
-        receiver: pion.sender().to_string().parse().unwrap(),
+        sender: xion.sender_addr().to_string().parse().unwrap(),
+        receiver: pion.sender_addr().to_string().parse().unwrap(),
         timeout_height: TimeoutHeight::Never,
         timeout_timestamp: Timestamp::from_nanoseconds(1_800_000_000_000_000_000)?,
         memo: None,
     };
     let response = xion.commit_any::<u64>(
-        vec![Any {
+        vec![prost_types::Any {
             type_url: msg.type_url(),
             value: msg.to_any().value,
         }],
         None,
     )?;
 
-    relayer.check_ibc("xion-testnet-1", response)?;
+    relayer.await_and_check_packets("xion-testnet-1", response)?;
 
     Ok(())
 }

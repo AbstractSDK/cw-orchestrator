@@ -31,6 +31,8 @@ pub use crate::environment::{
     NodeQuerier, QuerierGetter, QueryHandler, TxHandler, TxResponse, WasmQuerier,
 };
 
+pub use cw_orch_core::environment::Environment;
+
 // Chains
 pub use crate::environment::{ChainInfo, ChainInfoOwned};
 
