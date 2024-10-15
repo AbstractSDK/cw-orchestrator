@@ -1,10 +1,15 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{
+    cw_serde,
+    schemars::JsonSchema,
+    serde::{Deserialize, Serialize},
+};
 use cosmwasm_std::{from_json, Binary};
 use prost::Message;
 // TODO: when polytone updates to cosmwasm v2 use polytone::ack::Callback;
-use polytone_callback::Callback;
-
 use crate::{packet::success::IbcAppResult, InterchainError};
+use cosmwasm_schema::schemars;
+
+use polytone_callback::Callback;
 
 use self::acknowledgement::{Acknowledgement, Response};
 
@@ -76,6 +81,23 @@ impl IbcAckParser {
         Err(decode_ack_error(ack))
     }
 
+    /// Verifies if the given ack is an ICS004 type with json parsing and returns the ack result if it is
+    ///
+    /// Returns an error if there was an error in the parsing process
+    pub fn ics004_json_ack(ack: &Binary) -> Result<Vec<u8>, InterchainError> {
+        if let Ok(decoded_ics_004) = from_json::<StdAck>(ack) {
+            log::debug!(
+                "Decoded ack using ICS-004 with json format : {:x?}",
+                decoded_ics_004
+            );
+            match decoded_ics_004 {
+                StdAck::Result(result) => return Ok(result.into()),
+                StdAck::Error(e) => return Err(InterchainError::FailedAckReceived(e)),
+            }
+        }
+        Err(decode_ack_error(ack))
+    }
+
     /// Verifies if the given ack is a standard acknowledgement type
     ///
     /// Returns an error if there was an error in the parsing process
@@ -85,6 +107,8 @@ impl IbcAckParser {
         } else if IbcAckParser::ics20_ack(ack).is_ok() {
             Ok(IbcAppResult::Ics20)
         } else if let Ok(ack) = IbcAckParser::ics004_ack(ack) {
+            Ok(IbcAppResult::Ics004(ack))
+        } else if let Ok(ack) = IbcAckParser::ics004_json_ack(ack) {
             Ok(IbcAppResult::Ics004(ack))
         } else {
             Err(InterchainError::AckDecodingFailed(
@@ -142,6 +166,14 @@ pub mod acknowledgement {
             ::prost::alloc::format!("ibc.core.channel.v1.{}", Self::NAME)
         }
     }
+}
+/// This is a generic ICS acknowledgement format formated in json.
+/// Proto defined here: https://github.com/cosmos/cosmos-sdk/blob/v0.42.0/proto/ibc/core/channel/v1/channel.proto#L141-L147
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum StdAck {
+    Result(Binary),
+    Error(String),
 }
 
 pub mod polytone_callback {
