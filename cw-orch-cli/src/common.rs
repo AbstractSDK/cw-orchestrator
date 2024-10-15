@@ -100,7 +100,6 @@ pub fn parse_expiration() -> InquireResult<cw_utils::Expiration> {
 }
 
 pub async fn show_addr_explorer(chain_info: ChainInfo, addr: &str) -> color_eyre::eyre::Result<()> {
-    // TODO: should be allowed for any type of chain ORC-119
     if let ChainKind::Mainnet = chain_info.kind {
         let Explorers { explorers } =
             Explorers::fetch(chain_info.network_info.chain_name.to_owned(), None).await?;

@@ -14,7 +14,6 @@ pub trait LogOutput {
 impl LogOutput for CosmTxResponse {
     fn log(&self, chain_info: &ChainInfo) {
         println!("Transaction hash: {}", self.txhash);
-        // TODO: should be allowed for any type of chain ORC-119
         if let ChainKind::Mainnet = chain_info.kind {
             let log_explorer_url = || -> cw_orch::anyhow::Result<()> {
                 let rt = Runtime::new()?;
