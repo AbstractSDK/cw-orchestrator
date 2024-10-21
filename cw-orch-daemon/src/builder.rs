@@ -4,7 +4,7 @@ use crate::{
     log::print_if_log_disabled,
     network_config,
     senders::{builder::SenderBuilder, CosmosOptions, CosmosWalletKey},
-    DaemonAsyncBase, DaemonBuilder, DaemonStateFile, Wallet,
+    DaemonAsyncBase, DaemonBuilder, DaemonStateFile, TxSender, Wallet,
 };
 
 use super::{error::DaemonError, state::DaemonState};
@@ -134,6 +134,11 @@ impl DaemonAsyncBuilder {
             ..Default::default()
         };
         let sender = options.build(&chain_info).await?;
+        log::info!(
+            "Interacting on {} with address {}",
+            chain_info.chain_id,
+            sender.address()
+        );
 
         let daemon = DaemonAsyncBase::new(sender, state);
 
