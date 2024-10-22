@@ -143,6 +143,10 @@ impl<Sender> ChainState for DaemonBase<Sender> {
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
     }
+
+    fn can_load_state_from_state_file(&self) -> bool {
+        true
+    }
 }
 
 // Execute on the real chain, returns tx response
