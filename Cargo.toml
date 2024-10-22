@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "cw-orch",
+  "cw-orch-cli",
   "cw-orch-daemon",
   "cw-orch-interchain",
   "packages/cw-orch-core",
