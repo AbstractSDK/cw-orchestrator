@@ -155,7 +155,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwEnvError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
         let amount = self
             .bank_querier()
             .balance(address, Some(denom.to_string()))?;
@@ -163,7 +163,10 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     }
 
     /// Fetch all the balances of an address.
-    pub fn query_all_balances(&self, address: &str) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
+    pub fn query_all_balances(
+        &self,
+        address: &Addr,
+    ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         let amount = self.bank_querier().balance(address, None)?;
         Ok(amount)
     }
@@ -211,8 +214,8 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Response = AppResponse;
     type Sender = Rc<SigningAccount>;
 
-    fn sender(&self) -> Addr {
-        self.sender_addr()
+    fn sender(&self) -> &Self::Sender {
+        &self.sender
     }
 
     fn sender_addr(&self) -> Addr {
@@ -339,6 +342,13 @@ impl Stargate for OsmosisTestTube {
         msgs: Vec<prost_types::Any>,
         _memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
+        let msgs = msgs
+            .into_iter()
+            .map(|any| osmosis_test_tube::cosmrs::Any {
+                type_url: any.type_url,
+                value: any.value,
+            })
+            .collect();
         let tx_response: ExecuteResponse<R> = self
             .app
             .borrow()
@@ -373,7 +383,7 @@ pub mod tests {
         contract.instantiate(
             &InstantiateMsg { count: 7 },
             Some(&Addr::unchecked(app.sender.address())),
-            None,
+            &[],
         )?;
 
         assert_eq!(
@@ -381,12 +391,14 @@ pub mod tests {
             app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
-        let contract_info = app.wasm_querier().contract_info(contract.addr_str()?)?;
-        let mut target_contract_info = ContractInfoResponse::default();
-        target_contract_info.admin = Some(app.sender.address().to_string());
-        target_contract_info.code_id = contract.code_id()?;
-        target_contract_info.creator = app.sender.address().to_string();
-        target_contract_info.ibc_port = None;
+        let contract_info = app.wasm_querier().contract_info(&contract.address()?)?;
+        let target_contract_info = ContractInfoResponse::new(
+            contract.code_id()?,
+            app.sender_addr(),
+            Some(app.sender_addr()),
+            false,
+            None,
+        );
         assert_eq!(contract_info, target_contract_info);
 
         Ok(())
@@ -400,7 +412,7 @@ pub mod tests {
         let sender = app.sender.address();
         assert_eq!(
             app.bank_querier()
-                .balance(sender.clone(), Some(denom.to_string()))?,
+                .balance(&Addr::unchecked(sender), Some(denom.to_string()))?,
             init_coins
         );
         assert_eq!(
@@ -417,15 +429,16 @@ pub mod tests {
         let mut app = OsmosisTestTube::new(init_coins.clone());
 
         let account = app.init_account(coins(78, "uweird"))?;
+        let account_address = Addr::unchecked(account.address());
 
         let amount1 = 139823876u128;
         let amount2 = 1398212713563876u128;
         app.add_balance(
-            account.address(),
+            &account_address,
             vec![coin(amount1, GAS_TOKEN), coin(amount2, "uother")],
         )?;
 
-        let balance = app.bank_querier().balance(account.address(), None)?;
+        let balance = app.bank_querier().balance(&account_address, None)?;
 
         assert_eq!(
             balance,

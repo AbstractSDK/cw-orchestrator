@@ -7,8 +7,7 @@ members = [
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
   "packages/clone-testing",
-  # TODO: release those after *-std reaches to prost 0.13
-  # "packages/cw-orch-osmosis-test-tube",
+  "packages/cw-orch-osmosis-test-tube",
   # "packages/cw-orch-neutron-test-tube",
   "packages/cw-orch-traits",
   "test_contracts/*",
@@ -39,7 +38,7 @@ cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", feature
 cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0" }
 
-osmosis-test-tube = { version = "25.0.0" }
+osmosis-test-tube = { version = "26.0.0" }
 neutron-test-tube = { version = "4.2.0" }
 
 anyhow = "1.0"

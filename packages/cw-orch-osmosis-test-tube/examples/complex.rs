@@ -24,11 +24,11 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     let contract_counter = CounterContract::new(chain.clone());
 
     contract_counter.upload()?;
-    contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
-    contract_counter.execute(&ExecuteMsg::Increment {}, None)?;
+    contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, &[])?;
+    contract_counter.execute(&ExecuteMsg::Increment {}, &[])?;
 
     let sender = contract_counter.environment().sender.clone();
-    let sender_addr = sender.address().to_string();
+    let sender_addr = sender.address();
 
     contract_counter.call_as(&sender).increment()?;
     contract_counter.get_count()?;
@@ -73,7 +73,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     assert_eq!(
         chain
             .bank_querier()
-            .balance(contract_counter.address()?, Some(denom.clone()))?
+            .balance(&contract_counter.address()?, Some(denom.clone()))?
             .first()
             .cloned(),
         Some(coin(50_000, denom.clone()))
@@ -81,7 +81,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     assert_eq!(
         chain
             .bank_querier()
-            .balance(sender_addr, Some(denom.clone()))?
+            .balance(&Addr::unchecked(sender_addr), Some(denom.clone()))?
             .first()
             .cloned(),
         Some(coin(50_000, denom.clone()))
