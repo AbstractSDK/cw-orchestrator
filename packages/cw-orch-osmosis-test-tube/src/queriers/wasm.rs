@@ -55,13 +55,13 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
             )
             .map_err(map_err)?;
 
-        Ok(code_info_result
+        code_info_result
             .code_info
             .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?
             .data_hash
             .as_slice()
             .try_into()
-            .map_err(|e: cosmwasm_std::ChecksumError| CwEnvError::StdErr(e.to_string()))?)
+            .map_err(|e: cosmwasm_std::ChecksumError| CwEnvError::StdErr(e.to_string()))
     }
 
     fn contract_info(&self, address: &Addr) -> Result<ContractInfoResponse, CwEnvError> {

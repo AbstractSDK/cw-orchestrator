@@ -1,3 +1,5 @@
+pub use osmosis_test_tube;
+
 use cosmwasm_std::{coin, Addr, Coins};
 
 use cw_orch_core::contract::interface_traits::Uploadable;
@@ -29,8 +31,6 @@ use cw_orch_core::{
 };
 
 use cw_orch_mock::MockState;
-
-pub use osmosis_test_tube;
 
 use super::queriers::bank::OsmosisTestTubeBankQuerier;
 
