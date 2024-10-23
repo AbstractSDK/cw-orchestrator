@@ -9,11 +9,9 @@ use cw_orch_core::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueri
 use cosmwasm_std::{Binary, Coin, Uint128};
 use cw_orch_core::CwEnvError;
 use cw_orch_mock::cw_multi_test::AppResponse;
-use cw_orch_traits::Stargate;
 use neutron_test_tube::{
     neutron_std::{cosmwasm_to_proto_coins, types::cosmos::bank::v1beta1::MsgSend},
-    Account, Bank, ExecuteResponse, Module, NeutronTestApp, Runner, RunnerError, SigningAccount,
-    Wasm,
+    Account, Bank, Module, NeutronTestApp, Runner, RunnerError, SigningAccount, Wasm,
 };
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
@@ -334,16 +332,25 @@ impl BankSetter for NeutronTestTube {
     }
 }
 
-impl Stargate for NeutronTestTube {
-    fn commit_any<R: prost::Message + Default>(
+// TODO: neutron have different prost version
+// impl Stargate for
+impl NeutronTestTube {
+    pub fn commit_any<R: neutron_test_tube::cosmrs::proto::prost::Message + Default>(
         &self,
         msgs: Vec<prost_types::Any>,
         _memo: Option<&str>,
-    ) -> Result<Self::Response, Self::Error> {
-        let tx_response: ExecuteResponse<R> = self
+    ) -> Result<<Self as TxHandler>::Response, <Self as TxHandler>::Error> {
+        let msgs = msgs
+            .into_iter()
+            .map(|any| neutron_test_tube::cosmrs::Any {
+                type_url: any.type_url,
+                value: any.value,
+            })
+            .collect();
+        let tx_response = self
             .app
             .borrow()
-            .execute_multiple_raw(msgs, &self.sender)
+            .execute_multiple_raw::<R>(msgs, &self.sender)
             .map_err(map_err)?;
 
         Ok(AppResponse {
