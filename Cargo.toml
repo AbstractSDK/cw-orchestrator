@@ -15,6 +15,7 @@ members = [
   "packages/macros/*",
   "packages/interchain/*",
   "packages/integrations/*",
+  "packages/cw-orch-on-chain",
 ]
 exclude = [
   "test_contracts/compatibility-test", # TODO: add new after cw-orch-core 2.0.0 as it's breaking, it shouldn't be compatible
