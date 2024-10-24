@@ -289,7 +289,7 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
             MsgMigrateContract, MsgMigrateContractResponse,
         };
 
-        let instantiate_response = (*self.app.borrow())
+        let migrate_response = (*self.app.borrow())
             .execute::<MsgMigrateContract, MsgMigrateContractResponse>(
                 MsgMigrateContract {
                     sender: self.sender_addr().to_string(),
@@ -297,14 +297,14 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
                     msg: cosmwasm_std::to_json_vec(migrate_msg)?,
                     contract: contract_address.to_string(),
                 },
-                MsgMigrateContractResponse::TYPE_URL,
+                MsgMigrateContract::TYPE_URL,
                 &self.sender,
             )
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary::new(instantiate_response.raw_data)),
-            events: instantiate_response.events,
+            data: Some(Binary::new(migrate_response.raw_data)),
+            events: migrate_response.events,
         })
     }
 
