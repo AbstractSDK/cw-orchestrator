@@ -281,11 +281,31 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
 
     fn migrate<M: Serialize + Debug>(
         &self,
-        _migrate_msg: &M,
-        _new_code_id: u64,
-        _contract_address: &Addr,
+        migrate_msg: &M,
+        new_code_id: u64,
+        contract_address: &Addr,
     ) -> Result<Self::Response, CwEnvError> {
-        panic!("Migrate not implemented on osmosis test_tube")
+        use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
+            MsgMigrateContract, MsgMigrateContractResponse,
+        };
+
+        let instantiate_response = (*self.app.borrow())
+            .execute::<MsgMigrateContract, MsgMigrateContractResponse>(
+                MsgMigrateContract {
+                    sender: self.sender_addr().to_string(),
+                    code_id: new_code_id,
+                    msg: cosmwasm_std::to_json_vec(migrate_msg)?,
+                    contract: contract_address.to_string(),
+                },
+                MsgMigrateContractResponse::TYPE_URL,
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(instantiate_response.raw_data)),
+            events: instantiate_response.events,
+        })
     }
 
     fn instantiate2<I: Serialize + Debug>(
