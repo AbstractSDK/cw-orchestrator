@@ -1,3 +1,5 @@
+pub use osmosis_test_tube;
+
 use cosmwasm_std::{coin, Addr, Coins};
 
 use cw_orch_core::contract::interface_traits::Uploadable;
@@ -29,8 +31,6 @@ use cw_orch_core::{
 };
 
 use cw_orch_mock::MockState;
-
-pub use osmosis_test_tube;
 
 use super::queriers::bank::OsmosisTestTubeBankQuerier;
 
@@ -155,7 +155,7 @@ impl<S: StateInterface> OsmosisTestTube<S> {
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &str, denom: &str) -> Result<Uint128, CwEnvError> {
+    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
         let amount = self
             .bank_querier()
             .balance(address, Some(denom.to_string()))?;
@@ -163,7 +163,10 @@ impl<S: StateInterface> OsmosisTestTube<S> {
     }
 
     /// Fetch all the balances of an address.
-    pub fn query_all_balances(&self, address: &str) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
+    pub fn query_all_balances(
+        &self,
+        address: &Addr,
+    ) -> Result<Vec<cosmwasm_std::Coin>, CwEnvError> {
         let amount = self.bank_querier().balance(address, None)?;
         Ok(amount)
     }
@@ -211,8 +214,8 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
     type Response = AppResponse;
     type Sender = Rc<SigningAccount>;
 
-    fn sender(&self) -> Addr {
-        self.sender_addr()
+    fn sender(&self) -> &Self::Sender {
+        &self.sender
     }
 
     fn sender_addr(&self) -> Addr {
@@ -278,23 +281,67 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
 
     fn migrate<M: Serialize + Debug>(
         &self,
-        _migrate_msg: &M,
-        _new_code_id: u64,
-        _contract_address: &Addr,
+        migrate_msg: &M,
+        new_code_id: u64,
+        contract_address: &Addr,
     ) -> Result<Self::Response, CwEnvError> {
-        panic!("Migrate not implemented on osmosis test_tube")
+        use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
+            MsgMigrateContract, MsgMigrateContractResponse,
+        };
+
+        let migrate_response = (*self.app.borrow())
+            .execute::<MsgMigrateContract, MsgMigrateContractResponse>(
+                MsgMigrateContract {
+                    sender: self.sender_addr().to_string(),
+                    code_id: new_code_id,
+                    msg: cosmwasm_std::to_json_vec(migrate_msg)?,
+                    contract: contract_address.to_string(),
+                },
+                MsgMigrateContract::TYPE_URL,
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(migrate_response.raw_data)),
+            events: migrate_response.events,
+        })
     }
 
     fn instantiate2<I: Serialize + Debug>(
         &self,
-        _code_id: u64,
-        _init_msg: &I,
-        _label: Option<&str>,
-        _admin: Option<&Addr>,
-        _coins: &[cosmwasm_std::Coin],
-        _salt: Binary,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
     ) -> Result<Self::Response, Self::Error> {
-        unimplemented!("Osmosis Test Tube doesn't support Instantiate 2 directly");
+        use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
+            MsgInstantiateContract2, MsgInstantiateContract2Response,
+        };
+
+        let instantiate_response = (*self.app.borrow())
+            .execute::<MsgInstantiateContract2, MsgInstantiateContract2Response>(
+                MsgInstantiateContract2 {
+                    sender: self.sender_addr().to_string(),
+                    admin: admin.map(ToString::to_string).unwrap_or_default(),
+                    code_id,
+                    label: label.unwrap_or(" ").to_string(), // empty string causes panic
+                    msg: cosmwasm_std::to_json_vec(init_msg)?,
+                    funds: cosmwasm_to_proto_coins(coins.to_vec()),
+                    salt: salt.to_vec(),
+                    fix_msg: false,
+                },
+                MsgInstantiateContract2::TYPE_URL,
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(instantiate_response.raw_data)),
+            events: instantiate_response.events,
+        })
     }
 }
 
@@ -339,6 +386,13 @@ impl Stargate for OsmosisTestTube {
         msgs: Vec<prost_types::Any>,
         _memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
+        let msgs = msgs
+            .into_iter()
+            .map(|any| osmosis_test_tube::cosmrs::Any {
+                type_url: any.type_url,
+                value: any.value,
+            })
+            .collect();
         let tx_response: ExecuteResponse<R> = self
             .app
             .borrow()
@@ -373,7 +427,7 @@ pub mod tests {
         contract.instantiate(
             &InstantiateMsg { count: 7 },
             Some(&Addr::unchecked(app.sender.address())),
-            None,
+            &[],
         )?;
 
         assert_eq!(
@@ -381,12 +435,14 @@ pub mod tests {
             app.wasm_querier().code_id_hash(contract.code_id()?)?
         );
 
-        let contract_info = app.wasm_querier().contract_info(contract.addr_str()?)?;
-        let mut target_contract_info = ContractInfoResponse::default();
-        target_contract_info.admin = Some(app.sender.address().to_string());
-        target_contract_info.code_id = contract.code_id()?;
-        target_contract_info.creator = app.sender.address().to_string();
-        target_contract_info.ibc_port = None;
+        let contract_info = app.wasm_querier().contract_info(&contract.address()?)?;
+        let target_contract_info = ContractInfoResponse::new(
+            contract.code_id()?,
+            app.sender_addr(),
+            Some(app.sender_addr()),
+            false,
+            None,
+        );
         assert_eq!(contract_info, target_contract_info);
 
         Ok(())
@@ -400,7 +456,7 @@ pub mod tests {
         let sender = app.sender.address();
         assert_eq!(
             app.bank_querier()
-                .balance(sender.clone(), Some(denom.to_string()))?,
+                .balance(&Addr::unchecked(sender), Some(denom.to_string()))?,
             init_coins
         );
         assert_eq!(
@@ -417,15 +473,16 @@ pub mod tests {
         let mut app = OsmosisTestTube::new(init_coins.clone());
 
         let account = app.init_account(coins(78, "uweird"))?;
+        let account_address = Addr::unchecked(account.address());
 
         let amount1 = 139823876u128;
         let amount2 = 1398212713563876u128;
         app.add_balance(
-            account.address(),
+            &account_address,
             vec![coin(amount1, GAS_TOKEN), coin(amount2, "uother")],
         )?;
 
-        let balance = app.bank_querier().balance(account.address(), None)?;
+        let balance = app.bank_querier().balance(&account_address, None)?;
 
         assert_eq!(
             balance,

@@ -189,6 +189,7 @@ mod node {
     }
 
     #[cfg(test)]
+    #[allow(unused)]
     pub fn enable_logger() {
         let _ = env_logger::Builder::new()
             .filter_level(log::LevelFilter::Debug)
