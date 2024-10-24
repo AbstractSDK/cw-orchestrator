@@ -290,14 +290,38 @@ impl<S: StateInterface> TxHandler for OsmosisTestTube<S> {
 
     fn instantiate2<I: Serialize + Debug>(
         &self,
-        _code_id: u64,
-        _init_msg: &I,
-        _label: Option<&str>,
-        _admin: Option<&Addr>,
-        _coins: &[cosmwasm_std::Coin],
-        _salt: Binary,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
     ) -> Result<Self::Response, Self::Error> {
-        unimplemented!("Osmosis Test Tube doesn't support Instantiate 2 directly");
+        use osmosis_test_tube::osmosis_std::types::cosmwasm::wasm::v1::{
+            MsgInstantiateContract2, MsgInstantiateContract2Response,
+        };
+
+        let instantiate_response = (*self.app.borrow())
+            .execute::<MsgInstantiateContract2, MsgInstantiateContract2Response>(
+                MsgInstantiateContract2 {
+                    sender: self.sender_addr().to_string(),
+                    admin: admin.map(ToString::to_string).unwrap_or_default(),
+                    code_id,
+                    label: label.unwrap_or(" ").to_string(), // empty string causes panic
+                    msg: cosmwasm_std::to_json_vec(init_msg)?,
+                    funds: cosmwasm_to_proto_coins(coins.to_vec()),
+                    salt: salt.to_vec(),
+                    fix_msg: false,
+                },
+                MsgInstantiateContract2::TYPE_URL,
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(instantiate_response.raw_data)),
+            events: instantiate_response.events,
+        })
     }
 }
 
