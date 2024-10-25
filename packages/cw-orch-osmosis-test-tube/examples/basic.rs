@@ -18,7 +18,7 @@ pub fn main() {
     let upload_res = contract_counter.upload();
     assert!(upload_res.is_ok());
 
-    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None);
+    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, &[]);
     assert!(init_res.is_ok());
     // ANCHOR_END: osmosis_test_tube_usage
 

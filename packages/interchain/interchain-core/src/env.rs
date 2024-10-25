@@ -351,7 +351,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     ///
     /// let osmosis = interchain.get_chain("osmosis-1").unwrap();
     /// let archway = interchain.get_chain("archway-1").unwrap();
-    /// let tx_resp = osmosis.commit_any::<MsgTransferResponse>(
+    /// let tx_resp = osmosis.commit_any(
     ///     vec![
     ///         Any {
     ///             value: MsgTransfer {
