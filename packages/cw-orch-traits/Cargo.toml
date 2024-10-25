@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-traits"
-version = "0.24.1"
+version = "0.25.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -13,6 +13,4 @@ readme = "README.md"
 
 [dependencies]
 cw-orch-core = { workspace = true }
-# Prost and Prost-types were kept at 0.11.9 here, because osmosis-test-tube doesn't support prost above 0.11.9
 prost-types = { workspace = true }
-prost = { workspace = true }

@@ -48,7 +48,7 @@ tokio = { version = "1.39", features = ["full"] }
 cw-orch = { path = "./cw-orch", version = "0.26.0" }
 cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.27.0" }
 cw-orch-core = { path = "packages/cw-orch-core", version = "2.1.3" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.24.0" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.25.0" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.24.2" }
 cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.24.3" }
 

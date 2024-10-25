@@ -10,9 +10,7 @@ use cosmwasm_std::{Binary, Coin, Uint128};
 use cw_orch_core::CwEnvError;
 use cw_orch_mock::cw_multi_test::AppResponse;
 use cw_orch_traits::Stargate;
-use osmosis_test_tube::{
-    Account, Bank, ExecuteResponse, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm,
-};
+use osmosis_test_tube::{Account, Bank, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm};
 
 // This should be the way to import stuff.
 // But apparently osmosis-test-tube doesn't have the same dependencies as the test-tube package
@@ -381,27 +379,34 @@ impl BankSetter for OsmosisTestTube {
 }
 
 impl Stargate for OsmosisTestTube {
-    fn commit_any<R: prost::Message + Default>(
+    fn commit_any(
         &self,
         msgs: Vec<prost_types::Any>,
         _memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
-        let msgs = msgs
-            .into_iter()
-            .map(|any| osmosis_test_tube::cosmrs::Any {
-                type_url: any.type_url,
-                value: any.value,
-            })
-            .collect();
-        let tx_response: ExecuteResponse<R> = self
+        let msgs = msgs.into_iter().map(|any| osmosis_test_tube::cosmrs::Any {
+            type_url: any.type_url,
+            value: any.value,
+        });
+        let tx_response = self
             .app
             .borrow()
-            .execute_multiple_raw(msgs, &self.sender)
+            .execute_with_selected_authenticators(msgs, &self.sender, &self.sender, &[])
             .map_err(map_err)?;
 
         Ok(AppResponse {
-            data: Some(Binary::new(tx_response.raw_data)),
-            events: tx_response.events,
+            data: None,
+            events: tx_response
+                .events
+                .into_iter()
+                .map(|e| {
+                    let mut event = cosmwasm_std::Event::new(e.r#type);
+                    for attribute in e.attributes {
+                        event = event.add_attribute(attribute.key, attribute.value)
+                    }
+                    event
+                })
+                .collect(),
         })
     }
 }
