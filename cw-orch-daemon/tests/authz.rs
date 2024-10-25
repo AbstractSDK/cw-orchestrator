@@ -68,7 +68,7 @@ mod tests {
         };
 
         // We start by granting authz to an account
-        daemon.commit_any::<MsgGrantResponse>(
+        daemon.commit_any(
             vec![Any {
                 type_url: "/cosmos.authz.v1beta1.MsgGrant".to_string(),
                 value: MsgGrant {
