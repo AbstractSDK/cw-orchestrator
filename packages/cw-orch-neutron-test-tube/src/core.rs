@@ -362,13 +362,17 @@ impl BankSetter for NeutronTestTube {
         address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        let mut all_coins: Coins = amount.clone().try_into().unwrap();
+        // Sorting coins
+        let amount: Coins = amount.try_into().unwrap();
+
+        let mut all_coins: Coins = amount.clone();
         let gas_balance = coin(100_000_000_000_000, GAS_TOKEN);
         all_coins.add(gas_balance).unwrap();
 
         let new_account = self.init_account(all_coins.into())?;
 
-        self.call_as(&new_account).bank_send(address, amount)?;
+        self.call_as(&new_account)
+            .bank_send(address, amount.into())?;
 
         Ok(())
 
