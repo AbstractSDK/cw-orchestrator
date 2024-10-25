@@ -67,7 +67,7 @@ pub const MOCK_CHAIN_INFO: ChainInfo = ChainInfo {
 /// let account = tube.init_account(coins(1_000_000_000, "uatom")).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = tube.query_balance(&account.address(), "uatom").unwrap();
+/// let balance: Uint128 = tube.query_balance(&Addr::unchecked(account.address()), "uatom").unwrap();
 /// assert_eq!(balance.u128(), 1_000_000_000u128);
 /// ```
 #[derive(Clone)]
@@ -153,10 +153,14 @@ impl<S: StateInterface> OsmosisTestTube<S> {
 
     /// Query the (bank) balance of a native token for and address.
     /// Returns the amount of the native token.
-    pub fn query_balance(&self, address: &Addr, denom: &str) -> Result<Uint128, CwEnvError> {
+    pub fn query_balance(
+        &self,
+        address: impl Into<String>,
+        denom: &str,
+    ) -> Result<Uint128, CwEnvError> {
         let amount = self
             .bank_querier()
-            .balance(address, Some(denom.to_string()))?;
+            .balance(&Addr::unchecked(address), Some(denom.to_string()))?;
         Ok(amount.first().unwrap().amount)
     }
 
