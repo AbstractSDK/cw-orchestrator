@@ -7,8 +7,8 @@ mod tests {
 
     use cosmrs::proto::cosmos::{
         authz::v1beta1::{
-            GenericAuthorization, GrantAuthorization, MsgGrant, MsgGrantResponse,
-            QueryGranteeGrantsResponse, QueryGranterGrantsResponse, QueryGrantsResponse,
+            GenericAuthorization, GrantAuthorization, MsgGrant, QueryGranteeGrantsResponse,
+            QueryGranterGrantsResponse, QueryGrantsResponse,
         },
         bank::v1beta1::MsgSend,
     };
