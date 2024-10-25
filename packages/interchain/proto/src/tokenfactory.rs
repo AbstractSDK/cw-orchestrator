@@ -3,12 +3,8 @@
 use cw_orch_interchain_core::{
     channel::InterchainChannel, IbcQueryHandler, InterchainEnv, InterchainError, NestedPacketsFlow,
 };
-use ibc_proto::ibc::{
-    applications::transfer::v1::MsgTransferResponse, apps::transfer::v1::MsgTransfer,
-};
-use osmosis_std::types::osmosis::tokenfactory::v1beta1::{
-    MsgCreateDenom, MsgCreateDenomResponse, MsgMint, MsgMintResponse,
-};
+use ibc_proto::ibc::apps::transfer::v1::MsgTransfer;
+use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgCreateDenom, MsgMint};
 use prost::{Message, Name};
 use tonic::transport::Channel;
 
@@ -32,7 +28,7 @@ pub fn create_denom<Chain: FullNode>(
     }
     .to_any();
 
-    chain.commit_any::<MsgCreateDenomResponse>(vec![any.into()], None)?;
+    chain.commit_any(vec![any.into()], None)?;
 
     log::info!("Created denom {}", get_denom(chain, token_name));
 
@@ -71,7 +67,7 @@ pub fn mint<Chain: FullNode>(
     }
     .to_any();
 
-    chain.commit_any::<MsgMintResponse>(vec![any.into()], None)?;
+    chain.commit_any(vec![any.into()], None)?;
 
     log::info!("Minted coins {} {}", amount, get_denom(chain, token_name));
 
@@ -115,7 +111,7 @@ pub fn transfer_tokens<Chain: IbcQueryHandler + FullNode, IBC: InterchainEnv<Cha
 
     // We send tokens using the ics20 message over the channel that is passed as an argument
     let send_tx = origin
-        .commit_any::<MsgTransferResponse>(
+        .commit_any(
             vec![prost_types::Any {
                 type_url: MsgTransfer::full_name(),
                 value: msg_transfer.encode_to_vec(),

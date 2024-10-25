@@ -239,7 +239,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
 }
 
 impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
-    fn commit_any<R>(
+    fn commit_any(
         &self,
         msgs: Vec<prost_types::Any>,
         memo: Option<&str>,

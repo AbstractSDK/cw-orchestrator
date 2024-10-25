@@ -8,9 +8,7 @@ use cw_orch::prelude::*;
 use cw_orch_osmosis_test_tube::OsmosisTestTube;
 use osmosis_test_tube::osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
-    osmosis::tokenfactory::v1beta1::{
-        MsgCreateDenom, MsgCreateDenomResponse, MsgMint, MsgMintResponse,
-    },
+    osmosis::tokenfactory::v1beta1::{MsgCreateDenom, MsgMint},
 };
 use osmosis_test_tube::Account;
 use prost::Message;
@@ -34,7 +32,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     contract_counter.get_count()?;
 
     // We create a new denom
-    chain.commit_any::<MsgCreateDenomResponse>(
+    chain.commit_any(
         vec![Any {
             type_url: MsgCreateDenom::TYPE_URL.to_string(),
             value: MsgCreateDenom {
@@ -47,7 +45,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     )?;
     let denom = format!("factory/{}/{}", sender_addr, SUBDENOM);
     // We mint some tokens
-    chain.commit_any::<MsgMintResponse>(
+    chain.commit_any(
         vec![Any {
             type_url: MsgMint::TYPE_URL.to_string(),
             value: MsgMint {
