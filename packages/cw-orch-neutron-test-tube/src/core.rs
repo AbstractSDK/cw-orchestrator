@@ -264,23 +264,67 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
 
     fn migrate<M: Serialize + Debug>(
         &self,
-        _migrate_msg: &M,
-        _new_code_id: u64,
-        _contract_address: &Addr,
+        migrate_msg: &M,
+        new_code_id: u64,
+        contract_address: &Addr,
     ) -> Result<Self::Response, CwEnvError> {
-        panic!("Migrate not implemented on neutron test_tube")
+        use neutron_test_tube::neutron_std::types::cosmwasm::wasm::v1::{
+            MsgMigrateContract, MsgMigrateContractResponse,
+        };
+
+        let migrate_response = (*self.app.borrow())
+            .execute::<MsgMigrateContract, MsgMigrateContractResponse>(
+                MsgMigrateContract {
+                    sender: self.sender_addr().to_string(),
+                    code_id: new_code_id,
+                    msg: cosmwasm_std::to_json_vec(migrate_msg)?,
+                    contract: contract_address.to_string(),
+                },
+                MsgMigrateContract::TYPE_URL,
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(migrate_response.raw_data)),
+            events: migrate_response.events,
+        })
     }
 
     fn instantiate2<I: Serialize + Debug>(
         &self,
-        _code_id: u64,
-        _init_msg: &I,
-        _label: Option<&str>,
-        _admin: Option<&Addr>,
-        _coins: &[cosmwasm_std::Coin],
-        _salt: Binary,
+        code_id: u64,
+        init_msg: &I,
+        label: Option<&str>,
+        admin: Option<&Addr>,
+        coins: &[cosmwasm_std::Coin],
+        salt: Binary,
     ) -> Result<Self::Response, Self::Error> {
-        unimplemented!("Neutron Test Tube doesn't support Instantiate 2 directly");
+        use neutron_test_tube::neutron_std::types::cosmwasm::wasm::v1::{
+            MsgInstantiateContract2, MsgInstantiateContract2Response,
+        };
+
+        let instantiate_response = (*self.app.borrow())
+            .execute::<MsgInstantiateContract2, MsgInstantiateContract2Response>(
+                MsgInstantiateContract2 {
+                    sender: self.sender_addr().to_string(),
+                    admin: admin.map(ToString::to_string).unwrap_or_default(),
+                    code_id,
+                    label: label.unwrap_or(" ").to_string(), // empty string causes panic
+                    msg: cosmwasm_std::to_json_vec(init_msg)?,
+                    funds: cosmwasm_to_proto_coins(coins.to_vec()),
+                    salt: salt.to_vec(),
+                    fix_msg: false,
+                },
+                MsgInstantiateContract2::TYPE_URL,
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(instantiate_response.raw_data)),
+            events: instantiate_response.events,
+        })
     }
 }
 
@@ -318,13 +362,17 @@ impl BankSetter for NeutronTestTube {
         address: &Addr,
         amount: Vec<Coin>,
     ) -> Result<(), <Self as TxHandler>::Error> {
-        let mut all_coins: Coins = amount.clone().try_into().unwrap();
+        // Sorting coins
+        let amount: Coins = amount.try_into().unwrap();
+
+        let mut all_coins: Coins = amount.clone();
         let gas_balance = coin(100_000_000_000_000, GAS_TOKEN);
         all_coins.add(gas_balance).unwrap();
 
         let new_account = self.init_account(all_coins.into())?;
 
-        self.call_as(&new_account).bank_send(address, amount)?;
+        self.call_as(&new_account)
+            .bank_send(address, amount.into())?;
 
         Ok(())
 
