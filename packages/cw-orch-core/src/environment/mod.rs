@@ -7,7 +7,7 @@ mod tx_handler;
 
 pub use chain_info::{ChainInfo, ChainInfoOwned, ChainKind, NetworkInfo, NetworkInfoOwned};
 pub use envs::{BankSetter, CwEnv, Environment, MutCwEnv};
-pub use index_response::IndexResponse;
+pub use index_response::{AppResponse, IndexResponse};
 pub use queriers::{
     bank::BankQuerier,
     env::{EnvironmentInfo, EnvironmentQuerier},

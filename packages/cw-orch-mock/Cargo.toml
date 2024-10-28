@@ -10,8 +10,8 @@ description = "Adapter for interacting with cw-multi-test via the cw-orchestrato
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cw-orch-core = { workspace = true }
-cosmwasm-std = { workspace = true, features = ["cosmwasm_1_2"] }
+cw-orch-core = { workspace = true, features = ["mock"] }
+cosmwasm-std = { workspace = true }
 cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 serde = { workspace = true }

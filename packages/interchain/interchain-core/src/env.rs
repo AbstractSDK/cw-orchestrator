@@ -380,7 +380,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     fn await_packets(
         &self,
         chain_id: ChainId,
-        tx_response: <Chain as TxHandler>::Response,
+        tx_response: impl Into<<Chain as TxHandler>::Response>,
     ) -> Result<IbcTxAnalysis<Chain>, Self::Error>;
 
     /// Follow every IBC packets sent out during the transaction
@@ -433,7 +433,7 @@ pub trait InterchainEnv<Chain: IbcQueryHandler>: Clone {
     fn await_and_check_packets(
         &self,
         chain_id: ChainId,
-        tx_response: <Chain as TxHandler>::Response,
+        tx_response: impl Into<<Chain as TxHandler>::Response>,
     ) -> Result<(), InterchainError> {
         let tx_result = self
             .await_packets(chain_id, tx_response)

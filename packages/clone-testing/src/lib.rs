@@ -25,10 +25,10 @@ mod contract {
     };
     use cosmwasm_std::{Checksum, Deps, DepsMut, Empty, QuerierWrapper};
 
-    pub struct CloneTestingContract(Box<dyn cw_orch_mock::cw_multi_test::Contract<Empty, Empty>>);
+    pub struct CloneTestingContract(Box<dyn cw_orch_core::contract::MockContract<Empty, Empty>>);
 
     impl CloneTestingContract {
-        pub fn new(contract: Box<dyn cw_orch_mock::cw_multi_test::Contract<Empty, Empty>>) -> Self {
+        pub fn new(contract: Box<dyn cw_orch_core::contract::MockContract<Empty, Empty>>) -> Self {
             Self(contract)
         }
     }

@@ -133,9 +133,8 @@ impl From<AccessConfig> for cosmos_sdk_proto::cosmwasm::wasm::v1::AccessConfig {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Empty;
-    use cw_multi_test::AppResponse;
 
-    use crate::environment::StateInterface;
+    use crate::{environment::StateInterface, AppResponse};
 
     use super::*;
 

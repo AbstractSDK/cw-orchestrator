@@ -241,8 +241,9 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
     fn await_packets(
         &self,
         chain_id: ChainId,
-        tx_response: CosmTxResponse,
+        tx_response: impl Into<CosmTxResponse>,
     ) -> Result<IbcTxAnalysis<Daemon>, Self::Error> {
+        let tx_response = tx_response.into();
         log::info!(
             target: chain_id,
             "Investigating sent packet events on tx {}",

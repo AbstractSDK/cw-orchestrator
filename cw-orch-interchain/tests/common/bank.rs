@@ -26,7 +26,7 @@ impl BankModule for Mock {
                 })],
             )
             .unwrap();
-        Ok(app_responses[0].clone())
+        Ok(app_responses[0].clone().into())
     }
 }
 

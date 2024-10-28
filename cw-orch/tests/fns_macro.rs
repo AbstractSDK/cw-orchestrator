@@ -1,9 +1,7 @@
 use mock_contract::{ExecuteMsgFns, InstantiateMsg, MockContract, QueryMsgFns};
 
-use cosmwasm_std::Event;
-
-use cw_orch::prelude::CwOrchUpload;
 use cw_orch::prelude::{CwOrchInstantiate, Mock};
+use cw_orch::prelude::{CwOrchUpload, IndexResponse};
 
 #[test]
 fn test_execute() {
@@ -13,11 +11,12 @@ fn test_execute() {
     contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
     let response = contract.first_message().unwrap();
-
-    response.has_event(
-        &Event::new("wasm")
-            .add_attribute("_contract_addr", "contract0")
-            .add_attribute("action", "first message passed"),
+    assert!(response
+        .event_attr_value("wasm", "_contract_address")
+        .is_ok(),);
+    assert_eq!(
+        response.event_attr_value("wasm", "action").unwrap(),
+        "first message passed"
     );
 
     contract.second_message("".to_string(), &[]).unwrap_err();

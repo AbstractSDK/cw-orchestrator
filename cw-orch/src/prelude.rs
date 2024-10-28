@@ -46,7 +46,7 @@ pub use crate::error::CwOrchError;
 pub use crate::contract::{ArtifactsDir, WasmPath};
 
 // re-export as it is used in the public API
-pub use crate::mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
+pub use crate::core::contract::{ContractWrapper, MockContract};
 pub use cosmwasm_std::{Addr, Coin, Empty};
 
 // builder, core type, networks mod, queriers mod, traits

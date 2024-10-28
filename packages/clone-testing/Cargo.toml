@@ -13,7 +13,6 @@ description = "Adapter for interacting with cw-multi-test via the cw-orchestrato
 cosmwasm-std = { workspace = true }
 
 cw-orch-core = { workspace = true }
-cw-orch-mock = { workspace = true }
 cw-orch-daemon = { workspace = true }
 
 clone-cw-multi-test = { version = "0.6.1" }

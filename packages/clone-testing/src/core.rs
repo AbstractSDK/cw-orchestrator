@@ -492,9 +492,9 @@ mod test {
     };
     use cw20::{BalanceResponse, MinterResponse};
     use cw_orch_core::contract::WasmPath;
+    use cw_orch_core::contract::{ContractWrapper, MockContract};
     use cw_orch_core::environment::QueryHandler;
     use cw_orch_daemon::networks::JUNO_1;
-    use cw_orch_mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
     use speculoos::prelude::*;
 
     pub struct MockCw20;

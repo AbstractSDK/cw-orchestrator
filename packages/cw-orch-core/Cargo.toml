@@ -18,13 +18,13 @@ all-features = true
 
 [features]
 default = []
+mock = ["dep:cw-multi-test"]
 eth = ["dep:snailquote"]
 
 [dependencies]
 thiserror = { workspace = true }
 cosmwasm-std = { workspace = true }
 serde = { workspace = true }
-cw-multi-test = { workspace = true }
 
 log = { workspace = true }
 sha2 = { workspace = true }
@@ -38,6 +38,10 @@ dirs = "5.0.1"
 cw-utils = { workspace = true }
 cosmos-sdk-proto = { workspace = true, features = ["cosmwasm"] }
 cw-storage-plus = { workspace = true }
+
+# Mock Specific Deps
+cw-multi-test = { workspace = true, optional = true }
+
 
 [dev-dependencies]
 speculoos = { workspace = true }

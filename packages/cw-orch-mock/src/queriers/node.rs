@@ -1,10 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::Api;
-use cw_multi_test::AppResponse;
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
-    CwEnvError,
+    AppResponse, CwEnvError,
 };
 
 use crate::{core::MockApp, MockBase};

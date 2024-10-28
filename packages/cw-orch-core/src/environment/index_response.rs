@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Binary, Event, StdError, StdResult};
-use cw_multi_test::AppResponse;
 #[cfg(feature = "eth")]
 use snailquote::unescape;
 
@@ -71,6 +70,37 @@ pub trait IndexResponse {
     }
 }
 
+/// Cloned from cosmwasm/cw_multi_test
+/// A subset of data returned as a response of a contract entry point,
+/// such as `instantiate`, `execute` or `migrate`.
+#[derive(Default, Clone, Debug)]
+pub struct AppResponse {
+    /// Response events.
+    pub events: Vec<Event>,
+    /// Response data.
+    pub data: Option<Binary>,
+}
+
+#[cfg(feature = "mock")]
+impl From<cw_multi_test::AppResponse> for AppResponse {
+    fn from(value: cw_multi_test::AppResponse) -> Self {
+        Self {
+            events: value.events,
+            data: value.data,
+        }
+    }
+}
+
+#[cfg(feature = "mock")]
+impl From<AppResponse> for cw_multi_test::AppResponse {
+    fn from(value: AppResponse) -> Self {
+        Self {
+            events: value.events,
+            data: value.data,
+        }
+    }
+}
+
 impl IndexResponse for AppResponse {
     fn events(&self) -> Vec<Event> {
         self.events.clone()
@@ -115,11 +145,10 @@ impl IndexResponse for AppResponse {
 #[cfg(test)]
 mod index_response_test {
     use cosmwasm_std::{Addr, Event};
-    use cw_multi_test::AppResponse;
 
     use speculoos::prelude::*;
 
-    use super::IndexResponse;
+    use super::{AppResponse, IndexResponse};
 
     const CONTRACT_ADDRESS: &str =
         "cosmos1fd68ah02gr2y8ze7tm9te7m70zlmc7vjyyhs6xlhsdmqqcjud4dql4wpxr";
