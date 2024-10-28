@@ -4,7 +4,7 @@ use cw_orch_daemon::queriers::{Ibc, Node};
 use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError, RUNTIME};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
-use cw_orch_interchain_core::InterchainEnv;
+use cw_orch_interchain_core::{InterchainEnv, NestedPacketsFlow, SinglePacketFlow};
 
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use tokio::time::sleep;
@@ -17,9 +17,8 @@ use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
 
 use crate::{IcDaemonResult, InterchainDaemonError};
 
-use cw_orch_interchain_core::types::{
-    ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult, NetworkId,
-    SimpleIbcPacketAnalysis,
+use cw_orch_interchain_core::results::{
+    ChannelCreationTransactionsResult, InternalChannelCreationResult, NetworkId,
 };
 use futures::future::try_join4;
 use std::collections::HashMap;
@@ -242,7 +241,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         &self,
         chain_id: ChainId,
         tx_response: impl Into<CosmTxResponse>,
-    ) -> Result<IbcTxAnalysis<Daemon>, Self::Error> {
+    ) -> Result<NestedPacketsFlow<Daemon>, Self::Error> {
         let tx_response = tx_response.into();
         log::info!(
             target: chain_id,
@@ -271,7 +270,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         src_channel: ChannelId,
         dst_chain: ChainId,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Daemon>, Self::Error> {
+    ) -> Result<SinglePacketFlow<Daemon>, Self::Error> {
         // We crate an interchain env object that is safe to send between threads
         let interchain_env = self
             .rt_handle
@@ -317,13 +316,13 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
     ///     .await_packets_for_txhash(
     ///         src_chain.chain_id,
     ///         "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
-    ///     ).unwrap().into_result().unwrap();
+    ///     ).unwrap().assert().unwrap();
     /// ```
     pub fn await_packets_for_txhash(
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,
-    ) -> Result<IbcTxAnalysis<Daemon>, InterchainDaemonError> {
+    ) -> Result<NestedPacketsFlow<Daemon>, InterchainDaemonError> {
         let grpc_channel1 = self.get_chain(chain_id)?.channel();
 
         let tx = self.rt_handle.block_on(

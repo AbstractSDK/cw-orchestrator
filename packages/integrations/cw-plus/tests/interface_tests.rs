@@ -321,7 +321,7 @@ mod cw20_ics {
         msg::AllowedInfo,
     };
     use cw_orch::prelude::*;
-    use cw_orch_interchain::{env::contract_port, prelude::*};
+    use cw_orch_interchain::{core::contract_port, prelude::*};
     use cw_plus_orch::{
         cw20_base::{Cw20Base, ExecuteMsgInterfaceFns as _},
         cw20_ics20::{
