@@ -25,9 +25,9 @@ eth = ["dep:snailquote"]
 [dependencies]
 thiserror = { workspace = true }
 cosmwasm-std = { workspace = true, features = [
-    "cosmwasm_1_2",
-    "staking",
-    "stargate",
+  "cosmwasm_1_2",
+  "staking",
+  "stargate",
 ] }
 serde = { workspace = true }
 

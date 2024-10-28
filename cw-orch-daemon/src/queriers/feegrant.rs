@@ -18,9 +18,7 @@ impl FeeGrant {
     }
 
     pub fn new_async(channel: Channel) -> Self {
-        Self {
-            channel,
-        }
+        Self { channel }
     }
 }
 
