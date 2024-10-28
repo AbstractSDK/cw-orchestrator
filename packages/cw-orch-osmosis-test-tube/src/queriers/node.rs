@@ -4,9 +4,8 @@ use crate::OsmosisTestTube;
 use cosmwasm_std::{BlockInfo, Timestamp};
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
-    CwEnvError,
+    AppResponse, CwEnvError,
 };
-use cw_orch_mock::cw_multi_test::AppResponse;
 use osmosis_test_tube::OsmosisTestApp;
 
 pub struct OsmosisTestTubeNodeQuerier {

@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use cosmwasm_std::IbcOrder;
 use cw_orch_core::environment::QuerierGetter;
 use cw_orch_daemon::queriers::Ibc;
@@ -17,7 +18,7 @@ fn assert_ordering(
         .interchain_channel
         .get_ordered_ports_from("juno-1")?;
 
-    let channel_info = juno.rt_handle.block_on(ibc_querier._channel(
+    let channel_info = block_on(ibc_querier._channel(
         channel.0.port.to_string(),
         channel.0.channel.unwrap().to_string(),
     ))?;

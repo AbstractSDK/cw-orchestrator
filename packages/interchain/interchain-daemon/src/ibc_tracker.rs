@@ -12,7 +12,6 @@ use futures_util::future::join_all;
 use futures_util::stream::FuturesUnordered;
 use futures_util::StreamExt;
 use log::*;
-use tokio::runtime::Handle;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -65,16 +64,16 @@ pub trait IbcTracker<S: LoggedState>: ChannelAccess + Send + Sync + Clone {
                 state.update_state(self.channel(), &chain_id).await?;
                 debug!(target: &chain_id, "state updated");
             }
-            tokio::time::sleep(config.log_interval).await;
+            async_std::task::sleep(config.log_interval).await;
         }
     }
 
-    fn detach_cron_log(self, rt: &Handle, config: IbcTrackerConfig<S>) -> Result<(), Box<dyn Error>>
+    fn detach_cron_log(self, config: IbcTrackerConfig<S>) -> Result<(), Box<dyn Error>>
     where
         S: 'static,
         Self: 'static,
     {
-        rt.spawn(async move {
+        async_std::task::spawn(async move {
             self.cron_log(config).await.unwrap();
         });
         Ok(())
@@ -102,7 +101,7 @@ impl<T: ContractInstance<Daemon>> IbcPacketLogger for T {
 
         let channel = daemon.channel().clone();
 
-        daemon.rt_handle.spawn(async move {
+        async_std::task::spawn(async move {
             channel.cron_log(config).await.unwrap();
         });
         Ok(())

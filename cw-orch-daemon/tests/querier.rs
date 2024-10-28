@@ -2,6 +2,7 @@ mod common;
 
 #[cfg(feature = "node-tests")]
 mod queriers {
+    use async_std::task::block_on;
 
     use cosmwasm_std::Addr;
     use cw_orch_core::contract::interface_traits::*;
@@ -16,7 +17,6 @@ mod queriers {
         queriers::{CosmWasm, Gov, Ibc, Node, Staking},
         Daemon, DaemonError,
     };
-    use tokio::runtime::Runtime;
 
     use cosmrs::{
         cosmwasm::MsgExecuteContract,
@@ -43,12 +43,11 @@ mod queriers {
     */
     #[test]
     fn ibc() {
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let ibc = Ibc::new_async(channel);
 
-        let clients = rt.block_on(ibc._clients());
+        let clients = block_on(ibc._clients());
         asserting!("clients is ok").that(&clients).is_ok();
     }
 
@@ -57,15 +56,14 @@ mod queriers {
     */
     #[test]
     fn staking() {
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let staking = Staking::new_async(channel);
 
-        let params = rt.block_on(staking._params());
+        let params = block_on(staking._params());
         asserting!("params is ok").that(&params).is_ok();
 
-        let validators = rt.block_on(staking._validators(StakingBondStatus::Bonded));
+        let validators = block_on(staking._validators(StakingBondStatus::Bonded));
         asserting!("validators is ok").that(&validators).is_ok();
         asserting!("validators is not empty")
             .that(&validators.unwrap().len())
@@ -77,12 +75,11 @@ mod queriers {
     */
     #[test]
     fn gov() {
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let gov = Gov::new_async(channel);
 
-        let params = rt.block_on(gov._params("voting"));
+        let params = block_on(gov._params("voting"));
         asserting!("params is ok").that(&params).is_ok();
     }
 
@@ -91,39 +88,38 @@ mod queriers {
     */
     #[test]
     fn bank() {
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let bank = Bank::new_async(channel);
 
-        let params = rt.block_on(bank._params());
+        let params = block_on(bank._params());
         asserting!("params is ok").that(&params).is_ok();
 
-        let balances = rt.block_on(bank._balance(
+        let balances = block_on(bank._balance(
             &Addr::unchecked("juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y"),
             None,
         ));
         asserting!("balances is ok").that(&balances).is_ok();
 
-        let spendable_balances = rt.block_on(bank._spendable_balances(&Addr::unchecked(
+        let spendable_balances = block_on(bank._spendable_balances(&Addr::unchecked(
             "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y",
         )));
         asserting!("spendable_balances is ok")
             .that(&spendable_balances)
             .is_ok();
 
-        let total_supply = rt.block_on(bank._total_supply());
+        let total_supply = block_on(bank._total_supply());
         asserting!("total_supply is ok").that(&total_supply).is_ok();
 
-        let supply_of = rt.block_on(bank._supply_of("ujunox"));
+        let supply_of = block_on(bank._supply_of("ujunox"));
         asserting!("supply_of is ok").that(&supply_of).is_ok();
 
-        let denom_metadata = rt.block_on(bank._denom_metadata("ucosm"));
+        let denom_metadata = block_on(bank._denom_metadata("ucosm"));
         asserting!("denom_metadata is err, should not exists")
             .that(&denom_metadata)
             .is_err();
 
-        let denoms_metadata = rt.block_on(bank._denoms_metadata(None));
+        let denoms_metadata = block_on(bank._denoms_metadata(None));
         asserting!("denoms_metadata is ok, but empty")
             .that(&denoms_metadata)
             .is_ok();
@@ -134,12 +130,11 @@ mod queriers {
     */
     #[test]
     fn cosmwasm() {
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let cw = CosmWasm::new_async(channel);
 
-        let params = rt.block_on(cw._params());
+        let params = block_on(cw._params());
         asserting!("params is ok").that(&params).is_ok();
     }
 
@@ -148,27 +143,24 @@ mod queriers {
     */
     #[test]
     fn node() {
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let node = Node::new_async(channel);
 
-        let block_height = rt.block_on(node._block_height());
+        let block_height = block_on(node._block_height());
         asserting!("block_height is ok").that(&block_height).is_ok();
 
-        let latest_block = rt.block_on(node._latest_block());
+        let latest_block = block_on(node._latest_block());
         asserting!("latest_block is ok").that(&latest_block).is_ok();
 
-        let block_time = rt.block_on(node._block_time());
+        let block_time = block_on(node._block_time());
         asserting!("block_time is ok").that(&block_time).is_ok();
     }
 
     #[test]
     #[serial_test::serial]
     fn simulate_tx() {
-        let rt = Runtime::new().unwrap();
-
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
 
         let node = Node::new_async(channel);
 
@@ -200,7 +192,7 @@ mod queriers {
 
         let body = tx::Body::new(msgs, memo, 100u32);
 
-        let simulate_tx = rt.block_on(node._simulate_tx(body.into_bytes().unwrap()));
+        let simulate_tx = block_on(node._simulate_tx(body.into_bytes().unwrap()));
 
         asserting!("that simulate_tx worked but msg is wrong")
             .that(&simulate_tx)
@@ -213,8 +205,7 @@ mod queriers {
         use cw_orch_daemon::TxSender;
         use cw_orch_networks::networks;
 
-        let rt = Runtime::new().unwrap();
-        let channel = rt.block_on(build_channel());
+        let channel = block_on(build_channel());
         let cosm_wasm = CosmWasm::new_async(channel);
         let daemon = Daemon::builder(networks::LOCAL_JUNO)
             .is_test(true)
@@ -233,7 +224,7 @@ mod queriers {
 
         let contract_address = contract.address().unwrap();
 
-        let contract_info = rt.block_on(cosm_wasm._contract_info(&contract_address));
+        let contract_info = block_on(cosm_wasm._contract_info(&contract_address));
 
         asserting!("contract info is ok")
             .that(&contract_info)

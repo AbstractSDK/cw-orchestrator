@@ -1,5 +1,6 @@
 use std::{cell::RefCell, fmt::Debug, io::Read, rc::Rc};
 
+use async_std::task::block_on;
 use clone_cw_multi_test::{
     addons::{MockAddressGenerator, MockApiBech32},
     wasm_emulation::{channel::RemoteChannel, storage::analyzer::StorageAnalyzer},
@@ -17,10 +18,9 @@ use cw_orch_core::{
     },
     CwEnvError,
 };
-use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT, RUNTIME};
+use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT};
 use cw_utils::NativeBalance;
 use serde::Serialize;
-use tokio::runtime::Runtime;
 
 use crate::{contract::CloneTestingContract, queriers::bank::CloneBankQuerier};
 
@@ -60,9 +60,8 @@ pub type CloneTestingApp = App<BankKeeper, MockApiBech32>;
 /// // We just use the MockState as an example here, but you can implement your own state struct.
 /// use cw_orch_clone_testing::MockState as CustomState;
 ///
-/// let rt = tokio::runtime::Runtime::new().unwrap();
 /// let chain = cw_orch_daemon::networks::JUNO_1;
-/// let mock: CloneTesting = CloneTesting::new_custom(&rt, chain.clone(), CustomState::new(chain.clone().into(), "mock")).unwrap();
+/// let mock: CloneTesting = CloneTesting::new_custom(chain.clone(), CustomState::new(chain.clone().into(), "mock")).unwrap();
 /// ```
 #[derive(Clone)]
 pub struct CloneTesting<S: StateInterface = MockState> {
@@ -168,32 +167,21 @@ impl CloneTesting {
 
 impl CloneTesting<MockState> {
     /// Create a mock environment with the default mock state.
-    pub fn new(chain: impl Into<ChainInfoOwned>) -> Result<Self, CwEnvError> {
-        Self::new_with_runtime(&RUNTIME, chain)
-    }
 
-    /// Create a mock environment with the default mock state.
-    /// It uses a custom runtime object to control async requests
-    pub fn new_with_runtime(
-        rt: &Runtime,
-        chain: impl Into<ChainInfoOwned>,
-    ) -> Result<Self, CwEnvError> {
+    pub fn new(chain: impl Into<ChainInfoOwned>) -> Result<Self, CwEnvError> {
         let chain_data = chain.into();
         CloneTesting::new_custom(
-            rt,
             chain_data.clone(),
             MockState::new(chain_data, DEFAULT_DEPLOYMENT),
         )
     }
 
     pub fn new_with_deployment_id(
-        rt: &Runtime,
         chain: impl Into<ChainInfoOwned>,
         deployment_id: &str,
     ) -> Result<Self, CwEnvError> {
         let chain_data = chain.into();
         CloneTesting::new_custom(
-            rt,
             chain_data.clone(),
             MockState::new(chain_data, deployment_id),
         )
@@ -204,7 +192,6 @@ impl<S: StateInterface> CloneTesting<S> {
     /// Create a mock environment with a custom mock state.
     /// The state is customizable by implementing the `StateInterface` trait on a custom struct and providing it on the custom constructor.
     pub fn new_custom(
-        rt: &Runtime,
         chain: impl Into<ChainInfoOwned>,
         custom_state: S,
     ) -> Result<Self, CwEnvError> {
@@ -218,7 +205,6 @@ impl<S: StateInterface> CloneTesting<S> {
 
         let pub_address_prefix = chain.network_info.pub_address_prefix.clone();
         let remote_channel = RemoteChannel::new(
-            rt,
             &chain
                 .grpc_urls
                 .iter()
@@ -236,10 +222,8 @@ impl<S: StateInterface> CloneTesting<S> {
         let bank = BankKeeper::new().with_remote(remote_channel.clone());
 
         // We update the block_height
-        let block_info = remote_channel
-            .rt
-            .block_on(Node::new_async(remote_channel.channel.clone())._block_info())
-            .unwrap();
+        let block_info =
+            block_on(Node::new_async(remote_channel.channel.clone())._block_info()).unwrap();
 
         // Finally we instantiate a new app
         let app = AppBuilder::default()
@@ -496,9 +480,9 @@ mod test {
     };
     use cw20::{BalanceResponse, MinterResponse};
     use cw_orch_core::contract::WasmPath;
+    use cw_orch_core::contract::{ContractWrapper, MockContract};
     use cw_orch_core::environment::QueryHandler;
     use cw_orch_daemon::networks::JUNO_1;
-    use cw_orch_mock::cw_multi_test::{Contract as MockContract, ContractWrapper};
     use speculoos::prelude::*;
 
     pub struct MockCw20;
@@ -631,10 +615,9 @@ mod test {
         let denom = "uosmo";
         let chain = JUNO_1;
 
-        let rt = Runtime::new().unwrap();
         let mock_state = MockState::new(JUNO_1.into(), "default_id");
 
-        let chain: CloneTesting = CloneTesting::<_>::new_custom(&rt, chain, mock_state)?;
+        let chain: CloneTesting = CloneTesting::<_>::new_custom(chain, mock_state)?;
         let recipient = chain.init_account();
 
         chain

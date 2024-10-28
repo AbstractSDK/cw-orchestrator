@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use cosmwasm_std::coins;
 use cw_orch::{anyhow, prelude::*};
 use cw_orch_daemon::CosmosOptions;
@@ -16,7 +17,7 @@ pub fn main() -> anyhow::Result<()> {
         .authz_granter(&Addr::unchecked(LOCAL_JUNO_GRANTER));
     let chain = Daemon::builder(network).build_sender(sender)?;
 
-    chain.rt_handle.block_on(
+    block_on(
         chain
             .sender()
             .bank_send(&Addr::unchecked(LOCAL_JUNO_GRANTER), coins(10000, "ujuno")),

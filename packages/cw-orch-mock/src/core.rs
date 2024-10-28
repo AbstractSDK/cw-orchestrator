@@ -5,16 +5,16 @@ use cosmwasm_std::{
     to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
 };
 use cw_multi_test::{
-    ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
-    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailing, WasmKeeper,
+    ibc::IbcSimpleModule, App, BankKeeper, DistributionKeeper, Executor, FailingModule,
+    GovFailingModule, MockApiBech32, StakeKeeper, StargateFailing, WasmKeeper,
 };
 use serde::Serialize;
 
 use super::state::MockState;
 use cw_orch_core::{
-    contract::interface_traits::Uploadable,
+    contract::{interface_traits::Uploadable, BoxedContractWrapper, MockContract},
     environment::{AccessConfig, ChainState, IndexResponse, StateInterface, TxHandler},
-    CwEnvError,
+    AppResponse, CwEnvError,
 };
 
 pub type MockApp<A = MockApi> = App<
@@ -104,9 +104,11 @@ impl<A: Api, S: StateInterface> MockBase<A, S> {
     pub fn upload_custom(
         &self,
         contract_id: &str,
-        wrapper: Box<dyn Contract<Empty, Empty>>,
+        wrapper: Box<dyn MockContract<Empty, Empty>>,
     ) -> Result<AppResponse, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(wrapper);
+        let boxed_wrapper: BoxedContractWrapper<Empty, Empty> = wrapper.into();
+
+        let code_id = self.app.borrow_mut().store_code(Box::new(boxed_wrapper));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -131,7 +133,7 @@ impl<A: Api, S: StateInterface> ChainState for MockBase<A, S> {
 impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     type Response = AppResponse;
     type Error = CwEnvError;
-    type ContractSource = Box<dyn Contract<Empty, Empty>>;
+    type ContractSource = Box<dyn MockContract<Empty, Empty>>;
     type Sender = Addr;
 
     fn sender(&self) -> &Self::Sender {
@@ -147,7 +149,8 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     }
 
     fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(T::wrapper());
+        let boxed_wrapper: BoxedContractWrapper<Empty, Empty> = T::wrapper().into();
+        let code_id = self.app.borrow_mut().store_code(Box::new(boxed_wrapper));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -173,6 +176,7 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
                 coins,
             )
             .map_err(From::from)
+            .map(Into::into)
     }
 
     fn instantiate<I: Serialize + Debug>(
@@ -247,6 +251,7 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
                 new_code_id,
             )
             .map_err(From::from)
+            .map(Into::into)
     }
 
     fn upload_with_access_config<T: Uploadable>(

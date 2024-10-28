@@ -7,8 +7,7 @@ use cw_orch_core::contract::WasmPath;
 use cw_orch_core::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueriers, NetworkInfo};
 
 use cosmwasm_std::{Binary, Coin, Uint128};
-use cw_orch_core::CwEnvError;
-use cw_orch_mock::cw_multi_test::AppResponse;
+use cw_orch_core::{AppResponse, CwEnvError};
 use cw_orch_traits::Stargate;
 use osmosis_test_tube::{Account, Bank, Gamm, Module, Runner, RunnerError, SigningAccount, Wasm};
 

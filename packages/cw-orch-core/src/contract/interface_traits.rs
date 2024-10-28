@@ -1,4 +1,5 @@
 use super::{Contract, WasmPath};
+use crate::contract::wrapper::Contract as MockContract;
 use crate::environment::AccessConfig;
 use crate::{
     environment::{
@@ -9,7 +10,6 @@ use crate::{
     log::contract_target,
 };
 use cosmwasm_std::{Addr, Binary, Coin, Empty};
-use cw_multi_test::Contract as MockContract;
 use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;

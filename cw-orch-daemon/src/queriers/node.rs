@@ -5,6 +5,7 @@ use crate::{
     tx_resp::CosmTxResponse, DaemonBase,
 };
 
+use async_std::task::block_on;
 use cosmrs::{
     proto::cosmos::{
         base::query::v1beta1::PageRequest,
@@ -17,7 +18,6 @@ use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter},
     log::query_target,
 };
-use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 /// Querier for the Tendermint node.
@@ -25,21 +25,16 @@ use tonic::transport::Channel;
 /// All the async function are prefixed with `_`
 pub struct Node {
     pub channel: Channel,
-    pub rt_handle: Option<Handle>,
 }
 
 impl Node {
     pub fn new<Sender: QuerySender>(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
-            rt_handle: Some(daemon.rt_handle.clone()),
         }
     }
     pub fn new_async(channel: Channel) -> Self {
-        Self {
-            channel,
-            rt_handle: None,
-        }
+        Self { channel }
     }
 }
 
@@ -123,7 +118,7 @@ impl Node {
 
         while latest_block_height <= 1 {
             // wait to get some blocks
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            async_std::task::sleep(Duration::from_secs(1)).await;
             latest_block = self._latest_block().await?;
             latest_block_height = latest_block.header.height.value();
         }
@@ -263,7 +258,7 @@ impl Node {
                     }
                     log::debug!(target: &query_target(), "TX not found with error: {:?}", err);
                     log::debug!(target: &query_target(), "Waiting {} milli-seconds", block_speed.as_millis());
-                    tokio::time::sleep(block_speed).await;
+                    async_std::task::sleep(block_speed).await;
                 }
             }
         }
@@ -340,7 +335,7 @@ impl Node {
                     if retry_on_empty && resp.is_empty() {
                         log::debug!(target: &query_target(), "No TX found with events {:?}", events);
                         log::debug!(target: &query_target(), "Waiting 10s");
-                        tokio::time::sleep(Duration::from_secs(10)).await;
+                        async_std::task::sleep(Duration::from_secs(10)).await;
                     } else {
                         log::debug!(
                             target: &query_target(),
@@ -353,7 +348,7 @@ impl Node {
                 Err(err) => {
                     log::debug!(target: &query_target(), "TX not found with error: {:?}", err);
                     log::debug!(target: &query_target(), "Waiting 10s");
-                    tokio::time::sleep(Duration::from_secs(10)).await;
+                    async_std::task::sleep(Duration::from_secs(10)).await;
                 }
             }
         }
@@ -371,48 +366,29 @@ impl NodeQuerier for Node {
     type Response = CosmTxResponse;
 
     fn latest_block(&self) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._block_info())
+        block_on(self._block_info())
     }
 
     fn block_by_height(&self, height: u64) -> Result<cosmwasm_std::BlockInfo, Self::Error> {
-        let block = self
-            .rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._block_by_height(height))?;
+        let block = block_on(self._block_by_height(height))?;
 
         block_to_block_info(block)
     }
 
     fn block_height(&self) -> Result<u64, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._block_height())
+        block_on(self._block_height())
     }
 
     fn block_time(&self) -> Result<u128, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._block_time())
+        block_on(self._block_time())
     }
 
     fn simulate_tx(&self, tx_bytes: Vec<u8>) -> Result<u64, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._simulate_tx(tx_bytes))
+        block_on(self._simulate_tx(tx_bytes))
     }
 
     fn find_tx(&self, hash: String) -> Result<Self::Response, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._find_tx(hash))
+        block_on(self._find_tx(hash))
     }
 }
 

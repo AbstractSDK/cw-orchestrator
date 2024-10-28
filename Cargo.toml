@@ -14,6 +14,7 @@ members = [
   "packages/macros/*",
   "packages/interchain/*",
   "packages/integrations/*",
+  "packages/cw-orch-on-chain",
 ]
 exclude = [
   "test_contracts/compatibility-test", # TODO: add new after cw-orch-core 2.0.0 as it's breaking, it shouldn't be compatible
@@ -44,6 +45,7 @@ neutron-test-tube = { version = "4.2.3" }
 anyhow = "1.0"
 serde = { version = "1.0.208", default-features = false, features = ["derive"] }
 tokio = { version = "1.39", features = ["full"] }
+async-std = "1.13.0"
 
 cw-orch = { path = "./cw-orch", version = "0.27.0" }
 cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.28.0" }

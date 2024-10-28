@@ -4,9 +4,8 @@ use crate::NeutronTestTube;
 use cosmwasm_std::{BlockInfo, Timestamp};
 use cw_orch_core::{
     environment::{NodeQuerier, Querier, QuerierGetter, StateInterface},
-    CwEnvError,
+    AppResponse, CwEnvError,
 };
-use cw_orch_mock::cw_multi_test::AppResponse;
 use neutron_test_tube::NeutronTestApp;
 
 pub struct NeutronTestTubeNodeQuerier {

@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use cosmwasm_std::IbcOrder;
 use cw_orch_interchain_core::env::ChainId;
 use cw_orch_starship::Starship;
@@ -63,7 +64,7 @@ impl ChannelCreator for Starship {
         order: Option<IbcOrder>,
     ) -> Result<String, InterchainDaemonError> {
         // The connection_id is decided upon automatically by starship and returned by the client
-        let connection_id = self.rt_handle.block_on(self.client().create_channel(
+        let connection_id = block_on(self.client().create_channel(
             src_chain,
             dst_chain,
             src_port.as_str(),

@@ -55,7 +55,3 @@ pub(crate) mod cosmos_modules {
         tendermint::v0_34::abci as tendermint_abci,
     };
 }
-
-lazy_static::lazy_static! {
-    pub static ref RUNTIME: tokio::runtime::Runtime = tokio::runtime::Runtime::new().unwrap();
-}

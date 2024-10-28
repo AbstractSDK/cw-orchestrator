@@ -28,7 +28,6 @@ prost = "0.13.1"
 serde_json = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-tokio = "1.39.2"
 tonic = { workspace = true, features = ["tls", "tls-roots"] }
 
 [dev-dependencies]

@@ -13,19 +13,19 @@ description = "Adapter for interacting with cw-multi-test via the cw-orchestrato
 cosmwasm-std = { workspace = true }
 
 cw-orch-core = { workspace = true }
-cw-orch-mock = { workspace = true }
 cw-orch-daemon = { workspace = true }
 
-clone-cw-multi-test = { version = "0.6.1" }
+# clone-cw-multi-test = { version = "0.6.1" }
+clone-cw-multi-test = { git = "https://github.com/abstractsdk/cw-multi-test-fork", branch = "clone-testing/remove-tokio" }
 
 cw-utils = { workspace = true }
 serde = { workspace = true }
 log = { workspace = true }
 anyhow = { workspace = true }
-tokio = { workspace = true }
 itertools = "0.12.0"
 sha2 = "0.10.8"
 tonic = { workspace = true }
+async-std = { workspace = true }
 
 [dev-dependencies]
 cosmwasm-schema = "2.0.0"

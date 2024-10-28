@@ -1,6 +1,7 @@
 use crate::senders::builder::SenderBuilder;
 
-use crate::{DaemonAsyncBuilder, DaemonBase, DaemonState, Wallet, RUNTIME};
+use crate::{DaemonAsyncBuilder, DaemonBase, DaemonState, Wallet};
+use async_std::task::block_on;
 use cw_orch_core::environment::ChainInfoOwned;
 
 use super::super::error::DaemonError;
@@ -21,7 +22,6 @@ pub struct DaemonBuilder {
     pub(crate) chain: ChainInfoOwned,
 
     // # Optional
-    pub(crate) handle: Option<tokio::runtime::Handle>,
     pub(crate) deployment_id: Option<String>,
     pub(crate) state_path: Option<String>,
     // State from rebuild or existing daemon
@@ -38,7 +38,6 @@ impl DaemonBuilder {
     pub fn new(chain: impl Into<ChainInfoOwned>) -> Self {
         Self {
             chain: chain.into(),
-            handle: None,
             deployment_id: None,
             state_path: None,
             state: None,
@@ -47,24 +46,6 @@ impl DaemonBuilder {
             is_test: false,
             load_network: true,
         }
-    }
-
-    /// Set a custom tokio runtime handle to use for the Daemon
-    ///
-    /// ## Example
-    /// ```no_run
-    /// use cw_orch_daemon::{Daemon, networks};
-    /// use tokio::runtime::Runtime;
-    /// let rt = Runtime::new().unwrap();
-    /// let Daemon = Daemon::builder(networks::LOCAL_JUNO)
-    ///     .handle(rt.handle())
-    ///     // ...
-    ///     .build()
-    ///     .unwrap();
-    /// ```
-    pub fn handle(&mut self, handle: &tokio::runtime::Handle) -> &mut Self {
-        self.handle = Some(handle.clone());
-        self
     }
 
     /// Set the deployment id to use for the Daemon interactions
@@ -139,17 +120,12 @@ impl DaemonBuilder {
 
     /// Build a Daemon with the default [`Wallet`] implementation.
     pub fn build(&self) -> Result<DaemonBase<Wallet>, DaemonError> {
-        let rt_handle = self
-            .handle
-            .clone()
-            .unwrap_or_else(|| RUNTIME.handle().clone());
-
         let builder = self.clone();
 
         // build the underlying daemon
-        let daemon = rt_handle.block_on(DaemonAsyncBuilder::from(builder).build())?;
+        let daemon = block_on(DaemonAsyncBuilder::from(builder).build())?;
 
-        Ok(DaemonBase { rt_handle, daemon })
+        Ok(DaemonBase { daemon })
     }
 
     /// Build a daemon
@@ -157,18 +133,12 @@ impl DaemonBuilder {
         &self,
         sender_options: T,
     ) -> Result<DaemonBase<T::Sender>, DaemonError> {
-        let rt_handle = self
-            .handle
-            .clone()
-            .unwrap_or_else(|| RUNTIME.handle().clone());
-
         let builder = self.clone();
 
         // build the underlying daemon
-        let daemon =
-            rt_handle.block_on(DaemonAsyncBuilder::from(builder).build_sender(sender_options))?;
+        let daemon = block_on(DaemonAsyncBuilder::from(builder).build_sender(sender_options))?;
 
-        Ok(DaemonBase { rt_handle, daemon })
+        Ok(DaemonBase { daemon })
     }
 
     /// Specifies path to the daemon state file

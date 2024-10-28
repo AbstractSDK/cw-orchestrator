@@ -84,7 +84,7 @@ mod tests {
     use crate::DaemonAsync;
     use speculoos::prelude::*;
 
-    #[tokio::test]
+    #[async_std::test]
     #[serial_test::serial]
     async fn no_connection() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;
@@ -103,7 +103,7 @@ mod tests {
             ))
     }
 
-    #[tokio::test]
+    #[async_std::test]
     #[serial_test::serial]
     async fn network_grpcs_list_is_empty() {
         let mut chain = cw_orch_daemon::networks::LOCAL_JUNO;

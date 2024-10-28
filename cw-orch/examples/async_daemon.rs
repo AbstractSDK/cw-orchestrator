@@ -7,7 +7,7 @@ use cw_orch_mock::Mock;
 /// RUST_LOG (recommended value `info`) to see the app logs
 ///
 /// TEST_MNEMONIC to be able to sign and broadcast a transaction on UNI testnet
-#[tokio::main]
+#[async_std::main]
 pub async fn main() -> anyhow::Result<()> {
     // We start by loading environment variables from a .env file.
     // You can use a .env file to specify environment variables.

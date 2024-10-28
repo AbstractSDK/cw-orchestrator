@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 
 use cosmwasm_std::{from_json, testing::MockApi, Api, Event, IbcOrder};
-use cw_orch_core::environment::QueryHandler;
+use cw_orch_core::{environment::QueryHandler, AppResponse};
 use cw_orch_interchain_core::{
     channel::InterchainChannel,
     env::{ChainId, ChannelCreation},
@@ -14,7 +14,7 @@ use cw_orch_mock::{
             relayer::{self, ChannelCreationResult},
             types::{Connection, MockIbcQuery},
         },
-        AppResponse, MockApiBech32,
+        MockApiBech32,
     },
     Mock, MockBech32, MockState,
 };
@@ -211,10 +211,10 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
             src_channel_id: ChannelId::from_str(&src_channel)?,
             dst_channel_id: ChannelId::from_str(&dst_channel)?,
             channel_creation_txs: ChannelCreation {
-                init,
-                r#try,
-                ack,
-                confirm,
+                init: init.into(),
+                r#try: r#try.into(),
+                ack: ack.into(),
+                confirm: confirm.into(),
             },
         })
     }
@@ -222,8 +222,10 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
     fn await_packets(
         &self,
         chain_id: ChainId,
-        tx_response: AppResponse,
+        tx_response: impl Into<AppResponse>,
     ) -> Result<NestedPacketsFlow<MockBase<A>>, Self::Error> {
+        let tx_response = tx_response.into();
+
         // We start by analyzing sent packets in the response
         let packets = find_ibc_packets_sent_in_tx(&self.get_chain(chain_id)?, &tx_response)?;
 
@@ -307,7 +309,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                 timeout_tx,
                 close_channel_confirm: _,
             } => IbcPacketOutcome::Timeout {
-                timeout_tx: TxId::new(src_chain.to_string(), timeout_tx),
+                timeout_tx: TxId::new(src_chain.to_string(), timeout_tx.into()),
             },
             relayer::RelayingResult::Acknowledgement { tx, ack } => {
                 let ack_string =
@@ -321,8 +323,8 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                     ack_string,
                 );
                 IbcPacketOutcome::Success {
-                    receive_tx: TxId::new(dst_chain.to_string(), relay_result.receive_tx),
-                    ack_tx: TxId::new(src_chain.to_string(), tx),
+                    receive_tx: TxId::new(dst_chain.to_string(), relay_result.receive_tx.into()),
+                    ack_tx: TxId::new(src_chain.to_string(), tx.into()),
                     ack,
                 }
             }

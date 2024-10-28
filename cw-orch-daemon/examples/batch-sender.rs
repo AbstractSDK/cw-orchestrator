@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use counter_contract::{
     msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
@@ -26,7 +27,7 @@ pub fn main() -> anyhow::Result<()> {
     let count = counter.get_count()?;
     assert_eq!(count.count, 0);
 
-    chain.rt_handle.block_on(chain.sender().broadcast(None))?;
+    block_on(chain.sender().broadcast(None))?;
 
     let count = counter.get_count()?;
     assert_eq!(count.count, 1);
@@ -39,7 +40,7 @@ pub fn main() -> anyhow::Result<()> {
     counter.increment()?;
     counter.increment()?;
 
-    chain.rt_handle.block_on(chain.sender().broadcast(None))?;
+    block_on(chain.sender().broadcast(None))?;
 
     let count = counter.get_count()?;
     assert_eq!(count.count, 7);

@@ -1,8 +1,9 @@
 use cw_orch_core::environment::TxHandler;
 use mock_contract::{ExecuteMsg, InstantiateMsg, MigrateMsg, MockContract, QueryMsg};
 
-use cosmwasm_std::Event;
-use cw_orch::prelude::{ContractInstance, CwOrchExecute, CwOrchMigrate, CwOrchQuery};
+use cw_orch::prelude::{
+    ContractInstance, CwOrchExecute, CwOrchMigrate, CwOrchQuery, IndexResponse,
+};
 
 use cw_orch::prelude::CwOrchUpload;
 use cw_orch::prelude::{CwOrchInstantiate, Mock};
@@ -23,10 +24,12 @@ fn test_execute() {
     contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
     let response = contract.execute(&ExecuteMsg::FirstMessage {}, &[]).unwrap();
-    response.has_event(
-        &Event::new("wasm")
-            .add_attribute("_contract_addr", "contract0")
-            .add_attribute("action", "first message passed"),
+    assert!(response
+        .event_attr_value("wasm", "_contract_address")
+        .is_ok(),);
+    assert_eq!(
+        response.event_attr_value("wasm", "action").unwrap(),
+        "first message passed"
     );
 
     contract

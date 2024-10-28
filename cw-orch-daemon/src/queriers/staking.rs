@@ -4,7 +4,6 @@ use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::{Addr, StdError};
 use cw_orch_core::environment::{Querier, QuerierGetter};
-use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 use super::bank::cosmrs_to_cosmwasm_coin;
@@ -13,22 +12,17 @@ use super::bank::cosmrs_to_cosmwasm_coin;
 /// All the async function are prefixed with `_`
 pub struct Staking {
     pub channel: Channel,
-    pub rt_handle: Option<Handle>,
 }
 
 impl Staking {
     pub fn new(daemon: &Daemon) -> Self {
         Self {
             channel: daemon.channel(),
-            rt_handle: Some(daemon.rt_handle.clone()),
         }
     }
 
     pub fn new_async(channel: Channel) -> Self {
-        Self {
-            channel,
-            rt_handle: None,
-        }
+        Self { channel }
     }
 }
 

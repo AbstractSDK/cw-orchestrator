@@ -1,0 +1,37 @@
+[package]
+name = "counter-cousin-contract"
+version = "0.11.0"
+description = "counter constract"
+keywords = ["cosmwasm", "blockchain"]
+edition = { workspace = true }
+exclude = [".env"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["export"]
+export = []
+
+[dependencies]
+cosmwasm-std = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw2 = "2.0"
+cosmwasm-schema = "2.1"
+schemars = "0.8.21"
+thiserror = { version = "1.0.63" }
+serde = { workspace = true }
+serde_json = "1.0.125"
+cw-orch = { workspace = true, features = ["daemon"] }
+# Unused, only there to check for wasm compatibility
+# cw-orch-interchain = { workspace = true, features = ["daemon"] }
+
+cw-orch-on-chain = { path = "../../../packages/cw-orch-on-chain" }
+
+[dev-dependencies]
+# Deps for deployment
+dotenv = { version = "0.15.0" }
+pretty_env_logger = { version = "0.5.0" }
+cw-orch = { workspace = true, features = ["daemon"] }
+anyhow = { workspace = true }
+cw-orch-osmosis-test-tube = { path = "../../../packages/cw-orch-osmosis-test-tube" }
