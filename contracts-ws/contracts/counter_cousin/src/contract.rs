@@ -42,6 +42,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::Increment {} => execute::increment(deps),
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
+        ExecuteMsg::IncrementCousin {} => execute::increment_cousin(deps, &env),
         ExecuteMsg::SetCousin { cousin } => execute::set_cousin(deps, env, info, cousin),
     }
 }

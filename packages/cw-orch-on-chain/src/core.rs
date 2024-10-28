@@ -91,6 +91,11 @@ impl From<CosmosMsg> for CwOrchCosmosMsg {
         Self(value)
     }
 }
+impl From<CwOrchCosmosMsg> for CosmosMsg {
+    fn from(value: CwOrchCosmosMsg) -> Self {
+        value.0
+    }
+}
 
 impl IndexResponse for CwOrchCosmosMsg {
     fn events(&self) -> Vec<cosmwasm_std::Event> {

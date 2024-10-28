@@ -1,8 +1,7 @@
-use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
-use cw_orch::prelude::*;
-
+use crate::msg::ExecuteMsgFns;
 use crate::CounterContract;
 use crate::{error::*, state::*};
+use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 
 pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
     STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
@@ -11,6 +10,12 @@ pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
     })?;
 
     Ok(Response::new().add_attribute("action", "increment"))
+}
+
+pub fn increment_cousin(deps: DepsMut, env: &Env) -> Result<Response, ContractError> {
+    let increment_msg = CounterContract::load(deps, env, "cousin").increment()?;
+
+    Ok(Response::new().add_message(increment_msg))
 }
 
 pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
@@ -32,9 +37,7 @@ pub fn set_cousin(
 ) -> Result<Response, ContractError> {
     assert_owner(deps.as_ref(), &info)?;
 
-    let cousin_addr = deps.api.addr_validate(&cousin)?;
-
-    CounterContract::load(deps, &env, "cousin").set_address(&cousin_addr);
+    CounterContract::load(deps, &env, "cousin").set_raw_address(&cousin)?;
 
     Ok(Response::new().add_attribute("action", "set_cousin"))
 }

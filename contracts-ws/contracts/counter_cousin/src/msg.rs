@@ -22,6 +22,8 @@ pub enum ExecuteMsg {
         /// Count value after reset
         count: i32,
     },
+    /// Increment cousin count
+    IncrementCousin {},
     /// Sets the cousin contract, that this contract can query
     SetCousin {
         /// Address of the cousin contract of this counter

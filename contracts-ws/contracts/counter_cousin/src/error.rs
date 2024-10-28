@@ -1,10 +1,13 @@
 use cosmwasm_std::StdError;
 use thiserror::Error;
 
-#[derive(Error, PartialEq, Debug)]
+#[derive(Error, Debug)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
+
+    #[error("{0}")]
+    OrchError(#[from] cw_orch::prelude::CwOrchError),
 
     #[error("Unauthorized")]
     Unauthorized {},
