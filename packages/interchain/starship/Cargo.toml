@@ -23,6 +23,7 @@ cosmwasm-std = { workspace = true }
 cw-orch-daemon = { workspace = true }
 cw-orch-core = { workspace = true }
 tokio = { workspace = true }
+async-std = { workspace = true }
 
 url = "2.5.2"
 log.workspace = true

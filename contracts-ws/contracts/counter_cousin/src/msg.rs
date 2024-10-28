@@ -22,7 +22,9 @@ pub enum ExecuteMsg {
         /// Count value after reset
         count: i32,
     },
+    /// Sets the cousin contract, that this contract can query
     SetCousin {
+        /// Address of the cousin contract of this counter
         cousin: String,
     },
 }

@@ -6,6 +6,7 @@ use crate::{
     senders::{builder::SenderBuilder, query::QuerySender},
     CosmTxResponse, DaemonAsyncBase, DaemonBuilder, DaemonError, DaemonState,
 };
+use async_std::task::block_on;
 use cosmwasm_std::{Addr, Coin};
 use cw_orch_core::{
     contract::{interface_traits::Uploadable, WasmPath},
@@ -13,7 +14,6 @@ use cw_orch_core::{
 };
 use cw_orch_traits::stargate::Stargate;
 use serde::Serialize;
-use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 use crate::senders::tx::TxSender;
@@ -29,9 +29,7 @@ Is constructed with the [DaemonBuilder].
 
 ```rust,no_run
 use cw_orch_daemon::{Daemon, networks};
-use tokio::runtime::Runtime;
 
-let rt = Runtime::new().unwrap();
 let daemon: Daemon = Daemon::builder(networks::JUNO_1)
     .build()
     .unwrap();
@@ -47,8 +45,6 @@ See [Querier](crate::queriers) for examples.
 */
 pub struct DaemonBase<Sender> {
     pub(crate) daemon: DaemonAsyncBase<Sender>,
-    /// Runtime handle to execute async tasks
-    pub rt_handle: Handle,
 }
 
 impl<Sender> DaemonBase<Sender> {
@@ -73,13 +69,8 @@ impl<Sender> DaemonBase<Sender> {
         self,
         sender_options: T,
     ) -> DaemonBase<<T as SenderBuilder>::Sender> {
-        let new_daemon = self
-            .rt_handle
-            .block_on(self.daemon.new_sender(sender_options));
-        DaemonBase {
-            daemon: new_daemon,
-            rt_handle: self.rt_handle.clone(),
-        }
+        let new_daemon = block_on(self.daemon.new_sender(sender_options));
+        DaemonBase { daemon: new_daemon }
     }
 
     /// Flushes all the state related to the current chain
@@ -110,7 +101,6 @@ impl<Sender: QuerySender> DaemonBase<Sender> {
             deployment_id: Some(self.daemon.state.deployment_id.clone()),
             state_path: None,
             write_on_change: None,
-            handle: Some(self.rt_handle.clone()),
             mnemonic: None,
             // If it was test it will just use same tempfile as state
             is_test: false,
@@ -172,7 +162,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
     }
 
     fn upload<T: Uploadable>(&self, uploadable: &T) -> Result<Self::Response, DaemonError> {
-        self.rt_handle.block_on(self.daemon.upload(uploadable))
+        block_on(self.daemon.upload(uploadable))
     }
 
     fn execute<E: Serialize>(
@@ -181,8 +171,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, DaemonError> {
-        self.rt_handle
-            .block_on(self.daemon.execute(exec_msg, coins, contract_address))
+        block_on(self.daemon.execute(exec_msg, coins, contract_address))
     }
 
     fn instantiate<I: Serialize + Debug>(
@@ -193,7 +182,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         admin: Option<&Addr>,
         coins: &[Coin],
     ) -> Result<Self::Response, DaemonError> {
-        self.rt_handle.block_on(
+        block_on(
             self.daemon
                 .instantiate(code_id, init_msg, label, admin, coins),
         )
@@ -205,7 +194,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         new_code_id: u64,
         contract_address: &Addr,
     ) -> Result<Self::Response, DaemonError> {
-        self.rt_handle.block_on(
+        block_on(
             self.daemon
                 .migrate(migrate_msg, new_code_id, contract_address),
         )
@@ -220,7 +209,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         coins: &[cosmwasm_std::Coin],
         salt: cosmwasm_std::Binary,
     ) -> Result<Self::Response, Self::Error> {
-        self.rt_handle.block_on(
+        block_on(
             self.daemon
                 .instantiate2(code_id, init_msg, label, admin, coins, salt),
         )
@@ -231,7 +220,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
         contract_source: &T,
         access_config: Option<cw_orch_core::environment::AccessConfig>,
     ) -> Result<Self::Response, Self::Error> {
-        self.rt_handle.block_on(
+        block_on(
             self.daemon
                 .upload_with_access_config(contract_source, access_config),
         )
@@ -244,19 +233,18 @@ impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
         msgs: Vec<prost_types::Any>,
         memo: Option<&str>,
     ) -> Result<Self::Response, Self::Error> {
-        self.rt_handle
-            .block_on(
-                self.sender().commit_tx_any(
-                    msgs.iter()
-                        .map(|msg| cosmrs::Any {
-                            type_url: msg.type_url.clone(),
-                            value: msg.value.clone(),
-                        })
-                        .collect(),
-                    memo,
-                ),
-            )
-            .map_err(Into::into)
+        block_on(
+            self.sender().commit_tx_any(
+                msgs.iter()
+                    .map(|msg| cosmrs::Any {
+                        type_url: msg.type_url.clone(),
+                        value: msg.value.clone(),
+                    })
+                    .collect(),
+                memo,
+            ),
+        )
+        .map_err(Into::into)
     }
 }
 
@@ -264,19 +252,19 @@ impl<Sender: QuerySender> QueryHandler for DaemonBase<Sender> {
     type Error = DaemonError;
 
     fn wait_blocks(&self, amount: u64) -> Result<(), DaemonError> {
-        self.rt_handle.block_on(self.daemon.wait_blocks(amount))?;
+        block_on(self.daemon.wait_blocks(amount))?;
 
         Ok(())
     }
 
     fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        self.rt_handle.block_on(self.daemon.wait_seconds(secs))?;
+        block_on(self.daemon.wait_seconds(secs))?;
 
         Ok(())
     }
 
     fn next_block(&self) -> Result<(), DaemonError> {
-        self.rt_handle.block_on(self.daemon.next_block())?;
+        block_on(self.daemon.next_block())?;
 
         Ok(())
     }

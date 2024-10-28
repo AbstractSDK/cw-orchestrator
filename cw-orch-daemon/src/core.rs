@@ -173,12 +173,12 @@ impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
         let wait_time = average_block_speed.mul_f64(amount as f64);
 
         // now wait for that amount of time
-        tokio::time::sleep(wait_time).await;
+        async_std::task::sleep(wait_time).await;
         // now check every block until we hit the target
         while last_height < end_height {
             // wait
 
-            tokio::time::sleep(average_block_speed).await;
+            async_std::task::sleep(average_block_speed).await;
 
             // ping latest block
             last_height = Node::new_async(self.channel())._block_height().await?;
@@ -188,7 +188,7 @@ impl<Sender: QuerySender> DaemonAsyncBase<Sender> {
 
     /// Wait for a given amount of seconds.
     pub async fn wait_seconds(&self, secs: u64) -> Result<(), DaemonError> {
-        tokio::time::sleep(Duration::from_secs(secs)).await;
+        async_std::task::sleep(Duration::from_secs(secs)).await;
 
         Ok(())
     }

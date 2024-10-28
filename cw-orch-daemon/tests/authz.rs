@@ -4,7 +4,6 @@ mod tests {
     /*
         Authz tests
     */
-
     use cosmrs::proto::cosmos::{
         authz::v1beta1::{
             GenericAuthorization, GrantAuthorization, MsgGrant, QueryGranteeGrantsResponse,
@@ -44,8 +43,6 @@ mod tests {
                     .authz_granter(&sender),
             )
             .unwrap();
-
-        let runtime = daemon.rt_handle.clone();
 
         let grantee = second_daemon.sender_addr();
 
@@ -91,7 +88,7 @@ mod tests {
 
         // Grants
         let authz_querier: Authz = daemon.querier();
-        let grants: QueryGrantsResponse = runtime.block_on(async {
+        let grants: QueryGrantsResponse = block_on(async {
             authz_querier
                 ._grants(&sender, &grantee, MsgSend::type_url(), None)
                 .await
@@ -100,34 +97,33 @@ mod tests {
 
         // Grantee grants
         let grantee_grants: QueryGranteeGrantsResponse =
-            runtime.block_on(async { authz_querier._grantee_grants(&grantee, None).await })?;
+            block_on(async { authz_querier._grantee_grants(&grantee, None).await })?;
         assert_eq!(grantee_grants.grants, vec![grant_authorization.clone()]);
 
         // Granter grants
         let granter_grants: QueryGranterGrantsResponse =
-            runtime.block_on(async { authz_querier._granter_grants(&sender, None).await })?;
+            block_on(async { authz_querier._granter_grants(&sender, None).await })?;
         assert_eq!(granter_grants.grants, vec![grant_authorization]);
 
         // No grant gives out an error
-        runtime
-            .block_on(async {
-                authz_querier
-                    ._grants(&grantee, &sender, MsgSend::type_url(), None)
-                    .await
-            })
-            .unwrap_err();
+        block_on(async {
+            authz_querier
+                ._grants(&grantee, &sender, MsgSend::type_url(), None)
+                .await
+        })
+        .unwrap_err();
 
         // Check use of grants
 
         // The we send some funds to the account
-        runtime.block_on(
+        block_on(
             daemon
                 .sender()
                 .bank_send(&grantee, coins(100_000, LOCAL_JUNO.gas_denom)),
         )?;
-
+        use async_std::task::block_on;
         // And send a large amount of tokens on their behalf
-        runtime.block_on(
+        block_on(
             second_daemon
                 .sender()
                 .bank_send(&grantee, coins(500_000, LOCAL_JUNO.gas_denom)),

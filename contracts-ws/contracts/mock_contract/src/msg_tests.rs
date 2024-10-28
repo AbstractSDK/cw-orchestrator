@@ -57,19 +57,19 @@ pub fn execute_ordered(
 pub fn query(_deps: Deps, _env: Env, _msg: Empty) -> StdResult<Binary> {
     Ok(vec![].into())
 }
-#[cfg(not(target_arch = "wasm32"))]
+
 mod interface {
     use super::*;
     use cw_orch::prelude::*;
 
     impl<Chain> Uploadable for TestContract<Chain> {
-        fn wrapper() -> <Mock as TxHandler>::ContractSource {
+        fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
             Box::new(ContractWrapper::new_with_empty(execute, instantiate, query))
         }
     }
 
     impl<Chain> Uploadable for OrderedTestContract<Chain> {
-        fn wrapper() -> <Mock as TxHandler>::ContractSource {
+        fn wrapper() -> Box<dyn MockContract<Empty, Empty>> {
             Box::new(ContractWrapper::new_with_empty(
                 execute_ordered,
                 instantiate,

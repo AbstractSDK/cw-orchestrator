@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use cosmwasm_std::{BankMsg, Coin, CosmosMsg};
 use cw_orch::prelude::*;
 
@@ -36,7 +37,6 @@ impl BankModule for Daemon {
         recipient: &Addr,
         funds: Vec<Coin>,
     ) -> Result<<Self as TxHandler>::Response, <Self as TxHandler>::Error> {
-        self.rt_handle
-            .block_on(self.sender().bank_send(recipient, funds))
+        block_on(self.sender().bank_send(recipient, funds))
     }
 }

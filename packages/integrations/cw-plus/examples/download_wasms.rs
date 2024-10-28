@@ -16,7 +16,7 @@ pub const ALL_CONTRACTS: &[&str] = &[
     "cw20_ics20",
 ];
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> anyhow::Result<()> {
     let crate_dir = env!("CARGO_MANIFEST_DIR");
     let artifacts_dir = PathBuf::from_str(crate_dir)?.join("artifacts");

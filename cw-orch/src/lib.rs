@@ -7,10 +7,8 @@ pub use cw_orch_contract_derive::interface;
 pub use cw_orch_fns_derive::{ExecuteFns, QueryFns};
 
 // prelude
-#[cfg(not(target_arch = "wasm32"))]
 pub mod prelude;
 
-#[cfg(not(target_arch = "wasm32"))]
 mod error;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -21,21 +19,20 @@ pub mod daemon;
 #[cfg(feature = "snapshot-testing")]
 pub mod snapshots;
 
+/// Re-export anyhow for use in the macros
+pub extern crate anyhow;
+// This re-export should not be touched or the derive macros WILL break
+pub use cw_orch_core as core;
+pub use cw_orch_core::{build, contract};
+/// Related to execution environments
+pub mod environment {
+    pub use cw_orch_core::environment::*;
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 /// used to avoid repeating the #[cfg(not(target_arch = "wasm32"))] macro for each export
 pub mod wasm_protected {
 
-    /// Re-export anyhow for use in the macros
-    pub extern crate anyhow;
-
-    // This re-export should not be touched or the derive macros WILL break
-    pub use cw_orch_core as core;
-    pub use cw_orch_core::{build, contract};
-
-    /// Related to execution environments
-    pub mod environment {
-        pub use cw_orch_core::environment::*;
-    }
     /// Related environment variables definition
     pub mod env_vars {
         pub use cw_orch_core::CoreEnvVars;
@@ -43,10 +40,6 @@ pub mod wasm_protected {
         pub use cw_orch_daemon::{env::default_state_folder, env::DaemonEnvVars};
     }
     pub use cw_orch_mock as mock;
-
-    /// Re-export tokio, the async runtime when using daemons.
-    #[cfg(feature = "daemon")]
-    pub extern crate tokio;
 
     // Rexporting for the macro to work properly
     #[cfg(feature = "snapshot-testing")]

@@ -22,7 +22,6 @@ prost = { workspace = true }
 cosmwasm-std = { workspace = true }
 ibc-relayer-types = { workspace = true }
 log = { workspace = true }
-tokio = { workspace = true }
 tonic = { workspace = true }
 osmosis-std = { version = "0.26.0" }
 

@@ -260,16 +260,9 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
     let trait_condition = quote!(::cw_orch::core::contract::interface_traits::#trait_name<Chain, #trait_msg_type = #generic_msg_type>);
 
     let derived_trait = quote!(
-        #[cfg(not(target_arch = "wasm32"))]
         /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
         pub trait #bname #cw_orch_generics : #trait_condition #combined_trait_where_clause {
             #(#variant_fns)*
-        }
-
-        #[cfg(target_arch = "wasm32")]
-        /// Automatically derived trait that allows you to call the variants of the message directly without the need to construct the struct yourself.
-        pub trait #bname{
-
         }
     );
 
@@ -296,7 +289,6 @@ pub fn fns_derive(msg_type: MsgType, sync_type: SyncType, mut input: ItemEnum) -
     let expand = quote!(
         #derived_trait
 
-        #[cfg(not(target_arch = "wasm32"))]
         #derived_trait_blanket_impl
     );
 

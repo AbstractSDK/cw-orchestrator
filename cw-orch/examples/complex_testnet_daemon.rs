@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use cosmwasm_std::coins;
 use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
@@ -98,14 +99,12 @@ pub fn main() {
         .unwrap();
     // We send some funds to the counter contract
     let contract_addr = counter.address().unwrap();
-    daemon
-        .rt_handle
-        .block_on(
-            daemon
-                .sender()
-                .bank_send(&contract_addr, coins(50_000, denom.clone())),
-        )
-        .unwrap();
+    block_on(
+        daemon
+            .sender()
+            .bank_send(&contract_addr, coins(50_000, denom.clone())),
+    )
+    .unwrap();
     // We verify they have received their funds
     assert_eq!(
         daemon

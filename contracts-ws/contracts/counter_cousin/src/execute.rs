@@ -1,5 +1,7 @@
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
+use cw_orch::prelude::*;
 
+use crate::CounterContract;
 use crate::{error::*, state::*};
 
 pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
@@ -23,18 +25,16 @@ pub fn reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, C
 }
 
 pub fn set_cousin(
-    mut deps: DepsMut,
+    deps: DepsMut,
     env: Env,
     info: MessageInfo,
     cousin: String,
 ) -> Result<Response, ContractError> {
-    let cousin_addr = deps.api.addr_validate(&cousin)?;
-    let state = STATE.load(deps.storage)?;
-    if info.sender != state.owner {
-        return Err(ContractError::Unauthorized {});
-    }
+    assert_owner(deps.as_ref(), &info)?;
 
-    crate::CounterContract::save(deps.branch(), &env, "cousin", cousin_addr.clone());
+    let cousin_addr = deps.api.addr_validate(&cousin)?;
+
+    CounterContract::load(deps, &env, "cousin").set_address(&cousin_addr);
 
     Ok(Response::new().add_attribute("action", "set_cousin"))
 }

@@ -1,10 +1,12 @@
 use anyhow::Result as AnyResult;
+use async_std::task::block_on;
 use cosmwasm_std::Addr;
 use cw_orch::daemon::Daemon;
 use cw_orch::prelude::BankQuerier;
 use cw_orch::prelude::QuerierGetter;
 use cw_orch_daemon::queriers::Ibc;
 use cw_orch_daemon::queriers::{Bank, Staking};
+
 pub const TEST_MNEMONIC: &str="scare silent genuine cheese monitor industry item cloth pet gather cruise long confirm van lunar tomato scrub silk guide eight truly rural remember swim";
 
 pub fn main() -> AnyResult<()> {
@@ -23,18 +25,14 @@ pub fn main() -> AnyResult<()> {
     let staking_query_client: Staking = daemon.querier();
     let validator =
         Addr::unchecked("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn");
-    let validator_result = daemon
-        .rt_handle
-        .block_on(staking_query_client._validator(&validator))?;
+    let validator_result = block_on(staking_query_client._validator(&validator))?;
     println!("Validator info of {} : {:?}", sender, validator_result);
 
     // We do an actual IBC query on MAINNET
     let ibc_query_client: Ibc = daemon.querier();
     let port_id = "transfer";
     let channel_id = "channel-0";
-    let channel_result = daemon
-        .rt_handle
-        .block_on(ibc_query_client._channel(port_id, channel_id))?;
+    let channel_result = block_on(ibc_query_client._channel(port_id, channel_id))?;
     println!(
         "Channel info of {port_id}:{channel_id} : {:?}",
         channel_result

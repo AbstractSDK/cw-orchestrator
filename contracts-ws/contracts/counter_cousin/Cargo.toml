@@ -24,7 +24,7 @@ serde = { workspace = true }
 serde_json = "1.0.125"
 cw-orch = { workspace = true, features = ["daemon"] }
 # Unused, only there to check for wasm compatibility
-cw-orch-interchain = { workspace = true, features = ["daemon"] }
+# cw-orch-interchain = { workspace = true, features = ["daemon"] }
 
 cw-orch-on-chain = { path = "../../../packages/cw-orch-on-chain" }
 
@@ -34,3 +34,4 @@ dotenv = { version = "0.15.0" }
 pretty_env_logger = { version = "0.5.0" }
 cw-orch = { workspace = true, features = ["daemon"] }
 anyhow = { workspace = true }
+cw-orch-osmosis-test-tube = { path = "../../../packages/cw-orch-osmosis-test-tube" }

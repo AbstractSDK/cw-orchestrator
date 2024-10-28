@@ -4,7 +4,7 @@
 use crate::queriers::Bank;
 use crate::queriers::CosmWasm;
 use crate::queriers::Staking;
-use crate::RUNTIME;
+use async_std::task::block_on;
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::Addr;
 use cosmwasm_std::AllBalanceResponse;
@@ -78,20 +78,17 @@ impl WasmMockQuerier {
     /// Function used to handle a query and customize the query behavior
     /// This implements some queries by querying an actual node for the responses
     pub fn handle_query(&self, request: &QueryRequest<Empty>) -> QuerierResult {
-        let handle = RUNTIME.handle();
         match &request {
             QueryRequest::Wasm(x) => {
-                let querier = CosmWasm::new_sync(self.channel.clone(), handle);
+                let querier = CosmWasm::new_sync(self.channel.clone());
                 match x {
                     WasmQuery::Smart { contract_addr, msg } => {
                         // We forward the request to the cosmwasm querier
 
-                        let query_result: Result<Binary, _> = handle
-                            .block_on(
-                                querier
-                                    ._contract_state(&Addr::unchecked(contract_addr), msg.to_vec()),
-                            )
-                            .map(|query_result| query_result.into());
+                        let query_result: Result<Binary, _> = block_on(
+                            querier._contract_state(&Addr::unchecked(contract_addr), msg.to_vec()),
+                        )
+                        .map(|query_result| query_result.into());
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     WasmQuery::Raw { contract_addr, key } => {
@@ -111,7 +108,6 @@ impl WasmMockQuerier {
             QueryRequest::Bank(x) => {
                 let querier = Bank {
                     channel: self.channel.clone(),
-                    rt_handle: Some(handle.clone()),
                 };
                 match x {
                     BankQuery::Balance { address, denom } => {
@@ -140,8 +136,7 @@ impl WasmMockQuerier {
                 let querier = Staking::new_async(self.channel.clone());
                 match x {
                     StakingQuery::BondedDenom {} => {
-                        let query_result = handle
-                            .block_on(querier._params())
+                        let query_result = block_on(querier._params())
                             .map(|result| {
                                 BondedDenomResponse::new(result.params.unwrap().bond_denom)
                             })
@@ -152,29 +147,28 @@ impl WasmMockQuerier {
                     // This query is not perfect. I guess that on_chain you should be able to get ALL delegations and not a paginated result
                     // TODO, do better here
                     StakingQuery::AllDelegations { delegator } => {
-                        let query_result = handle
-                            .block_on(
-                                querier._delegator_delegations(&Addr::unchecked(delegator), None),
-                            )
-                            .map(|result| {
-                                AllDelegationsResponse::new(
-                                    result
-                                        .delegation_responses
-                                        .into_iter()
-                                        .filter_map(|delegation| {
-                                            delegation.delegation.map(|d| {
-                                                Delegation::new(
-                                                    Addr::unchecked(d.delegator_address),
-                                                    d.validator_address,
-                                                    to_cosmwasm_coin(delegation.balance.unwrap()),
-                                                )
-                                            })
+                        let query_result = block_on(
+                            querier._delegator_delegations(&Addr::unchecked(delegator), None),
+                        )
+                        .map(|result| {
+                            AllDelegationsResponse::new(
+                                result
+                                    .delegation_responses
+                                    .into_iter()
+                                    .filter_map(|delegation| {
+                                        delegation.delegation.map(|d| {
+                                            Delegation::new(
+                                                Addr::unchecked(d.delegator_address),
+                                                d.validator_address,
+                                                to_cosmwasm_coin(delegation.balance.unwrap()),
+                                            )
                                         })
-                                        .collect(),
-                                )
-                            })
-                            .map(|query_result| to_json_binary(&query_result))
-                            .unwrap();
+                                    })
+                                    .collect(),
+                            )
+                        })
+                        .map(|query_result| to_json_binary(&query_result))
+                        .unwrap();
                         SystemResult::Ok(ContractResult::from(query_result))
                     }
                     _ => todo!(),
@@ -191,12 +185,11 @@ impl WasmMockQuerier {
 impl WasmMockQuerier {
     /// Creates a querier from chain information
     pub fn new(chain: ChainInfoOwned) -> Self {
-        let channel = RUNTIME
-            .block_on(GrpcChannel::connect(
-                &chain.grpc_urls,
-                chain.chain_id.as_str(),
-            ))
-            .unwrap();
+        let channel = block_on(GrpcChannel::connect(
+            &chain.grpc_urls,
+            chain.chain_id.as_str(),
+        ))
+        .unwrap();
 
         WasmMockQuerier { channel }
     }

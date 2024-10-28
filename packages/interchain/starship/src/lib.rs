@@ -7,12 +7,12 @@ pub const STARSHIP_CONFIG_ENV_NAME: &str = "CW_ORCH_STARSHIP_CONFIG_PATH";
 pub mod client;
 
 use crate::client::StarshipClient;
+use async_std::task::block_on;
 use cw_orch_core::environment::{ChainInfoOwned, ChainState, NetworkInfoOwned};
 use cw_orch_core::CwEnvError;
-use cw_orch_daemon::{Daemon, DaemonBuilder, RUNTIME};
+use cw_orch_daemon::{Daemon, DaemonBuilder};
 use ibc_chain_registry::chain::ChainData;
 use std::collections::HashMap;
-use tokio::runtime::Handle;
 
 #[derive(Clone)]
 /// Starship integration
@@ -20,19 +20,11 @@ pub struct Starship {
     /// Daemon objects representing all the chains available inside the starship environment
     pub daemons: HashMap<String, Daemon>,
     starship_client: StarshipClient,
-    /// Runtime handle for awaiting async functions
-    pub rt_handle: Handle,
 }
 
 impl Starship {
     /// Creates a new instance and connects to a starship deployment
     pub fn new(url: Option<&str>) -> Result<Self, CwEnvError> {
-        let runtime = RUNTIME.handle();
-        Self::new_with_runtime(runtime, url)
-    }
-
-    /// Creates a new instance and connects to a starship deployment
-    pub fn new_with_runtime(rt_handle: &Handle, url: Option<&str>) -> Result<Self, CwEnvError> {
         let starship_config = match try_to_read_starship_config() {
             Ok(config) => Some(config),
             Err(e) => {
@@ -40,11 +32,11 @@ impl Starship {
                 None
             }
         };
-        let starship_client = StarshipClient::new(rt_handle.clone(), url, starship_config)?;
+        let starship_client = StarshipClient::new(url, starship_config)?;
 
         let mut daemons: HashMap<String, Daemon> = HashMap::new();
         for chain in starship_client.chains.iter() {
-            let mnemonic = rt_handle.block_on(async {
+            let mnemonic = block_on(async {
                 let registry = starship_client.registry().await;
                 registry
                     .test_mnemonic(chain.chain_id.as_str())
@@ -53,11 +45,7 @@ impl Starship {
             });
 
             let mut daemon_builder = DaemonBuilder::new(chain_data_conversion(chain.clone()));
-            let mut daemon_builder = daemon_builder
-                .mnemonic(mnemonic)
-                .load_network(false)
-                .handle(rt_handle);
-
+            let mut daemon_builder = daemon_builder.mnemonic(mnemonic).load_network(false);
             if let Some(existing_daemon) = daemons.values().next() {
                 daemon_builder = daemon_builder.state(existing_daemon.state())
             }
@@ -68,9 +56,9 @@ impl Starship {
         Ok(Self {
             daemons,
             starship_client,
-            rt_handle: rt_handle.clone(),
         })
     }
+
     /// Get a chain daemon from the starship infrastructure
     pub fn daemon(&self, chain_id: &str) -> Result<&Daemon, CwEnvError> {
         self.daemons

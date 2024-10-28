@@ -22,7 +22,6 @@ pub fn instantiate(
     let state = State {
         count: msg.count,
         owner: info.sender.clone(),
-        cousin: None,
     };
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     STATE.save(deps.storage, &state)?;
@@ -52,7 +51,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCount {} => to_json_binary(&query::count(deps)?),
         QueryMsg::GetCousinCount {} => to_json_binary(&query::cousin_count(deps, env)?),
-        QueryMsg::GetRawCousinCount {} => to_json_binary(&query::raw_cousin_count(deps)?),
+        QueryMsg::GetRawCousinCount {} => to_json_binary(&query::raw_cousin_count(deps, &env)?),
     }
 }
 

@@ -1,12 +1,12 @@
 //! Interactions with docker using bollard
 use std::fmt::Debug;
 
+use async_std::task::block_on;
 use cosmwasm_std::IbcOrder;
 use ibc_chain_registry::chain::ChainData;
 use kube::runtime::reflector::Lookup;
 use serde_json::Value;
 use tokio::io::AsyncReadExt;
-use tokio::runtime::Handle;
 use url::Url;
 
 use crate::client::StarshipClientError;
@@ -50,11 +50,10 @@ impl Debug for StarshipClient {
 impl StarshipClient {
     /// Create a Starship object from the localhost chain registry.
     pub fn new(
-        rt: Handle,
         url: Option<&str>,
         starship_config: Option<yaml_rust2::Yaml>,
     ) -> StarshipClientResult<Self> {
-        let starship = rt.block_on(Self::new_async(url, starship_config))?;
+        let starship = block_on(Self::new_async(url, starship_config))?;
         Ok(starship)
     }
 

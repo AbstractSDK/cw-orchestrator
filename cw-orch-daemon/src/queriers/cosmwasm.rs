@@ -3,6 +3,7 @@ use std::{marker::PhantomData, str::FromStr};
 use crate::senders::query::QuerySender;
 use crate::senders::QueryOnlySender;
 use crate::{cosmos_modules, error::DaemonError, DaemonBase};
+use async_std::task::block_on;
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
 use cosmwasm_std::{
@@ -14,14 +15,12 @@ use cw_orch_core::{
     contract::interface_traits::Uploadable,
     environment::{Querier, QuerierGetter, WasmQuerier},
 };
-use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`
 pub struct CosmWasmBase<Sender = QueryOnlySender> {
     pub channel: Channel,
-    pub rt_handle: Option<Handle>,
     _sender: PhantomData<Sender>,
 }
 
@@ -31,21 +30,18 @@ impl<Sender: QuerySender> CosmWasmBase<Sender> {
     pub fn new(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
-            rt_handle: Some(daemon.rt_handle.clone()),
             _sender: PhantomData,
         }
     }
     pub fn new_async(channel: Channel) -> Self {
         Self {
             channel,
-            rt_handle: None,
             _sender: PhantomData,
         }
     }
-    pub fn new_sync(channel: Channel, handle: &Handle) -> Self {
+    pub fn new_sync(channel: Channel) -> Self {
         Self {
             channel,
-            rt_handle: Some(handle.clone()),
             _sender: PhantomData,
         }
     }
@@ -238,28 +234,18 @@ impl<Sender: QuerySender> CosmWasmBase<Sender> {
 impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
     type Chain = DaemonBase<Sender>;
     fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._code_id_hash(code_id))
+        block_on(self._code_id_hash(code_id))
     }
 
     fn contract_info(
         &self,
         address: &Addr,
     ) -> Result<cosmwasm_std::ContractInfoResponse, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._contract_info(address))
+        block_on(self._contract_info(address))
     }
 
     fn raw_query(&self, address: &Addr, query_data: Vec<u8>) -> Result<Vec<u8>, Self::Error> {
-        let response = self
-            .rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._contract_raw_state(address, query_data))?;
+        let response = block_on(self._contract_raw_state(address, query_data))?;
 
         Ok(response.data)
     }
@@ -269,20 +255,14 @@ impl<Sender: QuerySender> WasmQuerier for CosmWasmBase<Sender> {
         address: &Addr,
         query_data: &Q,
     ) -> Result<T, Self::Error> {
-        let response = self
-            .rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._contract_state(address, to_json_binary(&query_data)?.to_vec()))?;
+        let response =
+            block_on(self._contract_state(address, to_json_binary(&query_data)?.to_vec()))?;
 
         Ok(from_json(response)?)
     }
 
     fn code(&self, code_id: u64) -> Result<cosmwasm_std::CodeInfoResponse, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._code(code_id))
+        block_on(self._code(code_id))
     }
 
     fn instantiate2_addr(

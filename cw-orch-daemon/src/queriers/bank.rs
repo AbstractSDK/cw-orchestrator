@@ -1,29 +1,24 @@
 use crate::{cosmos_modules, error::DaemonError, senders::query::QuerySender, DaemonBase};
+use async_std::task::block_on;
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::{Addr, Coin, StdError};
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
-use tokio::runtime::Handle;
 use tonic::transport::Channel;
 
 /// Queries for Cosmos Bank Module
 /// All the async function are prefixed with `_`
 pub struct Bank {
     pub channel: Channel,
-    pub rt_handle: Option<Handle>,
 }
 
 impl Bank {
     pub fn new<Sender: QuerySender>(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
-            rt_handle: Some(daemon.rt_handle.clone()),
         }
     }
     pub fn new_async(channel: Channel) -> Self {
-        Self {
-            channel,
-            rt_handle: None,
-        }
+        Self { channel }
     }
 }
 
@@ -169,23 +164,14 @@ impl BankQuerier for Bank {
         address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._balance(address, denom))
+        block_on(self._balance(address, denom))
     }
 
     fn total_supply(&self) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._total_supply())
+        block_on(self._total_supply())
     }
 
     fn supply_of(&self, denom: impl Into<String>) -> Result<cosmwasm_std::Coin, Self::Error> {
-        self.rt_handle
-            .as_ref()
-            .ok_or(DaemonError::QuerierNeedRuntime)?
-            .block_on(self._supply_of(denom))
+        block_on(self._supply_of(denom))
     }
 }
