@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
 use cosmwasm_std::StdError;
-use cw_orch_interchain_core::{channel::InterchainChannel, types::NetworkId, InterchainError};
+use cw_orch_interchain_core::{channel::InterchainChannel, results::NetworkId, InterchainError};
 use thiserror::Error;
 use tonic::transport::Channel;
 

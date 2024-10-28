@@ -33,6 +33,7 @@ INTERCHAIN_PACKAGES="
   starship
   interchain-daemon
   interchain-mock
+  proto
 "
 
 CORE="cw-orch-daemon cw-orch cw-orch-interchain"

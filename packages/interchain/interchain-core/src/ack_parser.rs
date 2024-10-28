@@ -1,15 +1,15 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{
+    cw_serde,
+    schemars::JsonSchema,
+    serde::{Deserialize, Serialize},
+};
 use cosmwasm_std::{from_json, Binary};
-use cw_orch_core::environment::CwEnv;
 use prost::Message;
 // TODO: when polytone updates to cosmwasm v2 use polytone::ack::Callback;
-use polytone_callback::Callback;
+use crate::{packet::success::IbcAppResult, InterchainError};
+use cosmwasm_schema::schemars;
 
-use crate::{
-    env::decode_ack_error,
-    types::{parse::SuccessIbcPacket, IbcTxAnalysis},
-    InterchainError,
-};
+use polytone_callback::Callback;
 
 use self::acknowledgement::{Acknowledgement, Response};
 
@@ -17,7 +17,7 @@ use self::acknowledgement::{Acknowledgement, Response};
 pub enum IbcAckParser {}
 
 impl IbcAckParser {
-    /// Verifies if the given ack is an Polytone type and returns the acknowledgement if it is
+    /// Verifies if the given ack is an Polytone type and returns the parsed acknowledgement if it is
     ///
     /// Returns an error if there was an error in the process
     pub fn polytone_ack(ack: &Binary) -> Result<Callback, InterchainError> {
@@ -56,15 +56,12 @@ impl IbcAckParser {
     ///
     /// Returns an error if there was an error in the parsing process
     pub fn ics20_ack(ack: &Binary) -> Result<(), InterchainError> {
-        let decoded_fungible_packet: Result<FungibleTokenPacketAcknowledgement, _> = from_json(ack);
-        if let Ok(decoded_fungible_packet) = decoded_fungible_packet {
-            match decoded_fungible_packet {
-                FungibleTokenPacketAcknowledgement::Result(_) => return Ok(()),
-                FungibleTokenPacketAcknowledgement::Error(e) => {
-                    return Err(InterchainError::FailedAckReceived(e))
-                }
-            }
+        let successful_ics20_packet = Binary::new(vec![0x01]);
+
+        if ack == &successful_ics20_packet {
+            return Ok(());
         }
+
         Err(decode_ack_error(ack))
     }
 
@@ -83,41 +80,63 @@ impl IbcAckParser {
         }
         Err(decode_ack_error(ack))
     }
-}
 
-#[cw_serde]
-/// Taken from https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md#data-structures
-pub enum FungibleTokenPacketAcknowledgement {
-    /// Successful packet
-    Result(String),
-    /// Error packet
-    Error(String),
-}
-
-impl<Chain: CwEnv> IbcTxAnalysis<Chain> {
-    /// Assert that all packets were not timeout
-    pub fn assert_no_timeout(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        Ok(self
-            .packets
-            .iter()
-            .map(|p| p.assert_no_timeout())
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
+    /// Verifies if the given ack is an ICS004 type with json parsing and returns the ack result if it is
+    ///
+    /// Returns an error if there was an error in the parsing process
+    pub fn ics004_json_ack(ack: &Binary) -> Result<Vec<u8>, InterchainError> {
+        if let Ok(decoded_ics_004) = from_json::<StdAck>(ack) {
+            log::debug!(
+                "Decoded ack using ICS-004 with json format : {:x?}",
+                decoded_ics_004
+            );
+            match decoded_ics_004 {
+                StdAck::Result(result) => return Ok(result.into()),
+                StdAck::Error(e) => return Err(InterchainError::FailedAckReceived(e)),
+            }
+        }
+        Err(decode_ack_error(ack))
     }
 
-    /// Returns all packets that were successful without asserting there was no timeout
-    pub fn get_success_packets(&self) -> Result<Vec<SuccessIbcPacket<Chain>>, InterchainError> {
-        Ok(self
-            .packets
-            .iter()
-            .map(|p| p.get_success_packets())
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect())
+    /// Verifies if the given ack is a standard acknowledgement type
+    ///
+    /// Returns an error if there was an error in the parsing process
+    pub fn any_standard_app_result(ack: &Binary) -> Result<IbcAppResult, InterchainError> {
+        if let Ok(ack) = IbcAckParser::polytone_ack(ack) {
+            Ok(IbcAppResult::Polytone(ack))
+        } else if IbcAckParser::ics20_ack(ack).is_ok() {
+            Ok(IbcAppResult::Ics20)
+        } else if let Ok(ack) = IbcAckParser::ics004_ack(ack) {
+            Ok(IbcAppResult::Ics004(ack))
+        } else if let Ok(ack) = IbcAckParser::ics004_json_ack(ack) {
+            Ok(IbcAppResult::Ics004(ack))
+        } else {
+            Err(InterchainError::AckDecodingFailed(
+                ack.clone(),
+                String::from_utf8_lossy(ack.as_slice()).to_string(),
+            ))
+        }
     }
+
+    /// Verifies if the given ack custom acknowledgement type.
+    /// If it fails, tries to parse into standard ack types
+    ///
+    /// Returns an error if there was an error in the parsing process
+    pub fn any_standard_app_result_with_custom<CustomResult>(
+        ack: &Binary,
+        parsing_func: fn(&Binary) -> Result<CustomResult, InterchainError>,
+    ) -> Result<IbcAppResult<CustomResult>, InterchainError> {
+        parsing_func(ack)
+            .map(IbcAppResult::Custom)
+            .or_else(|_| Self::any_standard_app_result(ack).map(|ack| ack.into_custom()))
+    }
+}
+
+pub(crate) fn decode_ack_error(ack: &Binary) -> InterchainError {
+    InterchainError::AckDecodingFailed(
+        ack.clone(),
+        String::from_utf8_lossy(ack.as_slice()).to_string(),
+    )
 }
 
 /// This is copied from https://github.com/cosmos/cosmos-rust/blob/4f2e3bbf9c67c8ffef44ef1e485a327fd66f060a/cosmos-sdk-proto/src/prost/ibc-go/ibc.core.channel.v1.rs#L164
@@ -148,8 +167,16 @@ pub mod acknowledgement {
         }
     }
 }
+/// This is a generic ICS acknowledgement format formated in json.
+/// Proto defined here: https://github.com/cosmos/cosmos-sdk/blob/v0.42.0/proto/ibc/core/channel/v1/channel.proto#L141-L147
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum StdAck {
+    Result(Binary),
+    Error(String),
+}
 
-mod polytone_callback {
+pub mod polytone_callback {
     use super::*;
 
     use cosmwasm_std::{SubMsgResponse, Uint64};
@@ -201,5 +228,20 @@ mod polytone_callback {
         /// expect this to happen and have carefully written the code to
         /// avoid it.
         FatalError(String),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use cosmwasm_std::Binary;
+
+    use super::IbcAckParser;
+
+    #[test]
+    fn ics20_ack_test() -> cw_orch::anyhow::Result<()> {
+        let success_ack = Binary::from_base64("AQ==")?;
+
+        IbcAckParser::ics20_ack(&success_ack)?;
+        Ok(())
     }
 }

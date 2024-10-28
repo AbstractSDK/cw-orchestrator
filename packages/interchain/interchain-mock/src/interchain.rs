@@ -5,12 +5,8 @@ use cw_orch_core::environment::QueryHandler;
 use cw_orch_interchain_core::{
     channel::InterchainChannel,
     env::{ChainId, ChannelCreation},
-    types::{
-        ChannelCreationTransactionsResult, FullIbcPacketAnalysis, IbcPacketAnalysis, IbcPacketInfo,
-        IbcPacketOutcome, IbcTxAnalysis, InternalChannelCreationResult, SimpleIbcPacketAnalysis,
-        TxId,
-    },
-    InterchainEnv,
+    results::{ChannelCreationTransactionsResult, InternalChannelCreationResult},
+    IbcPacketInfo, IbcPacketOutcome, InterchainEnv, NestedPacketsFlow, SinglePacketFlow, TxId,
 };
 use cw_orch_mock::{
     cw_multi_test::{
@@ -227,14 +223,11 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         &self,
         chain_id: ChainId,
         tx_response: AppResponse,
-    ) -> Result<IbcTxAnalysis<MockBase<A>>, Self::Error> {
+    ) -> Result<NestedPacketsFlow<MockBase<A>>, Self::Error> {
         // We start by analyzing sent packets in the response
         let packets = find_ibc_packets_sent_in_tx(&self.get_chain(chain_id)?, &tx_response)?;
 
-        let send_tx_id = TxId {
-            chain_id: chain_id.to_string(),
-            response: tx_response,
-        };
+        let send_tx_id = TxId::new(chain_id.to_string(), tx_response);
 
         let packet_analysis = packets
             .iter()
@@ -274,18 +267,12 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                     },
                 };
 
-                let analyzed_result = FullIbcPacketAnalysis {
-                    send_tx: Some(send_tx_id.clone()),
-                    outcome: analyzed_outcome,
-                };
-
                 // We return the packet analysis
-
-                Ok(analyzed_result)
+                Ok(analyzed_outcome)
             })
             .collect::<Result<Vec<_>, InterchainMockError>>()?;
 
-        let response = IbcTxAnalysis {
+        let response = NestedPacketsFlow {
             tx_id: send_tx_id,
             packets: packet_analysis,
         };
@@ -302,7 +289,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
         src_channel: ChannelId,
         dst_chain: ChainId,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<MockBase<A>>, Self::Error> {
+    ) -> Result<SinglePacketFlow<MockBase<A>>, Self::Error> {
         let src_mock = self.get_chain(src_chain)?;
         let dst_mock = self.get_chain(dst_chain)?;
 
@@ -320,10 +307,7 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                 timeout_tx,
                 close_channel_confirm: _,
             } => IbcPacketOutcome::Timeout {
-                timeout_tx: TxId {
-                    response: timeout_tx,
-                    chain_id: src_chain.to_string(),
-                },
+                timeout_tx: TxId::new(src_chain.to_string(), timeout_tx),
             },
             relayer::RelayingResult::Acknowledgement { tx, ack } => {
                 let ack_string =
@@ -337,20 +321,14 @@ impl<A: Api> InterchainEnv<MockBase<A>> for MockInterchainEnvBase<A> {
                     ack_string,
                 );
                 IbcPacketOutcome::Success {
-                    receive_tx: TxId {
-                        response: relay_result.receive_tx,
-                        chain_id: dst_chain.to_string(),
-                    },
-                    ack_tx: TxId {
-                        response: tx,
-                        chain_id: src_chain.to_string(),
-                    },
+                    receive_tx: TxId::new(dst_chain.to_string(), relay_result.receive_tx),
+                    ack_tx: TxId::new(src_chain.to_string(), tx),
                     ack,
                 }
             }
         };
 
-        let analysis_result = IbcPacketAnalysis {
+        let analysis_result = SinglePacketFlow {
             send_tx: None, // This is not available in this context unfortunately
             outcome,
         };

@@ -271,6 +271,10 @@ impl<S: StateInterface> ChainState for CloneTesting<S> {
     fn state(&self) -> Self::Out {
         self.state.clone()
     }
+
+    fn can_load_state_from_state_file(&self) -> bool {
+        true
+    }
 }
 
 // Execute on the test chain, returns test response type

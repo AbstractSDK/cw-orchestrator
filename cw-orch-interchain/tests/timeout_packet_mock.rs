@@ -46,9 +46,9 @@ fn timeout_packet_mock() -> cw_orch::anyhow::Result<()> {
 
     let result = interchain.await_packets("juno-1", tx_resp)?;
 
-    match &result.packets[0].outcome {
-        cw_orch_interchain_core::types::IbcPacketOutcome::Timeout { .. } => {}
-        cw_orch_interchain_core::types::IbcPacketOutcome::Success { .. } => {
+    match &result.packets[0] {
+        cw_orch_interchain_core::IbcPacketOutcome::Timeout { .. } => {}
+        cw_orch_interchain_core::IbcPacketOutcome::Success { .. } => {
             panic!("Expected timeout")
         }
     }

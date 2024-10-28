@@ -11,6 +11,12 @@ pub trait ChainState {
     type Out: StateInterface;
     /// Get the underlying state.
     fn state(&self) -> Self::Out;
+    /// Returns wether this environment can load state from the state file.
+    ///
+    /// This can be used within the Deploy trait to load the contracts from file if necessary
+    fn can_load_state_from_state_file(&self) -> bool {
+        false
+    }
 }
 
 /// This Interface allows for managing the local state of a deployment on any CosmWasm-supported environment.

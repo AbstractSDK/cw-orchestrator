@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch"
-version = "0.25.0"
+version = "0.27.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -100,6 +100,6 @@ mock-contract = { path = "../contracts-ws/contracts/mock_contract" }
 mock-contract-u64 = { path = "../contracts-ws/contracts/mock_contract_u64" }
 serde_json = { workspace = true }
 dotenv = "0.15.0"
-osmosis-std = "0.25.0"
+osmosis-std = "0.26.0"
 prost = { workspace = true }
 prost-types = { workspace = true }

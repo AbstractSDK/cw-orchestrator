@@ -143,6 +143,10 @@ impl<Sender> ChainState for DaemonBase<Sender> {
     fn state(&self) -> Self::Out {
         self.daemon.state.clone()
     }
+
+    fn can_load_state_from_state_file(&self) -> bool {
+        true
+    }
 }
 
 // Execute on the real chain, returns tx response
@@ -235,7 +239,7 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
 }
 
 impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
-    fn commit_any<R>(
+    fn commit_any(
         &self,
         msgs: Vec<prost_types::Any>,
         memo: Option<&str>,

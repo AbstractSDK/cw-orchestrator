@@ -357,32 +357,30 @@ pub trait DeployedChains<Chain: CwEnv>: cw_orch_core::contract::Deploy<Chain> {
     /// Set the default contract state for a contract, so that users can retrieve it in their application when importing the library
     /// If a state is provided, it is used for all contracts, otherwise, the state is loaded from the crate's state file.
     fn set_contracts_state(&mut self, custom_state: Option<Value>) {
-        let state;
-
-        let state_file = Self::deployed_state_file_path();
-        if let Some(custom_state) = custom_state {
-            state = custom_state;
-        } else if let Some(state_file) = state_file {
-            if let Ok(module_state_json) = crate::json_lock::read(&state_file) {
-                state = patch_state_if_old(module_state_json);
-            } else {
-                return;
-            }
-        } else {
+        let mut is_loading_from_file = false;
+        let Some(maybe_old_state) = custom_state.or_else(|| {
+            is_loading_from_file = true;
+            Self::deployed_state_file_path()
+                .and_then(|state_file| crate::json_lock::read(&state_file).ok())
+        }) else {
             return;
-        }
+        };
+        let state = patch_state_if_old(maybe_old_state);
 
         let all_contracts = self.get_contracts_mut();
 
         for contract in all_contracts {
+            // If we're loading the state from file and the environment doesn't allow that, we don't load addresses and code-ids
+            if is_loading_from_file && !contract.environment().can_load_state_from_state_file() {
+                return;
+            }
+
             // We set the code_id and/or address of the contract in question if they are not present already
             let env_info = contract.environment().env_info();
             // We load the file
             // We try to get the code_id for the contract
             if contract.code_id().is_err() {
                 let code_id = state
-                    .get(env_info.chain_name.clone())
-                    .unwrap_or(&Value::Null)
                     .get(env_info.chain_id.to_string())
                     .unwrap_or(&Value::Null)
                     .get("code_ids")
@@ -399,8 +397,6 @@ pub trait DeployedChains<Chain: CwEnv>: cw_orch_core::contract::Deploy<Chain> {
             if contract.address().is_err() {
                 // Try and get the code id from file
                 let address = state
-                    .get(env_info.chain_name.clone())
-                    .unwrap_or(&Value::Null)
                     .get(env_info.chain_id.to_string())
                     .unwrap_or(&Value::Null)
                     .get(env_info.deployment_id)
