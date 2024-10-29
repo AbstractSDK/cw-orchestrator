@@ -12,7 +12,7 @@ use crate::InterchainError;
 
 /// Identifies a channel between two IBC connected chains.
 /// This describes only 1 side of the channel
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct IbcPort<Channel> {
     /// The chain id of the network which belongs on one side of the channel
     pub chain_id: NetworkId,
@@ -31,10 +31,21 @@ pub struct IbcPort<Channel> {
     pub chain: Channel,
 }
 
+impl<Channel> std::fmt::Debug for IbcPort<Channel> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("IbcPort")
+            .field("chain_id", &self.chain_id)
+            .field("connection_id", &self.connection_id)
+            .field("port", &self.port)
+            .field("channel", &self.channel)
+            .finish()
+    }
+}
+
 /// Store information about a channel between 2 blockchains
 /// The order of port_a and port_b is not important
 /// Even if there is a src and dst chain, the order for an IBC channel doesn't matter
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct InterchainChannel<Channel>
 where
     Channel: Clone + Send + Sync,
@@ -43,6 +54,18 @@ where
     pub port_a: IbcPort<Channel>,
     /// Port on the other side of the channel
     pub port_b: IbcPort<Channel>,
+}
+
+impl<Channel> std::fmt::Debug for InterchainChannel<Channel>
+where
+    Channel: Clone + Send + Sync,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("InterchainChannel")
+            .field("port_a", &self.port_a)
+            .field("port_b", &self.port_b)
+            .finish()
+    }
 }
 
 // TODO some of those queries may be implemented (or are already implemented) in the IBC querier file ?

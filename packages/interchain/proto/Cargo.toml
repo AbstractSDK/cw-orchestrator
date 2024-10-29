@@ -13,6 +13,7 @@ repository.workspace = true
 cw-orch-interchain-core = { workspace = true }
 cw-orch-traits = { workspace = true }
 cw-orch-core = { workspace = true }
+cw-orch-daemon = { workspace = true }
 
 anyhow = { workspace = true }
 

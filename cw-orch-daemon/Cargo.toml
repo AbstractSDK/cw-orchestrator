@@ -78,6 +78,8 @@ uid = "0.1.7"
 toml = "0.8"
 http = "1.1.0"
 libc-print = "0.1.23"
+tower = { version = "0.5.1", features = ["reconnect"] }
+pin-project-lite = "0.2.15"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

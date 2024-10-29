@@ -3,7 +3,7 @@ use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::{Addr, Coin, StdError};
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
+use crate::Channel;
 
 /// Queries for Cosmos Bank Module
 /// All the async function are prefixed with `_`

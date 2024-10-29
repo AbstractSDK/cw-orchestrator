@@ -1,4 +1,4 @@
-use tonic::transport::Channel;
+use crate::Channel;
 
 use crate::DaemonError;
 

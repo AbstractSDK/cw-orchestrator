@@ -5,7 +5,7 @@ use cosmrs::proto::ibc::core::channel::v1::State;
 use cw_orch_core::contract::interface_traits::ContractInstance;
 use cw_orch_core::environment::Environment;
 use cw_orch_daemon::queriers::{Ibc, Node};
-use cw_orch_daemon::Daemon;
+use cw_orch_daemon::{Channel, Daemon};
 use cw_orch_interchain_core::env::contract_port;
 use diff::Diff;
 use futures_util::future::join_all;
@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
 use std::{fmt::Display, time::Duration};
-use tonic::{async_trait, transport::Channel};
+use tonic::async_trait;
 
 use self::logged_state::LoggedState;
 
@@ -117,8 +117,9 @@ mod logged_state {
         fmt::{Debug, Display},
     };
 
+    use cw_orch_daemon::Channel;
     use diff::Diff;
-    use tonic::{async_trait, transport::Channel};
+    use tonic::async_trait;
 
     #[async_trait]
     pub trait LoggedState:

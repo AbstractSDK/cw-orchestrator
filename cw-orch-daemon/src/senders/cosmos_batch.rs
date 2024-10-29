@@ -1,4 +1,4 @@
-use crate::{DaemonBase, INSTANTIATE_2_TYPE_URL};
+use crate::{Channel, DaemonBase, INSTANTIATE_2_TYPE_URL};
 
 use crate::{error::DaemonError, tx_resp::CosmTxResponse};
 
@@ -86,7 +86,7 @@ impl QuerySender for CosmosBatchSender {
     type Error = DaemonError;
     type Options = CosmosBatchOptions;
 
-    fn channel(&self) -> tonic::transport::Channel {
+    fn channel(&self) -> Channel {
         self.sender.channel()
     }
 }

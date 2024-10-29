@@ -18,10 +18,10 @@ use cosmrs::{AccountId, Any};
 use cosmwasm_std::Addr;
 use cw_orch::prelude::*;
 use cw_orch_core::environment::ChainInfoOwned;
+use cw_orch_daemon::Channel;
 use prost::Message;
 use std::io::{self, Write};
 use std::sync::Arc;
-use tonic::transport::Channel;
 
 // ANCHOR: full_counter_example
 use counter_contract::CounterContract;
@@ -72,7 +72,7 @@ impl SenderBuilder for ManualSenderOptions {
     type Sender = ManualSender;
 
     async fn build(&self, chain_info: &Arc<ChainInfoOwned>) -> Result<ManualSender, Self::Error> {
-        let grpc_channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await?;
+        let grpc_channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await;
         Ok(ManualSender {
             chain_info: chain_info.clone(),
             sender: Addr::unchecked(self.sender_address.clone()),
@@ -85,7 +85,7 @@ impl QuerySender for ManualSender {
     type Error = DaemonError;
     type Options = ManualSenderOptions;
 
-    fn channel(&self) -> tonic::transport::Channel {
+    fn channel(&self) -> Channel {
         self.grpc_channel.clone()
     }
 }

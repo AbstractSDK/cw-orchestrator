@@ -1,11 +1,11 @@
 use std::fmt::Display;
 
+use crate::Channel;
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::{Addr, StdError};
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
 
 use super::bank::cosmrs_to_cosmwasm_coin;
 

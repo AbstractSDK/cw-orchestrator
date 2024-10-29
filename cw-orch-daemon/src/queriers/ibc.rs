@@ -1,3 +1,4 @@
+use crate::Channel;
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmos_modules::ibc_channel;
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
@@ -13,8 +14,6 @@ use cosmrs::proto::ibc::{
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use prost::Message;
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
-
 /// Querier for the Cosmos IBC module
 /// All the async function are prefixed with `_`
 pub struct Ibc {

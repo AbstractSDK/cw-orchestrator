@@ -3,7 +3,7 @@ use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::Addr;
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
+use crate::Channel;
 
 /// Querier for the Cosmos Gov module
 /// All the async function are prefixed with `_`

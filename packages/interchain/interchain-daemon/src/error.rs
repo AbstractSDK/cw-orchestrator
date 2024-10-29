@@ -1,9 +1,9 @@
 #![allow(missing_docs)]
 
 use cosmwasm_std::StdError;
+use cw_orch_daemon::Channel;
 use cw_orch_interchain_core::{channel::InterchainChannel, results::NetworkId, InterchainError};
 use thiserror::Error;
-use tonic::transport::Channel;
 
 #[derive(Error, Debug)]
 pub enum InterchainDaemonError {

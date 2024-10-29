@@ -1,6 +1,7 @@
 use super::{
     cosmos_modules, error::DaemonError, queriers::Node, senders::Wallet, tx_resp::CosmTxResponse,
 };
+use crate::Channel;
 use crate::{
     queriers::CosmWasm,
     senders::{builder::SenderBuilder, query::QuerySender, tx::TxSender},
@@ -31,7 +32,6 @@ use std::{
     str::{from_utf8, FromStr},
     time::Duration,
 };
-use tonic::transport::Channel;
 
 pub const INSTANTIATE_2_TYPE_URL: &str = "/cosmwasm.wasm.v1.MsgInstantiateContract2";
 

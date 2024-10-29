@@ -2,6 +2,7 @@ use crate::results::NetworkId;
 use cosmwasm_std::Api;
 use cw_orch_core::environment::CwEnv;
 use cw_orch_core::environment::QueryHandler;
+use cw_orch_daemon::Channel;
 use cw_orch_mock::{MockBase, MockState};
 
 /// Adds additional capabilities to CwEnv for use with ibc environments
@@ -20,9 +21,9 @@ pub trait IbcQueryHandler: CwEnv {
 #[cfg(feature = "daemon")]
 // Temporary until we can actually push to cw-orch-daemon
 impl IbcQueryHandler for cw_orch_daemon::Daemon {
-    type Handler = tonic::transport::Channel;
+    type Handler = Channel;
 
-    fn ibc_handler(&self) -> tonic::transport::Channel {
+    fn ibc_handler(&self) -> Channel {
         self.channel()
     }
 

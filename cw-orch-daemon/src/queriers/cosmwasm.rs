@@ -2,6 +2,7 @@ use std::{marker::PhantomData, str::FromStr};
 
 use crate::senders::query::QuerySender;
 use crate::senders::QueryOnlySender;
+use crate::Channel;
 use crate::{cosmos_modules, error::DaemonError, DaemonBase};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmrs::AccountId;
@@ -15,7 +16,6 @@ use cw_orch_core::{
     environment::{Querier, QuerierGetter, WasmQuerier},
 };
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
 
 /// Querier for the CosmWasm SDK module
 /// All the async function are prefixed with `_`

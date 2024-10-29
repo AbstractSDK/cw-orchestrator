@@ -3,16 +3,26 @@ use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
 };
 use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 use http::Uri;
-use tonic::transport::{Channel, ClientTlsConfig, Endpoint};
+use tonic::transport::{ClientTlsConfig, Endpoint};
+
+use crate::service::{
+    factory::{ChannelCreationArgs, ChannelFactory},
+    reconnect::Reconnect,
+};
 
 use super::error::DaemonError;
 
 /// A helper for constructing a gRPC channel
 pub struct GrpcChannel {}
 
+pub type Channel = Reconnect<ChannelFactory, ChannelCreationArgs>;
+
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
-    pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+    pub async fn get_channel(
+        grpc: &[String],
+        chain_id: &str,
+    ) -> Result<tonic::transport::Channel, DaemonError> {
         if grpc.is_empty() {
             return Err(DaemonError::GRPCListIsEmpty);
         }
@@ -69,8 +79,13 @@ impl GrpcChannel {
         Ok(successful_connections.pop().unwrap())
     }
 
+    pub async fn connect(grpc: &[String], chain_id: &str) -> Channel {
+        let channel = Reconnect::new(ChannelFactory {}, (grpc.to_vec(), chain_id.to_string()));
+        channel.clone()
+    }
+
     /// Create a gRPC channel from the chain info
-    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Result<Channel, DaemonError> {
+    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Channel {
         GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await
     }
 }

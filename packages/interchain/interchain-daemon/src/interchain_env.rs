@@ -6,9 +6,9 @@ use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
 use cw_orch_interchain_core::{InterchainEnv, NestedPacketsFlow, SinglePacketFlow};
 
+use cw_orch_daemon::Channel;
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use tokio::time::sleep;
-use tonic::transport::Channel;
 
 use crate::channel_creator::{ChannelCreationValidator, ChannelCreator};
 use crate::interchain_log::InterchainLog;
