@@ -367,7 +367,7 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
 
         Err(InterchainDaemonError::ChannelCreationEventsNotFound {
             src_chain: src_chain.to_string(),
-            channel: ibc_channel.clone(),
+            channel: format!("{ibc_channel:?}"),
         })
     }
 

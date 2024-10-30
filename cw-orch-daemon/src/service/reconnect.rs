@@ -1,5 +1,4 @@
 use crate::service::future::ResponseFuture;
-use crate::DaemonError;
 use log::trace;
 use std::fmt;
 use std::sync::{Arc, Mutex};
@@ -12,8 +11,6 @@ use std::{
 };
 use tower::{BoxError, Service};
 
-use super::factory::ChannelFactory;
-
 /// Reconnect to failed services.
 pub struct Reconnect<M, Target>
 where
@@ -24,6 +21,7 @@ where
     Target: Sync,
 {
     mk_service: M,
+    #[allow(clippy::type_complexity)]
     state: Arc<Mutex<State<M::Future, M::Response, M::Error>>>,
     target: Target,
 }
@@ -80,19 +78,19 @@ where
     }
 }
 
-impl<Target, S, Request> Service<Request> for Reconnect<ChannelFactory, Target>
+impl<M, Target, S, Request> Service<Request> for Reconnect<M, Target>
 where
-    ChannelFactory: Service<Target, Response = S>,
-    <ChannelFactory as Service<Target>>::Error: std::fmt::Debug,
-    <ChannelFactory as Service<Target>>::Future: Unpin,
-    BoxError: From<<ChannelFactory as Service<Target>>::Error> + From<S::Error>,
+    M: Service<Target, Response = S> + Sync,
+    M::Error: std::fmt::Debug,
+    M::Future: Unpin,
+    BoxError: From<M::Error> + From<S::Error>,
 
     S: Service<Request>,
     Target: Clone + Sync,
 {
     type Response = S::Response;
     type Error = BoxError;
-    type Future = ResponseFuture<S::Future, DaemonError>;
+    type Future = ResponseFuture<S::Future, M::Error>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         loop {
@@ -153,15 +151,16 @@ where
                 }
             }
         }
-
-        Poll::Ready(Ok(()))
     }
 
     fn call(&mut self, request: Request) -> Self::Future {
         let mut state = self.state.lock().unwrap();
         let service = match &mut *state {
             State::Connected(ref mut service) => service,
-            State::Error(error) => panic!("{:?}", error),
+            State::Error(error) => panic!(
+                "service not ready; poll_ready must be called first: {:?}",
+                error
+            ),
             _ => panic!("service not ready; poll_ready must be called first"),
         };
 
