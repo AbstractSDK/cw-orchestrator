@@ -1,5 +1,3 @@
-use crate::RUNTIME;
-
 use super::Policy;
 use futures::TryStreamExt;
 use futures_util::future;
