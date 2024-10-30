@@ -2,14 +2,14 @@ use std::{future::Future, pin::Pin};
 
 use tower::Service;
 
-use crate::{DaemonError, GrpcChannel};
+use crate::{DaemonError, GrpcChannel, TowerChannel};
 
 pub type ChannelCreationArgs = (Vec<String>, String);
 #[derive(Clone)]
 pub struct ChannelFactory {}
 
 impl Service<ChannelCreationArgs> for ChannelFactory {
-    type Response = tonic::transport::Channel;
+    type Response = TowerChannel;
 
     type Error = DaemonError;
 

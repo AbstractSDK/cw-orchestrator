@@ -80,6 +80,12 @@ http = "1.1.0"
 libc-print = "0.1.23"
 tower = { version = "0.5.1", features = ["reconnect"] }
 pin-project-lite = "0.2.15"
+futures-core = "0.3.31"
+futures = "0.3.31"
+futures-util = "0.3.31"
+hyper = "1.5.0"
+http-body-util = "0.1.2"
+http-body = "1.0.1"
 
 [dev-dependencies]
 cw-orch-daemon = { path = "." }

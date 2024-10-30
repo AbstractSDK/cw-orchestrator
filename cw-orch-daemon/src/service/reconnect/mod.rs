@@ -1,4 +1,6 @@
-use crate::service::future::ResponseFuture;
+pub mod factory;
+pub mod future;
+use future::ResponseFuture;
 use log::trace;
 use std::fmt;
 use std::sync::{Arc, Mutex};
@@ -10,6 +12,9 @@ use std::{
     task::{Context, Poll},
 };
 use tower::{BoxError, Service};
+
+pub use factory::ChannelCreationArgs;
+pub use factory::ChannelFactory;
 
 /// Reconnect to failed services.
 pub struct Reconnect<M, Target>

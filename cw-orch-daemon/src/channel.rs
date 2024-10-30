@@ -4,25 +4,21 @@ use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
 use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 use http::Uri;
 use tonic::transport::{ClientTlsConfig, Endpoint};
-
-use crate::service::{
-    factory::{ChannelCreationArgs, ChannelFactory},
-    reconnect::Reconnect,
-};
+use tower::ServiceBuilder;
 
 use super::error::DaemonError;
+use crate::service::reconnect::{ChannelCreationArgs, ChannelFactory, Reconnect};
+use crate::service::retry::{Attempts, Retry, RetryLayer};
 
 /// A helper for constructing a gRPC channel
 pub struct GrpcChannel {}
 
 pub type Channel = Reconnect<ChannelFactory, ChannelCreationArgs>;
+pub type TowerChannel = Retry<Attempts, tonic::transport::Channel>;
 
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
-    pub async fn get_channel(
-        grpc: &[String],
-        chain_id: &str,
-    ) -> Result<tonic::transport::Channel, DaemonError> {
+    pub async fn get_channel(grpc: &[String], chain_id: &str) -> Result<TowerChannel, DaemonError> {
         if grpc.is_empty() {
             return Err(DaemonError::GRPCListIsEmpty);
         }
@@ -76,7 +72,14 @@ impl GrpcChannel {
             return Err(DaemonError::CannotConnectGRPC);
         }
 
-        Ok(successful_connections.pop().unwrap())
+        let retry_policy = Attempts(3);
+        let retry_layer = RetryLayer::new(retry_policy);
+
+        let service = ServiceBuilder::new()
+            .layer(retry_layer)
+            .service(successful_connections.pop().unwrap());
+
+        Ok(service)
     }
 
     pub async fn connect(grpc: &[String], chain_id: &str) -> Channel {

@@ -1,7 +1,5 @@
 // ANCHOR: full_counter_example
 
-use std::{thread::sleep, time::Duration};
-
 use cw_orch::{anyhow, prelude::*};
 use cw_orch_daemon::senders::QueryOnlyDaemon;
 
@@ -20,15 +18,10 @@ pub fn main() -> anyhow::Result<()> {
         .balance(&Addr::unchecked(LOCAL_JUNO_SENDER), None)?;
     assert!(!balances.is_empty());
 
-    log::info!("Sleeping 10s");
-    sleep(Duration::from_secs(10));
-    log::info!("FInished sleeping");
-
     let balances = chain
         .bank_querier()
-        .balance(&Addr::unchecked(LOCAL_JUNO_SENDER), None)?;
+        .balance(&Addr::unchecked("faulty-address"), None)?;
     assert!(!balances.is_empty());
-    log::info!("Finished example");
 
     Ok(())
 }
