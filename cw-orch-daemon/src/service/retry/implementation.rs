@@ -47,8 +47,9 @@ impl<E> Policy<Req, Res, E> for Attempts {
         let (parts, original_body) = req.into_parts();
 
         // Try to capture the Bytes from the original body
+        // This is circumvoluted, I'm not sure how to call an async function within a sync function that is used inside a future later
         let bytes = futures::executor::block_on(async move {
-            RUNTIME
+            tokio::runtime::Handle::current()
                 .spawn(async move { consume_unsync_body(original_body).await })
                 .await
                 .unwrap()
