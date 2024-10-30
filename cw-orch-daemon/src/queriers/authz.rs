@@ -1,9 +1,9 @@
+use crate::Channel;
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
 use cosmwasm_std::Addr;
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
-use crate::Channel;
 
 /// Queries for Cosmos AuthZ Module
 /// All the async function are prefixed with `_`
