@@ -7,9 +7,8 @@ members = [
   "packages/cw-orch-mock",
   "packages/cw-orch-networks",
   "packages/clone-testing",
-  # TODO: release those after *-std reaches to prost 0.13
-  # "packages/cw-orch-osmosis-test-tube",
-  # "packages/cw-orch-neutron-test-tube",
+  "packages/cw-orch-osmosis-test-tube",
+  "packages/cw-orch-neutron-test-tube",
   "packages/cw-orch-traits",
   "test_contracts/*",
   "packages/macros/*",
@@ -39,17 +38,17 @@ cw-multi-test = { package = "abstract-cw-multi-test", version = "2.0.2", feature
 cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0" }
 
-osmosis-test-tube = { version = "25.0.0" }
-neutron-test-tube = { version = "4.2.0" }
+osmosis-test-tube = { version = "26.0.0" }
+neutron-test-tube = { version = "4.2.3" }
 
 anyhow = "1.0"
 serde = { version = "1.0.208", default-features = false, features = ["derive"] }
 tokio = { version = "1.39", features = ["full"] }
 
-cw-orch = { path = "./cw-orch", version = "0.26.0" }
-cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.27.0" }
-cw-orch-core = { path = "packages/cw-orch-core", version = "2.1.0" }
-cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.24.0" }
+cw-orch = { path = "./cw-orch", version = "0.27.0" }
+cw-orch-daemon = { path = "./cw-orch-daemon", version = "0.28.0" }
+cw-orch-core = { path = "packages/cw-orch-core", version = "2.1.3" }
+cw-orch-traits = { path = "packages/cw-orch-traits", version = "0.25.0" }
 cw-orch-mock = { path = "packages/cw-orch-mock", version = "0.24.2" }
 cw-orch-networks = { path = "packages/cw-orch-networks", version = "0.24.3" }
 
@@ -58,18 +57,19 @@ cw-orch-contract-derive = { path = "packages/macros/cw-orch-contract-derive", ve
 cw-orch-fns-derive = { path = "packages/macros/cw-orch-fns-derive", version = "0.23.0" }
 
 # Extensions
-# cw-orch-osmosis-test-tube = { version = "0.3.0", path = "packages/cw-orch-osmosis-test-tube" }
+cw-orch-osmosis-test-tube = { version = "0.4.0", path = "packages/cw-orch-osmosis-test-tube" }
+cw-orch-neutron-test-tube = { version = "0.1.0", path = "packages/cw-orch-neutron-test-tube" }
 
 #Clone Testing
 cw-orch-clone-testing = { version = "0.8.0", path = "packages/clone-testing" }
 
 # Interchain
-cw-orch-interchain = { path = "cw-orch-interchain", version = "0.7.0" }
-cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.8.0" }
-cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.8.0" }
-cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.8.0" }
-cw-orch-starship = { path = "packages/interchain/starship", version = "0.6.0" }
-cw-orch-proto = { path = "packages/interchain/proto", version = "0.8.0" }
+cw-orch-interchain = { path = "cw-orch-interchain", version = "0.8.0" }
+cw-orch-interchain-core = { path = "packages/interchain/interchain-core", version = "0.9.0" }
+cw-orch-interchain-daemon = { path = "packages/interchain/interchain-daemon", version = "0.9.0" }
+cw-orch-interchain-mock = { path = "packages/interchain/interchain-mock", version = "0.9.0" }
+cw-orch-starship = { path = "packages/interchain/starship", version = "0.7.0" }
+cw-orch-proto = { path = "packages/interchain/proto", version = "0.9.0" }
 
 
 thiserror = { version = "1.0.63" }

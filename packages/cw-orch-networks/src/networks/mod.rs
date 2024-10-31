@@ -3,6 +3,7 @@
 //! Contains information and helpers for different blockchain networks
 //! See [parse_network] to easily retrieve this static network information
 pub mod archway;
+pub mod cosmos;
 pub mod doravota;
 pub mod injective;
 pub mod juno;
@@ -20,6 +21,7 @@ pub mod xion;
 
 use crate::networks::union::UNION_TESTNET_8;
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
+pub use cosmos::COSMOS_HUB_TESTNET;
 pub use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 pub use doravota::{VOTA_ASH, VOTA_TESTNET};
 pub use injective::{INJECTIVE_1, INJECTIVE_888};
@@ -81,4 +83,5 @@ pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     ROLLKIT_TESTNET,
     LOCAL_LANDSLIDE,
     UNION_TESTNET_8,
+    COSMOS_HUB_TESTNET,
 ];

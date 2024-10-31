@@ -7,8 +7,8 @@ mod tests {
 
     use cosmrs::proto::cosmos::{
         authz::v1beta1::{
-            GenericAuthorization, GrantAuthorization, MsgGrant, MsgGrantResponse,
-            QueryGranteeGrantsResponse, QueryGranterGrantsResponse, QueryGrantsResponse,
+            GenericAuthorization, GrantAuthorization, MsgGrant, QueryGranteeGrantsResponse,
+            QueryGranterGrantsResponse, QueryGrantsResponse,
         },
         bank::v1beta1::MsgSend,
     };
@@ -68,7 +68,7 @@ mod tests {
         };
 
         // We start by granting authz to an account
-        daemon.commit_any::<MsgGrantResponse>(
+        daemon.commit_any(
             vec![Any {
                 type_url: "/cosmos.authz.v1beta1.MsgGrant".to_string(),
                 value: MsgGrant {

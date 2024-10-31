@@ -16,7 +16,7 @@ pub const ICS_TESTNET: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "provider",
     gas_denom: "uatom",
-    gas_price: 0.0025,
+    gas_price: 0.01,
     grpc_urls: &["https://grpc-rs.cosmos.nodestake.top:443"],
     network_info: COSMOS_HUB_NETWORK,
     lcd_url: Some("https://api-rs.cosmos.nodestake.top:443"),

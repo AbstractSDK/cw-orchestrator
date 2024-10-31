@@ -24,8 +24,8 @@ We maintain a small set of interfaces ourselves that we use in our own projects.
 
 | Codebase | Latest Version |
 |---|---|
-| [cw-plus](https://github.com/AbstractSDK/cw-plus) | <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/v/tag/AbstractSDK/cw-plus"> |
-| [AbstractSDK](https://github.com/AbstractSDK/contracts/tree/main/packages/abstract-interface) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-interface"> |
+| [cw-plus](https://github.com/AbstractSDK/cw-orchestrator/tree/main/packages/integrations/cw-plus) | <img alt="Crates.io" src="https://img.shields.io/crates/v/cw-plus-orch"> |
+| [abstract](https://github.com/AbstractSDK/abstract/tree/main/framework/packages/abstract-interface) | <img alt="Crates.io" src="https://img.shields.io/crates/v/abstract-interface"> |
 
 ## Creating an Interface
 
