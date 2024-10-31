@@ -1,163 +1,30 @@
 use cosmwasm_std::IbcOrder;
-use cw_orch_core::environment::{ChainInfoOwned, ChainState, IndexResponse};
+use cw_orch_core::environment::IndexResponse;
 use cw_orch_daemon::queriers::{Ibc, Node};
-use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError, RUNTIME};
+use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
-use cw_orch_interchain_core::{InterchainEnv, NestedPacketsFlow, SinglePacketFlow};
+use cw_orch_interchain_core::results::{
+    ChannelCreationTransactionsResult, InternalChannelCreationResult,
+};
+use cw_orch_interchain_core::{IbcPacketOutcome, InterchainEnv, SinglePacketFlow, TxId};
+use cw_orch_interchain_daemon::packet_inspector::find_ibc_packets_sent_in_tx;
+use cw_orch_interchain_daemon::packet_inspector::PacketInspector;
 
+use crate::core::HermesRelayer;
+use cw_orch_interchain_daemon::InterchainDaemonError;
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
+use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
 use tokio::time::sleep;
 use tonic::transport::Channel;
 
-use crate::channel_creator::{ChannelCreationValidator, ChannelCreator};
-use crate::interchain_log::InterchainLog;
-use crate::packet_inspector::PacketInspector;
-use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
-
-use crate::{IcDaemonResult, InterchainDaemonError};
-
-use cw_orch_interchain_core::results::{
-    ChannelCreationTransactionsResult, InternalChannelCreationResult, NetworkId,
-};
+use cw_orch_interchain_core::NestedPacketsFlow;
+use cw_orch_interchain_daemon::ChannelCreator;
 use futures::future::try_join4;
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
-use tokio::runtime::Handle;
 
-/// Represents a set of locally running blockchain nodes and a Hermes relayer.
-#[derive(Clone)]
-pub struct DaemonInterchain<C: ChannelCreator = ChannelCreationValidator> {
-    /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
-    daemons: HashMap<NetworkId, Daemon>,
-
-    channel_creator: C,
-
-    // Allows logging on separate files
-    log: Option<InterchainLog>,
-
-    rt_handle: Handle,
-}
-
-/// Mnemonic type to clarify code
-pub type Mnemonic = String;
-
-impl<C: ChannelCreator> DaemonInterchain<C> {
-    /// Builds a new [`DaemonInterchain`] instance.
-    /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
-    /// channel_creator allows you to specify an object that is able to create channels
-    /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
-    pub fn new<T>(chains: Vec<T>, channel_creator: &C) -> IcDaemonResult<Self>
-    where
-        T: Into<ChainInfoOwned>,
-    {
-        Self::new_with_runtime(chains, channel_creator, RUNTIME.handle())
-    }
-
-    /// Builds a new [`DaemonInterchain`] instance.
-    /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
-    /// channel_creator allows you to specify an object that is able to create channels
-    /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
-    /// runtime allows you to control the async runtime (for advanced devs)
-    pub fn new_with_runtime<T>(
-        chains: Vec<T>,
-        channel_creator: &C,
-        runtime: &Handle,
-    ) -> IcDaemonResult<Self>
-    where
-        T: Into<ChainInfoOwned>,
-    {
-        let mut env = Self::raw(runtime, channel_creator);
-
-        // We create daemons for each chains
-        for chain_data in chains {
-            env.build_daemon(runtime, chain_data.into(), None::<String>)?;
-        }
-
-        Ok(env)
-    }
-
-    /// This creates an interchain environment from existing daemon instances
-    /// The `channel_creator` argument will be responsible for creation interchain channel
-    /// If using starship, prefer using Starship::interchain_env for environment creation
-    pub fn from_daemons(daemons: Vec<Daemon>, channel_creator: &C) -> Self {
-        let mut env = Self::raw(&daemons.first().unwrap().rt_handle, channel_creator);
-        env.add_daemons(daemons);
-        env
-    }
-
-    fn raw(rt: &Handle, channel_creator: &C) -> Self {
-        Self {
-            daemons: HashMap::new(),
-            channel_creator: channel_creator.clone(),
-            log: None,
-            rt_handle: rt.clone(),
-        }
-    }
-
-    /// Build a daemon from chain data and mnemonic and add it to the current configuration
-    fn build_daemon(
-        &mut self,
-        runtime: &Handle,
-        chain_data: ChainInfoOwned,
-        mnemonic: Option<impl Into<String>>,
-    ) -> IcDaemonResult<()> {
-        let mut daemon_builder = Daemon::builder(chain_data);
-        let mut daemon_builder = daemon_builder.handle(runtime);
-
-        daemon_builder = if let Some(mn) = mnemonic {
-            daemon_builder.mnemonic(mn)
-        } else {
-            daemon_builder
-        };
-
-        // State is shared between daemons, so if a daemon already exists, we use its state
-        daemon_builder = if let Some(daemon) = self.daemons.values().next() {
-            daemon_builder.state(daemon.state())
-        } else {
-            daemon_builder
-        };
-
-        let daemon = daemon_builder.build().unwrap();
-
-        self.add_daemons(vec![daemon]);
-
-        Ok(())
-    }
-
-    /// Enables logging on multiple files to separate chains from each other
-    pub fn with_log(&mut self) {
-        let log = InterchainLog::default();
-        self.add_to_log(self.daemons.values().cloned().collect());
-        self.log = Some(log)
-    }
-
-    /// Add already constructed daemons to the environment
-    pub fn add_daemons(&mut self, daemons: Vec<Daemon>) {
-        self.daemons.extend(
-            daemons
-                .iter()
-                .map(|d| (d.state().chain_data.chain_id.to_string(), d.clone())),
-        );
-
-        self.add_to_log(daemons)
-    }
-
-    // Adds the daemon to the log environment
-    fn add_to_log(&mut self, daemons: Vec<Daemon>) {
-        if let Some(log) = self.log.as_mut() {
-            log.add_chains(
-                &daemons
-                    .iter()
-                    .map(|d| d.state().chain_data.chain_id.to_string())
-                    .collect(),
-            )
-        }
-    }
-}
-
-impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
+impl InterchainEnv<Daemon> for HermesRelayer {
     type ChannelCreationResult = ();
 
     type Error = InterchainDaemonError;
@@ -166,6 +33,7 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
     fn get_chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
         self.daemons
             .get(&chain_id.to_string())
+            .map(|(d, _, _)| d)
             .ok_or(InterchainDaemonError::DaemonNotFound(chain_id.to_string()))
             .cloned()
     }
@@ -180,9 +48,8 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         version: &str,
         order: Option<IbcOrder>,
     ) -> Result<InternalChannelCreationResult<()>, Self::Error> {
-        let connection_id = self
-            .channel_creator
-            .create_ibc_channel(src_chain, dst_chain, src_port, dst_port, version, order)?;
+        let connection_id =
+            self.create_ibc_channel(src_chain, dst_chain, src_port, dst_port, version, order)?;
 
         Ok(InternalChannelCreationResult {
             result: (),
@@ -251,17 +118,73 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
             tx_response.txhash
         );
 
-        // We crate an interchain env object that is safe to send between threads
-        let interchain_env = self
-            .rt_handle
-            .block_on(PacketInspector::new(self.daemons.values().collect()))?;
+        // 1. Getting IBC related events for the current tx + finding all IBC packets sent out in the transaction
+        let daemon_1 = self.get_chain(chain_id)?;
+        let grpc_channel1 = daemon_1.channel();
 
-        // We follow the trail
-        let ibc_trail = self
-            .rt_handle
-            .block_on(interchain_env.wait_ibc(chain_id.to_string(), tx_response))?;
+        let sent_packets = daemon_1.rt_handle.block_on(find_ibc_packets_sent_in_tx(
+            chain_id.to_string(),
+            grpc_channel1.clone(),
+            tx_response.clone(),
+        ))?;
 
-        Ok(ibc_trail)
+        // 2. We follow the packet history for each packet found inside the transaction
+        let ibc_packet_results = sent_packets
+            .iter()
+            .map(|packet| {
+                self.await_single_packet(
+                    chain_id,
+                    packet.src_port.clone(),
+                    packet.src_channel.clone(),
+                    &packet.dst_chain_id,
+                    packet.sequence,
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let send_tx_id = TxId::new(chain_id.to_string(), tx_response);
+
+        // We follow all results from outgoing packets in the resulting transactions
+        let full_results = ibc_packet_results
+            .into_iter()
+            .map(|ibc_result| {
+                let txs_to_analyze = match ibc_result.outcome.clone() {
+                    IbcPacketOutcome::Timeout { timeout_tx } => vec![timeout_tx],
+                    IbcPacketOutcome::Success {
+                        receive_tx, ack_tx, ..
+                    } => vec![receive_tx, ack_tx],
+                };
+
+                let txs_results = txs_to_analyze
+                    .iter()
+                    .map(|tx| {
+                        let chain_id = tx.chain_id.clone();
+                        let response = tx.response.clone();
+                        self.await_packets(&chain_id, response)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                let analyzed_outcome = match ibc_result.outcome {
+                    IbcPacketOutcome::Timeout { .. } => IbcPacketOutcome::Timeout {
+                        timeout_tx: txs_results[0].clone(),
+                    },
+                    IbcPacketOutcome::Success { ack, .. } => IbcPacketOutcome::Success {
+                        ack: ack.clone(),
+                        receive_tx: txs_results[0].clone(),
+                        ack_tx: txs_results[1].clone(),
+                    },
+                };
+
+                Ok::<_, InterchainDaemonError>(analyzed_outcome.clone())
+            })
+            .collect::<Result<_, _>>()?;
+
+        let tx_identification = NestedPacketsFlow {
+            tx_id: send_tx_id.clone(),
+            packets: full_results,
+        };
+
+        Ok(tx_identification)
     }
 
     // This function follow the execution of an IBC packet across the chain
@@ -274,9 +197,18 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
         sequence: Sequence,
     ) -> Result<SinglePacketFlow<Daemon>, Self::Error> {
         // We crate an interchain env object that is safe to send between threads
-        let interchain_env = self
-            .rt_handle
-            .block_on(PacketInspector::new(self.daemons.values().collect()))?;
+        let interchain_env = self.rt_handle.block_on(PacketInspector::new(
+            self.daemons.values().map(|(d, _, _)| d).collect(),
+        ))?;
+
+        // We try to relay the packets using the HERMES relayer
+        self.force_packet_relay(
+            src_chain,
+            src_port.clone(),
+            src_channel.clone(),
+            dst_chain,
+            sequence,
+        );
 
         // We follow the trail
         let ibc_trail = self.rt_handle.block_on(interchain_env.follow_packet(
@@ -289,38 +221,19 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
 
         Ok(ibc_trail)
     }
+
     fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Daemon>
     where
         Daemon: 'a,
     {
-        self.daemons.values()
+        self.daemons.values().map(|(daemon, _, _)| daemon)
     }
 }
 
-impl<C: ChannelCreator> DaemonInterchain<C> {
+impl HermesRelayer {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
-    ///
-    /// ```rust,no_run
-    /// use cw_orch::prelude::*;
-    /// use cw_orch::daemon::networks::{OSMOSIS_1, ARCHWAY_1};
-    /// use cw_orch_interchain::prelude::*;
-    ///
-    /// let dst_chain = ARCHWAY_1;
-    /// let src_chain = OSMOSIS_1;
-    ///
-    /// let interchain = DaemonInterchain::new(
-    ///     vec![src_chain.clone(), dst_chain],
-    ///     &ChannelCreationValidator,
-    /// ).unwrap();
-    ///
-    /// interchain
-    ///     .await_packets_for_txhash(
-    ///         src_chain.chain_id,
-    ///         "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
-    ///     ).unwrap().assert().unwrap();
-    /// ```
-    pub fn await_packets_for_txhash(
+    pub fn wait_ibc_from_txhash(
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,

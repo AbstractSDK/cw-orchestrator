@@ -19,3 +19,4 @@ pub type IcDaemonResult<R> = Result<R, InterchainDaemonError>;
 pub use channel_creator::{ChannelCreationValidator, ChannelCreator};
 
 pub use interchain_env::DaemonInterchain;
+pub use interchain_env::Mnemonic;
