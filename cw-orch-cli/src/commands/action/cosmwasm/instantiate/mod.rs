@@ -83,15 +83,12 @@ impl InstantiateWasmOutput {
         println!("Address of the instantiated contract: {address}");
 
         // Maybe save it in Address Book
-        match inquire::Confirm::new("Would you like to save address in Address Book?").prompt()? {
-            true => {
-                let alias = inquire::Text::new("Input new contract alias")
-                    // Use label as default value
-                    .with_initial_value(&scope.label)
-                    .prompt()?;
-                address_book::try_insert_account_id(chain.chain_info(), &alias, address.as_str())?;
-            }
-            false => (),
+        if inquire::Confirm::new("Would you like to save address in Address Book?").prompt()? {
+            let alias = inquire::Text::new("Input new contract alias")
+                // Use label as default value
+                .with_initial_value(&scope.label)
+                .prompt()?;
+            address_book::try_insert_account_id(chain.chain_info(), &alias, address.as_str())?;
         };
 
         Ok(InstantiateWasmOutput)
