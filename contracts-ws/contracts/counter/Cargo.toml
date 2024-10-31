@@ -1,9 +1,10 @@
 [package]
 name = "counter-contract"
-version = "0.11.0"
+version = "0.27.0"
 description = "counter constract"
 keywords = ["cosmwasm", "blockchain"]
 edition = { workspace = true }
+license = "LGPL-3.0"
 exclude = [".env"]
 
 [lib]
