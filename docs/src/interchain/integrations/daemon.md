@@ -110,4 +110,4 @@ This is what the second argument of the `DaemonInterchain::new` function is used
 
     To create the interchain environment with this `ChannelCreator`, [use the Starship syntax above](#for-testing).
 
-[^documentation_date]: as of writing this documentation 10/31/2023. We have a [branch open here](https://github.com/AbstractSDK/cw-orchestrator/pull/427), that might be merged into cw-orch in the future. If you want to relay packets or create channel using cw-orch we recommend using ths branch.
+[^documentation_date]: as of writing this documentation 10/31/2024. We have a [branch open here](https://github.com/AbstractSDK/cw-orchestrator/pull/427), that might be merged into cw-orch in the future. If you want to relay packets or create channel using cw-orch we recommend using ths branch.
