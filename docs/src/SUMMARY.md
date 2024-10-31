@@ -32,6 +32,7 @@
   - [Quick Start](./interchain/quick-start.md)
   - [Integrations](./interchain/integrations/index.md)
     - [Daemon (Live Chains)](./interchain/integrations/daemon.md)
+    - [Starship (Local simulated chains)](./interchain/integrations/starship.md)
     - [Cw Multi Test](./interchain/integrations/mock.md)
 
 - [Supported Chains](./chains/index.md)

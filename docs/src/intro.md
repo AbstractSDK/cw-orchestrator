@@ -24,7 +24,7 @@ Additionally developers can share their infrastructure with other developers by 
 The testing frameworks supported by cw-orchestrator includes:
 
 - **[Cw-Multi-Test](./integrations/cw-multi-test.md)**
-- **[Starship](./interchain/integrations/daemon.md#for-testing)**
+- **[Starship](./interchain/integrations/starship.md)**
 - **[Osmosis-test-tube](./integrations/osmosis-test-tube.md)**
 
 ### Deployment + Scripting

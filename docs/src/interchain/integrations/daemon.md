@@ -58,42 +58,7 @@ let local_juno = Daemon::builder()
 
 ### For testing
 
-In some cases (we highly recommend it), you might want to interact with local nodes and relayers to test IBC interactions. To do so, we allow users to leverage <a href="https://docs.cosmology.zone/starship" target="_blank">@cosmology-tech/Starship</a>. Starship allows developers to spin up a fully simulated mini-cosmos ecosystem. It sets up Cosmos SDK Nodes as well as relayers between them allowing you to focus on your application and less on the testing environment.
-
-For setup, please refer to the [setup Starship](#setup-startship) section of this page or checkout <a href="https://docs.cosmology.zone/starship/get-started/step-1" target="_blank">the official Quick Start</a>. When all that is done, the starship adapter that we provide will detect the deployment and create the right `cw-orchestrator` variables and structures for you to interact and test with.
-
-```rust,ignore
-use cw_orch_interchain::interchain::{Starship, ChannelCreator};
-
-# fn main(){
-    let starship = Starship::new(None)?;
-    let interchain = starship.interchain_env();
-
-    let local_juno = interchain.chain("juno-1")?;
-    let local_osmo = interchain.chain("osmosis-1")?;
-# }
-```
-
-> **NOTE**: The argument of the `Starship::new` function is the optional URL of the starship deployment. It defaults to `http://localhost:8081`, but you can customize it if it doesn't match your setup. All the starship data, daemons and relayer setup is loaded from that URL.
-
-#### Setup Starship
-
-You can find helpers to setup starship in the [`cw-orch` repo](https://github.com/AbstractSDK/cw-orchestrator/tree/main/packages/interchain/starship/starship). Here are the command to launch in order to have starship up and running:
-
-- Install Starship and the chain+relayer cluster (do this once, this make take a little time)
-
-    ```bash
-    make setup
-    ```
-
-- Start Starship. This will create all chains and relayers based on the [example configuration file](https://github.com/AbstractSDK/cw-orchestrator/blob/main/packages/interchain/starship/examples/starship.yaml).
-
-    ```bash
-    make install
-    ```
-
-Starship will most likely crash after at most 1 day of usage. Don't forget to `make stop` and `make install` once everything is stopped from time to time to restart the whole chain cluster.
-
+In some cases (we highly recommend it), you might want to interact with local nodes and relayers to test IBC interactions. To do so, we allow users to leverage <a href="https://docs.cosmology.zone/starship" target="_blank">@cosmology-tech/Starship</a>. Starship allows developers to spin up a fully simulated mini-cosmos ecosystem. It sets up Cosmos SDK Nodes as well as relayers between them allowing you to focus on your application and less on the testing environment. [Read more on how to setup Starship](./starship.md) and make it work with `cw-orchestrator`.
 
 ## General Usage
 
@@ -145,4 +110,4 @@ This is what the second argument of the `DaemonInterchain::new` function is used
 
     To create the interchain environment with this `ChannelCreator`, [use the Starship syntax above](#for-testing).
 
-[^documentation_date]: as of writing this documentation 06/25/2023. We have a [branch open here](https://github.com/AbstractSDK/cw-orchestrator/pull/427), that may be merged into cw-orch. If you want to relay packets or create channel using cw-orch we recommend using ths branch.
+[^documentation_date]: as of writing this documentation 10/31/2024. We have a [branch open here](https://github.com/AbstractSDK/cw-orchestrator/pull/427), that might be merged into cw-orch in the future. If you want to relay packets or create channel using cw-orch we recommend using ths branch.
