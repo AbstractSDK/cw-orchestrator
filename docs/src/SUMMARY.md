@@ -49,6 +49,9 @@
   - [Union](./chains/union.md)
   - [XION](./chains/xion.md)
 
+- [CLI](./cli/index.md)
+  - [Keys](./cli/keys.md)
+
 # Extras
 
 - [CI/CD](./ci-cd.md)
