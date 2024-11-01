@@ -33,7 +33,7 @@ jobs:
         run: cargo test --locked --all-features --all-targets
   network:
     runs-on: ubuntu-latest
-    name: ubuntu / ${{ matrix.toolchain }}
+    name: ubuntu / ${{ matrix.toolchain }} / network-config
     strategy:
       matrix:
         toolchain: [
@@ -54,6 +54,7 @@ jobs:
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test network config
         run: |
+          mkdir ~/.cw-orchestrator
           cp cw-orch-daemon/tests/mock_networks.toml ~/.cw-orchestrator/networks.toml
           cargo test --locked --package cw-orch-daemon --lib -- network_config::test --ignored
   docs:
