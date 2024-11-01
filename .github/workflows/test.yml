@@ -30,7 +30,7 @@ jobs:
         run: cargo generate-lockfile
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test --locked
-        run: cargo test --workspace --exclude cw-orch-cli --locked --all-features --all-targets
+        run: cargo test --locked --all-features --all-targets
       - name: cargo test network config
         run: |
           cp cw-orch-daemon/tests/mock_networks.toml ~/.cw-orchestrator/networks.toml
@@ -73,7 +73,7 @@ jobs:
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
       - name: cargo llvm-cov
-        run: cargo llvm-cov --workspace --exclude cw-orch-cli --locked --all-features --lcov --output-path lcov.info
+        run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v4
         with:
