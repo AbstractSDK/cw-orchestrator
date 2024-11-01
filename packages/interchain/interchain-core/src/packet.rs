@@ -203,7 +203,7 @@ pub mod success {
     /// Success packet outcome. This is the result of a packet analysis.
     /// The T generic is used to allow for raw transactions or analyzed transactions to be used
     #[derive(Debug, PartialEq, Clone)]
-    pub struct IbcPacketResult<T, CustomResult = Empty> {
+    pub struct IbcPacketResult<T: IndexResponse, CustomResult = Empty> {
         /// The packets gets transmitted to the dst chain
         pub receive_tx: T,
         /// The ack is broadcasted back on the src chain
@@ -238,7 +238,7 @@ pub mod success {
             Vec<IbcPacketResult<SuccessNestedPacketsFlow<Chain, CustomResult>, CustomResult>>,
     }
 
-    impl<T: IndexResponse> IndexResponse for IbcPacketResult<T> {
+    impl<T: IndexResponse, CustomResult> IndexResponse for IbcPacketResult<T, CustomResult> {
         fn events(&self) -> Vec<cosmwasm_std::Event> {
             [self.receive_tx.events(), self.ack_tx.events()].concat()
         }
@@ -266,7 +266,7 @@ pub mod success {
         }
     }
 
-    impl<Chain: CwEnv> IndexResponse for SuccessSinglePacketFlow<Chain> {
+    impl<Chain: CwEnv, CustomResult> IndexResponse for SuccessSinglePacketFlow<Chain, CustomResult> {
         fn events(&self) -> Vec<cosmwasm_std::Event> {
             let mut events: Vec<_> = self
                 .send_tx
@@ -311,7 +311,7 @@ pub mod success {
         }
     }
 
-    impl<Chain: CwEnv> IndexResponse for SuccessNestedPacketsFlow<Chain> {
+    impl<Chain: CwEnv, CustomResult> IndexResponse for SuccessNestedPacketsFlow<Chain, CustomResult> {
         fn events(&self) -> Vec<cosmwasm_std::Event> {
             let mut self_events = self.tx_id.response.events();
             let other_events = self

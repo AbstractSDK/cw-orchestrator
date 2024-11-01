@@ -34,7 +34,7 @@ impl<C: CwEnv, CustomResult: std::fmt::Debug> std::fmt::Debug for TxId<C, Custom
     }
 }
 
-impl<Chain: CwEnv, CustomResult: std::fmt::Debug> IndexResponse for TxId<Chain, CustomResult> {
+impl<Chain: CwEnv, CustomResult> IndexResponse for TxId<Chain, CustomResult> {
     fn events(&self) -> Vec<cosmwasm_std::Event> {
         self.response.events()
     }
