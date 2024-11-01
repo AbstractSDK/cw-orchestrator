@@ -1,4 +1,8 @@
-# Quick-Start Guide <!-- omit in toc -->
+# Speed up your development with cw-orchestrator
+
+## Introduction
+
+cw-orchestrator is the most advanced scripting, testing, and deployment framework for CosmWasm smart-contracts. It makes it easy to write cross-environment compatible code for cw-multi-test, Osmosis Test Tube, Starship (alpha), and live networks, significantly reducing code duplication and test-writing time.
 
 Get ready to change the way you interact with contracts. The following steps will allow you to write clean code such as:
 
@@ -20,17 +24,19 @@ If you prefer watching a video, you can follow the workshop below:
 
 ## Summary
 
-- [Summary](#summary)
-- [Single Contract Integration](#single-contract-integration)
-  - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
-  - [Creating an Interface](#creating-an-interface)
-  - [Interaction helpers](#interaction-helpers)
-  - [Using the integration](#using-the-integration)
-- [Integration in a workspace](#integration-in-a-workspace)
-  - [Handling dependencies](#handling-dependencies)
-  - [Creating an interface crate](#creating-an-interface-crate)
-  - [Integrating single contracts](#integrating-single-contracts)
-- [More examples and scripts](#more-examples-and-scripts)
+- [Speed up your development with cw-orchestrator](#speed-up-your-development-with-cw-orchestrator)
+  - [Introduction](#introduction)
+  - [Summary](#summary)
+  - [Single Contract Integration](#single-contract-integration)
+    - [Adding `cw-orch` to your `Cargo.toml` file](#adding-cw-orch-to-your-cargotoml-file)
+    - [Creating an Interface](#creating-an-interface)
+    - [Interaction helpers](#interaction-helpers)
+    - [Using the integration](#using-the-integration)
+  - [Integration in a workspace](#integration-in-a-workspace)
+    - [Handling dependencies](#handling-dependencies)
+    - [Creating an interface crate](#creating-an-interface-crate)
+    - [Integrating single contracts](#integrating-single-contracts)
+  - [More examples and scripts](#more-examples-and-scripts)
 
 ## Single Contract Integration
 
@@ -49,7 +55,7 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 cw-orch = {version = "0.27.0" } # Latest version at time of writing
 ```
 
-> **NOTE**: Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract. Learn more about this behavior in the section about [Wasm Compilation](contracts/wasm-compilation.md)
+> **NOTE**: Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract.
 
 ### Creating an Interface
 
@@ -63,10 +69,9 @@ Then, inside that `interface.rs` file, you can define the interface for your con
 
 ```rust,ignore
 {{#include ../../contracts-ws/contracts/counter/src/interface.rs:custom_interface}}
-
 ```
 
-Learn more about the content of the interface creation specifics on [the interface page](./contracts/interfaces.md#creating-an-interface)
+Learn more about the content of the interface creation specifics in the official <a target="_blank" href="https://orchestrator.abstract.money/contracts/interfaces.html#creating-an-interface">`cw-orch`documentation</a>
 
 > **NOTE**: It can be useful to re-export this struct to simplify usage (in `lib.rs`):
 >
@@ -89,7 +94,7 @@ Enabling this functionality is very straightforward. Find your `ExecuteMsg` and 
 
 Make sure to derive the `#[derive(cosmwasm_schema::QueryResponses)]` macro on your query messages !
 
-Find out more about the interaction helpers on [the interface page](./contracts/interfaces.md#entry-point-function-generation)
+Find out more about the interaction helpers in the official <a target="_blank" href="https://orchestrator.abstract.money/contracts/interfaces.html#entry-point-function-generation">`cw-orch`documentation</a>
 
 > **NOTE**: Again, it can be useful to re-export these generated traits to simplify usage (in `lib.rs`):
 >
@@ -176,5 +181,4 @@ You can find more example interactions on the `counter-contract` example directl
 - Some examples <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/contracts/counter/examples/deploy.rs" target="_blank">showcase interacting with live chains</a>.
 - Some other examples show <a href="https://github.com/AbstractSDK/cw-orchestrator/tree/main/contracts/counter/tests" target="_blank">how to use the library for testing your contracts</a>.
 
-> **FINAL ADVICE**: Continue to explore those docs to learn more about `cw-orch`.
-> Why not go directly to [environment variables](./contracts/env-variable.md)?
+> **FINAL ADVICE**: Learn more and explore our <a target="_blank" href="https://orchestrator.abstract.money/contracts/interfaces.html#entry-point-function-generation">full `cw-orch`documentation</a>.
