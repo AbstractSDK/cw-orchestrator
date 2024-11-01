@@ -8,11 +8,12 @@ use crate::tx::TxId;
 use crate::{IbcAckParser, InterchainError};
 use cosmwasm_std::{Binary, Empty};
 use cw_orch_core::environment::CwEnv;
+use cw_orch_core::environment::IndexResponse;
 
 /// Trait used for analysis of IBC packet flows
-pub trait PacketAnalysis {
+pub trait PacketAnalysis: IndexResponse {
     /// Result of the Analysis of the packet flows
-    type AnalysisResult<CustomResult>;
+    type AnalysisResult<CustomResult>: IndexResponse;
 
     /// Asserts that there is no timeout packet inside the result structure.
     fn assert_no_timeout(&self) -> Result<(), InterchainError>;
@@ -69,6 +70,45 @@ impl<T: PacketAnalysis> PacketAnalysis for IbcPacketOutcome<T> {
                 ack,
             } => {
                 let ibc_app_result = IbcAckParser::any_standard_app_result(&ack)?;
+
+                // In case we have a polytone result, we verify that the execution result is not a failure
+                if let crate::IbcAppResult::Polytone(_) = ibc_app_result {
+                    // An execution failure in the ack for polytone, has those events :
+                    // "method" --> "reply_callback_error"
+                    // "packet_sequence" --> <packet-sequence>
+                    // "callback_error" --> <callback-error>  to
+                    let callback_error = ack_tx
+                        .events()
+                        .into_iter()
+                        .filter(|e| e.ty == "wasm")
+                        .filter_map(|e| {
+                            let method_position = e.attributes.iter().position(|a| {
+                                a.key == "method" && a.value == "reply_callback_error"
+                            })?;
+                            if let Some(packet_sequence) = e.attributes.get(method_position + 1) {
+                                if packet_sequence.key != "packet_sequence" {
+                                    return None;
+                                }
+                            } else {
+                                return None;
+                            }
+                            if let Some(packet_sequence) = e.attributes.get(method_position + 2) {
+                                if packet_sequence.key != "callback_error" {
+                                    None
+                                } else {
+                                    Some(packet_sequence.value.clone())
+                                }
+                            } else {
+                                None
+                            }
+                        })
+                        .next();
+
+                    if let Some(callback_error) = callback_error {
+                        return Err(InterchainError::CallbackError(callback_error));
+                    }
+                };
+
                 Ok(IbcPacketResult {
                     receive_tx: receive_tx.assert()?,
                     ack_tx: ack_tx.assert()?,
