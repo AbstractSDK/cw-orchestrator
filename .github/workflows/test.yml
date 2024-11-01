@@ -31,11 +31,31 @@ jobs:
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test --locked
         run: cargo test --locked --all-features --all-targets
+  network:
+    runs-on: ubuntu-latest
+    name: ubuntu / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        toolchain: [
+            stable, # beta failing to some crate using multiple `thread::set_current`
+          ]
+      fail-fast: false # beta may fail we shouldn't care
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test network config
         run: |
           cp cw-orch-daemon/tests/mock_networks.toml ~/.cw-orchestrator/networks.toml
-          cargo test --package cw-orch-daemon --lib -- network_config::test --ignored
-
+          cargo test --locked --package cw-orch-daemon --lib -- network_config::test --ignored
   docs:
     runs-on: ubuntu-latest
     name: doc-tests / stable
