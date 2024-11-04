@@ -4,6 +4,6 @@ expression: all_storage
 ---
 counter_contract:
   - - contract_info
-    - "{\"contract\":\"crates.io:counter\",\"version\":\"0.11.0\"}"
+    - "{\"contract\":\"crates.io:counter\",\"version\":\"0.27.0\"}"
   - - state
     - "{\"count\":1,\"owner\":\"cosmwasm1pgm8hyk0pvphmlvfjc8wsvk4daluz5tgrw6pu5mfpemk74uxnx9qlm3aqg\"}"

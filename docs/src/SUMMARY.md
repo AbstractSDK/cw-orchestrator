@@ -32,6 +32,7 @@
   - [Quick Start](./interchain/quick-start.md)
   - [Integrations](./interchain/integrations/index.md)
     - [Daemon (Live Chains)](./interchain/integrations/daemon.md)
+    - [Starship (Local simulated chains)](./interchain/integrations/starship.md)
     - [Cw Multi Test](./interchain/integrations/mock.md)
 
 - [Supported Chains](./chains/index.md)
@@ -49,6 +50,9 @@
   - [Union](./chains/union.md)
   - [XION](./chains/xion.md)
 
+- [CLI](./cli/index.md)
+  - [Keys](./cli/keys.md)
+
 # Extras
 
 - [CI/CD](./ci-cd.md)
@@ -57,3 +61,4 @@
 
 [Contributing](./contributing.md)
 [References](references.md)
+[Integrate cw-orch in your docs](./chain-specific-quick-start.md)

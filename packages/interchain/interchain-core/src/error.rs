@@ -58,4 +58,7 @@ pub enum InterchainError {
 
     #[error("Failure acknowledgment received: {0:?}")]
     FailedAckReceived(String),
+
+    #[error("Callback Failure during acknowledgment : {0:?}")]
+    CallbackError(String),
 }
