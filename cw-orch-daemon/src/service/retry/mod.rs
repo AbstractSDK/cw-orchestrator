@@ -2,7 +2,7 @@ pub mod future;
 pub mod implementation;
 pub mod layer;
 pub mod policy;
-pub use implementation::Attempts;
+pub use implementation::RetryAttemps;
 pub use layer::RetryLayer;
 pub use policy::Policy;
 

@@ -8,13 +8,13 @@ use tower::ServiceBuilder;
 
 use super::error::DaemonError;
 use crate::service::reconnect::{ChannelCreationArgs, ChannelFactory, Reconnect};
-use crate::service::retry::{Attempts, Retry, RetryLayer};
+use crate::service::retry::{Retry, RetryAttemps, RetryLayer};
 
 /// A helper for constructing a gRPC channel
 pub struct GrpcChannel {}
 
 pub type Channel = Reconnect<ChannelFactory, ChannelCreationArgs>;
-pub type TowerChannel = Retry<Attempts, tonic::transport::Channel>;
+pub type TowerChannel = Retry<RetryAttemps, tonic::transport::Channel>;
 
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
@@ -72,7 +72,7 @@ impl GrpcChannel {
             return Err(DaemonError::CannotConnectGRPC);
         }
 
-        let retry_policy = Attempts::Count(3);
+        let retry_policy = RetryAttemps::count(3);
         let retry_layer = RetryLayer::new(retry_policy);
 
         let service = ServiceBuilder::new()

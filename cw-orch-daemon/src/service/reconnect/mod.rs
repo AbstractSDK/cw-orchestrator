@@ -16,7 +16,7 @@ use tower::{BoxError, Service};
 pub use factory::ChannelCreationArgs;
 pub use factory::ChannelFactory;
 
-use super::retry::Attempts;
+use super::attempts::Attempts;
 
 /// Reconnect to failed services.
 pub struct Reconnect<M, Target>
