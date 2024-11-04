@@ -176,7 +176,7 @@ impl PacketInspector {
         } else {
             // If no custom channel was registered, we try to get it from the registry
             let chain_data: ChainInfoOwned = parse_network(chain_id).unwrap().into(); // TODO, no unwrap here ?
-            Ok(GrpcChannel::connect(&chain_data.grpc_urls, chain_id).await)
+            Ok(GrpcChannel::connect(&chain_data.grpc_urls, chain_id).await?)
         }
     }
 

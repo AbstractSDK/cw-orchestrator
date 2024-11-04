@@ -4,7 +4,7 @@ use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
 use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 use http::Uri;
 use tonic::transport::{ClientTlsConfig, Endpoint};
-use tower::ServiceBuilder;
+use tower::{MakeService, ServiceBuilder};
 
 use super::error::DaemonError;
 use crate::service::reconnect::{ChannelCreationArgs, ChannelFactory, Reconnect};
@@ -82,13 +82,18 @@ impl GrpcChannel {
         Ok(service)
     }
 
-    pub async fn connect(grpc: &[String], chain_id: &str) -> Channel {
-        let channel = Reconnect::new(ChannelFactory {}, (grpc.to_vec(), chain_id.to_string()));
-        channel.clone()
+    pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+        // We construct a channel using the factory
+        let target = (grpc.to_vec(), chain_id.to_string());
+        let channel = ChannelFactory {}.make_service(target.clone()).await?;
+
+        // Then we create the reconnect service
+        let channel = Reconnect::with_connection(channel, ChannelFactory {}, target);
+        Ok(channel)
     }
 
     /// Create a gRPC channel from the chain info
-    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Channel {
+    pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Result<Channel, DaemonError> {
         GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await
     }
 }

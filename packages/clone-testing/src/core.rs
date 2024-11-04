@@ -238,7 +238,7 @@ impl<S: StateInterface> CloneTesting<S> {
         let bank = BankKeeper::new().with_remote(remote_channel.clone());
 
         // We update the block_height, and open a second channel just for that (to make sure we are not too dependent on clone-cw-multi-test deps)
-        let node_channel = rt.block_on(GrpcChannel::from_chain_info(&chain));
+        let node_channel = rt.block_on(GrpcChannel::from_chain_info(&chain))?;
         let block_info = remote_channel
             .rt
             .block_on(Node::new_async(node_channel)._block_info())

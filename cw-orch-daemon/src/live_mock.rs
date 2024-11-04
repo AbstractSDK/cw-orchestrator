@@ -191,10 +191,12 @@ impl WasmMockQuerier {
 impl WasmMockQuerier {
     /// Creates a querier from chain information
     pub fn new(chain: ChainInfoOwned) -> Self {
-        let channel = RUNTIME.block_on(GrpcChannel::connect(
-            &chain.grpc_urls,
-            chain.chain_id.as_str(),
-        ));
+        let channel = RUNTIME
+            .block_on(GrpcChannel::connect(
+                &chain.grpc_urls,
+                chain.chain_id.as_str(),
+            ))
+            .unwrap();
 
         WasmMockQuerier { channel }
     }

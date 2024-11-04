@@ -30,7 +30,9 @@ mod queriers {
 
         let grpcs = vec![network.grpc_urls[0].into()];
 
-        GrpcChannel::connect(&grpcs, network.chain_id).await
+        let channel = GrpcChannel::connect(&grpcs, network.chain_id).await;
+
+        channel.unwrap()
     }
 
     /*

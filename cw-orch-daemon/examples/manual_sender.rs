@@ -72,7 +72,7 @@ impl SenderBuilder for ManualSenderOptions {
     type Sender = ManualSender;
 
     async fn build(&self, chain_info: &Arc<ChainInfoOwned>) -> Result<ManualSender, Self::Error> {
-        let grpc_channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await;
+        let grpc_channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await?;
         Ok(ManualSender {
             chain_info: chain_info.clone(),
             sender: Addr::unchecked(self.sender_address.clone()),

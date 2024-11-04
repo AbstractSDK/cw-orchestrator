@@ -26,7 +26,7 @@ impl SenderBuilder for () {
     type Sender = QueryOnlySender;
 
     async fn build(&self, chain_info: &Arc<ChainInfoOwned>) -> Result<Self::Sender, Self::Error> {
-        let channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await;
+        let channel = GrpcChannel::from_chain_info(chain_info.as_ref()).await?;
 
         Ok(QueryOnlySender {
             channel,

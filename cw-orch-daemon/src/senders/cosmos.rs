@@ -98,7 +98,7 @@ impl Wallet {
 
         Ok(Self {
             chain_info: chain_info.clone(),
-            grpc_channel: GrpcChannel::from_chain_info(chain_info.as_ref()).await,
+            grpc_channel: GrpcChannel::from_chain_info(chain_info.as_ref()).await?,
             private_key: pk,
             secp,
             options,
