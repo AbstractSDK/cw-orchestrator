@@ -1,6 +1,6 @@
 use crate::{log::LogOutput, types::keys::seed_phrase_for_id};
 
-use super::Cw3Context;
+use super::{Cw3Context, Cw3ProposalCli};
 
 use cw3::ProposalListResponse;
 use cw_orch::prelude::*;
@@ -52,7 +52,7 @@ impl Cw3VoteOutput {
             },
             &contract_addr,
         )?;
-        let mut proposals_vote = vec![];
+        let mut proposals_to_vote = vec![];
         for proposal in proposal_list.proposals {
             match proposal.status {
                 cw3::Status::Pending | cw3::Status::Open => (),
@@ -67,21 +67,25 @@ impl Cw3VoteOutput {
                 },
                 &contract_addr,
             )?;
-            proposals_vote.push(Cw3ProposalCli {
+            proposals_to_vote.push(Cw3ProposalCli {
                 proposal,
                 vote: vote.vote,
             });
         }
-        println!("here");
-        let proposal = inquire::Select::new("Select proposal", proposals_vote).prompt()?;
-        println!("not_here");
+
+        if proposals_to_vote.is_empty() {
+            println!("There is no unfinished proposals");
+            return Ok(Self);
+        }
+
+        let proposal = inquire::Select::new("Select proposal", proposals_to_vote).prompt()?;
 
         let approved_description = inquire::Confirm::new("Do you agree with description?")
             .with_help_message(&proposal.proposal.description)
             .prompt()?;
         let mut approved = approved_description;
         if approved {
-            for action in proposal.proposal.msgs {
+            for action in proposal.proposal.msgs.clone() {
                 if !inquire::Confirm::new("Do you agree with this action?")
                     .with_help_message(&serde_json::to_string(&action).unwrap())
                     .prompt()?
@@ -91,6 +95,9 @@ impl Cw3VoteOutput {
                 }
             }
         }
+
+        let whole_proposal = serde_json::to_string_pretty(&proposal.proposal)?;
+        println!("{whole_proposal}");
 
         let final_vote = inquire::Select::new(
             "Confirm your vote",
@@ -112,34 +119,6 @@ impl Cw3VoteOutput {
         resp.log(chain.chain_info());
 
         Ok(Cw3VoteOutput)
-    }
-}
-
-pub struct Cw3ProposalCli {
-    pub proposal: cw3::ProposalResponse,
-    pub vote: Option<cw3::VoteInfo>,
-}
-
-impl std::fmt::Display for Cw3ProposalCli {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let status = match self.proposal.status {
-            cw3::Status::Pending => "PENDING",
-            cw3::Status::Open => "OPEN",
-            cw3::Status::Rejected => "REJECTED",
-            cw3::Status::Passed => "PASSED",
-            cw3::Status::Executed => "EXECUTED",
-        };
-        let title = self.proposal.title.as_str();
-        let vote = match &self.vote {
-            Some(v) => match v.vote {
-                cw3::Vote::Yes => " [YES]",
-                cw3::Vote::No => " [NO]",
-                cw3::Vote::Abstain => " [ABSTAIN]",
-                cw3::Vote::Veto => " [VETO]",
-            },
-            None => "",
-        };
-        write!(f, "[{status}] {title}{vote}")
     }
 }
 

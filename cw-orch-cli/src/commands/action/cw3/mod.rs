@@ -6,6 +6,7 @@ use crate::{
 
 use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
+mod execute;
 mod vote;
 
 #[derive(Clone)]
@@ -48,6 +49,7 @@ impl From<Cw3Context> for CosmosContext {
 #[interactive_clap(input_context = CosmosContext)]
 #[interactive_clap(output_context = Cw3Context)]
 pub struct Cw3Commands {
+    /// Cw3 Address or alias from address-book
     cw3_address: CliAddress,
     #[interactive_clap(subcommand)]
     action: Cw3Action,
@@ -61,4 +63,35 @@ pub enum Cw3Action {
     /// Vote on existing proposal
     #[strum_discriminants(strum(message = "🗳️ Vote on the existing proposal"))]
     Vote(vote::VoteOnProposal),
+    /// Execute passed proposal
+    #[strum_discriminants(strum(message = "⚡ Execute on the passed proposal"))]
+    Execute(execute::ExecuteProposal),
+}
+
+pub struct Cw3ProposalCli {
+    pub proposal: cw3::ProposalResponse,
+    pub vote: Option<cw3::VoteInfo>,
+}
+
+impl std::fmt::Display for Cw3ProposalCli {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let status = match self.proposal.status {
+            cw3::Status::Pending => "PENDING",
+            cw3::Status::Open => "OPEN",
+            cw3::Status::Rejected => "REJECTED",
+            cw3::Status::Passed => "PASSED",
+            cw3::Status::Executed => "EXECUTED",
+        };
+        let title = self.proposal.title.as_str();
+        let vote = match &self.vote {
+            Some(v) => match v.vote {
+                cw3::Vote::Yes => " [YES]",
+                cw3::Vote::No => " [NO]",
+                cw3::Vote::Abstain => " [ABSTAIN]",
+                cw3::Vote::Veto => " [VETO]",
+            },
+            None => "",
+        };
+        write!(f, "[{status}] {title}{vote}")
+    }
 }
