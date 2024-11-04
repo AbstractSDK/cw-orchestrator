@@ -1,11 +1,11 @@
 pub mod factory;
 pub mod future;
 use future::ResponseFuture;
-use log::trace;
-use std::fmt;
+use log::{debug, trace};
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
+use std::{fmt, mem};
 use std::{
     future::Future,
     pin::Pin,
@@ -15,6 +15,8 @@ use tower::{BoxError, Service};
 
 pub use factory::ChannelCreationArgs;
 pub use factory::ChannelFactory;
+
+use super::retry::Attempts;
 
 /// Reconnect to failed services.
 pub struct Reconnect<M, Target>
@@ -29,6 +31,7 @@ where
     #[allow(clippy::type_complexity)]
     state: Arc<Mutex<State<M::Future, M::Response, M::Error>>>,
     target: Target,
+    attempts: Attempts,
 }
 
 impl<M, Target> Clone for Reconnect<M, Target>
@@ -45,6 +48,7 @@ where
             mk_service: self.mk_service.clone(),
             state: self.state.clone(),
             target: self.target.clone(),
+            attempts: self.attempts.clone(),
         }
     }
 }
@@ -55,6 +59,15 @@ enum State<F, S, E: std::fmt::Debug> {
     Idle,
     Connecting(F),
     Connected(S),
+}
+
+impl<F, S, E: std::fmt::Debug> State<F, S, E> {
+    pub(crate) fn unwrap_err(self) -> E {
+        match self {
+            State::Error(e) => e,
+            _ => panic!("Not error"),
+        }
+    }
 }
 
 impl<M, Target> Reconnect<M, Target>
@@ -70,6 +83,7 @@ where
             mk_service,
             state: Arc::new(Mutex::new(State::Idle)),
             target,
+            attempts: Attempts::Unlimited,
         }
     }
 
@@ -79,7 +93,13 @@ where
             mk_service,
             state: Arc::new(Mutex::new(State::Connected(init_conn))),
             target,
+            attempts: Attempts::Unlimited,
         }
+    }
+
+    pub fn with_attemps(mut self, attempts: usize) -> Self {
+        self.attempts = Attempts::Count(attempts);
+        self
     }
 }
 
@@ -110,7 +130,6 @@ where
                             return Poll::Pending;
                         }
                     }
-
                     let fut = self.mk_service.call(self.target.clone());
                     drop(state);
                     self.state = Arc::new(Mutex::new(State::Connecting(fut)));
@@ -128,10 +147,20 @@ where
                             return Poll::Pending;
                         }
                         Poll::Ready(Err(e)) => {
-                            trace!("poll_ready; error, retrying in {} seconds", 5);
                             drop(state);
-                            self.state = Arc::new(Mutex::new(State::Error(e)));
-                            sleep(Duration::from_secs(5));
+                            if self.attempts.retry() {
+                                trace!("poll_ready; error");
+                                debug!(
+                                    "Connection error, retrying in {} seconds, {} attemps left",
+                                    5, self.attempts
+                                );
+                                self.state = Arc::new(Mutex::new(State::Error(e)));
+                                sleep(Duration::from_secs(5));
+                            } else {
+                                self.state = Arc::new(Mutex::new(State::Error(e)));
+
+                                break;
+                            }
                         }
                     }
                 }
@@ -156,16 +185,18 @@ where
                 }
             }
         }
+
+        Poll::Ready(Ok(()))
     }
 
     fn call(&mut self, request: Request) -> Self::Future {
         let mut state = self.state.lock().unwrap();
         let service = match &mut *state {
             State::Connected(ref mut service) => service,
-            State::Error(error) => panic!(
-                "service not ready; poll_ready must be called first: {:?}",
-                error
-            ),
+            State::Error(_) => {
+                let state = mem::replace(&mut *state, State::Idle);
+                return ResponseFuture::error(state.unwrap_err());
+            }
             _ => panic!("service not ready; poll_ready must be called first"),
         };
 

@@ -10,7 +10,44 @@ type Req = http::Request<BoxBody>;
 type Res = http::Response<BoxBody>;
 
 #[derive(Clone)]
-pub struct Attempts(pub usize);
+pub enum Attempts {
+    Unlimited,
+    Count(usize),
+}
+
+impl std::fmt::Display for Attempts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Attempts::Unlimited => write!(f, "unlimited")?,
+            Attempts::Count(count) => write!(f, "{}", count)?,
+        }
+        Ok(())
+    }
+}
+
+impl Attempts {
+    pub fn can_retry(&self) -> bool {
+        match self {
+            Attempts::Unlimited => true,
+            Attempts::Count(count) => *count > 0,
+        }
+    }
+
+    /// Verifies the attempt can retry
+    /// If it can retry, decrements the counter
+    pub fn retry(&mut self) -> bool {
+        let can_retry = self.can_retry();
+        if can_retry {
+            self.decrement();
+        }
+        can_retry
+    }
+    fn decrement(&mut self) {
+        if let Attempts::Count(count) = self {
+            *count -= 1
+        }
+    }
+}
 
 impl<E> Policy<Req, Res, E> for Attempts {
     type Future = future::Ready<()>;
@@ -27,10 +64,9 @@ impl<E> Policy<Req, Res, E> for Attempts {
                 log::trace!("Entering the middleware error");
                 // Treat all errors as failures...
                 // But we limit the number of attempts...
-                if self.0 > 0 {
+                if self.retry() {
                     log::trace!("Try this again, there was a failure");
                     // Try again!
-                    self.0 -= 1;
                     Some(future::ready(()))
                 } else {
                     // Used all our attempts, no retry...

@@ -33,12 +33,22 @@ impl<F, E> Inner<F, E> {
     fn future(fut: F) -> Self {
         Self::Future { fut }
     }
+
+    fn error(error: Option<E>) -> Self {
+        Self::Error { error }
+    }
 }
 
 impl<F, E> ResponseFuture<F, E> {
     pub(crate) fn new(inner: F) -> Self {
         ResponseFuture {
             inner: Inner::future(inner),
+        }
+    }
+
+    pub(crate) fn error(error: E) -> Self {
+        ResponseFuture {
+            inner: Inner::error(Some(error)),
         }
     }
 }
