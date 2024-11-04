@@ -21,6 +21,7 @@ cosmwasm-std = { workspace = true }
 cw-utils = "2.0.0"
 cw20 = { version = "2.0" }
 cw-ownable = { version = "2.0.0" }
+cw3 = { version = "2.0.0" }
 cosmrs = { workspace = true, features = ["cosmwasm", "grpc"] }
 ibc-chain-registry = { workspace = true }
 

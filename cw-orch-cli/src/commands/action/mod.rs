@@ -4,6 +4,7 @@ use strum::{EnumDiscriminants, EnumIter, EnumMessage};
 
 mod asset;
 mod cosmwasm;
+mod cw3;
 mod cw_ownable;
 
 #[derive(Debug, Clone, interactive_clap::InteractiveClap)]
@@ -31,16 +32,15 @@ pub enum CosmosAction {
     /// CW-Ownable Action
     #[strum_discriminants(strum(message = "👑 CW-Ownable"))]
     CwOwnable(cw_ownable::CwOwnableCommands),
+    /// CW3 Action
+    #[strum_discriminants(strum(message = "🤝 CW3"))]
+    Cw3(cw3::Cw3Commands),
 }
 
 impl CosmosCommands {
     fn input_chain_id(_context: &GlobalConfig) -> color_eyre::eyre::Result<Option<CliLockedChain>> {
         crate::common::select_chain()
     }
-}
-
-impl From<CosmosContext> for () {
-    fn from(_value: CosmosContext) -> Self {}
 }
 
 #[derive(Clone)]

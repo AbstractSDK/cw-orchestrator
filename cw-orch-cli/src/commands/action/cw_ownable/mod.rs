@@ -32,7 +32,7 @@ pub struct CwOwnableCommands {
 #[derive(Debug, EnumDiscriminants, Clone, interactive_clap::InteractiveClap)]
 #[strum_discriminants(derive(EnumMessage, EnumIter))]
 #[interactive_clap(context = CosmosContext)]
-/// Select cosmwasm action
+/// Select CW-Ownable action
 pub enum CwOwnableAction {
     /// Propose to transfer contract ownership to another address
     #[strum_discriminants(strum(message = "💍 Propose ownership to another address."))]
