@@ -1,7 +1,7 @@
+use counter_contract::AsyncCounterQueryMsgFns;
 use counter_contract::CounterContract;
-use cw_orch_daemon::DaemonAsync;
-use cw_orch_mock::Mock;
 
+use cw_orch_daemon::DaemonAsync;
 /// In order to use this script, you need to set the following env variables
 ///
 /// RUST_LOG (recommended value `info`) to see the app logs
@@ -25,9 +25,12 @@ pub async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Uploading a contract is very simple
-    let counter = CounterContract::new(Mock::new("sender"));
+    let counter = CounterContract::new(daemon.clone());
     let upload_res = daemon.upload(&counter).await;
     assert!(upload_res.is_ok());
+
+    let count = counter.get_count_async().await?;
+    assert_eq!(count.count, 1);
 
     Ok(())
 }
