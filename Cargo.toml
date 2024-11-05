@@ -39,7 +39,7 @@ cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0" }
 
 osmosis-test-tube = { version = "26.0.0" }
-neutron-test-tube = { version = "4.2.3" }
+neutron-test-tube = { version = "5.0.0" }
 
 anyhow = "1.0"
 serde = { version = "1.0.208", default-features = false, features = ["derive"] }
