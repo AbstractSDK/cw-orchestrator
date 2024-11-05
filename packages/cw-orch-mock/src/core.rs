@@ -106,7 +106,10 @@ impl<A: Api, S: StateInterface> MockBase<A, S> {
         contract_id: &str,
         wrapper: Box<dyn Contract<Empty, Empty>>,
     ) -> Result<AppResponse, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(wrapper);
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_code_with_creator(self.sender_addr(), wrapper);
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -147,7 +150,10 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     }
 
     fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(T::wrapper());
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_code_with_creator(self.sender_addr(), T::wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
