@@ -19,8 +19,6 @@ fn instantiate2() -> anyhow::Result<()> {
     let mock_contract = MockContract::new("mock-contract", app.clone());
 
     mock_contract.upload()?;
-    let info = app.wasm_querier().code(mock_contract.code_id()?)?;
-    dbg!(info);
 
     let expected_address = app.wasm_querier().instantiate2_addr(
         mock_contract.code_id()?,
