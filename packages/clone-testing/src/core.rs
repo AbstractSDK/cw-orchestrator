@@ -298,7 +298,10 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
 
     fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
         let wrapper_contract = CloneTestingContract::new(T::wrapper());
-        let code_id = self.app.borrow_mut().store_code(Box::new(wrapper_contract));
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_code_with_creator(self.sender_addr(), Box::new(wrapper_contract));
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
