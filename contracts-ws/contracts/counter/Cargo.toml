@@ -1,6 +1,6 @@
 [package]
 name = "counter-contract"
-version = "0.27.0"
+version = "0.27.1"
 description = "counter constract"
 keywords = ["cosmwasm", "blockchain"]
 edition = { workspace = true }
