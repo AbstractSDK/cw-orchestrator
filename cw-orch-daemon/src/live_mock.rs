@@ -4,6 +4,7 @@
 use crate::queriers::Bank;
 use crate::queriers::CosmWasm;
 use crate::queriers::Staking;
+use crate::Channel;
 use crate::RUNTIME;
 use cosmwasm_std::testing::{MockApi, MockStorage};
 use cosmwasm_std::Addr;
@@ -24,7 +25,6 @@ use cw_orch_core::environment::ChainInfoOwned;
 use cw_orch_core::environment::WasmQuerier;
 use std::marker::PhantomData;
 use std::str::FromStr;
-use tonic::transport::Channel;
 
 use crate::channel::GrpcChannel;
 

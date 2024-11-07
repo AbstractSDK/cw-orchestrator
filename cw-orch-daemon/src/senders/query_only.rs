@@ -4,7 +4,7 @@ use crate::{error::DaemonError, DaemonBase, GrpcChannel};
 
 use cw_orch_core::environment::ChainInfoOwned;
 
-use tonic::transport::Channel;
+use crate::Channel;
 
 use super::{builder::SenderBuilder, query::QuerySender};
 

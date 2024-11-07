@@ -3,16 +3,22 @@ use cosmrs::proto::cosmos::base::tendermint::v1beta1::{
 };
 use cw_orch_core::{environment::ChainInfoOwned, log::connectivity_target};
 use http::Uri;
-use tonic::transport::{Channel, ClientTlsConfig, Endpoint};
+use tonic::transport::{ClientTlsConfig, Endpoint};
+use tower::ServiceBuilder;
 
 use super::error::DaemonError;
+use crate::service::reconnect::{ChannelCreationArgs, ChannelFactory, Reconnect};
+use crate::service::retry::{Retry, RetryAttemps, RetryLayer};
 
 /// A helper for constructing a gRPC channel
 pub struct GrpcChannel {}
 
+pub type Channel = Reconnect<ChannelFactory, ChannelCreationArgs>;
+pub type TowerChannel = Retry<RetryAttemps, tonic::transport::Channel>;
+
 impl GrpcChannel {
     /// Connect to any of the provided gRPC endpoints
-    pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+    pub async fn get_channel(grpc: &[String], chain_id: &str) -> Result<TowerChannel, DaemonError> {
         if grpc.is_empty() {
             return Err(DaemonError::GRPCListIsEmpty);
         }
@@ -66,12 +72,34 @@ impl GrpcChannel {
             return Err(DaemonError::CannotConnectGRPC);
         }
 
-        Ok(successful_connections.pop().unwrap())
+        let retry_policy = RetryAttemps::count(3);
+        let retry_layer = RetryLayer::new(retry_policy);
+
+        let service = ServiceBuilder::new()
+            .layer(retry_layer)
+            .service(successful_connections.pop().unwrap());
+
+        Ok(service)
+    }
+
+    pub async fn connect(grpc: &[String], chain_id: &str) -> Result<Channel, DaemonError> {
+        let target = (grpc.to_vec(), chain_id.to_string());
+        let channel = Reconnect::new(ChannelFactory {}, target).with_attemps(3);
+        Self::verify_connection(channel.clone()).await?;
+        Ok(channel)
     }
 
     /// Create a gRPC channel from the chain info
     pub async fn from_chain_info(chain_info: &ChainInfoOwned) -> Result<Channel, DaemonError> {
         GrpcChannel::connect(&chain_info.grpc_urls, &chain_info.chain_id).await
+    }
+
+    async fn verify_connection(channel: Channel) -> Result<(), DaemonError> {
+        let mut client = ServiceClient::new(channel.clone());
+
+        // Verify that we're able to query the node info
+        client.get_node_info(GetNodeInfoRequest {}).await?;
+        Ok(())
     }
 }
 

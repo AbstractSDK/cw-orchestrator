@@ -4,6 +4,7 @@ use super::{
     sign::{Signer, SigningAccount},
     tx::TxSender,
 };
+use crate::Channel;
 use crate::{
     core::parse_cw_coins,
     cosmos_modules::{self, auth::BaseAccount},
@@ -33,7 +34,6 @@ use cw_orch_core::{
     CoreEnvVars, CwEnvError,
 };
 use std::{str::FromStr, sync::Arc};
-use tonic::transport::Channel;
 
 #[cfg(feature = "eth")]
 use crate::proto::injective::InjectiveSigner;

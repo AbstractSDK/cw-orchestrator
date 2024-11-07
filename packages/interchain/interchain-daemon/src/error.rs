@@ -1,9 +1,8 @@
 #![allow(missing_docs)]
 
 use cosmwasm_std::StdError;
-use cw_orch_interchain_core::{channel::InterchainChannel, results::NetworkId, InterchainError};
+use cw_orch_interchain_core::{results::NetworkId, InterchainError};
 use thiserror::Error;
-use tonic::transport::Channel;
 
 #[derive(Error, Debug)]
 pub enum InterchainDaemonError {
@@ -40,7 +39,8 @@ pub enum InterchainDaemonError {
     #[error("Channel creation events not found from chain {src_chain} on following channel : {channel:?}")]
     ChannelCreationEventsNotFound {
         src_chain: NetworkId,
-        channel: InterchainChannel<Channel>,
+        /// Meant to contain InterchainChannel<Channel>, but this is a large variant so used a string to remove warning
+        channel: String,
     },
 
     #[error("Configuration already registered for chain {0}")]

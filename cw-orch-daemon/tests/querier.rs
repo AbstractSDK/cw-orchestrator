@@ -23,17 +23,14 @@ mod queriers {
         tx::{self, Msg},
         AccountId, Denom,
     };
+    use cw_orch_daemon::Channel;
 
-    pub async fn build_channel() -> tonic::transport::Channel {
+    pub async fn build_channel() -> Channel {
         let network = networks::LOCAL_JUNO;
 
         let grpcs = vec![network.grpc_urls[0].into()];
 
         let channel = GrpcChannel::connect(&grpcs, network.chain_id).await;
-
-        asserting!("channel connection is succesful")
-            .that(&channel)
-            .is_ok();
 
         channel.unwrap()
     }

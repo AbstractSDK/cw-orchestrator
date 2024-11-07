@@ -1,12 +1,12 @@
 #![allow(non_snake_case)]
 
+use cw_orch_daemon::Channel;
 use cw_orch_interchain_core::{
     channel::InterchainChannel, IbcQueryHandler, InterchainEnv, InterchainError, NestedPacketsFlow,
 };
 use ibc_proto::ibc::apps::transfer::v1::MsgTransfer;
 use osmosis_std::types::osmosis::tokenfactory::v1beta1::{MsgCreateDenom, MsgMint};
 use prost::{Message, Name};
-use tonic::transport::Channel;
 
 use cosmwasm_std::Coin;
 use cw_orch_core::environment::{CwEnv, TxHandler};

@@ -5,6 +5,7 @@ use crate::{
     tx_resp::CosmTxResponse, DaemonBase,
 };
 
+use crate::Channel;
 use cosmrs::{
     proto::cosmos::{
         base::query::v1beta1::PageRequest,
@@ -18,8 +19,6 @@ use cw_orch_core::{
     log::query_target,
 };
 use tokio::runtime::Handle;
-use tonic::transport::Channel;
-
 /// Querier for the Tendermint node.
 /// Supports queries for block and tx information
 /// All the async function are prefixed with `_`

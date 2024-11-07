@@ -17,7 +17,9 @@ use cw_orch_core::{
     },
     CwEnvError,
 };
-use cw_orch_daemon::{queriers::Node, read_network_config, DEFAULT_DEPLOYMENT, RUNTIME};
+use cw_orch_daemon::{
+    queriers::Node, read_network_config, GrpcChannel, DEFAULT_DEPLOYMENT, RUNTIME,
+};
 use cw_utils::NativeBalance;
 use serde::Serialize;
 use tokio::runtime::Runtime;
@@ -235,10 +237,11 @@ impl<S: StateInterface> CloneTesting<S> {
 
         let bank = BankKeeper::new().with_remote(remote_channel.clone());
 
-        // We update the block_height
+        // We update the block_height, and open a second channel just for that (to make sure we are not too dependent on clone-cw-multi-test deps)
+        let node_channel = rt.block_on(GrpcChannel::from_chain_info(&chain))?;
         let block_info = remote_channel
             .rt
-            .block_on(Node::new_async(remote_channel.channel.clone())._block_info())
+            .block_on(Node::new_async(node_channel)._block_info())
             .unwrap();
 
         // Finally we instantiate a new app

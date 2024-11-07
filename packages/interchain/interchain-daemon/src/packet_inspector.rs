@@ -18,10 +18,10 @@ use futures_util::FutureExt;
 use crate::{IcDaemonResult, InterchainDaemonError};
 use cw_orch_interchain_core::results::NetworkId;
 
+use cw_orch_daemon::Channel;
 use futures::future::try_join_all;
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
-use tonic::transport::Channel;
 
 use std::collections::HashMap;
 
