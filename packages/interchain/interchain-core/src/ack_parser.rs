@@ -81,6 +81,19 @@ impl IbcAckParser {
         Err(decode_ack_error(ack))
     }
 
+    /// Verifies if the given ack is an ibc-hooks type and returns the ack result if it is
+    ///
+    /// Returns an error if there was an error in the parsing process
+    ///
+    /// The structure can be found here : https://github.com/cosmos/ibc-apps/blob/8cb681e31589bc90b47e0ab58173a579825fd56d/modules/ibc-hooks/wasm_hook.go#L119C1-L119C86
+    pub fn ics_hooks_ack(ack: &Binary) -> Result<IbcHooksAck, InterchainError> {
+        if let Ok(decoded_ics_ack) = from_json::<IbcHooksAck>(ack) {
+            return Ok(decoded_ics_ack);
+        }
+
+        Err(decode_ack_error(ack))
+    }
+
     /// Verifies if the given ack is an ICS004 type with json parsing and returns the ack result if it is
     ///
     /// Returns an error if there was an error in the parsing process
@@ -174,6 +187,15 @@ pub mod acknowledgement {
 pub enum StdAck {
     Result(Binary),
     Error(String),
+}
+
+/// This is the ibc-hooks acknowledgment formated in json
+/// https://github.com/cosmos/ibc-apps/blob/8cb681e31589bc90b47e0ab58173a579825fd56d/modules/ibc-hooks/wasm_hook.go#L119C1-L119C86
+
+#[cw_serde]
+pub struct IbcHooksAck {
+    contract_result: Option<Binary>,
+    ibc_ack: Binary,
 }
 
 pub mod polytone_callback {
