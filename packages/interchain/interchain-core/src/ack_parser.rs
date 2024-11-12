@@ -123,6 +123,8 @@ impl IbcAckParser {
             Ok(IbcAppResult::Ics004(ack))
         } else if let Ok(ack) = IbcAckParser::ics004_json_ack(ack) {
             Ok(IbcAppResult::Ics004(ack))
+        } else if let Ok(ack) = IbcAckParser::ics_hooks_ack(ack) {
+            Ok(IbcAppResult::IbcHooks(ack))
         } else {
             Err(InterchainError::AckDecodingFailed(
                 ack.clone(),
