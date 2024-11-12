@@ -86,7 +86,7 @@ impl IbcAckParser {
     /// Returns an error if there was an error in the parsing process
     ///
     /// The structure can be found here : https://github.com/cosmos/ibc-apps/blob/8cb681e31589bc90b47e0ab58173a579825fd56d/modules/ibc-hooks/wasm_hook.go#L119C1-L119C86
-    pub fn ics_hooks_ack(ack: &Binary) -> Result<IbcHooksAck, InterchainError> {
+    pub fn ibc_hooks_ack(ack: &Binary) -> Result<IbcHooksAck, InterchainError> {
         if let Ok(decoded_ics_ack) = from_json::<IbcHooksAck>(ack) {
             return Ok(decoded_ics_ack);
         }
@@ -123,7 +123,7 @@ impl IbcAckParser {
             Ok(IbcAppResult::Ics004(ack))
         } else if let Ok(ack) = IbcAckParser::ics004_json_ack(ack) {
             Ok(IbcAppResult::Ics004(ack))
-        } else if let Ok(ack) = IbcAckParser::ics_hooks_ack(ack) {
+        } else if let Ok(ack) = IbcAckParser::ibc_hooks_ack(ack) {
             Ok(IbcAppResult::IbcHooks(ack))
         } else {
             Err(InterchainError::AckDecodingFailed(
