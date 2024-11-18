@@ -224,9 +224,8 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
         coins: &[cosmwasm_std::Coin],
         contract_address: &Addr,
     ) -> Result<Self::Response, CwEnvError> {
-        let coins = cosmwasm_to_neutron_coins(coins);
         let execute_response = Wasm::new(&*self.app.borrow())
-            .execute(contract_address.as_ref(), exec_msg, &coins, &self.sender)
+            .execute(contract_address.as_ref(), exec_msg, coins, &self.sender)
             .map_err(map_err)?;
 
         Ok(AppResponse {
@@ -243,15 +242,13 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
         admin: Option<&Addr>,
         coins: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, CwEnvError> {
-        let coins = cosmwasm_to_neutron_coins(coins);
-
         let instantiate_response = Wasm::new(&*self.app.borrow())
             .instantiate(
                 code_id,
                 init_msg,
                 admin.map(|a| a.to_string()).as_deref(),
                 label,
-                &coins,
+                coins,
                 &self.sender,
             )
             .map_err(map_err)?;
@@ -326,20 +323,6 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
             events: instantiate_response.events,
         })
     }
-}
-
-fn cosmwasm_to_neutron_coins(
-    coins: &[cosmwasm_std::Coin],
-) -> Vec<neutron_test_tube::neutron_std::types::cosmos::base::v1beta1::Coin> {
-    coins
-        .iter()
-        .map(
-            |m| neutron_test_tube::neutron_std::types::cosmos::base::v1beta1::Coin {
-                denom: m.denom.to_string(),
-                amount: m.amount.to_string(),
-            },
-        )
-        .collect()
 }
 
 /// Gas Fee token for NeutronTestTube, used in BankSetter
