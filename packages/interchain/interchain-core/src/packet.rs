@@ -170,6 +170,7 @@ impl<Chain: CwEnv> IndexResponse for NestedPacketsFlow<Chain> {
 }
 
 pub mod success {
+    use crate::ack_parser::IbcHooksAck;
     use crate::{ack_parser::polytone_callback::Callback, tx::TxId};
     use cosmwasm_std::{Binary, Empty, StdError};
     use cw_orch_core::environment::CwEnv;
@@ -177,6 +178,7 @@ pub mod success {
 
     /// Contains the result (ack success) associated with various Ibc applications
     #[derive(Debug, PartialEq, Clone)]
+    #[non_exhaustive]
     pub enum IbcAppResult<CustomResult = Empty> {
         /// Contains a successful result for Polytone
         Polytone(Callback),
@@ -184,6 +186,9 @@ pub mod success {
         Ics20,
         /// Contains a successful result according to the ICS004 standard
         Ics004(Vec<u8>),
+        /// Contains a successful result according to the ibc hooks standard
+        /// https://github.com/cosmos/ibc-apps/blob/8cb681e31589bc90b47e0ab58173a579825fd56d/modules/ibc-hooks/wasm_hook.go#L119C1-L119C86
+        IbcHooks(IbcHooksAck),
         /// Contains a custom result. This is only used if a custom parsing function is specified
         Custom(CustomResult),
     }
@@ -195,6 +200,7 @@ pub mod success {
                 IbcAppResult::Polytone(callback) => IbcAppResult::Polytone(callback),
                 IbcAppResult::Ics20 => IbcAppResult::Ics20,
                 IbcAppResult::Ics004(vec) => IbcAppResult::Ics004(vec),
+                IbcAppResult::IbcHooks(ibc_hooks_ack) => IbcAppResult::IbcHooks(ibc_hooks_ack),
                 IbcAppResult::Custom(_) => unreachable!(),
             }
         }
