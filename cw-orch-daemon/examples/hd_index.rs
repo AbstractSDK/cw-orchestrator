@@ -16,9 +16,7 @@ pub fn main() -> anyhow::Result<()> {
         .authz_granter(&Addr::unchecked(LOCAL_JUNO_GRANTER));
     let chain = Daemon::builder(network).build_sender(sender)?;
 
-    chain
-    .bank_send(&Addr::unchecked(LOCAL_JUNO_GRANTER), &coins(10000, "ujuno"))?;
-    
+    chain.bank_send(&Addr::unchecked(LOCAL_JUNO_GRANTER), &coins(10000, "ujuno"))?;
 
     Ok(())
 }

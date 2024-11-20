@@ -120,12 +120,10 @@ mod tests {
         // Check use of grants
 
         // The we send some funds to the account
-        daemon
-            .bank_send(&grantee, &coins(100_000, LOCAL_JUNO.gas_denom))?;
+        daemon.bank_send(&grantee, &coins(100_000, LOCAL_JUNO.gas_denom))?;
 
         // And send a large amount of tokens on their behalf
-        second_daemon
-            .bank_send(&grantee, &coins(500_000, LOCAL_JUNO.gas_denom))?;
+        second_daemon.bank_send(&grantee, &coins(500_000, LOCAL_JUNO.gas_denom))?;
 
         // the balance of the grantee whould be 600_000 or close
 
