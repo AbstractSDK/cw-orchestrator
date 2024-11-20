@@ -2,10 +2,14 @@
 
 ## Unpublished
 
-
 ### Breaking
 
-- [cw-orch-interchain-core] Modify the structure and the names of the IBC analysis and following structure. 
+- [interchain-core] Modify the structure and the names of the IBC analysis and following structure.
+- [daemon]: Move the bank_send method from the Wallet to the TxSender trait. 
+
+### Added
+
+- [core] bank_send method on TxHandler to facilitate sending funds in script
 
 ## 0.26.0 [8. October 2024]
 
