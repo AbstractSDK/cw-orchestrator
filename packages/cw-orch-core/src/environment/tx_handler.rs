@@ -100,7 +100,7 @@ pub trait TxHandler: ChainState + Clone {
         _receiver: &Addr,
         _amount: &[cosmwasm_std::Coin],
     ) -> Result<Self::Response, Self::Error> {
-        unimplemented!("Bakn send is not implemented on this env")
+        unimplemented!("Bank send is not implemented on this env")
     }
 }
 
