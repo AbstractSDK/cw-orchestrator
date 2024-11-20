@@ -1,7 +1,5 @@
 use crate::{DaemonBase, INSTANTIATE_2_TYPE_URL};
-
 use crate::{error::DaemonError, tx_resp::CosmTxResponse};
-
 use cosmrs::proto::cosmwasm::wasm::v1::{MsgInstantiateContract, MsgStoreCode};
 use cosmrs::{AccountId, Any};
 use cosmwasm_std::Addr;
@@ -9,13 +7,14 @@ use cw_orch_core::environment::ChainInfoOwned;
 use cw_orch_core::log::transaction_target;
 use options::CosmosBatchOptions;
 use prost::Name;
-
+use cosmrs::bank::MsgSend;
 use std::sync::{Arc, Mutex};
-
 use super::builder::SenderBuilder;
 use super::cosmos::Wallet;
 use super::query::QuerySender;
 use super::tx::TxSender;
+use crate::parse_cw_coins;
+use std::str::FromStr;
 
 pub type BatchDaemon = DaemonBase<CosmosBatchSender>;
 
@@ -131,5 +130,21 @@ impl TxSender for CosmosBatchSender {
 
     fn account_id(&self) -> AccountId {
         self.sender.account_id()
+    }
+
+    async fn bank_send(
+        &self,
+        recipient: &Addr,
+        coins: &[cosmwasm_std::Coin],
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let acc_id = self.msg_sender()?;
+
+        let msg_send = MsgSend {
+            from_address: acc_id,
+            to_address: AccountId::from_str(recipient.as_str())?,
+            amount: parse_cw_coins(coins)?,
+        };
+
+        self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 }
