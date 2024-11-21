@@ -6,8 +6,8 @@ use clone_cw_multi_test::{
     App, AppBuilder, BankKeeper, Contract, Executor, WasmKeeper,
 };
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult, Uint128,
-    WasmMsg,
+    to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Empty, Event, StdError, StdResult,
+    Uint128, WasmMsg,
 };
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
@@ -410,6 +410,25 @@ impl<S: StateInterface> TxHandler for CloneTesting<S> {
         };
 
         Ok(app_resp)
+    }
+
+    fn bank_send(
+        &self,
+        receiver: &Addr,
+        amount: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error> {
+        self.app
+            .borrow_mut()
+            .execute(
+                self.sender.clone(),
+                BankMsg::Send {
+                    to_address: receiver.to_string(),
+                    amount: amount.to_vec(),
+                }
+                .into(),
+            )
+            .map_err(From::from)
+            .map(Into::into)
     }
 }
 

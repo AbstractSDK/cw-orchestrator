@@ -94,6 +94,14 @@ pub trait TxHandler: ChainState + Clone {
         chain.set_sender(sender.clone());
         chain
     }
+
+    fn bank_send(
+        &self,
+        _receiver: &Addr,
+        _amount: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error> {
+        unimplemented!("Bank send is not implemented on this env")
+    }
 }
 
 pub enum AccessConfig {

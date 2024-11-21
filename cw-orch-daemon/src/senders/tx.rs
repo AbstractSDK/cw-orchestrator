@@ -66,4 +66,13 @@ pub trait TxSender: QuerySender + Sync {
             Ok(commit)
         }
     }
+
+    // Send funds using the bank module
+    fn bank_send(
+        &self,
+        _receiver: &Addr,
+        _amount: &[cosmwasm_std::Coin],
+    ) -> impl std::future::Future<Output = Result<CosmTxResponse, Self::Error>> + Send {
+        async { unimplemented!() }
+    }
 }

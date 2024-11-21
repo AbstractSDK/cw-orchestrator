@@ -444,9 +444,7 @@ impl AsyncWasmQuerier for DaemonAsync {
     }
 }
 
-pub(crate) fn parse_cw_coins(
-    coins: &[cosmwasm_std::Coin],
-) -> Result<Vec<cosmrs::Coin>, DaemonError> {
+pub fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, DaemonError> {
     coins
         .iter()
         .map(|cosmwasm_std::Coin { amount, denom }| {

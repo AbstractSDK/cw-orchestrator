@@ -48,11 +48,9 @@ use simple_ica_host::msg::{self as host_msgs};
 
 use speculoos::assert_that;
 
-use super::bank::BankModule;
-
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 
-pub fn full_ica_test<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
+pub fn full_ica_test<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>>(
     interchain: &IBC,
     host_chain_id: &str,
     controller_chain_id: &str,
@@ -101,7 +99,7 @@ fn deploy_contracts<Chain: CwEnv>(
 }
 
 /// Test the cw-ica contract
-fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
+fn test_ica<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>>(
     interchain: &IBC,
     // controller on osmosis
     controller: &Controller<Chain>,
@@ -119,9 +117,9 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
     let channel = remote_account.channel_id;
 
     // send some funds to the remote account
-    juno.send(
+    juno.bank_send(
         &remote_addr,
-        vec![cosmwasm_std::coin(100u128, host_funds_denom)],
+        &cosmwasm_std::coins(100u128, host_funds_denom),
     )
     .map_err(Into::into)?;
 

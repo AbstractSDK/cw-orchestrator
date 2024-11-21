@@ -3,7 +3,8 @@ use std::str::FromStr;
 use cosmrs::{tx::Msg, AccountId, Coin, Denom};
 use cosmwasm_std::{coins, Addr};
 // ANCHOR: full_counter_example
-use cw_orch_daemon::senders::tx::TxSender;
+use cw_orch::prelude::Stargate;
+use cw_orch::prelude::TxHandler;
 use cw_orch_daemon::DaemonBuilder;
 use cw_orch_networks::networks;
 
@@ -19,13 +20,11 @@ pub fn main() -> anyhow::Result<()> {
 
     // We commit the tx (also resimulates the tx)
     // ANCHOR: send_tx
-    let wallet = daemon.sender();
 
-    let rt = daemon.rt_handle.clone();
-    rt.block_on(wallet.bank_send(
+    daemon.bank_send(
         &Addr::unchecked("<address-of-my-sister>"),
-        coins(345, "ujunox"),
-    ))?;
+        &coins(345, "ujunox"),
+    )?;
     // ANCHOR_END: send_tx
 
     // ANCHOR: cosmrs_tx
@@ -45,22 +44,27 @@ pub fn main() -> anyhow::Result<()> {
             denom: Denom::from_str("ujuno").unwrap(),
         },
     };
-    rt.block_on(wallet.commit_tx(vec![tx_msg.clone()], None))?;
+    daemon
+        .rt_handle
+        .block_on(daemon.sender().commit_tx(vec![tx_msg.clone()], None))?;
     // ANCHOR_END: cosmrs_tx
 
     // ANCHOR: any_tx
-    rt.block_on(wallet.commit_tx_any(
-        vec![cosmrs::Any {
+    daemon.commit_any(
+        vec![prost_types::Any {
             type_url: "/cosmos.staking.v1beta1.MsgBeginRedelegate".to_string(),
             value: tx_msg.to_any().unwrap().value,
         }],
         None,
-    ))?;
+    )?;
     // ANCHOR_END: any_tx
 
     // ANCHOR: simulate_tx
-    let (gas_needed, fee_needed) =
-        rt.block_on(wallet.simulate(vec![tx_msg.to_any().unwrap()], None))?;
+    let (gas_needed, fee_needed) = daemon.rt_handle.block_on(
+        daemon
+            .sender()
+            .simulate(vec![tx_msg.to_any().unwrap()], None),
+    )?;
 
     log::info!(
         "Submitting this transaction will necessitate: 
