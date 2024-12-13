@@ -9,12 +9,24 @@ pub const UNION_NETWORK: NetworkInfo = NetworkInfo {
 
 pub const UNION_TESTNET: ChainInfo = UNION_TESTNET_8;
 
+#[deprecated]
 pub const UNION_TESTNET_8: ChainInfo = ChainInfo {
     kind: ChainKind::Testnet,
     chain_id: "union-testnet-8",
     gas_denom: "muno",
     gas_price: 0.000025,
     grpc_urls: &["https://grpc.testnet-8.union.build:443"],
+    network_info: UNION_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+
+pub const UNION_TESTNET_9: ChainInfo = ChainInfo {
+    kind: ChainKind::Testnet,
+    chain_id: "union-testnet-9",
+    gas_denom: "muno",
+    gas_price: 0.000025,
+    grpc_urls: &["https://rpc.union-testnet-9.cor.systems:443"],
     network_info: UNION_NETWORK,
     lcd_url: None,
     fcd_url: None,
