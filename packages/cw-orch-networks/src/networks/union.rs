@@ -7,7 +7,7 @@ pub const UNION_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 118,
 };
 
-pub const UNION_TESTNET: ChainInfo = UNION_TESTNET_8;
+pub const UNION_TESTNET: ChainInfo = UNION_TESTNET_9;
 
 #[deprecated]
 pub const UNION_TESTNET_8: ChainInfo = ChainInfo {
