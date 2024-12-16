@@ -79,7 +79,7 @@ jobs:
     # https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
     strategy:
       matrix:
-        msrv: [1.76.0] # dep/feat syntax fixed with co-exist dep
+        msrv: [1.78.0] # dep/feat syntax fixed with co-exist dep
     name: ubuntu / ${{ matrix.msrv }}
     steps:
       - uses: actions/checkout@v4
