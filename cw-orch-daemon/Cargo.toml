@@ -1,14 +1,14 @@
 [package]
-name = "cw-orch-daemon"
-version = "0.28.1"
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-repository = { workspace = true }
+authors     = { workspace = true }
+categories  = ["development-tools"]
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
-keywords = ["cosmwasm", "blockchain"]
-categories = ["development-tools"]
-readme = "../README.md"
+edition     = { workspace = true }
+keywords    = ["cosmwasm", "blockchain"]
+license     = { workspace = true }
+name        = "cw-orch-daemon"
+readme      = "../README.md"
+repository  = { workspace = true }
+version     = "0.28.1"
 
 exclude = [".env"]
 
@@ -20,51 +20,51 @@ all-features = true
 default = []
 # enable node-backed tests (ensure Docker is running)
 # run with `cargo test --jobs 1 --features node-tests`
+eth        = ["dep:ethers-signers", "dep:ethers-core"]
 node-tests = []
-eth = ["dep:ethers-signers", "dep:ethers-core"]
 [dependencies]
 # Default deps
-cw-orch-core = { workspace = true }
-cw-orch-traits = { workspace = true }
+cw-orch-core     = { workspace = true }
 cw-orch-networks = { workspace = true }
+cw-orch-traits   = { workspace = true }
 
+anyhow       = { workspace = true }
 cosmwasm-std = { workspace = true }
-anyhow = { workspace = true }
-serde = { workspace = true }
-schemars = "0.8.21"
-log = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
+log          = { workspace = true }
+schemars     = "0.8.21"
+serde        = { workspace = true }
+serde_json   = { workspace = true }
+thiserror    = { workspace = true }
 
 prost-types = { workspace = true }
 # Daemon deps
-sha2 = { workspace = true }
-prost = { workspace = true }
-bitcoin = { version = "0.32.2" }
-bech32 = { version = "0.11.0", default-features = false, features = ["alloc"] }
-hex = { version = "0.4.3" }
-ripemd = { version = "0.1.3" }
-tokio = { workspace = true, features = ["full"] }
-tonic = { workspace = true, features = ["tls-native-roots"] }
-reqwest = { version = "0.12.5" }
-base64 = { version = "0.22.1" }
-rand_core = { version = "0.6.4", default-features = false }
+base16        = { version = "0.2.1" }
+base64        = { version = "0.22.1" }
+bech32        = { version = "0.11.0", default-features = false, features = ["alloc"] }
+bip39         = { version = "2.0.0", features = ["rand"] }
+bitcoin       = { version = "0.32.2" }
+chrono        = { version = "0.4" }
+cosmrs        = { workspace = true, features = ["dev", "cosmwasm", "grpc"] }
+dirs          = "5.0.1"
 ed25519-dalek = { version = "2", features = ["serde"] }
-eyre = { version = "0.6" }
-cosmrs = { workspace = true, features = ["dev", "cosmwasm", "grpc"] }
-chrono = { version = "0.4" }
-base16 = { version = "0.2.1" }
-ring = { version = "0.17.8" }
-dirs = "5.0.1"
-bip39 = { version = "2.0.0", features = ["rand"] }
+eyre          = { version = "0.6" }
+hex           = { version = "0.4.3" }
+prost         = { workspace = true }
+rand_core     = { version = "0.6.4", default-features = false }
+reqwest       = { version = "0.12.5" }
+ring          = { version = "0.17.8" }
+ripemd        = { version = "0.1.3" }
+sha2          = { workspace = true }
+tokio         = { workspace = true, features = ["full"] }
+tonic         = { workspace = true, features = ["tls-native-roots"] }
 
 # Injective dependencies
-ethers-signers = { version = "2.0.14", optional = true }
-ethers-core = { version = "2.0.14", optional = true }
 async-recursion = "1.1.1"
+ethers-core     = { version = "2.0.14", optional = true }
+ethers-signers  = { version = "2.0.14", optional = true }
 
 # Gzip
-flate2 = { version = "1.0.31" }
+flate2      = { version = "1.0.31" }
 lazy_static = "1.5.0"
 
 # Lock daemon
@@ -75,32 +75,30 @@ once_cell = { version = "1.19.0" }
 uid = "0.1.7"
 
 # Deserialize network config
-toml = "0.8"
-http = "1.1.0"
+http       = "1.1.0"
 libc-print = "0.1.23"
+toml       = "0.8"
 
 [dev-dependencies]
-cw-orch-daemon = { path = "." }
-cw-orch = { path = "../cw-orch", features = ["daemon"] }
-env_logger = "0.11.5"
-cw20 = { version = "2" }
-cw20-base = { version = "2" }
 cosmwasm-schema = "2.1"
-speculoos = "0.11.0"
-ctor = "0.2.8"
-duct = "0.13"
-mock-contract = { path = "../contracts-ws/contracts/mock_contract", features = [
-  "interface",
-] }
-serial_test = { version = "3.1.1" }
+ctor            = "0.2.8"
+cw-orch         = { path = "../cw-orch", features = ["daemon"] }
+cw-orch-daemon  = { path = "." }
+cw20            = { version = "2" }
+cw20-base       = { version = "2" }
+duct            = "0.13"
+env_logger      = "0.11.5"
+mock-contract   = { path = "../contracts-ws/contracts/mock_contract", features = ["interface"] }
+serial_test     = { version = "3.1.1" }
+speculoos       = "0.11.0"
 
 # Ethereum deps
+ethers-core    = { version = "2.0.14" }
 ethers-signers = { version = "2.0.14" }
-ethers-core = { version = "2.0.14" }
-tokio-test = "0.4.4"
+tokio-test     = "0.4.4"
 
 # File lock test
-nix = { version = "0.29.0", features = ["process"] }
-counter-contract = { path = "../contracts-ws/contracts/counter" }
-dotenv = "0.15.0"
+counter-contract  = { path = "../contracts-ws/contracts/counter" }
+dotenv            = "0.15.0"
+nix               = { version = "0.29.0", features = ["process"] }
 pretty_env_logger = "0.5.0"
