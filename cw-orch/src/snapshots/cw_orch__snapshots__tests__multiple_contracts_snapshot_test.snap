@@ -1,6 +1,7 @@
 ---
 source: cw-orch/src/snapshots.rs
 expression: all_storage
+snapshot_kind: text
 ---
 counter_contract:
   - - contract_info
