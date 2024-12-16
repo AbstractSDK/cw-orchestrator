@@ -372,9 +372,9 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
     }
 
     /// Queries  the last transactions that is related to creating a channel from chain from to the counterparty chain defined in the structure
-    async fn get_last_channel_creation<'a>(
+    async fn get_last_channel_creation(
         &self,
-        src_chain: ChainId<'a>,
+        src_chain: ChainId<'_>,
         ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<ChannelCreation<Option<CosmTxResponse>>, InterchainDaemonError> {
         let (channel_init, channel_try, channel_ack, channel_confirm) = try_join4(

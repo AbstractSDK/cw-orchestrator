@@ -168,7 +168,7 @@ impl PacketInspector {
 
     /// Gets the grpc channel associed with a specific `chain_id`
     /// If it's not registered in this struct (using the `add_custom_chain` member), it will query the grpc from the chain regisry (`networks::parse_network` function)
-    async fn get_grpc_channel<'a>(&self, chain_id: ChainId<'a>) -> IcDaemonResult<Channel> {
+    async fn get_grpc_channel(&self, chain_id: ChainId<'_>) -> IcDaemonResult<Channel> {
         let grpc_channel = self.registered_chains.get(chain_id);
 
         if let Some(dst_grpc_channel) = grpc_channel {
