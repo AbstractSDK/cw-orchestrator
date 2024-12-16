@@ -1,6 +1,6 @@
 [package]
 name = "cw-orch-networks"
-version = "0.24.6"
+version = "0.24.7"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }

@@ -2,6 +2,7 @@
 
 ## Unpublished
 
+- [networks] Replaced union testnet-8 by union-testnet-9
 
 ### Breaking
 
