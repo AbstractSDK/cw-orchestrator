@@ -19,6 +19,7 @@ pub mod terra;
 pub mod union;
 pub mod xion;
 
+#[allow(deprecated)]
 use crate::networks::union::UNION_TESTNET_8;
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use cosmos::COSMOS_HUB_TESTNET;
@@ -82,6 +83,7 @@ pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     XION_TESTNET_1,
     ROLLKIT_TESTNET,
     LOCAL_LANDSLIDE,
+    #[allow(deprecated)]
     UNION_TESTNET_8,
     COSMOS_HUB_TESTNET,
 ];
