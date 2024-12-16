@@ -1,4 +1,7 @@
+use std::str::FromStr;
+
 use crate::{
+    parse_cw_coins,
     queriers::Node,
     tx_broadcaster::{
         account_sequence_strategy, assert_broadcast_code_cosm_response, insufficient_fee_strategy,
@@ -7,6 +10,7 @@ use crate::{
     CosmTxResponse, DaemonError, QuerySender, TxBuilder, TxSender,
 };
 use cosmrs::{
+    bank::MsgSend,
     proto::cosmos::authz::v1beta1::MsgExec,
     tendermint::chain::Id,
     tx::{Body, Fee, Raw, SignDoc, SignerInfo},
@@ -131,5 +135,21 @@ impl<T: Signer + Sync> TxSender for T {
         } else {
             Ok(self.account_id())
         }
+    }
+
+    async fn bank_send(
+        &self,
+        recipient: &Addr,
+        coins: &[cosmwasm_std::Coin],
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let acc_id = self.msg_sender()?;
+
+        let msg_send = MsgSend {
+            from_address: acc_id,
+            to_address: AccountId::from_str(recipient.as_str())?,
+            amount: parse_cw_coins(coins)?,
+        };
+
+        self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 }

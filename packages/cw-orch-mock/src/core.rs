@@ -2,7 +2,7 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{
     testing::{MockApi, MockStorage},
-    to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
+    to_json_binary, Addr, Api, BankMsg, Binary, CosmosMsg, Empty, Event, WasmMsg,
 };
 use cw_multi_test::{
     ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
@@ -262,6 +262,24 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     ) -> Result<Self::Response, Self::Error> {
         log::debug!("Uploading with access is not enforced when using Mock testing");
         self.upload(contract_source)
+    }
+
+    fn bank_send(
+        &self,
+        receiver: &Addr,
+        amount: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error> {
+        self.app
+            .borrow_mut()
+            .execute(
+                self.sender.clone(),
+                BankMsg::Send {
+                    to_address: receiver.to_string(),
+                    amount: amount.to_vec(),
+                }
+                .into(),
+            )
+            .map_err(From::from)
     }
 }
 

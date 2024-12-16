@@ -5,10 +5,11 @@ use cw_orch_daemon::queriers::Node;
 use cw_orch_daemon::senders::builder::SenderBuilder;
 use cw_orch_daemon::senders::query::QuerySender;
 use cw_orch_daemon::tx_broadcaster::assert_broadcast_code_cosm_response;
-use cw_orch_daemon::{DaemonBase, GrpcChannel, TxBuilder};
+use cw_orch_daemon::{parse_cw_coins, DaemonBase, GrpcChannel, TxBuilder};
 
 use cw_orch_daemon::{CosmTxResponse, DaemonError};
 
+use cosmrs::bank::MsgSend;
 use cosmrs::proto::cosmos;
 use cosmrs::proto::cosmos::auth::v1beta1::BaseAccount;
 use cosmrs::proto::cosmos::vesting::v1beta1::PeriodicVestingAccount;
@@ -20,6 +21,7 @@ use cw_orch::prelude::*;
 use cw_orch_core::environment::ChainInfoOwned;
 use prost::Message;
 use std::io::{self, Write};
+use std::str::FromStr;
 use std::sync::Arc;
 use tonic::transport::Channel;
 
@@ -121,6 +123,22 @@ impl TxSender for ManualSender {
 
     fn account_id(&self) -> AccountId {
         self.sender.clone().to_string().parse().unwrap()
+    }
+
+    async fn bank_send(
+        &self,
+        recipient: &Addr,
+        coins: &[cosmwasm_std::Coin],
+    ) -> Result<CosmTxResponse, DaemonError> {
+        let acc_id = self.msg_sender()?;
+
+        let msg_send = MsgSend {
+            from_address: acc_id,
+            to_address: AccountId::from_str(recipient.as_str())?,
+            amount: parse_cw_coins(coins)?,
+        };
+
+        self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 }
 

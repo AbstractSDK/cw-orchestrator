@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## Cw-orch-daemon 0.29.0 - cw-orch-core 2.1.4 [16. December 2024]
 
 - [networks] Replaced union testnet-8 by union-testnet-9
 
@@ -8,6 +8,11 @@
 
 - [interchain-core] Modify the structure and the names of the IBC analysis and following structure. 
 - [osmosis-test-tube] Update `osmosis-test-tube` to "v27.0.0"
+- [daemon]: Move the bank_send method from the Wallet to the TxSender trait. 
+
+### Added
+
+- [core] bank_send method on TxHandler to facilitate sending funds in script
 
 ## 0.26.0 [8. October 2024]
 

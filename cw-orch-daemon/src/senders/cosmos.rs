@@ -5,7 +5,6 @@ use super::{
     tx::TxSender,
 };
 use crate::{
-    core::parse_cw_coins,
     cosmos_modules::{self, auth::BaseAccount},
     env::{DaemonEnvVars, LOCAL_MNEMONIC_ENV_NAME, MAIN_MNEMONIC_ENV_NAME, TEST_MNEMONIC_ENV_NAME},
     error::DaemonError,
@@ -19,7 +18,6 @@ use crate::{
 use bitcoin::secp256k1::{All, Secp256k1, Signing};
 use cosmos_modules::vesting::PeriodicVestingAccount;
 use cosmrs::{
-    bank::MsgSend,
     crypto::secp256k1::SigningKey,
     proto::traits::Message,
     tendermint::chain::Id,
@@ -32,7 +30,7 @@ use cw_orch_core::{
     environment::{AccessConfig, ChainInfoOwned, ChainKind},
     CoreEnvVars, CwEnvError,
 };
-use std::{str::FromStr, sync::Arc};
+use std::sync::Arc;
 use tonic::transport::Channel;
 
 #[cfg(feature = "eth")]
@@ -161,22 +159,6 @@ impl Wallet {
 
     pub fn pub_addr_str(&self) -> String {
         Signer::account_id(self).to_string()
-    }
-
-    pub async fn bank_send(
-        &self,
-        recipient: &Addr,
-        coins: Vec<cosmwasm_std::Coin>,
-    ) -> Result<CosmTxResponse, DaemonError> {
-        let acc_id = self.msg_sender()?;
-
-        let msg_send = MsgSend {
-            from_address: acc_id,
-            to_address: AccountId::from_str(recipient.as_str())?,
-            amount: parse_cw_coins(&coins)?,
-        };
-
-        self.commit_tx(vec![msg_send], Some("sending tokens")).await
     }
 
     /// Computes the gas needed for submitting a transaction

@@ -236,6 +236,17 @@ impl<Sender: TxSender> TxHandler for DaemonBase<Sender> {
                 .upload_with_access_config(contract_source, access_config),
         )
     }
+
+    fn bank_send(
+        &self,
+        receiver: &Addr,
+        amount: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error> {
+        self.rt_handle
+            .block_on(self.sender().bank_send(receiver, amount))
+            .map_err(Into::into)
+            .map(Into::into)
+    }
 }
 
 impl<Sender: TxSender> Stargate for DaemonBase<Sender> {
