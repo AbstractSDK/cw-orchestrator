@@ -1,6 +1,6 @@
 # cw-orchestrator Changelog
 
-## Unpublished
+## Cw-orch-daemon 0.29.0 - cw-orch-core 2.1.4 [16. December 2024]
 
 - [networks] Replaced union testnet-8 by union-testnet-9
 
