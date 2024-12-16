@@ -1,29 +1,29 @@
 [package]
-name = "counter-contract"
-version = "0.27.1"
 description = "counter constract"
-keywords = ["cosmwasm", "blockchain"]
-edition = { workspace = true }
-license = "LGPL-3.0"
-exclude = [".env"]
+edition     = { workspace = true }
+exclude     = [".env"]
+keywords    = ["cosmwasm", "blockchain"]
+license     = "LGPL-3.0"
+name        = "counter-contract"
+version     = "0.27.1"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["export"]
-export = []
+export  = []
 
 [dependencies]
-cosmwasm-std = { workspace = true }
-cw-storage-plus = { workspace = true }
-cw2 = "2.0"
 cosmwasm-schema = "2.1"
-schemars = "0.8.21"
-thiserror = { version = "1.0.63" }
-serde = { workspace = true }
-serde_json = "1.0.125"
-cw-orch = { workspace = true, features = ["daemon"] }
+cosmwasm-std    = { workspace = true }
+cw-orch         = { workspace = true, features = ["daemon"] }
+cw-storage-plus = { workspace = true }
+cw2             = "2.0"
+schemars        = "0.8.21"
+serde           = { workspace = true }
+serde_json      = "1.0.125"
+thiserror       = { version = "1.0.63" }
 # Unused, only there to check for wasm compatibility
 cw-orch-interchain = { workspace = true, features = ["daemon"] }
 
@@ -32,7 +32,7 @@ name = "deploy"
 
 [dev-dependencies]
 # Deps for deployment
-dotenv = { version = "0.15.0" }
+anyhow            = { workspace = true }
+cw-orch           = { workspace = true, features = ["daemon"] }
+dotenv            = { version = "0.15.0" }
 pretty_env_logger = { version = "0.5.0" }
-cw-orch = { workspace = true, features = ["daemon"] }
-anyhow = { workspace = true }

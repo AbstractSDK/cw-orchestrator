@@ -1,16 +1,16 @@
 [package]
-name = "cw-orch-traits"
-version = "0.25.0"
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-repository = { workspace = true }
+authors     = { workspace = true }
+categories  = ["development-tools"]
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
-keywords = ["cosmwasm", "blockchain"]
-categories = ["development-tools"]
-readme = "README.md"
+edition     = { workspace = true }
+keywords    = ["cosmwasm", "blockchain"]
+license     = { workspace = true }
+name        = "cw-orch-traits"
+readme      = "README.md"
+repository  = { workspace = true }
+version     = "0.25.0"
 
 
 [dependencies]
 cw-orch-core = { workspace = true }
-prost-types = { workspace = true }
+prost-types  = { workspace = true }
