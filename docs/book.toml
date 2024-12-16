@@ -1,28 +1,22 @@
 [book]
-authors = ["CyberHoward", "Riada"]
-language = "en"
+authors      = ["CyberHoward", "Riada"]
+language     = "en"
 multilingual = false
-src = "src"
-title = "cw-orchestrator documentation"
+src          = "src"
+title        = "cw-orchestrator documentation"
 
 [preprocessor.keeper]
-command = "mdbook-keeper"
+command      = "mdbook-keeper"
+externs      = ["cosmwasm_schema", "cosmwasm_std", "counter_contract", "cw_orch_interchain", "anyhow"]
 manifest_dir = "../"
-externs = [
-  "cosmwasm_schema",
-  "cosmwasm_std",
-  "counter_contract",
-  "cw_orch_interchain",
-  "anyhow",
-]
 
 [output.html]
-default-theme = "light"
+curly-quotes         = true
+default-theme        = "light"
+edit-url-template    = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/docs/{path}"
+git-repository-icon  = "fa-github"
+git-repository-url   = "https://github.com/AbstractSDK/cw-orchestrator"
 preferred-dark-theme = "navy"
-curly-quotes = true
-git-repository-url = "https://github.com/AbstractSDK/cw-orchestrator"
-git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/AbstractSDK/cw-orchestrator/edit/main/docs/{path}"
 
 [extern]
 # Define the external crate and its features

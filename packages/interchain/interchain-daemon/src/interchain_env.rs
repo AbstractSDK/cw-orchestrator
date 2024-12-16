@@ -333,9 +333,9 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         Ok(ibc_trail)
     }
 
-    async fn find_channel_creation_tx<'a>(
+    async fn find_channel_creation_tx(
         &self,
-        src_chain: ChainId<'a>,
+        src_chain: ChainId<'_>,
         ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<ChannelCreation<CosmTxResponse>, InterchainDaemonError> {
         for _ in 0..5 {
@@ -372,9 +372,9 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
     }
 
     /// Queries  the last transactions that is related to creating a channel from chain from to the counterparty chain defined in the structure
-    async fn get_last_channel_creation<'a>(
+    async fn get_last_channel_creation(
         &self,
-        src_chain: ChainId<'a>,
+        src_chain: ChainId<'_>,
         ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<ChannelCreation<Option<CosmTxResponse>>, InterchainDaemonError> {
         let (channel_init, channel_try, channel_ack, channel_confirm) = try_join4(
@@ -393,10 +393,10 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         ))
     }
 
-    async fn get_channel_creation_init<'a>(
+    async fn get_channel_creation_init(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
@@ -412,10 +412,10 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         Ok(find_one_tx_by_events(src_port, channel_creation_events_init_events).await?)
     }
 
-    async fn get_channel_creation_try<'a>(
+    async fn get_channel_creation_try(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
@@ -437,10 +437,10 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         Ok(find_one_tx_by_events(dst_port, channel_creation_try_events).await?)
     }
 
-    async fn get_channel_creation_ack<'a>(
+    async fn get_channel_creation_ack(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
@@ -456,10 +456,10 @@ impl<C: ChannelCreator> DaemonInterchain<C> {
         Ok(find_one_tx_by_events(src_port, channel_creation_ack_events).await?)
     }
 
-    async fn get_channel_creation_confirm<'a>(
+    async fn get_channel_creation_confirm(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
