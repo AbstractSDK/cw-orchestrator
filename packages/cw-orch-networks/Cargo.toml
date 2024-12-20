@@ -8,7 +8,7 @@ license     = { workspace = true }
 name        = "cw-orch-networks"
 readme      = "README.md"
 repository  = { workspace = true }
-version     = "0.24.8"
+version     = "0.24.9"
 
 exclude = [".env"]
 
