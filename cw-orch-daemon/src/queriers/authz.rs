@@ -1,5 +1,6 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cosmwasm_std::Addr;
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -41,8 +42,8 @@ impl Authz {
     /// Query Authz Grants from grantee to granter
     pub async fn _grants(
         &self,
-        granter: String,
-        grantee: String,
+        granter: &Addr,
+        grantee: &Addr,
         msg_type_url: String,
         pagination: Option<PageRequest>,
     ) -> Result<cosmrs::proto::cosmos::authz::v1beta1::QueryGrantsResponse, DaemonError> {
@@ -50,8 +51,8 @@ impl Authz {
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let grants = client
             .grants(QueryGrantsRequest {
-                granter,
-                grantee,
+                granter: granter.to_string(),
+                grantee: grantee.to_string(),
                 msg_type_url,
                 pagination,
             })
@@ -63,7 +64,7 @@ impl Authz {
     /// Query Authz Grants of grantee
     pub async fn _grantee_grants(
         &self,
-        grantee: String,
+        grantee: &Addr,
         pagination: Option<PageRequest>,
     ) -> Result<cosmrs::proto::cosmos::authz::v1beta1::QueryGranteeGrantsResponse, DaemonError>
     {
@@ -71,7 +72,7 @@ impl Authz {
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let grants = client
             .grantee_grants(QueryGranteeGrantsRequest {
-                grantee,
+                grantee: grantee.to_string(),
                 pagination,
             })
             .await?
@@ -82,7 +83,7 @@ impl Authz {
     /// Query Authz Grants for granter
     pub async fn _granter_grants(
         &self,
-        granter: String,
+        granter: &Addr,
         pagination: Option<PageRequest>,
     ) -> Result<cosmrs::proto::cosmos::authz::v1beta1::QueryGranterGrantsResponse, DaemonError>
     {
@@ -90,7 +91,7 @@ impl Authz {
         let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
         let grants = client
             .granter_grants(QueryGranterGrantsRequest {
-                granter,
+                granter: granter.to_string(),
                 pagination,
             })
             .await?

@@ -1,39 +1,38 @@
 use cosmwasm_std::coins;
 use counter_contract::{
-    msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
-    CounterContract,
+    msg::InstantiateMsg, CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
 
-use cw_orch::prelude::{CallAs, ContractInstance};
-use cw_orch::prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload};
+use cw_orch::prelude::CallAs;
+use cw_orch::prelude::*;
 use cw_orch_osmosis_test_tube::OsmosisTestTube;
 
 pub fn main() {
     // ANCHOR: osmosis_test_tube_creation
-    let chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
+    let mut chain = OsmosisTestTube::new(coins(1_000_000_000_000, "uosmo"));
     // ANCHOR_END: osmosis_test_tube_creation
 
     // ANCHOR: osmosis_test_tube_usage
-    let contract_counter = CounterContract::new(chain);
+    let contract_counter = CounterContract::new(chain.clone());
 
     let upload_res = contract_counter.upload();
     assert!(upload_res.is_ok());
 
-    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None);
+    let init_res = contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, &[]);
     assert!(init_res.is_ok());
     // ANCHOR_END: osmosis_test_tube_usage
 
-    let exec_res = contract_counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = contract_counter.increment();
     assert!(exec_res.is_ok());
 
-    let sender = contract_counter.as_instance().get_chain().sender.clone();
+    let sender = chain
+        .init_account(coins(1_000_000_000_000, "uosmo"))
+        .unwrap();
 
-    let exec_call_as = contract_counter
-        .call_as(&sender)
-        .execute(&ExecuteMsg::Increment {}, None);
+    let exec_call_as = contract_counter.call_as(&sender).increment();
     assert!(exec_call_as.is_ok());
 
-    let query_res = contract_counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
+    let query_res = contract_counter.get_count();
     assert!(query_res.is_ok());
 }
 

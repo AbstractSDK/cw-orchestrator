@@ -4,11 +4,17 @@
 
 ## Quick Start
 
+Before starting, here are a few examples utilizing the daemon structure:
+
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/testnet_daemon.rs" target="_blank">Interacting with a Testnet</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/complex_testnet_daemon.rs" target="_blank">Sending any message with a Daemon</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/async_daemon.rs" target="_blank">Using Daemon in an async context</a>
+
+
 Interacting with the `daemon` is really straightforward. Creating a daemon instance is shown below:
 
 ```rust,ignore
     use cw_orch::prelude::*;
-    use tokio::runtime::Runtime;
 {{#include ../../../cw-orch/examples/local_daemon.rs:daemon_creation}}
 ```
 
@@ -26,13 +32,10 @@ This simple script actually hides another parameter which is the `LOCAL_MNEMONIC
 When using multiple Daemons with the same state file, you should re-use a single Daemon State to avoid conflicts and panics: 
 
 ```rust,ignore
-let daemon1 = Daemon::builder()
-  .chain(OSMOSIS_1)
-  .build()?;
+let daemon1 = Daemon::builder(OSMOSIS_1).build()?;
 // If you don't use the `state` method here, this will fail with:
 // State file <file-name> already locked, use another state file, clone daemon which holds the lock, or use `state` method of Builder
-let daemon2 = Daemon::builder()
-  .chain(JUNO_1)
+let daemon2 = Daemon::builder(JUNO_1)
   .state(daemon1.state())
   .build()?;
 ```
@@ -63,12 +66,10 @@ When calling the `upload` function on a contract, if the tx is successful, the d
 
 ```json
 {
-  "juno": {
-    "juno-1": {
-      "code_ids": {
-        "counter_contract": 1356,
-      },     
-    }
+  "juno-1": {
+    "code_ids": {
+      "counter_contract": 1356,
+    },     
   }
 }
 
@@ -80,14 +81,12 @@ When calling the `instantiate` function, if the tx is successful, the daemon wil
 
 ```json
 {
-  "juno": {
-    "juno-1": {
-      "code_ids": {
-        "counter_contract": 1356,
-      },
-      "default": {
-        "counter_contract": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
-      }
+  "juno-1": {
+    "code_ids": {
+      "counter_contract": 1356,
+    },
+    "default": {
+      "counter_contract": "juno1wug8sewp6cedgkmrmvhl3lf3tulagm9hnvy8p0rppz9yjw0g4wtqwrw37d"
     }
   }
 }
@@ -104,14 +103,28 @@ Here are the available options and fields you can use in the builder object:
 - `deployment_id` (*optional*) is used when loading and saving blockchain state (addresses and code-ids). It is useful when you have multiple instances of the same contract on a single chain. It will allow you to keep those multiple instances in the same state file without overriding state.<a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.deployment_id" target="_blank">Documentation Link</a>
 - `handle` (*optional*) is the `tokio` runtime handled used to await async functions. `cw-orch` provides a default runtime if not specified. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.handle" target="_blank">Documentation Link</a>
 - `mnemonic` (*optional*) is the mnemonic that will be used to create the sender associated with the resulting `Daemon` Object. It is not compatible with the `sender` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>
-- `sender` (*optional*) is the sender that will be uses with the `resulting` Daemon Object. It is not compatible with the `mnemonic` method. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.mnemonic" target="_blank">Documentation Link</a>
-- `authz_granter` (*optional*) allows you to use the authz module. If this field is specified, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.authz_granter" target="_blank">Documentation Link</a>
-- `fee_granter` (*optional*) allows you to use the fee-grant module. If this field is specified, the sender will try to pay for transactions using the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/feegrant/" target="_blank">More info on the fee grant module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.fee_granter" target="_blank">Documentation Link</a>
-- `hd_index` (*optional*) allows to set the index of the HD path for the account associated with the `Daemon` object. <a href="https://hub.cosmos.network/main/resources/hd-wallets.html" target="_blank">More info on the derivation path and index</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/sync/struct.DaemonBuilder.html#method.hd_index" target="_blank">Documentation Link</a>
+- `state` (*optional*) is used when you want to specify an existing `DaemonState` object to the new Daemon. This is particularly useful when interacting with multiple chains at the same time.
 
-> **NOTE**: if none of `sender` or `mnemonic` is specified, [env variables](../contracts/env-variable.md) will be used to construct the sender object.
+> **NOTE**: if `mnemonic` is not specified, [env variables](../contracts/env-variable.md) will be used to construct the sender object.
 
-Keep in mind that those options can't be changed once the `Daemon` object is built, using the `build` function. It is possible to create a new `DaemonBuilder` structure from a `Daemon` object by using the `rebuild` method and specifying the options that you need to change.
+Keep in mind that most of these options can't be changed once the `Daemon` object is built, using the `build` function. It is possible to create a new `DaemonBuilder` structure from a `Daemon` object by using the `rebuild` method and specifying the options that you need to change.
+
+### Properties of the default sender
+
+If you wish to use the default `CosmosSender` provided by default, you can use this simple pattern:
+
+```rust,ignore
+  let daemon = Daemon::builder(JUNO_1).build()?;
+```
+
+You can use the following functions on the `CosmosSender` (obtained via `Daemon::sender_mut()`) object to customize some of its properties:
+
+- `CosmosSender::set_authz_granter` allows you to use the authz module. If this method is used, the sender will send transactions wrapped inside an authz message sent by the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/authz/" target="_blank">More info on the authz module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/type.Daemon.html#method.authz_granter" target="_blank">Documentation Link</a>
+- `CosmosSender::set_fee_granter` allows you to use the fee-grant module. If this method is used, the sender will try to pay for transactions using the specified `granter`. <a href="https://docs.cosmos.network/v0.46/modules/feegrant/" target="_blank">More info on the fee grant module</a>. <a href="https://docs.rs/cw-orch-daemon/latest/cw_orch_daemon/type.Daemon.html#method.fee_granter" target="_blank">Documentation Link</a>
+
+### Customizing the Sender
+
+If you wish to use the `Daemon` object with a different sender (for instance to batch transactions, or to submit the transaction to a multisig), you can use `DaemonBuilder::build_sender` instead of `DaemonBuilder::build`. This allows you to customize the sender before constructing the Daemon object. You can find an example of such usage in <a target="_blank" href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch-daemon/examples/">our official Github repository</a>
 
 ## Additional tools
 
@@ -155,5 +168,5 @@ For more information and queries, <a href="https://docs.rs/crate/cw-orch/latest/
 Here is an example of a script that deploys the counter contract only after a specific block_height.
 
 ```rust,ignore
-{{#include ../../../contracts/counter/src/interface.rs:daemon}}
+{{#include ../../../contracts-ws/contracts/counter/src/interface.rs:daemon}}
 ```

@@ -2,11 +2,14 @@
 use super::interface_traits::Uploadable;
 use crate::{
     env::CoreEnvVars,
-    environment::{ChainState, IndexResponse, StateInterface, TxHandler, TxResponse},
+    environment::{
+        AsyncWasmQuerier, ChainState, IndexResponse, StateInterface, TxHandler, TxResponse,
+    },
     error::CwEnvError,
     log::{contract_target, transaction_target},
 };
 
+use crate::environment::AccessConfig;
 use crate::environment::QueryHandler;
 use cosmwasm_std::{Addr, Binary, Coin};
 use serde::{de::DeserializeOwned, Serialize};
@@ -38,8 +41,10 @@ impl<Chain> Contract<Chain> {
         }
     }
 
-    /// `get_chain` instead of `chain` to disambiguate from the std prelude .chain() method.
-    pub fn get_chain(&self) -> &Chain {
+    // This should use the `Environment` trait, but it's not possible due to
+    // `downstream crates may implement trait `contract::interface_traits::ContractInstance<_>` for type `contract::contract_instance::Contract<_>`
+    /// Retrieves the underlying chain used for execution
+    pub fn environment(&self) -> &Chain {
         &self.chain
     }
 
@@ -98,15 +103,22 @@ impl<Chain: ChainState> Contract<Chain> {
 impl<Chain: TxHandler> Contract<Chain> {
     // Chain interfaces
 
-    /// Upload a contract given its source
-    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
+    /// Upload a contract given its source and specify the permissions for instantiating
+    pub fn upload_with_access_config(
+        &self,
+        source: &impl Uploadable,
+        access_config: Option<AccessConfig>,
+    ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
             "[{}][Upload]",
             self.id,
         );
 
-        let resp = self.chain.upload(source).map_err(Into::into)?;
+        let resp = self
+            .chain
+            .upload_with_access_config(source, access_config)
+            .map_err(Into::into)?;
         let code_id = resp.uploaded_code_id()?;
         self.set_code_id(code_id);
         log::info!(
@@ -124,11 +136,16 @@ impl<Chain: TxHandler> Contract<Chain> {
         Ok(resp)
     }
 
+    /// Upload a contract given its source
+    pub fn upload(&self, source: &impl Uploadable) -> Result<TxResponse<Chain>, CwEnvError> {
+        self.upload_with_access_config(source, None)
+    }
+
     /// Executes an operation on the contract
     pub fn execute<E: Serialize + Debug>(
         &self,
         msg: &E,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -145,9 +162,7 @@ impl<Chain: TxHandler> Contract<Chain> {
             log_serialize_message(msg)?
         );
 
-        let resp = self
-            .chain
-            .execute(msg, coins.unwrap_or(&[]), &self.address()?);
+        let resp = self.chain.execute(msg, coins, &self.address()?);
 
         log::info!(
             target: &contract_target(),
@@ -171,7 +186,7 @@ impl<Chain: TxHandler> Contract<Chain> {
         &self,
         msg: &I,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
             target: &contract_target(),
@@ -188,13 +203,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-            )
+            .instantiate(self.code_id()?, msg, Some(&self.id), admin, coins)
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
 
@@ -221,7 +230,7 @@ impl<Chain: TxHandler> Contract<Chain> {
         &self,
         msg: &I,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<TxResponse<Chain>, CwEnvError> {
         log::info!(
@@ -239,14 +248,7 @@ impl<Chain: TxHandler> Contract<Chain> {
 
         let resp = self
             .chain
-            .instantiate2(
-                self.code_id()?,
-                msg,
-                Some(&self.id),
-                admin,
-                coins.unwrap_or(&[]),
-                salt,
-            )
+            .instantiate2(self.code_id()?, msg, Some(&self.id), admin, coins, salt)
             .map_err(Into::into)?;
         let contract_address = resp.instantiated_contract_address()?;
 
@@ -328,6 +330,40 @@ impl<Chain: ChainState + QueryHandler> Contract<Chain> {
         let resp = self
             .chain
             .query(query_msg, &self.address()?)
+            .map_err(Into::into)?;
+
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Queried][{}] response {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(&resp)?
+        );
+        Ok(resp)
+    }
+}
+
+impl<Chain: AsyncWasmQuerier + ChainState> Contract<Chain> {
+    /// Query the contract
+    pub async fn async_query<
+        Q: Serialize + Debug + Sync,
+        T: Serialize + DeserializeOwned + Debug,
+    >(
+        &self,
+        query_msg: &Q,
+    ) -> Result<T, CwEnvError> {
+        log::debug!(
+            target: &contract_target(),
+            "[{}][Query][{}] {}",
+            self.id,
+            self.address()?,
+            log_serialize_message(query_msg)?
+        );
+
+        let resp = self
+            .chain
+            .smart_query(&self.address()?, query_msg)
+            .await
             .map_err(Into::into)?;
 
         log::debug!(

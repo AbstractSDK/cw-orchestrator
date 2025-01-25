@@ -15,17 +15,18 @@ pub mod test {
     #[test]
     #[serial_test::serial]
     fn instantiate2() -> anyhow::Result<()> {
-        let app = Daemon::builder()
-            .chain(networks::LOCAL_JUNO)
+        super::common::enable_logger();
+        let app = Daemon::builder(networks::LOCAL_JUNO)
+            .is_test(true)
             .build()
             .unwrap();
 
-        let salt = Binary(vec![12, 89, 156, 63]);
+        let salt = Binary::new(vec![12, 89, 156, 63]);
         let mock_contract = MockContract::new("mock-contract", app.clone());
 
         mock_contract.upload()?;
 
-        mock_contract.instantiate2(&InstantiateMsg {}, None, None, salt.clone())?;
+        mock_contract.instantiate2(&InstantiateMsg {}, None, &[], salt.clone())?;
 
         mock_contract.address()?;
 

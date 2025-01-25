@@ -6,16 +6,21 @@ Cw Multi Test is a rust-based test framework that allows developers to test  for
 > 
 > Custom-typed contracts are contracts where the endpoints return `Response<M>` where `M`is not `cosmwasm_std::Empty` OR where the `Deps` and `DepsMut` endpoint arguments have a non `Empty` generic parameter specified. 
 >
-> You can still test and deploy your contracts on actual nodes (testnets, mainnets). To achieve that, don't specify the `wrapper` function in the `Uploadable` trait implementation on your interface. 
+> You can still test and deploy your contracts on actual nodes (testnets, mainnets). To achieve that, don't specify the `wrapper` function in the `Uploadable` trait implementation on your interface.
 
 ## Quick Start
 
-The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environement in cw-orchestrator that leverages `cw-multi-test` goes along the lines of:
+Before starting, here are a few examples utilizing the mock structures:
+
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/mockbech32.rs" target="_blank">Using actual cosmos addresses</a>
+- <a href="https://github.com/AbstractSDK/cw-orchestrator/blob/main/cw-orch/examples/mock.rs" target="_blank">Customizing the execution environment</a>
+
+The `cw-multi-test` integration comes at no extra cost for the developer. Creating a test environment in cw-orchestrator that leverages `cw-multi-test` goes along the lines of:
 
 ```rust,ignore
     use cw_orch::prelude::*;
     use cosmwasm_std::Addr;
-{{#include ../../../cw-orch/examples/mock_test.rs:mock_creation}}
+{{#include ../../../cw-orch/examples/mock.rs:mock_creation}}
 ```
 
 > **_NOTE:_** When using `cw-multi-test`, the addresses ARE NOT validated like on a live chain. Therefore, you can use any string format for designating addresses. For instance,`Addr::unchecked("my-first-sender")` is a valid `cw-multi-test` address.
@@ -27,7 +32,7 @@ The `cw-multi-test` integration comes at no extra cost for the developer. Creati
 You can then use the resulting `Mock` variable to interact with your [contracts](../contracts/index.md):
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/mock_test.rs:mock_usage}}
+{{#include ../../../cw-orch/examples/mock.rs:mock_usage}}
 ```
 
 When executing contracts in a `cw-multi-test` environment, the messages and sub-messages sent along the Response of an endpoint, will be executed as well.
@@ -46,7 +51,7 @@ The underlying `cw_multi_test::App` object is however not clonable.
 
 ## Bech32
 
-When testing your smart contracts, you may need to use valid bech32 addresses instead of arbitrary strings. Notably Bech32 addresses are a requirment whenever `instantiate2` is used in your codebase. Therefore `cw-orch` allows this behavior using the `MockBech32` struct. This structure has the same features as the above described `Mock` with the following differences:
+When testing your smart contracts, you may need to use valid bech32 addresses instead of arbitrary strings. Notably Bech32 addresses are a requirement whenever `instantiate2` is used in your codebase. Therefore `cw-orch` allows this behavior using the `MockBech32` struct. This structure has the same features as the above described `Mock` with the following differences:
 
 - The constructor now takes the bech32 prefix instead of the sender. Under the hood, the environment creates an address that will be used as the default sender for actions executed on that environment:
 
@@ -92,7 +97,7 @@ At any point of development, if the storage variables are modified, this test wi
 The `Mock` test environment allows you to change application variables (such as the balance of an account) using wrappers around the underlying `cw_multi_test::App` object. Here are some examples of those wrappers in context:
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/mock_test.rs:mock_customization}}
+{{#include ../../../cw-orch/examples/mock.rs:mock_customization}}
 ```
 
 ## Additional customization
@@ -100,5 +105,5 @@ The `Mock` test environment allows you to change application variables (such as 
 As we don't provide wrappers around each and every functionality that `cw-multi-test` provides, you can also customize the underlying `cw_multi_test::App`object to your specific needs. In the following example, we create a new validator in the test environment:
 
 ```rust,ignore
-{{#include ../../../cw-orch/examples/mock_test.rs:deep_mock_customization}}
+{{#include ../../../cw-orch/examples/mock.rs:deep_mock_customization}}
 ````

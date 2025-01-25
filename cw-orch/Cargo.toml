@@ -1,14 +1,14 @@
 [package]
-name = "cw-orch"
-version = "0.23.0"
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-repository = { workspace = true }
+authors     = { workspace = true }
+categories  = ["development-tools"]
 description = "Scripting library for deploying and interacting with CosmWasm smart-contracts"
-keywords = ["cosmwasm", "blockchain"]
-categories = ["development-tools"]
-readme = "README.md"
+edition     = { workspace = true }
+keywords    = ["cosmwasm", "blockchain"]
+license     = { workspace = true }
+name        = "cw-orch"
+readme      = "README.md"
+repository  = { workspace = true }
+version     = "0.27.0"
 
 exclude = [".env"]
 
@@ -17,94 +17,80 @@ exclude = [".env"]
 all-features = true
 
 [[example]]
-name = "mock_test"
-
-[[example]]
-name = "local_daemon"
+name              = "local_daemon"
 required-features = ["daemon"]
 
 [[example]]
-name = "testnet_daemon"
+name              = "testnet_daemon"
 required-features = ["daemon"]
 
 [[example]]
-name = "injective"
+name              = "injective"
 required-features = ["eth"]
 
 [[example]]
-name = "bank_query"
-path = "examples/queries/bank_query.rs"
+name              = "bank_query"
+path              = "examples/queries/bank_query.rs"
 required-features = ["daemon"]
 
 [[example]]
-name = "testnet_queries"
-path = "examples/queries/testnet_queries.rs"
+name              = "testnet_queries"
+path              = "examples/queries/testnet_queries.rs"
 required-features = ["daemon"]
 
 [features]
 default = []
 # enable the optional dependencies
-daemon = [
-  "dep:tokio",
-  # "dep:tonic",
-  "dep:cosmrs",
-  "dep:cw-orch-daemon",
-  "dep:cw-orch-networks",
-]
-eth = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
+daemon           = ["dep:tokio", "dep:cosmrs", "dep:cw-orch-daemon", "dep:cw-orch-networks"]
+eth              = ["daemon", "cw-orch-core/eth", "cw-orch-daemon?/eth"]
 snapshot-testing = ["dep:insta", "dep:sanitize-filename"]
 
 [dependencies]
 # Derive
 cw-orch-contract-derive = { workspace = true }
-cw-orch-fns-derive = { workspace = true }
-
+cw-orch-fns-derive      = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 
 # Daemon deps
+cosmrs           = { workspace = true, features = ["dev", "cosmwasm", "grpc"], optional = true }
 cw-orch-networks = { workspace = true, optional = true }
-tokio = { workspace = true, features = ["full"], optional = true }
-cosmrs = { workspace = true, features = [
-  "dev",
-  "cosmwasm",
-  "grpc",
-], optional = true }
+tokio            = { workspace = true, features = ["full"], optional = true }
 
 # Live mock deps
 tonic = { workspace = true, optional = true, features = ["tls", "tls-roots"] }
 
 
 # Snapshot deps
-insta = { version = "1.34.0", features = ["yaml"], optional = true }
+insta             = { version = "1.39.0", features = ["yaml"], optional = true }
 sanitize-filename = { version = "0.5.0", optional = true }
 
 # Default deps
+anyhow       = { workspace = true }
 cosmwasm-std = { workspace = true }
-cw-utils = { workspace = true }
-anyhow = { workspace = true }
-serde = { workspace = true }
-schemars = "0.8.10"
-log = { workspace = true }
-thiserror = { workspace = true }
-hex = "0.4.3"
+cw-utils     = { workspace = true }
+hex          = "0.4.3"
+log          = { workspace = true }
+schemars     = "0.8.21"
+serde        = { workspace = true }
+thiserror    = { workspace = true }
 
 # Env deps
 # This packages will most likely make wasm not compilable
+cw-orch-core   = { workspace = true }
 cw-orch-daemon = { workspace = true, optional = true }
+cw-orch-mock   = { workspace = true }
 cw-orch-traits = { workspace = true }
-cw-orch-core = { workspace = true }
-cw-orch-mock = { workspace = true }
 
 [dev-dependencies]
-cw-orch = { features = ["daemon", "snapshot-testing"], path = "." }
-env_logger = "0.11.2"
-cosmwasm-schema = "1.2"
-counter-contract = { path = "../contracts/counter" }
-mock-contract = { path = "../contracts/mock_contract" }
-mock-contract-u64 = { path = "../contracts/mock_contract_u64" }
-serde_json = { workspace = true }
-dotenv = "0.15.0"
-osmosis-std = "0.24.0"
-prost = { workspace = true }
-prost-types = { workspace = true }
+cosmwasm-schema   = "2.1"
+counter-contract  = { path = "../contracts-ws/contracts/counter" }
+cw-orch           = { features = ["daemon", "snapshot-testing"], path = "." }
+dotenv            = "0.15.0"
+env_logger        = "0.11.5"
+mock-contract     = { path = "../contracts-ws/contracts/mock_contract" }
+mock-contract-u64 = { path = "../contracts-ws/contracts/mock_contract_u64" }
+osmosis-std       = "0.26.0"
+prost             = { workspace = true }
+prost-types       = { workspace = true }
+serde_json        = { workspace = true }

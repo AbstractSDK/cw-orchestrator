@@ -1,8 +1,8 @@
 use std::{cell::RefCell, marker::PhantomData, rc::Rc, str::FromStr};
 
 use cosmwasm_std::{
-    from_json, instantiate2_address, to_json_vec, CanonicalAddr, CodeInfoResponse,
-    ContractInfoResponse, HexBinary,
+    from_json, instantiate2_address, to_json_vec, Addr, CanonicalAddr, Checksum, CodeInfoResponse,
+    ContractInfoResponse,
 };
 use cw_orch_core::{
     contract::interface_traits::{ContractInstance, Uploadable},
@@ -45,7 +45,7 @@ impl<S: StateInterface> QuerierGetter<OsmosisTestTubeWasmQuerier<S>> for Osmosis
 
 impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
     type Chain = OsmosisTestTube<S>;
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error> {
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error> {
         let code_info_result: QueryCodeResponse = self
             .app
             .borrow()
@@ -55,18 +55,17 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
             )
             .map_err(map_err)?;
 
-        Ok(code_info_result
+        code_info_result
             .code_info
             .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?
             .data_hash
-            .into())
+            .as_slice()
+            .try_into()
+            .map_err(|e: cosmwasm_std::ChecksumError| CwEnvError::StdErr(e.to_string()))
     }
 
-    fn contract_info(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<ContractInfoResponse, CwEnvError> {
-        let address = address.into();
+    fn contract_info(&self, address: &Addr) -> Result<ContractInfoResponse, CwEnvError> {
+        let address: String = address.to_string();
         let result = self
             .app
             .borrow()
@@ -80,26 +79,23 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
             .contract_info
             .ok_or(CwEnvError::AddrNotInStore(address))?;
 
-        let mut contract_info = ContractInfoResponse::default();
-        contract_info.code_id = result.code_id;
-        contract_info.creator = result.creator;
-        contract_info.admin = Some(result.admin);
-
-        contract_info.ibc_port = if result.ibc_port_id.is_empty() {
+        let ibc_port = if result.ibc_port_id.is_empty() {
             None
         } else {
             Some(result.ibc_port_id)
         };
-
+        let contract_info = ContractInfoResponse::new(
+            result.code_id,
+            Addr::unchecked(result.creator),
+            Some(Addr::unchecked(result.admin)),
+            false,
+            ibc_port,
+        );
         Ok(contract_info)
     }
 
-    fn raw_query(
-        &self,
-        address: impl Into<String>,
-        query_data: Vec<u8>,
-    ) -> Result<Vec<u8>, Self::Error> {
-        let address = address.into();
+    fn raw_query(&self, address: &Addr, query_data: Vec<u8>) -> Result<Vec<u8>, Self::Error> {
+        let address = address.to_string();
         let result = self
             .app
             .borrow()
@@ -118,10 +114,10 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
 
     fn smart_query<Q: serde::Serialize, T: serde::de::DeserializeOwned>(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         query_data: &Q,
     ) -> Result<T, Self::Error> {
-        let address = address.into();
+        let address = address.to_string();
         let result = self
             .app
             .borrow()
@@ -152,36 +148,40 @@ impl<S: StateInterface> WasmQuerier for OsmosisTestTubeWasmQuerier<S> {
             .code_info
             .ok_or(CwEnvError::CodeIdNotInStore(code_id.to_string()))?;
 
-        let mut c = CodeInfoResponse::default();
-        c.code_id = code_id;
-        c.creator = code_info.creator;
-        c.checksum = code_info.data_hash.into();
-
+        let c = CodeInfoResponse::new(
+            code_id,
+            Addr::unchecked(code_info.creator),
+            code_info
+                .data_hash
+                .as_slice()
+                .try_into()
+                .map_err(|e: cosmwasm_std::ChecksumError| CwEnvError::StdErr(e.to_string()))?,
+        );
         Ok(c)
     }
 
     fn instantiate2_addr(
         &self,
         code_id: u64,
-        creator: impl Into<String>,
+        creator: &Addr,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, Self::Error> {
         let checksum = self.code_id_hash(code_id)?;
 
-        let creator_str = creator.into();
+        let creator_str = creator.to_string();
         let account_id = AccountId::from_str(&creator_str).unwrap();
         let prefix = account_id.prefix();
         let canon = account_id.to_bytes();
         let addr =
-            instantiate2_address(checksum.as_slice(), &CanonicalAddr(canon.into()), &salt).unwrap();
+            instantiate2_address(checksum.as_slice(), &CanonicalAddr::from(canon), &salt).unwrap();
 
-        Ok(AccountId::new(prefix, &addr.0).unwrap().to_string())
+        Ok(AccountId::new(prefix, addr.as_slice()).unwrap().to_string())
     }
 
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         _contract: &T,
-    ) -> Result<HexBinary, CwEnvError> {
+    ) -> Result<Checksum, CwEnvError> {
         <T as Uploadable>::wasm(&MOCK_CHAIN_INFO.into()).checksum()
     }
 }

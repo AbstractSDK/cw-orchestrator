@@ -1,5 +1,6 @@
 use crate::{cosmos_modules, error::DaemonError, Daemon};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
+use cosmwasm_std::Addr;
 use cw_orch_core::environment::{Querier, QuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -60,8 +61,8 @@ impl Gov {
     pub async fn _proposals(
         &self,
         proposal_status: GovProposalStatus,
-        voter: impl Into<String>,
-        depositor: impl Into<String>,
+        voter: &Addr,
+        depositor: &Addr,
         pagination: Option<PageRequest>,
     ) -> Result<cosmos_modules::gov::QueryProposalsResponse, DaemonError> {
         let proposals: cosmos_modules::gov::QueryProposalsResponse = cosmos_query!(
@@ -70,8 +71,8 @@ impl Gov {
             proposals,
             QueryProposalsRequest {
                 proposal_status: proposal_status as i32,
-                voter: voter.into(),
-                depositor: depositor.into(),
+                voter: voter.to_string(),
+                depositor: depositor.to_string(),
                 pagination: pagination
             }
         );
@@ -82,7 +83,7 @@ impl Gov {
     pub async fn _vote(
         &self,
         proposal_id: u64,
-        voter: impl Into<String>,
+        voter: &Addr,
     ) -> Result<cosmos_modules::gov::Vote, DaemonError> {
         let vote: cosmos_modules::gov::QueryVoteResponse = cosmos_query!(
             self,
@@ -90,7 +91,7 @@ impl Gov {
             vote,
             QueryVoteRequest {
                 proposal_id: proposal_id,
-                voter: voter.into()
+                voter: voter.to_string()
             }
         );
         Ok(vote.vote.unwrap())

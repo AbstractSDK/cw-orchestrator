@@ -1,4 +1,4 @@
-use cosmwasm_std::{from_json, CodeInfoResponse, ContractInfoResponse, HexBinary};
+use cosmwasm_std::{from_json, Addr, Checksum, CodeInfoResponse, ContractInfoResponse};
 use cw_storage_plus::{Item, Map, PrimaryKey};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -13,24 +13,17 @@ use super::Querier;
 pub trait WasmQuerier: Querier {
     type Chain: ChainState;
 
-    fn code_id_hash(&self, code_id: u64) -> Result<HexBinary, Self::Error>;
+    fn code_id_hash(&self, code_id: u64) -> Result<Checksum, Self::Error>;
 
     /// Query contract info
-    fn contract_info(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<ContractInfoResponse, Self::Error>;
+    fn contract_info(&self, address: &Addr) -> Result<ContractInfoResponse, Self::Error>;
 
     /// Query contract state
-    fn raw_query(
-        &self,
-        address: impl Into<String>,
-        query_keys: Vec<u8>,
-    ) -> Result<Vec<u8>, Self::Error>;
+    fn raw_query(&self, address: &Addr, query_keys: Vec<u8>) -> Result<Vec<u8>, Self::Error>;
 
     fn item_query<T: Serialize + DeserializeOwned>(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         item: Item<T>,
     ) -> Result<T, CwEnvError> {
         let raw_value = self
@@ -42,8 +35,8 @@ pub trait WasmQuerier: Querier {
 
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
-        address: impl Into<String>,
-        map: Map<'a, K, T>,
+        address: &Addr,
+        map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
         let total_key = map.key(key).to_vec();
@@ -54,7 +47,7 @@ pub trait WasmQuerier: Querier {
 
     fn smart_query<Q: Serialize, T: DeserializeOwned>(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         query_msg: &Q,
     ) -> Result<T, Self::Error>;
 
@@ -65,12 +58,20 @@ pub trait WasmQuerier: Querier {
     fn local_hash<T: Uploadable + ContractInstance<Self::Chain>>(
         &self,
         contract: &T,
-    ) -> Result<HexBinary, CwEnvError>;
+    ) -> Result<Checksum, CwEnvError>;
 
     fn instantiate2_addr(
         &self,
         code_id: u64,
-        creator: impl Into<String>,
+        creator: &Addr,
         salt: cosmwasm_std::Binary,
     ) -> Result<String, Self::Error>;
+}
+
+pub trait AsyncWasmQuerier: Querier + Sync {
+    fn smart_query<Q: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        address: &Addr,
+        query_msg: &Q,
+    ) -> impl std::future::Future<Output = Result<T, Self::Error>> + Send;
 }

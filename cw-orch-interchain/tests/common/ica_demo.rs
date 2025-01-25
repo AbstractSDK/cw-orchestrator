@@ -48,18 +48,16 @@ use simple_ica_host::msg::{self as host_msgs};
 
 use speculoos::assert_that;
 
-use super::bank::BankModule;
-
 const CRATE_PATH: &str = env!("CARGO_MANIFEST_DIR");
 
-pub fn full_ica_test<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
+pub fn full_ica_test<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>>(
     interchain: &IBC,
     host_chain_id: &str,
     controller_chain_id: &str,
     host_funds_denom: &str,
 ) -> cw_orch::anyhow::Result<()> {
-    let host_chain = interchain.chain(host_chain_id)?;
-    let controller_chain = interchain.chain(controller_chain_id)?;
+    let host_chain = interchain.get_chain(host_chain_id)?;
+    let controller_chain = interchain.get_chain(controller_chain_id)?;
 
     let cw1 = Cw1::new("cw1", host_chain.clone());
     let host = Host::new("host", host_chain.clone());
@@ -94,14 +92,14 @@ fn deploy_contracts<Chain: CwEnv>(
             cw1_code_id: cw1.code_id()?,
         },
         None,
-        None,
+        &[],
     )?;
-    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, None)?;
+    controller.instantiate(&controller_msgs::InstantiateMsg {}, None, &[])?;
     Ok(())
 }
 
 /// Test the cw-ica contract
-fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
+fn test_ica<Chain: IbcQueryHandler, IBC: InterchainEnv<Chain>>(
     interchain: &IBC,
     // controller on osmosis
     controller: &Controller<Chain>,
@@ -115,13 +113,13 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
 
     // get the account information
     let remote_account = remote_accounts.accounts[0].clone();
-    let remote_addr = remote_account.remote_addr.unwrap();
+    let remote_addr = Addr::unchecked(remote_account.remote_addr.unwrap());
     let channel = remote_account.channel_id;
 
     // send some funds to the remote account
-    juno.send(
+    juno.bank_send(
         &remote_addr,
-        vec![cosmwasm_std::coin(100u128, host_funds_denom)],
+        &cosmwasm_std::coins(100u128, host_funds_denom),
     )
     .map_err(Into::into)?;
 
@@ -142,18 +140,18 @@ fn test_ica<Chain: IbcQueryHandler + BankModule, IBC: InterchainEnv<Chain>>(
             })],
             callback_id: None,
         },
-        None,
+        &[],
     )?;
 
     let chain_id = controller
-        .get_chain()
+        .environment()
         .block_info()
         .map_err(Into::into)?
         .chain_id
         .to_string();
 
     // Follow the transaction execution
-    interchain.check_ibc(&chain_id, burn_response)?;
+    interchain.await_and_check_packets(&chain_id, burn_response)?;
 
     // check that the balance became 0
     let balance = juno

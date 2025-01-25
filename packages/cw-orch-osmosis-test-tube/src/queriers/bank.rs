@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use cosmwasm_std::coin;
+use cosmwasm_std::{coin, Addr};
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter, StateInterface};
 use cw_orch_core::CwEnvError;
 use osmosis_test_tube::osmosis_std::try_proto_to_cosmwasm_coins;
@@ -38,7 +38,7 @@ impl<S: StateInterface> QuerierGetter<OsmosisTestTubeBankQuerier> for OsmosisTes
 impl BankQuerier for OsmosisTestTubeBankQuerier {
     fn balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         if let Some(denom) = denom {
@@ -61,6 +61,7 @@ impl BankQuerier for OsmosisTestTubeBankQuerier {
                 .query_all_balances(&QueryAllBalancesRequest {
                     address: address.into(),
                     pagination: None,
+                    resolve_denom: false,
                 })
                 .map_err(map_err)?
                 .balances;

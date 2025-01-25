@@ -1,8 +1,77 @@
 # cw-orchestrator Changelog
 
+## Cw-orch-daemon 0.29.0 - cw-orch-core 2.1.4 [16. December 2024]
+
+- [networks] Replaced union testnet-8 by union-testnet-9
+
+### Breaking
+
+- [interchain-core] Modify the structure and the names of the IBC analysis and following structure. 
+- [osmosis-test-tube] Update `osmosis-test-tube` to "v27.0.0"
+- [daemon]: Move the bank_send method from the Wallet to the TxSender trait. 
+
+### Added
+
+- [core] bank_send method on TxHandler to facilitate sending funds in script
+
+## 0.26.0 [8. October 2024]
+
+- [daemon] Add methods to set the private key and mnemonic of an existing sender
+- [daemon] Deprecate `authz_granter` and `fee_granter` on `Daemon` struct
+- [core] Add a method on `TxHandler` to select instantiation permissions on Wasm upload
+- [daemon] Adds an `upload_wasm` function to CosmosSender to upload wasm code associated to no Contract structure
+- [Macros] Update syn to 2.0
+- [Integrations] Added cw-plus orchestrator interface to the repo. Pacing the way for more integrations inside this repository in the future
+- [daemon] Add easier way to get PublicKey for `cw_orch_daemon::Wallet`
+- [networks] Added Cosmos hub Testnet
+  
+### Breaking
+
+- [Daemon] Added Support for more mnemonic lengths (at least 24 and 12). This is breaking because of how the mnemonic words are stored and retrieved (`words` method on `PrivateKey`)
+- [Daemon] Added `Signer` trait for being able to re-use the signing/broadcast flow 
+
+## 0.25.0
+
+- `is_test` Added for Daemon Builders, when set to `true` will use temporary file for state
+- Chain configs now can be edited from a networks config file. It will read `~/.cw-orchestrator/networks.json`, see example `networks.json.example`
+- New package `cw-orch-neutron-test-tube`
+- Chain configs now can be edited from a networks config file. It will read `~/.cw-orchestrator/networks.toml`, see example `networks.toml.example`
+- Added `load_network` for `DaemonBuilder`, defaults to `true`. Set to `false` to avoid loading networks from `~/.cw-orchestrator/networks.toml`
+- New environment variable for `cw-orch-starship`: `CW_ORCH_STARSHIP_CONFIG_PATH` to specify path of starship config that's currently in use.
+- 3+ chain support for `cw-orch-starship`.
+
+### Breaking
+
+- Daemon state got flattened from `.chain_name.chain_id` to `.chain_id` to simplify state parsing.
+- Rename `DaemonInterchainEnv` to `DaemonInterchain` for consistency.
+
+## 0.24.1
+
+- Added async query functions generations with cw_orch::QueryFns
+- Re-export ibc-relayer-types inside cw-orch-interchain for ease of use
+- Deprecate cw-orch-core `TxHandler::sender` in favor of `TxHandler::sender_addr`
+- Implement `SenderBuilder`, `QuerySender` and `TxSender` which allow for customizing the transaction commitment logic.
+- Can now easily build `QueryOnlyDaemon` which will only expose query functions.
+- Changed cw-orch-interchain InterchainEnv API
+  - `chain` --> `get_chain`
+  - `follow_packet` --> `await_single_packet`
+  - `wait_ibc` --> `await_packets`
+  - `check_ibc` --> `await_and_check_packets`
+  - `follow_packets_from_tx_hash` --> `await_packets_for_txhash`
+- Better Docs for interchain, cw-orch and clone-testing
+- Added max block time environment variable `CW_ORCH_MAX_BLOCK_TIME`
+- `CW_ORCH_MIN_GAS` Now defaults to 150_000 instead of 0, making it more reliable for txs that cost little gas
+
+### Breaking
+
+- Refactor `Daemon` builder pattern to allow for custom senders.
+- Update `Daemon` / `DaemonAsync` implementations to reflect customizable sender.
+- Deprecated `CW_ORCH_MIN_BLOCK_SPEED` in favor of `CW_ORCH_MIN_BLOCK_TIME`
+
 ## cw-orch-daemon 0.23.5
 
 - Fixed Get Tx By Events compatibility with Cosmos SDK 0.50+ for Daemon
+- Fix Generics on QueryMsg and Return types
 
 ## 0.23.0
 
@@ -50,6 +119,7 @@
 ## 0.21.2
 
 - Allow cw-orch wasm compilation without features
+- Bumped MSRV to 1.74 because of dependency `clap_derive@4.5.3`
 - Transaction Response now inspects logs and events to find matching events.
 
 ## 0.21.1

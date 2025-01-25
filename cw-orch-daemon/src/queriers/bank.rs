@@ -1,6 +1,6 @@
-use crate::{cosmos_modules, error::DaemonError, Daemon};
+use crate::{cosmos_modules, error::DaemonError, senders::query::QuerySender, DaemonBase};
 use cosmrs::proto::cosmos::base::query::v1beta1::PageRequest;
-use cosmwasm_std::{Coin, StdError};
+use cosmwasm_std::{Addr, Coin, StdError};
 use cw_orch_core::environment::{BankQuerier, Querier, QuerierGetter};
 use tokio::runtime::Handle;
 use tonic::transport::Channel;
@@ -13,7 +13,7 @@ pub struct Bank {
 }
 
 impl Bank {
-    pub fn new(daemon: &Daemon) -> Self {
+    pub fn new<Sender: QuerySender>(daemon: &DaemonBase<Sender>) -> Self {
         Self {
             channel: daemon.channel(),
             rt_handle: Some(daemon.rt_handle.clone()),
@@ -31,7 +31,7 @@ impl Querier for Bank {
     type Error = DaemonError;
 }
 
-impl QuerierGetter<Bank> for Daemon {
+impl<Sender: QuerySender> QuerierGetter<Bank> for DaemonBase<Sender> {
     fn querier(&self) -> Bank {
         Bank::new(self)
     }
@@ -42,7 +42,7 @@ impl Bank {
     /// If denom is None, returns all balances
     pub async fn _balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<Coin>, DaemonError> {
         use cosmos_modules::bank::query_client::QueryClient;
@@ -50,7 +50,7 @@ impl Bank {
             Some(denom) => {
                 let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
                 let request = cosmos_modules::bank::QueryBalanceRequest {
-                    address: address.into(),
+                    address: address.to_string(),
                     denom,
                 };
                 let resp = client.balance(request).await?.into_inner();
@@ -60,7 +60,7 @@ impl Bank {
             None => {
                 let mut client: QueryClient<Channel> = QueryClient::new(self.channel.clone());
                 let request = cosmos_modules::bank::QueryAllBalancesRequest {
-                    address: address.into(),
+                    address: address.to_string(),
                     ..Default::default()
                 };
                 let resp = client.all_balances(request).await?.into_inner();
@@ -70,16 +70,13 @@ impl Bank {
     }
 
     /// Query spendable balance for address
-    pub async fn _spendable_balances(
-        &self,
-        address: impl Into<String>,
-    ) -> Result<Vec<Coin>, DaemonError> {
+    pub async fn _spendable_balances(&self, address: &Addr) -> Result<Vec<Coin>, DaemonError> {
         let spendable_balances: cosmos_modules::bank::QuerySpendableBalancesResponse = cosmos_query!(
             self,
             bank,
             spendable_balances,
             QuerySpendableBalancesRequest {
-                address: address.into(),
+                address: address.to_string(),
                 pagination: None,
             }
         );
@@ -169,7 +166,7 @@ pub fn cosmrs_to_cosmwasm_coins(
 impl BankQuerier for Bank {
     fn balance(
         &self,
-        address: impl Into<String>,
+        address: &Addr,
         denom: Option<String>,
     ) -> Result<Vec<cosmwasm_std::Coin>, Self::Error> {
         self.rt_handle

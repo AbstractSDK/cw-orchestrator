@@ -22,7 +22,6 @@ pub fn parse_storage(storage: &[(Vec<u8>, Vec<u8>)]) -> Vec<(String, String)> {
 /// The name you input to the function should be different from all other snapshots in your repository
 /// Find more details on how snapshot testing works on the official quick-start guide: https://insta.rs/docs/quickstart/
 /// This function will panic if the snapshot is different from the reference snapshot
-
 #[macro_export]
 macro_rules! take_storage_snapshot {
     ($chain: ident, $name: literal) => {
@@ -49,7 +48,7 @@ macro_rules! take_storage_snapshot {
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use crate::mock::cw_multi_test::ContractWrapper;
     use cosmwasm_std::Empty;
     use cw_orch::prelude::{CwOrchInstantiate, CwOrchUpload, Mock};
@@ -68,7 +67,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
 
         contract.increment()?;
@@ -114,7 +113,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
         contract.increment()?;
 
@@ -123,7 +122,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
         contract.increment()?;
         contract.increment()?;
@@ -135,7 +134,7 @@ pub mod tests {
         contract.instantiate(
             &counter_contract::msg::InstantiateMsg { count: 0 },
             None,
-            None,
+            &[],
         )?;
         contract.increment()?;
         contract.increment()?;

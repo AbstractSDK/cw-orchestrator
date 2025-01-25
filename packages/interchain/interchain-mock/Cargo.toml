@@ -1,28 +1,28 @@
 [package]
-name = "cw-orch-interchain-mock"
-version = "0.3.1"
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
+authors.workspace    = true
+description          = "Adapter for interacting with ibc on cw-multi-test via cw-orch"
+edition.workspace    = true
+license.workspace    = true
+name                 = "cw-orch-interchain-mock"
 repository.workspace = true
-description = "Adapter for interacting with ibc on cw-multi-test via cw-orch"
+version              = "0.9.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cw-orch-mock = { workspace = true }
 cw-orch-core = { workspace = true }
+cw-orch-mock = { workspace = true }
 
-anyhow = { workspace = true }
-cosmwasm-std = { workspace = true }
-cw-utils = { workspace = true }
-serde = { workspace = true }
-cosmrs = { workspace = true }
+anyhow                  = { workspace = true }
+cosmrs                  = { workspace = true }
+cosmwasm-std            = { workspace = true }
 cw-orch-interchain-core = { workspace = true }
-thiserror = { workspace = true }
-ibc-relayer-types = { workspace = true }
-log = { workspace = true }
-serde_json = { workspace = true }
+cw-utils                = { workspace = true }
+ibc-relayer-types       = { workspace = true }
+log                     = { workspace = true }
+serde                   = { workspace = true }
+serde_json              = { workspace = true }
+thiserror               = { workspace = true }
 
 [dev-dependencies]
 cw20 = { workspace = true }

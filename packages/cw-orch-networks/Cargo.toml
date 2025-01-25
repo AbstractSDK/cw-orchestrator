@@ -1,17 +1,17 @@
 [package]
-name = "cw-orch-networks"
-version = "0.22.2"
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-repository = { workspace = true }
+authors     = { workspace = true }
+categories  = ["development-tools"]
 description = "Networks library for deploying and interacting with CosmWasm smart-contracts"
-keywords = ["cosmwasm", "blockchain"]
-categories = ["development-tools"]
-readme = "README.md"
+edition     = { workspace = true }
+keywords    = ["cosmwasm", "blockchain"]
+license     = { workspace = true }
+name        = "cw-orch-networks"
+readme      = "README.md"
+repository  = { workspace = true }
+version     = "0.24.10"
 
 exclude = [".env"]
 
 [dependencies]
 cw-orch-core = { workspace = true }
-serde = { workspace = true }
+serde        = { workspace = true }

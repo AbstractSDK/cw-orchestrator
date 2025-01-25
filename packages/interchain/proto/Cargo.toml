@@ -1,32 +1,33 @@
 [package]
-name = "cw-orch-proto"
-description = "A helper crate for interaction with protos from different chains. Mostly used for handling cw20 coins and ibc transfers"
-version = "0.3.0"
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
+authors.workspace    = true
+description          = "A helper crate for interaction with protos from different chains. Mostly used for handling cw20 coins and ibc transfers"
+edition.workspace    = true
+license.workspace    = true
+name                 = "cw-orch-proto"
 repository.workspace = true
+version              = "0.9.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cw-orch-core            = { workspace = true }
 cw-orch-interchain-core = { workspace = true }
-cw-orch-traits = { workspace = true }
-cw-orch-core = { workspace = true }
+cw-orch-traits          = { workspace = true }
 
 anyhow = { workspace = true }
 
-cosmrs = { workspace = true }
-cosmwasm-std = { workspace = true }
+cosmwasm-std      = { workspace = true }
+ibc-proto         = { workspace = true }
 ibc-relayer-types = { workspace = true }
-log = { workspace = true }
-prost = { workspace = true }
-tokio = { workspace = true }
-tonic = { workspace = true }
-osmosis-std = { version = "0.21.0" }
+log               = { workspace = true }
+osmosis-std       = { version = "0.26.0" }
+prost             = { workspace = true }
+prost-types       = { workspace = true }
+tokio             = { workspace = true }
+tonic             = { workspace = true }
 
 [dev-dependencies]
-cw-orch-starship = { workspace = true }
 cw-orch-interchain-daemon = { workspace = true }
-env_logger = "0.10.0"
-speculoos = { workspace = true }
+cw-orch-starship          = { workspace = true }
+env_logger                = "0.11.5"
+speculoos                 = { workspace = true }

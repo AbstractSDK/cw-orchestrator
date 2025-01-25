@@ -10,9 +10,7 @@ fn test_execute() {
     let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
     let response = contract.first_message().unwrap();
 
@@ -30,9 +28,7 @@ fn test_query() {
     let contract = MockContract::new("test:mock_contract", Mock::new("Ghazshag"));
     contract.upload().unwrap();
 
-    contract
-        .instantiate(&InstantiateMsg {}, None, None)
-        .unwrap();
+    contract.instantiate(&InstantiateMsg {}, None, &[]).unwrap();
 
     let response = contract.first_query().unwrap();
     assert_eq!(response, "first query passed");

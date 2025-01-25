@@ -7,7 +7,7 @@ pub fn parse_query_type(v: &syn::Variant) -> proc_macro2::TokenStream {
     let response_ty: syn::Type = v
         .attrs
         .iter()
-        .find(|a| a.path.get_ident().unwrap() == RETURNS)
+        .find(|a| a.path().is_ident(RETURNS))
         .unwrap_or_else(|| panic!("missing return type for query: {}", v.ident))
         .parse_args()
         .unwrap_or_else(|_| panic!("return for {} must be a type", v.ident));

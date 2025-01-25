@@ -3,6 +3,7 @@ pub use node::*;
 
 #[cfg(feature = "node-tests")]
 mod node {
+    use libc_print::libc_println;
     use std::{env, fs, path::Path, thread::sleep, time::Duration};
 
     use ctor::{ctor, dtor};
@@ -20,39 +21,30 @@ mod node {
     // From https://github.com/CosmosContracts/juno/blob/32568dba828ff7783aea8cb5bb4b8b5832888255/docker/test-user.env#L2
     const LOCAL_MNEMONIC: &str = "clip hire initial neck maid actor venue client foam budget lock catalog sweet steak waste crater broccoli pipe steak sister coyote moment obvious choose";
 
-    use uid::Id as IdT;
-
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct DeployId(());
-
-    #[allow(unused)]
-    pub type Id = IdT<DeployId>;
-
     pub mod state_file {
-        use super::{fs, Path};
-
+        use super::*;
         pub fn exists(file: &str) -> bool {
             if Path::new(file).exists() {
-                log::info!("File found: {}", file);
+                libc_println!("File found: {}", file);
                 true
             } else {
-                log::info!("File not found: {}", file);
+                libc_println!("File not found: {}", file);
                 false
             }
         }
 
         pub fn remove(file: &str) {
             if self::exists(file) {
-                log::info!("Removing state file: {}", file);
+                libc_println!("Removing state file: {}", file);
                 let _ = fs::remove_file(file);
             }
         }
     }
 
     pub mod container {
-        use crate::common::STAKE_TOKEN;
-
         use super::cmd;
+        use super::*;
+        use crate::common::STAKE_TOKEN;
 
         pub fn find(name: &String) -> bool {
             let read = cmd!("docker", "container", "ls", "--all")
@@ -64,7 +56,7 @@ mod node {
 
             match read {
                 Ok(val) => {
-                    log::info!("Container found: {}", name);
+                    libc_println!("Container found: {}", name);
                     val == *name
                 }
                 Err(_) => false,
@@ -106,7 +98,7 @@ mod node {
                 return true;
             }
 
-            log::info!("Stopping container: {}", name);
+            libc_println!("Stopping container: {}", name);
 
             let res = cmd!("docker", "container", "stop", name)
                 .read()
@@ -121,7 +113,7 @@ mod node {
                 return true;
             }
 
-            log::info!("Removing container: {}", name);
+            libc_println!("Removing container: {}", name);
 
             let res = cmd!("docker", "container", "rm", name).read().ok().unwrap();
 
@@ -136,7 +128,7 @@ mod node {
     }
 
     pub fn docker_container_start() {
-        log::info!("Running docker_container_start");
+        libc_println!("Running docker_container_start");
 
         // Set environment variables
         // this does not seems to be working in this case
@@ -158,13 +150,13 @@ mod node {
             env::set_var("LOCAL_MNEMONIC", LOCAL_MNEMONIC);
         }
 
-        log::info!("Using RUST_LOG: {}", env::var("RUST_LOG").unwrap());
-        log::info!("Using CONTAINER_NAME: {}", container);
-        log::info!(
+        libc_println!("Using RUST_LOG: {}", env::var("RUST_LOG").unwrap());
+        libc_println!("Using CONTAINER_NAME: {}", &container);
+        libc_println!(
             "Using STATE_FILE: {}",
             DaemonEnvVars::state_file().display()
         );
-        log::info!(
+        libc_println!(
             "Using LOCAL_MNEMONIC: {:?}",
             DaemonEnvVars::local_mnemonic()
         );
@@ -176,23 +168,31 @@ mod node {
     }
 
     pub fn docker_container_stop() {
-        log::info!("Running docker_container_stop");
+        libc_println!("Running docker_container_stop");
         container::ensure_removal(&env::var("CONTAINER_NAME").unwrap());
         let temp_dir = env::temp_dir();
         let expected_state_file = temp_dir.join("cw_orch_test_local.json");
-        state_file::remove(expected_state_file.to_str().unwrap());
+        if let Some(state_file) = expected_state_file.to_str() {
+            state_file::remove(state_file);
+        }
     }
 
     #[ctor]
     fn common_start() {
-        env_logger::Builder::new()
-            .filter_level(log::LevelFilter::Debug)
-            .init();
-        docker_container_start()
+        docker_container_start();
+        libc_println!("Finish start");
     }
 
     #[dtor]
     fn common_stop() {
         docker_container_stop()
+    }
+
+    #[cfg(test)]
+    #[allow(unused)]
+    pub fn enable_logger() {
+        let _ = env_logger::Builder::new()
+            .filter_level(log::LevelFilter::Debug)
+            .try_init();
     }
 }

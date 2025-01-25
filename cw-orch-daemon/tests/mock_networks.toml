@@ -1,0 +1,20 @@
+[juno-1]
+chain_id     = "joono-1"
+fcd_url      = "http://juno-fcd.com:234"
+gas_denom    = "gas_denom"
+gas_price    = 64
+grpc_urls    = ["http://juno-grpc.com:123"]
+kind         = "local"
+lcd_url      = "http://juno-lcd.com:321"
+network_info = { chain_name = "joono", pub_address_prefix = "joo", coin_type = 42 }
+
+[neutron-1]
+gas_price = 1.23
+
+[abstr-1]
+chain_id     = "juno-1"
+gas_denom    = "ujuno"
+gas_price    = 0.075
+grpc_urls    = ["http://juno-grpc.polkachu.com:12690"]
+kind         = "mainnet"
+network_info = { chain_name = "juno", pub_address_prefix = "juno", coin_type = 118 }

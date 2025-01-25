@@ -1,10 +1,10 @@
 use cosmwasm_std::IbcOrder;
 use cw_orch_core::environment::{ChainInfoOwned, ChainState, IndexResponse};
 use cw_orch_daemon::queriers::{Ibc, Node};
-use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError};
+use cw_orch_daemon::{CosmTxResponse, Daemon, DaemonError, RUNTIME};
 use cw_orch_interchain_core::channel::{IbcPort, InterchainChannel};
 use cw_orch_interchain_core::env::{ChainId, ChannelCreation};
-use cw_orch_interchain_core::InterchainEnv;
+use cw_orch_interchain_core::{InterchainEnv, NestedPacketsFlow, SinglePacketFlow};
 
 use ibc_relayer_types::core::ics04_channel::packet::Sequence;
 use tokio::time::sleep;
@@ -17,9 +17,8 @@ use ibc_relayer_types::core::ics24_host::identifier::{ChannelId, PortId};
 
 use crate::{IcDaemonResult, InterchainDaemonError};
 
-use cw_orch_interchain_core::types::{
-    ChannelCreationTransactionsResult, IbcTxAnalysis, InternalChannelCreationResult, NetworkId,
-    SimpleIbcPacketAnalysis,
+use cw_orch_interchain_core::results::{
+    ChannelCreationTransactionsResult, InternalChannelCreationResult, NetworkId,
 };
 use futures::future::try_join4;
 use std::collections::HashMap;
@@ -29,7 +28,7 @@ use tokio::runtime::Handle;
 
 /// Represents a set of locally running blockchain nodes and a Hermes relayer.
 #[derive(Clone)]
-pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
+pub struct DaemonInterchain<C: ChannelCreator = ChannelCreationValidator> {
     /// Daemons indexable by network id, i.e. "juno-1", "osmosis-2", ...
     daemons: HashMap<NetworkId, Daemon>,
 
@@ -41,15 +40,27 @@ pub struct DaemonInterchainEnv<C: ChannelCreator = ChannelCreationValidator> {
     rt_handle: Handle,
 }
 
-type Mnemonic = String;
+impl<C: ChannelCreator> DaemonInterchain<C> {
+    /// Builds a new [`DaemonInterchain`] instance.
+    /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
+    /// channel_creator allows you to specify an object that is able to create channels
+    /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
+    pub fn new<T>(chains: Vec<T>, channel_creator: &C) -> IcDaemonResult<Self>
+    where
+        T: Into<ChainInfoOwned>,
+    {
+        Self::new_with_runtime(chains, channel_creator, RUNTIME.handle())
+    }
 
-impl<C: ChannelCreator> DaemonInterchainEnv<C> {
-    /// Builds a new `InterchainEnv` instance.
-    /// For use with starship, we advise to use `Starship::interchain_env` instead
-    pub fn new<T>(
-        runtime: &Handle,
-        chains: Vec<(T, Option<Mnemonic>)>,
+    /// Builds a new [`DaemonInterchain`] instance.
+    /// For use with starship, we advise to use [`cw_orch_starship::Starship::interchain_env`] instead
+    /// channel_creator allows you to specify an object that is able to create channels
+    /// Use [`crate::ChannelCreationValidator`] for manual channel creations.
+    /// runtime allows you to control the async runtime (for advanced devs)
+    pub fn new_with_runtime<T>(
+        chains: Vec<T>,
         channel_creator: &C,
+        runtime: &Handle,
     ) -> IcDaemonResult<Self>
     where
         T: Into<ChainInfoOwned>,
@@ -57,8 +68,8 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         let mut env = Self::raw(runtime, channel_creator);
 
         // We create daemons for each chains
-        for (chain_data, mnemonic) in chains {
-            env.build_daemon(runtime, chain_data.into(), mnemonic)?;
+        for chain_data in chains {
+            env.build_daemon(runtime, chain_data.into(), None::<String>)?;
         }
 
         Ok(env)
@@ -67,8 +78,8 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     /// This creates an interchain environment from existing daemon instances
     /// The `channel_creator` argument will be responsible for creation interchain channel
     /// If using starship, prefer using Starship::interchain_env for environment creation
-    pub fn from_daemons(rt: &Handle, daemons: Vec<Daemon>, channel_creator: &C) -> Self {
-        let mut env = Self::raw(rt, channel_creator);
+    pub fn from_daemons(daemons: Vec<Daemon>, channel_creator: &C) -> Self {
+        let mut env = Self::raw(&daemons.first().unwrap().rt_handle, channel_creator);
         env.add_daemons(daemons);
         env
     }
@@ -87,10 +98,10 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         &mut self,
         runtime: &Handle,
         chain_data: ChainInfoOwned,
-        mnemonic: Option<impl ToString>,
+        mnemonic: Option<impl Into<String>>,
     ) -> IcDaemonResult<()> {
-        let mut daemon_builder = Daemon::builder();
-        let mut daemon_builder = daemon_builder.chain(chain_data.clone()).handle(runtime);
+        let mut daemon_builder = Daemon::builder(chain_data);
+        let mut daemon_builder = daemon_builder.handle(runtime);
 
         daemon_builder = if let Some(mn) = mnemonic {
             daemon_builder.mnemonic(mn)
@@ -143,13 +154,13 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     }
 }
 
-impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchain<C> {
     type ChannelCreationResult = ();
 
     type Error = InterchainDaemonError;
 
     /// Get the daemon for a network-id in the interchain.
-    fn chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
+    fn get_chain(&self, chain_id: impl ToString) -> Result<Daemon, InterchainDaemonError> {
         self.daemons
             .get(&chain_id.to_string())
             .ok_or(InterchainDaemonError::DaemonNotFound(chain_id.to_string()))
@@ -226,11 +237,11 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 
     // This function follows every IBC packet sent out in a tx result
-    fn wait_ibc(
+    fn await_packets(
         &self,
         chain_id: ChainId,
         tx_response: CosmTxResponse,
-    ) -> Result<IbcTxAnalysis<Daemon>, Self::Error> {
+    ) -> Result<NestedPacketsFlow<Daemon>, Self::Error> {
         log::info!(
             target: chain_id,
             "Investigating sent packet events on tx {}",
@@ -251,14 +262,14 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
     }
 
     // This function follow the execution of an IBC packet across the chain
-    fn follow_packet(
+    fn await_single_packet(
         &self,
         src_chain: ChainId,
         src_port: PortId,
         src_channel: ChannelId,
         dst_chain: ChainId,
         sequence: Sequence,
-    ) -> Result<SimpleIbcPacketAnalysis<Daemon>, Self::Error> {
+    ) -> Result<SinglePacketFlow<Daemon>, Self::Error> {
         // We crate an interchain env object that is safe to send between threads
         let interchain_env = self
             .rt_handle
@@ -275,30 +286,56 @@ impl<C: ChannelCreator> InterchainEnv<Daemon> for DaemonInterchainEnv<C> {
 
         Ok(ibc_trail)
     }
+    fn chains<'a>(&'a self) -> impl Iterator<Item = &'a Daemon>
+    where
+        Daemon: 'a,
+    {
+        self.daemons.values()
+    }
 }
 
-impl<C: ChannelCreator> DaemonInterchainEnv<C> {
+impl<C: ChannelCreator> DaemonInterchain<C> {
     /// This function follows every IBC packet sent out in a tx result
     /// This allows only providing the transaction hash when you don't have access to the whole response object
-    pub fn wait_ibc_from_txhash(
+    ///
+    /// ```rust,no_run
+    /// use cw_orch::prelude::*;
+    /// use cw_orch::daemon::networks::{OSMOSIS_1, ARCHWAY_1};
+    /// use cw_orch_interchain::prelude::*;
+    ///
+    /// let dst_chain = ARCHWAY_1;
+    /// let src_chain = OSMOSIS_1;
+    ///
+    /// let interchain = DaemonInterchain::new(
+    ///     vec![src_chain.clone(), dst_chain],
+    ///     &ChannelCreationValidator,
+    /// ).unwrap();
+    ///
+    /// interchain
+    ///     .await_packets_for_txhash(
+    ///         src_chain.chain_id,
+    ///         "D2C5459C54B394C168B8DFA214670FF9E2A0349CCBEF149CF5CB508A5B3BCB84".to_string(),
+    ///     ).unwrap().assert().unwrap();
+    /// ```
+    pub fn await_packets_for_txhash(
         &self,
         chain_id: ChainId,
         packet_send_tx_hash: String,
-    ) -> Result<IbcTxAnalysis<Daemon>, InterchainDaemonError> {
-        let grpc_channel1 = self.chain(chain_id)?.channel();
+    ) -> Result<NestedPacketsFlow<Daemon>, InterchainDaemonError> {
+        let grpc_channel1 = self.get_chain(chain_id)?.channel();
 
         let tx = self.rt_handle.block_on(
             Node::new_async(grpc_channel1.clone())._find_tx(packet_send_tx_hash.clone()),
         )?;
 
-        let ibc_trail = self.wait_ibc(chain_id, tx)?;
+        let ibc_trail = self.await_packets(chain_id, tx)?;
 
         Ok(ibc_trail)
     }
 
-    async fn find_channel_creation_tx<'a>(
+    async fn find_channel_creation_tx(
         &self,
-        src_chain: ChainId<'a>,
+        src_chain: ChainId<'_>,
         ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<ChannelCreation<CosmTxResponse>, InterchainDaemonError> {
         for _ in 0..5 {
@@ -335,9 +372,9 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
     }
 
     /// Queries  the last transactions that is related to creating a channel from chain from to the counterparty chain defined in the structure
-    async fn get_last_channel_creation<'a>(
+    async fn get_last_channel_creation(
         &self,
-        src_chain: ChainId<'a>,
+        src_chain: ChainId<'_>,
         ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<ChannelCreation<Option<CosmTxResponse>>, InterchainDaemonError> {
         let (channel_init, channel_try, channel_ack, channel_confirm) = try_join4(
@@ -356,10 +393,10 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         ))
     }
 
-    async fn get_channel_creation_init<'a>(
+    async fn get_channel_creation_init(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
@@ -375,10 +412,10 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         Ok(find_one_tx_by_events(src_port, channel_creation_events_init_events).await?)
     }
 
-    async fn get_channel_creation_try<'a>(
+    async fn get_channel_creation_try(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
@@ -400,10 +437,10 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         Ok(find_one_tx_by_events(dst_port, channel_creation_try_events).await?)
     }
 
-    async fn get_channel_creation_ack<'a>(
+    async fn get_channel_creation_ack(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 
@@ -419,10 +456,10 @@ impl<C: ChannelCreator> DaemonInterchainEnv<C> {
         Ok(find_one_tx_by_events(src_port, channel_creation_ack_events).await?)
     }
 
-    async fn get_channel_creation_confirm<'a>(
+    async fn get_channel_creation_confirm(
         &self,
-        from: ChainId<'a>,
-        ibc_channel: &'a InterchainChannel<Channel>,
+        from: ChainId<'_>,
+        ibc_channel: &InterchainChannel<Channel>,
     ) -> Result<Option<CosmTxResponse>, InterchainDaemonError> {
         let (src_port, dst_port) = ibc_channel.get_ordered_ports_from(from)?;
 

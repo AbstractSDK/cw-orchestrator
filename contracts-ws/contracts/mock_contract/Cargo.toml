@@ -1,0 +1,27 @@
+[package]
+description = "Mock constract for cw-orch macro testing"
+edition     = { workspace = true }
+keywords    = ["cosmwasm", "blockchain"]
+name        = "mock-contract"
+version     = "0.1.0"
+
+exclude = [".env"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default   = ["export"]
+export    = []
+interface = []
+
+[dependencies]
+cosmwasm-schema = "2.1"
+cosmwasm-std    = { workspace = true }
+cw-orch         = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw2             = { version = "2.0.0" }
+schemars        = "0.8.21"
+serde           = { workspace = true }
+serde_json      = "1.0.125"
+thiserror       = { version = "1.0.63" }

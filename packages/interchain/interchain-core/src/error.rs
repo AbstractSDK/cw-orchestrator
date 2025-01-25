@@ -43,7 +43,7 @@ pub enum InterchainError {
     PacketTimeout {},
 
     #[error(
-        "Acknowledgement decoding failed with ack: {0:x?}, tried decoding it as json : {1:x?}. Try using `into_result_custom` instead !"
+        "Acknowledgement decoding failed with ack: {0:x?}, tried decoding it as json : {1:x?}. Try using `assert_custom` instead !"
     )]
     AckDecodingFailed(Binary, String),
 
@@ -58,4 +58,7 @@ pub enum InterchainError {
 
     #[error("Failure acknowledgment received: {0:?}")]
     FailedAckReceived(String),
+
+    #[error("Callback Failure during acknowledgment : {0:?}")]
+    CallbackError(String),
 }

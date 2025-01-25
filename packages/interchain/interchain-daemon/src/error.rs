@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
 use cosmwasm_std::StdError;
-use cw_orch_interchain_core::{channel::InterchainChannel, types::NetworkId, InterchainError};
+use cw_orch_interchain_core::{channel::InterchainChannel, results::NetworkId, InterchainError};
 use thiserror::Error;
 use tonic::transport::Channel;
 
@@ -45,8 +45,12 @@ pub enum InterchainDaemonError {
 
     #[error("Configuration already registered for chain {0}")]
     AlreadyRegistered(String),
+
+    #[error(transparent)]
+    Dialoguer(#[from] dialoguer::Error),
 }
 
+// impl From
 impl From<InterchainDaemonError> for InterchainError {
     fn from(value: InterchainDaemonError) -> Self {
         InterchainError::GenericError(value.to_string())

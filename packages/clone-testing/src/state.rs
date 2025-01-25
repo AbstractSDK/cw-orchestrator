@@ -5,7 +5,7 @@ use cw_orch_core::{
 };
 use cw_orch_daemon::DaemonState;
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 #[derive(Clone, Debug)]
 /// Mock state for testing, stores addresses and code-ids.
@@ -26,7 +26,7 @@ impl MockState {
             code_ids: HashMap::new(),
             daemon_state: DaemonState::new(
                 DaemonState::state_file_path().unwrap(),
-                chain,
+                &Arc::new(chain),
                 deployment_id.to_string(),
                 true,
                 false,

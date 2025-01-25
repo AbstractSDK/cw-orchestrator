@@ -1,26 +1,32 @@
 [package]
-name = "cw-orch-starship"
-version = "0.3.1"
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
+authors.workspace    = true
+description          = "Adapter for interacting with cosmoslogy:starship via cw-orch"
+edition.workspace    = true
+license.workspace    = true
+name                 = "cw-orch-starship"
 repository.workspace = true
-description = "Adapter for interacting with cosmoslogy:starship via cw-orch"
+version              = "0.7.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11.18", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.102"
+reqwest    = { version = "0.12.5", features = ["json"] }
+serde      = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.125"
+# Serde yaml deprecated
+cosmwasm-std       = { workspace = true }
 ibc-chain-registry = { workspace = true }
-ibc-relayer-types = { workspace = true }
-thiserror = "1.0.43"
-cosmwasm-std = "1.2.7"
+ibc-relayer-types  = { workspace = true }
+thiserror          = "1.0.63"
+yaml-rust2         = "0.8"
 
+cw-orch-core   = { workspace = true }
 cw-orch-daemon = { workspace = true }
-cw-orch-core = { workspace = true }
-tokio = { workspace = true }
+tokio          = { workspace = true }
 
-url = "2.4.1"
+env_logger    = "0.11"
 log.workspace = true
+url           = "2.5.2"
+
+k8s-openapi = { version = "0.22.0", features = ["latest"] }
+kube        = { version = "0.93.1", features = ["runtime", "derive", "ws"] }

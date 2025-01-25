@@ -2,12 +2,13 @@ use counter_contract::{
     msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg},
     CounterContract, CounterExecuteMsgFns, CounterQueryMsgFns,
 };
-use cw_orch::prelude::{
-    ContractInstance, CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon,
-    TxHandler,
+use cw_orch::{
+    environment::Environment,
+    prelude::{CwOrchExecute, CwOrchInstantiate, CwOrchQuery, CwOrchUpload, Daemon, TxHandler},
 };
 
 /// In order to use this script, you need to set the following env variables
+///
 /// RUST_LOG (recommended value `info`) to see the app logs
 /// TEST_MNEMONIC to be able to sign and broadcast a transaction on UNI testnet
 pub fn main() {
@@ -22,9 +23,7 @@ pub fn main() {
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
-    let daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+    let daemon = Daemon::builder(cw_orch::daemon::networks::UNI_6) // set the network to use
         .build()
         .unwrap();
 
@@ -37,13 +36,13 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
-        None,
+        Some(&counter.environment().sender_addr()),
+        &[],
     );
     assert!(init_res.is_ok());
 
     // You can execute a message using actual message types
-    let exec_res = counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = counter.execute(&ExecuteMsg::Increment {}, &[]);
     assert!(exec_res.is_ok());
 
     let query_res = counter.query::<GetCountResponse>(&QueryMsg::GetCount {});

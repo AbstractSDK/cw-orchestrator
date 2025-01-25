@@ -7,9 +7,7 @@ use cw_orch::prelude::*;
 use cw_orch_traits::Stargate;
 use osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
-    osmosis::tokenfactory::v1beta1::{
-        MsgCreateDenom, MsgCreateDenomResponse, MsgMint, MsgMintResponse,
-    },
+    osmosis::tokenfactory::v1beta1::{MsgCreateDenom, MsgMint},
 };
 use prost::Message;
 use prost_types::Any;
@@ -17,6 +15,7 @@ use prost_types::Any;
 pub const SUBDENOM: &str = "complex-test";
 
 /// In order to use this script, you need to set the following env variables
+///
 /// RUST_LOG (recommended value `info`) to see the app logs
 /// TEST_MNEMONIC to be able to sign and broadcast a transaction on UNI testnet
 pub fn main() {
@@ -31,9 +30,7 @@ pub fn main() {
 
     // We can now create a daemon. This daemon will be used to interact with the chain.
     // In the background, the `build` function uses the `TEST_MNEMONIC` variable, don't forget to set it !
-    let daemon = Daemon::builder()
-        // set the network to use
-        .chain(cw_orch::daemon::networks::UNI_6)
+    let daemon = Daemon::builder(cw_orch::daemon::networks::UNI_6) // set the network to use
         .build()
         .unwrap();
 
@@ -46,13 +43,13 @@ pub fn main() {
 
     let init_res = counter.instantiate(
         &InstantiateMsg { count: 0 },
-        Some(&counter.get_chain().sender()),
-        None,
+        Some(&counter.environment().sender_addr()),
+        &[],
     );
     assert!(init_res.is_ok());
 
     // You can execute a message using actual message types
-    let exec_res = counter.execute(&ExecuteMsg::Increment {}, None);
+    let exec_res = counter.execute(&ExecuteMsg::Increment {}, &[]);
     assert!(exec_res.is_ok());
 
     let query_res = counter.query::<GetCountResponse>(&QueryMsg::GetCount {});
@@ -65,10 +62,10 @@ pub fn main() {
     let query_res = counter.get_count();
     assert!(query_res.is_ok());
 
-    let sender_addr = daemon.sender().to_string();
+    let sender_addr = daemon.sender_addr().to_string();
     // We create a denom
     daemon
-        .commit_any::<MsgCreateDenomResponse>(
+        .commit_any(
             vec![Any {
                 type_url: MsgCreateDenom::TYPE_URL.to_string(),
                 value: MsgCreateDenom {
@@ -83,7 +80,7 @@ pub fn main() {
     let denom = format!("factory/{}/{}", sender_addr, SUBDENOM);
     // We mint some tokens
     daemon
-        .commit_any::<MsgMintResponse>(
+        .commit_any(
             vec![Any {
                 type_url: MsgMint::TYPE_URL.to_string(),
                 value: MsgMint {
@@ -100,21 +97,17 @@ pub fn main() {
         )
         .unwrap();
     // We send some funds to the counter contract
-    let contract_addr = counter.addr_str().unwrap();
+    let contract_addr = counter.address().unwrap();
+
     daemon
-        .rt_handle
-        .block_on(
-            daemon
-                .daemon
-                .sender
-                .bank_send(&contract_addr, coins(50_000, denom.clone())),
-        )
+        .bank_send(&contract_addr, &coins(50_000, denom.clone()))
         .unwrap();
+
     // We verify they have received their funds
     assert_eq!(
         daemon
             .bank_querier()
-            .balance(contract_addr, Some(denom.clone()))
+            .balance(&contract_addr, Some(denom.clone()))
             .unwrap(),
         coins(50_000, denom.clone())
     );

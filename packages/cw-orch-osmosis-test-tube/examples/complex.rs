@@ -8,9 +8,7 @@ use cw_orch::prelude::*;
 use cw_orch_osmosis_test_tube::OsmosisTestTube;
 use osmosis_test_tube::osmosis_std::types::{
     cosmos::base::v1beta1::Coin,
-    osmosis::tokenfactory::v1beta1::{
-        MsgCreateDenom, MsgCreateDenomResponse, MsgMint, MsgMintResponse,
-    },
+    osmosis::tokenfactory::v1beta1::{MsgCreateDenom, MsgMint},
 };
 use osmosis_test_tube::Account;
 use prost::Message;
@@ -24,17 +22,17 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     let contract_counter = CounterContract::new(chain.clone());
 
     contract_counter.upload()?;
-    contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, None)?;
-    contract_counter.execute(&ExecuteMsg::Increment {}, None)?;
+    contract_counter.instantiate(&InstantiateMsg { count: 0 }, None, &[])?;
+    contract_counter.execute(&ExecuteMsg::Increment {}, &[])?;
 
-    let sender = contract_counter.as_instance().get_chain().sender.clone();
-    let sender_addr = sender.address().to_string();
+    let sender = contract_counter.environment().sender.clone();
+    let sender_addr = sender.address();
 
     contract_counter.call_as(&sender).increment()?;
     contract_counter.get_count()?;
 
     // We create a new denom
-    chain.commit_any::<MsgCreateDenomResponse>(
+    chain.commit_any(
         vec![Any {
             type_url: MsgCreateDenom::TYPE_URL.to_string(),
             value: MsgCreateDenom {
@@ -47,7 +45,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     )?;
     let denom = format!("factory/{}/{}", sender_addr, SUBDENOM);
     // We mint some tokens
-    chain.commit_any::<MsgMintResponse>(
+    chain.commit_any(
         vec![Any {
             type_url: MsgMint::TYPE_URL.to_string(),
             value: MsgMint {
@@ -73,7 +71,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     assert_eq!(
         chain
             .bank_querier()
-            .balance(contract_counter.address()?, Some(denom.clone()))?
+            .balance(&contract_counter.address()?, Some(denom.clone()))?
             .first()
             .cloned(),
         Some(coin(50_000, denom.clone()))
@@ -81,7 +79,7 @@ pub fn main() -> cw_orch::anyhow::Result<()> {
     assert_eq!(
         chain
             .bank_querier()
-            .balance(sender_addr, Some(denom.clone()))?
+            .balance(&Addr::unchecked(sender_addr), Some(denom.clone()))?
             .first()
             .cloned(),
         Some(coin(50_000, denom.clone()))

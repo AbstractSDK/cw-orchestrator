@@ -1,4 +1,5 @@
 //! This defines types and traits associated with IBC channels.
+//!
 //! Those structures are mostly used internally for dealing with channel creation and analysis
 //! But they can also be used in a user application if they need specific channel description
 
@@ -6,7 +7,7 @@ use ibc_relayer_types::core::ics24_host::identifier::ChannelId;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
 
 use crate::env::ChainId;
-use crate::types::NetworkId;
+use crate::results::NetworkId;
 use crate::InterchainError;
 
 /// Identifies a channel between two IBC connected chains.

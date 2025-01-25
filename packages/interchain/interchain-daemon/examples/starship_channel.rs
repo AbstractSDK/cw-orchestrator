@@ -2,7 +2,7 @@ use cosmwasm_std::IbcOrder;
 use cw_orch_core::environment::QuerierGetter;
 use cw_orch_daemon::queriers::Ibc;
 use cw_orch_daemon::Daemon;
-use cw_orch_interchain_core::{types::ChannelCreationResult, InterchainEnv};
+use cw_orch_interchain_core::{results::ChannelCreationResult, InterchainEnv};
 use cw_orch_interchain_daemon::ChannelCreator;
 use cw_orch_starship::Starship;
 use ibc_relayer_types::core::ics24_host::identifier::PortId;
@@ -30,11 +30,10 @@ fn assert_ordering(
 
 fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
-    let rt = tokio::runtime::Runtime::new()?;
-    let starship = Starship::new(rt.handle(), None)?;
+    let starship = Starship::new(None)?;
     let interchain_env = starship.interchain_env();
 
-    let juno = interchain_env.chain("juno-1")?;
+    let juno = interchain_env.get_chain("juno-1")?;
 
     let channel_created = interchain_env.create_channel(
         "juno-1",

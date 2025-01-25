@@ -1,7 +1,9 @@
 use super::{Contract, WasmPath};
+use crate::environment::AccessConfig;
 use crate::{
     environment::{
-        ChainInfoOwned, ChainState, CwEnv, QueryHandler, TxHandler, TxResponse, WasmQuerier,
+        AsyncWasmQuerier, ChainInfoOwned, ChainState, CwEnv, Environment, QueryHandler, TxHandler,
+        TxResponse, WasmQuerier,
     },
     error::CwEnvError,
     log::contract_target,
@@ -74,11 +76,6 @@ pub trait ContractInstance<Chain: ChainState> {
     fn set_default_code_id(&mut self, code_id: u64) {
         Contract::set_default_code_id(self.as_instance_mut(), code_id)
     }
-
-    /// Returns the chain that this contract is deployed on.
-    fn get_chain(&self) -> &Chain {
-        Contract::get_chain(self.as_instance())
-    }
 }
 
 /// Trait that indicates that the contract can be instantiated with the associated message.
@@ -111,7 +108,7 @@ pub trait CwOrchExecute<Chain: TxHandler>: ExecutableContract + ContractInstance
     fn execute(
         &self,
         execute_msg: &Self::ExecuteMsg,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().execute(&execute_msg, coins)
     }
@@ -128,7 +125,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
             .instantiate(instantiate_msg, admin, coins)
@@ -139,7 +136,7 @@ pub trait CwOrchInstantiate<Chain: TxHandler>:
         &self,
         instantiate_msg: &Self::InstantiateMsg,
         admin: Option<&Addr>,
-        coins: Option<&[Coin]>,
+        coins: &[Coin],
         salt: Binary,
     ) -> Result<Chain::Response, CwEnvError> {
         self.as_instance()
@@ -166,9 +163,9 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
 
     /// Query the contract raw state from an raw binary key
     fn raw_query(&self, query_keys: Vec<u8>) -> Result<Vec<u8>, CwEnvError> {
-        self.get_chain()
+        self.environment()
             .wasm_querier()
-            .raw_query(self.address()?, query_keys)
+            .raw_query(&self.address()?, query_keys)
             .map_err(Into::into)
     }
 
@@ -177,25 +174,56 @@ pub trait CwOrchQuery<Chain: QueryHandler + ChainState>:
         &self,
         query_item: Item<T>,
     ) -> Result<T, CwEnvError> {
-        self.get_chain()
+        self.environment()
             .wasm_querier()
-            .item_query(self.address()?, query_item)
+            .item_query(&self.address()?, query_item)
     }
 
     /// Query the contract raw state from a cw-storage-plus::Map
     fn map_query<'a, T: Serialize + DeserializeOwned, K: PrimaryKey<'a>>(
         &self,
-        query_map: Map<'a, K, T>,
+        query_map: Map<K, T>,
         key: K,
     ) -> Result<T, CwEnvError> {
-        self.get_chain()
+        self.environment()
             .wasm_querier()
-            .map_query(self.address()?, query_map, key)
+            .map_query(&self.address()?, query_map, key)
+    }
+}
+/// Smart contract query entry point.
+pub trait AsyncCwOrchQuery<Chain: AsyncWasmQuerier + ChainState>:
+    QueryableContract + ContractInstance<Chain>
+where
+    <Self as QueryableContract>::QueryMsg: Sync,
+{
+    /// Query the contract.
+    fn async_query<'a, G: Serialize + DeserializeOwned + Debug>(
+        &'a self,
+        query_msg: &Self::QueryMsg,
+    ) -> impl std::future::Future<Output = Result<G, CwEnvError>> + Send
+    where
+        Chain: 'a,
+    {
+        let instance = self.as_instance();
+        async { instance.async_query(query_msg).await }
+    }
+}
+
+impl<Chain: ChainState, T: ?Sized + ContractInstance<Chain>> Environment<Chain> for T {
+    fn environment(&self) -> &Chain {
+        self.as_instance().environment()
     }
 }
 
 impl<T: QueryableContract + ContractInstance<Chain>, Chain: QueryHandler + ChainState>
     CwOrchQuery<Chain> for T
+{
+}
+
+impl<T: QueryableContract + ContractInstance<Chain>, Chain: AsyncWasmQuerier + ChainState>
+    AsyncCwOrchQuery<Chain> for T
+where
+    <T as QueryableContract>::QueryMsg: std::marker::Sync,
 {
 }
 
@@ -214,6 +242,7 @@ pub trait CwOrchMigrate<Chain: TxHandler>: MigratableContract + ContractInstance
 impl<T: MigratableContract + ContractInstance<Chain>, Chain: TxHandler> CwOrchMigrate<Chain> for T {}
 
 /// Trait to implement on the contract to enable it to be uploaded
+///
 /// Should return [`WasmPath`](crate::contract::interface_traits::WasmPath) for `Chain = Daemon`
 /// and [`Box<&dyn Contract>`] for `Chain = Mock`
 pub trait Uploadable {
@@ -233,6 +262,15 @@ pub trait CwOrchUpload<Chain: TxHandler>: ContractInstance<Chain> + Uploadable +
     /// upload the contract to the configured environment.
     fn upload(&self) -> Result<Chain::Response, CwEnvError> {
         self.as_instance().upload(self)
+    }
+
+    /// upload the contract to the configured environment and specify the permissions for instantiating
+    fn upload_with_access_config(
+        &self,
+        access_config: Option<AccessConfig>,
+    ) -> Result<Chain::Response, CwEnvError> {
+        self.as_instance()
+            .upload_with_access_config(self, access_config)
     }
 }
 
@@ -277,12 +315,12 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
             return Ok(false);
         };
 
-        let chain = self.get_chain();
+        let chain = self.environment();
         let on_chain_hash = chain
             .wasm_querier()
             .code_id_hash(latest_uploaded_code_id)
             .map_err(Into::into)?;
-        let local_hash = self.get_chain().wasm_querier().local_hash(self)?;
+        let local_hash = self.environment().wasm_querier().local_hash(self)?;
 
         Ok(local_hash == on_chain_hash)
     }
@@ -292,10 +330,10 @@ pub trait ConditionalUpload<Chain: CwEnv>: CwOrchUpload<Chain> {
         let Some(latest_uploaded_code_id) = self.code_id().ok() else {
             return Ok(false);
         };
-        let chain = self.get_chain();
+        let chain = self.environment();
         let info = chain
             .wasm_querier()
-            .contract_info(self.address()?)
+            .contract_info(&self.address()?)
             .map_err(Into::into)?;
         Ok(latest_uploaded_code_id == info.code_id)
     }

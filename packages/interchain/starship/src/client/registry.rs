@@ -52,7 +52,6 @@ impl Registry {
         chain_id_b: &str,
     ) -> StarshipClientResult<IBCPath> {
         let ibc_path_url = format!("{}/{}/{}", self.ibc_data_url(), chain_id_a, chain_id_b);
-        eprintln!("ibc_paths_url: {:?}", ibc_path_url);
 
         let response = reqwest::get(&ibc_path_url).await?;
         let path: IBCPath = response.json().await?;

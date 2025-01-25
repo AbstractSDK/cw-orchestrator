@@ -2,18 +2,18 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cosmwasm_std::{
     testing::{MockApi, MockStorage},
-    to_json_binary, Addr, Api, Binary, CosmosMsg, Empty, Event, WasmMsg,
+    to_json_binary, Addr, Api, BankMsg, Binary, CosmosMsg, Empty, Event, WasmMsg,
 };
 use cw_multi_test::{
     ibc::IbcSimpleModule, App, AppResponse, BankKeeper, Contract, DistributionKeeper, Executor,
-    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailingModule, WasmKeeper,
+    FailingModule, GovFailingModule, MockApiBech32, StakeKeeper, StargateFailing, WasmKeeper,
 };
 use serde::Serialize;
 
 use super::state::MockState;
 use cw_orch_core::{
     contract::interface_traits::Uploadable,
-    environment::{ChainState, IndexResponse, StateInterface, TxHandler},
+    environment::{AccessConfig, ChainState, IndexResponse, StateInterface, TxHandler},
     CwEnvError,
 };
 
@@ -27,7 +27,7 @@ pub type MockApp<A = MockApi> = App<
     DistributionKeeper,
     IbcSimpleModule,
     GovFailingModule,
-    StargateFailingModule,
+    StargateFailing,
 >;
 
 /// Wrapper around a cw-multi-test [`App`](cw_multi_test::App) backend.
@@ -50,10 +50,10 @@ pub type MockApp<A = MockApi> = App<
 /// let mock: Mock = Mock::new("sender");
 ///
 /// // set a balance
-/// mock.set_balance("sender", vec![coin(100u128, "token")]).unwrap();
+/// mock.set_balance(&mock.sender_addr(), vec![coin(100u128, "token")]).unwrap();
 ///
 /// // query the balance
-/// let balance: Uint128 = mock.query_balance("sender", "token").unwrap();
+/// let balance: Uint128 = mock.query_balance(&mock.sender_addr(), "token").unwrap();
 /// assert_eq!(balance.u128(), 100u128);
 /// ```
 ///
@@ -106,7 +106,10 @@ impl<A: Api, S: StateInterface> MockBase<A, S> {
         contract_id: &str,
         wrapper: Box<dyn Contract<Empty, Empty>>,
     ) -> Result<AppResponse, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(wrapper);
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_code_with_creator(self.sender_addr(), wrapper);
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -134,7 +137,11 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     type ContractSource = Box<dyn Contract<Empty, Empty>>;
     type Sender = Addr;
 
-    fn sender(&self) -> Addr {
+    fn sender(&self) -> &Self::Sender {
+        &self.sender
+    }
+
+    fn sender_addr(&self) -> Addr {
         self.sender.clone()
     }
 
@@ -143,7 +150,10 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
     }
 
     fn upload<T: Uploadable>(&self, _contract: &T) -> Result<Self::Response, CwEnvError> {
-        let code_id = self.app.borrow_mut().store_code(T::wrapper());
+        let code_id = self
+            .app
+            .borrow_mut()
+            .store_code_with_creator(self.sender_addr(), T::wrapper());
         // add contract code_id to events manually
         let mut event = Event::new("store_code");
         event = event.add_attribute("code_id", code_id.to_string());
@@ -244,6 +254,33 @@ impl<A: Api, S: StateInterface> TxHandler for MockBase<A, S> {
             )
             .map_err(From::from)
     }
+
+    fn upload_with_access_config<T: Uploadable>(
+        &self,
+        contract_source: &T,
+        _access_config: Option<AccessConfig>,
+    ) -> Result<Self::Response, Self::Error> {
+        log::debug!("Uploading with access is not enforced when using Mock testing");
+        self.upload(contract_source)
+    }
+
+    fn bank_send(
+        &self,
+        receiver: &Addr,
+        amount: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error> {
+        self.app
+            .borrow_mut()
+            .execute(
+                self.sender.clone(),
+                BankMsg::Send {
+                    to_address: receiver.to_string(),
+                    amount: amount.to_vec(),
+                }
+                .into(),
+            )
+            .map_err(From::from)
+    }
 }
 
 #[cfg(test)]
@@ -291,16 +328,16 @@ mod test {
 
     #[test]
     fn mock() {
-        let recipient = BALANCE_ADDR;
-        let sender = SENDER;
-        let chain = Mock::new(sender);
+        let chain = MockBech32::new(SENDER);
+        let sender = chain.sender_addr();
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
 
         chain
-            .set_balance(recipient, vec![Coin::new(amount, denom)])
+            .set_balance(&recipient, vec![Coin::new(amount, denom)])
             .unwrap();
-        let balance = chain.query_balance(recipient, denom).unwrap();
+        let balance = chain.query_balance(&recipient, denom).unwrap();
 
         asserting("address balance amount is correct")
             .that(&amount)
@@ -308,7 +345,7 @@ mod test {
 
         asserting("sender is correct")
             .that(&sender.to_string())
-            .is_equal_to(chain.sender().to_string());
+            .is_equal_to(chain.sender_addr().to_string());
 
         let contract_source = Box::new(
             ContractWrapper::new(execute, cw20_base::contract::instantiate, query)
@@ -318,7 +355,7 @@ mod test {
         let init_res = chain.upload_custom("cw20", contract_source).unwrap();
         asserting("contract initialized properly")
             .that(&init_res.events[0].attributes[0].value)
-            .is_equal_to(&String::from("1"));
+            .is_equal_to(String::from("1"));
 
         let init_msg = cw20_base::msg::InstantiateMsg {
             name: String::from("Token"),
@@ -345,9 +382,9 @@ mod test {
             )
             .unwrap();
 
-        asserting("that exect passed on correctly")
+        asserting("that exec passed on correctly")
             .that(&exec_res.events[1].attributes[1].value)
-            .is_equal_to(&String::from("mint"));
+            .is_equal_to(String::from("mint"));
 
         let query_res = chain
             .query::<cw20_base::msg::QueryMsg, Response>(
@@ -360,9 +397,10 @@ mod test {
 
         asserting("that query passed on correctly")
             .that(&query_res.attributes[1].value)
-            .is_equal_to(&String::from("0"));
+            .is_equal_to(String::from("0"));
 
-        let migration_res = chain.migrate(&cw20_base::msg::MigrateMsg {}, 1, &contract_address);
+        let migrate_msg = Empty {}; // cw20_base::msg::MigrateMsg{} Doesn't implement fmt::Debug
+        let migration_res = chain.migrate(&migrate_msg, 1, &contract_address);
         asserting("that migration passed on correctly")
             .that(&migration_res)
             .is_ok();
@@ -373,15 +411,15 @@ mod test {
         let mock_state = MockState::new();
         let chain = Mock::new_custom(SENDER, mock_state);
 
-        let recipient = BALANCE_ADDR;
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom = "uosmo";
 
         chain
-            .set_balances(&[(recipient, &[Coin::new(amount, denom)])])
+            .set_balances(&[(recipient.clone(), &[Coin::new(amount, denom)])])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances length is 1")
             .that(&balances.len())
             .is_equal_to(1);
@@ -416,19 +454,19 @@ mod test {
     #[test]
     fn add_balance() {
         let chain = Mock::new(SENDER);
-        let recipient = BALANCE_ADDR;
+        let recipient = chain.addr_make(BALANCE_ADDR);
         let amount = 1000000u128;
         let denom_1 = "uosmo";
         let denom_2 = "osmou";
 
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_1)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_1)])
             .unwrap();
         chain
-            .add_balance(recipient, vec![Coin::new(amount, denom_2)])
+            .add_balance(&recipient, vec![Coin::new(amount, denom_2)])
             .unwrap();
 
-        let balances = chain.query_all_balances(recipient).unwrap();
+        let balances = chain.query_all_balances(&recipient).unwrap();
         asserting("recipient balances added")
             .that(&balances)
             .contains_all_of(&[&Coin::new(amount, denom_1), &Coin::new(amount, denom_2)])
@@ -438,13 +476,12 @@ mod test {
     fn bank_querier_works() -> Result<(), CwEnvError> {
         let denom = "urandom";
         let init_coins = coins(45, denom);
-        let sender = "sender";
-        let app = Mock::new(sender);
+        let app = Mock::new(SENDER);
+        let sender = &app.sender;
         app.set_balance(sender, init_coins.clone())?;
-        let sender = app.sender.clone();
         assert_eq!(
             app.bank_querier()
-                .balance(sender.clone(), Some(denom.to_string()))?,
+                .balance(sender, Some(denom.to_string()))?,
             init_coins
         );
         assert_eq!(

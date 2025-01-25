@@ -3,7 +3,7 @@
 Get ready to change the way you interact with contracts. The following steps will allow you to write clean code such as:
 
 ```rust,ignore
-{{#include ../../contracts/counter/examples/deploy.rs:clean_example}}
+{{#include ../../contracts-ws/contracts/counter/examples/deploy.rs:clean_example}}
 ```
 
 In this quick-start guide, we will review the necessary steps in order to integrate `cw-orch` into a simple contract crate. [We review integration of rust-workspaces (multiple contracts) at the end of this page](#integration-in-a-workspace).
@@ -11,6 +11,12 @@ In this quick-start guide, we will review the necessary steps in order to integr
 > **NOTE**: *Additional content*
 >
 >If you're moving quicker than everybody else, we suggest looking at <a href="https://github.com/AbstractSDK/cw-orch-counter-example/compare/e0a54b074ca1a894bb6e58276944cf2013d152f2..main" target="_blank">a before-after review of this example integration</a>. This will help you catch the additions you need to make to your contract to be able to interact with it using cw-orchestrator.
+
+**Video Workshop**
+
+If you prefer watching a video, you can follow the workshop below:
+
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/IZ5_r9JEoUs?si=4nQ03M3LmsmmExQp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ## Summary
 
@@ -40,7 +46,7 @@ Alternatively, you can add it manually in your `Cargo.toml` file as shown below:
 
 ```toml
 [dependencies]
-cw-orch = {version = "0.21.2" } # Latest version at time of writing
+cw-orch = {version = "0.27.0" } # Latest version at time of writing
 ```
 
 > **NOTE**: Even if you include `cw-orch` in your dependencies here, it won't be included in your `wasm` contract. Learn more about this behavior in the section about [Wasm Compilation](contracts/wasm-compilation.md)
@@ -50,13 +56,13 @@ cw-orch = {version = "0.21.2" } # Latest version at time of writing
 When using a single contract, we advise creating an `interface.rs` file inside your contract's directory. You then need to add this module to your `lib.rs` file. This file should not be included inside you final wasm. In order to do that, you need to add `#[cfg(not(target_arch = "wasm32"))]` when importing the file.
 
 ```rust,ignore
-{{#include ../../contracts/counter/src/lib.rs:custom_interface}}
+{{#include ../../contracts-ws/contracts/counter/src/lib.rs:custom_interface}}
 ```
 
 Then, inside that `interface.rs` file, you can define the interface for your contract:
 
 ```rust,ignore
-{{#include ../../contracts/counter/src/interface.rs:custom_interface}}
+{{#include ../../contracts-ws/contracts/counter/src/interface.rs:custom_interface}}
 
 ```
 
@@ -76,9 +82,9 @@ cw-orchestrator provides a additional macros that simplify contract calls and qu
 Enabling this functionality is very straightforward. Find your `ExecuteMsg` and `QueryMsg` definitions (in `msg.rs` in our example) and add the `ExecuteFns` and `QueryFns` derive macros to them like below:
 
 ```rust,ignore
-{{#include ../../contracts/counter/src/msg.rs:exec_msg}}
+{{#include ../../contracts-ws/contracts/counter/src/msg.rs:exec_msg}}
 
-{{#include ../../contracts/counter/src/msg.rs:query_msg}}
+{{#include ../../contracts-ws/contracts/counter/src/msg.rs:query_msg}}
 ```
 
 Make sure to derive the `#[derive(cosmwasm_schema::QueryResponses)]` macro on your query messages !
@@ -104,7 +110,7 @@ counter-contract = { path = "../counter-contract"}
 You can now use:
 
 ```rust,ignore
-{{#include ../../contracts/counter/examples/deploy.rs:full_counter_example}}
+{{#include ../../contracts-ws/contracts/counter/examples/deploy.rs:full_counter_example}}
 ```
 
 ## Integration in a workspace

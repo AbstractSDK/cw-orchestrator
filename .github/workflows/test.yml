@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
 name: test
-env: 
+env:
   CODECOV_TOKEN: 62fac3fe-498a-4449-a00d-a9b30b443acf
 jobs:
   required:
@@ -13,7 +13,10 @@ jobs:
     name: ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable, beta]
+        toolchain: [
+            stable, # beta failing to some crate using multiple `thread::set_current`
+          ]
+      fail-fast: false # beta may fail we shouldn't care
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,7 +31,32 @@ jobs:
       # https://twitter.com/jonhoo/status/1571290371124260865
       - name: cargo test --locked
         run: cargo test --locked --all-features --all-targets
-
+  network:
+    runs-on: ubuntu-latest
+    name: ubuntu / ${{ matrix.toolchain }} / network-config
+    strategy:
+      matrix:
+        toolchain: [
+            stable, # beta failing to some crate using multiple `thread::set_current`
+          ]
+      fail-fast: false # beta may fail we shouldn't care
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      # https://twitter.com/jonhoo/status/1571290371124260865
+      - name: cargo test network config
+        run: |
+          mkdir ~/.cw-orchestrator
+          cp cw-orch-daemon/tests/mock_networks.toml ~/.cw-orchestrator/networks.toml
+          cargo test --locked --package cw-orch-daemon --lib -- network_config::test --ignored
   docs:
     runs-on: ubuntu-latest
     name: doc-tests / stable
@@ -48,26 +76,3 @@ jobs:
         run: cargo generate-lockfile
       - name: cargo test --doc
         run: cargo test --doc --locked --all-features
-        
-  coverage:
-    runs-on: ubuntu-latest
-    name: ubuntu / stable / coverage
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Install stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: llvm-tools-preview
-      - name: cargo install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-      - name: cargo generate-lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
-      - name: cargo llvm-cov
-        run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4
-        with:
-          fail_ci_if_error: true
