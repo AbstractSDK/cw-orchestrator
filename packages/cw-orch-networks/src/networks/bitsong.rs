@@ -7,27 +7,27 @@ pub const BITSONG_NETWORK: NetworkInfo = NetworkInfo {
     coin_type: 639u32,
 };
 
-pub const BITSONG_1: ChainInfo = ChainInfo {
+pub const BITSONG_2B: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
     chain_id: "bitsong-1",
     gas_denom: "ubtsg",
     gas_price: 0.025,
-    grpc_urls: &["http://grpc-bitsong-ia.cosmosia.notional.ventures:443"],
+    grpc_urls: &["http://bitsong-grpc.polkachu.com:16090", "http://grpc.explorebitsong.com:443"],
     network_info: BITSONG_NETWORK,
     lcd_url: None,
     fcd_url: None,
 };
 
-pub const BOBNET: ChainInfo = ChainInfo {
-    kind: ChainKind::Testnet,
-    chain_id: "bobnet",
-    gas_denom: "ubtsg",
-    gas_price: 0.025,
-    grpc_urls: &["http://grpc-testnet.explorebitsong.com:443"],
-    network_info: BITSONG_NETWORK,
-    lcd_url: None,
-    fcd_url: None,
-};
+// pub const BOBNET: ChainInfo = ChainInfo {
+//     kind: ChainKind::Testnet,
+//     chain_id: "bobnet",
+//     gas_denom: "ubtsg",
+//     gas_price: 0.025,
+//     grpc_urls: &["http://grpc-testnet.explorebitsong.com:443"],
+//     network_info: BITSONG_NETWORK,
+//     lcd_url: None,
+//     fcd_url: None,
+// };
 
 pub const LOCAL_BITSONG: ChainInfo = ChainInfo {
     kind: ChainKind::Local,
