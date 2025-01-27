@@ -18,4 +18,15 @@ pub const XION_TESTNET_1: ChainInfo = ChainInfo {
     fcd_url: None,
 };
 
+pub const XION_MAINNET_1: ChainInfo = ChainInfo {
+    kind: ChainKind::Mainnet,
+    chain_id: "xion-mainnet-1",
+    gas_denom: "uxion",
+    gas_price: 0.001,
+    grpc_urls: &["https://grpc.xion-mainnet-1.burnt.com:443"],
+    network_info: XION_NETWORK,
+    lcd_url: None,
+    fcd_url: None,
+};
+
 // ANCHOR_END: xion
