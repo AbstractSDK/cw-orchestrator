@@ -3,6 +3,7 @@
 //! Contains information and helpers for different blockchain networks
 //! See [parse_network] to easily retrieve this static network information
 pub mod archway;
+pub mod bitsong;
 pub mod cosmos;
 pub mod doravota;
 pub mod injective;
@@ -22,6 +23,7 @@ pub mod xion;
 #[allow(deprecated)]
 use crate::networks::union::{UNION_TESTNET_8, UNION_TESTNET_9};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
+pub use bitsong::BITSONG_2B;
 pub use cosmos::COSMOS_HUB_TESTNET;
 pub use cw_orch_core::environment::{ChainInfo, ChainKind, NetworkInfo};
 pub use doravota::{VOTA_ASH, VOTA_TESTNET};
@@ -56,34 +58,35 @@ pub fn parse_network(net_id: &str) -> Result<ChainInfo, String> {
 }
 
 pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
-    UNI_6,
+    ARCHWAY_1,
+    ATLANTIC_2,
+    BITSONG_2B,
+    CONSTANTINE_3,
+    HARPOON_4,
+    INJECTIVE_888,
+    INJECTIVE_1,
     JUNO_1,
     LOCAL_JUNO,
-    PISCO_1,
-    PHOENIX_1,
-    LOCAL_TERRA,
-    INJECTIVE_888,
-    CONSTANTINE_3,
-    ARCHWAY_1,
-    PION_1,
-    NARWHAL_1,
-    NEUTRON_1,
-    INJECTIVE_1,
-    HARPOON_4,
-    OSMOSIS_1,
-    OSMO_5,
-    LOCAL_OSMO,
+    LOCAL_LANDSLIDE,
     LOCAL_MIGALOO,
     LOCAL_NEUTRON,
-    MIGALOO_1,
+    LOCAL_OSMO,
+    LOCAL_TERRA,
     LOCAL_SEI,
-    SEI_DEVNET_3,
-    ATLANTIC_2,
+    MIGALOO_1,
+    NARWHAL_1,
+    NEUTRON_1,
+    OSMOSIS_1,
+    OSMO_5,
     PACIFIC_1,
+    PISCO_1,
+    PHOENIX_1,
+    PION_1,
+    ROLLKIT_TESTNET,
+    SEI_DEVNET_3,
+    UNI_6,
     XION_TESTNET_1,
     XION_MAINNET_1,
-    ROLLKIT_TESTNET,
-    LOCAL_LANDSLIDE,
     #[allow(deprecated)]
     UNION_TESTNET_8,
     UNION_TESTNET_9,
