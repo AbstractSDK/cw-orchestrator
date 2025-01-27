@@ -21,7 +21,7 @@ pub mod union;
 pub mod xion;
 
 #[allow(deprecated)]
-use crate::networks::union::UNION_TESTNET_8;
+use crate::networks::union::{UNION_TESTNET_8, UNION_TESTNET_9};
 pub use archway::{ARCHWAY_1, CONSTANTINE_3};
 pub use bitsong::BITSONG_2B;
 pub use cosmos::COSMOS_HUB_TESTNET;
@@ -89,5 +89,6 @@ pub const SUPPORTED_NETWORKS: &[ChainInfo] = &[
     XION_MAINNET_1,
     #[allow(deprecated)]
     UNION_TESTNET_8,
+    UNION_TESTNET_9,
     COSMOS_HUB_TESTNET,
 ];
