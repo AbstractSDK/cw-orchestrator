@@ -1,28 +1,28 @@
 [package]
-name = "cw-orch-osmosis-test-tube"
-version = "0.4.0"
-description = "Cw-orch environment adapter for osmosis-test-tube"
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
+authors.workspace    = true
+description          = "Cw-orch environment adapter for osmosis-test-tube"
+edition.workspace    = true
+license.workspace    = true
+name                 = "cw-orch-osmosis-test-tube"
 repository.workspace = true
+version              = "0.5.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
 # Test Tube env deps
+cosmwasm-std      = { workspace = true }
+cw-orch-core      = { workspace = true }
+cw-orch-mock      = { workspace = true }
+cw-orch-traits    = { workspace = true }
 osmosis-test-tube = { workspace = true }
-prost-types = { workspace = true }
-prost = { workspace = true }
-cosmwasm-std = { workspace = true }
-serde = { workspace = true }
-cw-orch-core = { workspace = true }
-cw-orch-mock = { workspace = true }
-cw-orch-traits = { workspace = true }
+prost             = { workspace = true }
+prost-types       = { workspace = true }
+serde             = { workspace = true }
 
 [dev-dependencies]
 counter-contract = { path = "../../contracts-ws/contracts/counter" }
-env_logger = "0.11.3"
+env_logger       = "0.11.3"
 
 cw-orch = { workspace = true }

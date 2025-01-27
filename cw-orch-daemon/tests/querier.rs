@@ -5,7 +5,7 @@ mod queriers {
 
     use cosmwasm_std::Addr;
     use cw_orch_core::contract::interface_traits::*;
-    use cw_orch_daemon::{queriers::Bank, GrpcChannel};
+    use cw_orch_daemon::{parse_cw_coins, queriers::Bank, GrpcChannel};
     use cw_orch_networks::networks;
     use mock_contract::InstantiateMsg;
     use speculoos::{asserting, result::ResultAssertions};
@@ -14,14 +14,14 @@ mod queriers {
     use cw_orch_daemon::{
         queriers::StakingBondStatus,
         queriers::{CosmWasm, Gov, Ibc, Node, Staking},
-        Daemon, DaemonError,
+        Daemon,
     };
     use tokio::runtime::Runtime;
 
     use cosmrs::{
         cosmwasm::MsgExecuteContract,
         tx::{self, Msg},
-        AccountId, Denom,
+        AccountId,
     };
 
     pub async fn build_channel() -> tonic::transport::Channel {
@@ -238,17 +238,5 @@ mod queriers {
         asserting!("contract info is ok")
             .that(&contract_info)
             .is_ok();
-    }
-
-    fn parse_cw_coins(coins: &[cosmwasm_std::Coin]) -> Result<Vec<cosmrs::Coin>, DaemonError> {
-        coins
-            .iter()
-            .map(|cosmwasm_std::Coin { amount, denom }| {
-                Ok(cosmrs::Coin {
-                    amount: amount.u128(),
-                    denom: Denom::from_str(denom)?,
-                })
-            })
-            .collect::<Result<Vec<_>, DaemonError>>()
     }
 }

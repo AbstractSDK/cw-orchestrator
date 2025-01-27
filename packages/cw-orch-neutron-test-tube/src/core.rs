@@ -1,6 +1,6 @@
 pub use neutron_test_tube;
 
-use cosmwasm_std::{coin, Addr, Coins};
+use cosmwasm_std::{coin, Addr, BankMsg, Coins};
 
 use cw_orch_core::contract::interface_traits::Uploadable;
 use cw_orch_core::contract::WasmPath;
@@ -9,6 +9,7 @@ use cw_orch_core::environment::{BankQuerier, BankSetter, ChainInfo, DefaultQueri
 use cosmwasm_std::{Binary, Coin, Uint128};
 use cw_orch_core::CwEnvError;
 use cw_orch_mock::cw_multi_test::AppResponse;
+use neutron_test_tube::cosmrs::proto::cosmos::bank::v1beta1::MsgSendResponse;
 use neutron_test_tube::{
     neutron_std::{cosmwasm_to_proto_coins, types::cosmos::bank::v1beta1::MsgSend},
     Account, Bank, Module, NeutronTestApp, Runner, RunnerError, SigningAccount, Wasm,
@@ -321,6 +322,28 @@ impl<S: StateInterface> TxHandler for NeutronTestTube<S> {
         Ok(AppResponse {
             data: Some(Binary::new(instantiate_response.raw_data)),
             events: instantiate_response.events,
+        })
+    }
+
+    fn bank_send(
+        &self,
+        receiver: &Addr,
+        amount: &[cosmwasm_std::Coin],
+    ) -> Result<Self::Response, Self::Error> {
+        let send_response = (*self.app.borrow())
+            .execute_cosmos_msgs::<MsgSendResponse>(
+                &[BankMsg::Send {
+                    to_address: receiver.to_string(),
+                    amount: amount.to_vec(),
+                }
+                .into()],
+                &self.sender,
+            )
+            .map_err(map_err)?;
+
+        Ok(AppResponse {
+            data: Some(Binary::new(send_response.raw_data)),
+            events: send_response.events,
         })
     }
 }
