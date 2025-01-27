@@ -9,10 +9,13 @@ pub const BITSONG_NETWORK: NetworkInfo = NetworkInfo {
 
 pub const BITSONG_2B: ChainInfo = ChainInfo {
     kind: ChainKind::Mainnet,
-    chain_id: "bitsong-1",
+    chain_id: "bitsong-2b",
     gas_denom: "ubtsg",
     gas_price: 0.025,
-    grpc_urls: &["http://bitsong-grpc.polkachu.com:16090", "http://grpc.explorebitsong.com:443"],
+    grpc_urls: &[
+        "http://bitsong-grpc.polkachu.com:16090",
+        "http://grpc.explorebitsong.com:443",
+    ],
     network_info: BITSONG_NETWORK,
     lcd_url: None,
     fcd_url: None,
