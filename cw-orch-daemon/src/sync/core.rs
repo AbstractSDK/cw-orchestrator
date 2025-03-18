@@ -46,7 +46,7 @@ Different Cosmos SDK modules can be queried through the daemon by calling the [`
 See [Querier](crate::queriers) for examples.
 */
 pub struct DaemonBase<Sender> {
-    pub(crate) daemon: DaemonAsyncBase<Sender>,
+    pub daemon: DaemonAsyncBase<Sender>,
     /// Runtime handle to execute async tasks
     pub rt_handle: Handle,
 }
