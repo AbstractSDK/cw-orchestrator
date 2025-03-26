@@ -5,7 +5,7 @@ edition.workspace    = true
 license.workspace    = true
 name                 = "cw-orch-interchain-mock"
 repository.workspace = true
-version              = "0.9.0"
+version              = "0.10.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
