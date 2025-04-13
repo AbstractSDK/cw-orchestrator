@@ -23,7 +23,7 @@ pub const XION_TESTNET_2: ChainInfo = ChainInfo {
     chain_id: "xion-testnet-2",
     gas_denom: "uxion",
     gas_price: 0.001,
-    grpc_urls: &["http://grpc.xion-testnet-2.burnt.com:443"],
+    grpc_urls: &["https://grpc.xion-testnet-2.burnt.com:443"],
     network_info: XION_NETWORK,
     lcd_url: None,
     fcd_url: None,
