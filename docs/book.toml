@@ -21,3 +21,9 @@ preferred-dark-theme = "navy"
 [extern]
 # Define the external crate and its features
 cw-orch-interchain = { path = "../cw-orch-interchain", features = ["daemon"] }
+
+# Basic llmstxt.org format output
+[output.llms-txt]
+
+# Detailed llmstxt.org format output with additional information
+[output.llms-txt-full]
