@@ -4,7 +4,7 @@ use cw_orch_core::environment::ChainState;
 use cw_orch_daemon::{
     env::STATE_FILE_ENV_NAME,
     json_lock::JsonLockedState,
-    networks::{JUNO_1, NEUTRON_1},
+    networks::{JUNO_1, XION_MAINNET_1},
     Daemon, DaemonBuilder, DaemonError, DaemonStateFile,
 };
 
@@ -208,7 +208,7 @@ fn reuse_same_state_multichain() {
         .build()
         .unwrap();
 
-    let daemon_res = DaemonBuilder::new(NEUTRON_1)
+    let daemon_res = DaemonBuilder::new(XION_MAINNET_1)
         .state(daemon.state())
         .mnemonic(DUMMY_MNEMONIC)
         .build();
