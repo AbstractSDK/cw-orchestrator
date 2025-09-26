@@ -12,10 +12,14 @@ mod tests {
         },
         bank::v1beta1::MsgSend,
     };
-    use cosmwasm_std::coins;
+    use cosmwasm_std::{coins, Addr};
     use cw_orch_core::environment::QuerierGetter;
     use cw_orch_core::environment::{BankQuerier, DefaultQueriers, QueryHandler, TxHandler};
-    use cw_orch_daemon::{queriers::Authz, senders::CosmosOptions, Daemon};
+    use cw_orch_daemon::{
+        queriers::Authz,
+        senders::{sign::Signer, CosmosOptions},
+        Daemon,
+    };
     use cw_orch_networks::networks::LOCAL_JUNO;
     use cw_orch_traits::Stargate;
     use prost::Message;
@@ -34,20 +38,27 @@ mod tests {
             .build()
             .unwrap();
 
-        let sender = daemon.sender_addr();
+        let granter_addr = daemon.sender_addr();
 
         let second_daemon: Daemon = daemon
             .rebuild()
             .build_sender(
                 CosmosOptions::default()
                     .mnemonic(SECOND_MNEMONIC)
-                    .authz_granter(&sender),
+                    .authz_granter(&granter_addr),
             )
             .unwrap();
+        // Actual sender is expected to be authz granter
+        assert_eq!(second_daemon.sender_addr(), daemon.sender_addr());
+        // We still can get signer AccountId, if needed
+        let grantee_account_id = second_daemon.sender().signer_account_id();
+        let granter_account_id = second_daemon.sender().account_id();
+        assert_ne!(grantee_account_id, daemon.sender().account_id());
+
+        let grantee = Addr::unchecked(grantee_account_id.to_string());
+        let granter = Addr::unchecked(granter_account_id.to_string());
 
         let runtime = daemon.rt_handle.clone();
-
-        let grantee = second_daemon.sender_addr();
 
         let current_timestamp = daemon.block_info()?.time;
 
@@ -72,7 +83,7 @@ mod tests {
             vec![Any {
                 type_url: "/cosmos.authz.v1beta1.MsgGrant".to_string(),
                 value: MsgGrant {
-                    granter: sender.to_string(),
+                    granter: granter.to_string(),
                     grantee: grantee.to_string(),
                     grant: Some(grant.clone()),
                 }
@@ -83,7 +94,7 @@ mod tests {
 
         // Check Queries of the authz
         let grant_authorization = GrantAuthorization {
-            granter: sender.to_string(),
+            granter: granter.to_string(),
             grantee: grantee.to_string(),
             authorization: Some(authorization.clone()),
             expiration: Some(expiration),
@@ -93,7 +104,7 @@ mod tests {
         let authz_querier: Authz = daemon.querier();
         let grants: QueryGrantsResponse = runtime.block_on(async {
             authz_querier
-                ._grants(&sender, &grantee, MsgSend::type_url(), None)
+                ._grants(&granter, &grantee, MsgSend::type_url(), None)
                 .await
         })?;
         assert_eq!(grants.grants, vec![grant]);
@@ -105,14 +116,14 @@ mod tests {
 
         // Granter grants
         let granter_grants: QueryGranterGrantsResponse =
-            runtime.block_on(async { authz_querier._granter_grants(&sender, None).await })?;
+            runtime.block_on(async { authz_querier._granter_grants(&granter, None).await })?;
         assert_eq!(granter_grants.grants, vec![grant_authorization]);
 
         // No grant gives out an error
         runtime
             .block_on(async {
                 authz_querier
-                    ._grants(&grantee, &sender, MsgSend::type_url(), None)
+                    ._grants(&grantee, &granter, MsgSend::type_url(), None)
                     .await
             })
             .unwrap_err();

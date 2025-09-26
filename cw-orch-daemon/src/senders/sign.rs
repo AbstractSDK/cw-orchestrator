@@ -29,8 +29,13 @@ pub trait Signer: QuerySender<Error = DaemonError> + Sync {
     /// The chain id of the connected chain
     fn chain_id(&self) -> String;
 
-    /// The account id of the signer.
+    /// The account id of the sender.
     fn account_id(&self) -> AccountId;
+
+    /// The account id of the signer, it is different from account_id with authz granter.
+    fn signer_account_id(&self) -> AccountId {
+        self.account_id()
+    }
 
     fn signing_account(
         &self,
@@ -97,7 +102,7 @@ impl<T: Signer + Sync> TxSender for T {
             vec![Any {
                 type_url: "/cosmos.authz.v1beta1.MsgExec".to_string(),
                 value: MsgExec {
-                    grantee: self.account_id().to_string(),
+                    grantee: self.signer_account_id().to_string(),
                     msgs,
                 }
                 .encode_to_vec(),
@@ -126,15 +131,6 @@ impl<T: Signer + Sync> TxSender for T {
             .await?;
 
         assert_broadcast_code_cosm_response(resp)
-    }
-    /// Actual sender of the messages.
-    /// This is different when using authz capabilites
-    fn msg_sender(&self) -> Result<AccountId, DaemonError> {
-        if let Some(sender) = self.authz_granter() {
-            Ok(sender.as_str().parse()?)
-        } else {
-            Ok(self.account_id())
-        }
     }
 
     async fn bank_send(
