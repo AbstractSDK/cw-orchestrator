@@ -29,7 +29,7 @@ pub struct InjectivePubKey {
 
 impl Name for InjectivePubKey {
     const NAME: &'static str = "PubKey";
-    const PACKAGE: &'static str = "/injective.crypto.v1beta1.ethsecp256k1";
+    const PACKAGE: &'static str = "injective.crypto.v1beta1.ethsecp256k1";
 
     /// Workaround until tokio-rs/prost#923 is released
     fn full_name() -> String {
